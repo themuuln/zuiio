@@ -1,11 +1,7 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
-export default async function LocaleNotFoundPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
+export default async function LocaleNotFoundPage() {
+  const locale = await getLocale();
   const t = await getTranslations({ locale, namespace: "common" });
 
   return (

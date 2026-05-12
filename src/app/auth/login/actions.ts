@@ -3,31 +3,22 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export interface LoginState {
+interface LoginState {
   error?: string;
 }
 
 export async function login(
-  _prevState: LoginState | null,
+  _prevState: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  if (!email || !password) {
-    return { error: "Email and password are required" };
-  }
-
   const supabase = await createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
+    email: formData.get("email") as string,
+    password: formData.get("password") as string,
   });
 
-  if (error) {
-    return { error: error.message };
-  }
+  if (error) return { error: error.message };
 
-  redirect("/dashboard");
+  redirect("/auth/select-organization");
 }

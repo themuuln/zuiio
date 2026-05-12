@@ -133,7 +133,7 @@ export async function createAuditLog(
 
   return {
     success: true,
-    id: data.id as string,
+    id: (data as { id: string } | null)?.id ?? null,
     error: null,
   };
 }

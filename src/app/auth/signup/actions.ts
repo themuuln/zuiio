@@ -3,43 +3,31 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export interface SignupState {
+interface SignupState {
   error?: string;
 }
 
 export async function signup(
-  _prevState: SignupState | null,
+  _prevState: SignupState,
   formData: FormData,
 ): Promise<SignupState> {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const fullName = formData.get("fullName") as string;
-  const organizationName = formData.get("organizationName") as string;
-
-  if (!email || !password || !fullName || !organizationName) {
-    return { error: "All fields are required" };
-  }
-
-  if (password.length < 8) {
-    return { error: "Password must be at least 8 characters" };
-  }
-
   const supabase = await createClient();
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
   const { error } = await supabase.auth.signUp({
-    email,
-    password,
+    email: formData.get("email") as string,
+    password: formData.get("password") as string,
     options: {
       data: {
-        full_name: fullName,
-        organization_name: organizationName,
+        full_name: formData.get("full_name") as string,
+        org_name: formData.get("org_name") as string,
       },
+      emailRedirectTo: `${siteUrl}/auth/callback`,
     },
   });
 
-  if (error) {
-    return { error: error.message };
-  }
+  if (error) return { error: error.message };
 
   redirect("/auth/confirm-email");
 }

@@ -1,10 +1,16 @@
 "use client";
 
-import { Building2, CreditCard, FileText, Globe, MessageSquare } from "lucide-react";
+import {
+  Building2,
+  CreditCard,
+  FileText,
+  Globe,
+  MessageSquare,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
-import { setCookie } from "@/lib/utils";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ApiResponse, Organization } from "@/lib/types";
+import { setCookie } from "@/lib/utils";
 
 type SettingsForm = {
   invoicePrefix: string;
@@ -40,7 +47,7 @@ const DEFAULT_FORM: SettingsForm = {
 };
 
 const inputClassName =
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+  "flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
 
 function getStringSetting(
   settings: Record<string, unknown> | null | undefined,
@@ -91,11 +98,7 @@ function buildFormFromOrganization(organization: Organization): SettingsForm {
       "default_currency",
       DEFAULT_FORM.defaultCurrency,
     ),
-    language: getStringSetting(
-      settings,
-      "language",
-      DEFAULT_FORM.language,
-    ),
+    language: getStringSetting(settings, "language", DEFAULT_FORM.language),
     defaultTaxRate: getNumberSetting(
       settings,
       "default_tax_rate",
@@ -214,6 +217,7 @@ export default function SettingsPage() {
       setOrganization(json.data);
       const updated = buildFormFromOrganization(json.data);
       setForm(updated);
+      toast.success("Settings saved");
 
       // Switch locale if language changed
       if (updated.language !== currentLocale) {
@@ -227,7 +231,10 @@ export default function SettingsPage() {
 
       setSuccessMessage("Settings saved");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save settings");
+      const message =
+        err instanceof Error ? err.message : "Failed to save settings";
+      toast.error(message);
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -375,6 +382,7 @@ export default function SettingsPage() {
                         }))
                       }
                       className={`${inputClassName} pl-9`}
+                      aria-label="Default currency"
                     >
                       <option value="MNT">🇲🇳 MNT (Mongolian Tugrik)</option>
                       <option value="CNY">🇨🇳 CNY (Chinese Yuan)</option>
@@ -455,6 +463,7 @@ export default function SettingsPage() {
                         }))
                       }
                       className={`${inputClassName} pl-9`}
+                      aria-label="Default language"
                     >
                       <option value="mn">🇲🇳 Монгол (Mongolian)</option>
                       <option value="en">🇬🇧 English</option>

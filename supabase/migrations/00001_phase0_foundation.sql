@@ -474,26 +474,34 @@ begin
 end;
 $$;
 
-create trigger set_updated_at on organizations
-  before update for each row execute function update_updated_at_column();
+create trigger set_updated_at
+  before update on organizations
+  for each row execute function update_updated_at_column();
 
-create trigger set_updated_at on branches
-  before update for each row execute function update_updated_at_column();
+create trigger set_updated_at
+  before update on branches
+  for each row execute function update_updated_at_column();
 
-create trigger set_updated_at on profiles
-  before update for each row execute function update_updated_at_column();
+create trigger set_updated_at
+  before update on profiles
+  for each row execute function update_updated_at_column();
 
-create trigger set_updated_at on roles
-  before update for each row execute function update_updated_at_column();
+create trigger set_updated_at
+  before update on roles
+  for each row execute function update_updated_at_column();
 
-create trigger set_updated_at on permissions
-  before update for each row execute function update_updated_at_column();
+create trigger set_updated_at
+  before update on permissions
+  for each row execute function update_updated_at_column();
 
-create trigger set_updated_at on subscription_plans
-  before update for each row execute function update_updated_at_column();
+create trigger set_updated_at
+  before update on subscription_plans
+  for each row execute function update_updated_at_column();
 
-create trigger set_updated_at on feature_flags
-  before update for each row execute function update_updated_at_column();
+create trigger set_updated_at
+  before update on feature_flags
+  for each row execute function update_updated_at_column();
 
-create trigger set_updated_at on organization_settings
-  before update for each row execute function update_updated_at_column();
+create trigger set_updated_at
+  before update on organization_settings
+  for each row execute function update_updated_at_column();

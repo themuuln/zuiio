@@ -13,6 +13,7 @@ import {
   Package,
   Settings,
   Users,
+  Warehouse,
 } from "lucide-react";
 import { usePathname } from "@/lib/i18n/navigation";
 
@@ -76,20 +77,27 @@ const navigationItems: NavItem[] = [
   },
   {
     labelKey: "nav.guide",
-    href: "/dashboard/guide",
+    href: "/guide",
     icon: BookOpen,
     section: "main",
   },
+  // Settings section
   {
-    labelKey: "nav.settings",
-    href: "/dashboard/settings",
-    icon: Settings,
+    labelKey: "nav.vehicleModels",
+    href: "/dashboard/vehicle-models",
+    icon: Warehouse,
     section: "settings",
   },
   {
     labelKey: "nav.organization",
     href: "/dashboard/organization",
     icon: Building2,
+    section: "settings",
+  },
+  {
+    labelKey: "nav.settings",
+    href: "/dashboard/settings",
+    icon: Settings,
     section: "settings",
   },
 ];

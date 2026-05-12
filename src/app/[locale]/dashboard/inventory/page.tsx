@@ -2,19 +2,26 @@
 
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   Building2,
   ClipboardList,
   Package,
   Pencil,
   Plus,
-  Truck,
+  Star,
   Trash2,
+  Truck,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useLocale } from "next-intl";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { type FilterChip, FilterChips } from "@/components/filter-chips";
+import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -25,13 +32,17 @@ type Tab = "parts" | "movements" | "suppliers" | "purchase-orders";
 type Part = {
   id: string;
   name: string;
+  name_mn: string | null;
   part_number: string | null;
   category: string | null;
   description: string | null;
   unit: string;
   default_price: number | null;
   is_active: boolean;
+  popularity_score?: number;
 };
+
+type SortKey = "name" | "category" | "price" | "stock" | "popularity";
 
 type Balance = {
   part_id: string;
@@ -158,7 +169,10 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
     <Card>
       <CardContent className="p-0">
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 border-b border-border p-4">
+          <div
+            key={i}
+            className="flex items-center gap-4 border-b border-border p-4"
+          >
             <Skeleton className="h-5 w-full" />
           </div>
         ))}
@@ -183,7 +197,11 @@ function Modal({
       <div className="w-full max-w-lg rounded-xl border border-border bg-card shadow-lg">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h3 className="text-lg font-semibold">{title}</h3>
-          <button type="button" onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground">
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 text-muted-foreground hover:text-foreground"
+          >
             <X className="size-5" />
           </button>
         </div>
@@ -193,13 +211,57 @@ function Modal({
   );
 }
 
+// ── SortKeyHeader ────────────────────────────────────────────
+
+function SortKeyHeader({
+  label,
+  sortKey,
+  currentSortKey,
+  sortDir,
+  onSort,
+  icon,
+}: {
+  label: string;
+  sortKey: SortKey;
+  currentSortKey: SortKey;
+  sortDir: "asc" | "desc";
+  onSort: (key: SortKey) => void;
+  icon?: typeof Star;
+}) {
+  const isActive = currentSortKey === sortKey;
+  const IconEl = icon;
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(sortKey)}
+      className="flex items-center gap-1 text-left font-medium text-muted-foreground hover:text-foreground transition-colors"
+    >
+      {IconEl && <IconEl className="size-3.5" />}
+      {label}
+      <span className="ml-auto">
+        {isActive ? (
+          sortDir === "desc" ? (
+            <ArrowDown className="size-3.5" />
+          ) : (
+            <ArrowUp className="size-3.5" />
+          )
+        ) : (
+          <ArrowUpDown className="size-3.5" />
+        )}
+      </span>
+    </button>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────
 
 export default function InventoryPage() {
+  const locale = useLocale();
   const [orgId, setOrgId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("parts");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   // Parts data
   const [parts, setParts] = useState<Part[]>([]);
@@ -228,7 +290,26 @@ export default function InventoryPage() {
   const [editingThreshold, setEditingThreshold] = useState<string | null>(null);
   const [thresholdValue, setThresholdValue] = useState("");
 
-  // ── Fetch org ID ───────────────────────────────────────────
+  // Sorting
+  const [sortKey, setSortKey] = useState<SortKey>("popularity");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  // Reset search on tab change
+  const handleTabChange = useCallback((newTab: Tab) => {
+    setTab(newTab);
+    setSearch("");
+  }, []);
+
+  // Build filter chips for movements tab
+  const movementChips: FilterChip[] = useMemo(() => {
+    const types = ["", "purchase", "sale", "adjustment", "return", "waste"];
+    return types.map((t) => ({
+      key: t || "all",
+      label: t ? (MOVEMENT_LABELS[t] ?? t) : "All",
+      active: movementFilter === t,
+      onClick: () => setMovementFilter(t),
+    }));
+  }, [movementFilter]);
   useEffect(() => {
     fetch("/api/profile")
       .then((r) => r.json())
@@ -284,7 +365,9 @@ export default function InventoryPage() {
   const fetchSuppliers = useCallback(async () => {
     if (!orgId) return;
     try {
-      const res = await fetch(`/api/organizations/${orgId}/inventory?type=suppliers`);
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory?type=suppliers`,
+      );
       const json = await res.json();
       if (!json.error) setSuppliers(json.data ?? []);
     } catch {
@@ -295,7 +378,9 @@ export default function InventoryPage() {
   const fetchPOs = useCallback(async () => {
     if (!orgId) return;
     try {
-      const res = await fetch(`/api/organizations/${orgId}/inventory?type=purchase-orders`);
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory?type=purchase-orders`,
+      );
       const json = await res.json();
       if (!json.error) setPurchaseOrders(json.data ?? []);
     } catch {
@@ -303,18 +388,24 @@ export default function InventoryPage() {
     }
   }, [orgId]);
 
-  const fetchPOItems = useCallback(async (poId: string) => {
-    setLoadingPOItems(poId);
-    try {
-      const res = await fetch(`/api/organizations/${orgId}/inventory?type=purchase-order-items&po_id=${poId}`);
-      const json = await res.json();
-      if (!json.error) setPoItems((prev) => ({ ...prev, [poId]: json.data ?? [] }));
-    } catch {
-      toast.error("Failed to load PO items");
-    } finally {
-      setLoadingPOItems(null);
-    }
-  }, [orgId]);
+  const fetchPOItems = useCallback(
+    async (poId: string) => {
+      setLoadingPOItems(poId);
+      try {
+        const res = await fetch(
+          `/api/organizations/${orgId}/inventory?type=purchase-order-items&po_id=${poId}`,
+        );
+        const json = await res.json();
+        if (!json.error)
+          setPoItems((prev) => ({ ...prev, [poId]: json.data ?? [] }));
+      } catch {
+        toast.error("Failed to load PO items");
+      } finally {
+        setLoadingPOItems(null);
+      }
+    },
+    [orgId],
+  );
 
   // Load data on orgId + tab changes
   useEffect(() => {
@@ -333,25 +424,59 @@ export default function InventoryPage() {
     load();
   }, [orgId, tab, fetchParts, fetchMovements, fetchSuppliers, fetchPOs]);
 
+  // Client-side filtering helpers
+  const filteredSuppliers = useMemo(() => {
+    if (!search) return suppliers.filter((s) => s.is_active);
+    const q = search.toLowerCase();
+    return suppliers.filter(
+      (s) =>
+        s.is_active &&
+        (s.name.toLowerCase().includes(q) ||
+          (s.contact_person ?? "").toLowerCase().includes(q) ||
+          (s.phone ?? "").toLowerCase().includes(q) ||
+          (s.email ?? "").toLowerCase().includes(q)),
+    );
+  }, [suppliers, search]);
+
+  const filteredPOs = useMemo(() => {
+    if (!search) return purchaseOrders;
+    const q = search.toLowerCase();
+    return purchaseOrders.filter(
+      (po) =>
+        po.order_number.toLowerCase().includes(q) ||
+        (po.supplier?.name ?? "").toLowerCase().includes(q) ||
+        (PO_STATUS_LABELS[po.status] ?? po.status).toLowerCase().includes(q),
+    );
+  }, [purchaseOrders, search]);
+
   // ── Part CRUD ──────────────────────────────────────────────
   async function handleAddPart(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     try {
-      const res = await fetch(`/api/organizations/${orgId}/inventory?type=part`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.get("name"),
-          part_number: form.get("part_number") || undefined,
-          category: form.get("category") || undefined,
-          description: form.get("description") || undefined,
-          unit: form.get("unit") || "piece",
-          default_price: form.get("default_price") ? Number(form.get("default_price")) : undefined,
-        }),
-      });
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory?type=part`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: form.get("name"),
+            name_mn: form.get("name_mn") || undefined,
+            part_number: form.get("part_number") || undefined,
+            category: form.get("category") || undefined,
+            description: form.get("description") || undefined,
+            unit: form.get("unit") || "piece",
+            default_price: form.get("default_price")
+              ? Number(form.get("default_price"))
+              : undefined,
+          }),
+        },
+      );
       const json = await res.json();
-      if (json.error) { toast.error(json.error.message); return; }
+      if (json.error) {
+        toast.error(json.error.message);
+        return;
+      }
       toast.success("Part created");
       setShowAddPart(false);
       fetchParts();
@@ -365,19 +490,27 @@ export default function InventoryPage() {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     try {
-      const res = await fetch(`/api/organizations/${orgId}/inventory?type=movement`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          part_id: form.get("part_id"),
-          movement_type: form.get("movement_type"),
-          quantity: Number(form.get("quantity")),
-          unit_cost: form.get("unit_cost") ? Number(form.get("unit_cost")) : undefined,
-          notes: form.get("notes") || undefined,
-        }),
-      });
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory?type=movement`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            part_id: form.get("part_id"),
+            movement_type: form.get("movement_type"),
+            quantity: Number(form.get("quantity")),
+            unit_cost: form.get("unit_cost")
+              ? Number(form.get("unit_cost"))
+              : undefined,
+            notes: form.get("notes") || undefined,
+          }),
+        },
+      );
       const json = await res.json();
-      if (json.error) { toast.error(json.error.message); return; }
+      if (json.error) {
+        toast.error(json.error.message);
+        return;
+      }
       toast.success("Movement recorded");
       setShowAddMovement(false);
       fetchParts();
@@ -405,17 +538,32 @@ export default function InventoryPage() {
       if (editingSupplier) {
         const res = await fetch(
           `/api/organizations/${orgId}/inventory?type=supplier&id=${editingSupplier.id}`,
-          { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          },
         );
         const json = await res.json();
-        if (json.error) { toast.error(json.error.message); return; }
+        if (json.error) {
+          toast.error(json.error.message);
+          return;
+        }
         toast.success("Supplier updated");
       } else {
-        const res = await fetch(`/api/organizations/${orgId}/inventory?type=supplier`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-        });
+        const res = await fetch(
+          `/api/organizations/${orgId}/inventory?type=supplier`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          },
+        );
         const json = await res.json();
-        if (json.error) { toast.error(json.error.message); return; }
+        if (json.error) {
+          toast.error(json.error.message);
+          return;
+        }
         toast.success("Supplier created");
       }
       setShowAddSupplier(false);
@@ -434,7 +582,10 @@ export default function InventoryPage() {
         { method: "DELETE" },
       );
       const json = await res.json();
-      if (json.error) { toast.error(json.error.message); return; }
+      if (json.error) {
+        toast.error(json.error.message);
+        return;
+      }
       toast.success("Supplier deleted");
       fetchSuppliers();
     } catch {
@@ -458,20 +609,29 @@ export default function InventoryPage() {
           unit_cost: Number(form.get(`item_${i}_cost`) || 0),
         });
       }
-      if (!items.length) { toast.error("Add at least one item"); return; }
+      if (!items.length) {
+        toast.error("Add at least one item");
+        return;
+      }
 
-      const res = await fetch(`/api/organizations/${orgId}/inventory?type=purchase-order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          supplier_id: form.get("supplier_id") || undefined,
-          order_number: form.get("order_number"),
-          notes: form.get("notes") || undefined,
-          items,
-        }),
-      });
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory?type=purchase-order`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            supplier_id: form.get("supplier_id") || undefined,
+            order_number: form.get("order_number"),
+            notes: form.get("notes") || undefined,
+            items,
+          }),
+        },
+      );
       const json = await res.json();
-      if (json.error) { toast.error(json.error.message); return; }
+      if (json.error) {
+        toast.error(json.error.message);
+        return;
+      }
       toast.success("Purchase order created");
       setShowAddPO(false);
       fetchPOs();
@@ -482,13 +642,19 @@ export default function InventoryPage() {
 
   async function handleReceivePO(poId: string) {
     try {
-      const res = await fetch(`/api/organizations/${orgId}/inventory?type=receive-po`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ po_id: poId }),
-      });
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory?type=receive-po`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ po_id: poId }),
+        },
+      );
       const json = await res.json();
-      if (json.error) { toast.error(json.error.message); return; }
+      if (json.error) {
+        toast.error(json.error.message);
+        return;
+      }
       toast.success("PO received");
       fetchPOs();
       fetchParts();
@@ -509,15 +675,27 @@ export default function InventoryPage() {
   // ── Threshold ──────────────────────────────────────────────
   async function handleSaveThreshold(partId: string) {
     try {
-      const res = await fetch(`/api/organizations/${orgId}/inventory?type=threshold`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ part_id: partId, minimum_quantity: Number(thresholdValue) || 0 }),
-      });
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory?type=threshold`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            part_id: partId,
+            minimum_quantity: Number(thresholdValue) || 0,
+          }),
+        },
+      );
       const json = await res.json();
-      if (json.error) { toast.error(json.error.message); return; }
+      if (json.error) {
+        toast.error(json.error.message);
+        return;
+      }
       toast.success("Threshold saved");
-      setThresholds((prev) => ({ ...prev, [partId]: Number(thresholdValue) || 0 }));
+      setThresholds((prev) => ({
+        ...prev,
+        [partId]: Number(thresholdValue) || 0,
+      }));
       setEditingThreshold(null);
     } catch {
       toast.error("Failed to save threshold");
@@ -528,6 +706,62 @@ export default function InventoryPage() {
   const balanceMap = new Map<string, Balance>();
   for (const b of balances) {
     balanceMap.set(b.part_id, b);
+  }
+
+  // ── Sorted & filtered parts ────────────────────────────────
+  const sortedParts = useMemo(() => {
+    let filtered = parts.filter((p) => p.is_active);
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          (p.name.toLowerCase().includes(q) ||
+            p.name_mn?.toLowerCase().includes(q)) ??
+          (false || p.part_number?.toLowerCase().includes(q)) ??
+          (false || p.category?.toLowerCase().includes(q)) ??
+          false,
+      );
+    }
+
+    const sorted = [...filtered].sort((a, b) => {
+      let cmp = 0;
+      const aMn = locale === "mn" && a.name_mn ? a.name_mn : a.name;
+      const bMn = locale === "mn" && b.name_mn ? b.name_mn : b.name;
+
+      switch (sortKey) {
+        case "name":
+          cmp = aMn.localeCompare(bMn, "mn");
+          break;
+        case "category":
+          cmp = (a.category ?? "").localeCompare(b.category ?? "", "mn");
+          break;
+        case "price":
+          cmp = (a.default_price ?? 0) - (b.default_price ?? 0);
+          break;
+        case "stock": {
+          const aQty = balanceMap.get(a.id)?.quantity_on_hand ?? 0;
+          const bQty = balanceMap.get(b.id)?.quantity_on_hand ?? 0;
+          cmp = aQty - bQty;
+          break;
+        }
+        case "popularity":
+          cmp = (a.popularity_score ?? 0) - (b.popularity_score ?? 0);
+          break;
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+
+    return sorted;
+  }, [parts, search, sortKey, sortDir, balanceMap, locale]);
+
+  // ── Sort handler ───────────────────────────────────────────
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
   }
 
   // ── Render ─────────────────────────────────────────────────
@@ -559,7 +793,9 @@ export default function InventoryPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Inventory</h1>
-        <p className="text-muted-foreground">Manage parts, stock, suppliers, and purchase orders</p>
+        <p className="text-muted-foreground">
+          Manage parts, stock, suppliers, and purchase orders
+        </p>
       </div>
 
       {/* Tabs */}
@@ -570,7 +806,7 @@ export default function InventoryPage() {
             <button
               key={t.key}
               type="button"
-              onClick={() => setTab(t.key)}
+              onClick={() => handleTabChange(t.key)}
               className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-colors min-h-[48px] ${
                 tab === t.key
                   ? "bg-primary text-primary-foreground border-primary"
@@ -587,19 +823,26 @@ export default function InventoryPage() {
       {/* ── Tab: Parts & Stock ───────────────────────────────── */}
       {tab === "parts" && (
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-muted-foreground">{parts.length} parts</p>
-            <div className="flex gap-2">
-              <Button size="lg" onClick={() => { setShowAddMovement(true); }}>
-                <ClipboardList className="size-4" />
-                Record Movement
-              </Button>
-              <Button size="lg" onClick={() => { setShowAddPart(true); }}>
-                <Plus className="size-4" />
-                Add Part
-              </Button>
-            </div>
-          </div>
+          <ListToolbar
+            search={{
+              placeholder: "Search parts by name, #, or category...",
+              value: search,
+              onChange: setSearch,
+            }}
+            stats={<span>{sortedParts.length} parts</span>}
+            actions={
+              <>
+                <Button size="lg" onClick={() => setShowAddMovement(true)}>
+                  <ClipboardList className="size-4" />
+                  Record Movement
+                </Button>
+                <Button size="lg" onClick={() => setShowAddPart(true)}>
+                  <Plus className="size-4" />
+                  Add Part
+                </Button>
+              </>
+            }
+          />
 
           {loading ? (
             <TableSkeleton />
@@ -619,51 +862,136 @@ export default function InventoryPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/50">
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Part #</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Category</th>
-                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">Default Price</th>
-                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">On Hand</th>
-                      <th className="px-4 py-3 text-center font-medium text-muted-foreground">Status</th>
-                      <th className="px-4 py-3 text-center font-medium text-muted-foreground">Min</th>
+                      <th className="px-4 py-3 text-left">
+                        <SortKeyHeader
+                          label="Name"
+                          sortKey="name"
+                          currentSortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={handleSort}
+                        />
+                      </th>
+                      <th className="px-4 py-3 text-left">
+                        <SortKeyHeader
+                          label="Popularity"
+                          sortKey="popularity"
+                          currentSortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={handleSort}
+                          icon={Star}
+                        />
+                      </th>
+                      <th className="px-4 py-3 text-left">
+                        <SortKeyHeader
+                          label="Category"
+                          sortKey="category"
+                          currentSortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={handleSort}
+                        />
+                      </th>
+                      <th className="px-4 py-3 text-right">
+                        <SortKeyHeader
+                          label="Default Price"
+                          sortKey="price"
+                          currentSortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={handleSort}
+                        />
+                      </th>
+                      <th className="px-4 py-3 text-right">
+                        <SortKeyHeader
+                          label="On Hand"
+                          sortKey="stock"
+                          currentSortKey={sortKey}
+                          sortDir={sortDir}
+                          onSort={handleSort}
+                        />
+                      </th>
+                      <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                        Min
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                        Part #
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {parts.filter(p => p.is_active).map((part) => {
+                    {sortedParts.map((part) => {
                       const bal = balanceMap.get(part.id);
                       const qty = bal?.quantity_on_hand ?? 0;
                       const min = thresholds[part.id] ?? 5;
                       const status =
-                        qty <= 0
-                          ? "out"
-                          : qty < min
-                            ? "low"
-                            : "ok";
+                        qty <= 0 ? "out" : qty < min ? "low" : "ok";
                       return (
-                        <tr key={part.id} className="border-b border-border transition-colors hover:bg-muted/30">
-                          <td className="px-4 py-3 font-medium">{part.name}</td>
+                        <tr
+                          key={part.id}
+                          className="border-b border-border transition-colors hover:bg-muted/30"
+                        >
+                          <td className="px-4 py-3 font-medium">
+                            {locale === "mn" && part.name_mn
+                              ? part.name_mn
+                              : part.name}
+                          </td>
+                          <td className="px-4 py-3">
+                            {part.popularity_score != null && (
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                                  part.popularity_score >= 80
+                                    ? "bg-amber-50 text-amber-700"
+                                    : "bg-muted text-muted-foreground"
+                                }`}
+                              >
+                                {part.popularity_score >= 80 ? (
+                                  <Star className="size-3" />
+                                ) : null}
+                                {part.popularity_score}
+                              </span>
+                            )}
+                          </td>
                           <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
                             {part.part_number ?? "—"}
                           </td>
-                          <td className="px-4 py-3 text-muted-foreground">{part.category ?? "—"}</td>
-                          <td className="px-4 py-3 text-right tabular-nums">
-                            {part.default_price ? `₮${formatMNT(part.default_price)}` : "—"}
+                          <td className="px-4 py-3 text-muted-foreground">
+                            {part.category ?? "—"}
                           </td>
-                          <td className={`px-4 py-3 text-right font-semibold tabular-nums ${
-                            status === "out" ? "text-red-600" : status === "low" ? "text-amber-600" : "text-green-600"
-                          }`}>
+                          <td className="px-4 py-3 text-right tabular-nums">
+                            {part.default_price
+                              ? `₮${formatMNT(part.default_price)}`
+                              : "—"}
+                          </td>
+                          <td
+                            className={`px-4 py-3 text-right font-semibold tabular-nums ${
+                              status === "out"
+                                ? "text-red-600"
+                                : status === "low"
+                                  ? "text-amber-600"
+                                  : "text-green-600"
+                            }`}
+                          >
                             {qty} {part.unit}
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                              status === "out"
-                                ? "bg-red-50 text-red-700"
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                                status === "out"
+                                  ? "bg-red-50 text-red-700"
+                                  : status === "low"
+                                    ? "bg-amber-50 text-amber-700"
+                                    : "bg-green-50 text-green-700"
+                              }`}
+                            >
+                              {status === "out" && (
+                                <AlertTriangle className="size-3" />
+                              )}
+                              {status === "out"
+                                ? "Out"
                                 : status === "low"
-                                  ? "bg-amber-50 text-amber-700"
-                                  : "bg-green-50 text-green-700"
-                            }`}>
-                              {status === "out" && <AlertTriangle className="size-3" />}
-                              {status === "out" ? "Out" : status === "low" ? "Low" : "In Stock"}
+                                  ? "Low"
+                                  : "In Stock"}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -672,7 +1000,9 @@ export default function InventoryPage() {
                                 <Input
                                   type="number"
                                   value={thresholdValue}
-                                  onChange={(e) => setThresholdValue(e.target.value)}
+                                  onChange={(e) =>
+                                    setThresholdValue(e.target.value)
+                                  }
                                   className="h-8 w-16 text-center"
                                   min={0}
                                 />
@@ -689,7 +1019,9 @@ export default function InventoryPage() {
                                 type="button"
                                 onClick={() => {
                                   setEditingThreshold(part.id);
-                                  setThresholdValue(String(thresholds[part.id] ?? 5));
+                                  setThresholdValue(
+                                    String(thresholds[part.id] ?? 5),
+                                  );
                                 }}
                                 className="text-xs text-muted-foreground hover:text-foreground"
                               >
@@ -711,25 +1043,15 @@ export default function InventoryPage() {
       {/* ── Tab: Movements ──────────────────────────────────── */}
       {tab === "movements" && (
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-muted-foreground">Recent stock movements</p>
-            <div className="flex flex-wrap gap-2">
-              {["", "purchase", "sale", "adjustment", "return", "waste"].map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setMovementFilter(t)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                    movementFilter === t
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background border-border text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  {t ? MOVEMENT_LABELS[t] ?? t : "All"}
-                </button>
-              ))}
-            </div>
-          </div>
+          <ListToolbar
+            search={{
+              placeholder: "Search movements by part name...",
+              value: search,
+              onChange: setSearch,
+            }}
+            filters={<FilterChips items={movementChips} />}
+            stats={<span>{movements.length} movements</span>}
+          />
 
           {loading ? (
             <TableSkeleton />
@@ -746,28 +1068,49 @@ export default function InventoryPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/50">
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Qty</th>
-                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">Unit Cost</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ref</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Notes</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                        Type
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                        Qty
+                      </th>
+                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                        Unit Cost
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                        Ref
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                        Notes
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {movements.map((m) => (
                       <tr key={m.id} className="border-b border-border">
-                        <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(m.created_at)}</td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs">
+                          {formatDate(m.created_at)}
+                        </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${MOVEMENT_COLORS[m.movement_type] ?? ""}`}>
-                            {MOVEMENT_LABELS[m.movement_type] ?? m.movement_type}
+                          <span
+                            className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${MOVEMENT_COLORS[m.movement_type] ?? ""}`}
+                          >
+                            {MOVEMENT_LABELS[m.movement_type] ??
+                              m.movement_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 font-semibold tabular-nums">{m.quantity}</td>
+                        <td className="px-4 py-3 font-semibold tabular-nums">
+                          {m.quantity}
+                        </td>
                         <td className="px-4 py-3 text-right tabular-nums">
                           {m.unit_cost ? `₮${formatMNT(m.unit_cost)}` : "—"}
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground text-xs">{m.reference_type ?? "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs">
+                          {m.reference_type ?? "—"}
+                        </td>
                         <td className="px-4 py-3 text-muted-foreground text-xs max-w-[200px] truncate">
                           {m.notes ?? "—"}
                         </td>
@@ -784,13 +1127,26 @@ export default function InventoryPage() {
       {/* ── Tab: Suppliers ──────────────────────────────────── */}
       {tab === "suppliers" && (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">{suppliers.length} suppliers</p>
-            <Button size="lg" onClick={() => { setShowAddSupplier(true); setEditingSupplier(null); }}>
-              <Plus className="size-4" />
-              Add Supplier
-            </Button>
-          </div>
+          <ListToolbar
+            search={{
+              placeholder: "Search suppliers by name, contact, or phone...",
+              value: search,
+              onChange: setSearch,
+            }}
+            stats={<span>{filteredSuppliers.length} suppliers</span>}
+            actions={
+              <Button
+                size="lg"
+                onClick={() => {
+                  setShowAddSupplier(true);
+                  setEditingSupplier(null);
+                }}
+              >
+                <Plus className="size-4" />
+                Add Supplier
+              </Button>
+            }
+          />
 
           {loading ? (
             <TableSkeleton />
@@ -799,7 +1155,13 @@ export default function InventoryPage() {
               <CardContent className="flex flex-col items-center gap-3 py-16">
                 <Building2 className="size-12 text-muted-foreground/40" />
                 <p className="text-muted-foreground">No suppliers</p>
-                <Button variant="outline" onClick={() => { setShowAddSupplier(true); setEditingSupplier(null); }}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddSupplier(true);
+                    setEditingSupplier(null);
+                  }}
+                >
                   Add your first supplier
                 </Button>
               </CardContent>
@@ -810,25 +1172,45 @@ export default function InventoryPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/50">
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Contact</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Phone</th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
-                      <th className="px-4 py-3 text-center font-medium text-muted-foreground">Actions</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                        Name
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                        Contact
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                        Phone
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                        Email
+                      </th>
+                      <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {suppliers.filter(s => s.is_active).map((s) => (
-                      <tr key={s.id} className="border-b border-border transition-colors hover:bg-muted/30">
+                    {filteredSuppliers.map((s) => (
+                      <tr
+                        key={s.id}
+                        className="border-b border-border transition-colors hover:bg-muted/30"
+                      >
                         <td className="px-4 py-3 font-medium">{s.name}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{s.contact_person ?? "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {s.contact_person ?? "—"}
+                        </td>
                         <td className="px-4 py-3">{s.phone ?? "—"}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{s.email ?? "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {s.email ?? "—"}
+                        </td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
                             <button
                               type="button"
-                              onClick={() => { setEditingSupplier(s); setShowAddSupplier(true); }}
+                              onClick={() => {
+                                setEditingSupplier(s);
+                                setShowAddSupplier(true);
+                              }}
                               className="p-1 text-muted-foreground hover:text-foreground"
                               title="Edit"
                             >
@@ -857,13 +1239,20 @@ export default function InventoryPage() {
       {/* ── Tab: Purchase Orders ────────────────────────────── */}
       {tab === "purchase-orders" && (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">{purchaseOrders.length} orders</p>
-            <Button size="lg" onClick={() => { setShowAddPO(true); }}>
-              <Plus className="size-4" />
-              Create PO
-            </Button>
-          </div>
+          <ListToolbar
+            search={{
+              placeholder: "Search POs by order #, supplier, or status...",
+              value: search,
+              onChange: setSearch,
+            }}
+            stats={<span>{filteredPOs.length} orders</span>}
+            actions={
+              <Button size="lg" onClick={() => setShowAddPO(true)}>
+                <Plus className="size-4" />
+                Create PO
+              </Button>
+            }
+          />
 
           {loading ? (
             <TableSkeleton />
@@ -879,7 +1268,7 @@ export default function InventoryPage() {
             </Card>
           ) : (
             <div className="flex flex-col gap-3">
-              {purchaseOrders.map((po) => (
+              {filteredPOs.map((po) => (
                 <Card key={po.id}>
                   <button
                     type="button"
@@ -892,11 +1281,17 @@ export default function InventoryPage() {
                         {po.supplier?.name ?? "No supplier"}
                       </p>
                     </div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${PO_STATUS_COLORS[po.status] ?? ""}`}>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${PO_STATUS_COLORS[po.status] ?? ""}`}
+                    >
                       {PO_STATUS_LABELS[po.status] ?? po.status}
                     </span>
-                    <span className="text-sm font-semibold tabular-nums">₮{formatMNT(po.total_amount)}</span>
-                    <span className="text-xs text-muted-foreground">{formatDate(po.created_at)}</span>
+                    <span className="text-sm font-semibold tabular-nums">
+                      ₮{formatMNT(po.total_amount)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(po.created_at)}
+                    </span>
                   </button>
 
                   {expandedPO === po.id && (
@@ -906,37 +1301,62 @@ export default function InventoryPage() {
                       ) : (
                         <div className="space-y-2">
                           {(poItems[po.id] ?? []).length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No items</p>
+                            <p className="text-sm text-muted-foreground">
+                              No items
+                            </p>
                           ) : (
                             <table className="w-full text-sm">
                               <thead>
                                 <tr className="border-b border-border">
-                                  <th className="py-2 pr-4 text-left font-medium text-muted-foreground">Part</th>
-                                  <th className="py-2 pr-4 text-right font-medium text-muted-foreground">Ordered</th>
-                                  <th className="py-2 pr-4 text-right font-medium text-muted-foreground">Received</th>
-                                  <th className="py-2 text-right font-medium text-muted-foreground">Unit Cost</th>
+                                  <th className="py-2 pr-4 text-left font-medium text-muted-foreground">
+                                    Part
+                                  </th>
+                                  <th className="py-2 pr-4 text-right font-medium text-muted-foreground">
+                                    Ordered
+                                  </th>
+                                  <th className="py-2 pr-4 text-right font-medium text-muted-foreground">
+                                    Received
+                                  </th>
+                                  <th className="py-2 text-right font-medium text-muted-foreground">
+                                    Unit Cost
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {(poItems[po.id] ?? []).map((item) => (
-                                  <tr key={item.id} className="border-b border-border/50">
-                                    <td className="py-2 pr-4">{item.part_name}</td>
-                                    <td className="py-2 pr-4 text-right tabular-nums">{item.quantity_ordered}</td>
-                                    <td className="py-2 pr-4 text-right tabular-nums">{item.quantity_received}</td>
-                                    <td className="py-2 text-right tabular-nums">₮{formatMNT(item.unit_cost)}</td>
+                                  <tr
+                                    key={item.id}
+                                    className="border-b border-border/50"
+                                  >
+                                    <td className="py-2 pr-4">
+                                      {item.part_name}
+                                    </td>
+                                    <td className="py-2 pr-4 text-right tabular-nums">
+                                      {item.quantity_ordered}
+                                    </td>
+                                    <td className="py-2 pr-4 text-right tabular-nums">
+                                      {item.quantity_received}
+                                    </td>
+                                    <td className="py-2 text-right tabular-nums">
+                                      ₮{formatMNT(item.unit_cost)}
+                                    </td>
                                   </tr>
                                 ))}
                               </tbody>
                             </table>
                           )}
-                          {po.status !== "received" && po.status !== "cancelled" && (
-                            <div className="mt-3 flex justify-end">
-                              <Button size="sm" onClick={() => handleReceivePO(po.id)}>
-                                <Truck className="size-3" />
-                                Receive Stock
-                              </Button>
-                            </div>
-                          )}
+                          {po.status !== "received" &&
+                            po.status !== "cancelled" && (
+                              <div className="mt-3 flex justify-end">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleReceivePO(po.id)}
+                                >
+                                  <Truck className="size-3" />
+                                  Receive Stock
+                                </Button>
+                              </div>
+                            )}
                         </div>
                       )}
                     </div>
@@ -956,12 +1376,29 @@ export default function InventoryPage() {
           <form onSubmit={handleAddPart} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Name *</label>
-              <Input name="name" required placeholder="Oil filter" className="h-11" />
+              <Input
+                name="name"
+                required
+                placeholder="Oil filter"
+                className="h-11"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Монгол нэр</label>
+              <Input
+                name="name_mn"
+                placeholder="Тосны шүүлтүүр"
+                className="h-11"
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Part Number</label>
-                <Input name="part_number" placeholder="OF-101" className="h-11" />
+                <Input
+                  name="part_number"
+                  placeholder="OF-101"
+                  className="h-11"
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Category</label>
@@ -970,7 +1407,11 @@ export default function InventoryPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Description</label>
-              <Input name="description" placeholder="Optional description" className="h-11" />
+              <Input
+                name="description"
+                placeholder="Optional description"
+                className="h-11"
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -979,11 +1420,22 @@ export default function InventoryPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Default Price (₮)</label>
-                <Input name="default_price" type="number" min="0" className="h-11" />
+                <Input
+                  name="default_price"
+                  type="number"
+                  min="0"
+                  className="h-11"
+                />
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => setShowAddPart(false)}>Cancel</Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAddPart(false)}
+              >
+                Cancel
+              </Button>
               <Button type="submit">Create Part</Button>
             </div>
           </form>
@@ -992,7 +1444,10 @@ export default function InventoryPage() {
 
       {/* Record Movement Modal */}
       {showAddMovement && (
-        <Modal title="Record Stock Movement" onClose={() => setShowAddMovement(false)}>
+        <Modal
+          title="Record Stock Movement"
+          onClose={() => setShowAddMovement(false)}
+        >
           <form onSubmit={handleAddMovement} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Part *</label>
@@ -1002,8 +1457,11 @@ export default function InventoryPage() {
                 className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
               >
                 <option value="">Select part</option>
-                {parts.filter(p => p.is_active).map((p) => (
-                  <option key={p.id} value={p.id}>{p.name} ({p.part_number ?? "no #"})</option>
+                {sortedParts.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {locale === "mn" && p.name_mn ? p.name_mn : p.name} (
+                    {p.part_number ?? "no #"})
+                  </option>
                 ))}
               </select>
             </div>
@@ -1025,19 +1483,40 @@ export default function InventoryPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Quantity *</label>
-                <Input name="quantity" type="number" required min="1" className="h-11" />
+                <Input
+                  name="quantity"
+                  type="number"
+                  required
+                  min="1"
+                  className="h-11"
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Unit Cost (₮)</label>
-                <Input name="unit_cost" type="number" min="0" className="h-11" />
+                <Input
+                  name="unit_cost"
+                  type="number"
+                  min="0"
+                  className="h-11"
+                />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Notes</label>
-              <Input name="notes" placeholder="Optional notes" className="h-11" />
+              <Input
+                name="notes"
+                placeholder="Optional notes"
+                className="h-11"
+              />
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => setShowAddMovement(false)}>Cancel</Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAddMovement(false)}
+              >
+                Cancel
+              </Button>
               <Button type="submit">Record</Button>
             </div>
           </form>
@@ -1046,43 +1525,91 @@ export default function InventoryPage() {
 
       {/* Add/Edit Supplier Modal */}
       {showAddSupplier && (
-        <Modal title={editingSupplier ? "Edit Supplier" : "Add Supplier"} onClose={() => { setShowAddSupplier(false); setEditingSupplier(null); }}>
+        <Modal
+          title={editingSupplier ? "Edit Supplier" : "Add Supplier"}
+          onClose={() => {
+            setShowAddSupplier(false);
+            setEditingSupplier(null);
+          }}
+        >
           <form onSubmit={handleSaveSupplier} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Name *</label>
-              <Input name="name" required defaultValue={editingSupplier?.name ?? ""} placeholder="ABC Auto Parts" className="h-11" />
+              <Input
+                name="name"
+                required
+                defaultValue={editingSupplier?.name ?? ""}
+                placeholder="ABC Auto Parts"
+                className="h-11"
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Contact Person</label>
-                <Input name="contact_person" defaultValue={editingSupplier?.contact_person ?? ""} className="h-11" />
+                <Input
+                  name="contact_person"
+                  defaultValue={editingSupplier?.contact_person ?? ""}
+                  className="h-11"
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Phone</label>
-                <Input name="phone" defaultValue={editingSupplier?.phone ?? ""} className="h-11" />
+                <Input
+                  name="phone"
+                  defaultValue={editingSupplier?.phone ?? ""}
+                  className="h-11"
+                />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Email</label>
-              <Input name="email" type="email" defaultValue={editingSupplier?.email ?? ""} className="h-11" />
+              <Input
+                name="email"
+                type="email"
+                defaultValue={editingSupplier?.email ?? ""}
+                className="h-11"
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Address</label>
-              <Input name="address" defaultValue={editingSupplier?.address ?? ""} className="h-11" />
+              <Input
+                name="address"
+                defaultValue={editingSupplier?.address ?? ""}
+                className="h-11"
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tax ID</label>
-                <Input name="tax_id" defaultValue={editingSupplier?.tax_id ?? ""} className="h-11" />
+                <Input
+                  name="tax_id"
+                  defaultValue={editingSupplier?.tax_id ?? ""}
+                  className="h-11"
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Notes</label>
-                <Input name="notes" defaultValue={editingSupplier?.notes ?? ""} className="h-11" />
+                <Input
+                  name="notes"
+                  defaultValue={editingSupplier?.notes ?? ""}
+                  className="h-11"
+                />
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => { setShowAddSupplier(false); setEditingSupplier(null); }}>Cancel</Button>
-              <Button type="submit">{editingSupplier ? "Update" : "Create"}</Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowAddSupplier(false);
+                  setEditingSupplier(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">
+                {editingSupplier ? "Update" : "Create"}
+              </Button>
             </div>
           </form>
         </Modal>
@@ -1090,35 +1617,60 @@ export default function InventoryPage() {
 
       {/* Create PO Modal */}
       {showAddPO && (
-        <Modal title="Create Purchase Order" onClose={() => setShowAddPO(false)}>
+        <Modal
+          title="Create Purchase Order"
+          onClose={() => setShowAddPO(false)}
+        >
           <form onSubmit={handleCreatePO} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Order Number *</label>
-                <Input name="order_number" required placeholder="PO-001" className="h-11" />
+                <Input
+                  name="order_number"
+                  required
+                  placeholder="PO-001"
+                  className="h-11"
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Supplier</label>
-                <select name="supplier_id" className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm">
+                <select
+                  name="supplier_id"
+                  className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                >
                   <option value="">No supplier</option>
-                  {suppliers.filter(s => s.is_active).map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
+                  {suppliers
+                    .filter((s) => s.is_active)
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Notes</label>
-              <Input name="notes" placeholder="Optional notes" className="h-11" />
+              <Input
+                name="notes"
+                placeholder="Optional notes"
+                className="h-11"
+              />
             </div>
             <div className="space-y-3 rounded-lg border border-border p-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">Items</p>
               </div>
-              <POItemEditor parts={parts} />
+              <POItemEditor parts={sortedParts} locale={locale} />
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => setShowAddPO(false)}>Cancel</Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAddPO(false)}
+              >
+                Cancel
+              </Button>
               <Button type="submit">Create PO</Button>
             </div>
           </form>
@@ -1130,14 +1682,17 @@ export default function InventoryPage() {
 
 // ── PO Item Editor ───────────────────────────────────────────
 
-function POItemEditor({ parts }: { parts: Part[] }) {
+function POItemEditor({ parts, locale }: { parts: Part[]; locale: string }) {
   const [count, setCount] = useState(0);
 
   return (
     <div className="space-y-3">
       <input type="hidden" name="item_count" value={count} />
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-end gap-2 border-b border-border pb-2">
+        <div
+          key={i}
+          className="flex items-end gap-2 border-b border-border pb-2"
+        >
           <div className="flex-1 space-y-1">
             <span className="text-xs text-muted-foreground">Part</span>
             <select
@@ -1146,9 +1701,13 @@ function POItemEditor({ parts }: { parts: Part[] }) {
               className="h-9 w-full rounded border border-input bg-background px-2 text-sm"
             >
               <option value="">Select</option>
-              {parts.filter(p => p.is_active).map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
+              {parts
+                .filter((p) => p.is_active)
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {locale === "mn" && p.name_mn ? p.name_mn : p.name}
+                  </option>
+                ))}
             </select>
           </div>
           <div className="w-20 space-y-1">

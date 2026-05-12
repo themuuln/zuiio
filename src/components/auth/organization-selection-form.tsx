@@ -1,0 +1,164 @@
+"use client";
+
+import { Building2, KeyRound, Loader2 } from "lucide-react";
+import { useActionState, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import type { CompleteOrganizationLoginState } from "@/lib/actions/complete-organization-login";
+import type { UserOrganizationAccessOption } from "@/lib/services/organization-access-service";
+
+interface OrganizationSelectionFormProps {
+  organizations: UserOrganizationAccessOption[];
+  action: (
+    state: CompleteOrganizationLoginState,
+    formData: FormData,
+  ) => Promise<CompleteOrganizationLoginState>;
+  copy: {
+    title: string;
+    subtitle: string;
+    organizationLabel: string;
+    organizationPlaceholder: string;
+    pinLabel: string;
+    pinPlaceholder: string;
+    confirmPinLabel: string;
+    continueLabel: string;
+    setupLabel: string;
+    setupHint: string;
+    verifyHint: string;
+    noOrganizations: string;
+  };
+}
+
+export function OrganizationSelectionForm({
+  organizations,
+  action,
+  copy,
+}: OrganizationSelectionFormProps) {
+  const [state, formAction, isPending] = useActionState(action, {});
+  const [organizationId, setOrganizationId] = useState(
+    organizations.find((organization) => organization.isPrimary)
+      ?.organizationId ??
+      organizations[0]?.organizationId ??
+      "",
+  );
+
+  const selectedOrganization = useMemo(
+    () =>
+      organizations.find(
+        (organization) => organization.organizationId === organizationId,
+      ) ?? null,
+    [organizationId, organizations],
+  );
+
+  if (organizations.length === 0) {
+    return (
+      <div className="space-y-3 text-center">
+        <h2 className="text-lg font-semibold text-foreground">{copy.title}</h2>
+        <p className="text-sm text-muted-foreground">{copy.noOrganizations}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-6 text-center">
+        <h2 className="text-lg font-semibold text-foreground">{copy.title}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{copy.subtitle}</p>
+      </div>
+
+      <form action={formAction} className="space-y-4">
+        {state?.error && (
+          <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {state.error}
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          <label
+            htmlFor="organizationId"
+            className="text-sm font-medium text-foreground"
+          >
+            {copy.organizationLabel}
+          </label>
+          <div className="relative">
+            <Building2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <select
+              id="organizationId"
+              name="organizationId"
+              value={organizationId}
+              onChange={(event) => setOrganizationId(event.target.value)}
+              className="h-10 w-full rounded-md border border-input bg-background py-2 pr-3 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              {organizations.map((organization) => (
+                <option
+                  key={organization.organizationId}
+                  value={organization.organizationId}
+                >
+                  {organization.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {selectedOrganization?.slug ?? copy.organizationPlaceholder}
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="pin" className="text-sm font-medium text-foreground">
+            {copy.pinLabel}
+          </label>
+          <div className="relative">
+            <KeyRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              id="pin"
+              name="pin"
+              type="password"
+              inputMode="numeric"
+              pattern="[0-9]{4,6}"
+              minLength={4}
+              maxLength={6}
+              required
+              className="w-full rounded-md border border-input bg-background px-3 py-2 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              placeholder={copy.pinPlaceholder}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {selectedOrganization?.hasBayViewPin
+              ? copy.verifyHint
+              : copy.setupHint}
+          </p>
+        </div>
+
+        {!selectedOrganization?.hasBayViewPin && (
+          <div className="space-y-1.5">
+            <label
+              htmlFor="confirmPin"
+              className="text-sm font-medium text-foreground"
+            >
+              {copy.confirmPinLabel}
+            </label>
+            <input
+              id="confirmPin"
+              name="confirmPin"
+              type="password"
+              inputMode="numeric"
+              pattern="[0-9]{4,6}"
+              minLength={4}
+              maxLength={6}
+              required
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              placeholder={copy.pinPlaceholder}
+            />
+          </div>
+        )}
+
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending ? <Loader2 className="animate-spin" /> : <KeyRound />}
+          {selectedOrganization?.hasBayViewPin
+            ? copy.continueLabel
+            : copy.setupLabel}
+        </Button>
+      </form>
+    </div>
+  );
+}

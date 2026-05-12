@@ -1,0 +1,34 @@
+import { NextResponse } from "next/server";
+import { createRouteHandler } from "@/lib/api-handler";
+import {
+  addServiceToWorkOrder,
+  removeServiceFromWorkOrder,
+} from "@/lib/services/work-order-service";
+
+export const POST = createRouteHandler(async ({ request, params, orgId }) => {
+  const { workOrderId } = params;
+  const body = await request.json();
+  const service = await addServiceToWorkOrder(workOrderId, orgId, body);
+  return NextResponse.json({ data: service }, { status: 201 });
+});
+
+export const DELETE = createRouteHandler(async ({ request, params }) => {
+  const { workOrderId } = params;
+  const { searchParams } = new URL(request.url);
+  const serviceId = searchParams.get("serviceId");
+
+  if (!serviceId) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "serviceId query param required",
+        },
+      },
+      { status: 400 },
+    );
+  }
+
+  await removeServiceFromWorkOrder(serviceId, workOrderId);
+  return NextResponse.json({ data: null });
+});

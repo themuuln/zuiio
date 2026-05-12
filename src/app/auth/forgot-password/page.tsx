@@ -1,93 +1,109 @@
 "use client";
 
-import { ArrowLeft, Loader2, Mail } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Mail } from "lucide-react";
 import Link from "next/link";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
-import { requestPasswordReset } from "./actions";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { resetPasswordForEmail } from "./actions";
 
 export default function ForgotPasswordPage() {
-  const [state, formAction, isPending] = useActionState(
-    requestPasswordReset,
-    null,
-  );
+  const [state, formAction, isPending] = useActionState(resetPasswordForEmail, {
+    error: "",
+    success: false,
+  });
 
-  if (state?.success) {
+  if (state.success) {
     return (
-      <div className="text-center">
-        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
-          <Mail className="size-6 text-muted-foreground" />
-        </div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Check your email
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          If an account exists with that email, we&apos;ve sent a password reset
-          link.
-        </p>
-        <p className="mt-6 text-sm">
+      <Card>
+        <CardHeader className="space-y-1">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <CheckCircle2 className="h-6 w-6 text-primary" />
+          </div>
+          <CardTitle className="text-center text-2xl">
+            Check your email
+          </CardTitle>
+          <CardDescription className="text-center">
+            We&apos;ve sent a password reset link to your email address.
+          </CardDescription>
+        </CardHeader>
+        <CardFooter className="flex justify-center">
           <Link
             href="/auth/login"
-            className="font-medium text-foreground underline-offset-4 hover:underline"
+            className="flex items-center gap-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           >
+            <ArrowLeft className="h-3 w-3" />
             Back to sign in
           </Link>
-        </p>
-      </div>
+        </CardFooter>
+      </Card>
     );
   }
 
   return (
-    <div>
-      <div className="mb-6 text-center">
-        <h2 className="text-lg font-semibold text-foreground">
-          Reset your password
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Enter your email and we&apos;ll send you a reset link
-        </p>
-      </div>
-
-      <form action={formAction} className="space-y-4">
-        {state?.error && (
-          <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {state.error}
+    <Card>
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl">Reset your password</CardTitle>
+        <CardDescription>
+          Enter your email address and we&apos;ll send you a reset link
+        </CardDescription>
+      </CardHeader>
+      <form action={formAction}>
+        <CardContent className="space-y-4">
+          {state.error && (
+            <div className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {state.error}
+            </div>
+          )}
+          <div className="space-y-2">
+            <label
+              htmlFor="email"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Email
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="name@example.com"
+                className="pl-10"
+                required
+                autoComplete="email"
+              />
+            </div>
           </div>
-        )}
-
-        <div className="space-y-1.5">
-          <label
-            htmlFor="email"
-            className="text-sm font-medium text-foreground"
+        </CardContent>
+        <CardFooter className="flex flex-col gap-4">
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Sending reset link...
+              </>
+            ) : (
+              "Send reset link"
+            )}
+          </Button>
+          <Link
+            href="/auth/login"
+            className="flex items-center justify-center gap-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           >
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            placeholder="you@example.com"
-          />
-        </div>
-
-        <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? <Loader2 className="animate-spin" /> : <Mail />}
-          Send reset link
-        </Button>
+            <ArrowLeft className="h-3 w-3" />
+            Back to sign in
+          </Link>
+        </CardFooter>
       </form>
-
-      <p className="mt-6 text-center text-sm">
-        <Link
-          href="/auth/login"
-          className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-        >
-          <ArrowLeft className="size-3" />
-          Back to sign in
-        </Link>
-      </p>
-    </div>
+    </Card>
   );
 }

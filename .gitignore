@@ -45,3 +45,8 @@ next-env.d.ts
 .factory/
 .mcp.json
 .playwright-mcp/
+
+# VitePress guide docs
+public/guide/
+docs/.vitepress/cache/
+docs/.vitepress/dist/

@@ -3,11 +3,12 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
+import { Toaster } from "sonner";
+import QueryProvider from "@/components/query-provider";
 import { routing } from "@/lib/i18n/routing";
 import "../globals.css";
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -65,7 +66,17 @@ export default async function LocaleLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} flex min-h-dvh flex-col antialiased`}
     >
       <NextIntlClientProvider locale={locale} messages={messages}>
-        {children}
+        <QueryProvider>
+          {children}
+          <Toaster
+            position="bottom-left"
+            richColors
+            closeButton
+            toastOptions={{
+              duration: 4000,
+            }}
+          />
+        </QueryProvider>
       </NextIntlClientProvider>
     </div>
   );

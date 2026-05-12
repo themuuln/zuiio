@@ -40,14 +40,27 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+  const pathname = request.nextUrl.pathname;
+
+  // Detect locale prefix (e.g., /mn/auth/login → locale is "mn")
+  const localeMatch = pathname.match(/^\/([a-z]{2})\//);
+  const locale = localeMatch ? localeMatch[1] : null;
+
+  const isAuthRoute = pathname.includes("/auth/");
+  const isLoginRoute = pathname.includes("/auth/login");
+
+  if (!user && !isAuthRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
+    url.pathname = locale ? `/${locale}/auth/login` : "/auth/login";
+    return NextResponse.redirect(url);
+  }
+
+  // If user is authenticated and on the login page, continue through org verification
+  if (user && isLoginRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = locale
+      ? `/${locale}/auth/select-organization`
+      : "/auth/select-organization";
     return NextResponse.redirect(url);
   }
 

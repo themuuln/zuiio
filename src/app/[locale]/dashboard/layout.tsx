@@ -1,19 +1,13 @@
 "use client";
 
-import { LogOut, Menu } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Menu } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, useContext, useState } from "react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import UserMenu from "@/components/user-menu";
 import { useNavigation } from "@/hooks/use-navigation";
+import { useRequireAuth } from "@/hooks/use-require-auth";
+import { Link, usePathname } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 type SidebarContextType = {
@@ -58,7 +52,26 @@ function MobileOverlay() {
   );
 }
 
+function MainContent({ children }: { children: ReactNode }) {
+  const { collapsed } = useSidebar();
+
+  return (
+    <div
+      className={cn(
+        "flex flex-1 flex-col min-w-0 transition-[margin] duration-200",
+        collapsed ? "lg:ml-16" : "lg:ml-60",
+      )}
+    >
+      <MobileHeader />
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        {children}
+      </main>
+    </div>
+  );
+}
+
 function Sidebar() {
+  const t = useTranslations();
   const { collapsed, mobileOpen } = useSidebar();
   const pathname = usePathname();
   const { mainItems, settingsItems } = useNavigation();
@@ -66,7 +79,7 @@ function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-border bg-sidebar text-sidebar-foreground transition-transform duration-200 lg:relative lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-border bg-sidebar text-sidebar-foreground transition-[width,transform] duration-200",
         collapsed && "lg:w-16",
         !mobileOpen && "-translate-x-full lg:translate-x-0",
       )}
@@ -114,7 +127,7 @@ function Sidebar() {
                   aria-current={active ? "page" : undefined}
                 >
                   <Icon className="size-5 shrink-0" aria-hidden="true" />
-                  {!collapsed && <span>{item.label}</span>}
+                  {!collapsed && <span>{t(item.labelKey)}</span>}
                 </Link>
               </li>
             );
@@ -129,7 +142,7 @@ function Sidebar() {
               collapsed && "lg:hidden",
             )}
           >
-            Settings
+            {t("nav.settings")}
           </div>
           <ul className="flex flex-col gap-0.5">
             {settingsItems.map((item) => {
@@ -152,7 +165,7 @@ function Sidebar() {
                     aria-current={active ? "page" : undefined}
                   >
                     <Icon className="size-5 shrink-0" aria-hidden="true" />
-                    {!collapsed && <span>{item.label}</span>}
+                    {!collapsed && <span>{t(item.labelKey)}</span>}
                   </Link>
                 </li>
               );
@@ -168,38 +181,7 @@ function Sidebar() {
           collapsed && "lg:flex lg:justify-center",
         )}
       >
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className={cn(
-              "flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors",
-              "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              collapsed && "lg:w-auto lg:justify-center",
-            )}
-          >
-            <Avatar className="size-8">
-              <AvatarFallback>JD</AvatarFallback>
-            </Avatar>
-            {!collapsed && (
-              <div className="flex-1 truncate text-left">
-                <div className="text-sm font-medium leading-none">John Doe</div>
-                <div className="text-xs text-sidebar-foreground/60 truncate">
-                  john@tolom.com
-                </div>
-              </div>
-            )}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <div className="px-2 py-1.5 text-xs text-muted-foreground">
-              Signed in as{" "}
-              <span className="font-medium text-foreground">John Doe</span>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOut className="size-4" />
-              Sign out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <UserMenu collapsed={collapsed} />
       </div>
     </aside>
   );
@@ -226,18 +208,13 @@ function MobileHeader() {
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  useRequireAuth();
+
   return (
     <SidebarProvider>
-      <div className="flex h-full">
-        <MobileOverlay />
-        <Sidebar />
-        <div className="flex flex-1 flex-col min-w-0">
-          <MobileHeader />
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-            {children}
-          </main>
-        </div>
-      </div>
+      <MobileOverlay />
+      <Sidebar />
+      <MainContent>{children}</MainContent>
     </SidebarProvider>
   );
 }

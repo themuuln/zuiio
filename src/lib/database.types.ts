@@ -305,7 +305,6 @@ export interface WorkOrderService {
   organization_id: string;
   service_catalog_id: string | null;
   service_name: string;
-  name: string;
   description: string | null;
   quantity: number;
   unit_price: number;
@@ -324,7 +323,6 @@ export interface WorkOrderPart {
   work_order_id: string;
   organization_id: string;
   part_name: string;
-  name: string;
   part_number: string | null;
   quantity: number;
   unit_price: number;
@@ -360,6 +358,109 @@ export interface MechanicAssignment {
   created_at: string;
 }
 
+// ============================================================
+// Invoice Types
+// Added 2026-05-12
+// ============================================================
+
+export type InvoiceStatus =
+  | 'draft'
+  | 'sent'
+  | 'paid'
+  | 'partial'
+  | 'overdue'
+  | 'cancelled';
+
+export interface Invoice {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  work_order_id: string | null;
+  customer_id: string | null;
+  vehicle_id: string | null;
+  invoice_number: string;
+  status: InvoiceStatus;
+  subtotal: number;
+  discount_total: number;
+  tax_total: number;
+  total: number;
+  amount_paid: number;
+  balance_due: number;
+  issued_at: string;
+  due_at: string | null;
+  paid_at: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_email: string | null;
+  customer_address: string | null;
+  vehicle_plate: string | null;
+  vehicle_details: string | null;
+  public_token: string;
+  email_sent_at: string | null;
+  notes: string | null;
+  terms: string | null;
+  footer: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface InvoiceItem {
+  id: string;
+  invoice_id: string;
+  item_type: 'service' | 'part';
+  description: string;
+  quantity: number;
+  unit_price: number;
+  discount_amount: number;
+  total_price: number;
+  sort_order: number;
+  created_at: string;
+}
+
+// ── Payment types ──────────────────────────────────────────────
+// payments: Simple manual payment recording (cash, card, internet_bank)
+// Separate from invoice_payments which are part of the invoice system
+
+export type PaymentMethod = 'cash' | 'card' | 'internet_bank';
+
+export interface Payment {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  work_order_id: string | null;
+  amount: number;
+  payment_method: PaymentMethod;
+  reference: string | null;
+  notes: string | null;
+  paid_at: string;
+  created_by: string | null;
+  created_at: string;
+  deleted_at: string | null;
+}
+
+export interface InvoicePayment {
+  id: string;
+  invoice_id: string;
+  amount: number;
+  method: string;
+  reference: string | null;
+  notes: string | null;
+  paid_at: string;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface InvoiceWithItems extends Invoice {
+  items?: InvoiceItem[];
+  payments?: InvoicePayment[];
+  work_order?: WorkOrder | null;
+  customer?: Customer | null;
+  vehicle?: Vehicle | null;
+}
+
 export interface ServicePriceHistory {
   id: string;
   organization_id: string;
@@ -367,13 +468,9 @@ export interface ServicePriceHistory {
   vehicle_id: string | null;
   vehicle_make: string | null;
   vehicle_model: string | null;
-  make: string | null;
-  model: string | null;
   service_name: string | null;
   quantity: number | null;
   unit_price: number | null;
-  price: number | null;
-  base_price: number | null;
   discount_amount: number | null;
   discount_percentage: number | null;
   final_price: number | null;
@@ -392,13 +489,11 @@ export interface PartPriceHistory {
   vehicle_id: string | null;
   vehicle_make: string | null;
   vehicle_model: string | null;
-  name: string | null;
   quantity: number | null;
   unit_price: number | null;
-  price: number | null;
-  final_price: number | null;
   discount_amount: number | null;
   discount_percentage: number | null;
+  final_price: number | null;
   work_order_part_id: string | null;
   work_order_id: string | null;
   mechanic_id: string | null;
@@ -458,6 +553,7 @@ export interface PartsCatalog {
   id: string;
   organization_id: string;
   name: string;
+  name_mn: string | null;
   part_number: string | null;
   category: string | null;
   description: string | null;
@@ -731,6 +827,7 @@ export type PartsCatalogInsert = Omit<
   id?: string;
   created_at?: string;
   updated_at?: string;
+  name_mn?: string | null;
 };
 
 export type VehicleModelPartInsert = Omit<
@@ -812,6 +909,7 @@ export type PartsCatalogUpdate = Partial<
   Omit<PartsCatalog, "id" | "created_at" | "created_by">
 > & {
   updated_at?: string;
+  name_mn?: string | null;
 };
 
 export type VehicleModelPartUpdate = Partial<
@@ -1410,6 +1508,59 @@ export interface Database {
           referencedColumns: string[];
         }[];
       };
+      invoices: {
+        Row: Invoice;
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      invoice_items: {
+        Row: InvoiceItem;
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      payments: {
+        Row: Payment;
+        Insert: Omit<Payment, 'id' | 'created_at'> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<Payment, 'id' | 'created_at'>> & {
+          created_at?: string;
+        };
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      invoice_payments: {
+        Row: InvoicePayment;
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
     };
     Views: {
       inventory_balances: {
@@ -1473,6 +1624,7 @@ export interface Database {
       body_type: BodyType;
       work_order_status: WorkOrderStatus;
       inventory_movement_type: InventoryMovementType;
+      invoice_status: InvoiceStatus;
     };
     CompositeTypes: Record<string, never>;
   };

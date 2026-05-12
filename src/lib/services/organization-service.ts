@@ -8,8 +8,8 @@ import type {
 
 /**
  * Creates a new organization, adds the creating user as an admin
- * via organization_users, creates a default Admin role, creates a
- * default branch, and a profile row. All within a best-effort sequence.
+ * via organization_users, creates default Admin and Mechanic roles,
+ * creates a default branch, and a profile row. All within a best-effort sequence.
  */
 export async function createOrganization(
   params: CreateOrganizationParams,
@@ -52,8 +52,8 @@ export async function createOrganization(
     throw new Error(orgError?.message ?? "Failed to create organization");
   }
 
-  // 2. Create the admin role
-  const { data: adminRole, error: roleError } = await supabase
+  // 2. Create the Admin role
+  const { data: adminRole, error: adminRoleError } = await supabase
     .from("roles")
     .insert({
       organization_id: org.id,
@@ -65,13 +65,30 @@ export async function createOrganization(
     .select("id")
     .single();
 
-  if (roleError || !adminRole) {
+  if (adminRoleError || !adminRole) {
     // Best-effort cleanup
     await supabase.from("organizations").delete().eq("id", org.id);
-    throw new Error(roleError?.message ?? "Failed to create admin role");
+    throw new Error(adminRoleError?.message ?? "Failed to create Admin role");
   }
 
-  // 3. Create the default branch
+  // 3. Create the Mechanic role
+  const { error: mechanicRoleError } = await supabase.from("roles").insert({
+    organization_id: org.id,
+    name: "Mechanic",
+    is_system: true,
+    created_by: userId,
+    updated_by: userId,
+  });
+
+  if (mechanicRoleError) {
+    // Best-effort cleanup
+    await supabase.from("organizations").delete().eq("id", org.id);
+    throw new Error(
+      mechanicRoleError?.message ?? "Failed to create Mechanic role",
+    );
+  }
+
+  // 4. Create the default branch
   const { data: branch, error: branchError } = await supabase
     .from("branches")
     .insert({
@@ -90,7 +107,7 @@ export async function createOrganization(
     throw new Error(branchError?.message ?? "Failed to create default branch");
   }
 
-  // 4. Add the creator as an admin member
+  // 5. Add the creator as an admin member
   const { error: memberError } = await supabase
     .from("organization_users")
     .insert({
@@ -107,12 +124,13 @@ export async function createOrganization(
     );
   }
 
-  // 5. Create / update the user's profile
+  // 6. Create / update the user's profile
   const { error: profileError } = await supabase.from("profiles").upsert({
     id: userId,
     organization_id: org.id,
     branch_id: branch.id,
     is_active: true,
+    full_name: params.userFullName ?? null,
   });
 
   if (profileError) {

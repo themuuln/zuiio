@@ -12,6 +12,7 @@ import type {
 } from "@/lib/database.types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import { getWorkOrderDetail as _getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
 import type {
   AddPartParams,
   AddServiceParams,
@@ -93,65 +94,7 @@ export async function getWorkOrders(
 // ── Get Single Work Order (with detail) ───────────────────────
 export async function getWorkOrder(id: string): Promise<WorkOrderDetail> {
   const supabase = await createClient();
-
-  // Fetch WO
-  const { data: wo, error: woError } = await supabase
-    .from("work_orders")
-    .select("*")
-    .eq("id", id)
-    .is("deleted_at", null)
-    .single();
-
-  if (woError || !wo) throw new NotFoundError("Work order not found");
-
-  // Fetch related data in parallel
-  const [
-    { data: services },
-    { data: parts },
-    { data: statusHistory },
-    { data: customerData },
-    { data: vehicleData },
-    { data: mechanicData },
-  ] = await Promise.all([
-    supabase
-      .from("work_order_services")
-      .select("*")
-      .eq("work_order_id", id)
-      .order("created_at"),
-    supabase
-      .from("work_order_parts")
-      .select("*")
-      .eq("work_order_id", id)
-      .order("created_at"),
-    supabase
-      .from("work_order_status_history")
-      .select("*")
-      .eq("work_order_id", id)
-      .order("created_at", { ascending: false }),
-    wo.customer_id
-      ? supabase.from("customers").select("*").eq("id", wo.customer_id).single()
-      : { data: null },
-    wo.vehicle_id
-      ? supabase.from("vehicles").select("*").eq("id", wo.vehicle_id).single()
-      : { data: null },
-    wo.mechanic_id
-      ? supabase
-          .from("profiles")
-          .select("id, full_name")
-          .eq("id", wo.mechanic_id)
-          .single()
-      : { data: null },
-  ]);
-
-  return {
-    ...wo,
-    customer: customerData,
-    vehicle: vehicleData,
-    mechanic: mechanicData,
-    services: (services ?? []) as WorkOrderService[],
-    parts: (parts ?? []) as WorkOrderPart[],
-    status_history: (statusHistory ?? []) as WorkOrderStatusHistory[],
-  };
+  return _getWorkOrderDetail(supabase, id);
 }
 
 // ── Create Work Order ──────────────────────────────────────────

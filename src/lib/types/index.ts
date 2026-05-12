@@ -2,6 +2,7 @@
 import type {
   Customer,
   InventoryMovementType,
+  InvoiceStatus,
   Vehicle,
   WorkOrderDetail,
   WorkOrderStatus,
@@ -55,6 +56,11 @@ export type {
   StockThreshold,
   SupplierInsert,
   PurchaseOrderInsert,
+  Invoice,
+  InvoiceItem,
+  InvoicePayment,
+  InvoiceWithItems,
+  InvoiceStatus,
   PurchaseOrderItemInsert,
   StockThresholdInsert,
   SupplierUpdate,
@@ -280,6 +286,10 @@ export interface CustomerAcquisitionPoint {
 
 export interface DashboardData {
   summary: DashboardSummary;
+  /** Previous period data for comparison, null when no prior period */
+  summaryComparison: DashboardSummary | null;
+  /** Smart text insights generated from data deltas */
+  insights: string[];
   workOrderStatusDistribution: WorkOrderStatusDistribution[];
   revenueTrend: RevenueTrendPoint[];
   topServices: TopService[];
@@ -400,6 +410,7 @@ export interface PartsCatalogItem {
   id: string;
   organization_id: string;
   name: string;
+  name_mn: string | null;
   part_number: string | null;
   category: string | null;
   description: string | null;
@@ -412,6 +423,7 @@ export interface PartsCatalogItem {
 
 export interface CreatePartParams {
   name: string;
+  name_mn?: string;
   part_number?: string;
   category?: string;
   description?: string;
@@ -421,6 +433,7 @@ export interface CreatePartParams {
 
 export interface UpdatePartParams {
   name?: string;
+  name_mn?: string;
   part_number?: string;
   category?: string;
   description?: string;

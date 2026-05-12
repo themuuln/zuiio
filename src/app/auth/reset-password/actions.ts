@@ -3,20 +3,18 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export interface ResetPasswordState {
+interface ResetPasswordState {
   error?: string;
 }
 
-export async function resetPassword(
-  _prevState: ResetPasswordState | null,
+export async function updatePassword(
+  _prevState: ResetPasswordState,
   formData: FormData,
 ): Promise<ResetPasswordState> {
-  const password = formData.get("password") as string;
-  const confirmPassword = formData.get("confirmPassword") as string;
+  const supabase = await createClient();
 
-  if (!password || !confirmPassword) {
-    return { error: "Both fields are required" };
-  }
+  const password = formData.get("password") as string;
+  const confirmPassword = formData.get("confirm_password") as string;
 
   if (password !== confirmPassword) {
     return { error: "Passwords do not match" };
@@ -26,15 +24,9 @@ export async function resetPassword(
     return { error: "Password must be at least 8 characters" };
   }
 
-  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
 
-  const { error } = await supabase.auth.updateUser({
-    password,
-  });
+  if (error) return { error: error.message };
 
-  if (error) {
-    return { error: error.message };
-  }
-
-  redirect("/dashboard");
+  redirect("/auth/login?reset=success");
 }

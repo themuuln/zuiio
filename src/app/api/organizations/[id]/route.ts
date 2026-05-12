@@ -1,59 +1,25 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { handleApiError, UnauthorizedError } from "@/lib/errors";
+import { NextResponse } from "next/server";
+import { createRouteHandler } from "@/lib/api-handler";
 import {
   getOrganization,
   updateOrganization,
 } from "@/lib/services/organization-service";
-import { createClient } from "@/lib/supabase/server";
-
-type RouteContext = { params: Promise<{ id: string }> };
 
 /**
  * GET /api/organizations/[id]
  * Returns a single organization by ID.
  */
-export async function GET(_request: NextRequest, context: RouteContext) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new UnauthorizedError();
-    }
-
-    const { id } = await context.params;
-    const org = await getOrganization(id);
-
-    return NextResponse.json({ data: org });
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+export const GET = createRouteHandler(async ({ orgId }) => {
+  const org = await getOrganization(orgId);
+  return NextResponse.json({ data: org });
+});
 
 /**
  * PATCH /api/organizations/[id]
  * Updates an organization's name or settings.
  */
-export async function PATCH(request: NextRequest, context: RouteContext) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new UnauthorizedError();
-    }
-
-    const { id } = await context.params;
-    const body = await request.json();
-
-    const org = await updateOrganization(id, body);
-
-    return NextResponse.json({ data: org });
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+export const PATCH = createRouteHandler(async ({ request, orgId }) => {
+  const body = await request.json();
+  const org = await updateOrganization(orgId, body);
+  return NextResponse.json({ data: org });
+});

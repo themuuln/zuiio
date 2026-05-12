@@ -74,7 +74,14 @@ export function handleApiError(error: unknown): NextResponse {
           details: error.details,
         },
       },
-      { status: error.statusCode },
+      {
+        status: error.statusCode,
+        headers: {
+          ...(error instanceof UnauthorizedError
+            ? { "X-Auth-Required": "true" }
+            : {}),
+        },
+      },
     );
   }
 

@@ -23,14 +23,45 @@ import type {
 
 export async function getPartsCatalog(orgId: string): Promise<PartsCatalogItem[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+
+  // Fetch parts
+  const { data: parts, error } = await supabase
     .from("parts_catalog")
     .select("*")
     .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("name");
+    .is("deleted_at", null);
   if (error) throw new Error(error.message);
-  return data ?? [];
+
+  // Fetch popularity: count how many vehicle models each part is assigned to
+  const { data: assignments } = await supabase
+    .from("vehicle_model_parts")
+    .select("part_id, count")
+    .eq("organization_id", orgId);
+
+  const popularityMap: Record<string, number> = {};
+  if (assignments) {
+    // Group by part_id and count
+    const countMap: Record<string, number> = {};
+    for (const a of assignments) {
+      const pid = a.part_id as string;
+      countMap[pid] = (countMap[pid] || 0) + 1;
+    }
+    // Normalize: 26 models = score 100, proportionally less for fewer
+    const maxModels = 26;
+    for (const [pid, count] of Object.entries(countMap)) {
+      popularityMap[pid] = Math.round((count / maxModels) * 100);
+    }
+  }
+
+  // Attach popularity score and sort by it descending
+  const result = (parts ?? []).map((p) => ({
+    ...p,
+    popularity_score: popularityMap[p.id] ?? 0,
+  }));
+
+  result.sort((a, b) => (b.popularity_score ?? 0) - (a.popularity_score ?? 0));
+
+  return result;
 }
 
 export async function getPart(id: string): Promise<PartsCatalogItem> {
@@ -57,6 +88,7 @@ export async function createPart(
     .insert({
       organization_id: orgId,
       name: params.name.trim(),
+      name_mn: params.name_mn?.trim() || null,
       part_number: params.part_number?.trim() || null,
       category: params.category?.trim() || null,
       description: params.description?.trim() || null,
@@ -80,6 +112,7 @@ export async function updatePart(
   const userId = (await supabase.auth.getUser()).data.user?.id;
   const updates: Record<string, unknown> = { updated_by: userId };
   if (params.name !== undefined) updates.name = params.name.trim();
+  if (params.name_mn !== undefined) updates.name_mn = params.name_mn?.trim() || null;
   if (params.part_number !== undefined) updates.part_number = params.part_number || null;
   if (params.category !== undefined) updates.category = params.category || null;
   if (params.description !== undefined) updates.description = params.description || null;
