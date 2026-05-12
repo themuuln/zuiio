@@ -150,6 +150,704 @@ export interface OrganizationSettings {
   updated_at: string;
 }
 
+// ============================================================
+// Phase 1: Customer + Vehicle CRM Types
+// Added 2026-05-11
+// ============================================================
+
+export type CustomerType = "individual" | "company";
+export type FuelType =
+  | "gasoline"
+  | "diesel"
+  | "hybrid"
+  | "electric"
+  | "lpg"
+  | "cng";
+export type TransmissionType = "manual" | "automatic" | "cvt" | "dct";
+export type DrivetrainType = "fwd" | "rwd" | "awd" | "4wd";
+export type BodyType =
+  | "sedan"
+  | "suv"
+  | "hatchback"
+  | "coupe"
+  | "wagon"
+  | "pickup"
+  | "van"
+  | "minivan"
+  | "convertible"
+  | "crossover";
+export type WorkOrderStatus =
+  | "New"
+  | "Diagnosing"
+  | "In Progress"
+  | "Ready for Pickup"
+  | "Completed"
+  | "Cancelled";
+
+// ----------------------------------------------------------
+// Phase 1 — Table Row Types
+// ----------------------------------------------------------
+
+export interface Customer {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  type: "individual" | "company";
+  first_name: string | null;
+  last_name: string | null;
+  full_name: string | null;
+  company_name: string | null;
+  contact_person: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  notes: string | null;
+  tags: string[] | null;
+  total_visits: number;
+  last_visit_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface Vehicle {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  plate_number: string;
+  vin: string | null;
+  chassis_number: string | null;
+  make: string;
+  model: string;
+  year: number | null;
+  trim: string | null;
+  color: string | null;
+  engine: string | null;
+  fuel_type: string | null;
+  transmission: string | null;
+  drivetrain: string | null;
+  body_type: string | null;
+  odometer: number | null;
+  last_visit_at: string | null;
+  next_service_at: string | null;
+  license_expiry_at: string | null;
+  notes: string | null;
+  tags: string[] | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface VehicleOwner {
+  id: string;
+  organization_id: string;
+  vehicle_id: string;
+  customer_id: string;
+  is_primary: boolean;
+  owned_from: string;
+  owned_until: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface ServiceCatalog {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  name: string;
+  description: string | null;
+  category: string | null;
+  default_price: number | null;
+  estimated_duration_minutes: number | null;
+  is_active: boolean;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface WorkOrder {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  customer_id: string | null;
+  vehicle_id: string | null;
+  status: WorkOrderStatus;
+  description: string | null;
+  complaint: string | null;
+  diagnosis: string | null;
+  mechanic_notes: string | null;
+  notes: string | null;
+  mechanic_id: string | null;
+  bay_number: number | null;
+  discount_amount: number | null;
+  discount_percentage: number | null;
+  subtotal: number;
+  discount_total: number;
+  total: number;
+  started_at: string | null;
+  completed_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface WorkOrderService {
+  id: string;
+  work_order_id: string;
+  organization_id: string;
+  service_catalog_id: string | null;
+  service_name: string;
+  name: string;
+  description: string | null;
+  quantity: number;
+  unit_price: number;
+  discount_amount: number | null;
+  discount_percentage: number | null;
+  final_price: number;
+  last_sold_price: number | null;
+  mechanic_id: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface WorkOrderPart {
+  id: string;
+  work_order_id: string;
+  organization_id: string;
+  part_name: string;
+  name: string;
+  part_number: string | null;
+  quantity: number;
+  unit_price: number;
+  discount_amount: number | null;
+  discount_percentage: number | null;
+  final_price: number;
+  last_sold_price: number | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface WorkOrderStatusHistory {
+  id: string;
+  work_order_id: string;
+  organization_id: string;
+  status: WorkOrderStatus;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface MechanicAssignment {
+  id: string;
+  work_order_id: string;
+  organization_id: string;
+  mechanic_id: string;
+  assigned_by: string | null;
+  assigned_at: string;
+  unassigned_at: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface ServicePriceHistory {
+  id: string;
+  organization_id: string;
+  service_catalog_id: string | null;
+  vehicle_id: string | null;
+  vehicle_make: string | null;
+  vehicle_model: string | null;
+  make: string | null;
+  model: string | null;
+  service_name: string | null;
+  quantity: number | null;
+  unit_price: number | null;
+  price: number | null;
+  base_price: number | null;
+  discount_amount: number | null;
+  discount_percentage: number | null;
+  final_price: number | null;
+  work_order_service_id: string | null;
+  work_order_id: string | null;
+  mechanic_id: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface PartPriceHistory {
+  id: string;
+  organization_id: string;
+  part_name: string | null;
+  part_number: string | null;
+  vehicle_id: string | null;
+  vehicle_make: string | null;
+  vehicle_model: string | null;
+  name: string | null;
+  quantity: number | null;
+  unit_price: number | null;
+  price: number | null;
+  final_price: number | null;
+  discount_amount: number | null;
+  discount_percentage: number | null;
+  work_order_part_id: string | null;
+  work_order_id: string | null;
+  mechanic_id: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface WorkOrderNote {
+  id: string;
+  organization_id: string;
+  work_order_id: string;
+  content: string;
+  created_by: string | null;
+  created_at: string;
+}
+
+// Composite types for work order display
+export interface WorkOrderRow extends WorkOrder {
+  customer_name: string | null;
+  vehicle_plate: string | null;
+  mechanic_name: string | null;
+}
+
+export interface WorkOrderDetail extends WorkOrder {
+  customer: Customer | null;
+  vehicle: Vehicle | null;
+  mechanic: { id: string; full_name: string | null } | null;
+  services: WorkOrderService[];
+  parts: WorkOrderPart[];
+  status_history: WorkOrderStatusHistory[];
+}
+
+// ============================================================
+// Phase 2: Vehicle Models + Parts Catalog Types
+// Added 2026-05-11
+// ============================================================
+
+export interface VehicleModel {
+  id: string;
+  organization_id: string;
+  make: string;
+  model: string;
+  generation: string | null;
+  year_start: number | null;
+  year_end: number | null;
+  engine: string | null;
+  body_type: string | null;
+  is_active: boolean;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface PartsCatalog {
+  id: string;
+  organization_id: string;
+  name: string;
+  part_number: string | null;
+  category: string | null;
+  description: string | null;
+  unit: string;
+  default_price: number | null;
+  is_active: boolean;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface VehicleModelPart {
+  id: string;
+  organization_id: string;
+  vehicle_model_id: string;
+  part_id: string;
+  specific_price: number | null;
+  notes: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Composite type: vehicle model with its parts and pricing
+export interface VehicleModelWithParts extends VehicleModel {
+  parts: (PartsCatalog & { specific_price: number | null })[];
+}
+
+// Composite type: part with which vehicle models it fits
+export interface PartWithVehicleModels extends PartsCatalog {
+  vehicle_models: (VehicleModel & { specific_price: number | null })[];
+}
+
+// ============================================================
+// Phase 2: Inventory Control Types
+// Added 2026-05-12
+// ============================================================
+
+export type InventoryMovementType =
+  | "purchase"
+  | "sale"
+  | "adjustment"
+  | "transfer_in"
+  | "transfer_out"
+  | "return"
+  | "waste";
+
+export interface InventoryMovement {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  part_id: string;
+  movement_type: InventoryMovementType;
+  quantity: number;
+  unit_cost: number | null;
+  unit_price: number | null;
+  reference_type: string | null;
+  reference_id: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface Supplier {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  name: string;
+  contact_person: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  tax_id: string | null;
+  payment_terms: string | null;
+  notes: string | null;
+  is_active: boolean;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  supplier_id: string | null;
+  order_number: string;
+  status: "draft" | "ordered" | "partial" | "received" | "cancelled";
+  order_date: string;
+  expected_at: string | null;
+  received_at: string | null;
+  notes: string | null;
+  total_amount: number;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface PurchaseOrderItem {
+  id: string;
+  organization_id: string;
+  purchase_order_id: string;
+  part_id: string;
+  quantity_ordered: number;
+  quantity_received: number;
+  unit_cost: number;
+  notes: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StockThreshold {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  part_id: string;
+  minimum_quantity: number;
+  maximum_quantity: number;
+  notes: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InventoryBalance {
+  organization_id: string;
+  branch_id: string | null;
+  part_id: string;
+  part_name: string;
+  part_number: string | null;
+  category: string | null;
+  unit: string;
+  default_price: number | null;
+  quantity_on_hand: number;
+  last_movement_at: string | null;
+}
+
+// ----------------------------------------------------------
+// Phase 1 — Insert Types
+// ----------------------------------------------------------
+
+export type CustomerInsert = Omit<
+  Customer,
+  "id" | "created_at" | "updated_at" | "deleted_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type VehicleInsert = Omit<
+  Vehicle,
+  "id" | "created_at" | "updated_at" | "deleted_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type VehicleOwnerInsert = Omit<VehicleOwner, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
+export type ServiceCatalogInsert = Omit<
+  ServiceCatalog,
+  "id" | "created_at" | "updated_at" | "deleted_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type WorkOrderInsert = Omit<
+  WorkOrder,
+  "id" | "created_at" | "updated_at" | "deleted_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type WorkOrderServiceInsert = Omit<
+  WorkOrderService,
+  "id" | "created_at"
+> & {
+  id?: string;
+  created_at?: string;
+};
+
+export type WorkOrderPartInsert = Omit<WorkOrderPart, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
+export type WorkOrderStatusHistoryInsert = Omit<
+  WorkOrderStatusHistory,
+  "id" | "created_at"
+> & {
+  id?: string;
+  created_at?: string;
+};
+
+export type MechanicAssignmentInsert = Omit<
+  MechanicAssignment,
+  "id" | "created_at"
+> & {
+  id?: string;
+  created_at?: string;
+};
+
+// ----------------------------------------------------------
+// Phase 1 — Update Types
+// ----------------------------------------------------------
+
+export type CustomerUpdate = Partial<
+  Omit<Customer, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
+};
+
+export type VehicleUpdate = Partial<
+  Omit<Vehicle, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
+};
+
+export type VehicleOwnerUpdate = Partial<
+  Omit<VehicleOwner, "id" | "created_at" | "created_by">
+>;
+
+export type ServiceCatalogUpdate = Partial<
+  Omit<ServiceCatalog, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
+};
+
+export type WorkOrderUpdate = Partial<
+  Omit<WorkOrder, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
+};
+
+// ----------------------------------------------------------
+// Phase 2 — Insert Types
+// ----------------------------------------------------------
+
+export type VehicleModelInsert = Omit<
+  VehicleModel,
+  "id" | "created_at" | "updated_at" | "deleted_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PartsCatalogInsert = Omit<
+  PartsCatalog,
+  "id" | "created_at" | "updated_at" | "deleted_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type VehicleModelPartInsert = Omit<
+  VehicleModelPart,
+  "id" | "created_at" | "updated_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+// ----------------------------------------------------------
+// Phase 2: Inventory — Insert Types
+// ----------------------------------------------------------
+
+export type InventoryMovementInsert = {
+  organization_id: string;
+  branch_id?: string | null;
+  part_id: string;
+  movement_type: InventoryMovementType;
+  quantity: number;
+  unit_cost?: number | null;
+  unit_price?: number | null;
+  reference_type?: string | null;
+  reference_id?: string | null;
+  notes?: string | null;
+  created_by?: string | null;
+  id?: string;
+  created_at?: string;
+};
+
+export type SupplierInsert = Omit<
+  Supplier,
+  "id" | "created_at" | "updated_at" | "deleted_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PurchaseOrderInsert = Omit<
+  PurchaseOrder,
+  "id" | "created_at" | "updated_at" | "deleted_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PurchaseOrderItemInsert = Omit<
+  PurchaseOrderItem,
+  "id" | "created_at" | "updated_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type StockThresholdInsert = Omit<
+  StockThreshold,
+  "id" | "created_at" | "updated_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+// ----------------------------------------------------------
+// Phase 2 — Update Types
+// ----------------------------------------------------------
+
+export type VehicleModelUpdate = Partial<
+  Omit<VehicleModel, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
+};
+
+export type PartsCatalogUpdate = Partial<
+  Omit<PartsCatalog, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
+};
+
+export type VehicleModelPartUpdate = Partial<
+  Omit<VehicleModelPart, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
+};
+
+// ----------------------------------------------------------
+// Phase 2: Inventory — Update Types
+// ----------------------------------------------------------
+
+export type SupplierUpdate = Partial<
+  Omit<Supplier, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
+};
+
+export type PurchaseOrderUpdate = Partial<
+  Omit<PurchaseOrder, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
+};
+
+export type PurchaseOrderItemUpdate = Partial<
+  Omit<PurchaseOrderItem, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
+};
+
+export type StockThresholdUpdate = Partial<
+  Omit<StockThreshold, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
+};
+
 // ----------------------------------------------------------
 // Insert Types (omit generated columns)
 // ----------------------------------------------------------
@@ -429,17 +1127,352 @@ export interface Database {
           referencedColumns: string[];
         }[];
       };
+      customers: {
+        Row: Customer;
+        Insert: CustomerInsert;
+        Update: CustomerUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      vehicles: {
+        Row: Vehicle;
+        Insert: VehicleInsert;
+        Update: VehicleUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      vehicle_owners: {
+        Row: VehicleOwner;
+        Insert: VehicleOwnerInsert;
+        Update: VehicleOwnerUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      service_catalog: {
+        Row: ServiceCatalog;
+        Insert: ServiceCatalogInsert;
+        Update: ServiceCatalogUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      work_orders: {
+        Row: WorkOrder;
+        Insert: WorkOrderInsert;
+        Update: WorkOrderUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      work_order_services: {
+        Row: WorkOrderService;
+        Insert: WorkOrderServiceInsert;
+        Update: WorkOrderService;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      work_order_parts: {
+        Row: WorkOrderPart;
+        Insert: WorkOrderPartInsert;
+        Update: WorkOrderPart;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      work_order_status_history: {
+        Row: WorkOrderStatusHistory;
+        Insert: WorkOrderStatusHistoryInsert;
+        Update: WorkOrderStatusHistory;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      mechanic_assignments: {
+        Row: MechanicAssignment;
+        Insert: MechanicAssignmentInsert;
+        Update: MechanicAssignment;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      service_price_history: {
+        Row: ServicePriceHistory;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          service_catalog_id?: string | null;
+          vehicle_id?: string | null;
+          vehicle_make?: string | null;
+          vehicle_model?: string | null;
+          service_name?: string | null;
+          quantity?: number | null;
+          unit_price?: number | null;
+          discount_amount?: number | null;
+          discount_percentage?: number | null;
+          final_price?: number | null;
+          work_order_service_id?: string | null;
+          work_order_id?: string | null;
+          mechanic_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: Record<string, unknown>;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      part_price_history: {
+        Row: PartPriceHistory;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          part_name?: string | null;
+          part_number?: string | null;
+          vehicle_id?: string | null;
+          vehicle_make?: string | null;
+          vehicle_model?: string | null;
+          quantity?: number | null;
+          unit_price?: number | null;
+          discount_amount?: number | null;
+          discount_percentage?: number | null;
+          final_price?: number | null;
+          work_order_part_id?: string | null;
+          work_order_id?: string | null;
+          mechanic_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: Record<string, unknown>;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      work_order_notes: {
+        Row: WorkOrderNote;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          work_order_id: string;
+          content: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: Record<string, unknown>;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      vehicle_models: {
+        Row: VehicleModel;
+        Insert: VehicleModelInsert;
+        Update: VehicleModelUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      parts_catalog: {
+        Row: PartsCatalog;
+        Insert: PartsCatalogInsert;
+        Update: PartsCatalogUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      vehicle_model_parts: {
+        Row: VehicleModelPart;
+        Insert: VehicleModelPartInsert;
+        Update: VehicleModelPartUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      inventory_movements: {
+        Row: InventoryMovement;
+        Insert: InventoryMovementInsert;
+        Update: Record<string, never>;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      suppliers: {
+        Row: Supplier;
+        Insert: SupplierInsert;
+        Update: SupplierUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      purchase_orders: {
+        Row: PurchaseOrder;
+        Insert: PurchaseOrderInsert;
+        Update: PurchaseOrderUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      purchase_order_items: {
+        Row: PurchaseOrderItem;
+        Insert: PurchaseOrderItemInsert;
+        Update: PurchaseOrderItemUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      stock_thresholds: {
+        Row: StockThreshold;
+        Insert: StockThresholdInsert;
+        Update: StockThresholdUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
     };
-    Views: Record<string, never>;
+    Views: {
+      inventory_balances: {
+        Row: InventoryBalance;
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+    };
     Functions: {
+      get_user_organizations: {
+        Args: Record<string, never>;
+        Returns: {
+          organization_id: string;
+          name: string;
+          slug: string;
+          branch_id: string | null;
+          role_id: string | null;
+          is_primary: boolean;
+          has_bay_view_pin: boolean;
+        }[];
+      };
       get_user_organization_id: {
         Args: Record<string, never>;
         Returns: string | null;
+      };
+      set_organization_bay_view_pin: {
+        Args: {
+          target_org_id: string;
+          plain_pin: string;
+        };
+        Returns: boolean;
+      };
+      set_primary_organization: {
+        Args: {
+          target_org_id: string;
+        };
+        Returns: string;
+      };
+      verify_organization_bay_view_pin: {
+        Args: {
+          target_org_id: string;
+          plain_pin: string;
+        };
+        Returns: boolean;
       };
     };
     Enums: {
       permission_action: PermissionAction;
       plan_type: PlanType;
+      customer_type: CustomerType;
+      fuel_type: FuelType;
+      transmission_type: TransmissionType;
+      drivetrain_type: DrivetrainType;
+      body_type: BodyType;
+      work_order_status: WorkOrderStatus;
+      inventory_movement_type: InventoryMovementType;
     };
     CompositeTypes: Record<string, never>;
   };
