@@ -167,6 +167,7 @@ export interface AddServiceParams {
 }
 
 export interface AddPartParams {
+  part_id?: string;
   part_name: string;
   part_number?: string;
   quantity?: number;
@@ -429,6 +430,7 @@ export interface CreatePartParams {
   description?: string;
   unit?: string;
   default_price?: number;
+  purchase_price?: number;
 }
 
 export interface UpdatePartParams {
@@ -439,6 +441,7 @@ export interface UpdatePartParams {
   description?: string;
   unit?: string;
   default_price?: number;
+  purchase_price?: number;
   is_active?: boolean;
 }
 

@@ -28,9 +28,11 @@ import {
 import { BaySlot } from "./bay-slot";
 import { BayViewToolbar } from "./bay-view-toolbar";
 import { MechanicRoster } from "./mechanic-roster";
+import { QuickActions } from "./quick-actions";
 import { StatusNotesModal } from "./status-notes-modal";
 import { ToastMessage } from "./toast-message";
 import { WaitingQueue } from "./waiting-queue";
+import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
 
 // ── Stats Summary ──────────────────────────────────────
 function BayStats({ data }: { data: BayViewData }) {
@@ -110,6 +112,10 @@ export function BayViewClient() {
     woId: string;
     status: string;
   } | null>(null);
+
+  // ── Work order detail drawer ────────────────────────────
+  const [detailWoId, setDetailWoId] = useState<string | null>(null);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
 
   // ── Auto-refresh ───────────────────────────────────────
   const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -298,6 +304,11 @@ export function BayViewClient() {
         variant: "error",
       });
     }
+  }
+
+  function handleOpenDetail(woId: string) {
+    setDetailWoId(woId);
+    setDetailDrawerOpen(true);
   }
 
   async function handleRemoveFromBay(woId: string) {
@@ -489,12 +500,14 @@ export function BayViewClient() {
               onStatusChange={handleStatusClick}
               onRemoveFromBay={handleRemoveFromBay}
               onAssignMechanic={async () => {}}
+              onOpenDetail={handleOpenDetail}
             />
           ))}
         </div>
 
         {/* Bottom panels */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
+          <QuickActions />
           <MechanicRoster mechanics={data.mechanics} />
           <WaitingQueue items={filteredQueue} />
         </div>
@@ -535,6 +548,17 @@ export function BayViewClient() {
           onDismiss={() => setToast(null)}
         />
       )}
+
+      {/* Work Order Detail Drawer */}
+      <WorkOrderDetailDrawer
+        workOrderId={detailWoId}
+        open={detailDrawerOpen}
+        onOpenChange={(open) => {
+          setDetailDrawerOpen(open);
+          if (!open) setDetailWoId(null);
+        }}
+        onRefresh={() => fetchData(false)}
+      />
     </DndContext>
   );
 }

@@ -166,14 +166,18 @@ export async function getInventoryMovements(
   const supabase = await createClient();
   let query = supabase
     .from("inventory_movements")
-    .select("*")
+    .select("*, part:parts_catalog(name, part_number)")
     .eq("organization_id", orgId)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (type) query = query.eq("movement_type", type);
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data ?? []).map((m: Record<string, unknown>) => ({
+    ...m,
+    part_name: ((m.part as { name: string } | null)?.name) ?? "Unknown",
+    part: undefined,
+  })) as unknown as InventoryMovement[];
 }
 
 export async function createMovement(
@@ -433,7 +437,7 @@ export async function receivePurchaseOrder(
 
   if (!items?.length) throw new ValidationError("No items to receive");
 
-  // Record movements for each item
+  // Record movements for each item + update part purchase price
   for (const item of items) {
     const qtyToReceive = item.quantity_ordered - item.quantity_received;
     if (qtyToReceive > 0) {
@@ -459,6 +463,15 @@ export async function receivePurchaseOrder(
           updated_by: userId,
         })
         .eq("id", item.id);
+
+      // Update part's last_purchase_price from this PO's unit_cost
+      await supabase
+        .from("parts_catalog")
+        .update({
+          last_purchase_price: item.unit_cost,
+          updated_by: userId,
+        })
+        .eq("id", item.part_id);
     }
   }
 

@@ -1,168 +1,101 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
-import {
-  createMovement,
-  createPart,
-  createPurchaseOrder,
-  createSupplier,
-  getInventoryBalances,
-  getInventoryMovements,
-  getPartsCatalog,
-  getPurchaseOrderItems,
-  getPurchaseOrders,
-  getStockThresholds,
-  getSuppliers,
-  receivePurchaseOrder,
-  setStockThreshold,
-  updatePart,
-  updatePurchaseOrder,
-  updateSupplier,
-  deleteSupplier,
-} from "@/lib/services/inventory-service";
+import { type NextRequest, NextResponse } from "next/server";
 
-export const GET = createRouteHandler(async ({ request, orgId }) => {
-  const { searchParams } = new URL(request.url);
+/**
+ * Backward-compat redirect for old `?type=` inventory API.
+ * New paths:
+ *   GET/POST  /inventory/parts
+ *   GET       /inventory/balances
+ *   GET/POST  /inventory/movements
+ *   GET/POST/PATCH/DELETE /inventory/suppliers
+ *   GET/POST  /inventory/purchase-orders
+ *   GET       /inventory/purchase-orders/[id]/items
+ *   POST      /inventory/purchase-orders/[id]/receive
+ *   GET/POST  /inventory/thresholds
+ *
+ * This file can be removed once all consumers migrate off ?type=.
+ */
+export const GET = redirectHandler;
+export const POST = redirectHandler;
+export const PATCH = redirectHandler;
+export const DELETE = redirectHandler;
+
+async function redirectHandler(request: NextRequest, context: { params: Promise<Record<string, string>> }) {
+  const params = await context.params;
+  const orgId = params.id;
+  const { searchParams, pathname } = new URL(request.url);
   const type = searchParams.get("type") ?? "parts";
+  const method = request.method;
+  const base = pathname;  // /api/organizations/{orgId}/inventory
 
-  switch (type) {
-    case "parts": {
-      const parts = await getPartsCatalog(orgId);
-      return NextResponse.json({ data: parts });
-    }
-    case "balances": {
-      const balances = await getInventoryBalances(orgId);
-      return NextResponse.json({ data: balances });
-    }
-    case "movements": {
-      const movementType = searchParams.get("movement_type") ?? undefined;
-      const limit = Number(searchParams.get("limit")) || 50;
-      const movements = await getInventoryMovements(orgId, movementType, limit);
-      return NextResponse.json({ data: movements });
-    }
-    case "suppliers": {
-      const suppliers = await getSuppliers(orgId);
-      return NextResponse.json({ data: suppliers });
-    }
-    case "purchase-orders": {
-      const pos = await getPurchaseOrders(orgId);
-      return NextResponse.json({ data: pos });
-    }
-    case "purchase-order-items": {
-      const poId = searchParams.get("po_id");
-      if (!poId) {
-        return NextResponse.json(
-          { error: { message: "po_id required" } },
-          { status: 400 },
-        );
-      }
-      const items = await getPurchaseOrderItems(poId);
-      return NextResponse.json({ data: items });
-    }
-    case "thresholds": {
-      const thresholds = await getStockThresholds(orgId);
-      return NextResponse.json({ data: thresholds });
-    }
-    default:
-      return NextResponse.json(
-        { error: { message: "Invalid type" } },
-        { status: 400 },
-      );
-  }
-});
+  const urlMap: Record<string, Record<string, string>> = {
+    GET: {
+      parts: `/api/organizations/${orgId}/inventory/parts`,
+      balances: `/api/organizations/${orgId}/inventory/balances`,
+      movements: `/api/organizations/${orgId}/inventory/movements`,
+      suppliers: `/api/organizations/${orgId}/inventory/suppliers`,
+      "purchase-orders": `/api/organizations/${orgId}/inventory/purchase-orders`,
+      thresholds: `/api/organizations/${orgId}/inventory/thresholds`,
+    },
+    POST: {
+      part: `/api/organizations/${orgId}/inventory/parts`,
+      movement: `/api/organizations/${orgId}/inventory/movements`,
+      supplier: `/api/organizations/${orgId}/inventory/suppliers`,
+      "purchase-order": `/api/organizations/${orgId}/inventory/purchase-orders`,
+      threshold: `/api/organizations/${orgId}/inventory/thresholds`,
+    },
+    PATCH: {
+      part: `/api/organizations/${orgId}/inventory/parts`,
+      supplier: `/api/organizations/${orgId}/inventory/suppliers`,
+      "purchase-order": `/api/organizations/${orgId}/inventory/purchase-orders`,
+    },
+    DELETE: {
+      supplier: `/api/organizations/${orgId}/inventory/suppliers`,
+    },
+  };
 
-export const POST = createRouteHandler(async ({ request, orgId, user }) => {
-  const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type") ?? "part";
-  const body = await request.json();
-
-  switch (type) {
-    case "part": {
-      const part = await createPart(orgId, body, user.id);
-      return NextResponse.json({ data: part }, { status: 201 });
-    }
-    case "movement": {
-      const movement = await createMovement(orgId, body, user.id);
-      return NextResponse.json({ data: movement }, { status: 201 });
-    }
-    case "supplier": {
-      const supplier = await createSupplier(orgId, body, user.id);
-      return NextResponse.json({ data: supplier }, { status: 201 });
-    }
-    case "purchase-order": {
-      const po = await createPurchaseOrder(orgId, body, user.id);
-      return NextResponse.json({ data: po }, { status: 201 });
-    }
-    case "receive-po": {
-      const po = await receivePurchaseOrder(body.po_id, orgId);
-      return NextResponse.json({ data: po });
-    }
-    case "threshold": {
-      const threshold = await setStockThreshold(orgId, body);
-      return NextResponse.json({ data: threshold }, { status: 201 });
-    }
-    default:
-      return NextResponse.json(
-        { error: { message: "Invalid type" } },
-        { status: 400 },
-      );
-  }
-});
-
-export const PATCH = createRouteHandler(async ({ request, orgId }) => {
-  const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type") ?? "part";
-  const body = await request.json();
-  const itemId = searchParams.get("id");
-
-  if (!itemId) {
+  const methodMap = urlMap[method as keyof typeof urlMap];
+  if (!methodMap?.[type]) {
     return NextResponse.json(
-      { error: { message: "Item ID required" } },
+      { error: { message: `Unknown type "${type}" for method ${method}` } },
       { status: 400 },
     );
   }
 
-  switch (type) {
-    case "part": {
-      const part = await updatePart(itemId, orgId, body);
-      return NextResponse.json({ data: part });
-    }
-    case "supplier": {
-      const supplier = await updateSupplier(itemId, orgId, body);
-      return NextResponse.json({ data: supplier });
-    }
-    case "purchase-order": {
-      const po = await updatePurchaseOrder(itemId, orgId, body);
-      return NextResponse.json({ data: po });
-    }
-    default:
+  let target = methodMap[type];
+
+  // Special case: purchase-order-items needs po_id as path param
+  if (method === "GET" && type === "purchase-order-items") {
+    const poId = searchParams.get("po_id");
+    if (!poId) {
       return NextResponse.json(
-        { error: { message: "Invalid type" } },
+        { error: { message: "po_id required" } },
         { status: 400 },
       );
-  }
-});
-
-export const DELETE = createRouteHandler(async ({ request, orgId }) => {
-  const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type") ?? "supplier";
-  const itemId = searchParams.get("id");
-
-  if (!itemId) {
-    return NextResponse.json(
-      { error: { message: "Item ID required" } },
-      { status: 400 },
-    );
-  }
-
-  switch (type) {
-    case "supplier": {
-      await deleteSupplier(itemId, orgId);
-      return NextResponse.json({ data: { success: true } });
     }
-    default:
+    target = `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/items`;
+  }
+
+  // Special case: receive-po wasn't in POST URL map
+  if (method === "POST" && type === "receive-po") {
+    const body = await request.clone().json();
+    const poId = body?.po_id;
+    if (!poId) {
       return NextResponse.json(
-        { error: { message: "Invalid type" } },
+        { error: { message: "po_id required in body" } },
         { status: 400 },
       );
+    }
+    target = `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/receive`;
   }
-});
+
+  // Forward query params for search/filter
+  const newUrl = new URL(target, request.url);
+  for (const [key, value] of searchParams.entries()) {
+    if (key !== "type" && key !== "po_id") {
+      newUrl.searchParams.set(key, value);
+    }
+  }
+
+  // Redirect with the same body
+  return NextResponse.redirect(newUrl, { status: 308 });
+}

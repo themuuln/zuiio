@@ -10,7 +10,7 @@ export default defineConfig({
   lastUpdated: true,
 
   head: [
-    ["meta", { name: "theme-color", content: "#2563eb" }],
+    ["meta", { name: "theme-color", content: "#09090b" }],    ["meta", { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" }],
     ["link", { rel: "icon", href: "/favicon.ico" }],
   ],
 
@@ -28,6 +28,7 @@ export default defineConfig({
         items: [
           { text: "Танилцуулга", link: "/intro" },
           { text: "Системд нэвтрэх", link: "/getting-started" },
+          { text: "Нэршил", link: "/nershil" },
         ],
       },
       {

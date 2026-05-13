@@ -57,6 +57,7 @@ type Balance = {
 type Movement = {
   id: string;
   part_id: string;
+  part_name: string;
   movement_type: string;
   quantity: number;
   unit_cost: number | null;
@@ -327,9 +328,9 @@ export default function InventoryPage() {
     if (!orgId) return;
     try {
       const [partsRes, balancesRes, thresholdsRes] = await Promise.all([
-        fetch(`/api/organizations/${orgId}/inventory?type=parts`),
-        fetch(`/api/organizations/${orgId}/inventory?type=balances`),
-        fetch(`/api/organizations/${orgId}/inventory?type=thresholds`),
+        fetch(`/api/organizations/${orgId}/inventory/parts`),
+        fetch(`/api/organizations/${orgId}/inventory/balances`),
+        fetch(`/api/organizations/${orgId}/inventory/thresholds`),
       ]);
       const [partsJson, balancesJson, thresholdsJson] = await Promise.all([
         partsRes.json(),
@@ -353,7 +354,7 @@ export default function InventoryPage() {
   const fetchMovements = useCallback(async () => {
     if (!orgId) return;
     try {
-      const url = `/api/organizations/${orgId}/inventory?type=movements${movementFilter ? `&movement_type=${movementFilter}` : ""}`;
+      const url = `/api/organizations/${orgId}/inventory/movements${movementFilter ? `&movement_type=${movementFilter}` : ""}`;
       const res = await fetch(url);
       const json = await res.json();
       if (!json.error) setMovements(json.data ?? []);
@@ -366,7 +367,7 @@ export default function InventoryPage() {
     if (!orgId) return;
     try {
       const res = await fetch(
-        `/api/organizations/${orgId}/inventory?type=suppliers`,
+        `/api/organizations/${orgId}/inventory/suppliers`,
       );
       const json = await res.json();
       if (!json.error) setSuppliers(json.data ?? []);
@@ -379,7 +380,7 @@ export default function InventoryPage() {
     if (!orgId) return;
     try {
       const res = await fetch(
-        `/api/organizations/${orgId}/inventory?type=purchase-orders`,
+        `/api/organizations/${orgId}/inventory/purchase-orders`,
       );
       const json = await res.json();
       if (!json.error) setPurchaseOrders(json.data ?? []);
@@ -393,7 +394,7 @@ export default function InventoryPage() {
       setLoadingPOItems(poId);
       try {
         const res = await fetch(
-          `/api/organizations/${orgId}/inventory?type=purchase-order-items&po_id=${poId}`,
+          `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/items`,
         );
         const json = await res.json();
         if (!json.error)
@@ -455,7 +456,7 @@ export default function InventoryPage() {
     const form = new FormData(e.currentTarget);
     try {
       const res = await fetch(
-        `/api/organizations/${orgId}/inventory?type=part`,
+        `/api/organizations/${orgId}/inventory/parts`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -491,7 +492,7 @@ export default function InventoryPage() {
     const form = new FormData(e.currentTarget);
     try {
       const res = await fetch(
-        `/api/organizations/${orgId}/inventory?type=movement`,
+        `/api/organizations/${orgId}/inventory/movements`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -537,7 +538,7 @@ export default function InventoryPage() {
     try {
       if (editingSupplier) {
         const res = await fetch(
-          `/api/organizations/${orgId}/inventory?type=supplier&id=${editingSupplier.id}`,
+          `/api/organizations/${orgId}/inventory/suppliers?supplierId=${editingSupplier.id}`,
           {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -552,7 +553,7 @@ export default function InventoryPage() {
         toast.success("Supplier updated");
       } else {
         const res = await fetch(
-          `/api/organizations/${orgId}/inventory?type=supplier`,
+          `/api/organizations/${orgId}/inventory/suppliers`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -578,7 +579,7 @@ export default function InventoryPage() {
     if (!confirm("Delete this supplier?")) return;
     try {
       const res = await fetch(
-        `/api/organizations/${orgId}/inventory?type=supplier&id=${id}`,
+        `/api/organizations/${orgId}/inventory/suppliers?supplierId=${id}`,
         { method: "DELETE" },
       );
       const json = await res.json();
@@ -615,7 +616,7 @@ export default function InventoryPage() {
       }
 
       const res = await fetch(
-        `/api/organizations/${orgId}/inventory?type=purchase-order`,
+        `/api/organizations/${orgId}/inventory/purchase-orders`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -643,11 +644,10 @@ export default function InventoryPage() {
   async function handleReceivePO(poId: string) {
     try {
       const res = await fetch(
-        `/api/organizations/${orgId}/inventory?type=receive-po`,
+        `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/receive`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ po_id: poId }),
         },
       );
       const json = await res.json();
@@ -676,7 +676,7 @@ export default function InventoryPage() {
   async function handleSaveThreshold(partId: string) {
     try {
       const res = await fetch(
-        `/api/organizations/${orgId}/inventory?type=threshold`,
+        `/api/organizations/${orgId}/inventory/thresholds`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1075,6 +1075,9 @@ export default function InventoryPage() {
                         Type
                       </th>
                       <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                        Part
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Qty
                       </th>
                       <th className="px-4 py-3 text-right font-medium text-muted-foreground">
@@ -1101,6 +1104,9 @@ export default function InventoryPage() {
                             {MOVEMENT_LABELS[m.movement_type] ??
                               m.movement_type}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm font-medium">
+                          {m.part_name}
                         </td>
                         <td className="px-4 py-3 font-semibold tabular-nums">
                           {m.quantity}

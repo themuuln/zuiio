@@ -322,6 +322,7 @@ export interface WorkOrderPart {
   id: string;
   work_order_id: string;
   organization_id: string;
+  part_id: string | null;
   part_name: string;
   part_number: string | null;
   quantity: number;
@@ -559,6 +560,8 @@ export interface PartsCatalog {
   description: string | null;
   unit: string;
   default_price: number | null;
+  purchase_price: number | null;
+  last_purchase_price: number | null;
   is_active: boolean;
   created_by: string | null;
   updated_by: string | null;

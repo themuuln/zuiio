@@ -1,7 +1,7 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
-import { Clock, MapPin } from "lucide-react";
+import { Clock, MapPin, Maximize2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
@@ -87,12 +87,14 @@ interface BaySlotProps {
   onStatusChange: (woId: string, status: string) => void;
   onRemoveFromBay: (woId: string) => void;
   onAssignMechanic: (woId: string, mechanicId: string) => void;
+  onOpenDetail: (woId: string) => void;
 }
 
 export function BaySlot({
   bay,
   onStatusChange,
   onRemoveFromBay,
+  onOpenDetail,
 }: BaySlotProps) {
   const { setNodeRef, isOver } = useDroppable({ id: `bay-${bay.bayNumber}` });
   const wo = bay.workOrder;
@@ -170,8 +172,9 @@ export function BaySlot({
             <ElapsedTimer startedAt={wo.started_at ?? wo.created_at} />
           </div>
 
-          {/* Action buttons */}
+          {/* Quick actions row */}
           <div className="flex gap-1.5 mt-1" role="group" aria-label="Work order actions">
+            {/* Contextual status action */}
             {wo.status !== "Ready for Pickup" && wo.status !== "Completed" && wo.status !== "Cancelled" && (
               <button
                 type="button"
@@ -192,23 +195,15 @@ export function BaySlot({
                 Complete
               </button>
             )}
-            {wo.status !== "Cancelled" && (
-              <button
-                type="button"
-                onClick={() => onStatusChange(wo.id, "Cancelled")}
-                className="flex-1 rounded-md bg-red-500/10 px-2 py-1.5 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-                aria-label="Cancel work order"
-              >
-                Cancel
-              </button>
-            )}
+            {/* Open detail drawer */}
             <button
               type="button"
-              onClick={() => onRemoveFromBay(wo.id)}
-              className="flex-1 rounded-md bg-red-500/10 px-2 py-1.5 text-xs font-medium text-red-500 hover:bg-red-500/20 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-              aria-label="Remove vehicle from bay"
+              onClick={() => onOpenDetail(wo.id)}
+              className="flex items-center justify-center gap-1 rounded-md bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label="Open work order details"
             >
-              Remove
+              <Maximize2 className="size-3" />
+              <span className="hidden sm:inline">Manage</span>
             </button>
           </div>
         </div>

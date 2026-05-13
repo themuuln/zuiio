@@ -3,6 +3,11 @@
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export default function ThemeToggle({
@@ -31,23 +36,32 @@ export default function ThemeToggle({
   const isDark = theme === "dark";
 
   return (
-    <button
-      type="button"
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-      className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors w-full",
-        "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-        collapsed && "lg:justify-center lg:px-0",
-      )}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-    >
-      {isDark ? (
-        <Sun className="size-5 shrink-0" aria-hidden="true" />
-      ) : (
-        <Moon className="size-5 shrink-0" aria-hidden="true" />
-      )}
-      {!collapsed && <span>{isDark ? "Light" : "Dark"}</span>}
-    </button>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <button
+            type="button"
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors w-full",
+              "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+              collapsed && "lg:justify-center lg:px-0",
+            )}
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {isDark ? (
+              <Sun className="size-5 shrink-0" aria-hidden="true" />
+            ) : (
+              <Moon className="size-5 shrink-0" aria-hidden="true" />
+            )}
+            {!collapsed && <span>{isDark ? "Light" : "Dark"}</span>}
+          </button>
+        }
+      />
+      <TooltipContent side="right">
+        {isDark ? "Switch to light mode" : "Switch to dark mode"}
+      </TooltipContent>
+    </Tooltip>
   );
 }

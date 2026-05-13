@@ -126,7 +126,14 @@
     "services": "Services",
     "vehicleModels": "Vehicle Models",
     "settings": "Settings",
-    "organization": "Organization"
+    "organization": "Organization",
+    "group": {
+      "operations": "Operations",
+      "crm": "CRM",
+      "business": "Business",
+      "resources": "Resources",
+      "settings": "Settings"
+    }
   },
   "dashboard": {
     "title": "Dashboard",

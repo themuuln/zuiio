@@ -355,6 +355,7 @@ export async function addPartToWorkOrder(
     .insert({
       work_order_id: workOrderId,
       organization_id: orgId,
+      part_id: partData.part_id ?? null,
       part_name: partData.part_name,
       part_number: partData.part_number ?? null,
       quantity,
@@ -403,6 +404,23 @@ export async function addPartToWorkOrder(
     discount_percentage: partData.discount_percentage ?? 0,
     final_price: finalPrice,
   });
+
+  // ── Record inventory deduction ────────────────────────────
+  // If the part is linked to the catalog, create a 'sale' movement
+  // so the inventory ledger reflects actual stock consumption.
+  if (partData.part_id) {
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    await supabase.from("inventory_movements").insert({
+      organization_id: orgId,
+      part_id: partData.part_id,
+      movement_type: "sale",
+      quantity: quantity,
+      unit_price: unitPrice,
+      reference_type: "work_order",
+      reference_id: workOrderId,
+      created_by: userId,
+    });
+  }
 
   // Invalidate caches
   revalidateTag(cacheTags.workOrder(workOrderId), "max");

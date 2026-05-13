@@ -45,6 +45,7 @@ next-env.d.ts
 .factory/
 .mcp.json
 .playwright-mcp/
+opencode/
 
 # VitePress guide docs
 public/guide/

@@ -1,6 +1,7 @@
 -- 00011: Add missing RLS policies for work_orders table
 -- RLS was enabled in 00002 but no policies were defined — all operations blocked for anon/authenticated users.
 
+drop policy if exists "Users can view work orders in their org" on work_orders;
 create policy "Users can view work orders in their org"
   on work_orders for select
   using (
@@ -10,6 +11,7 @@ create policy "Users can view work orders in their org"
     )
   );
 
+drop policy if exists "Users can insert work orders in their org" on work_orders;
 create policy "Users can insert work orders in their org"
   on work_orders for insert
   with check (
@@ -19,6 +21,7 @@ create policy "Users can insert work orders in their org"
     )
   );
 
+drop policy if exists "Users can update work orders in their org" on work_orders;
 create policy "Users can update work orders in their org"
   on work_orders for update
   using (
@@ -28,6 +31,7 @@ create policy "Users can update work orders in their org"
     )
   );
 
+drop policy if exists "Users can soft-delete work orders in their org" on work_orders;
 create policy "Users can soft-delete work orders in their org"
   on work_orders for delete
   using (

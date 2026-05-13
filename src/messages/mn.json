@@ -126,7 +126,14 @@
     "services": "Үйлчилгээ",
     "vehicleModels": "Машины загварууд",
     "settings": "Тохиргоо",
-    "organization": "Байгууллага"
+    "organization": "Байгууллага",
+    "group": {
+      "operations": "Үйл ажиллагаа",
+      "crm": "Харилцагчийн CRM",
+      "business": "Бизнес",
+      "resources": "Нөөц",
+      "settings": "Тохиргоо"
+    }
   },
   "dashboard": {
     "title": "Хяналтын самбар",

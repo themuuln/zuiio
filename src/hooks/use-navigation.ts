@@ -17,98 +17,79 @@ import {
 } from "lucide-react";
 import { usePathname } from "@/lib/i18n/navigation";
 
-export type NavSection = "main" | "settings";
-
 export interface NavItem {
   labelKey: string;
   href: string;
   icon: LucideIcon;
-  section: NavSection;
 }
 
-const navigationItems: NavItem[] = [
-  {
-    labelKey: "nav.dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-    section: "main",
-  },
-  {
-    labelKey: "nav.bayView",
-    href: "/dashboard/bay-view",
-    icon: LayoutGrid,
-    section: "main",
-  },
-  {
-    labelKey: "nav.workOrders",
-    href: "/dashboard/work-orders",
-    icon: ClipboardList,
-    section: "main",
-  },
-  {
-    labelKey: "nav.customers",
-    href: "/dashboard/customers",
-    icon: Users,
-    section: "main",
-  },
-  {
-    labelKey: "nav.vehicles",
-    href: "/dashboard/vehicles",
-    icon: Car,
-    section: "main",
-  },
-  {
-    labelKey: "nav.inventory",
-    href: "/dashboard/inventory",
-    icon: Package,
-    section: "main",
-  },
-  {
-    labelKey: "nav.finance",
-    href: "/dashboard/finance",
-    icon: DollarSign,
-    section: "main",
-  },
-  {
-    labelKey: "nav.reports",
-    href: "/dashboard/reports",
-    icon: BarChart3,
-    section: "main",
-  },
-  {
-    labelKey: "nav.guide",
-    href: "/guide",
-    icon: BookOpen,
-    section: "main",
-  },
-  // Settings section
-  {
-    labelKey: "nav.vehicleModels",
-    href: "/dashboard/vehicle-models",
-    icon: Warehouse,
-    section: "settings",
-  },
-  {
-    labelKey: "nav.organization",
-    href: "/dashboard/organization",
-    icon: Building2,
-    section: "settings",
-  },
-  {
-    labelKey: "nav.settings",
-    href: "/dashboard/settings",
-    icon: Settings,
-    section: "settings",
-  },
-];
+export interface NavGroup {
+  labelKey: string;
+  icon: LucideIcon;
+  children: NavItem[];
+}
+
+export type NavGroupConfig = {
+  groups: NavGroup[];
+  standalone: NavItem[];
+};
+
+const navigationConfig: NavGroupConfig = {
+  standalone: [
+    {
+      labelKey: "nav.dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+  ],
+  groups: [
+    {
+      labelKey: "nav.group.operations",
+      icon: LayoutGrid,
+      children: [
+        { labelKey: "nav.bayView", href: "/dashboard/bay-view", icon: LayoutGrid },
+        { labelKey: "nav.workOrders", href: "/dashboard/work-orders", icon: ClipboardList },
+      ],
+    },
+    {
+      labelKey: "nav.group.crm",
+      icon: Users,
+      children: [
+        { labelKey: "nav.customers", href: "/dashboard/customers", icon: Users },
+        { labelKey: "nav.vehicles", href: "/dashboard/vehicles", icon: Car },
+      ],
+    },
+    {
+      labelKey: "nav.group.business",
+      icon: DollarSign,
+      children: [
+        { labelKey: "nav.inventory", href: "/dashboard/inventory", icon: Package },
+        { labelKey: "nav.finance", href: "/dashboard/finance", icon: DollarSign },
+        { labelKey: "nav.reports", href: "/dashboard/reports", icon: BarChart3 },
+      ],
+    },
+    {
+      labelKey: "nav.group.resources",
+      icon: BookOpen,
+      children: [
+        { labelKey: "nav.guide", href: "/guide", icon: BookOpen },
+      ],
+    },
+  ],
+};
+
+const settingsGroup: NavGroup = {
+  labelKey: "nav.group.settings",
+  icon: Settings,
+  children: [
+    { labelKey: "nav.vehicleModels", href: "/dashboard/vehicle-models", icon: Warehouse },
+    { labelKey: "nav.organization", href: "/dashboard/organization", icon: Building2 },
+    { labelKey: "nav.settings", href: "/dashboard/settings", icon: Settings },
+  ],
+};
 
 export function useNavigation() {
   const pathname = usePathname();
-
-  const mainItems = navigationItems.filter((item) => item.section === "main");
-  const settingsItems = navigationItems.filter(
-    (item) => item.section === "settings",
-  );
 
   function isActive(href: string) {
     if (href === "/dashboard") {
@@ -117,10 +98,16 @@ export function useNavigation() {
     return pathname.startsWith(href);
   }
 
+  function groupHasActive(group: NavGroup) {
+    return group.children.some((item) => isActive(item.href));
+  }
+
   return {
-    mainItems,
-    settingsItems,
+    standalone: navigationConfig.standalone,
+    groups: navigationConfig.groups,
+    settingsGroup,
     isActive,
+    groupHasActive,
     pathname,
   };
 }

@@ -36,6 +36,14 @@ Verify before committing:
 npm run lint && npm run test && npm run build
 ```
 
+## UI Components & shadcn
+
+- **Use shadcn/ui components first** — check `src/components/ui/` before building any new UI element. Most form controls, layouts, and interactive elements already have a shadcn primitive.
+- **Don't recreate what exists** — if a shadcn component covers 80% of the need, extend it rather than building from scratch. Copy from the shadcn CLI (`npx shadcn add button`) instead of writing bespoke components.
+- **Register all shadcn components** in `src/components/ui/`. Keep them minimal — no app-specific styling, no business logic.
+- **Use the existing components** (Button, Input, Card, DropdownMenu, Avatar, Skeleton, Tooltip, Typography) before reaching for a custom solution.
+- **Before adding a new dependency**, check if shadcn already provides what's needed (dialog, popover, select, table, form, etc.).
+
 ## Coding Style & Naming Conventions
 
 - **TypeScript** throughout — no `any` without a comment explaining why.

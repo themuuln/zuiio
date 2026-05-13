@@ -5,6 +5,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
 import QueryProvider from "@/components/query-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/lib/i18n/routing";
 import "../globals.css";
 
@@ -65,10 +66,11 @@ export default async function LocaleLayout({
     <div
       className={`${inter.variable} ${jetbrainsMono.variable} flex min-h-dvh flex-col antialiased`}
     >
-      <NextIntlClientProvider locale={locale} messages={messages}>
-        <QueryProvider>
-          {children}
-          <Toaster
+      <TooltipProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <QueryProvider>
+            {children}
+            <Toaster
             position="bottom-left"
             richColors
             closeButton
@@ -78,6 +80,7 @@ export default async function LocaleLayout({
           />
         </QueryProvider>
       </NextIntlClientProvider>
+      </TooltipProvider>
     </div>
   );
 }

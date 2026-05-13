@@ -6,7 +6,11 @@ import {
   FileText,
   Globe,
   MessageSquare,
+  Monitor,
+  Moon,
+  Sun,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
@@ -123,10 +127,17 @@ function buildFormFromOrganization(organization: Organization): SettingsForm {
   };
 }
 
+const THEME_OPTIONS = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: Monitor },
+] as const;
+
 export default function SettingsPage() {
   const t = useTranslations();
   const router = useRouter();
   const currentLocale = useLocale();
+  const { theme, setTheme } = useTheme();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [form, setForm] = useState<SettingsForm>(DEFAULT_FORM);
   const [loading, setLoading] = useState(true);
@@ -551,6 +562,39 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Appearance */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sun className="size-4" />
+            Appearance
+          </CardTitle>
+          <CardDescription>Choose your preferred color theme.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-1 rounded-xl border border-border bg-card p-1 w-fit">
+            {THEME_OPTIONS.map((option) => {
+              const Icon = option.icon;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setTheme(option.value)}
+                  className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                    theme === option.value
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Icon className="size-4" />
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { handleApiError } from "@/lib/errors";
-import { getInvoiceByPublicToken } from "@/lib/services/invoice-service";
+import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -11,25 +11,22 @@ type RouteContext = { params: Promise<{ token: string }> };
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
     const { token } = await context.params;
-    const invoice = await getInvoiceByPublicToken(token);
+    const supabase = await createClient();
+    const { data: invoice, error } = await supabase.rpc(
+      "get_public_invoice_by_token",
+      { p_token: token },
+    );
 
-    // Also fetch org name for display
-    let organization_name = "INVOICE";
-    try {
-      const { createClient } = await import("@/lib/supabase/server");
-      const supabase = await createClient();
-      const { data: org } = await supabase
-        .from("organizations")
-        .select("name")
-        .eq("id", invoice.organization_id)
-        .single();
-      if (org?.name) organization_name = org.name;
-    } catch {
-      // ignore
+    if (error) throw error;
+    if (!invoice) {
+      return NextResponse.json(
+        { error: { message: "Invoice not found" } },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({
-      data: { ...invoice, organization_name },
+      data: invoice,
     });
   } catch (error) {
     return handleApiError(error);

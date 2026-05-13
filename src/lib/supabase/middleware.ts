@@ -49,18 +49,19 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = pathname.includes("/auth/");
   const isLoginRoute = pathname.includes("/auth/login");
 
+  // Default locale fallback (auth tree only lives under [locale])
+  const defaultLocale = locale ?? "mn";
+
   if (!user && !isAuthRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = locale ? `/${locale}/auth/login` : "/auth/login";
+    url.pathname = `/${defaultLocale}/auth/login`;
     return NextResponse.redirect(url);
   }
 
   // If user is authenticated and on the login page, continue through org verification
   if (user && isLoginRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = locale
-      ? `/${locale}/auth/select-organization`
-      : "/auth/select-organization";
+    url.pathname = `/${defaultLocale}/auth/select-organization`;
     return NextResponse.redirect(url);
   }
 

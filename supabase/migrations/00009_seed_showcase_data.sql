@@ -11,20 +11,53 @@ declare
   admin_user_id uuid;
   org_id constant uuid := '00000000-0000-0000-0000-000000000001';
 begin
-  -- Get the main branch
+  -- Get or create the main branch
   select id into branch_id_val from public.branches
     where organization_id = org_id and is_main = true limit 1;
 
-  -- Get an admin user
+  if branch_id_val is null then
+    insert into public.branches (organization_id, name, is_main, created_by)
+    values (org_id, 'Main Branch', true, auth.uid())
+    returning id into branch_id_val;
+  end if;
+
+  -- Get or create an admin user reference
   select user_id into admin_user_id from public.organization_users
     where organization_id = org_id and is_primary = true limit 1;
 
-  if branch_id_val is null then
-    raise exception 'No branch found for demo org — run signup flow first';
+  if admin_user_id is null then
+    -- Create a demo auth user for seeding purposes
+    insert into auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, confirmation_sent_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, role, aud)
+    values (
+      '00000000-0000-0000-0000-000000000001',
+      '00000000-0000-0000-0000-000000000000',
+      'admin@demo.tolom.mn',
+      '',
+      now(),
+      now(),
+      '{"provider":"email"}'::jsonb,
+      '{}'::jsonb,
+      now(),
+      now(),
+      'authenticated',
+      'authenticated'
+    )
+    on conflict (id) do nothing;
+
+    -- Create profile
+    insert into public.profiles (id, organization_id, branch_id, full_name, is_active)
+    values ('00000000-0000-0000-0000-000000000001', org_id, branch_id_val, 'Admin', true)
+    on conflict (id) do nothing;
+
+    -- Link to org
+    insert into public.organization_users (organization_id, user_id, is_primary)
+    values (org_id, '00000000-0000-0000-0000-000000000001', true)
+    on conflict do nothing
+    returning user_id into admin_user_id;
   end if;
 
   if admin_user_id is null then
-    raise exception 'No user found for demo org — run signup flow first';
+    admin_user_id := '00000000-0000-0000-0000-000000000001';
   end if;
 
   -- ═════════════════════════════════════════════════════════════
