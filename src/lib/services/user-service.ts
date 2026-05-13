@@ -1,3 +1,6 @@
+import { revalidateTag } from "next/cache";
+import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { withCache } from "@/lib/cache/with-cache";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import type { UserProfile } from "@/lib/types";
@@ -11,57 +14,66 @@ export async function getOrganizationUsers(
 ): Promise<UserProfile[]> {
   const supabase = await createClient();
 
-  const { data: members, error } = await supabase
-    .from("organization_users")
-    .select(`
-      user_id,
-      role_id,
-      branch_id,
-      roles (
-        id,
-        name
-      ),
-      profiles (
-        id,
-        full_name,
-        phone,
-        avatar_url
-      )
-    `)
-    .eq("organization_id", orgId);
+  return withCache(
+    ["getOrganizationUsers", orgId],
+    async () => {
+      const { data: members, error } = await supabase
+        .from("organization_users")
+        .select(`
+        user_id,
+        role_id,
+        branch_id,
+        roles (
+          id,
+          name
+        ),
+        profiles (
+          id,
+          full_name,
+          phone,
+          avatar_url
+        )
+      `)
+        .eq("organization_id", orgId);
 
-  if (error) {
-    throw new Error(error.message ?? "Failed to fetch organization users");
-  }
+      if (error) {
+        throw new Error(error.message ?? "Failed to fetch organization users");
+      }
 
-  if (!members?.length) return [];
+      if (!members?.length) return [];
 
-  return members.map((m) => {
-    const role = Array.isArray(m.roles)
-      ? m.roles[0]
-      : (m.roles as unknown as { id: string; name: string } | null);
-    const profile = Array.isArray(m.profiles)
-      ? m.profiles[0]
-      : (m.profiles as unknown as {
-          id: string;
-          full_name: string | null;
-          phone: string | null;
-          avatar_url: string | null;
-        } | null);
+      return members.map((m) => {
+        const role = Array.isArray(m.roles)
+          ? m.roles[0]
+          : (m.roles as unknown as { id: string; name: string } | null);
+        const profile = Array.isArray(m.profiles)
+          ? m.profiles[0]
+          : (m.profiles as unknown as {
+              id: string;
+              full_name: string | null;
+              phone: string | null;
+              avatar_url: string | null;
+            } | null);
 
-    return {
-      id: m.user_id,
-      email: "", // email comes from auth.users, not in public schema — resolve separately if needed
-      phone: profile?.phone ?? null,
-      fullName: profile?.full_name ?? null,
-      avatarUrl: profile?.avatar_url ?? null,
-      organizationId: orgId,
-      organizationName: null,
-      branchId: m.branch_id ?? null,
-      roleId: m.role_id ?? null,
-      roleName: role?.name ?? null,
-    };
-  });
+        return {
+          id: m.user_id,
+          email: "",
+          phone: profile?.phone ?? null,
+          fullName: profile?.full_name ?? null,
+          avatarUrl: profile?.avatar_url ?? null,
+          organizationId: orgId,
+          organizationName: null,
+          branchId: m.branch_id ?? null,
+          roleId: m.role_id ?? null,
+          roleName: role?.name ?? null,
+        };
+      });
+    },
+    {
+      tags: [cacheTags.organizationUsers(orgId)],
+      revalidate: cacheDurations.organizationUsers,
+    },
+  );
 }
 
 /**
@@ -170,6 +182,8 @@ export async function addUserToOrganization(
   if (error) {
     throw new Error(error.message ?? "Failed to add user to organization");
   }
+
+  revalidateTag(cacheTags.organizationUsers(orgId), "max");
 }
 
 /**
@@ -203,6 +217,8 @@ export async function updateUserRole(
   if (error) {
     throw new NotFoundError("User membership not found");
   }
+
+  revalidateTag(cacheTags.organizationUsers(orgId), "max");
 }
 
 /**
@@ -236,6 +252,8 @@ export async function removeUser(userId: string, orgId: string): Promise<void> {
   if (error) {
     throw new NotFoundError("User membership not found");
   }
+
+  revalidateTag(cacheTags.organizationUsers(orgId), "max");
 }
 
 /**
