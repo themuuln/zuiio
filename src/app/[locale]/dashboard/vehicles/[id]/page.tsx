@@ -3,7 +3,7 @@
 import { ArrowLeft, ChevronDown, ChevronRight, Pencil, Save, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import type { ExportColumn } from "@/lib/export";
@@ -15,6 +15,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { WorkOrderStatus } from "@/lib/database.types";
 import { Link, useRouter } from "@/lib/i18n/navigation";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { vehicleKeys } from "@/lib/queries/keys";
+import { useQuery } from "@tanstack/react-query";
 import { formatMNT } from "@/lib/utils";
 
 interface VehicleOwnerSummary {
@@ -118,7 +121,29 @@ export default function VehicleDetailPage() {
   const router = useRouter();
   const vehicleId = params.id as string;
 
-  const [vehicle, setVehicle] = useState<VehicleDetailResponse | null>(null);
+  const orgQuery = useCurrentOrg();
+  const orgId = orgQuery.data?.orgId;
+
+  const {
+    data: vehicle,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: vehicleKeys.detail(orgId ?? "", vehicleId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/vehicles/${vehicleId}`,
+      );
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data as VehicleDetailResponse;
+    },
+    enabled: !!orgId && !!vehicleId,
+    staleTime: 30_000,
+  });
+
+  const error = queryError ? queryError.message : null;
 
   const serviceHistoryColumns: ExportColumn<VehicleServiceHistoryItem>[] = [
     { key: "status", label: "Status" },
@@ -127,9 +152,7 @@ export default function VehicleDetailPage() {
     { key: "description", label: "Description" },
     { key: "total", label: "Total", format: "currency" as const },
   ];
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [orgId, setOrgId] = useState<string | null>(null);
+
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<VehicleFormState>(emptyForm);
@@ -156,63 +179,12 @@ export default function VehicleDetailPage() {
     });
   }, []);
 
-  const fetchVehicle = useCallback(async () => {
-    if (!orgId || !vehicleId) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `/api/organizations/${orgId}/vehicles/${vehicleId}`,
-      );
-      const json = await response.json();
-
-      if (json.error) {
-        setError(json.error.message);
-        return;
-      }
-
-      setVehicle(json.data);
-      syncForm(json.data);
-    } catch {
-      setError(t("failedToLoad"));
-    } finally {
-      setLoading(false);
-    }
-  }, [orgId, syncForm, vehicleId, t]);
-
-  useEffect(() => {
-    fetch("/api/profile")
-      .then((response) => response.json())
-      .then((data) => {
-        const nextOrgId = data?.organizationId ?? data?.data?.organizationId;
-        if (!nextOrgId) {
-          setError(t("noOrganization"));
-          return;
-        }
-
-        setOrgId(nextOrgId);
-      })
-      .catch(() => setError("Failed to load profile"))
-      .finally(() => setLoading(false));
-  }, [t]);
-
-  useEffect(() => {
-    if (orgId) {
-      void fetchVehicle();
-    }
-  }, [fetchVehicle, orgId]);
-
   const handleSave = async () => {
     if (!orgId || !vehicleId) {
       return;
     }
 
     setSaving(true);
-    setError(null);
 
     try {
       const response = await fetch(
@@ -245,28 +217,20 @@ export default function VehicleDetailPage() {
 
       if (json.error) {
         toast.error(json.error.message);
-        setError(json.error.message);
         return;
       }
 
-      const nextVehicle = {
-        ...(vehicle as VehicleDetailResponse),
-        ...json.data,
-      };
-
-      setVehicle(nextVehicle);
-      syncForm(nextVehicle);
+      refetch();
       setEditing(false);
       toast.success(t("vehicleUpdated"));
     } catch {
       toast.error(t("failedToSave"));
-      setError(t("failedToSave"));
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) {
+  if (orgQuery.isLoading || loading) {
     return (
       <div className="flex max-w-3xl flex-col gap-6">
         <Skeleton className="h-8 w-36" />
@@ -289,7 +253,7 @@ export default function VehicleDetailPage() {
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <p className="text-muted-foreground">{error}</p>
-            <Button onClick={() => void fetchVehicle()} variant="outline">
+            <Button onClick={() => refetch()} variant="outline">
               {t("retry")}
             </Button>
           </CardContent>
@@ -336,7 +300,7 @@ export default function VehicleDetailPage() {
           </p>
         </div>
         {!editing ? (
-          <Button variant="outline" onClick={() => setEditing(true)}>
+          <Button variant="outline" onClick={() => { syncForm(vehicle); setEditing(true); }}>
             <Pencil className="size-4" />
             Edit
           </Button>
@@ -523,8 +487,6 @@ export default function VehicleDetailPage() {
   );
 }
 
-// ── Condensed Read-Only View ─────────────────────
-
 function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
   const t = useTranslations("vehicles");
   const [showMore, setShowMore] = useState(false);
@@ -597,8 +559,6 @@ function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
   );
 }
 
-// ── Field input (module scope — NOT inside component) ──
-
 function FormField({
   label,
   field,
@@ -636,8 +596,6 @@ function FormField({
     </div>
   );
 }
-
-// ── Condensed Edit Form ───────────────────────────
 
 function VehicleEditForm({
   form,

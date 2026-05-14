@@ -58,8 +58,7 @@ async function getOrgId(): Promise<string> {
 // ── Get Bay View Data ──────────────────────────────────────────
 
 export async function getBayViewData(): Promise<BayViewData> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Use orgId as branchId placeholder since we use is_main branch
   return withCache(
@@ -173,8 +172,7 @@ export async function assignVehicleToBay(
   workOrderId: string,
   bayNumber: number,
 ): Promise<void> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Validate bay is free
   const { data: conflict } = await supabase
@@ -225,8 +223,7 @@ export async function assignVehicleToBay(
 // ── Remove Vehicle from Bay ───────────────────────────────────
 
 export async function removeVehicleFromBay(workOrderId: string): Promise<void> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { error } = await supabase
     .from("work_orders")
@@ -250,8 +247,7 @@ export async function assignMechanicToWorkOrder(
   workOrderId: string,
   mechanicId: string,
 ): Promise<void> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { error } = await supabase
     .from("work_orders")
@@ -273,8 +269,7 @@ export async function assignMechanicToWorkOrder(
 export async function unassignMechanicFromWorkOrder(
   workOrderId: string,
 ): Promise<void> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { error } = await supabase
     .from("work_orders")
@@ -315,8 +310,7 @@ export async function updateWorkOrderStatus(
     | "Cancelled",
   notes?: string,
 ): Promise<void> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const updates: Record<string, unknown> = {
     status,
@@ -357,8 +351,7 @@ export async function updateBayCount(count: number): Promise<number> {
   if (count < 1 || count > 50)
     throw new ValidationError("Bay count must be between 1 and 50");
 
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Get current branch settings
   const { data: branch } = await supabase
@@ -521,8 +514,7 @@ export async function seedWaitingQueue(): Promise<{
   created: number;
   errors: string[];
 }> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { data: branch } = await supabase
     .from("branches")
@@ -633,8 +625,7 @@ export async function seedWaitingQueue(): Promise<{
 export async function assignToFirstAvailableBay(
   workOrderId: string,
 ): Promise<number> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Get current bay count
   const { data: branch } = await supabase
@@ -692,8 +683,7 @@ export async function assignToFirstAvailableBay(
 export async function reorderQueue(
   updates: { id: string; queue_order: number }[],
 ): Promise<void> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   for (const u of updates) {
     const { error } = await supabase
@@ -725,8 +715,7 @@ export interface ShiftReport {
 }
 
 export async function getShiftReport(): Promise<ShiftReport> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Get bay count
   const { data: branch } = await supabase
@@ -740,17 +729,36 @@ export async function getShiftReport(): Promise<ShiftReport> {
     ((branch?.settings as Record<string, unknown> | null)
       ?.bay_count as number) ?? 6;
 
-  // Today's completed work orders
+  // Today's completed work orders + active + in-bay (parallel)
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
-  const { data: completed } = await supabase
-    .from("work_orders")
-    .select("total, completed_at, started_at")
-    .eq("organization_id", orgId)
-    .eq("status", "Completed")
-    .gte("completed_at", todayStart.toISOString())
-    .is("deleted_at", null);
+  const [
+    { data: completed },
+    { data: active },
+    { data: inBay },
+  ] = await Promise.all([
+    supabase
+      .from("work_orders")
+      .select("total, completed_at, started_at")
+      .eq("organization_id", orgId)
+      .eq("status", "Completed")
+      .gte("completed_at", todayStart.toISOString())
+      .is("deleted_at", null),
+    supabase
+      .from("work_orders")
+      .select("id")
+      .eq("organization_id", orgId)
+      .not("status", "in", '("Completed","Cancelled")')
+      .is("deleted_at", null),
+    supabase
+      .from("work_orders")
+      .select("id")
+      .eq("organization_id", orgId)
+      .not("status", "in", '("Completed","Cancelled")')
+      .is("deleted_at", null)
+      .not("bay_number", "is", null),
+  ]);
 
   const completedToday = completed?.length ?? 0;
   const revenueToday =
@@ -768,24 +776,7 @@ export async function getShiftReport(): Promise<ShiftReport> {
     avgDurationMinutes = Math.round(totalMinutes / completedToday);
   }
 
-  // Active jobs (non-completed, non-cancelled)
-  const { data: active } = await supabase
-    .from("work_orders")
-    .select("id")
-    .eq("organization_id", orgId)
-    .not("status", "in", '("Completed","Cancelled")')
-    .is("deleted_at", null);
-
   const activeJobs = active?.length ?? 0;
-
-  // Bay utilization: active jobs in bays / total bays
-  const { data: inBay } = await supabase
-    .from("work_orders")
-    .select("id")
-    .eq("organization_id", orgId)
-    .not("status", "in", '("Completed","Cancelled")')
-    .is("deleted_at", null)
-    .not("bay_number", "is", null);
 
   const bayUtilization =
     bayCount > 0 ? Math.round(((inBay?.length ?? 0) / bayCount) * 100) : 0;
@@ -814,8 +805,7 @@ export async function updateBayViewPin(
     throw new ValidationError("PIN confirmation does not match");
   }
 
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Verify current PIN first
   const { data: verified } = await supabase.rpc(

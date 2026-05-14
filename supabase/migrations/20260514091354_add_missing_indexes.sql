@@ -2,13 +2,11 @@
 -- Targets slow query patterns identified in performance audit.
 
 -- Subscription expiry scan: edge function queries status + expires_at
--- Currently does sequential scan on subscription_plans.
+-- subscription_plans has no deleted_at column (immutable lifecycle table).
 create index if not exists idx_sub_plans_status_expires
-  on subscription_plans(status, expires_at)
-  where deleted_at is null;
+  on subscription_plans(status, expires_at);
 
 -- Parts catalog lookup by part_number within an org
--- Common in work order creation and inventory management.
 create index if not exists idx_parts_catalog_org_part_number
   on parts_catalog(organization_id, part_number)
   where deleted_at is null;
@@ -19,7 +17,7 @@ create index if not exists idx_purchase_orders_org_status
   where deleted_at is null;
 
 -- Inventory balances view grouping + ordering
--- Supports the ledger-based inventory_balances computation.
+-- inventory_movements is append-only (no soft-delete), so no partial filter.
 create index if not exists idx_inventory_movements_org_part_created
   on inventory_movements(organization_id, part_id, created_at desc);
 

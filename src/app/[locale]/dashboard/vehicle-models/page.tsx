@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronRight, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import type { ExportColumn } from "@/lib/export";
@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { vehicleModelKeys } from "@/lib/queries/keys";
+import { useQuery } from "@tanstack/react-query";
 
 interface VehicleModelItem {
   id: string;
@@ -88,13 +91,31 @@ const bodyTypeOptions = [
 
 export default function VehicleModelsPage() {
   const t = useTranslations("vehicleModels");
-  const [models, setModels] = useState<VehicleModelItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const orgQuery = useCurrentOrg();
+  const orgId = orgQuery.data?.orgId;
+
+  const {
+    data: models = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: vehicleModelKeys.list(orgId ?? ""),
+    queryFn: async () => {
+      const r = await fetch(`/api/organizations/${orgId}/vehicle-models`);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      return (d.data ?? []) as VehicleModelItem[];
+    },
+    enabled: !!orgId,
+    staleTime: 5 * 60_000,
+  });
+
+  const error = queryError ? queryError.message : null;
+
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [orgId, setOrgId] = useState<string | null>(null);
 
   // Tree expansion state
   const [expandedMakes, setExpandedMakes] = useState<Set<string>>(new Set());
@@ -129,32 +150,6 @@ export default function VehicleModelsPage() {
     setShowDetails(false);
   };
 
-  // ── Data loading ──────────────────────────────────────────────
-
-  useEffect(() => {
-    fetch("/api/organizations")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.data?.id) setOrgId(d.data.id);
-        else setError("No organization");
-      })
-      .catch(() => setError("Failed to load organization"))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (!orgId) return;
-    setLoading(true);
-    fetch(`/api/organizations/${orgId}/vehicle-models`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.error) setError(d.error.message);
-        else setModels(d.data ?? []);
-      })
-      .catch(() => setError("Failed to load vehicle models"))
-      .finally(() => setLoading(false));
-  }, [orgId]);
-
   // ── CRUD handlers ─────────────────────────────────────────────
 
   const handleAdd = async () => {
@@ -179,7 +174,7 @@ export default function VehicleModelsPage() {
       const d = await r.json();
       if (d.data) {
         toast.success("Vehicle model created");
-        setModels([...models, d.data]);
+        refetch();
         setShowAdd(false);
         setEditingId(null);
         resetForm();
@@ -220,7 +215,7 @@ export default function VehicleModelsPage() {
       const d = await r.json();
       if (d.data) {
         toast.success("Vehicle model updated");
-        setModels(models.map((m) => (m.id === id ? d.data : m)));
+        refetch();
         setEditingId(null);
         resetForm();
       } else {
@@ -245,7 +240,7 @@ export default function VehicleModelsPage() {
         toast.error(d.error.message);
         return;
       }
-      setModels(models.filter((m) => m.id !== id));
+      refetch();
       toast.success("Vehicle model deleted");
     } catch {
       toast.error("Failed to delete");
@@ -529,7 +524,7 @@ export default function VehicleModelsPage() {
       {/* ── Tree View ──────────────────────────────────────── */}
       <Card>
         <CardContent className="p-0">
-          {loading ? (
+          {orgQuery.isLoading || loading ? (
             <div className="divide-y divide-border">
               {[1, 2, 3].map((n) => (
                 <div key={n} className="flex items-center gap-3 px-4 py-4">
@@ -542,7 +537,7 @@ export default function VehicleModelsPage() {
           ) : error ? (
             <div className="flex flex-col items-center gap-4 py-12">
               <p className="text-destructive">{error}</p>
-              <Button onClick={() => setLoading(true)}>Retry</Button>
+              <Button onClick={() => refetch()}>Retry</Button>
             </div>
           ) : tree.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-12">

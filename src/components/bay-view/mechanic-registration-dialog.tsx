@@ -9,8 +9,8 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   onClose: () => void;
@@ -107,9 +107,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
           {success && (
             <div className="rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 px-4 py-2.5 text-xs text-green-600 dark:text-green-400 flex items-center gap-2">
               <CheckCircle2 className="size-4 shrink-0" />
-              <span>
-                {t("mechanicRegistered", { name: fullName })}
-              </span>
+              <span>{t("mechanicRegistered", { name: fullName })}</span>
             </div>
           )}
 
@@ -152,7 +150,8 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
 
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-              {t("phone")} <span className="text-muted-foreground/60">(optional)</span>
+              {t("phone")}{" "}
+              <span className="text-muted-foreground/60">(optional)</span>
             </label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />

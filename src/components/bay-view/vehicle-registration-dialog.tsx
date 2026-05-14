@@ -1,18 +1,18 @@
 "use client";
 
-import { HistoryIcon } from "lucide-react";
 import {
   Car,
   CheckCircle2,
   Clock,
+  HistoryIcon,
   Loader2,
   Search,
   User,
   Wrench,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatMNT } from "@/lib/utils";
 
 interface Props {
@@ -122,7 +122,9 @@ function ServiceTimeline({
 
             {/* Dot */}
             <div className="relative z-10 mt-1 shrink-0">
-              <div className={`size-5 rounded-full ${dotColor} ring-2 ring-background flex items-center justify-center`}>
+              <div
+                className={`size-5 rounded-full ${dotColor} ring-2 ring-background flex items-center justify-center`}
+              >
                 {entry.status === "Completed" ? (
                   <CheckCircle2 className="size-3 text-white" />
                 ) : (
@@ -237,9 +239,13 @@ export function VehicleRegistrationDialog({
       setEngine(v.engine ?? "");
       setOdometer(v.odometer?.toString() ?? "");
       if (lookupResult.customer) {
-        const [first, ...rest] = (lookupResult.customer.first_name ?? "").split(" ");
+        const [first, ...rest] = (lookupResult.customer.first_name ?? "").split(
+          " ",
+        );
         setCustFirstName(first);
-        setCustLastName(rest.join(" ") || (lookupResult.customer.last_name ?? ""));
+        setCustLastName(
+          rest.join(" ") || (lookupResult.customer.last_name ?? ""),
+        );
         setCustPhone(lookupResult.customer.phone ?? "");
       }
     }
@@ -265,9 +271,7 @@ export function VehicleRegistrationDialog({
         setMode("register");
       }
     } catch (err) {
-      setLookupError(
-        err instanceof Error ? err.message : "Lookup failed",
-      );
+      setLookupError(err instanceof Error ? err.message : "Lookup failed");
     } finally {
       setLookupLoading(false);
     }
@@ -301,7 +305,9 @@ export function VehicleRegistrationDialog({
       setSaveMode(saveResult.isUpdate ? "updated" : "created");
 
       // Re-lookup to update timeline
-      const lookupResult = await lookupVehicleByPlate(plate.trim().toUpperCase());
+      const lookupResult = await lookupVehicleByPlate(
+        plate.trim().toUpperCase(),
+      );
       setLookupResult(lookupResult);
     } catch (err) {
       setSaveError(
@@ -367,7 +373,9 @@ export function VehicleRegistrationDialog({
               }}
               className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted transition-colors"
             >
-              {mode === "register" ? t("switchToLookup") : t("switchToRegister")}
+              {mode === "register"
+                ? t("switchToLookup")
+                : t("switchToRegister")}
             </button>
             <button
               type="button"
@@ -520,7 +528,8 @@ export function VehicleRegistrationDialog({
               {/* Customer fields */}
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                  {t("ownerInfo")} <span className="text-muted-foreground/60">(optional)</span>
+                  {t("ownerInfo")}{" "}
+                  <span className="text-muted-foreground/60">(optional)</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <input
@@ -550,7 +559,9 @@ export function VehicleRegistrationDialog({
               {/* Submit button */}
               <button
                 type="submit"
-                disabled={saving || !plate.trim() || !make.trim() || !model.trim()}
+                disabled={
+                  saving || !plate.trim() || !make.trim() || !model.trim()
+                }
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 mt-2"
               >
                 {saving ? (
@@ -575,7 +586,9 @@ export function VehicleRegistrationDialog({
               <div className="flex items-center justify-center size-7 rounded-lg bg-amber-500/10">
                 <HistoryIcon className="size-3.5 text-amber-500" />
               </div>
-              <span className="text-sm font-semibold">{t("serviceTimeline")}</span>
+              <span className="text-sm font-semibold">
+                {t("serviceTimeline")}
+              </span>
               {lookupResult.serviceHistory.length > 0 && (
                 <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
                   {lookupResult.serviceHistory.length}
@@ -634,12 +647,8 @@ export function VehicleRegistrationDialog({
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/40">
                 <Car className="size-12 mb-3" />
-                <p className="text-sm font-medium">
-                  {t("enterPlateAbove")}
-                </p>
-                <p className="text-xs mt-1">
-                  {t("timelineWillAppear")}
-                </p>
+                <p className="text-sm font-medium">{t("enterPlateAbove")}</p>
+                <p className="text-xs mt-1">{t("timelineWillAppear")}</p>
               </div>
             )}
           </div>

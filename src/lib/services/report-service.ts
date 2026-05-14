@@ -2,7 +2,7 @@ import { cacheTags, cacheDurations } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
 import type { WorkOrderDetail } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
-import { getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
+
 import type {
   CustomerAcquisitionPoint,
   DailyReport,
@@ -121,7 +121,7 @@ export async function getDailyReport(
       let totalRevenue = 0;
       let totalDiscounts = 0;
 
-      for (const [woId, data] of woDataMap) {
+      for (const [_woId, data] of woDataMap) {
         servicesCount += data.services.length;
         partsCount += data.parts.length;
         for (const s of data.services) {
@@ -253,21 +253,46 @@ export async function getMonthlyReport(
 
   const woIds = (workOrders ?? []).map((w) => w.id);
 
+  const [servicesData, partsData] = await Promise.all([
+    woIds.length > 0
+      ? supabase
+          .from("work_order_services")
+          .select("final_price, discount_amount, work_order_id")
+          .in("work_order_id", woIds)
+      : { data: [] as any[] },
+    woIds.length > 0
+      ? supabase
+          .from("work_order_parts")
+          .select("final_price, discount_amount, work_order_id")
+          .in("work_order_id", woIds)
+      : { data: [] as any[] },
+  ]);
+
+  const woDataMap = new Map<string, { services: any[]; parts: any[] }>();
+  for (const s of servicesData.data ?? []) {
+    const entry = woDataMap.get(s.work_order_id) ?? { services: [], parts: [] };
+    entry.services.push(s);
+    woDataMap.set(s.work_order_id, entry);
+  }
+  for (const p of partsData.data ?? []) {
+    const entry = woDataMap.get(p.work_order_id) ?? { services: [], parts: [] };
+    entry.parts.push(p);
+    woDataMap.set(p.work_order_id, entry);
+  }
+
   let servicesCount = 0;
   let partsCount = 0;
   let totalRevenue = 0;
   let totalDiscounts = 0;
 
-  for (const woId of woIds) {
-    const detail = await getWorkOrderDetail(supabase, woId);
-    servicesCount += detail.services.length;
-    partsCount += detail.parts.length;
-
-    for (const s of detail.services) {
+  for (const [_woId, data] of woDataMap) {
+    servicesCount += data.services.length;
+    partsCount += data.parts.length;
+    for (const s of data.services) {
       totalRevenue += Number(s.final_price);
       totalDiscounts += Number(s.discount_amount ?? 0);
     }
-    for (const p of detail.parts) {
+    for (const p of data.parts) {
       totalRevenue += Number(p.final_price);
       totalDiscounts += Number(p.discount_amount ?? 0);
     }
@@ -318,20 +343,63 @@ export async function getEndOfDaySummary(
     }
   >();
 
+  const mechanicIds = [
+    ...new Set(
+      workOrders
+        .map((w) => w.mechanic_id)
+        .filter(Boolean) as string[],
+    ),
+  ];
+
+  const { data: profilesData } =
+    mechanicIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", mechanicIds)
+      : { data: [] as any[] };
+
+  const profileMap = new Map<string, string>();
+  for (const p of profilesData ?? []) {
+    profileMap.set(p.id, p.full_name ?? "Unknown");
+  }
+
+  const woIds = workOrders.map((w) => w.id);
+  const [servicesData, partsData] = await Promise.all([
+    woIds.length > 0
+      ? supabase
+          .from("work_order_services")
+          .select("final_price, work_order_id")
+          .in("work_order_id", woIds)
+      : { data: [] as any[] },
+    woIds.length > 0
+      ? supabase
+          .from("work_order_parts")
+          .select("final_price, work_order_id")
+          .in("work_order_id", woIds)
+      : { data: [] as any[] },
+  ]);
+
+  const woDataMap = new Map<string, { services: any[]; parts: any[] }>();
+  for (const s of servicesData.data ?? []) {
+    const entry = woDataMap.get(s.work_order_id) ?? { services: [], parts: [] };
+    entry.services.push(s);
+    woDataMap.set(s.work_order_id, entry);
+  }
+  for (const p of partsData.data ?? []) {
+    const entry = woDataMap.get(p.work_order_id) ?? { services: [], parts: [] };
+    entry.parts.push(p);
+    woDataMap.set(p.work_order_id, entry);
+  }
+
   for (const wo of workOrders) {
     const mid = wo.mechanic_id;
     if (!mid) continue;
 
     if (!mechanicMap.has(mid)) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", mid)
-        .single();
-
       mechanicMap.set(mid, {
         mechanic_id: mid,
-        mechanic_name: profile?.full_name ?? "Unknown",
+        mechanic_name: profileMap.get(mid) ?? "Unknown",
         work_orders_completed: 0,
         services_count: 0,
         parts_count: 0,
@@ -344,13 +412,15 @@ export async function getEndOfDaySummary(
 
     entry.work_orders_completed++;
 
-    const detail = await getWorkOrderDetail(supabase, wo.id);
-    entry.services_count += detail.services.length;
-    entry.parts_count += detail.parts.length;
+    const data = woDataMap.get(wo.id);
+    if (!data) continue;
 
-    for (const s of detail.services)
+    entry.services_count += data.services.length;
+    entry.parts_count += data.parts.length;
+
+    for (const s of data.services)
       entry.total_revenue += Number(s.final_price);
-    for (const p of detail.parts) entry.total_revenue += Number(p.final_price);
+    for (const p of data.parts) entry.total_revenue += Number(p.final_price);
   }
 
   const mechanics = Array.from(mechanicMap.values());
@@ -527,40 +597,24 @@ export async function getDashboardData(
     statusMap.entries(),
   ).map(([status, count]) => ({ status, count }));
 
-  // ── Revenue Trend (optimized: 1 query per day → 3 total) ──
-  const revenueTrend = await getRevenueTrendBatched(supabase, orgId, dayCount);
-
-  // ── Top Services ──────────────────────────────────────
-  const topServices = await getTopServicesBatched(supabase, completedWoIds);
-
-  // ── Technician Performance (optimized: 2 queries total) ──
-  const technicianPerformance = await getTechnicianPerformanceBatched(
-    supabase,
-    orgId,
-    allCompletedIds,
-  );
-
-  // ── Recent Work Orders (optimized: batch fetch, not N+1) ──
-  const recentWorkOrders = await getRecentWorkOrdersBatched(
-    supabase,
-    recentWoIds,
-  );
-
-  // ── Service Category Breakdown ────────────────────────
-  const serviceCategoryBreakdown = await getServiceCategoryBreakdownBatched(
-    supabase,
-    orgId,
-    allCompletedIds,
-  );
-
-  // ── Customer Acquisition Trend ────────────────────────
-  const customerAcquisitionTrend = await getCustomerAcquisitionTrendBatched(
-    supabase,
-    orgId,
-  );
-
-  // ── Previous Period Comparison ──────────────────────────
-  const prevSummary = await getPreviousPeriodSummary(supabase, orgId, period);
+  // ── Parallel: Revenue Trend, Top Services, Tech Perf, Recent WOs, Categories, Acquisition, Prev Period ──
+  const [
+    revenueTrend,
+    topServices,
+    technicianPerformance,
+    recentWorkOrders,
+    serviceCategoryBreakdown,
+    customerAcquisitionTrend,
+    prevSummary,
+  ] = await Promise.all([
+    getRevenueTrendBatched(supabase, orgId, dayCount),
+    getTopServicesBatched(supabase, completedWoIds),
+    getTechnicianPerformanceBatched(supabase, orgId, allCompletedIds),
+    getRecentWorkOrdersBatched(supabase, recentWoIds),
+    getServiceCategoryBreakdownBatched(supabase, orgId, allCompletedIds),
+    getCustomerAcquisitionTrendBatched(supabase, orgId),
+    getPreviousPeriodSummary(supabase, orgId, period),
+  ]);
 
   // Combine into a DashboardSummary shape for comparison
   const summaryComparison: DashboardSummary | null = prevSummary

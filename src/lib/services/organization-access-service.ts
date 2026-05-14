@@ -59,8 +59,10 @@ export async function activateOrganizationAccess(params: {
   pin: string;
   confirmPin?: string;
 }): Promise<void> {
-  const supabase = await createClient();
-  const organizations = await listUserOrganizations();
+  const [supabase, organizations] = await Promise.all([
+    createClient(),
+    listUserOrganizations(),
+  ]);
   const selected = organizations.find(
     (organization) => organization.organizationId === params.organizationId,
   );

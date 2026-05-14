@@ -1,28 +1,27 @@
 "use client";
 
-import { ArrowLeft, Building2, Car, Pencil, Save, X } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, Building2, Pencil, Save, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { ExportButton } from "@/components/export-button";
-import type { ExportColumn } from "@/lib/export";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { ExportColumn } from "@/lib/export";
 import { Link, useRouter } from "@/lib/i18n/navigation";
+import { customerKeys } from "@/lib/queries/keys";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import {
+  CustomerEditForm,
+  type CustomerFormState,
+} from "./_customer-edit-form";
+import type { CustomerVehicleSummary } from "./_vehicle-list-card";
+import { VehicleListCard } from "./_vehicle-list-card";
 
 type CustomerType = "individual" | "company";
-
-interface CustomerVehicleSummary {
-  id: string;
-  plate_number: string;
-  make: string;
-  model: string;
-  year: number | null;
-}
 
 interface CustomerDetailResponse {
   id: string;
@@ -38,18 +37,6 @@ interface CustomerDetailResponse {
   notes: string | null;
   created_at: string;
   vehicles: CustomerVehicleSummary[];
-}
-
-interface CustomerFormState {
-  type: CustomerType;
-  firstName: string;
-  lastName: string;
-  companyName: string;
-  contactPerson: string;
-  phone: string;
-  email: string;
-  address: string;
-  notes: string;
 }
 
 const emptyForm: CustomerFormState = {
@@ -86,7 +73,29 @@ export default function CustomerDetailPage() {
   const router = useRouter();
   const customerId = params.id as string;
 
-  const [customer, setCustomer] = useState<CustomerDetailResponse | null>(null);
+  const orgQuery = useCurrentOrg();
+  const orgId = orgQuery.data?.orgId;
+
+  const {
+    data: customer,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: customerKeys.detail(orgId ?? "", customerId ?? ""),
+    queryFn: async () => {
+      const response = await fetch(
+        `/api/organizations/${orgId}/customers/${customerId}`,
+      );
+      const json = await response.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data as CustomerDetailResponse;
+    },
+    enabled: !!orgId && !!customerId,
+    staleTime: 30_000,
+  });
+
+  const error = queryError ? queryError.message : null;
 
   const vehicleExportColumns: ExportColumn<CustomerVehicleSummary>[] = [
     { key: "plate_number", label: "Plate" },
@@ -94,9 +103,7 @@ export default function CustomerDetailPage() {
     { key: "model", label: "Model" },
     { key: "year", label: "Year" },
   ];
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [orgId, setOrgId] = useState<string | null>(null);
+
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<CustomerFormState>(emptyForm);
@@ -115,63 +122,12 @@ export default function CustomerDetailPage() {
     });
   }, []);
 
-  const fetchCustomer = useCallback(async () => {
-    if (!orgId || !customerId) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `/api/organizations/${orgId}/customers/${customerId}`,
-      );
-      const json = await response.json();
-
-      if (json.error) {
-        setError(json.error.message);
-        return;
-      }
-
-      setCustomer(json.data);
-      syncForm(json.data);
-    } catch {
-      setError(t("failedToLoad"));
-    } finally {
-      setLoading(false);
-    }
-  }, [customerId, orgId, syncForm, t]);
-
-  useEffect(() => {
-    fetch("/api/profile")
-      .then((response) => response.json())
-      .then((data) => {
-        const nextOrgId = data?.organizationId ?? data?.data?.organizationId;
-        if (!nextOrgId) {
-          setError(t("noOrganization"));
-          return;
-        }
-
-        setOrgId(nextOrgId);
-      })
-      .catch(() => setError("Failed to load profile"))
-      .finally(() => setLoading(false));
-  }, [t]);
-
-  useEffect(() => {
-    if (orgId) {
-      void fetchCustomer();
-    }
-  }, [fetchCustomer, orgId]);
-
   const handleSave = async () => {
     if (!orgId || !customerId) {
       return;
     }
 
     setSaving(true);
-    setError(null);
 
     try {
       const response = await fetch(
@@ -186,28 +142,20 @@ export default function CustomerDetailPage() {
 
       if (json.error) {
         toast.error(json.error.message);
-        setError(json.error.message);
         return;
       }
 
-      const nextCustomer = {
-        ...(customer as CustomerDetailResponse),
-        ...json.data,
-      };
-
-      setCustomer(nextCustomer);
-      syncForm(nextCustomer);
+      refetch();
       setEditing(false);
       toast.success("Customer updated");
     } catch {
       toast.error(t("failedToSave"));
-      setError(t("failedToSave"));
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) {
+  if (orgQuery.isLoading || loading) {
     return (
       <div className="flex max-w-3xl flex-col gap-6">
         <Skeleton className="h-8 w-40" />
@@ -230,7 +178,7 @@ export default function CustomerDetailPage() {
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <p className="text-muted-foreground">{error}</p>
-            <Button onClick={() => void fetchCustomer()} variant="outline">
+            <Button onClick={() => refetch()} variant="outline">
               {t("retry")}
             </Button>
           </CardContent>
@@ -269,7 +217,13 @@ export default function CustomerDetailPage() {
           </p>
         </div>
         {!editing ? (
-          <Button variant="outline" onClick={() => setEditing(true)}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              syncForm(customer);
+              setEditing(true);
+            }}
+          >
             <Pencil className="size-4" />
             {commonT("edit")}
           </Button>
@@ -307,193 +261,7 @@ export default function CustomerDetailPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {editing ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label
-                  className="mb-1 block text-sm font-medium"
-                  htmlFor="type"
-                >
-                  {t("type")}
-                </label>
-                <select
-                  id="type"
-                  value={form.type}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      type: event.target.value as CustomerType,
-                    }))
-                  }
-                  className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm"
-                >
-                  <option value="individual">{t("individual")}</option>
-                  <option value="company">{t("company")}</option>
-                </select>
-              </div>
-
-              {form.type === "company" ? (
-                <>
-                  <div>
-                    <label
-                      className="mb-1 block text-sm font-medium"
-                      htmlFor="companyName"
-                    >
-                      {t("companyName")}
-                    </label>
-                    <Input
-                      id="companyName"
-                      value={form.companyName}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          companyName: event.target.value,
-                        }))
-                      }
-                      className="h-11"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      className="mb-1 block text-sm font-medium"
-                      htmlFor="contactPerson"
-                    >
-                      {t("contactPerson")}
-                    </label>
-                    <Input
-                      id="contactPerson"
-                      value={form.contactPerson}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          contactPerson: event.target.value,
-                        }))
-                      }
-                      className="h-11"
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <label
-                      className="mb-1 block text-sm font-medium"
-                      htmlFor="firstName"
-                    >
-                      {t("firstName")}
-                    </label>
-                    <Input
-                      id="firstName"
-                      value={form.firstName}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          firstName: event.target.value,
-                        }))
-                      }
-                      className="h-11"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      className="mb-1 block text-sm font-medium"
-                      htmlFor="lastName"
-                    >
-                      {t("lastName")}
-                    </label>
-                    <Input
-                      id="lastName"
-                      value={form.lastName}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          lastName: event.target.value,
-                        }))
-                      }
-                      className="h-11"
-                    />
-                  </div>
-                </>
-              )}
-
-              <div>
-                <label
-                  className="mb-1 block text-sm font-medium"
-                  htmlFor="phone"
-                >
-                  {t("phone")}
-                </label>
-                <Input
-                  id="phone"
-                  value={form.phone}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      phone: event.target.value,
-                    }))
-                  }
-                  className="h-11"
-                />
-              </div>
-              <div>
-                <label
-                  className="mb-1 block text-sm font-medium"
-                  htmlFor="email"
-                >
-                  {t("email")}
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={form.email}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      email: event.target.value,
-                    }))
-                  }
-                  className="h-11"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label
-                  className="mb-1 block text-sm font-medium"
-                  htmlFor="address"
-                >
-                  {t("address")}
-                </label>
-                <Input
-                  id="address"
-                  value={form.address}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      address: event.target.value,
-                    }))
-                  }
-                  className="h-11"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label
-                  className="mb-1 block text-sm font-medium"
-                  htmlFor="notes"
-                >
-                  {t("notes")}
-                </label>
-                <textarea
-                  id="notes"
-                  value={form.notes}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      notes: event.target.value,
-                    }))
-                  }
-                  rows={4}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
-                />
-              </div>
-            </div>
+            <CustomerEditForm form={form} setForm={setForm} t={t} />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-lg bg-muted/50 p-3">
@@ -554,65 +322,13 @@ export default function CustomerDetailPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">
-              {t("vehicles")} ({customer.vehicles.length})
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <ExportButton
-                data={customer.vehicles}
-                columns={vehicleExportColumns}
-                filename={`customer-${customer.id.slice(0, 8)}-vehicles.xlsx`}
-                sheetName="Vehicles"
-                label="Export"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  router.push(`/dashboard/vehicles/new?customerId=${customer.id}`)
-                }
-              >
-                <Car className="size-4" />
-                {t("addVehicle")}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {customer.vehicles.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              {t("noVehicles")}
-            </p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {customer.vehicles.map((vehicle) => (
-                <button
-                  key={vehicle.id}
-                  type="button"
-                  onClick={() =>
-                    router.push(`/dashboard/vehicles/${vehicle.id}`)
-                  }
-                  className="flex items-center gap-3 rounded-lg bg-muted/50 p-3 text-left transition-colors hover:bg-muted"
-                >
-                  <Car className="size-5 shrink-0 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="font-medium">{vehicle.plate_number}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {[vehicle.year, vehicle.make, vehicle.model]
-                        .filter(Boolean)
-                        .join(" ")}
-                    </p>
-                  </div>
-                  <ArrowLeft className="size-4 rotate-180 text-muted-foreground" />
-                </button>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <VehicleListCard
+        vehicles={customer.vehicles}
+        customerId={customer.id}
+        router={router}
+        vehicleExportColumns={vehicleExportColumns}
+        t={t}
+      />
     </div>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import { ChevronDown, ChevronUp, Users, Wrench } from "lucide-react";
-import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import type { Profile } from "@/lib/database.types";
 import { MechanicChip } from "./mechanic-chip";
 

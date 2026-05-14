@@ -1,8 +1,8 @@
 "use client";
 
 import { MessageSquare, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,8 @@ export function StatusNotesModal({
     Completed: t("statusNotesCompleteTitle"),
     Cancelled: t("statusNotesCancelTitle"),
   };
-  const title = LABEL_MAP[newStatus] ?? t("statusNotesGenericTitle", { status: newStatus });
+  const title =
+    LABEL_MAP[newStatus] ?? t("statusNotesGenericTitle", { status: newStatus });
 
   return (
     <div
@@ -71,9 +72,7 @@ export function StatusNotesModal({
           </button>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">
-            {t("addNotePrompt")}
-          </p>
+          <p className="text-sm text-muted-foreground">{t("addNotePrompt")}</p>
           <Input
             ref={inputRef}
             value={notes}

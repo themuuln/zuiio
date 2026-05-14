@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -11,7 +12,20 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
+import {
+  type LastVisitInfo,
+  type MechanicOption,
+  useCreateCustomer,
+  useCreateVehicle,
+  useCreateWorkOrder,
+  useCustomerSearch,
+  useCustomersByPlate,
+  useMechanicsWithJobCount,
+  usePriceHistory,
+  useServiceCatalog,
+  useVehicleLastVisit,
+  useVehicleSearch,
+} from "@/lib/queries/use-wizard-data";
 import type { Customer, ServiceCatalog, Vehicle } from "@/lib/types";
 
 export interface ServiceLine {
@@ -32,30 +46,6 @@ export interface PartLine {
   unit_price: number;
   final_price: number;
   last_price?: number;
-}
-
-export interface MechanicOption {
-  id: string;
-  fullName: string | null;
-  email: string;
-  current_jobs?: number;
-}
-
-interface LastVisitInfo {
-  services: {
-    service_catalog_id: string | null;
-    service_name: string;
-    unit_price: number;
-    quantity: number;
-  }[];
-  parts: {
-    part_name: string;
-    part_number: string | null;
-    unit_price: number;
-    quantity: number;
-  }[];
-  mechanic_id: string | null;
-  notes: string | null;
 }
 
 interface WizardState {
@@ -172,10 +162,6 @@ export function useWizardContext() {
 export function WizardProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
   const [customerSearch, setCustomerSearch] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
@@ -185,8 +171,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [quickFirstName, setQuickFirstName] = useState("");
   const [quickLastName, setQuickLastName] = useState("");
   const [quickPhone, setQuickPhone] = useState("");
-  const [customerSearching, setCustomerSearching] = useState(false);
-  const [creatingCustomer, setCreatingCustomer] = useState(false);
   const [customerCreateError, setCustomerCreateError] = useState<string | null>(
     null,
   );
@@ -199,8 +183,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [quickMake, setQuickMake] = useState("");
   const [quickModel, setQuickModel] = useState("");
   const [quickYear, setQuickYear] = useState("");
-  const [vehicleSearching, setVehicleSearching] = useState(false);
-  const [creatingVehicle, setCreatingVehicle] = useState(false);
   const [vehicleCreateError, setVehicleCreateError] = useState<string | null>(
     null,
   );
@@ -229,143 +211,178 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [showLastVisitSuggestions, setShowLastVisitSuggestions] =
     useState(false);
 
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const res = await fetch("/api/profile");
+      if (!res.ok) throw new Error("Failed to load profile");
+      return res.json();
+    },
+    staleTime: Infinity,
+  });
+
+  const orgId =
+    (profile?.organizationId ?? profile?.data?.organizationId) || null;
+
+  const { data: catalogData, isInitialLoading: catalogLoading } =
+    useServiceCatalog(orgId);
+  const { data: mechanicsData, isInitialLoading: mechanicsLoading } =
+    useMechanicsWithJobCount(orgId);
+  const { data: priceHistoryData, isInitialLoading: priceHistoryLoading } =
+    usePriceHistory(orgId);
+
+  const { data: customerSearchResults, isFetching: customerSearchFetching } =
+    useCustomerSearch(orgId, customerSearch);
+  const { data: plateSearchResults, isFetching: plateSearchFetching } =
+    useCustomersByPlate(orgId, customerSearch);
+
+  const { data: vehicleSearchResults, isFetching: vehicleSearchFetching } =
+    useVehicleSearch(orgId, selectedCustomer?.id, vehicleSearch);
+
+  const { data: vehicleLastVisitData } = useVehicleLastVisit(
+    orgId,
+    selectedVehicle?.id,
+  );
+
+  const createCustomerMutation = useCreateCustomer(orgId);
+  const createVehicleMutation = useCreateVehicle(orgId);
+  const createWorkOrderMutation = useCreateWorkOrder(orgId);
+
+  const loading =
+    profileLoading || catalogLoading || mechanicsLoading || priceHistoryLoading;
+  const saving = createWorkOrderMutation.isPending;
+  const customerSearching = customerSearchFetching || plateSearchFetching;
+  const creatingCustomer = createCustomerMutation.isPending;
+  const vehicleSearching = vehicleSearchFetching;
+  const creatingVehicle = createVehicleMutation.isPending;
+
   const servicesTotal = serviceLines.reduce((s, l) => s + l.final_price, 0);
   const partsTotal = partLines.reduce((s, l) => s + l.final_price, 0);
   const grandTotal = servicesTotal + partsTotal;
   const isFormValid = !!selectedCustomer && !!selectedVehicle && !saving;
 
-  const handleSelectCustomer = useCallback(
-    (customer: Customer) => {
-      setSelectedCustomer(customer);
-      setCustomerSearch("");
-      setShowQuickCustomer(false);
-      setLastVisitData(null);
-      setShowLastVisitSuggestions(false);
-      if (orgId) {
-        fetch(`/api/organizations/${orgId}/vehicles?customer=${customer.id}`)
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.data?.length > 0) {
-              setVehicles(d.data);
-              setVehicleSearch("");
-            }
-          })
-          .catch(() => {});
+  useEffect(() => {
+    if (catalogData) setCatalog(catalogData);
+  }, [catalogData]);
+
+  useEffect(() => {
+    if (mechanicsData) setMechanics(mechanicsData);
+  }, [mechanicsData]);
+
+  useEffect(() => {
+    if (priceHistoryData) {
+      setPriceHistory(priceHistoryData.services ?? {});
+      setPartHistory(priceHistoryData.parts ?? {});
+    }
+  }, [priceHistoryData]);
+
+  useEffect(() => {
+    if (!customerSearch) {
+      setCustomers([]);
+      return;
+    }
+    const map = new Map<string, Customer>();
+    for (const c of customerSearchResults ?? []) map.set(c.id, c);
+    for (const c of plateSearchResults ?? []) map.set(c.id, c);
+    setCustomers(Array.from(map.values()));
+  }, [customerSearchResults, plateSearchResults, customerSearch]);
+
+  useEffect(() => {
+    if (!vehicleSearch && !selectedCustomer) {
+      setVehicles([]);
+    } else {
+      setVehicles(vehicleSearchResults ?? []);
+    }
+  }, [vehicleSearchResults, vehicleSearch, selectedCustomer]);
+
+  const lastProcessedVehicleRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!vehicleLastVisitData || !selectedVehicle) return;
+    if (lastProcessedVehicleRef.current === selectedVehicle.id) return;
+    lastProcessedVehicleRef.current = selectedVehicle.id;
+
+    if (!selectedCustomer && vehicleLastVisitData.owner) {
+      setSelectedCustomer(vehicleLastVisitData.owner);
+    }
+
+    if (vehicleLastVisitData.lastVisit) {
+      setLastVisitData(vehicleLastVisitData.lastVisit);
+      if (
+        vehicleLastVisitData.lastVisit.services.length > 0 ||
+        vehicleLastVisitData.lastVisit.parts.length > 0
+      ) {
+        setShowLastVisitSuggestions(true);
       }
-    },
-    [orgId],
-  );
+    }
+  }, [vehicleLastVisitData, selectedVehicle, selectedCustomer]);
+
+  const handleSelectCustomer = useCallback((customer: Customer) => {
+    setSelectedCustomer(customer);
+    setCustomerSearch("");
+    setShowQuickCustomer(false);
+    setLastVisitData(null);
+    setShowLastVisitSuggestions(false);
+  }, []);
 
   const handleQuickCreateCustomer = async () => {
     if (!orgId || !quickFirstName.trim()) {
       setCustomerCreateError("First name is required");
       return;
     }
-    setCreatingCustomer(true);
     setCustomerCreateError(null);
     try {
-      const res = await fetch(`/api/organizations/${orgId}/customers`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          first_name: quickFirstName.trim(),
-          last_name: quickLastName.trim() || null,
-          phone: quickPhone.trim() || null,
-        }),
+      const customer = await createCustomerMutation.mutateAsync({
+        first_name: quickFirstName.trim(),
+        last_name: quickLastName.trim() || null,
+        phone: quickPhone.trim() || null,
       });
-      const json = await res.json();
-      if (json.error) {
-        setCustomerCreateError(
-          json.error.message ?? "Failed to create customer",
-        );
-      } else if (json.data) {
-        handleSelectCustomer(json.data);
-        setQuickFirstName("");
-        setQuickLastName("");
-        setQuickPhone("");
-        setShowQuickCustomer(false);
-      }
-    } catch {
-      setCustomerCreateError("Network error — please try again");
-    } finally {
-      setCreatingCustomer(false);
+      handleSelectCustomer(customer);
+      setQuickFirstName("");
+      setQuickLastName("");
+      setQuickPhone("");
+      setShowQuickCustomer(false);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to create customer";
+      setCustomerCreateError(message);
     }
   };
 
-  const handleSelectVehicle = useCallback(
-    async (vehicle: Vehicle) => {
-      setSelectedVehicle(vehicle);
-      setVehicleSearch("");
+  const handleSelectVehicle = useCallback(async (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
+    setVehicleSearch("");
+    setShowQuickVehicle(false);
+    setLastVisitData(null);
+    setShowLastVisitSuggestions(false);
+    lastProcessedVehicleRef.current = null;
+  }, []);
+
+  const handleQuickCreateVehicle = async () => {
+    if (!orgId || !quickPlate.trim()) {
+      setVehicleCreateError("Plate number is required");
+      return;
+    }
+    setVehicleCreateError(null);
+    try {
+      const vehicle = await createVehicleMutation.mutateAsync({
+        plate_number: quickPlate.trim().toUpperCase(),
+        make: quickMake.trim() || "Unknown",
+        model: quickModel.trim() || "Unknown",
+        year: quickYear ? parseInt(quickYear, 10) : null,
+        customer_id: selectedCustomer?.id ?? null,
+      });
+      void handleSelectVehicle(vehicle);
+      setQuickPlate("");
+      setQuickMake("");
+      setQuickModel("");
+      setQuickYear("");
       setShowQuickVehicle(false);
-      setLastVisitData(null);
-      setShowLastVisitSuggestions(false);
-
-      if (!orgId || !vehicle.id) return;
-
-      const supabase = createClient();
-
-      if (!selectedCustomer) {
-        const { data: ownerData } = await supabase
-          .from("vehicle_owners")
-          .select("customers(*)")
-          .eq("organization_id", orgId)
-          .eq("vehicle_id", vehicle.id)
-          .is("owned_until", null)
-          .limit(1)
-          .maybeSingle();
-        const customer = ownerData?.customers as Customer | null | undefined;
-        if (customer) setSelectedCustomer(customer);
-      }
-
-      try {
-        const { data: workOrders } = await supabase
-          .from("work_orders")
-          .select("id, mechanic_id")
-          .eq("organization_id", orgId)
-          .eq("vehicle_id", vehicle.id)
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        const workOrder = workOrders?.[0];
-        if (!workOrder) return;
-
-        const [servicesResult, partsResult] = await Promise.all([
-          supabase
-            .from("work_order_services")
-            .select("service_catalog_id, service_name, unit_price, quantity")
-            .eq("work_order_id", workOrder.id),
-          supabase
-            .from("work_order_parts")
-            .select("part_name, part_number, unit_price, quantity")
-            .eq("work_order_id", workOrder.id),
-        ]);
-
-        const data: LastVisitInfo = {
-          services: (servicesResult.data ?? []).map((service) => ({
-            service_catalog_id: service.service_catalog_id,
-            service_name: service.service_name,
-            unit_price: Number(service.unit_price),
-            quantity: Number(service.quantity),
-          })),
-          parts: (partsResult.data ?? []).map((part) => ({
-            part_name: part.part_name,
-            part_number: part.part_number,
-            unit_price: Number(part.unit_price),
-            quantity: Number(part.quantity),
-          })),
-          mechanic_id: workOrder.mechanic_id,
-          notes: null,
-        };
-        setLastVisitData(data);
-        if (data.services.length > 0 || data.parts.length > 0) {
-          setShowLastVisitSuggestions(true);
-        }
-      } finally {
-      }
-    },
-    [orgId, selectedCustomer],
-  );
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to create vehicle";
+      setVehicleCreateError(message);
+    }
+  };
 
   const addAllFromLastVisit = useCallback(() => {
     if (!lastVisitData) return;
@@ -412,43 +429,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     }
     setShowLastVisitSuggestions(false);
   }, [lastVisitData, serviceLines]);
-
-  const handleQuickCreateVehicle = async () => {
-    if (!orgId || !quickPlate.trim()) {
-      setVehicleCreateError("Plate number is required");
-      return;
-    }
-    setCreatingVehicle(true);
-    setVehicleCreateError(null);
-    try {
-      const res = await fetch(`/api/organizations/${orgId}/vehicles`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plate_number: quickPlate.trim().toUpperCase(),
-          make: quickMake.trim() || "Unknown",
-          model: quickModel.trim() || "Unknown",
-          year: quickYear ? parseInt(quickYear, 10) : null,
-          customer_id: selectedCustomer?.id ?? null,
-        }),
-      });
-      const json = await res.json();
-      if (json.error) {
-        setVehicleCreateError(json.error.message ?? "Failed to create vehicle");
-      } else if (json.data) {
-        void handleSelectVehicle(json.data);
-        setQuickPlate("");
-        setQuickMake("");
-        setQuickModel("");
-        setQuickYear("");
-        setShowQuickVehicle(false);
-      }
-    } catch {
-      setVehicleCreateError("Network error — please try again");
-    } finally {
-      setCreatingVehicle(false);
-    }
-  };
 
   const addService = useCallback(
     (svc: ServiceCatalog) => {
@@ -546,156 +526,43 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       toast.error("Customer and vehicle are required");
       return;
     }
-    setSaving(true);
-    try {
-      const woRes = await fetch(`/api/organizations/${orgId}/work-orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer_id: selectedCustomer.id,
-          vehicle_id: selectedVehicle.id,
-          description,
-          mechanic_id: selectedMechanic || null,
-        }),
-      });
-      const woJson = await woRes.json();
-      if (woJson.error || !woJson.data) {
-        toast.error(woJson.error?.message ?? "Failed to create work order");
-        setSaving(false);
-        return;
-      }
-      const woId = woJson.data.id;
 
-      for (const svc of serviceLines) {
-        await fetch(
-          `/api/organizations/${orgId}/work-orders/${woId}/services`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(svc),
-          },
-        );
-      }
-      for (const part of partLines) {
-        await fetch(`/api/organizations/${orgId}/work-orders/${woId}/parts`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(part),
-        });
-      }
-      toast.success("Work order created");
-      router.push(`/dashboard/work-orders/${woId}`);
-    } catch {
-      toast.error("Failed to create work order");
-    } finally {
-      setSaving(false);
-    }
+    const services = serviceLines.map((svc) => ({
+      service_catalog_id: svc.service_catalog_id,
+      service_name: svc.name,
+      quantity: svc.quantity,
+      unit_price: svc.base_price,
+      discount_amount: svc.discount_amount_mnt,
+      discount_percentage: svc.discount_percent,
+    }));
+
+    const parts = partLines.map((part) => ({
+      part_name: part.part_name,
+      part_number: part.part_number || null,
+      quantity: part.quantity,
+      unit_price: part.unit_price,
+    }));
+
+    createWorkOrderMutation.mutate(
+      {
+        customer_id: selectedCustomer.id,
+        vehicle_id: selectedVehicle.id,
+        mechanic_id: selectedMechanic || null,
+        notes: description || undefined,
+        services,
+        parts,
+      },
+      {
+        onSuccess: (data) => {
+          toast.success("Work order created");
+          router.push(`/dashboard/work-orders/${data.id}`);
+        },
+        onError: () => {
+          toast.error("Failed to create work order");
+        },
+      },
+    );
   };
-
-  useEffect(() => {
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then((d) => {
-        const id = d?.organizationId ?? d?.data?.organizationId;
-        if (id) {
-          setOrgId(id);
-          Promise.all([
-            fetch(`/api/organizations/${id}/services`).then((r) => r.json()),
-            fetch(`/api/organizations/${id}/reports?type=mechanics`).then((r) =>
-              r.json(),
-            ),
-            fetch(`/api/organizations/${id}/price-history`).then((r) =>
-              r.json(),
-            ),
-            fetch(`/api/organizations/${id}/work-orders`).then((r) => r.json()),
-          ]).then(([catJson, mechJson, priceJson, workOrdersJson]) => {
-            if (catJson.data) setCatalog(catJson.data);
-            const mechanicsList = mechJson.data;
-            if (Array.isArray(mechanicsList)) {
-              const activeWorkOrders = (workOrdersJson.data ?? []).filter(
-                (wo: { status: string }) =>
-                  [
-                    "New",
-                    "Diagnosing",
-                    "In Progress",
-                    "Ready for Pickup",
-                  ].includes(wo.status),
-              );
-              setMechanics(
-                mechanicsList.map(
-                  (mechanic: { id: string; full_name: string | null }) => ({
-                    id: mechanic.id,
-                    fullName: mechanic.full_name ?? null,
-                    email: "",
-                    current_jobs: activeWorkOrders.filter(
-                      (wo: { mechanic_id: string | null }) =>
-                        wo.mechanic_id === mechanic.id,
-                    ).length,
-                  }),
-                ),
-              );
-            }
-            if (priceJson.data) {
-              setPriceHistory(priceJson.data.services ?? {});
-              setPartHistory(priceJson.data.parts ?? {});
-            }
-          });
-        }
-      })
-      .catch(() => setLoading(false))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (!orgId || !customerSearch) {
-      if (!customerSearch) setCustomers([]);
-      return;
-    }
-    setCustomerSearching(true);
-    const supabase = createClient();
-    Promise.all([
-      fetch(
-        `/api/organizations/${orgId}/customers?q=${encodeURIComponent(customerSearch)}`,
-      ).then((r) => r.json()),
-      supabase
-        .from("vehicles")
-        .select("vehicle_owners!inner(customers(*))")
-        .eq("organization_id", orgId)
-        .ilike("plate_number", `%${customerSearch}%`)
-        .is("deleted_at", null)
-        .is("vehicle_owners.owned_until", null)
-        .limit(5),
-    ])
-      .then(([customerJson, plateResult]) => {
-        const customerMap = new Map<string, Customer>();
-        for (const customer of customerJson.data ?? []) {
-          customerMap.set(customer.id, customer);
-        }
-        for (const row of plateResult.data ?? []) {
-          const owners = row.vehicle_owners as unknown as { customers?: Customer | Customer[] }[];
-          const ownerCustomer = owners?.[0]?.customers;
-          const customer = Array.isArray(ownerCustomer) ? ownerCustomer[0] : ownerCustomer;
-          if (customer) customerMap.set(customer.id, customer);
-        }
-        setCustomers(Array.from(customerMap.values()));
-      })
-      .finally(() => setCustomerSearching(false));
-  }, [orgId, customerSearch]);
-
-  useEffect(() => {
-    if (!orgId || !vehicleSearch || vehicleSearch.length < 2) {
-      if (!vehicleSearch && !selectedCustomer) setVehicles([]);
-      return;
-    }
-    setVehicleSearching(true);
-    const url = selectedCustomer
-      ? `/api/organizations/${orgId}/vehicles?customer=${selectedCustomer.id}&plate=${encodeURIComponent(vehicleSearch)}`
-      : `/api/organizations/${orgId}/vehicles?plate=${encodeURIComponent(vehicleSearch)}`;
-    fetch(url)
-      .then((r) => r.json())
-      .then((d) => setVehicles(d.data ?? []))
-      .finally(() => setVehicleSearching(false));
-  }, [orgId, vehicleSearch, selectedCustomer]);
 
   const customerRef = useRef<HTMLDivElement>(null);
 

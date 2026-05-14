@@ -2,15 +2,12 @@
 
 import {
   DndContext,
-  type DragEndEvent,
   DragOverlay,
-  type DragStartEvent,
   PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
 import {
   CarFront,
   Clock,
@@ -24,30 +21,24 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { BayViewData } from "@/lib/services/bay-view-service";
 import {
-  assignMechanicToWorkOrder,
-  assignToFirstAvailableBay,
-  assignVehicleToBay,
-  type BayViewData,
   getBayViewData,
-  removeVehicleFromBay,
-  reorderQueue,
   seedWaitingQueue,
-  unassignMechanicFromWorkOrder,
-  updateWorkOrderStatus,
 } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
+import { useBayActionHandlers } from "./_bay-action-handlers";
+import { useBayDragHandlers } from "./_bay-drag-handlers";
+import { BayListView } from "./_bay-list-view";
 import { BaySlot } from "./bay-slot";
 import { BayViewToolbar, type ViewMode } from "./bay-view-toolbar";
 import { MechanicRoster } from "./mechanic-roster";
 import { QuickActions } from "./quick-actions";
 import { StatusNotesModal } from "./status-notes-modal";
-import { StatusPill } from "./status-pill";
 import { ToastMessage } from "./toast-message";
 import { WaitingQueue } from "./waiting-queue";
 import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
 
-// ── Stats Summary ──────────────────────────────────────
 function BayStats({ data }: { data: BayViewData }) {
   const t = useTranslations("bayView");
   const baysWithWork = data.bays.filter((b) => b.workOrder).length;
@@ -115,24 +106,20 @@ export function BayViewClient() {
     variant: "info" | "error";
   } | null>(null);
 
-  // ── Current user / My Jobs ─────────────────────────────
   const [currentProfile, setCurrentProfile] = useState<{
     id: string;
     full_name: string | null;
   } | null>(null);
   const [myJobsOnly, setMyJobsOnly] = useState(false);
 
-  // ── Status change notes modal ───────────────────────────
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     woId: string;
     status: string;
   } | null>(null);
 
-  // ── Work order detail drawer ────────────────────────────
   const [detailWoId, setDetailWoId] = useState<string | null>(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
 
-  // ── Pending mutation tracking (for optimistic UI + mini spinners) ──
   const [pendingWoIds, setPendingWoIds] = useState<Record<string, boolean>>({});
 
   function markPending(...ids: string[]) {
@@ -151,7 +138,6 @@ export function BayViewClient() {
     });
   }
 
-  // ── Auto-refresh ───────────────────────────────────────
   const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
     null,
   );
@@ -177,7 +163,6 @@ export function BayViewClient() {
   useEffect(() => {
     fetchData(true);
 
-    // Fetch current user profile
     fetch("/api/profile")
       .then((r) => r.json())
       .then((d) => {
@@ -191,7 +176,6 @@ export function BayViewClient() {
       })
       .catch(() => {});
 
-    // Start auto-refresh (every 30s)
     refreshIntervalRef.current = setInterval(() => fetchData(false), 30000);
 
     return () => {
@@ -199,7 +183,6 @@ export function BayViewClient() {
     };
   }, [fetchData]);
 
-  // Sensors — fast response on both pointer and touch
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: { distance: 8 },
   });
@@ -208,458 +191,36 @@ export function BayViewClient() {
   });
   const sensors = useSensors(pointerSensor, touchSensor);
 
-  // ── Drag handlers ──────────────────────────────────────
+  const { handleDragStart, handleDragEnd } = useBayDragHandlers({
+    data,
+    setData,
+    setActiveDrag,
+    markPending,
+    clearPending,
+    fetchData,
+    setToast,
+  });
 
-  function handleDragStart(event: DragStartEvent) {
-    const { active } = event;
-    const activeData = active.data.current;
-    if (activeData?.type === "vehicle") {
-      setActiveDrag({ type: "vehicle", label: "Vehicle" });
-    } else if (activeData?.type === "mechanic") {
-      setActiveDrag({ type: "mechanic", label: "Mechanic" });
-    } else if (activeData?.type === "mechanic-assigned") {
-      setActiveDrag({ type: "mechanic-assigned", label: "Mechanic" });
-    }
-  }
-
-  async function handleDragEnd(event: DragEndEvent) {
-    setActiveDrag(null);
-    const { active, over } = event;
-    const activeData = active.data.current;
-    const prevData = data; // snapshot for rollback
-
-    if (!over) {
-      // Dropped outside — unassign mechanic if dragging mechanic off a bay
-      if (activeData?.type === "mechanic-assigned" && activeData.workOrderId) {
-        const woId = activeData.workOrderId;
-        markPending(woId);
-        // Optimistic: clear mechanic from the work order
-        setData((d) =>
-          d
-            ? {
-                ...d,
-                bays: d.bays.map((b) =>
-                  b.workOrder?.id === woId
-                    ? {
-                        ...b,
-                        workOrder: b.workOrder
-                          ? {
-                              ...b.workOrder,
-                              mechanic: null,
-                              mechanic_id: null,
-                            }
-                          : null,
-                      }
-                    : b,
-                ),
-              }
-            : d,
-        );
-        try {
-          await unassignMechanicFromWorkOrder(woId);
-        } catch {
-          setData(prevData);
-        } finally {
-          clearPending(woId);
-          fetchData(false);
-        }
-      }
-      return;
-    }
-
-    const overId = String(over.id);
-
-    try {
-      // ── Case 1: Dragging a vehicle to a bay ──
-      if (activeData?.type === "vehicle" && overId.startsWith("bay-")) {
-        const bayNumber = Number.parseInt(overId.replace("bay-", ""), 10);
-        const woId = activeData.workOrderId;
-        markPending(woId);
-
-        // Optimistic: move vehicle to bay immediately
-        setData((d) => {
-          if (!d) return d;
-          const movedWO =
-            d.waitingQueue.find((w) => w.id === woId) ??
-            d.bays.find((b) => b.workOrder?.id === woId)?.workOrder;
-          if (!movedWO) return d;
-          const enriched = {
-            ...movedWO,
-            bay_number: bayNumber,
-            status: "Diagnosing" as const,
-            mechanic: null,
-            customer_name: null,
-          };
-          return {
-            ...d,
-            waitingQueue: d.waitingQueue.filter((w) => w.id !== woId),
-            bays: d.bays.map((b) =>
-              b.bayNumber === bayNumber
-                ? { ...b, workOrder: enriched }
-                : b.workOrder?.id === woId
-                  ? { ...b, workOrder: null }
-                  : b,
-            ),
-          };
-        });
-
-        await assignVehicleToBay(woId, bayNumber);
-        clearPending(woId);
-        fetchData(false);
-        return;
-      }
-
-      // ── Case 2: Dragging a mechanic from roster to a bay/vehicle ──
-      if (activeData?.type === "mechanic") {
-        let targetWoId: string | null = null;
-
-        if (overId.startsWith("bay-")) {
-          const bayNumber = Number.parseInt(overId.replace("bay-", ""), 10);
-          const bay = data?.bays.find((b) => b.bayNumber === bayNumber);
-          targetWoId = bay?.workOrder?.id ?? null;
-          if (!targetWoId) {
-            setToast({
-              message: "Drop the vehicle here first, then assign a mechanic.",
-              variant: "info",
-            });
-            return;
-          }
-        } else if (overId.startsWith("vehicle-")) {
-          targetWoId = overId.replace("vehicle-", "");
-        } else if (overId.startsWith("mechanic-on-wo-")) {
-          targetWoId = overId.replace("mechanic-on-wo-", "");
-        }
-
-        if (targetWoId && activeData.mechanicId) {
-          const mechId = activeData.mechanicId;
-          const mechName =
-            data?.mechanics.find((m) => m.id === mechId)?.full_name ?? null;
-          markPending(targetWoId);
-
-          // Optimistic: assign mechanic to target work order
-          setData((d) => {
-            if (!d) return d;
-            const nextBays = d.bays.map((b) => {
-              const wo = b.workOrder;
-              let next = b;
-              if (wo && wo.mechanic?.id === mechId) {
-                next = {
-                  ...next,
-                  workOrder: { ...wo, mechanic: null, mechanic_id: null },
-                };
-              }
-              if (next.workOrder?.id === targetWoId && next.workOrder) {
-                next = {
-                  ...next,
-                  workOrder: {
-                    ...next.workOrder,
-                    mechanic: {
-                      id: mechId,
-                      full_name: mechName,
-                      avatar_url: null,
-                    },
-                    mechanic_id: mechId,
-                    status: "In Progress" as const,
-                  },
-                };
-              }
-              return next;
-            });
-            return { ...d, bays: nextBays };
-          });
-
-          await assignMechanicToWorkOrder(targetWoId, mechId);
-          clearPending(targetWoId);
-          fetchData(false);
-        }
-        return;
-      }
-
-      // ── Case 3: Dragging an assigned mechanic to another bay ──
-      if (activeData?.type === "mechanic-assigned") {
-        const mechanicId = activeData.mechanicId;
-        const currentWoId = activeData.workOrderId;
-        if (!mechanicId) return;
-
-        const findTargetWoId = (): string | null => {
-          if (overId.startsWith("vehicle-")) {
-            const newWoId = overId.replace("vehicle-", "");
-            return newWoId !== currentWoId ? newWoId : null;
-          }
-          if (overId.startsWith("bay-")) {
-            const bayNumber = Number.parseInt(overId.replace("bay-", ""), 10);
-            const bay = data?.bays.find((b) => b.bayNumber === bayNumber);
-            if (!bay?.workOrder) {
-              setToast({
-                message:
-                  "Drop the vehicle here first, then reassign the mechanic.",
-                variant: "info",
-              });
-              return null;
-            }
-            return bay.workOrder.id !== currentWoId ? bay.workOrder.id : null;
-          }
-          return null;
-        };
-
-        const targetWoId = findTargetWoId();
-        if (!targetWoId) return;
-
-        const mechName =
-          data?.mechanics.find((m) => m.id === mechanicId)?.full_name ?? null;
-        markPending(currentWoId, targetWoId);
-
-        // Optimistic: move mechanic from current WO to target WO
-        setData((d) => {
-          if (!d) return d;
-          const nextBays = d.bays.map((b) => {
-            const wo = b.workOrder;
-            let next = b;
-            if (wo && wo.id === currentWoId) {
-              next = {
-                ...next,
-                workOrder: { ...wo, mechanic: null, mechanic_id: null },
-              };
-            }
-            if (next.workOrder?.id === targetWoId && next.workOrder) {
-              next = {
-                ...next,
-                workOrder: {
-                  ...next.workOrder,
-                  mechanic: {
-                    id: mechanicId,
-                    full_name: mechName,
-                    avatar_url: null,
-                  },
-                  mechanic_id: mechanicId,
-                  status: "In Progress" as const,
-                },
-              };
-            }
-            return next;
-          });
-          return { ...d, bays: nextBays };
-        });
-
-        await assignMechanicToWorkOrder(targetWoId, mechanicId);
-        clearPending(currentWoId, targetWoId);
-        fetchData(false);
-        return;
-      }
-
-      // ── Case 4: Reorder within waiting queue ──
-      if (activeData?.type === "vehicle" && overId.startsWith("vehicle-")) {
-        const activeWoId = activeData.workOrderId;
-        const targetWoId = overId.replace("vehicle-", "");
-
-        const queue = data?.waitingQueue ?? [];
-        const queueIds = queue.map((w) => w.id);
-        const activeIdx = queueIds.indexOf(activeWoId);
-        const targetIdx = queueIds.indexOf(targetWoId);
-
-        if (activeIdx !== -1 && targetIdx !== -1) {
-          const reordered = arrayMove(queue, activeIdx, targetIdx);
-          const updates = reordered.map((wo, i) => ({
-            id: wo.id,
-            queue_order: i,
-          }));
-
-          // Optimistic: reorder immediately
-          setData((d) => (d ? { ...d, waitingQueue: reordered } : d));
-
-          await reorderQueue(updates);
-          fetchData(false);
-          return;
-        }
-      }
-    } catch (err) {
-      // Network / unexpected error — rollback
-      if (prevData) setData(prevData);
-      const woIds = [activeData?.workOrderId].filter(Boolean);
-      clearPending(...woIds);
-      console.error("Drag action failed:", err);
-      setToast({
-        message: "Action failed — changes reverted",
-        variant: "error",
-      });
-    }
-  }
-
-  // ── Action handlers ────────────────────────────────────
-
-  function handleStatusClick(woId: string, status: string) {
-    // Open notes modal before confirming status change
-    setPendingStatusChange({ woId, status });
-  }
-
-  async function handleStatusChangeConfirm(
-    woId: string,
-    status: string,
-    notes?: string,
-  ) {
-    setPendingStatusChange(null);
-    markPending(woId);
-    const prev = data;
-
-    // Optimistic: update status immediately
-    setData((d) =>
-      d
-        ? {
-            ...d,
-            bays: d.bays.map((b) =>
-              b.workOrder?.id === woId
-                ? {
-                    ...b,
-                    workOrder: b.workOrder
-                      ? {
-                          ...b.workOrder,
-                          status: status as typeof b.workOrder.status,
-                          bay_number:
-                            status === "Completed" || status === "Cancelled"
-                              ? null
-                              : b.workOrder.bay_number,
-                        }
-                      : null,
-                  }
-                : b,
-            ),
-          }
-        : d,
-    );
-
-    try {
-      await updateWorkOrderStatus(
-        woId,
-        status as "Ready for Pickup" | "Completed",
-        notes,
-      );
-    } catch (err) {
-      // Rollback
-      if (prev) setData(prev);
-      setToast({
-        message: `Failed to change status: ${err instanceof Error ? err.message : "Unknown error"}`,
-        variant: "error",
-      });
-    } finally {
-      clearPending(woId);
-      fetchData(false);
-    }
-  }
-
-  async function handleQuickAssign(woId: string) {
-    markPending(woId);
-    const prev = data;
-    try {
-      const bay = await assignToFirstAvailableBay(woId);
-      // Optimistic: move to the assigned bay
-      setData((d) => {
-        if (!d) return d;
-        const movedWO = d.waitingQueue.find((w) => w.id === woId);
-        if (!movedWO) return d;
-        const enriched = {
-          ...movedWO,
-          bay_number: bay,
-          status: "Diagnosing" as const,
-          mechanic: null,
-          customer_name: null,
-        };
-        return {
-          ...d,
-          waitingQueue: d.waitingQueue.filter((w) => w.id !== woId),
-          bays: d.bays.map((b) =>
-            b.bayNumber === bay ? { ...b, workOrder: enriched } : b,
-          ),
-        };
-      });
-      setToast({
-        message: `Assigned to Bay ${bay}`,
-        variant: "info",
-      });
-    } catch (err) {
-      if (prev) setData(prev);
-      setToast({
-        message: `Failed: ${err instanceof Error ? err.message : "error"}`,
-        variant: "error",
-      });
-    } finally {
-      clearPending(woId);
-      fetchData(false);
-    }
-  }
+  const {
+    handleStatusClick,
+    handleStatusChangeConfirm,
+    handleQuickAssign,
+    handleRemoveFromBay,
+    handleBayCountChange,
+  } = useBayActionHandlers({
+    data,
+    setData,
+    setPendingStatusChange,
+    markPending,
+    clearPending,
+    fetchData,
+    setToast,
+  });
 
   function handleOpenDetail(woId: string) {
     setDetailWoId(woId);
     setDetailDrawerOpen(true);
   }
-
-  async function handleRemoveFromBay(woId: string) {
-    markPending(woId);
-    const prev = data;
-    // Optimistic: move back to waiting queue immediately
-    setData((d) => {
-      if (!d) return d;
-      const removedWO = d.bays.find((b) => b.workOrder?.id === woId)?.workOrder;
-      if (!removedWO) return d;
-      return {
-        ...d,
-        bays: d.bays.map((b) =>
-          b.workOrder?.id === woId ? { ...b, workOrder: null } : b,
-        ),
-        waitingQueue: [
-          ...d.waitingQueue,
-          { ...removedWO, bay_number: null, status: "New" as const },
-        ],
-      };
-    });
-    try {
-      await removeVehicleFromBay(woId);
-    } catch (err) {
-      if (prev) setData(prev);
-      setToast({
-        message: `Failed to remove: ${err instanceof Error ? err.message : "Unknown error"}`,
-        variant: "error",
-      });
-    } finally {
-      clearPending(woId);
-      fetchData(false);
-    }
-  }
-
-  async function handleBayCountChange(count: number) {
-    if (!data) return;
-    const prevCount = data.bayCount;
-    const prevBays = data.bays;
-
-    // Optimistic update
-    setData({
-      ...data,
-      bayCount: count,
-      bays: Array.from({ length: count }, (_, i) => {
-        const existing = data.bays[i];
-        return existing ?? { bayNumber: i + 1, workOrder: null };
-      }),
-    });
-
-    try {
-      const { updateBayCount } = await import(
-        "@/lib/services/bay-view-service"
-      );
-      await updateBayCount(count);
-    } catch {
-      // Roll back on failure
-      setData({
-        ...data,
-        bayCount: prevCount,
-        bays: prevBays,
-      });
-      setToast({
-        message: "Failed to update bay count — reverted",
-        variant: "error",
-      });
-    }
-  }
-
-  // ── Filtered data (My Jobs mode) ───────────────────────
 
   const userIsMechanic =
     currentProfile && data?.mechanics.some((m) => m.id === currentProfile.id);
@@ -679,8 +240,6 @@ export function BayViewClient() {
         (wo) => wo.mechanic_id === currentProfile?.id,
       ) ?? [])
     : (data?.waitingQueue ?? []);
-
-  // ── Loading / Error States ─────────────────────────────
 
   if (loading) {
     return (
@@ -710,8 +269,6 @@ export function BayViewClient() {
     );
   }
 
-  // ── Render ─────────────────────────────────────────────
-
   return (
     <DndContext
       sensors={sensors}
@@ -719,7 +276,6 @@ export function BayViewClient() {
       onDragEnd={handleDragEnd}
     >
       <div className="flex flex-col gap-5">
-        {/* Header */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div>
@@ -825,7 +381,6 @@ export function BayViewClient() {
           <BayStats data={data} />
         </div>
 
-        {/* Garage Floor */}
         {viewMode === "grid" ? (
           <div
             className={cn(
@@ -851,108 +406,14 @@ export function BayViewClient() {
             ))}
           </div>
         ) : (
-          <div className="max-h-[calc(100vh-22rem)] overflow-y-auto space-y-1">
-            <div className="flex items-center gap-3 px-3 py-1.5 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider border-b border-border/50">
-              <span className="w-12 shrink-0">{t("listHeaderBay")}</span>
-              <span className="flex-1 min-w-0">{t("listHeaderVehicle")}</span>
-              <span className="w-24 shrink-0 hidden sm:block">
-                {t("listHeaderCustomer")}
-              </span>
-              <span className="w-28 shrink-0 hidden md:block">
-                {t("listHeaderMechanic")}
-              </span>
-              <span className="w-28 shrink-0">{t("listHeaderStatus")}</span>
-              <span className="w-16 shrink-0 text-right hidden sm:block">
-                {t("listHeaderTime")}
-              </span>
-              <span className="w-28 shrink-0" />
-            </div>
-            {filteredBays.map((bay) => {
-              const wo = bay.workOrder;
-              return (
-                <div
-                  key={bay.bayNumber}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
-                    wo
-                      ? "bg-card hover:bg-muted/40 border border-border/50"
-                      : "bg-muted/10 border border-dashed border-border/30",
-                  )}
-                >
-                  <span className="w-12 shrink-0 text-xs font-bold tabular-nums text-muted-foreground">
-                    #{bay.bayNumber}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    {wo?.vehicle ? (
-                      <div className="truncate">
-                        <span className="text-sm font-semibold">
-                          {wo.vehicle.plate_number}
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-1.5 hidden sm:inline">
-                          {wo.vehicle.make} {wo.vehicle.model}
-                          {wo.vehicle.year ? ` · ${wo.vehicle.year}` : ""}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground/50 italic">
-                        {t("emptyBay")}
-                      </span>
-                    )}
-                  </div>
-                  <span className="w-24 shrink-0 text-xs text-muted-foreground truncate hidden sm:block">
-                    {wo?.customer_name ?? "—"}
-                  </span>
-                  <span className="w-28 shrink-0 text-xs text-muted-foreground truncate hidden md:block">
-                    {wo?.mechanic?.full_name ?? "—"}
-                  </span>
-                  <span className="w-28 shrink-0">
-                    {wo ? <StatusPill status={wo.status} /> : null}
-                  </span>
-                  <span className="w-16 shrink-0 text-right text-[10px] text-muted-foreground tabular-nums hidden sm:block">
-                    {(wo?.started_at ?? wo?.created_at)
-                      ? (() => {
-                          const d = new Date(wo.started_at ?? wo.created_at);
-                          const mins = Math.floor(
-                            (Date.now() - d.getTime()) / 60000,
-                          );
-                          return mins < 60
-                            ? `${mins}m`
-                            : `${Math.floor(mins / 60)}h`;
-                        })()
-                      : "—"}
-                  </span>
-                  <div className="w-28 shrink-0 flex gap-1 justify-end">
-                    {wo &&
-                      wo.status !== "Ready for Pickup" &&
-                      wo.status !== "Completed" &&
-                      wo.status !== "Cancelled" && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleStatusClick(wo.id, "Ready for Pickup")
-                          }
-                          className="rounded-md bg-green-500/10 px-2 py-1 text-[10px] font-medium text-green-600 hover:bg-green-500/20 transition-colors"
-                        >
-                          {t("markReady")}
-                        </button>
-                      )}
-                    {wo && (
-                      <button
-                        type="button"
-                        onClick={() => handleOpenDetail(wo.id)}
-                        className="rounded-md bg-primary/10 px-2 py-1 text-[10px] font-medium text-primary hover:bg-primary/20 transition-colors"
-                      >
-                        {t("open")}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <BayListView
+            bays={filteredBays}
+            onStatusClick={handleStatusClick}
+            onOpenDetail={handleOpenDetail}
+            t={t}
+          />
         )}
 
-        {/* Bottom panels */}
         <div className="grid gap-4 md:grid-cols-3">
           <QuickActions />
           <MechanicRoster mechanics={data.mechanics} />
@@ -964,7 +425,6 @@ export function BayViewClient() {
         </div>
       </div>
 
-      {/* Status Change Notes Modal */}
       {pendingStatusChange && (
         <StatusNotesModal
           woId={pendingStatusChange.woId}
@@ -974,7 +434,6 @@ export function BayViewClient() {
         />
       )}
 
-      {/* Drag overlay — shows what's being dragged */}
       <DragOverlay dropAnimation={null}>
         {activeDrag && (
           <div
@@ -986,12 +445,10 @@ export function BayViewClient() {
         )}
       </DragOverlay>
 
-      {/* Live region for screen reader announcements */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {toast?.message ?? ""}
       </div>
 
-      {/* Toast notifications */}
       {toast && (
         <ToastMessage
           message={toast.message}
@@ -1000,7 +457,6 @@ export function BayViewClient() {
         />
       )}
 
-      {/* Work Order Detail Drawer */}
       <WorkOrderDetailDrawer
         workOrderId={detailWoId}
         open={detailDrawerOpen}

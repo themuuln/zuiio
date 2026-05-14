@@ -135,15 +135,11 @@ export function QuickActions() {
       </div>
 
       {showVehicleReg && (
-        <VehicleRegistrationDialog
-          onClose={() => setShowVehicleReg(false)}
-        />
+        <VehicleRegistrationDialog onClose={() => setShowVehicleReg(false)} />
       )}
 
       {showMechanicReg && (
-        <MechanicRegistrationDialog
-          onClose={() => setShowMechanicReg(false)}
-        />
+        <MechanicRegistrationDialog onClose={() => setShowMechanicReg(false)} />
       )}
 
       {showServiceLookup && (
@@ -154,15 +150,11 @@ export function QuickActions() {
       )}
 
       {showShiftReport && (
-        <ShiftReportModal
-          onClose={() => setShowShiftReport(false)}
-        />
+        <ShiftReportModal onClose={() => setShowShiftReport(false)} />
       )}
 
       {showPinSettings && (
-        <PinSettingsDialog
-          onClose={() => setShowPinSettings(false)}
-        />
+        <PinSettingsDialog onClose={() => setShowPinSettings(false)} />
       )}
     </>
   );

@@ -2,7 +2,7 @@
 
 import { Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { ExportButton } from "@/components/export-button";
@@ -12,7 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ExportColumn } from "@/lib/export";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { serviceKeys } from "@/lib/queries/keys";
 import { useServiceLastUsedPrices } from "@/lib/queries/use-price-memory";
+import { useQuery } from "@tanstack/react-query";
 import { formatMNT } from "@/lib/utils";
 
 interface ServiceItem {
@@ -25,9 +28,28 @@ interface ServiceItem {
 
 export default function ServicesPage() {
   const t = useTranslations();
-  const [services, setServices] = useState<ServiceItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const orgQuery = useCurrentOrg();
+  const orgId = orgQuery.data?.orgId;
+
+  const {
+    data: services = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: serviceKeys.list(orgId ?? ""),
+    queryFn: async () => {
+      const r = await fetch(`/api/organizations/${orgId}/services`);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      return (d.data ?? []) as ServiceItem[];
+    },
+    enabled: !!orgId,
+    staleTime: 30_000,
+  });
+
+  const error = queryError ? queryError.message : null;
+
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [newService, setNewService] = useState({
@@ -37,7 +59,7 @@ export default function ServicesPage() {
     category: "",
   });
   const [saving, setSaving] = useState(false);
-  const [orgId, setOrgId] = useState<string | null>(null);
+
   const lastUsedPrices = useServiceLastUsedPrices(orgId ?? undefined);
 
   const exportColumns: ExportColumn<ServiceItem>[] = useMemo(
@@ -48,32 +70,6 @@ export default function ServicesPage() {
     ],
     [],
   );
-
-  useEffect(() => {
-    fetch("/api/organizations")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.data?.id) setOrgId(d.data.id);
-        else {
-          setError("No organization");
-        }
-      })
-      .catch(() => setError("Failed to load organization"))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (!orgId) return;
-    setLoading(true);
-    fetch(`/api/organizations/${orgId}/services`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.error) setError(d.error.message);
-        else setServices(d.data ?? []);
-      })
-      .catch(() => setError("Failed to load services"))
-      .finally(() => setLoading(false));
-  }, [orgId]);
 
   const handleAdd = async () => {
     if (!orgId || !newService.name.trim()) return;
@@ -92,7 +88,7 @@ export default function ServicesPage() {
       const d = await r.json();
       if (d.data) {
         toast.success("Service created");
-        setServices([...services, d.data]);
+        refetch();
         setShowAdd(false);
         setNewService({
           name: "",
@@ -121,7 +117,7 @@ export default function ServicesPage() {
         toast.error(d.error.message);
         return;
       }
-      setServices(services.filter((s) => s.id !== id));
+      refetch();
       toast.success("Service deleted");
     } catch {
       toast.error("Failed to delete service");
@@ -234,7 +230,7 @@ export default function ServicesPage() {
 
       <Card>
         <CardContent className="p-0">
-          {loading ? (
+          {orgQuery.isLoading || loading ? (
             <div className="divide-y divide-border">
               {[1, 2, 3, 4, 5].map((n) => (
                 <div key={n} className="flex items-center gap-4 px-4 py-4">
@@ -246,7 +242,7 @@ export default function ServicesPage() {
           ) : error ? (
             <div className="flex flex-col items-center gap-4 py-12">
               <p className="text-destructive">{error}</p>
-              <Button onClick={() => setLoading(true)}>Retry</Button>
+              <Button onClick={() => refetch()}>Retry</Button>
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-12">

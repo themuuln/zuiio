@@ -6,32 +6,28 @@ import {
   ClipboardList,
   Clock,
   DollarSign,
-  Download,
   Loader2,
   Mail,
-  Percent,
   TrendingUp,
-  Users,
-  Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
-import type { ExportColumn } from "@/lib/export";
-import { ListToolbar } from "@/components/list-toolbar";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { ExportColumn } from "@/lib/export";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { DashboardData } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { KpiCard } from "./_kpi-card";
+import { OverviewTab } from "./_overview-tab";
+import { TransactionsTab } from "./_transactions-tab";
 
 type Period = "today" | "week" | "month" | "all";
 type Tab = "overview" | "transactions" | "invoices";
-
-// ── Period Pills ─────────────────────────────────────────
 
 type PeriodOption = { key: Period; label: string };
 
@@ -68,8 +64,6 @@ function PeriodBar({
     </div>
   );
 }
-
-// ── Tab Bar ──────────────────────────────────────────────
 
 function TabBar({
   value,
@@ -108,166 +102,52 @@ function TabBar({
   );
 }
 
-// ── KPI Card ─────────────────────────────────────────────
-
-function KpiCard({
-  label,
-  value,
-  icon: Icon,
-  subtitle,
-  loading,
-}: {
-  label: string;
-  value: string;
-  icon: React.ComponentType<{ className?: string }>;
-  subtitle?: string;
-  loading?: boolean;
-}) {
-  return (
-    <Card className="transition-shadow hover:shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {label}
-        </CardTitle>
-        <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <Skeleton className="h-9 w-28" />
-        ) : (
-          <>
-            <div className="text-3xl font-bold tracking-tight tabular-nums">
-              {value}
-            </div>
-            {subtitle && (
-              <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-// ── Revenue Breakup Bar ───────────────────────────────────
-
-function RevenueSplitBar({
-  total,
-  service,
-  parts,
-  loading,
-}: {
-  total: number;
-  service: number;
-  parts: number;
-  loading?: boolean;
-}) {
-  if (loading) return <Skeleton className="h-16 w-full rounded-xl" />;
-  if (total === 0) return null;
-
-  const svcPct = Math.round((service / total) * 100);
-  const prtPct = Math.round((parts / total) * 100);
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold">
-          Revenue Breakdown
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className="bg-blue-500 transition-all"
-            style={{ width: `${svcPct}%` }}
-            title={`Services: ${svcPct}%`}
-          />
-          <div
-            className="bg-amber-500 transition-all"
-            style={{ width: `${prtPct}%` }}
-            title={`Parts: ${prtPct}%`}
-          />
-        </div>
-        <div className="flex justify-between text-sm">
-          <div className="flex items-center gap-2">
-            <span className="size-2.5 rounded-full bg-blue-500" />
-            <span className="text-muted-foreground">Services</span>
-            <span className="font-semibold tabular-nums">
-              {formatCurrency(service)}
-            </span>
-            <span className="text-xs text-muted-foreground">({svcPct}%)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="size-2.5 rounded-full bg-amber-500" />
-            <span className="text-muted-foreground">Parts</span>
-            <span className="font-semibold tabular-nums">
-              {formatCurrency(parts)}
-            </span>
-            <span className="text-xs text-muted-foreground">({prtPct}%)</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ── Empty / No-Revenue States ────────────────────────────
-
-function EmptyFinanceState() {
-  return (
-    <Card className="py-16">
-      <CardContent className="flex flex-col items-center gap-5">
-        <div className="flex size-16 items-center justify-center rounded-full bg-muted">
-          <DollarSign className="size-8 text-muted-foreground" />
-        </div>
-        <div className="max-w-md text-center">
-          <h3 className="text-lg font-semibold">No financial data yet</h3>
-          <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-            Complete work orders with services and parts to see your revenue
-            breakdown, financial KPIs, and transaction history.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function NoRevenueBanner({ activeWorkOrders }: { activeWorkOrders: number }) {
-  return (
-    <Card className="border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10">
-      <CardContent className="flex items-start gap-3 py-4">
-        <TrendingUp className="mt-0.5 size-5 shrink-0 text-amber-500" />
-        <div className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">{activeWorkOrders} work order{activeWorkOrders === 1 ? "" : "s"} in progress.</span>
-          {" "}Revenue appears here once work orders are marked <strong>Completed</strong> —
-          close out jobs to see financial metrics, service mix, and breakdown.
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ── Invoice Status Badge ──────────────────────────────────
-
-const invoiceStatusConfig: Record<string, { label: string; className: string }> = {
-  draft: { label: "Draft", className: "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-400" },
-  sent: { label: "Sent", className: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400" },
-  paid: { label: "Paid", className: "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400" },
-  partial: { label: "Partial", className: "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-400" },
-  overdue: { label: "Overdue", className: "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400" },
-  cancelled: { label: "Cancelled", className: "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-500" },
+const invoiceStatusConfig: Record<
+  string,
+  { label: string; className: string }
+> = {
+  draft: {
+    label: "Draft",
+    className:
+      "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-400",
+  },
+  sent: {
+    label: "Sent",
+    className:
+      "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400",
+  },
+  paid: {
+    label: "Paid",
+    className:
+      "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400",
+  },
+  partial: {
+    label: "Partial",
+    className:
+      "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-400",
+  },
+  overdue: {
+    label: "Overdue",
+    className:
+      "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400",
+  },
+  cancelled: {
+    label: "Cancelled",
+    className:
+      "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-500",
+  },
 };
 
 function InvoiceStatusBadge({ status }: { status: string }) {
   const cfg = invoiceStatusConfig[status] ?? invoiceStatusConfig.draft;
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.className}`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.className}`}
+    >
       {cfg.label}
     </span>
   );
 }
-
-// ── Invoices Tab ─────────────────────────────────────────
 
 interface InvoiceListItem {
   id: string;
@@ -296,36 +176,76 @@ interface InvoiceStats {
   outstanding: number;
 }
 
-function InvoicesTab({
-  orgId,
-}: {
-  orgId: string | null;
-}) {
+interface InvoiceDataState {
+  loading: boolean;
+  stats: InvoiceStats | null;
+  invoices: InvoiceListItem[];
+}
+
+type InvoiceDataAction =
+  | { type: "FETCH_START" }
+  | {
+      type: "FETCH_SUCCESS";
+      stats: InvoiceStats | null;
+      invoices: InvoiceListItem[];
+    }
+  | { type: "FETCH_DONE" };
+
+function invoiceDataReducer(
+  state: InvoiceDataState,
+  action: InvoiceDataAction,
+): InvoiceDataState {
+  switch (action.type) {
+    case "FETCH_START":
+      return { ...state, loading: true };
+    case "FETCH_SUCCESS":
+      return {
+        ...state,
+        loading: false,
+        stats: action.stats,
+        invoices: action.invoices,
+      };
+    case "FETCH_DONE":
+      return { ...state, loading: false };
+  }
+}
+
+function InvoicesTab({ orgId }: { orgId: string | null }) {
   const t = useTranslations();
-  const [stats, setStats] = useState<InvoiceStats | null>(null);
-  const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [invoiceData, dispatchInvoice] = useReducer(invoiceDataReducer, {
+    loading: true,
+    stats: null,
+    invoices: [],
+  } satisfies InvoiceDataState);
+  const { loading, stats, invoices } = invoiceData;
   const [filter, setFilter] = useState<string>("");
   const [search, setSearch] = useState("");
   const [sendingId, setSendingId] = useState<string | null>(null);
 
-  const fetchInvoices = useCallback(async (oid: string, statusFilter: string) => {
-    setLoading(true);
-    try {
-      const [statsRes, listRes] = await Promise.all([
-        fetch(`/api/organizations/${oid}/invoices?type=stats`),
-        fetch(`/api/organizations/${oid}/invoices${statusFilter ? `?status=${statusFilter}` : ""}`),
-      ]);
-      const statsJson = await statsRes.json();
-      const listJson = await listRes.json();
-      if (statsJson.data) setStats(statsJson.data);
-      if (listJson.data) setInvoices(listJson.data);
-    } catch {
-      toast.error("Failed to load invoices");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchInvoices = useCallback(
+    async (oid: string, statusFilter: string) => {
+      dispatchInvoice({ type: "FETCH_START" });
+      try {
+        const [statsRes, listRes] = await Promise.all([
+          fetch(`/api/organizations/${oid}/invoices?type=stats`),
+          fetch(
+            `/api/organizations/${oid}/invoices${statusFilter ? `?status=${statusFilter}` : ""}`,
+          ),
+        ]);
+        const statsJson = await statsRes.json();
+        const listJson = await listRes.json();
+        dispatchInvoice({
+          type: "FETCH_SUCCESS",
+          stats: statsJson.data ?? null,
+          invoices: listJson.data ?? [],
+        });
+      } catch {
+        toast.error("Failed to load invoices");
+        dispatchInvoice({ type: "FETCH_DONE" });
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (orgId) fetchInvoices(orgId, filter);
@@ -360,7 +280,6 @@ function InvoicesTab({
     [orgId, fetchInvoices, filter],
   );
 
-  // Filter by search
   const filtered = useMemo(() => {
     if (!search) return invoices;
     const q = search.toLowerCase();
@@ -390,10 +309,19 @@ function InvoicesTab({
   ];
 
   const isLoading = loading && !stats;
+  const formatDate = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return iso;
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Invoice Stats */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           label="Total Invoices"
@@ -411,7 +339,9 @@ function InvoicesTab({
           label="Paid"
           value={isLoading ? "—" : String(stats?.paid ?? 0)}
           icon={TrendingUp}
-          subtitle={stats?.totalRevenue ? formatCurrency(stats.totalRevenue) : undefined}
+          subtitle={
+            stats?.totalRevenue ? formatCurrency(stats.totalRevenue) : undefined
+          }
           loading={isLoading}
         />
         <KpiCard
@@ -422,24 +352,20 @@ function InvoicesTab({
           loading={isLoading}
         />
       </div>
-
-      {/* Toolbar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-2 flex-wrap">
-          {["", "draft", "sent", "paid", "overdue", "partial", "cancelled"].map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setFilter(s)}
-              className={`rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                filter === s
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              {s ? s.charAt(0).toUpperCase() + s.slice(1) : "All"}
-            </button>
-          ))}
+          {["", "draft", "sent", "paid", "overdue", "partial", "cancelled"].map(
+            (s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setFilter(s)}
+                className={`rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors ${filter === s ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+              >
+                {s ? s.charAt(0).toUpperCase() + s.slice(1) : "All"}
+              </button>
+            ),
+          )}
         </div>
         <div className="flex gap-2">
           <ExportButton
@@ -450,28 +376,38 @@ function InvoicesTab({
           />
         </div>
       </div>
-
-      {/* Search */}
       <SearchInput
         placeholder="Search by invoice #, customer, or plate..."
         onSearch={setSearch}
         debounceMs={300}
       />
-
-      {/* Table */}
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
-                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">{t("common.invoiceNumber") ?? "Invoice #"}</th>
-                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">Customer</th>
-                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">Vehicle</th>
-                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">Status</th>
-                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">Total</th>
-                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">Date</th>
-                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">Actions</th>
+                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                    {t("common.invoiceNumber") ?? "Invoice #"}
+                  </th>
+                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                    Customer
+                  </th>
+                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                    Vehicle
+                  </th>
+                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                    Status
+                  </th>
+                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                    Total
+                  </th>
+                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                    Date
+                  </th>
+                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -483,7 +419,10 @@ function InvoicesTab({
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-5 py-16 text-center text-muted-foreground">
+                    <td
+                      colSpan={7}
+                      className="px-5 py-16 text-center text-muted-foreground"
+                    >
                       No invoices found
                     </td>
                   </tr>
@@ -535,7 +474,9 @@ function InvoicesTab({
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleSendEmail(inv.id, inv.invoice_number)}
+                              onClick={() =>
+                                handleSendEmail(inv.id, inv.invoice_number)
+                              }
                               disabled={sendingId === inv.id}
                               title={
                                 inv.customer_email
@@ -565,83 +506,83 @@ function InvoicesTab({
   );
 }
 
-// ── Format date helper ───────────────────────────────────
+interface FinanceDataState {
+  loading: boolean;
+  error: string | null;
+  data: DashboardData | null;
+}
 
-function formatDate(iso: string) {
-  try {
-    return new Date(iso).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return iso;
+type FinanceDataAction =
+  | { type: "LOAD_START" }
+  | { type: "LOAD_SUCCESS"; data: DashboardData }
+  | { type: "LOAD_ERROR"; error: string }
+  | { type: "LOAD_DONE" };
+
+function financeDataReducer(
+  state: FinanceDataState,
+  action: FinanceDataAction,
+): FinanceDataState {
+  switch (action.type) {
+    case "LOAD_START":
+      return { ...state, loading: true, error: null };
+    case "LOAD_SUCCESS":
+      return { ...state, loading: false, error: null, data: action.data };
+    case "LOAD_ERROR":
+      return { ...state, loading: false, error: action.error };
+    case "LOAD_DONE":
+      return { ...state, loading: false };
   }
 }
 
-// ── Main Finance Page ────────────────────────────────────
-
 export default function FinancePage() {
   const t = useTranslations();
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [dataLoading, setDataLoading] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [financeData, dispatchFinance] = useReducer(financeDataReducer, {
+    loading: false,
+    error: null,
+    data: null,
+  } satisfies FinanceDataState);
+  const { data } = financeData;
   const [period, setPeriod] = useState<Period>("all");
   const [tab, setTab] = useState<Tab>("overview");
   const [search, setSearch] = useState("");
 
-  const {
-    data: org,
-    isPending: orgLoading,
-    error: orgError,
-  } = useCurrentOrg();
+  const { data: org, isPending: orgLoading, error: orgError } = useCurrentOrg();
   const orgId = org?.orgId ?? null;
-  const loading = orgLoading || (!!orgId && dataLoading && !data);
+  const loading = orgLoading || (!!orgId && financeData.loading && !data);
   const error = orgError
     ? "Failed to load organization"
     : !orgId && !orgLoading
       ? "No organization found"
-      : fetchError;
+      : financeData.error;
 
-  const fetchData = useCallback(
-    async (oid: string, p: Period) => {
-      setDataLoading(true);
-      setFetchError(null);
-      try {
-        const res = await fetch(
-          `/api/organizations/${oid}/reports?type=dashboard&period=${p}`,
-        );
-        const json = await res.json();
-        if (json.error) {
-          setFetchError(json.error.message);
-        } else {
-          setData(json.data);
-        }
-      } catch {
-        toast.error("Failed to load finance data");
-      } finally {
-        setDataLoading(false);
+  const fetchData = useCallback(async (oid: string, p: Period) => {
+    dispatchFinance({ type: "LOAD_START" });
+    try {
+      const res = await fetch(
+        `/api/organizations/${oid}/reports?type=dashboard&period=${p}`,
+      );
+      const json = await res.json();
+      if (json.error) {
+        dispatchFinance({ type: "LOAD_ERROR", error: json.error.message });
+      } else {
+        dispatchFinance({ type: "LOAD_SUCCESS", data: json.data });
       }
-    },
-    [],
-  );
+    } catch {
+      toast.error("Failed to load finance data");
+      dispatchFinance({ type: "LOAD_DONE" });
+    }
+  }, []);
 
   useEffect(() => {
     if (orgId) fetchData(orgId, period);
   }, [orgId, period, fetchData]);
 
-  const handlePeriodChange = useCallback((p: Period) => {
-    setPeriod(p);
-  }, []);
-
-  // ── Derived summary ──────────────────────────────────
   const summary = data?.summary;
   const hasRevenue = (summary?.totalRevenue ?? 0) > 0;
   const hasActiveWos = (summary?.activeWorkOrders ?? 0) > 0;
   const hasTransactions = (data?.recentWorkOrders?.length ?? 0) > 0;
-  // Show the page content if there's anything to show
   const hasAnyData = hasRevenue || hasActiveWos || hasTransactions;
 
-  // ── Insight text ─────────────────────────────────────
   const insightLine = useMemo(() => {
     if (!summary || loading || !hasRevenue) return null;
     const rev = summary.totalRevenue;
@@ -650,7 +591,6 @@ export default function FinancePage() {
     return `${formatCurrency(rev)} revenue · ${summary.completedToday} completed today · ${wo} active · avg ${formatCurrency(avg)}/WO`;
   }, [summary, loading, hasRevenue]);
 
-  // ── Filtered transactions ───────────────────────────
   const filteredWorkOrders = useMemo(() => {
     if (!data?.recentWorkOrders) return [];
     if (!search) return data.recentWorkOrders;
@@ -667,7 +607,6 @@ export default function FinancePage() {
     });
   }, [data?.recentWorkOrders, search]);
 
-  // ── Loading state ────────────────────────────────────
   if (loading && !data) {
     return (
       <div className="flex flex-col gap-8">
@@ -708,7 +647,6 @@ export default function FinancePage() {
     );
   }
 
-  // ── Error state ──────────────────────────────────────
   if (error && !data) {
     return (
       <div className="flex flex-col gap-6">
@@ -716,9 +654,7 @@ export default function FinancePage() {
           <h1 className="text-2xl font-bold tracking-tight">
             {t("nav.finance")}
           </h1>
-          <p className="mt-1 text-muted-foreground">
-            {t("finance.subtitle")}
-          </p>
+          <p className="mt-1 text-muted-foreground">{t("finance.subtitle")}</p>
         </div>
         <Card className="py-12">
           <CardContent className="flex flex-col items-center gap-4">
@@ -730,392 +666,42 @@ export default function FinancePage() {
     );
   }
 
-  // ── Render ───────────────────────────────────────────
   return (
     <div className="flex flex-col gap-8">
-      {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
             {t("nav.finance")}
           </h1>
-          <p className="mt-1 text-muted-foreground">
-            {t("finance.subtitle")}
-          </p>
+          <p className="mt-1 text-muted-foreground">{t("finance.subtitle")}</p>
         </div>
         <div className="flex flex-col items-end gap-3">
-          <PeriodBar value={period} onChange={handlePeriodChange} />
+          <PeriodBar value={period} onChange={setPeriod} />
           <TabBar value={tab} onChange={setTab} />
         </div>
       </div>
 
-      {/* ── TAB: Overview ────────────────────────────── */}
       {tab === "overview" && (
-        <>
-          {!hasAnyData ? (
-            <EmptyFinanceState />
-          ) : hasRevenue ? (
-            <>
-              {/* Insight line */}
-              {insightLine && (
-                <Card className="border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10">
-                  <CardContent className="flex items-start gap-2 py-3">
-                    <TrendingUp className="mt-0.5 size-4 shrink-0 text-amber-500" />
-                    <p className="text-sm text-muted-foreground">
-                      {insightLine}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* KPI Cards */}
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard
-                  label="Total Revenue"
-                  value={formatCurrency(summary!.totalRevenue)}
-                  icon={DollarSign}
-                  subtitle={`${summary!.completedToday} completed today`}
-                  loading={loading}
-                />
-                <KpiCard
-                  label="Active Work Orders"
-                  value={String(summary!.activeWorkOrders)}
-                  icon={Clock}
-                  subtitle="Currently in progress"
-                  loading={loading}
-                />
-                <KpiCard
-                  label="Avg Repair Order"
-                  value={formatCurrency(summary!.avgRepairOrderValue)}
-                  icon={TrendingUp}
-                  loading={loading}
-                />
-                <KpiCard
-                  label="Total Customers"
-                  value={String(summary!.totalCustomers)}
-                  icon={Users}
-                  loading={loading}
-                />
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard
-                  label="Service Revenue"
-                  value={formatCurrency(summary!.serviceRevenue)}
-                  icon={Wrench}
-                  subtitle="Labor & services"
-                  loading={loading}
-                />
-                <KpiCard
-                  label="Parts Revenue"
-                  value={formatCurrency(summary!.partsRevenue)}
-                  icon={ClipboardList}
-                  subtitle="Parts & materials"
-                  loading={loading}
-                />
-                <KpiCard
-                  label="Total Vehicles"
-                  value={String(summary!.totalVehicles)}
-                  icon={TrendingUp}
-                  loading={loading}
-                />
-                <KpiCard
-                  label="Service Mix"
-                  value={`${summary!.totalRevenue > 0 ? Math.round((summary!.serviceRevenue / summary!.totalRevenue) * 100) : "—"}%`}
-                  icon={Percent}
-                  subtitle="Service vs Parts"
-                  loading={loading}
-                />
-              </div>
-
-              {/* Revenue Breakdown */}
-              <RevenueSplitBar
-                total={summary!.totalRevenue}
-                service={summary!.serviceRevenue}
-                parts={summary!.partsRevenue}
-                loading={loading}
-              />
-
-              {/* Top Services */}
-              {data?.topServices && data.topServices.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-semibold">
-                      Top Services
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-border bg-muted/50">
-                            <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                              Service
-                            </th>
-                            <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                              Count
-                            </th>
-                            <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                              Revenue
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {data.topServices.slice(0, 8).map((svc) => (
-                            <tr
-                              key={svc.name}
-                              className="border-b border-border transition-colors hover:bg-muted/30"
-                            >
-                              <td className="px-5 py-3.5">{svc.name}</td>
-                              <td className="px-5 py-3.5 text-right tabular-nums">
-                                {svc.count}
-                              </td>
-                              <td className="px-5 py-3.5 text-right font-medium tabular-nums">
-                                {formatCurrency(svc.revenue)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          ) : (
-            <>
-              <NoRevenueBanner activeWorkOrders={summary!.activeWorkOrders} />
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-2">
-                <KpiCard
-                  label="Active Work Orders"
-                  value={String(summary!.activeWorkOrders)}
-                  icon={Clock}
-                  subtitle="Currently in progress"
-                  loading={loading}
-                />
-                <KpiCard
-                  label="Total Customers"
-                  value={String(summary!.totalCustomers)}
-                  icon={Users}
-                  loading={loading}
-                />
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-2">
-                <KpiCard
-                  label="Total Vehicles"
-                  value={String(summary!.totalVehicles)}
-                  icon={TrendingUp}
-                  loading={loading}
-                />
-                <KpiCard
-                  label="Service Revenue"
-                  value={formatCurrency(0)}
-                  icon={Wrench}
-                  subtitle="Complete WOs to populate"
-                  loading={loading}
-                />
-              </div>
-            </>
-          )}
-        </>
+        <OverviewTab
+          hasAnyData={hasAnyData}
+          hasRevenue={hasRevenue}
+          summary={summary ?? null}
+          insightLine={insightLine}
+          loading={loading}
+          topServices={data?.topServices}
+        />
       )}
 
-      {/* ── TAB: Transactions ────────────────────────── */}
       {tab === "transactions" && (
-        <>
-          {!hasAnyData ? (
-            <EmptyFinanceState />
-          ) : (
-            <>
-              <ListToolbar
-                search={{
-                  placeholder: "Search by customer, plate, or ID...",
-                  value: search,
-                  onChange: setSearch,
-                }}
-                stats={
-                  <span>
-                    {filteredWorkOrders.length} work order{filteredWorkOrders.length !== 1 ? "s" : ""}
-                  </span>
-                }
-                actions={
-                  <ExportButton
-                    data={filteredWorkOrders}
-                    columns={[
-                      { key: "id", label: "WO #", value: (wo) => wo.id.slice(0, 8) },
-                      { key: "customer", label: "Customer", value: (wo) => {
-                        const c = wo.customer;
-                        return c ? `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() : "—";
-                      }},
-                      { key: "vehicle", label: "Vehicle", value: (wo) => wo.vehicle?.plate_number ?? "—" },
-                      { key: "status", label: "Status" },
-                      { key: "services", label: "Services", format: "currency", value: (wo) => {
-                        return wo.services.reduce((s, x) => s + Number(x.final_price), 0);
-                      }},
-                      { key: "parts", label: "Parts", format: "currency", value: (wo) => {
-                        return wo.parts.reduce((s, x) => s + Number(x.final_price), 0);
-                      }},
-                      { key: "grand_total", label: "Total", format: "currency", value: (wo) => {
-                        return wo.services.reduce((s, x) => s + Number(x.final_price), 0) +
-                               wo.parts.reduce((s, x) => s + Number(x.final_price), 0);
-                      }},
-                      { key: "created_at", label: "Date", format: "date" },
-                    ]}
-                    filename={`transactions-${new Date().toISOString().split("T")[0]}.xlsx`}
-                    sheetName="Transactions"
-                  />
-                }
-              />
-              <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold">
-                  Recent Work Orders
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/50">
-                        <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                          #
-                        </th>
-                        <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                          Customer
-                        </th>
-                        <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                          Vehicle
-                        </th>
-                        <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                          Status
-                        </th>
-                        <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                          Services
-                        </th>
-                        <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                          Parts
-                        </th>
-                        <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                          Total
-                        </th>
-                        <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                          Date
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    {filteredWorkOrders.length === 0 && search ? (
-                        <tr>
-                          <td
-                            colSpan={8}
-                            className="px-5 py-16 text-center text-muted-foreground"
-                          >
-                            No work orders match your search
-                          </td>
-                        </tr>
-                      ) : (!data?.recentWorkOrders ||
-                        data.recentWorkOrders.length === 0) && (
-                        <tr>
-                          <td
-                            colSpan={8}
-                            className="px-5 py-16 text-center text-muted-foreground"
-                          >
-                            No work orders in this period
-                          </td>
-                        </tr>
-                      )}
-                      {filteredWorkOrders.map((wo) => {
-                        const svcTotal = (
-                          wo.services as Array<{ final_price: number }>
-                        ).reduce(
-                          (sum: number, s: { final_price: number }) =>
-                            sum + Number(s.final_price),
-                          0,
-                        );
-                        const prtTotal = (
-                          wo.parts as Array<{ final_price: number }>
-                        ).reduce(
-                          (sum: number, p: { final_price: number }) =>
-                            sum + Number(p.final_price),
-                          0,
-                        );
-                        const grandTotal = svcTotal + prtTotal;
-
-                        return (
-                          <tr
-                            key={wo.id}
-                            className="border-b border-border transition-colors hover:bg-muted/30"
-                          >
-                            <td className="px-5 py-3.5 font-mono text-xs">
-                              {wo.id.slice(0, 8)}...
-                            </td>
-                            <td className="px-5 py-3.5">
-                              {wo.customer
-                                ? `${wo.customer.first_name} ${wo.customer.last_name ?? ""}`.trim()
-                                : "\u2014"}
-                            </td>
-                            <td className="px-5 py-3.5 text-muted-foreground">
-                              {wo.vehicle?.plate_number ?? "\u2014"}
-                            </td>
-                            <td className="px-5 py-3.5">
-                              <span
-                                className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                                style={{
-                                  backgroundColor: `${
-                                    wo.status === "Completed"
-                                      ? "#22c55e"
-                                      : wo.status === "Cancelled"
-                                        ? "#ef4444"
-                                        : wo.status === "In Progress"
-                                          ? "#f97316"
-                                          : wo.status === "Diagnosing"
-                                            ? "#eab308"
-                                            : wo.status === "New"
-                                              ? "#3b82f6"
-                                              : "#6b7280"
-                                  }20`,
-                                  color:
-                                    wo.status === "Completed"
-                                      ? "#22c55e"
-                                      : wo.status === "Cancelled"
-                                        ? "#ef4444"
-                                        : wo.status === "In Progress"
-                                          ? "#f97316"
-                                          : wo.status === "Diagnosing"
-                                            ? "#eab308"
-                                            : wo.status === "New"
-                                              ? "#3b82f6"
-                                              : "#6b7280",
-                                }}
-                              >
-                                {wo.status}
-                              </span>
-                            </td>
-                            <td className="px-5 py-3.5 text-right tabular-nums">
-                              {formatCurrency(svcTotal)}
-                            </td>
-                            <td className="px-5 py-3.5 text-right tabular-nums">
-                              {formatCurrency(prtTotal)}
-                            </td>
-                            <td className="px-5 py-3.5 text-right font-semibold tabular-nums">
-                              {formatCurrency(grandTotal)}
-                            </td>
-                            <td className="px-5 py-3.5 text-right text-muted-foreground">
-                              {formatDate(wo.created_at)}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-            </>
-          )}
-        </>
+        <TransactionsTab
+          hasAnyData={hasAnyData}
+          search={search}
+          onSearchChange={setSearch}
+          filteredWorkOrders={filteredWorkOrders}
+          data={data}
+        />
       )}
 
-      {/* ── TAB: Invoices ────────────────────────────── */}
       {tab === "invoices" && <InvoicesTab orgId={orgId} />}
     </div>
   );

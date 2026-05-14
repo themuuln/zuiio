@@ -1,12 +1,12 @@
 "use client";
 
 import { Plus, User } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { SearchInput } from "@/components/search-input";
 import { useWizardContext } from "./wizard-context";
-import { useTranslations } from "next-intl";
 
 export function CustomerSection() {
   const ctx = useWizardContext();
@@ -35,7 +35,10 @@ export function CustomerSection() {
               <User className="size-5 text-green-600" />
               <div>
                 <span className="font-medium">
-                  {[ctx.selectedCustomer.first_name, ctx.selectedCustomer.last_name]
+                  {[
+                    ctx.selectedCustomer.first_name,
+                    ctx.selectedCustomer.last_name,
+                  ]
                     .filter(Boolean)
                     .join(" ")}
                 </span>
@@ -122,7 +125,9 @@ export function CustomerSection() {
                   className="h-11"
                 />
                 {ctx.customerCreateError && (
-                  <p className="text-sm text-destructive">{ctx.customerCreateError}</p>
+                  <p className="text-sm text-destructive">
+                    {ctx.customerCreateError}
+                  </p>
                 )}
                 <div className="flex gap-2">
                   <Button
@@ -136,14 +141,17 @@ export function CustomerSection() {
                     }}
                   >
                     {t("cancel")}
-                    
                   </Button>
                   <Button
                     size="sm"
-                    disabled={ctx.creatingCustomer || !ctx.quickFirstName.trim()}
+                    disabled={
+                      ctx.creatingCustomer || !ctx.quickFirstName.trim()
+                    }
                     onClick={ctx.handleQuickCreateCustomer}
                   >
-                    {ctx.creatingCustomer ? t("creating") : t("createAndSelectCustomer")}
+                    {ctx.creatingCustomer
+                      ? t("creating")
+                      : t("createAndSelectCustomer")}
                   </Button>
                 </div>
               </div>

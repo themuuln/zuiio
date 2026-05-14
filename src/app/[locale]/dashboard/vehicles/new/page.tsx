@@ -3,7 +3,7 @@
 import { ArrowLeft, CarFront, Loader2, User } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { SearchInput } from "@/components/search-input";
@@ -12,6 +12,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useRouter } from "@/lib/i18n/navigation";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { customerKeys } from "@/lib/queries/keys";
+import { useQuery } from "@tanstack/react-query";
 import type { Customer } from "@/lib/types";
 
 type VehicleFormState = {
@@ -71,47 +74,32 @@ export default function NewVehiclePage() {
   const searchParams = useSearchParams();
   const preselectedCustomerId = searchParams.get("customerId");
 
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const orgQuery = useCurrentOrg();
+  const orgId = orgQuery.data?.orgId;
+
+  const {
+    data: preselectedCustomer,
+  } = useQuery({
+    queryKey: customerKeys.detail(orgId ?? "", preselectedCustomerId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/customers/${preselectedCustomerId}`,
+      );
+      const json = await res.json();
+      return json.data as Customer;
+    },
+    enabled: !!orgId && !!preselectedCustomerId,
+    staleTime: 30_000,
+  });
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<VehicleFormState>(initialForm);
   const [customerResults, setCustomerResults] = useState<Customer[]>([]);
   const [customerSearching, setCustomerSearching] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null,
+    preselectedCustomer ?? null,
   );
-
-  useEffect(() => {
-    fetch("/api/profile")
-      .then((response) => response.json())
-      .then((data) => {
-        const nextOrgId = data?.organizationId ?? data?.data?.organizationId;
-        if (!nextOrgId) {
-          setError(t("noOrganization"));
-          return;
-        }
-
-        setOrgId(nextOrgId);
-      })
-      .catch(() => setError("Failed to load profile"))
-      .finally(() => setLoading(false));
-  }, [t]);
-
-  useEffect(() => {
-    if (!orgId || !preselectedCustomerId) {
-      return;
-    }
-
-    fetch(`/api/organizations/${orgId}/customers/${preselectedCustomerId}`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.data) {
-          setSelectedCustomer(data.data);
-        }
-      })
-      .catch(() => setError("Failed to preload customer"));
-  }, [orgId, preselectedCustomerId]);
 
   const searchCustomers = useCallback(
     async (query: string) => {
@@ -182,7 +170,7 @@ export default function NewVehiclePage() {
     }
   };
 
-  if (loading) {
+  if (orgQuery.isLoading) {
     return (
       <div className="flex max-w-4xl flex-col gap-6">
         <Skeleton className="h-8 w-40" />

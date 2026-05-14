@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, Loader2, UserPlus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useRouter } from "@/lib/i18n/navigation";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useTranslations } from "next-intl";
 
 type CustomerType = "individual" | "company";
@@ -39,28 +40,12 @@ const initialForm: CustomerFormState = {
 
 export default function NewCustomerPage() {
   const router = useRouter();
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const orgQuery = useCurrentOrg();
+  const orgId = orgQuery.data?.orgId ?? null;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<CustomerFormState>(initialForm);
   const t = useTranslations("customers");
-
-  useEffect(() => {
-    fetch("/api/profile")
-      .then((response) => response.json())
-      .then((data) => {
-        const nextOrgId = data?.organizationId ?? data?.data?.organizationId;
-        if (!nextOrgId) {
-          setError("No organization found");
-          return;
-        }
-
-        setOrgId(nextOrgId);
-      })
-      .catch(() => setError("Failed to load profile"))
-      .finally(() => setLoading(false));
-  }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -97,11 +82,47 @@ export default function NewCustomerPage() {
     }
   };
 
-  if (loading) {
+  if (orgQuery.isLoading) {
     return (
       <div className="flex max-w-3xl flex-col gap-6">
         <Skeleton className="h-8 w-44" />
         <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
+  if (orgQuery.error) {
+    return (
+      <div className="flex max-w-3xl flex-col gap-6">
+        <Breadcrumb
+          items={[
+            { label: t("title"), href: "/dashboard/customers" },
+            { label: "New Customer" },
+          ]}
+        />
+        <div className="flex items-center gap-3">
+          <Button
+            render={<Link href="/dashboard/customers" />}
+            variant="ghost"
+            size="icon"
+            aria-label="Back"
+          >
+            <ArrowLeft className="size-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">New Customer</h1>
+            <p className="text-sm text-muted-foreground">
+              Create a customer record before check-in or invoicing.
+            </p>
+          </div>
+        </div>
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="p-4">
+            <p className="text-sm text-destructive">
+              {orgQuery.error.message}
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }

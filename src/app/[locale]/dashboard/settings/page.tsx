@@ -16,8 +16,9 @@ import {
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,7 +29,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ApiResponse, Organization } from "@/lib/types";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { orgKeys } from "@/lib/queries/keys";
+import type { Organization } from "@/lib/types";
 import { setCookie } from "@/lib/utils";
 
 type SettingsForm = {
@@ -141,49 +144,31 @@ export default function SettingsPage() {
   const router = useRouter();
   const currentLocale = useLocale();
   const { theme, setTheme } = useTheme();
-  const [organization, setOrganization] = useState<Organization | null>(null);
   const [form, setForm] = useState<SettingsForm>(DEFAULT_FORM);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const loadOrganization = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setSuccessMessage(null);
+  const orgInfoQuery = useCurrentOrg();
+  const orgId = orgInfoQuery.data?.orgId;
 
-    try {
-      const response = await fetch("/api/organizations");
-      const json = (await response.json()) as ApiResponse<Organization | null>;
-
-      if (!response.ok || json.error) {
-        throw new Error(json.error?.message ?? "Failed to load settings");
-      }
-
-      if (!json.data) {
-        throw new Error("No organization found");
-      }
-
-      setOrganization(json.data);
-      setForm(buildFormFromOrganization(json.data));
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to load settings";
-      setError(message);
-      if (message === "No organization found") {
-        router.replace(
-          "/auth/select-organization?returnUrl=/dashboard/settings",
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
-
-  useEffect(() => {
-    loadOrganization();
-  }, [loadOrganization]);
+  const {
+    data: organization,
+    isLoading: loading,
+    refetch,
+  } = useQuery({
+    queryKey: orgKeys.detail(orgId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(`/api/organizations/${orgId}`);
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      if (!json.data) throw new Error("No organization found");
+      return json.data as Organization;
+    },
+    enabled: !!orgId,
+    staleTime: 30_000,
+    retry: 1,
+  });
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -222,15 +207,15 @@ export default function SettingsPage() {
         }),
       });
 
-      const json = (await response.json()) as ApiResponse<Organization>;
+      const json = await response.json();
 
       if (!response.ok || json.error || !json.data) {
         throw new Error(json.error?.message ?? "Failed to save settings");
       }
 
-      setOrganization(json.data);
       const updated = buildFormFromOrganization(json.data);
       setForm(updated);
+      refetch();
       toast.success("Settings saved");
 
       // Switch locale if language changed
@@ -254,7 +239,7 @@ export default function SettingsPage() {
     }
   }
 
-  if (loading) {
+  if (orgInfoQuery.isLoading || loading) {
     return (
       <div className="flex flex-col gap-6">
         <div>
@@ -287,7 +272,7 @@ export default function SettingsPage() {
     );
   }
 
-  if (error && !organization) {
+  if (orgInfoQuery.error && !organization) {
     return (
       <div className="flex flex-col gap-6">
         <div>
@@ -300,8 +285,8 @@ export default function SettingsPage() {
         </div>
         <Card>
           <CardContent className="flex flex-col items-start gap-4 py-6">
-            <p className="text-destructive">{error}</p>
-            <Button onClick={() => loadOrganization()} variant="outline">
+            <p className="text-destructive">{orgInfoQuery.error.message}</p>
+            <Button onClick={() => orgInfoQuery.refetch()} variant="outline">
               {t("common.retry")}
             </Button>
           </CardContent>
@@ -622,7 +607,7 @@ export default function SettingsPage() {
                 Includes customers, vehicles, work orders, inventory, invoices,
                 and settings.
               </p>
-              <ExportDataButton orgId={organization?.id ?? ""} />
+              <ExportDataButton orgId={orgId ?? ""} />
             </div>
 
             <div className="rounded-lg border border-border p-4 space-y-3">

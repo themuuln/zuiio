@@ -5,6 +5,7 @@ export const orgKeys = {
   current: () => [...orgKeys.all, "current"] as const,
   detail: (id: string) => [...orgKeys.all, id] as const,
   settings: (id: string) => [...orgKeys.all, id, "settings"] as const,
+  subscription: (id: string) => [...orgKeys.detail(id), "subscription"] as const,
 };
 
 export const customerKeys = {
@@ -64,6 +65,33 @@ export const priceMemoryKeys = {
     [...priceMemoryKeys.all(orgId), "last-visit", vehicleId] as const,
   serviceLastUsed: (orgId: string) =>
     [...priceMemoryKeys.all(orgId), "service-last-used"] as const,
+};
+
+export const serviceKeys = {
+  all: (orgId: string) => ["organizations", orgId, "services"] as const,
+  list: (orgId: string) => [...serviceKeys.all(orgId), "list"] as const,
+  detail: (orgId: string, id: string) =>
+    [...serviceKeys.all(orgId), "detail", id] as const,
+};
+
+export const mechanicKeys = {
+  all: (orgId: string) => ["organizations", orgId, "mechanics"] as const,
+  list: (orgId: string) => [...mechanicKeys.all(orgId), "list"] as const,
+};
+
+export const wizardKeys = {
+  all: (orgId: string) => ["organizations", orgId, "wizard"] as const,
+  customersByPlate: (orgId: string, query: string) =>
+    [...wizardKeys.all(orgId), "customers-by-plate", query] as const,
+  priceHistory: (orgId: string) =>
+    [...wizardKeys.all(orgId), "price-history"] as const,
+};
+
+export const vehicleModelKeys = {
+  all: (orgId: string) => ["organizations", orgId, "vehicle-models"] as const,
+  list: (orgId: string) => [...vehicleModelKeys.all(orgId), "list"] as const,
+  detail: (orgId: string, id: string) =>
+    [...vehicleModelKeys.all(orgId), "detail", id] as const,
 };
 
 export const dashboardKeys = {

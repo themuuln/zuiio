@@ -129,7 +129,7 @@ export function ServiceLines({
             <div className="divide-y">
               {lines.map((svc, idx) => (
                 <div
-                  key={idx}
+                  key={svc.service_catalog_id ?? `svc-${idx}`}
                   className="flex items-center gap-2 p-3 hover:bg-muted/20"
                 >
                   <div className="flex-1 min-w-0">

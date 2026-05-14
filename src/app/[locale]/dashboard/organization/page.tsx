@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,50 +18,49 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ApiResponse, Organization, SubscriptionPlanInfo } from "@/lib/types";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { orgKeys } from "@/lib/queries/keys";
+import type { Organization, SubscriptionPlanInfo } from "@/lib/types";
 
 export default function OrganizationPage() {
   const t = useTranslations();
-  const [organization, setOrganization] = useState<Organization | null>(null);
-  const [subscription, setSubscription] = useState<SubscriptionPlanInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const orgInfoQuery = useCurrentOrg();
+  const orgId = orgInfoQuery.data?.orgId;
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const profileRes = await fetch("/api/profile");
-      const profile = await profileRes.json();
-      const orgId = profile.organizationId ?? profile.data?.organizationId ?? "";
+  const {
+    data: organization,
+    isLoading: orgLoading,
+    error: orgError,
+  } = useQuery({
+    queryKey: orgKeys.detail(orgId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(`/api/organizations/${orgId}`);
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data as Organization;
+    },
+    enabled: !!orgId,
+    staleTime: 30_000,
+  });
 
-      if (!orgId) {
-        setError("No organization found");
-        return;
-      }
+  const {
+    data: subscription,
+    isLoading: subLoading,
+    error: subError,
+  } = useQuery({
+    queryKey: orgKeys.subscription(orgId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(`/api/organizations/${orgId}/subscription`);
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data as SubscriptionPlanInfo;
+    },
+    enabled: !!orgId,
+    staleTime: 30_000,
+  });
 
-      const [orgRes, subRes] = await Promise.all([
-        fetch(`/api/organizations/${orgId}`),
-        fetch(`/api/organizations/${orgId}/subscription`),
-      ]);
-
-      const orgBody = (await orgRes.json()) as ApiResponse<Organization>;
-      const subBody = (await subRes.json()) as ApiResponse<SubscriptionPlanInfo>;
-
-      if (orgBody.data) setOrganization(orgBody.data);
-      if (subBody.data) setSubscription(subBody.data);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to load organization data";
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const loading = orgInfoQuery.isLoading || orgLoading || subLoading;
+  const error = orgInfoQuery.error?.message ?? orgError?.message ?? subError?.message ?? null;
 
   const formatPlanType = (planType: string) => {
     const map: Record<string, string> = {
@@ -114,7 +113,12 @@ export default function OrganizationPage() {
         <Card>
           <CardContent className="flex flex-col items-start gap-4 py-6">
             <p className="text-destructive">{error}</p>
-            <Button onClick={loadData} variant="outline">
+            <Button
+              onClick={() => {
+                orgInfoQuery.refetch();
+              }}
+              variant="outline"
+            >
               {t("common.retry")}
             </Button>
           </CardContent>

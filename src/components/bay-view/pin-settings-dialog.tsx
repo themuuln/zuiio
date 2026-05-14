@@ -1,8 +1,8 @@
 "use client";
 
 import { CheckCircle2, KeyRound, Loader2, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -46,9 +46,7 @@ export function PinSettingsDialog({ onClose }: Props) {
       await updateBayViewPin(currentPin, newPin, confirmPin);
       setSuccess(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to update PIN",
-      );
+      setError(err instanceof Error ? err.message : "Failed to update PIN");
     } finally {
       setSaving(false);
     }

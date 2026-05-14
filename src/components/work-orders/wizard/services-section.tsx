@@ -6,8 +6,8 @@ import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useWizardContext } from "./wizard-context";
 import { formatCurrency } from "@/lib/utils";
+import { useWizardContext } from "./wizard-context";
 
 export function ServicesSection() {
   const ctx = useWizardContext();
@@ -178,7 +178,7 @@ export function ServicesSection() {
             <div className="divide-y">
               {ctx.serviceLines.map((svc, idx) => (
                 <div
-                  key={idx}
+                  key={svc.service_catalog_id ?? `wsvc-${idx}`}
                   className="flex flex-wrap items-center gap-2 p-3 hover:bg-muted/20"
                 >
                   <div className="flex-1 min-w-[120px]">

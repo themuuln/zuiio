@@ -1,10 +1,10 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { MechanicSelect } from "@/components/mechanic-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MechanicSelect } from "@/components/mechanic-select";
 import { useWizardContext } from "./wizard-context";
-import { useTranslations } from "next-intl";
 
 export function MechanicSection() {
   const ctx = useWizardContext();

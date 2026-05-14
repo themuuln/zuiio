@@ -14,16 +14,21 @@ import {
   Wrench,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { MechanicSelect } from "@/components/mechanic-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
 import { cn, formatMNT } from "@/lib/utils";
-import { MechanicSelect } from "@/components/mechanic-select";
 import { StatusPill } from "./status-pill";
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -170,7 +175,9 @@ export function WorkOrderDetailDrawer({
 
   // ── Mechanic assignment ──────────────────────────────────
 
-  const [mechanics, setMechanics] = useState<{ id: string; full_name: string }[]>([]);
+  const [mechanics, setMechanics] = useState<
+    { id: string; full_name: string }[]
+  >([]);
 
   useEffect(() => {
     if (!orgId || mechanics.length > 0) return;
@@ -336,8 +343,10 @@ export function WorkOrderDetailDrawer({
 
   const canComplete =
     wo?.status === "In Progress" || wo?.status === "Ready for Pickup";
-  const canCancel = wo?.status && !["Completed", "Cancelled"].includes(wo.status);
-  const canInvoice = wo?.status === "Completed" || wo?.status === "Ready for Pickup";
+  const canCancel =
+    wo?.status && !["Completed", "Cancelled"].includes(wo.status);
+  const canInvoice =
+    wo?.status === "Completed" || wo?.status === "Ready for Pickup";
 
   // ── Render ──────────────────────────────────────────────
 
@@ -375,7 +384,9 @@ export function WorkOrderDetailDrawer({
                     {wo.created_at && (
                       <>
                         <span className="text-muted-foreground/30">·</span>
-                        <span>{new Date(wo.created_at).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(wo.created_at).toLocaleDateString()}
+                        </span>
                       </>
                     )}
                   </div>
@@ -402,9 +413,7 @@ export function WorkOrderDetailDrawer({
                 <span className="text-muted-foreground/60">
                   {wo.vehicle?.make}
                 </span>
-                <span className="font-medium">
-                  {wo.vehicle?.model}
-                </span>
+                <span className="font-medium">{wo.vehicle?.model}</span>
                 {wo.vehicle?.year && (
                   <span className="text-muted-foreground/50 text-xs">
                     · {wo.vehicle.year}
@@ -542,7 +551,9 @@ export function WorkOrderDetailDrawer({
                   {(wo.services ?? []).length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-4 text-muted-foreground/50 rounded-lg border border-dashed border-border/60">
                       <Wrench className="size-5 mb-1.5 opacity-60" />
-                      <p className="text-[11px] font-medium">{t("noServicesYet")}</p>
+                      <p className="text-[11px] font-medium">
+                        {t("noServicesYet")}
+                      </p>
                     </div>
                   ) : (
                     <div className="-mx-0.5">
@@ -602,7 +613,9 @@ export function WorkOrderDetailDrawer({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5">
                       <div className="flex items-center justify-center size-5 rounded-md bg-amber-500/10">
-                        <span className="text-[10px] font-bold text-amber-600">P</span>
+                        <span className="text-[10px] font-bold text-amber-600">
+                          P
+                        </span>
                       </div>
                       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         {t("parts")}
@@ -659,7 +672,9 @@ export function WorkOrderDetailDrawer({
                   {/* Parts list */}
                   {(wo.parts ?? []).length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-4 text-muted-foreground/50 rounded-lg border border-dashed border-border/60">
-                      <p className="text-[11px] font-medium">{t("noPartsYet")}</p>
+                      <p className="text-[11px] font-medium">
+                        {t("noPartsYet")}
+                      </p>
                     </div>
                   ) : (
                     <div className="-mx-0.5">
@@ -681,7 +696,8 @@ export function WorkOrderDetailDrawer({
                                 {part.part_name}
                               </p>
                               <p className="text-[10px] text-muted-foreground/60">
-                                {formatMNT(Number(part.unit_price))}{t("perUnit")}
+                                {formatMNT(Number(part.unit_price))}
+                                {t("perUnit")}
                               </p>
                             </div>
                             <div className="w-14 text-right text-xs text-muted-foreground tabular-nums">
@@ -721,13 +737,17 @@ export function WorkOrderDetailDrawer({
                 <section className="rounded-lg bg-gradient-to-br from-primary/5 to-primary/[0.02] border border-primary/10 p-3">
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">{t("services")}</span>
+                      <span className="text-muted-foreground">
+                        {t("services")}
+                      </span>
                       <span className="font-medium tabular-nums">
                         {formatMNT(servicesTotal)}
                       </span>
                     </div>
                     <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">{t("parts")}</span>
+                      <span className="text-muted-foreground">
+                        {t("parts")}
+                      </span>
                       <span className="font-medium tabular-nums">
                         {formatMNT(partsTotal)}
                       </span>
@@ -779,12 +799,14 @@ export function WorkOrderDetailDrawer({
                                     ? "bg-green-500"
                                     : h.status === "Cancelled"
                                       ? "bg-red-400"
-                                      : h.status === "In Progress" || h.status === "Ready for Pickup"
+                                      : h.status === "In Progress" ||
+                                          h.status === "Ready for Pickup"
                                         ? "bg-amber-500"
                                         : "bg-blue-500",
                                 )}
                               >
-                                {h.status === "Completed" || h.status === "Ready for Pickup" ? (
+                                {h.status === "Completed" ||
+                                h.status === "Ready for Pickup" ? (
                                   <CheckCircle2 className="size-3 text-white" />
                                 ) : (
                                   <div className="size-2 rounded-full bg-white/80" />
@@ -795,14 +817,20 @@ export function WorkOrderDetailDrawer({
                               <div className="flex items-center justify-between gap-2">
                                 <StatusPill status={h.status} />
                                 <span className="text-[10px] text-muted-foreground/60 shrink-0 font-mono">
-                                  {new Date(h.created_at).toLocaleDateString([], {
-                                    month: "short",
-                                    day: "numeric",
-                                  })}{" "}
-                                  {new Date(h.created_at).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
+                                  {new Date(h.created_at).toLocaleDateString(
+                                    [],
+                                    {
+                                      month: "short",
+                                      day: "numeric",
+                                    },
+                                  )}{" "}
+                                  {new Date(h.created_at).toLocaleTimeString(
+                                    [],
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    },
+                                  )}
                                 </span>
                               </div>
                               {h.notes && (
@@ -876,7 +904,10 @@ export function WorkOrderDetailDrawer({
                     <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
                     <div>
                       <p className="text-[11px] font-medium">
-                        {t("statusNotesGenericTitle", { status: confirmStatus })}?
+                        {t("statusNotesGenericTitle", {
+                          status: confirmStatus,
+                        })}
+                        ?
                       </p>
                       <p className="text-[10px] text-muted-foreground/70 mt-0.5">
                         {confirmStatus === "Completed"
@@ -906,7 +937,9 @@ export function WorkOrderDetailDrawer({
                     <Button
                       size="sm"
                       variant={
-                        confirmStatus === "Cancelled" ? "destructive" : "default"
+                        confirmStatus === "Cancelled"
+                          ? "destructive"
+                          : "default"
                       }
                       disabled={saving}
                       onClick={() => changeStatus(confirmStatus)}

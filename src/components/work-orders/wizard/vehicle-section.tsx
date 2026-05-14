@@ -1,12 +1,12 @@
 "use client";
 
 import { Car, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { SearchInput } from "@/components/search-input";
 import { useWizardContext } from "./wizard-context";
-import { useTranslations } from "next-intl";
 
 export function VehicleSection() {
   const ctx = useWizardContext();
@@ -37,7 +37,11 @@ export function VehicleSection() {
                   {ctx.selectedVehicle.plate_number}
                 </span>
                 <span className="ml-3 text-sm text-muted-foreground">
-                  {[ctx.selectedVehicle.year, ctx.selectedVehicle.make, ctx.selectedVehicle.model]
+                  {[
+                    ctx.selectedVehicle.year,
+                    ctx.selectedVehicle.make,
+                    ctx.selectedVehicle.model,
+                  ]
                     .filter(Boolean)
                     .join(" ")}
                 </span>
@@ -70,7 +74,9 @@ export function VehicleSection() {
                   >
                     <Car className="size-5 shrink-0 text-muted-foreground" />
                     <div>
-                      <span className="font-mono font-semibold">{v.plate_number}</span>
+                      <span className="font-mono font-semibold">
+                        {v.plate_number}
+                      </span>
                       <span className="ml-3 text-sm text-muted-foreground">
                         {[v.year, v.make, v.model].filter(Boolean).join(" ")}
                       </span>
@@ -120,7 +126,9 @@ export function VehicleSection() {
                   />
                 </div>
                 {ctx.vehicleCreateError && (
-                  <p className="text-sm text-destructive">{ctx.vehicleCreateError}</p>
+                  <p className="text-sm text-destructive">
+                    {ctx.vehicleCreateError}
+                  </p>
                 )}
                 <div className="flex gap-2">
                   <Button
@@ -135,14 +143,15 @@ export function VehicleSection() {
                     }}
                   >
                     {t("cancel")}
-                    
                   </Button>
                   <Button
                     size="sm"
                     disabled={ctx.creatingVehicle || !ctx.quickPlate.trim()}
                     onClick={ctx.handleQuickCreateVehicle}
                   >
-                    {ctx.creatingVehicle ? t("creating") : t("createAndSelectVehicle")}
+                    {ctx.creatingVehicle
+                      ? t("creating")
+                      : t("createAndSelectVehicle")}
                   </Button>
                 </div>
               </div>

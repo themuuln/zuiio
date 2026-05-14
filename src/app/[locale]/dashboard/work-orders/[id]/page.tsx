@@ -3,7 +3,7 @@
 import { AlertTriangle, ArrowLeft, FileText, Plus, Trash2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { ExportButton } from "@/components/export-button";
@@ -16,8 +16,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { WorkOrderPart, WorkOrderService } from "@/lib/database.types";
 import type { ExportColumn } from "@/lib/export";
 import { useRouter } from "@/lib/i18n/navigation";
-import { createClient } from "@/lib/supabase/client";
-import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import {
+  fetchServicePriceHistory,
+  useAddPart,
+  useAddService,
+  useAssignMechanic,
+  useCreateInvoice,
+  useMechanicsList,
+  usePartPriceHistory,
+  useRemovePart,
+  useRemoveService,
+  useServiceCatalog,
+  useUpdateWorkOrderStatus,
+  useWorkOrderDetail,
+} from "@/lib/queries/use-work-order-detail";
+import type { ServiceCatalog } from "@/lib/types";
 import { cn, formatMNT } from "@/lib/utils";
 
 const STATUSES = [
@@ -35,14 +49,6 @@ export default function WorkOrderDetailPage() {
   const woId = params.id as string;
   const t = useTranslations("workOrderDetail");
 
-  const [wo, setWo] = useState<WorkOrderDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  // Add service
-  const [catalog, setCatalog] = useState<ServiceCatalog[]>([]);
   const [serviceSearch, setServiceSearch] = useState("");
   const [showAddService, setShowAddService] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -51,19 +57,71 @@ export default function WorkOrderDetailPage() {
     name: string;
   } | null>(null);
 
-  // Add part
   const [newPart, setNewPart] = useState({
     part_name: "",
     quantity: 1,
     unit_price: 0,
   });
   const [showAddPart, setShowAddPart] = useState(false);
-  const [partPriceHistory, setPartPriceHistory] = useState<number[]>([]);
 
-  // Mechanics
-  const [mechanics, setMechanics] = useState<
-    { id: string; full_name: string }[]
-  >([]);
+  const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
+  const [statusNotes, setStatusNotes] = useState("");
+
+  const [existingInvoiceId, setExistingInvoiceId] = useState<string | null>(
+    null,
+  );
+
+  const { data: orgData, isLoading: orgLoading, error: orgError } =
+    useCurrentOrg();
+  const orgId = orgData?.orgId;
+
+  const {
+    data: wo,
+    isLoading: woLoading,
+    error: woError,
+    refetch: refetchWo,
+  } = useWorkOrderDetail(orgId, woId);
+  const { data: catalog = [] } = useServiceCatalog(orgId);
+  const { data: mechanics = [] } = useMechanicsList(orgId);
+
+  const { data: partPriceHistoryData } = usePartPriceHistory(
+    orgId,
+    newPart.part_name,
+    wo?.vehicle?.make,
+  );
+
+  const updateStatus = useUpdateWorkOrderStatus(orgId);
+  const assignMechanicMutation = useAssignMechanic(orgId);
+  const addService = useAddService(orgId);
+  const removeService = useRemoveService(orgId);
+  const addPart = useAddPart(orgId);
+  const removePart = useRemovePart(orgId);
+  const createInvoice = useCreateInvoice(orgId);
+
+  const saving =
+    updateStatus.isPending ||
+    assignMechanicMutation.isPending ||
+    addService.isPending ||
+    removeService.isPending ||
+    addPart.isPending ||
+    removePart.isPending;
+
+  useEffect(() => {
+    if (!orgLoading && !orgId && !orgError) {
+      router.push(
+        "/auth/select-organization?returnUrl=/dashboard/work-orders",
+      );
+    }
+  }, [orgLoading, orgId, orgError, router]);
+
+  useEffect(() => {
+    if (
+      partPriceHistoryData?.[0] &&
+      newPart.unit_price === 0
+    ) {
+      setNewPart((part) => ({ ...part, unit_price: partPriceHistoryData[0] }));
+    }
+  }, [partPriceHistoryData, newPart.unit_price]);
 
   const serviceExportColumns: ExportColumn<WorkOrderService>[] = useMemo(
     () => [
@@ -86,64 +144,7 @@ export default function WorkOrderDetailPage() {
     [],
   );
 
-  useEffect(() => {
-    fetch("/api/organizations")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.data?.id) {
-          setOrgId(d.data.id);
-          const id = d.data.id;
-          Promise.all([
-            fetch(`/api/organizations/${id}/services`).then((r) => r.json()),
-            fetch(`/api/organizations/${id}/reports?type=mechanics`).then((r) =>
-              r.json(),
-            ),
-          ])
-            .then(([cat, mech]) => {
-              if (cat.data) setCatalog(cat.data);
-              if (mech.data) setMechanics(mech.data);
-            })
-            .catch(() => {});
-        } else {
-          setError("No organization found");
-          router.push(
-            "/auth/select-organization?returnUrl=/dashboard/work-orders",
-          );
-        }
-      })
-      .catch(() => setError("Failed to load organization"))
-      .finally(() => setLoading(false));
-  }, [router]);
-
-  const fetchWo = useCallback(async () => {
-    if (!orgId || !woId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}`,
-      );
-      const json = await res.json();
-      if (json.error) setError(json.error.message);
-      else setWo(json.data);
-    } catch {
-      toast.error("Failed to load work order. Retrying...");
-    } finally {
-      setLoading(false);
-    }
-  }, [orgId, woId]);
-
-  useEffect(() => {
-    fetchWo();
-  }, [fetchWo]);
-
-  const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
-  const [statusNotes, setStatusNotes] = useState("");
-
-  const changeStatus = async (newStatus: string) => {
-    if (!orgId || !woId) return;
-
-    // Require confirmation for Completed/Cancelled
+  const changeStatus = (newStatus: string) => {
     if (
       (newStatus === "Completed" || newStatus === "Cancelled") &&
       confirmStatus !== newStatus
@@ -153,217 +154,86 @@ export default function WorkOrderDetailPage() {
       return;
     }
 
-    setSaving(true);
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            status: newStatus,
-            notes: statusNotes || undefined,
-          }),
+    updateStatus.mutate(
+      { woId, status: newStatus, notes: statusNotes || undefined },
+      {
+        onSuccess: () => {
+          setConfirmStatus(null);
+          setStatusNotes("");
+          toast.success(`Status changed to ${newStatus}`);
         },
-      );
-      const json = await res.json();
-      if (json.error) setError(json.error.message);
-      else {
-        setWo(json.data);
-        toast.success(`Status changed to ${newStatus}`);
-      }
-    } catch {
-      toast.error("Failed to update status");
-    } finally {
-      setSaving(false);
-      setConfirmStatus(null);
-      setStatusNotes("");
-    }
+      },
+    );
   };
 
-  const assignMechanic = async (mechanicId: string) => {
-    if (!orgId || !woId) return;
-    setSaving(true);
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mechanic_id: mechanicId || null }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) setError(json.error.message);
-      else {
-        setWo(json.data);
-        toast.success("Mechanic assigned");
-      }
-    } catch {
-      toast.error("Failed to assign mechanic");
-    } finally {
-      setSaving(false);
-    }
+  const assignMechanic = (mechanicId: string) => {
+    assignMechanicMutation.mutate({ woId, mechanicId });
   };
 
   const addServiceLine = async (svc: ServiceCatalog) => {
     if (!orgId || !woId) return;
     try {
-      const supabase = createClient();
-      const { data: history } = await supabase
-        .from("service_price_history")
-        .select("unit_price")
-        .eq("organization_id", orgId)
-        .eq("service_catalog_id", svc.id)
-        .eq("vehicle_make", wo?.vehicle?.make ?? "")
-        .eq("vehicle_model", wo?.vehicle?.model ?? "")
-        .order("created_at", { ascending: false })
-        .limit(3);
-      const lastPrices = (history ?? [])
-        .map((row) => Number(row.unit_price ?? 0))
-        .filter(Boolean);
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}/services`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            service_catalog_id: svc.id,
-            service_name: svc.name,
-            quantity: 1,
-            unit_price: lastPrices[0] ?? svc.default_price ?? 0,
-          }),
-        },
+      const prices = await fetchServicePriceHistory(
+        orgId,
+        svc.id,
+        wo?.vehicle?.make,
+        wo?.vehicle?.model,
       );
-      const json = await res.json();
-      if (json.error) setError(json.error.message);
-      else fetchWo();
+      addService.mutate({
+        woId,
+        body: {
+          service_catalog_id: svc.id,
+          service_name: svc.name,
+          quantity: 1,
+          unit_price: prices[0] ?? svc.default_price ?? 0,
+        },
+      });
     } catch {
       toast.error("Failed to add service");
     }
   };
 
-  const removeServiceLine = async (serviceId: string) => {
-    if (!orgId || !woId) return;
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}/services`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: serviceId }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) setError(json.error.message);
-      else fetchWo();
-    } catch {
-      toast.error("Failed to remove service");
-    }
-  };
-
-  const addPartLine = async () => {
+  const addPartLine = () => {
     if (!orgId || !woId || !newPart.part_name.trim()) return;
-    try {
-      const unitPrice = newPart.unit_price || partPriceHistory[0] || 0;
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}/parts`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...newPart, unit_price: unitPrice }),
+    const unitPrice =
+      newPart.unit_price || (partPriceHistoryData ?? [])[0] || 0;
+    addPart.mutate(
+      {
+        woId,
+        body: { ...newPart, unit_price: unitPrice },
+      },
+      {
+        onSuccess: () => {
+          setNewPart({ part_name: "", quantity: 1, unit_price: 0 });
+          setShowAddPart(false);
         },
-      );
-      const json = await res.json();
-      if (json.error) setError(json.error.message);
-      else {
-        fetchWo();
-        setNewPart({ part_name: "", quantity: 1, unit_price: 0 });
-        setShowAddPart(false);
-      }
-    } catch {
-      toast.error("Failed to add part");
-    }
+      },
+    );
   };
 
-  useEffect(() => {
-    if (
-      !orgId ||
-      !newPart.part_name.trim() ||
-      newPart.part_name.trim().length < 2
-    ) {
-      setPartPriceHistory([]);
-      return;
-    }
-    const supabase = createClient();
-    supabase
-      .from("part_price_history")
-      .select("unit_price")
-      .eq("organization_id", orgId)
-      .ilike("part_name", newPart.part_name.trim())
-      .eq("vehicle_make", wo?.vehicle?.make ?? "")
-      .order("created_at", { ascending: false })
-      .limit(3)
-      .then(({ data }) => {
-        const prices = (data ?? [])
-          .map((row) => Number(row.unit_price ?? 0))
-          .filter(Boolean);
-        setPartPriceHistory(prices);
-        if (prices[0] && newPart.unit_price === 0) {
-          setNewPart((part) => ({ ...part, unit_price: prices[0] }));
-        }
-      });
-  }, [orgId, newPart.part_name, newPart.unit_price, wo?.vehicle?.make]);
-
-  const removePartLine = async (partId: string) => {
+  const generateInvoice = () => {
     if (!orgId || !woId) return;
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}/parts`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: partId }),
+    createInvoice.mutate(
+      { woId },
+      {
+        onSuccess: (data) => {
+          setExistingInvoiceId(data.id);
+          window.open(`/invoice/${data.public_token}`, "_blank");
         },
-      );
-      const json = await res.json();
-      if (json.error) setError(json.error.message);
-      else fetchWo();
-    } catch {
-      toast.error("Failed to remove part");
-    }
+      },
+    );
   };
 
-  // ── Invoice Generation ──────────────────────────────
-  const [creatingInvoice, setCreatingInvoice] = useState(false);
-  const [existingInvoiceId, setExistingInvoiceId] = useState<string | null>(
-    null,
-  );
+  const loading = orgLoading || woLoading;
 
-  const generateInvoice = async () => {
-    if (!orgId || !woId) return;
-    setCreatingInvoice(true);
-    try {
-      const res = await fetch(`/api/organizations/${orgId}/invoices`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ work_order_id: woId }),
-      });
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message);
-      } else {
-        toast.success(`Invoice ${json.data.invoice_number} created`);
-        setExistingInvoiceId(json.data.id);
-        // Open the public invoice page
-        window.open(`/invoice/${json.data.public_token}`, "_blank");
-      }
-    } catch {
-      toast.error("Failed to create invoice");
-    } finally {
-      setCreatingInvoice(false);
-    }
-  };
+  let error: string | null = null;
+  if (orgError) {
+    error = orgError.message;
+  } else if (!orgLoading && !orgId) {
+    error = "No organization found";
+  } else if (woError) {
+    error = woError.message;
+  }
 
   if (loading) {
     return (
@@ -391,7 +261,7 @@ export default function WorkOrderDetailPage() {
             <p className="text-muted-foreground">
               {error ?? t("workOrderNotFound")}
             </p>
-            <Button onClick={fetchWo} variant="outline">
+            <Button onClick={() => refetchWo()} variant="outline">
               Retry
             </Button>
           </CardContent>
@@ -757,10 +627,10 @@ export default function WorkOrderDetailPage() {
                   }
                   className="h-11"
                 />
-                {partPriceHistory.length > 0 && (
+                {(partPriceHistoryData ?? []).length > 0 && (
                   <p className="mt-1 text-[11px] text-amber-600">
                     {t("lastPrices", {
-                      prices: partPriceHistory
+                      prices: (partPriceHistoryData ?? [])
                         .map((price) => formatMNT(price))
                         .join(" | "),
                     })}
@@ -853,15 +723,28 @@ export default function WorkOrderDetailPage() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={async () => {
+                  onClick={() => {
                     if (deleteConfirm.type === "service") {
-                      await removeServiceLine(deleteConfirm.id);
-                      toast.success("Service removed");
+                      removeService.mutate(
+                        { woId, serviceId: deleteConfirm.id },
+                        {
+                          onSuccess: () => {
+                            toast.success("Service removed");
+                            setDeleteConfirm(null);
+                          },
+                        },
+                      );
                     } else {
-                      await removePartLine(deleteConfirm.id);
-                      toast.success("Part removed");
+                      removePart.mutate(
+                        { woId, partId: deleteConfirm.id },
+                        {
+                          onSuccess: () => {
+                            toast.success("Part removed");
+                            setDeleteConfirm(null);
+                          },
+                        },
+                      );
                     }
-                    setDeleteConfirm(null);
                   }}
                 >
                   {t("remove")}
@@ -930,11 +813,11 @@ export default function WorkOrderDetailPage() {
               <Button
                 size="lg"
                 onClick={generateInvoice}
-                disabled={creatingInvoice}
+                disabled={createInvoice.isPending}
                 className="shrink-0"
               >
                 <FileText className="size-4" />
-                {creatingInvoice
+                {createInvoice.isPending
                   ? t("generating")
                   : existingInvoiceId
                     ? t("viewInvoice")

@@ -42,7 +42,7 @@ export function PartLines({ lines, onAdd, onUpdate, onRemove }: PartLinesProps) 
             <div className="divide-y">
               {lines.map((part, idx) => (
                 <div
-                  key={idx}
+                  key={part.part_number ?? `part-${idx}`}
                   className="flex items-center gap-2 p-3 hover:bg-muted/20"
                 >
                   <Input

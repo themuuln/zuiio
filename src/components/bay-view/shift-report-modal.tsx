@@ -1,22 +1,12 @@
 "use client";
 
-import {
-  Car,
-  Clock,
-  DollarSign,
-  Gauge,
-  Loader2,
-  Users,
-  X,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+import { Car, Clock, DollarSign, Gauge, Loader2, Users, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type {
-  ShiftReport,
-} from "@/lib/services/bay-view-service";
+import type { ShiftReport } from "@/lib/services/bay-view-service";
 
 interface Props {
   onClose: () => void;
@@ -41,9 +31,7 @@ export function ShiftReportModal({ onClose }: Props) {
         const data = await getShiftReport();
         setReport(data);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load report",
-        );
+        setError(err instanceof Error ? err.message : "Failed to load report");
       } finally {
         setLoading(false);
       }

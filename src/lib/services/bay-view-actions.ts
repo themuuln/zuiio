@@ -19,8 +19,7 @@ async function getOrgId(): Promise<string> {
 // ── Find or Create Customer ─────────────────────────────────────
 
 export async function findCustomerByPhone(phone: string) {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { data } = await supabase
     .from("customers")
@@ -34,8 +33,7 @@ export async function findCustomerByPhone(phone: string) {
 }
 
 export async function findCustomerByPlate(plate: string) {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { data } = await supabase
     .from("vehicles")
@@ -88,8 +86,7 @@ export interface VehicleLookupResult {
 }
 
 export async function lookupVehicleByPlate(plate: string): Promise<VehicleLookupResult> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Find vehicle
   const { data: vehicle } = await supabase
@@ -139,20 +136,15 @@ export async function lookupVehicleByPlate(plate: string): Promise<VehicleLookup
     .order("created_at", { ascending: false })
     .limit(20);
 
-  // Fetch mechanic names and services for each WO
+  // Fetch mechanic names and services for each WO (parallel)
   const mechanicIds = [...new Set((workOrders ?? []).map(wo => wo.mechanic_id).filter(Boolean))] as string[];
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, full_name")
-    .in("id", mechanicIds);
-  const mechanicNameMap = new Map((profiles ?? []).map(p => [p.id, p.full_name]));
-
-  // Fetch services for all WOs
   const woIds = (workOrders ?? []).map(wo => wo.id);
-  const { data: allServices } = await supabase
-    .from("work_order_services")
-    .select("work_order_id, service_name, final_price")
-    .in("work_order_id", woIds);
+  const [{ data: profiles }, { data: allServices }] = await Promise.all([
+    supabase.from("profiles").select("id, full_name").in("id", mechanicIds),
+    supabase.from("work_order_services").select("work_order_id, service_name, final_price").in("work_order_id", woIds),
+  ]);
+
+  const mechanicNameMap = new Map((profiles ?? []).map(p => [p.id, p.full_name]));
 
   const servicesByWo = new Map<string, { name: string; price: number }[]>();
   for (const s of allServices ?? []) {
@@ -207,8 +199,7 @@ export async function quickRegisterVehicle(params: {
   customerLastName?: string;
   customerPhone?: string;
 }) {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
   const userId = (await supabase.auth.getUser()).data.user?.id;
   if (!userId) throw new Error("Not authenticated");
 
@@ -291,8 +282,7 @@ export async function quickRegisterVehicle(params: {
 // ── Search mechanics (for registration) ─────────────────────────
 
 export async function searchMechanics(search?: string) {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   let query = supabase
     .from("profiles")
@@ -315,8 +305,7 @@ export async function registerMechanic(params: {
   fullName: string;
   phone?: string;
 }) {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   if (!params.email?.trim()) throw new ValidationError("Email is required");
   if (!params.fullName?.trim()) throw new ValidationError("Name is required");
@@ -351,8 +340,7 @@ export async function registerMechanic(params: {
 export async function getVehicleServiceTimeline(
   vehicleId: string,
 ): Promise<VehicleLookupResult["serviceHistory"]> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { data: workOrders } = await supabase
     .from("work_orders")
@@ -364,17 +352,13 @@ export async function getVehicleServiceTimeline(
     .limit(50);
 
   const mechanicIds = [...new Set((workOrders ?? []).map(wo => wo.mechanic_id).filter(Boolean))] as string[];
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, full_name")
-    .in("id", mechanicIds);
-  const mechanicNameMap = new Map((profiles ?? []).map(p => [p.id, p.full_name]));
-
   const woIds = (workOrders ?? []).map(wo => wo.id);
-  const { data: allServices } = await supabase
-    .from("work_order_services")
-    .select("work_order_id, service_name, final_price")
-    .in("work_order_id", woIds);
+  const [{ data: profiles }, { data: allServices }] = await Promise.all([
+    supabase.from("profiles").select("id, full_name").in("id", mechanicIds),
+    supabase.from("work_order_services").select("work_order_id, service_name, final_price").in("work_order_id", woIds),
+  ]);
+
+  const mechanicNameMap = new Map((profiles ?? []).map(p => [p.id, p.full_name]));
 
   const servicesByWo = new Map<string, { name: string; price: number }[]>();
   for (const s of allServices ?? []) {

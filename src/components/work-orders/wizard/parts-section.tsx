@@ -5,8 +5,8 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useWizardContext } from "./wizard-context";
 import { formatCurrency } from "@/lib/utils";
+import { useWizardContext } from "./wizard-context";
 
 export function PartsSection() {
   const ctx = useWizardContext();
@@ -48,7 +48,7 @@ export function PartsSection() {
               <div className="flex flex-wrap gap-2">
                 {ctx.lastVisitData?.parts.map((part, i) => (
                   <button
-                    key={i}
+                    key={part.part_name ?? `lvpart-${i}`}
                     type="button"
                     onClick={() => {
                       ctx.setPartLines((prev) => [
@@ -88,7 +88,7 @@ export function PartsSection() {
                   : undefined;
                 return (
                   <div
-                    key={idx}
+                    key={part.part_number ?? `wpart-${idx}`}
                     className="flex flex-wrap items-center gap-2 p-3 hover:bg-muted/20"
                   >
                     <div className="flex-1 min-w-[140px]">
@@ -103,7 +103,9 @@ export function PartsSection() {
                       />
                       {partLast && (
                         <p className="mt-1 text-[11px] text-amber-600">
-                          {t("lastSoldShort", { price: formatCurrency(partLast) })}
+                          {t("lastSoldShort", {
+                            price: formatCurrency(partLast),
+                          })}
                         </p>
                       )}
                     </div>
