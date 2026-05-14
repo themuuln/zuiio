@@ -27,6 +27,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { formatMNT } from "@/lib/utils";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -161,11 +162,6 @@ function formatDate(iso: string) {
   } catch {
     return iso;
   }
-}
-
-function formatMNT(n: number | null | undefined) {
-  if (n == null) return "—";
-  return new Intl.NumberFormat("mn-MN").format(n);
 }
 
 // ── Loading Skeleton ──────────────────────────────────────────
@@ -1009,7 +1005,7 @@ export default function InventoryPage() {
                           </td>
                           <td className="px-4 py-3 text-right tabular-nums">
                             {part.default_price
-                              ? `₮${formatMNT(part.default_price)}`
+                              ? formatMNT(part.default_price)
                               : "—"}
                           </td>
                           <td
@@ -1169,7 +1165,7 @@ export default function InventoryPage() {
                           {m.quantity}
                         </td>
                         <td className="px-4 py-3 text-right tabular-nums">
-                          {m.unit_cost ? `₮${formatMNT(m.unit_cost)}` : "—"}
+                          {m.unit_cost ? formatMNT(m.unit_cost) : "—"}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground text-xs">
                           {m.reference_type ?? "—"}
@@ -1366,7 +1362,7 @@ export default function InventoryPage() {
                       {PO_STATUS_LABELS[po.status] ?? po.status}
                     </span>
                     <span className="text-sm font-semibold tabular-nums">
-                      ₮{formatMNT(po.total_amount)}
+                      {formatMNT(po.total_amount)}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {formatDate(po.created_at)}
@@ -1417,7 +1413,7 @@ export default function InventoryPage() {
                                       {item.quantity_received}
                                     </td>
                                     <td className="py-2 text-right tabular-nums">
-                                      ₮{formatMNT(item.unit_cost)}
+                                      {formatMNT(item.unit_cost)}
                                     </td>
                                   </tr>
                                 ))}

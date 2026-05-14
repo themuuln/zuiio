@@ -6,15 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWizardContext } from "./wizard-context";
-
-function formatMNT(amount: number): string {
-  return new Intl.NumberFormat("mn-MN", {
-    style: "currency",
-    currency: "MNT",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { formatCurrency } from "@/lib/utils";
 
 export function PartsSection() {
   const ctx = useWizardContext();
@@ -75,7 +67,7 @@ export function PartsSection() {
                   >
                     <span className="font-medium">{part.part_name}</span>
                     <span className="text-muted-foreground">
-                      {formatMNT(part.unit_price)}
+                      {formatCurrency(part.unit_price)}
                     </span>
                   </button>
                 ))}
@@ -111,7 +103,7 @@ export function PartsSection() {
                       />
                       {partLast && (
                         <p className="mt-1 text-[11px] text-amber-600">
-                          {t("lastSoldShort", { price: formatMNT(partLast) })}
+                          {t("lastSoldShort", { price: formatCurrency(partLast) })}
                         </p>
                       )}
                     </div>
@@ -143,7 +135,7 @@ export function PartsSection() {
                       aria-label="Unit price"
                     />
                     <span className="w-24 text-right text-sm font-semibold tabular-nums shrink-0">
-                      {formatMNT(part.final_price)}
+                      {formatCurrency(part.final_price)}
                     </span>
                     <button
                       type="button"

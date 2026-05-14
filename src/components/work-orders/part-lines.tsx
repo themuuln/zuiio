@@ -4,15 +4,7 @@ import { Plus, Trash2, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-function formatMNT(amount: number): string {
-  return new Intl.NumberFormat("mn-MN", {
-    style: "currency",
-    currency: "MNT",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { formatCurrency } from "@/lib/utils";
 
 export interface PartLine {
   part_name: string;
@@ -97,7 +89,7 @@ export function PartLines({ lines, onAdd, onUpdate, onRemove }: PartLinesProps) 
                     aria-label="Unit price"
                   />
                   <span className="text-sm font-semibold tabular-nums w-20 text-right">
-                    {formatMNT(part.final_price)}
+                    {formatCurrency(part.final_price)}
                   </span>
                   <Button
                     variant="ghost"

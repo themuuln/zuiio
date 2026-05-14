@@ -1,9 +1,22 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Car, ChevronDown, ChevronUp, Clock, CornerDownRight, Search, X } from "lucide-react";
+import {
+  Car,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  CornerDownRight,
+  Loader2,
+  Search,
+  X,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { Vehicle, WorkOrder } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
@@ -20,13 +33,23 @@ function getWaitTime(createdAt: string): { text: string; urgent: boolean } {
 
 interface QueuedVehicleCardProps {
   workOrder: WorkOrder & { vehicle: Vehicle | null };
+  isPending?: boolean;
   onQuickAssign?: (workOrderId: string) => void;
 }
 
-export function QueuedVehicleCard({ workOrder, onQuickAssign }: QueuedVehicleCardProps) {
+export function QueuedVehicleCard({
+  workOrder,
+  isPending,
+  onQuickAssign,
+}: QueuedVehicleCardProps) {
   const t = useTranslations("bayView");
   const {
-    attributes, listeners, setNodeRef, transform, transition, isDragging,
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
   } = useSortable({
     id: `vehicle-${workOrder.id}`,
     data: { type: "vehicle", workOrderId: workOrder.id },
@@ -49,7 +72,8 @@ export function QueuedVehicleCard({ workOrder, onQuickAssign }: QueuedVehicleCar
     const tick = () => {
       const minutes = Math.floor((Date.now() - createdRef.current) / 60000);
       if (minutes < 15) setWaitInfo({ text: `${minutes}m`, urgent: false });
-      else if (minutes < 60) setWaitInfo({ text: `${minutes}m`, urgent: minutes > 30 });
+      else if (minutes < 60)
+        setWaitInfo({ text: `${minutes}m`, urgent: minutes > 30 });
       else setWaitInfo({ text: `${Math.floor(minutes / 60)}h+`, urgent: true });
     };
     tick();
@@ -103,7 +127,10 @@ export function QueuedVehicleCard({ workOrder, onQuickAssign }: QueuedVehicleCar
         )}
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        {onQuickAssign && (
+        {isPending && (
+          <Loader2 className="size-3.5 animate-spin text-muted-foreground/50" />
+        )}
+        {onQuickAssign && !isPending && (
           <button
             type="button"
             onClick={(e) => {
@@ -135,10 +162,15 @@ export function QueuedVehicleCard({ workOrder, onQuickAssign }: QueuedVehicleCar
 
 interface WaitingQueueProps {
   items: (WorkOrder & { vehicle: Vehicle | null })[];
+  pendingWoIds?: Record<string, boolean>;
   onQuickAssign?: (workOrderId: string) => void;
 }
 
-export function WaitingQueue({ items, onQuickAssign }: WaitingQueueProps) {
+export function WaitingQueue({
+  items,
+  pendingWoIds = {},
+  onQuickAssign,
+}: WaitingQueueProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -232,12 +264,16 @@ export function WaitingQueue({ items, onQuickAssign }: WaitingQueueProps) {
               </button>
             </div>
           ) : (
-            <SortableContext items={queueIds} strategy={verticalListSortingStrategy}>
+            <SortableContext
+              items={queueIds}
+              strategy={verticalListSortingStrategy}
+            >
               <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto pr-1">
                 {filtered.map((wo) => (
                   <QueuedVehicleCard
                     key={wo.id}
                     workOrder={wo}
+                    isPending={!!pendingWoIds[wo.id]}
                     onQuickAssign={onQuickAssign}
                   />
                 ))}

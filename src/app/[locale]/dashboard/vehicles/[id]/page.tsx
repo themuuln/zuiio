@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { WorkOrderStatus } from "@/lib/database.types";
 import { Link, useRouter } from "@/lib/i18n/navigation";
+import { formatMNT } from "@/lib/utils";
 
 interface VehicleOwnerSummary {
   customer_id: string;
@@ -106,14 +107,6 @@ const emptyForm: VehicleFormState = {
   nextServiceAt: "",
   notes: "",
 };
-
-function formatMNT(value: number) {
-  return new Intl.NumberFormat("mn-MN", {
-    style: "decimal",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 function formatDate(value: string | null) {
   return value ? new Date(value).toLocaleDateString() : "—";

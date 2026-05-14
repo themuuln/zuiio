@@ -24,17 +24,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/lib/utils";
 
 type ReportType = "daily" | "weekly" | "monthly" | "eod";
-
-function formatMNT(amount: number): string {
-  return new Intl.NumberFormat("mn-MN", {
-    style: "currency",
-    currency: "MNT",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 /** Compact number: 1.2M, 430k */
 function compactNum(n: number): string {
@@ -115,7 +107,7 @@ function avgRevenuePerWo(
   wos: number,
 ): string {
   if (wos === 0) return "—";
-  return formatMNT(Math.round(revenue / wos));
+  return formatCurrency(Math.round(revenue / wos));
 }
 
 // ── KPI Card (reports variant) ───────────────────────────
@@ -384,8 +376,8 @@ export default function ReportsPage() {
     const parts = r.parts_used ?? 0;
     if (wo === 0 && rev === 0) return null;
 
-    const parts2 = rev > 0 ? `avg ${formatMNT(Math.round(rev / wo))}/WO` : "";
-    return `${wo} job${wo === 1 ? "" : "s"} completed · ${formatMNT(rev)} revenue · ${svc} services · ${parts} parts ${parts2 ? "· " + parts2 : ""}`;
+    const parts2 = rev > 0 ? `avg ${formatCurrency(Math.round(rev / wo))}/WO` : "";
+    return `${wo} job${wo === 1 ? "" : "s"} completed · ${formatCurrency(rev)} revenue · ${svc} services · ${parts} parts ${parts2 ? "· " + parts2 : ""}`;
   }, [r, loading]);
 
   const eodReport = report as EodReport | null;
@@ -542,7 +534,7 @@ export default function ReportsPage() {
             />
             <ReportKpiCard
               label="Total Revenue"
-              value={formatMNT(eodReport.total_revenue)}
+              value={formatCurrency(eodReport.total_revenue)}
               icon={DollarSign}
               subtitle={`${eodReport.mechanics.length} mechanic${eodReport.mechanics.length === 1 ? "" : "s"} active`}
             />
@@ -550,8 +542,8 @@ export default function ReportsPage() {
               label="Avg Revenue / WO"
               value={
                 eodReport.total_work_orders > 0
-                  ? formatMNT(Math.round(eodReport.total_revenue / eodReport.total_work_orders))
-                  : formatMNT(0)
+                  ? formatCurrency(Math.round(eodReport.total_revenue / eodReport.total_work_orders))
+                  : formatCurrency(0)
               }
               icon={TrendingUp}
             />
@@ -627,10 +619,10 @@ export default function ReportsPage() {
                             {m.parts_used ?? 0}
                           </td>
                           <td className="px-4 py-3 text-right font-medium tabular-nums">
-                            {formatMNT(m.total_revenue)}
+                            {formatCurrency(m.total_revenue)}
                           </td>
                           <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                            {formatMNT(avg)}
+                            {formatCurrency(avg)}
                           </td>
                         </tr>
                       );
@@ -651,7 +643,7 @@ export default function ReportsPage() {
                         {eodReport.mechanics.reduce((s, m) => s + (m.parts_used ?? 0), 0)}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">
-                        {formatMNT(eodReport.total_revenue)}
+                        {formatCurrency(eodReport.total_revenue)}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums" />
                     </tr>
@@ -727,11 +719,11 @@ export default function ReportsPage() {
                 />
                 <ReportKpiCard
                   label="Total Revenue"
-                  value={formatMNT(r?.total_revenue ?? 0)}
+                  value={formatCurrency(r?.total_revenue ?? 0)}
                   icon={DollarSign}
                   subtitle={
                     r?.total_discounts && r.total_discounts > 0
-                      ? `${formatMNT(r.total_discounts)} in discounts`
+                      ? `${formatCurrency(r.total_discounts)} in discounts`
                       : undefined
                   }
                 />

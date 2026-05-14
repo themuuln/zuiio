@@ -463,22 +463,23 @@ export async function createPurchaseOrder(
   if (poError || !po) throw new Error(poError?.message ?? "Failed to create PO");
 
   // Insert items
-  for (const item of params.items) {
-    const { error: itemError } = await supabase
-      .from("purchase_order_items")
-      .insert({
-        organization_id: orgId,
-        purchase_order_id: po.id,
-        part_id: item.part_id,
-        quantity_ordered: item.quantity_ordered,
-        quantity_received: 0,
-        unit_cost: item.unit_cost,
-        notes: item.notes || null,
-        created_by: userId,
-        updated_by: userId,
-      });
-    if (itemError) throw new Error(itemError?.message ?? "Failed to add PO item");
-  }
+  const items = params.items.map((item) => ({
+    organization_id: orgId,
+    purchase_order_id: po.id,
+    part_id: item.part_id,
+    quantity_ordered: item.quantity_ordered,
+    quantity_received: 0,
+    unit_cost: item.unit_cost,
+    notes: item.notes || null,
+    created_by: userId,
+    updated_by: userId,
+  }));
+
+  const { error: itemsError } = await supabase
+    .from("purchase_order_items")
+    .insert(items);
+
+  if (itemsError) throw new Error(itemsError?.message ?? "Failed to add PO item");
 
   revalidateTag(cacheTags.purchaseOrders(orgId), "max");
   return po;

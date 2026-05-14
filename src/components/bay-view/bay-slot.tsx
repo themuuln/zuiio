@@ -1,9 +1,9 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
-import { Clock, MapPin, Maximize2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Clock, Loader2, MapPin, Maximize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
 import { MechanicBadge } from "./mechanic-badge";
@@ -66,7 +66,9 @@ function ElapsedTimer({ startedAt }: { startedAt: string | null | undefined }) {
 
   if (!startedAt || !display) return null;
 
-  const minutes = Math.floor((Date.now() - new Date(startedAt).getTime()) / 60000);
+  const minutes = Math.floor(
+    (Date.now() - new Date(startedAt).getTime()) / 60000,
+  );
 
   return (
     <div
@@ -85,6 +87,7 @@ function ElapsedTimer({ startedAt }: { startedAt: string | null | undefined }) {
 
 interface BaySlotProps {
   bay: BaySlotData;
+  isPending?: boolean;
   onStatusChange: (woId: string, status: string) => void;
   onRemoveFromBay: (woId: string) => void;
   onAssignMechanic: (woId: string, mechanicId: string) => void;
@@ -93,8 +96,8 @@ interface BaySlotProps {
 
 export function BaySlot({
   bay,
+  isPending,
   onStatusChange,
-  onRemoveFromBay,
   onOpenDetail,
 }: BaySlotProps) {
   const t = useTranslations("bayView");
@@ -168,25 +171,36 @@ export function BaySlot({
             </div>
           )}
 
-          {/* Bottom row: mechanic + timer */}
+          {/* Bottom row: mechanic + timer + pending indicator */}
           <div className="flex items-center justify-between mt-auto pt-2 border-t border-border/40">
-            <MechanicBadge workOrderId={wo.id} mechanic={wo.mechanic} />
+            <div className="flex items-center gap-2">
+              <MechanicBadge workOrderId={wo.id} mechanic={wo.mechanic} />
+              {isPending && (
+                <Loader2 className="size-3.5 animate-spin text-muted-foreground/60" />
+              )}
+            </div>
             <ElapsedTimer startedAt={wo.started_at ?? wo.created_at} />
           </div>
 
           {/* Quick actions row */}
-          <div className="flex gap-1.5 mt-1" role="group" aria-label={t("manage")}>
+          <div
+            className="flex gap-1.5 mt-1"
+            role="group"
+            aria-label={t("manage")}
+          >
             {/* Contextual status action */}
-            {wo.status !== "Ready for Pickup" && wo.status !== "Completed" && wo.status !== "Cancelled" && (
-              <button
-                type="button"
-                onClick={() => onStatusChange(wo.id, "Ready for Pickup")}
-                className="flex-1 rounded-md bg-green-500/10 px-2 py-1.5 text-xs font-medium text-green-600 hover:bg-green-500/20 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
-                aria-label={t("markReady")}
-              >
-                {t("markReady")}
-              </button>
-            )}
+            {wo.status !== "Ready for Pickup" &&
+              wo.status !== "Completed" &&
+              wo.status !== "Cancelled" && (
+                <button
+                  type="button"
+                  onClick={() => onStatusChange(wo.id, "Ready for Pickup")}
+                  className="flex-1 rounded-md bg-green-500/10 px-2 py-1.5 text-xs font-medium text-green-600 hover:bg-green-500/20 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+                  aria-label={t("markReady")}
+                >
+                  {t("markReady")}
+                </button>
+              )}
             {wo.status === "Ready for Pickup" && (
               <button
                 type="button"

@@ -18,7 +18,7 @@ import type { ExportColumn } from "@/lib/export";
 import { useRouter } from "@/lib/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, formatMNT } from "@/lib/utils";
 
 const STATUSES = [
   "New",
@@ -28,14 +28,6 @@ const STATUSES = [
   "Completed",
   "Cancelled",
 ] as const;
-
-function formatMNT(value: number): string {
-  return `₮${new Intl.NumberFormat("mn-MN", {
-    style: "decimal",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)}`;
-}
 
 export default function WorkOrderDetailPage() {
   const params = useParams();

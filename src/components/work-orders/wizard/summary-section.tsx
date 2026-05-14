@@ -6,15 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@/lib/i18n/navigation";
 import { useWizardContext } from "./wizard-context";
 import { useTranslations } from "next-intl";
-
-function formatMNT(amount: number): string {
-  return new Intl.NumberFormat("mn-MN", {
-    style: "currency",
-    currency: "MNT",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { formatCurrency } from "@/lib/utils";
 
 export function SummarySection() {
   const ctx = useWizardContext();
@@ -29,19 +21,19 @@ export function SummarySection() {
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t("servicesTotal")}</span>
               <span className="font-medium tabular-nums">
-                {formatMNT(ctx.servicesTotal)}
+                {formatCurrency(ctx.servicesTotal)}
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t("partsTotal")}</span>
               <span className="font-medium tabular-nums">
-                {formatMNT(ctx.partsTotal)}
+                {formatCurrency(ctx.partsTotal)}
               </span>
             </div>
             <hr className="border-border" />
             <div className="flex justify-between text-xl font-bold">
               <span>{t("grandTotal")}</span>
-              <span className="tabular-nums">{formatMNT(ctx.grandTotal)}</span>
+              <span className="tabular-nums">{formatCurrency(ctx.grandTotal)}</span>
             </div>
           </div>
         </CardContent>
@@ -68,7 +60,7 @@ export function SummarySection() {
               <Wrench className="size-5" />
               {ctx.saving
                 ? t("creating")
-                : t("createWorkOrder", { total: formatMNT(ctx.grandTotal) })}
+                : t("createWorkOrder", { total: formatCurrency(ctx.grandTotal) })}
             </Button>
           </div>
           {(!ctx.selectedCustomer || !ctx.selectedVehicle) && (

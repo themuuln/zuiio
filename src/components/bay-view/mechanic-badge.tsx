@@ -16,6 +16,7 @@ interface MechanicBadgeProps {
 }
 
 export function MechanicBadge({ workOrderId, mechanic }: MechanicBadgeProps) {
+  const t = useTranslations("bayView");
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: `mechanic-on-wo-${workOrderId}`,
@@ -36,7 +37,6 @@ export function MechanicBadge({ workOrderId, mechanic }: MechanicBadgeProps) {
     : undefined;
 
   if (!mechanic) {
-    const t = useTranslations("bayView");
     return (
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground/40 px-2 py-1 rounded-full bg-muted/30">
         <User className="size-3.5" />

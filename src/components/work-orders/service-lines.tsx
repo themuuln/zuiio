@@ -7,15 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { ServiceCatalog } from "@/lib/types";
-
-function formatMNT(amount: number): string {
-  return new Intl.NumberFormat("mn-MN", {
-    style: "currency",
-    currency: "MNT",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { formatCurrency } from "@/lib/utils";
 
 export interface ServiceLine {
   service_catalog_id: string | null;
@@ -111,11 +103,11 @@ export function ServiceLines({
                     </div>
                     <div className="text-right">
                       <span className="text-sm font-semibold tabular-nums">
-                        {formatMNT(Number(svc.default_price))}
+                        {formatCurrency(Number(svc.default_price))}
                       </span>
                       {last !== Number(svc.default_price) && last > 0 && (
                         <span className="ml-2 text-xs text-amber-600">
-                          last: {formatMNT(last)}
+                          last: {formatCurrency(last)}
                         </span>
                       )}
                     </div>
@@ -144,7 +136,7 @@ export function ServiceLines({
                     <p className="text-sm font-medium truncate">{svc.name}</p>
                     {svc.last_price && (
                       <p className="text-[11px] text-amber-600">
-                        Last sold: {formatMNT(svc.last_price)}
+                        Last sold: {formatCurrency(svc.last_price)}
                       </p>
                     )}
                   </div>
@@ -163,7 +155,7 @@ export function ServiceLines({
                     aria-label="Quantity"
                   />
                   <span className="text-sm font-semibold tabular-nums w-20 text-right">
-                    {formatMNT(svc.final_price)}
+                    {formatCurrency(svc.final_price)}
                   </span>
                   <Button
                     variant="ghost"

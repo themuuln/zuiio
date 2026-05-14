@@ -7,15 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWizardContext } from "./wizard-context";
-
-function formatMNT(amount: number): string {
-  return new Intl.NumberFormat("mn-MN", {
-    style: "currency",
-    currency: "MNT",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { formatCurrency } from "@/lib/utils";
 
 export function ServicesSection() {
   const ctx = useWizardContext();
@@ -63,7 +55,7 @@ export function ServicesSection() {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2">
-                {ctx.lastVisitData?.services.map((svc, i) => {
+                {ctx.lastVisitData?.services.map((svc) => {
                   const isAdded = ctx.serviceLines.some(
                     (s) =>
                       s.service_catalog_id === svc.service_catalog_id &&
@@ -71,7 +63,7 @@ export function ServicesSection() {
                   );
                   return (
                     <button
-                      key={i}
+                      key={svc.service_catalog_id ?? svc.service_name}
                       type="button"
                       disabled={isAdded}
                       onClick={() => {
@@ -91,7 +83,7 @@ export function ServicesSection() {
                       {isAdded && <Check className="size-3.5" />}
                       <span className="font-medium">{svc.service_name}</span>
                       <span className="text-muted-foreground">
-                        {formatMNT(svc.unit_price)}
+                        {formatCurrency(svc.unit_price)}
                       </span>
                     </button>
                   );
@@ -152,11 +144,11 @@ export function ServicesSection() {
                       </div>
                       <div className="text-right">
                         <span className="text-sm font-semibold tabular-nums">
-                          {formatMNT(Number(svc.default_price))}
+                          {formatCurrency(Number(svc.default_price))}
                         </span>
                         {last !== Number(svc.default_price) && last > 0 && (
                           <span className="ml-2 text-xs text-amber-600">
-                            {t("lastSold", { price: formatMNT(last) })}
+                            {t("lastSold", { price: formatCurrency(last) })}
                           </span>
                         )}
                       </div>
@@ -194,7 +186,7 @@ export function ServicesSection() {
                     {svc.last_price && (
                       <p className="text-[11px] text-amber-600">
                         {t("lastSoldShort", {
-                          price: formatMNT(svc.last_price),
+                          price: formatCurrency(svc.last_price),
                         })}
                       </p>
                     )}
@@ -243,7 +235,7 @@ export function ServicesSection() {
                     />
                   </div>
                   <span className="w-24 text-right text-sm font-semibold tabular-nums shrink-0">
-                    {formatMNT(svc.final_price)}
+                    {formatCurrency(svc.final_price)}
                   </span>
                   <button
                     type="button"

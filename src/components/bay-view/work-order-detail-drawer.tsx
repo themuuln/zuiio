@@ -22,19 +22,11 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, formatMNT } from "@/lib/utils";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { StatusPill } from "./status-pill";
 
 // ── Helpers ──────────────────────────────────────────────────
-
-function formatMNT(value: number): string {
-  return `₮${new Intl.NumberFormat("mn-MN", {
-    style: "decimal",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)}`;
-}
 
 const STATUSES = [
   "New",

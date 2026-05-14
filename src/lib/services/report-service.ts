@@ -88,29 +88,56 @@ export async function getDailyReport(
       const { data: workOrders } = await query;
 
       const woIds = (workOrders ?? []).map((w) => w.id);
-      const details: WorkOrderDetail[] = [];
+
+      const [servicesData, partsData] = await Promise.all([
+        woIds.length > 0
+          ? supabase
+              .from("work_order_services")
+              .select("final_price, discount_amount, name, work_order_id")
+              .in("work_order_id", woIds)
+          : { data: [] as any[] },
+        woIds.length > 0
+          ? supabase
+              .from("work_order_parts")
+              .select("final_price, discount_amount, part_name, work_order_id")
+              .in("work_order_id", woIds)
+          : { data: [] as any[] },
+      ]);
+
+      const woDataMap = new Map<string, { services: any[]; parts: any[] }>();
+      for (const s of servicesData.data ?? []) {
+        const entry = woDataMap.get(s.work_order_id) ?? { services: [], parts: [] };
+        entry.services.push(s);
+        woDataMap.set(s.work_order_id, entry);
+      }
+      for (const p of partsData.data ?? []) {
+        const entry = woDataMap.get(p.work_order_id) ?? { services: [], parts: [] };
+        entry.parts.push(p);
+        woDataMap.set(p.work_order_id, entry);
+      }
 
       let servicesCount = 0;
       let partsCount = 0;
       let totalRevenue = 0;
       let totalDiscounts = 0;
 
-      for (const woId of woIds) {
-        const detail = await getWorkOrderDetail(supabase, woId);
-        details.push(detail);
-
-        servicesCount += detail.services.length;
-        partsCount += detail.parts.length;
-
-        for (const s of detail.services) {
+      for (const [woId, data] of woDataMap) {
+        servicesCount += data.services.length;
+        partsCount += data.parts.length;
+        for (const s of data.services) {
           totalRevenue += Number(s.final_price);
           totalDiscounts += Number(s.discount_amount ?? 0);
         }
-        for (const p of detail.parts) {
+        for (const p of data.parts) {
           totalRevenue += Number(p.final_price);
           totalDiscounts += Number(p.discount_amount ?? 0);
         }
       }
+
+      const details =
+        woIds.length > 0
+          ? await getRecentWorkOrdersBatched(supabase, woIds)
+          : [];
 
       return {
         date,

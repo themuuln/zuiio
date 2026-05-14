@@ -860,9 +860,9 @@ export default function FinancePage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {data.topServices.slice(0, 8).map((svc, i) => (
+                          {data.topServices.slice(0, 8).map((svc) => (
                             <tr
-                              key={i}
+                              key={svc.name}
                               className="border-b border-border transition-colors hover:bg-muted/30"
                             >
                               <td className="px-5 py-3.5">{svc.name}</td>

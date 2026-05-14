@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
+import { formatMNT } from "@/lib/utils";
 
 interface MechanicEodSummary {
   mechanic_id: string;
@@ -50,10 +51,6 @@ const STATUS_COLORS: Record<string, string> = {
   Completed: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
   Cancelled: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
-
-function formatMNT(value: number): string {
-  return `₮${new Intl.NumberFormat("mn-MN").format(value)}`;
-}
 
 export default function MechanicPage() {
   const t = useTranslations();

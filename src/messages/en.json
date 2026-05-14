@@ -157,6 +157,7 @@
     "addDemoVehicles": "Add 12 demo vehicles?",
     "adding": "Adding...",
     "refreshing": "Refreshing...",
+    "saving": "Saving...",
     "myJobsSubtitle": "Showing only your assigned work orders",
     "allJobsSubtitle": "Drag vehicles to bays, assign mechanics to work orders",
     "listHeaderBay": "Bay",

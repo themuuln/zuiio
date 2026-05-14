@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ExportColumn } from "@/lib/export";
 import { useServiceLastUsedPrices } from "@/lib/queries/use-price-memory";
+import { formatMNT } from "@/lib/utils";
 
 interface ServiceItem {
   id: string;
@@ -21,13 +22,6 @@ interface ServiceItem {
   default_price: number;
   category: string | null;
 }
-
-const formatMNT = (v: number) =>
-  new Intl.NumberFormat("mn-MN", {
-    style: "currency",
-    currency: "MNT",
-    minimumFractionDigits: 0,
-  }).format(v);
 
 export default function ServicesPage() {
   const t = useTranslations();

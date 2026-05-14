@@ -22,13 +22,7 @@ interface Props {
   onClose: () => void;
 }
 
-function formatMNT(value: number): string {
-  return `₮${new Intl.NumberFormat("mn-MN", {
-    style: "decimal",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)}`;
-}
+import { formatMNT } from "@/lib/utils";
 
 export function ShiftReportModal({ onClose }: Props) {
   const t = useTranslations("bayView");

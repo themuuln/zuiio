@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { cacheDurations, cacheTags } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
 import type { Profile, Vehicle, WorkOrder } from "@/lib/database.types";
 import {
@@ -9,8 +9,8 @@ import {
   UnauthorizedError,
   ValidationError,
 } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
 import { createWorkOrder } from "@/lib/services/work-order-service";
+import { createClient } from "@/lib/supabase/server";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -65,91 +65,93 @@ export async function getBayViewData(): Promise<BayViewData> {
   return withCache(
     ["getBayViewData", orgId],
     async () => {
+      // Get branch with bay_count setting
+      const { data: branch } = await supabase
+        .from("branches")
+        .select("settings")
+        .eq("organization_id", orgId)
+        .eq("is_main", true)
+        .maybeSingle();
 
-  // Get branch with bay_count setting
-  const { data: branch } = await supabase
-    .from("branches")
-    .select("settings")
-    .eq("organization_id", orgId)
-    .eq("is_main", true)
-    .maybeSingle();
+      const bayCount =
+        ((branch?.settings as Record<string, unknown> | null)
+          ?.bay_count as number) ?? 6;
 
-  const bayCount =
-    ((branch?.settings as Record<string, unknown> | null)
-      ?.bay_count as number) ?? 6;
-
-  // Get all active (non-completed/cancelled) work orders
-  const { data: activeWOs } = await supabase
-    .from("work_orders")
-    .select(`
+      // Get all active (non-completed/cancelled) work orders
+      const { data: activeWOs } = await supabase
+        .from("work_orders")
+        .select(`
       *,
       vehicle:vehicle_id (*),
       customer:customer_id (full_name, company_name)
     `)
-    .eq("organization_id", orgId)
-    .not("status", "in", '("Completed","Cancelled")')
-    .is("deleted_at", null)
-    .order("queue_order", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: true });
+        .eq("organization_id", orgId)
+        .not("status", "in", '("Completed","Cancelled")')
+        .is("deleted_at", null)
+        .order("queue_order", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: true });
 
-  const workOrders = activeWOs ?? [];
+      const workOrders = activeWOs ?? [];
 
-  // Batch-fetch mechanic profiles for all assigned mechanics
-  const mechanicIds = [
-    ...new Set(
-      workOrders
-        .filter((wo) => wo.mechanic_id)
-        .map((wo) => wo.mechanic_id as string),
-    ),
-  ];
+      // Batch-fetch mechanic profiles for all assigned mechanics
+      const mechanicIds = [
+        ...new Set(
+          workOrders
+            .filter((wo) => wo.mechanic_id)
+            .map((wo) => wo.mechanic_id as string),
+        ),
+      ];
 
-  const mechanicMap = new Map<
-    string,
-    { id: string; full_name: string | null; avatar_url: string | null }
-  >();
-  if (mechanicIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, full_name, avatar_url")
-      .in("id", mechanicIds);
-    for (const p of profiles ?? []) {
-      mechanicMap.set(p.id, p);
-    }
-  }
+      const mechanicMap = new Map<
+        string,
+        { id: string; full_name: string | null; avatar_url: string | null }
+      >();
+      if (mechanicIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .in("id", mechanicIds);
+        for (const p of profiles ?? []) {
+          mechanicMap.set(p.id, p);
+        }
+      }
 
-  // Attach mechanic info and customer name to work orders
-  const woWithDetails = workOrders.map((wo) => ({
-    ...wo,
-    mechanic: wo.mechanic_id ? (mechanicMap.get(wo.mechanic_id) ?? null) : null,
-    customer_name: wo.customer?.company_name ?? wo.customer?.full_name ?? null,
-  }));
+      // Attach mechanic info and customer name to work orders
+      const woWithDetails = workOrders.map((wo) => ({
+        ...wo,
+        mechanic: wo.mechanic_id
+          ? (mechanicMap.get(wo.mechanic_id) ?? null)
+          : null,
+        customer_name:
+          wo.customer?.company_name ?? wo.customer?.full_name ?? null,
+      }));
 
-  // Separate bay-assigned vs waiting queue
-  const inBay = woWithDetails.filter((wo) => wo.bay_number != null);
-  const waiting = woWithDetails.filter((wo) => wo.bay_number == null);
+      // Separate bay-assigned vs waiting queue
+      const inBay = woWithDetails.filter((wo) => wo.bay_number != null);
+      const waiting = woWithDetails.filter((wo) => wo.bay_number == null);
 
-  // Build bay slots
-  const bays: BaySlotData[] = [];
-  for (let i = 1; i <= bayCount; i++) {
-    const wo = inBay.find((w) => w.bay_number === i) ?? null;
-    bays.push({
-      bayNumber: i,
-      workOrder: wo as BaySlotData["workOrder"],
-    });
-  }
+      // Build bay slots
+      const bays: BaySlotData[] = [];
+      for (let i = 1; i <= bayCount; i++) {
+        const wo = inBay.find((w) => w.bay_number === i) ?? null;
+        bays.push({
+          bayNumber: i,
+          workOrder: wo as BaySlotData["workOrder"],
+        });
+      }
 
-  // Get mechanics (users with mechanic role)
-  const { data: mechanics } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("organization_id", orgId)
-    .eq("is_active", true)
-    .order("full_name");
+      // Get mechanics (users with mechanic role)
+      const { data: mechanics } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("organization_id", orgId)
+        .eq("is_active", true)
+        .order("full_name");
 
-  const mechList = (mechanics ?? []).map((p) => ({
-    ...p,
-    current_jobs: workOrders.filter((wo) => wo.mechanic_id === p.id).length,
-  }));
+      const mechList = (mechanics ?? []).map((p) => ({
+        ...p,
+        current_jobs: workOrders.filter((wo) => wo.mechanic_id === p.id).length,
+      }));
 
       return {
         bayCount,
@@ -262,6 +264,8 @@ export async function assignMechanicToWorkOrder(
     .eq("organization_id", orgId);
 
   if (error) throw new Error(error.message ?? "Failed to assign mechanic");
+
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 }
 
 // ── Unassign Mechanic ─────────────────────────────────────────
@@ -400,18 +404,102 @@ export async function updateBayCount(count: number): Promise<number> {
 // ── Seed Waiting Queue ─────────────────────────────────────────
 
 const SEED_VEHICLES = [
-  { make: "Toyota", model: "Prius", plate: "01-01-УБО", year: 2020, owner: "Bat Erdene", phone: "99110001" },
-  { make: "Toyota", model: "Land Cruiser 200", plate: "01-02-УБН", year: 2022, owner: "Sukhbold", phone: "99110002" },
-  { make: "Honda", model: "Fit", plate: "01-03-УБЦ", year: 2019, owner: "Tsetseg Baatar", phone: "99110003" },
-  { make: "Hyundai", model: "Santa Fe", plate: "01-04-УБӨ", year: 2021, owner: "Gan Zorig", phone: "99110004" },
-  { make: "Lexus", model: "RX 350", plate: "01-05-УБХ", year: 2023, owner: "Enkh Tuvshin", phone: "99110005" },
-  { make: "Kia", model: "Sorento", plate: "01-06-УБЯ", year: 2022, owner: "Dash Purev", phone: "99110006" },
-  { make: "Mercedes", model: "GLC 300", plate: "01-07-УБЭ", year: 2021, owner: "Odkoo Dorj", phone: "99110007" },
-  { make: "BMW", model: "X5", plate: "01-08-УБШ", year: 2023, owner: "Naraa Batzorig", phone: "99110008" },
-  { make: "Nissan", model: "Navara", plate: "01-09-УБЧ", year: 2020, owner: "Bayarsaikhan", phone: "99110009" },
-  { make: "Mazda", model: "CX-5", plate: "01-10-УБЗ", year: 2022, owner: "Tuya Chimed", phone: "99110010" },
-  { make: "Land", model: "Range Rover Sport", plate: "01-11-УБҮ", year: 2023, owner: "Zolboo Davaa", phone: "99110011" },
-  { make: "Toyota", model: "Hiace", plate: "01-12-УБФ", year: 2021, owner: "Amar Ganbold", phone: "99110012" },
+  {
+    make: "Toyota",
+    model: "Prius",
+    plate: "01-01-УБО",
+    year: 2020,
+    owner: "Bat Erdene",
+    phone: "99110001",
+  },
+  {
+    make: "Toyota",
+    model: "Land Cruiser 200",
+    plate: "01-02-УБН",
+    year: 2022,
+    owner: "Sukhbold",
+    phone: "99110002",
+  },
+  {
+    make: "Honda",
+    model: "Fit",
+    plate: "01-03-УБЦ",
+    year: 2019,
+    owner: "Tsetseg Baatar",
+    phone: "99110003",
+  },
+  {
+    make: "Hyundai",
+    model: "Santa Fe",
+    plate: "01-04-УБӨ",
+    year: 2021,
+    owner: "Gan Zorig",
+    phone: "99110004",
+  },
+  {
+    make: "Lexus",
+    model: "RX 350",
+    plate: "01-05-УБХ",
+    year: 2023,
+    owner: "Enkh Tuvshin",
+    phone: "99110005",
+  },
+  {
+    make: "Kia",
+    model: "Sorento",
+    plate: "01-06-УБЯ",
+    year: 2022,
+    owner: "Dash Purev",
+    phone: "99110006",
+  },
+  {
+    make: "Mercedes",
+    model: "GLC 300",
+    plate: "01-07-УБЭ",
+    year: 2021,
+    owner: "Odkoo Dorj",
+    phone: "99110007",
+  },
+  {
+    make: "BMW",
+    model: "X5",
+    plate: "01-08-УБШ",
+    year: 2023,
+    owner: "Naraa Batzorig",
+    phone: "99110008",
+  },
+  {
+    make: "Nissan",
+    model: "Navara",
+    plate: "01-09-УБЧ",
+    year: 2020,
+    owner: "Bayarsaikhan",
+    phone: "99110009",
+  },
+  {
+    make: "Mazda",
+    model: "CX-5",
+    plate: "01-10-УБЗ",
+    year: 2022,
+    owner: "Tuya Chimed",
+    phone: "99110010",
+  },
+  {
+    make: "Land",
+    model: "Range Rover Sport",
+    plate: "01-11-УБҮ",
+    year: 2023,
+    owner: "Zolboo Davaa",
+    phone: "99110011",
+  },
+  {
+    make: "Toyota",
+    model: "Hiace",
+    plate: "01-12-УБФ",
+    year: 2021,
+    owner: "Amar Ganbold",
+    phone: "99110012",
+  },
 ];
 
 const SERVICES = [
@@ -429,7 +517,10 @@ const SERVICES = [
   "Spark plug replacement",
 ];
 
-export async function seedWaitingQueue(): Promise<{ created: number; errors: string[] }> {
+export async function seedWaitingQueue(): Promise<{
+  created: number;
+  errors: string[];
+}> {
   const supabase = await createClient();
   const orgId = await getOrgId();
 
@@ -441,7 +532,9 @@ export async function seedWaitingQueue(): Promise<{ created: number; errors: str
     .maybeSingle();
   if (!branch) throw new Error("Branch not found");
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
   let created = 0;
@@ -590,6 +683,7 @@ export async function assignToFirstAvailableBay(
     throw new Error(error.message ?? "Failed to assign vehicle to bay");
   }
 
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   return firstEmpty;
 }
 
@@ -615,6 +709,8 @@ export async function reorderQueue(
       throw new Error(error.message ?? "Failed to reorder queue");
     }
   }
+
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 }
 
 // ── Shift Report ─────────────────────────────────────────────
@@ -692,9 +788,7 @@ export async function getShiftReport(): Promise<ShiftReport> {
     .not("bay_number", "is", null);
 
   const bayUtilization =
-    bayCount > 0
-      ? Math.round(((inBay?.length ?? 0) / bayCount) * 100)
-      : 0;
+    bayCount > 0 ? Math.round(((inBay?.length ?? 0) / bayCount) * 100) : 0;
 
   return {
     completedToday,

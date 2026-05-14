@@ -103,7 +103,6 @@ interface WizardState {
   description: string;
 
   lastVisitData: LastVisitInfo | null;
-  lastVisitLoading: boolean;
   showLastVisitSuggestions: boolean;
 
   servicesTotal: number;
@@ -227,7 +226,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [lastVisitData, setLastVisitData] = useState<LastVisitInfo | null>(
     null,
   );
-  const [lastVisitLoading, setLastVisitLoading] = useState(false);
   const [showLastVisitSuggestions, setShowLastVisitSuggestions] =
     useState(false);
 
@@ -319,7 +317,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         if (customer) setSelectedCustomer(customer);
       }
 
-      setLastVisitLoading(true);
       try {
         const { data: workOrders } = await supabase
           .from("work_orders")
@@ -365,7 +362,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
           setShowLastVisitSuggestions(true);
         }
       } finally {
-        setLastVisitLoading(false);
       }
     },
     [orgId, selectedCustomer],
@@ -738,7 +734,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     selectedMechanic,
     description,
     lastVisitData,
-    lastVisitLoading,
     showLastVisitSuggestions,
     servicesTotal,
     partsTotal,

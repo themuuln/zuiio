@@ -1,8 +1,4 @@
-import { cn } from "@/lib/utils";
-
-function formatMNT(amount: number): string {
-  return `₮${amount.toLocaleString("en-US")}`;
-}
+import { cn, formatMNT } from "@/lib/utils";
 
 export function PriceDisplay({
   amount,

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { formatMNT } from "@/lib/utils";
 
 interface Props {
   onClose: () => void;
@@ -88,14 +89,6 @@ function formatTime(iso: string) {
   });
 }
 
-function formatMNT(value: number): string {
-  return `₮${new Intl.NumberFormat("mn-MN", {
-    style: "decimal",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value)}`;
-}
-
 // ── Timeline Component ──────────────────────────────────────────
 
 function ServiceTimeline({
@@ -157,9 +150,9 @@ function ServiceTimeline({
 
               {entry.services.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1.5">
-                  {entry.services.map((s, i) => (
+                  {entry.services.map((s) => (
                     <span
-                      key={i}
+                      key={`${s.name}-${s.price}`}
                       className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400"
                     >
                       <Wrench className="size-2.5" />
