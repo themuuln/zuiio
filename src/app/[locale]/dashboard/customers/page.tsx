@@ -11,9 +11,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { ExportButton } from "@/components/export-button";
-import type { ExportColumn } from "@/lib/export";
 import { CustomerDetailDrawer } from "@/components/customer-detail-drawer";
+import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -28,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Customer } from "@/lib/database.types";
+import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
 import { useCustomers } from "@/lib/queries/use-customers";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -108,13 +108,15 @@ function formatDate(dateString: string | null) {
 export default function CustomersPage() {
   const t = useTranslations("customers");
   const [search, setSearch] = useState("");
-  const [detailCustomerId, setDetailCustomerId] = useState<string | null>(
-    null,
-  );
+  const [detailCustomerId, setDetailCustomerId] = useState<string | null>(null);
 
   const exportColumns: ExportColumn<CustomerWithVehicleCount>[] = useMemo(
     () => [
-      { key: "first_name", label: "Name", value: (c) => getCustomerDisplayName(c) },
+      {
+        key: "first_name",
+        label: "Name",
+        value: (c) => getCustomerDisplayName(c),
+      },
       { key: "type", label: "Type" },
       { key: "phone", label: "Phone" },
       { key: "email", label: "Email" },
@@ -145,7 +147,7 @@ export default function CustomersPage() {
 
   if (showLoadingScreen) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-36" />
@@ -174,7 +176,7 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
@@ -247,7 +249,7 @@ export default function CustomersPage() {
                   return (
                     <TableRow
                       key={customer.id}
-                      className="cursor-pointer"
+                      className="h-16 cursor-pointer"
                       onClick={() => setDetailCustomerId(customer.id)}
                     >
                       <TableCell>

@@ -1,0 +1,174 @@
+"use client";
+
+import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useRouter } from "@/lib/i18n/navigation";
+import { useCreateSupplier } from "@/lib/queries/use-inventory";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+
+export default function NewSupplierPage() {
+  const t = useTranslations("inventory");
+  const router = useRouter();
+  const { data: org } = useCurrentOrg();
+  const orgId = org?.orgId;
+  const createSupplier = useCreateSupplier(orgId);
+
+  const [name, setName] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [taxId, setTaxId] = useState("");
+  const [paymentTerms, setPaymentTerms] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      toast.error(t("nameRequired"));
+      return;
+    }
+    try {
+      await createSupplier.mutateAsync({
+        name: name.trim(),
+        contact_person: contactPerson || undefined,
+        phone: phone || undefined,
+        email: email || undefined,
+        address: address || undefined,
+        tax_id: taxId || undefined,
+        payment_terms: paymentTerms || undefined,
+        notes: notes || undefined,
+      });
+      toast.success(t("supplierCreated"));
+      router.push("/dashboard/inventory/suppliers");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("failedToCreate"));
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-6 max-w-2xl">
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.back()}
+          aria-label={t("back")}
+        >
+          <ArrowLeft className="size-5" />
+        </Button>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {t("newSupplier")}
+        </h1>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">{t("name")} *</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t("namePlaceholder")}
+                className="h-11"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="contact_person">{t("contactPerson")}</Label>
+                <Input
+                  id="contact_person"
+                  value={contactPerson}
+                  onChange={(e) => setContactPerson(e.target.value)}
+                  placeholder={t("contactPersonPlaceholder")}
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">{t("phone")}</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder={t("phonePlaceholder")}
+                  className="h-11"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">{t("email")}</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t("emailPlaceholder")}
+                className="h-11"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">{t("address")}</Label>
+              <Input
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder={t("addressPlaceholder")}
+                className="h-11"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tax_id">{t("taxId")}</Label>
+                <Input
+                  id="tax_id"
+                  value={taxId}
+                  onChange={(e) => setTaxId(e.target.value)}
+                  placeholder={t("taxIdPlaceholder")}
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payment_terms">{t("paymentTerms")}</Label>
+                <Input
+                  id="payment_terms"
+                  value={paymentTerms}
+                  onChange={(e) => setPaymentTerms(e.target.value)}
+                  placeholder={t("paymentTermsPlaceholder")}
+                  className="h-11"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">{t("notes")}</Label>
+              <Input
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={t("notesPlaceholder")}
+                className="h-11"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="outline" onClick={() => router.back()}>
+            {t("cancel")}
+          </Button>
+          <Button type="submit" disabled={createSupplier.isPending}>
+            {createSupplier.isPending ? t("saving") : t("create")}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}

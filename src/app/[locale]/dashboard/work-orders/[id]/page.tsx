@@ -1,22 +1,23 @@
 "use client";
 
-import { ArrowLeft, FileText, Plus, Trash2, AlertTriangle } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { AlertTriangle, ArrowLeft, FileText, Plus, Trash2 } from "lucide-react";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ExportButton } from "@/components/export-button";
-import type { ExportColumn } from "@/lib/export";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { ExportButton } from "@/components/export-button";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { WorkOrderPart, WorkOrderService } from "@/lib/database.types";
+import type { ExportColumn } from "@/lib/export";
 import { useRouter } from "@/lib/i18n/navigation";
+import { createClient } from "@/lib/supabase/client";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
-import type { WorkOrderService, WorkOrderPart } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
 
 const STATUSES = [
@@ -52,7 +53,11 @@ export default function WorkOrderDetailPage() {
   const [catalog, setCatalog] = useState<ServiceCatalog[]>([]);
   const [serviceSearch, setServiceSearch] = useState("");
   const [showAddService, setShowAddService] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<{type: 'service'|'part'; id: string; name: string} | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    type: "service" | "part";
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Add part
   const [newPart, setNewPart] = useState({
@@ -61,6 +66,7 @@ export default function WorkOrderDetailPage() {
     unit_price: 0,
   });
   const [showAddPart, setShowAddPart] = useState(false);
+  const [partPriceHistory, setPartPriceHistory] = useState<number[]>([]);
 
   // Mechanics
   const [mechanics, setMechanics] = useState<
@@ -183,8 +189,6 @@ export default function WorkOrderDetailPage() {
     }
   };
 
-  const [pendingMechanic, setPendingMechanic] = useState<string | null>(null);
-
   const assignMechanic = async (mechanicId: string) => {
     if (!orgId || !woId) return;
     setSaving(true);
@@ -207,13 +211,25 @@ export default function WorkOrderDetailPage() {
       toast.error("Failed to assign mechanic");
     } finally {
       setSaving(false);
-      setPendingMechanic(null);
     }
   };
 
   const addServiceLine = async (svc: ServiceCatalog) => {
     if (!orgId || !woId) return;
     try {
+      const supabase = createClient();
+      const { data: history } = await supabase
+        .from("service_price_history")
+        .select("unit_price")
+        .eq("organization_id", orgId)
+        .eq("service_catalog_id", svc.id)
+        .eq("vehicle_make", wo?.vehicle?.make ?? "")
+        .eq("vehicle_model", wo?.vehicle?.model ?? "")
+        .order("created_at", { ascending: false })
+        .limit(3);
+      const lastPrices = (history ?? [])
+        .map((row) => Number(row.unit_price ?? 0))
+        .filter(Boolean);
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${woId}/services`,
         {
@@ -223,7 +239,7 @@ export default function WorkOrderDetailPage() {
             service_catalog_id: svc.id,
             service_name: svc.name,
             quantity: 1,
-            unit_price: svc.default_price ?? 0,
+            unit_price: lastPrices[0] ?? svc.default_price ?? 0,
           }),
         },
       );
@@ -257,12 +273,13 @@ export default function WorkOrderDetailPage() {
   const addPartLine = async () => {
     if (!orgId || !woId || !newPart.part_name.trim()) return;
     try {
+      const unitPrice = newPart.unit_price || partPriceHistory[0] || 0;
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${woId}/parts`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newPart),
+          body: JSON.stringify({ ...newPart, unit_price: unitPrice }),
         },
       );
       const json = await res.json();
@@ -276,6 +293,35 @@ export default function WorkOrderDetailPage() {
       toast.error("Failed to add part");
     }
   };
+
+  useEffect(() => {
+    if (
+      !orgId ||
+      !newPart.part_name.trim() ||
+      newPart.part_name.trim().length < 2
+    ) {
+      setPartPriceHistory([]);
+      return;
+    }
+    const supabase = createClient();
+    supabase
+      .from("part_price_history")
+      .select("unit_price")
+      .eq("organization_id", orgId)
+      .ilike("part_name", newPart.part_name.trim())
+      .eq("vehicle_make", wo?.vehicle?.make ?? "")
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .then(({ data }) => {
+        const prices = (data ?? [])
+          .map((row) => Number(row.unit_price ?? 0))
+          .filter(Boolean);
+        setPartPriceHistory(prices);
+        if (prices[0] && newPart.unit_price === 0) {
+          setNewPart((part) => ({ ...part, unit_price: prices[0] }));
+        }
+      });
+  }, [orgId, newPart.part_name, newPart.unit_price, wo?.vehicle?.make]);
 
   const removePartLine = async (partId: string) => {
     if (!orgId || !woId) return;
@@ -298,7 +344,9 @@ export default function WorkOrderDetailPage() {
 
   // ── Invoice Generation ──────────────────────────────
   const [creatingInvoice, setCreatingInvoice] = useState(false);
-  const [existingInvoiceId, setExistingInvoiceId] = useState<string | null>(null);
+  const [existingInvoiceId, setExistingInvoiceId] = useState<string | null>(
+    null,
+  );
 
   const generateInvoice = async () => {
     if (!orgId || !woId) return;
@@ -371,7 +419,7 @@ export default function WorkOrderDetailPage() {
   const _grandTotal = servicesTotal + partsTotal;
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
+    <div className="flex max-w-5xl flex-col gap-6 tablet:gap-8 tablet:px-4">
       <Breadcrumb
         items={[
           { label: "Work Orders", href: "/dashboard/work-orders" },
@@ -380,12 +428,13 @@ export default function WorkOrderDetailPage() {
       />
 
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 tablet:gap-5">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => router.back()}
           aria-label="Back"
+          className="tablet:size-12"
         >
           <ArrowLeft className="size-5" />
         </Button>
@@ -472,11 +521,15 @@ export default function WorkOrderDetailPage() {
                   Cancel
                 </Button>
                 <Button
-                  variant={confirmStatus === "Cancelled" ? "destructive" : "default"}
+                  variant={
+                    confirmStatus === "Cancelled" ? "destructive" : "default"
+                  }
                   disabled={saving}
                   onClick={() => changeStatus(confirmStatus)}
                 >
-                  {saving ? t("updating") : t("confirm", { status: confirmStatus })}
+                  {saving
+                    ? t("updating")
+                    : t("confirm", { status: confirmStatus })}
                 </Button>
               </div>
             </div>
@@ -533,6 +586,7 @@ export default function WorkOrderDetailPage() {
             onChange={assignMechanic}
             mechanics={mechanics}
             disabled={saving}
+            showJobCount
           />
         </CardContent>
       </Card>
@@ -616,6 +670,13 @@ export default function WorkOrderDetailPage() {
                       ? ` (-${formatMNT(Number(s.discount_amount))})`
                       : ""}
                   </p>
+                  {s.last_sold_price && (
+                    <p className="text-xs text-amber-600">
+                      {t("lastSoldShort", {
+                        price: formatMNT(Number(s.last_sold_price)),
+                      })}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-sm font-medium tabular-nums">
@@ -624,8 +685,14 @@ export default function WorkOrderDetailPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="size-8 text-destructive"
-                    onClick={() => setDeleteConfirm({type:'service', id:s.id, name:s.service_name})}
+                    className="size-11 text-destructive"
+                    onClick={() =>
+                      setDeleteConfirm({
+                        type: "service",
+                        id: s.id,
+                        name: s.service_name,
+                      })
+                    }
                     aria-label="Remove service"
                   >
                     <Trash2 className="size-4" />
@@ -698,6 +765,15 @@ export default function WorkOrderDetailPage() {
                   }
                   className="h-11"
                 />
+                {partPriceHistory.length > 0 && (
+                  <p className="mt-1 text-[11px] text-amber-600">
+                    {t("lastPrices", {
+                      prices: partPriceHistory
+                        .map((price) => formatMNT(price))
+                        .join(" | "),
+                    })}
+                  </p>
+                )}
               </div>
               <Button
                 size="lg"
@@ -723,6 +799,13 @@ export default function WorkOrderDetailPage() {
                   <p className="text-xs text-muted-foreground">
                     {p.quantity} x {formatMNT(Number(p.unit_price))}
                   </p>
+                  {p.last_sold_price && (
+                    <p className="text-xs text-amber-600">
+                      {t("lastSoldShort", {
+                        price: formatMNT(Number(p.last_sold_price)),
+                      })}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium tabular-nums">
@@ -731,8 +814,14 @@ export default function WorkOrderDetailPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="size-8 text-destructive"
-                    onClick={() => setDeleteConfirm({type:'part', id:p.id, name:p.part_name})}
+                    className="size-11 text-destructive"
+                    onClick={() =>
+                      setDeleteConfirm({
+                        type: "part",
+                        id: p.id,
+                        name: p.part_name,
+                      })
+                    }
                     aria-label="Remove part"
                   >
                     <Trash2 className="size-4" />
@@ -756,8 +845,8 @@ export default function WorkOrderDetailPage() {
                     {t("removeConfirm", { item: deleteConfirm.type })}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    <strong>{deleteConfirm.name}</strong> will be removed from this work order.
-                    This can be undone by re-adding it.
+                    <strong>{deleteConfirm.name}</strong> will be removed from
+                    this work order. This can be undone by re-adding it.
                   </p>
                 </div>
               </div>
@@ -773,7 +862,7 @@ export default function WorkOrderDetailPage() {
                   variant="destructive"
                   size="sm"
                   onClick={async () => {
-                    if (deleteConfirm.type === 'service') {
+                    if (deleteConfirm.type === "service") {
                       await removeServiceLine(deleteConfirm.id);
                       toast.success("Service removed");
                     } else {

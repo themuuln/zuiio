@@ -2,17 +2,17 @@
 
 import {
   Car,
+  Check,
   ClipboardList,
   Clock,
   DollarSign,
+  Pencil,
   Percent,
   Plus,
+  Target,
   TrendingUp,
   Users,
   Wrench,
-  Target,
-  Pencil,
-  Check,
   X,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -21,20 +21,20 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
-import type { ExportColumn } from "@/lib/export";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import type { DashboardData, WorkOrderDetail } from "@/lib/types";
-import { DailyTimeline } from "./_daily-timeline";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
+import type { ExportColumn } from "@/lib/export";
 import { useDashboard } from "@/lib/queries/use-dashboard";
 import {
   useOrgSettings,
   useUpdateOrgSettings,
 } from "@/lib/queries/use-org-settings";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import type { DashboardData, WorkOrderDetail } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import { DailyTimeline } from "./_daily-timeline";
 
 type Period = "today" | "week" | "month" | "all";
 
@@ -131,13 +131,13 @@ function PeriodBar({
   ];
 
   return (
-    <div className="flex gap-1.5">
+    <div className="flex flex-wrap gap-1.5 tablet:gap-2">
       {options.map((opt) => (
         <button
           key={opt.key}
           type="button"
           onClick={() => onChange(opt.key)}
-          className={`rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors ${
+          className={`min-h-[44px] rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors tablet:px-4 ${
             value === opt.key
               ? "bg-primary/10 text-primary"
               : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -171,7 +171,7 @@ function EmptyDashboardState({ onRetry }: { onRetry: () => void }) {
         <div className="flex gap-3">
           <Link
             href="/dashboard/work-orders/new"
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+            className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
           >
             <Plus className="size-4" />
             New Work Order
@@ -339,28 +339,28 @@ function QuickActions({ t }: { t: ReturnType<typeof useTranslations> }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Link
           href="/dashboard/work-orders/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+          className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
         >
           <Plus className="size-4 text-primary" />
           New Work Order
         </Link>
         <Link
           href="/dashboard/customers/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+          className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
         >
           <Users className="size-4 text-primary" />
           New Customer
         </Link>
         <Link
           href="/dashboard/vehicles/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+          className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
         >
           <Car className="size-4 text-primary" />
           New Vehicle
         </Link>
         <Link
           href="/dashboard/reports"
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+          className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
         >
           <TrendingUp className="size-4 text-primary" />
           View Reports
@@ -380,11 +380,7 @@ export default function DashboardPage() {
   const [goalInput, setGoalInput] = useState("");
 
   // ── React Query hooks ───────────────────────────────
-  const {
-    data: org,
-    isPending: orgLoading,
-    error: orgError,
-  } = useCurrentOrg();
+  const { data: org, isPending: orgLoading, error: orgError } = useCurrentOrg();
   const orgId = org?.orgId;
 
   const {
@@ -394,9 +390,6 @@ export default function DashboardPage() {
     refetch: refetchDashboard,
   } = useDashboard(orgId, period);
 
-  // Combined loading: wait for both org and dashboard
-  const loading = orgLoading || (!!orgId && dashboardLoading);
-
   // Derived error messages for UI
   const errorMessage = orgError
     ? "Failed to load organization"
@@ -405,17 +398,14 @@ export default function DashboardPage() {
       : null;
 
   // ── Org Settings (daily revenue goal) ──────────────
-  const {
-    settings,
-    isLoading: settingsLoading,
-  } = useOrgSettings(orgId);
+  const { settings, isLoading: settingsLoading } = useOrgSettings(orgId);
   const updateSettings = useUpdateOrgSettings(orgId);
 
   const dailyGoal = settings?.daily_revenue_goal ?? 0;
 
   const handleSetGoal = useCallback(() => {
     const val = parseInt(goalInput, 10);
-    if (isNaN(val) || val < 0) return;
+    if (Number.isNaN(val) || val < 0) return;
     updateSettings.mutate({ daily_revenue_goal: val });
     setEditingGoal(false);
   }, [goalInput, updateSettings]);
@@ -428,6 +418,44 @@ export default function DashboardPage() {
   const handlePeriodChange = useCallback((p: Period) => {
     setPeriod(p);
   }, []);
+
+  const dashboardExportColumns: ExportColumn<WorkOrderDetail>[] = useMemo(
+    () => [
+      { key: "id", label: "WO #", value: (wo) => wo.id.slice(0, 8) },
+      {
+        key: "customer",
+        label: "Customer",
+        value: (wo) =>
+          wo.customer
+            ? `${wo.customer.first_name ?? ""} ${wo.customer.last_name ?? ""}`.trim()
+            : "—",
+      },
+      {
+        key: "vehicle",
+        label: "Vehicle",
+        value: (wo) => wo.vehicle?.plate_number ?? "—",
+      },
+      { key: "status", label: "Status" },
+      {
+        key: "grand_total",
+        label: "Total",
+        format: "currency" as const,
+        value: (wo) =>
+          wo.services.reduce(
+            (s: number, x: { final_price: number }) =>
+              s + Number(x.final_price),
+            0,
+          ) +
+          wo.parts.reduce(
+            (s: number, x: { final_price: number }) =>
+              s + Number(x.final_price),
+            0,
+          ),
+      },
+      { key: "created_at", label: "Date", format: "date" as const },
+    ],
+    [],
+  );
 
   // ── Org Loading State ───────────────────────────────
   if (orgLoading) {
@@ -567,22 +595,6 @@ export default function DashboardPage() {
 
   const { summary, recentWorkOrders } = data;
 
-  const dashboardExportColumns: ExportColumn<WorkOrderDetail>[] = useMemo(
-    () => [
-      { key: "id", label: "WO #", value: (wo) => wo.id.slice(0, 8) },
-      { key: "customer", label: "Customer", value: (wo) =>
-        wo.customer ? `${wo.customer.first_name ?? ""} ${wo.customer.last_name ?? ""}`.trim() : "—" },
-      { key: "vehicle", label: "Vehicle", value: (wo) => wo.vehicle?.plate_number ?? "—" },
-      { key: "status", label: "Status" },
-      {
-        key: "grand_total", label: "Total", format: "currency" as const, value: (wo) =>
-          wo.services.reduce((s: number, x: { final_price: number }) => s + Number(x.final_price), 0) +
-          wo.parts.reduce((s: number, x: { final_price: number }) => s + Number(x.final_price), 0),
-      },
-      { key: "created_at", label: "Date", format: "date" as const },
-    ],
-    [],
-  );
   const hasRevenue = summary.totalRevenue > 0;
   const hasActiveWos = summary.activeWorkOrders > 0;
 
@@ -606,9 +618,7 @@ export default function DashboardPage() {
   const header = (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <Typography.H2 className="m-0">
-          {t("dashboard.welcome")}
-        </Typography.H2>
+        <Typography.H2 className="m-0">{t("dashboard.welcome")}</Typography.H2>
         <Typography.Muted className="mt-1">
           {t("dashboard.subtitle")}
         </Typography.Muted>
@@ -652,7 +662,6 @@ export default function DashboardPage() {
                 onKeyDown={(e) => e.key === "Enter" && handleSetGoal()}
                 className="flex h-11 w-full rounded-md border border-input bg-background pl-7 pr-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 placeholder="Enter daily revenue goal"
-                autoFocus
                 min={0}
               />
             </div>
@@ -694,8 +703,8 @@ export default function DashboardPage() {
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {formatCurrency(summary.totalRevenue)} /{" "}
-                      {formatCurrency(dailyGoal)}{" "}
-                      ({Math.round((summary.totalRevenue / dailyGoal) * 100)}%)
+                      {formatCurrency(dailyGoal)} (
+                      {Math.round((summary.totalRevenue / dailyGoal) * 100)}%)
                     </p>
                   </div>
                 )}

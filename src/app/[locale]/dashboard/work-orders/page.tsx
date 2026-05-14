@@ -3,14 +3,14 @@
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ExportButton } from "@/components/export-button";
-import type { ExportColumn } from "@/lib/export";
 import { toast } from "sonner";
-import { FilterChips, type FilterChip } from "@/components/filter-chips";
+import { ExportButton } from "@/components/export-button";
+import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
 
 interface WorkOrder {
@@ -25,8 +25,18 @@ interface WorkOrder {
 
 const exportColumns: ExportColumn<WorkOrder>[] = [
   { key: "id", label: "WO #", value: (wo) => wo.id.slice(0, 8) },
-  { key: "customer", label: "Customer", value: (wo) => `${wo.customer?.first_name ?? ""} ${wo.customer?.last_name ?? ""}`.trim() || "—" },
-  { key: "vehicle", label: "Vehicle", value: (wo) => wo.vehicle?.plate_number ?? "—" },
+  {
+    key: "customer",
+    label: "Customer",
+    value: (wo) =>
+      `${wo.customer?.first_name ?? ""} ${wo.customer?.last_name ?? ""}`.trim() ||
+      "—",
+  },
+  {
+    key: "vehicle",
+    label: "Vehicle",
+    value: (wo) => wo.vehicle?.plate_number ?? "—",
+  },
   { key: "status", label: "Status" },
   { key: "created_at", label: "Date", format: "date" },
   { key: "grand_total", label: "Grand Total", format: "currency" },
@@ -116,7 +126,7 @@ export default function WorkOrdersPage() {
         label: i === 0 ? t("common.all") : translateStatus(t, key),
         active: statusIdx === i,
         onClick: () => setStatusIdx(i),
-        colorDot: i > 0 ? STATUS_COLORS[key] ?? "bg-gray-500" : undefined,
+        colorDot: i > 0 ? (STATUS_COLORS[key] ?? "bg-gray-500") : undefined,
       })),
     [statusIdx, t],
   );
@@ -128,7 +138,7 @@ export default function WorkOrdersPage() {
     });
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight">
           {t("workOrders.title")}
@@ -138,7 +148,9 @@ export default function WorkOrdersPage() {
 
       <ListToolbar
         search={{
-          placeholder: t("workOrders.searchPlaceholder") || "Search by customer, plate, or ID...",
+          placeholder:
+            t("workOrders.searchPlaceholder") ||
+            "Search by customer, plate, or ID...",
           value: search,
           onChange: handleSearch,
           loading,
@@ -146,7 +158,10 @@ export default function WorkOrdersPage() {
         filters={<FilterChips items={statusChips} />}
         stats={
           <span>
-            {orders.length} {orders.length === 1 ? t("workOrders.workOrder") : t("workOrders.workOrders")}
+            {orders.length}{" "}
+            {orders.length === 1
+              ? t("workOrders.workOrder")
+              : t("workOrders.workOrders")}
           </span>
         }
         actions={
@@ -201,7 +216,7 @@ export default function WorkOrdersPage() {
                 <Link
                   key={wo.id}
                   href={`/dashboard/work-orders/${wo.id}`}
-                  className="flex items-center gap-4 px-4 py-4 transition-colors hover:bg-muted/50 cursor-pointer min-h-[64px]"
+                  className="flex min-h-[72px] items-center gap-4 px-4 py-4 transition-colors hover:bg-muted/50 tablet:px-5"
                 >
                   <span className="font-mono text-sm text-muted-foreground w-20 shrink-0">
                     #{wo.id.slice(0, 8)}

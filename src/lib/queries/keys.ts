@@ -31,6 +31,41 @@ export const workOrderKeys = {
     [...workOrderKeys.all(orgId), "detail", id] as const,
 };
 
+export const priceMemoryKeys = {
+  all: (orgId: string) => ["organizations", orgId, "price-memory"] as const,
+  customerAutoFill: (orgId: string, customerId: string, vehicleId?: string) =>
+    [
+      ...priceMemoryKeys.all(orgId),
+      "customer-auto-fill",
+      customerId,
+      vehicleId ?? "",
+    ] as const,
+  servicePrices: (
+    orgId: string,
+    serviceCatalogId: string,
+    vehicleMake?: string,
+    vehicleModel?: string,
+  ) =>
+    [
+      ...priceMemoryKeys.all(orgId),
+      "service-prices",
+      serviceCatalogId,
+      vehicleMake ?? "",
+      vehicleModel ?? "",
+    ] as const,
+  partPrices: (orgId: string, partName: string, vehicleMake?: string) =>
+    [
+      ...priceMemoryKeys.all(orgId),
+      "part-prices",
+      partName,
+      vehicleMake ?? "",
+    ] as const,
+  lastVisit: (orgId: string, vehicleId: string) =>
+    [...priceMemoryKeys.all(orgId), "last-visit", vehicleId] as const,
+  serviceLastUsed: (orgId: string) =>
+    [...priceMemoryKeys.all(orgId), "service-last-used"] as const,
+};
+
 export const dashboardKeys = {
   all: (orgId: string) => ["organizations", orgId, "dashboard"] as const,
   summary: (orgId: string, period: string) =>
@@ -46,4 +81,11 @@ export const inventoryKeys = {
     [...inventoryKeys.all(orgId), "suppliers"] as const,
   purchaseOrders: (orgId: string) =>
     [...inventoryKeys.all(orgId), "purchase-orders"] as const,
+  purchaseOrderDetail: (orgId: string, id: string) =>
+    [...inventoryKeys.purchaseOrders(orgId), "detail", id] as const,
+  purchaseOrderItems: (poId: string) => ["purchase-order-items", poId] as const,
+  balances: (orgId: string) =>
+    [...inventoryKeys.all(orgId), "balances"] as const,
+  thresholds: (orgId: string) =>
+    [...inventoryKeys.all(orgId), "thresholds"] as const,
 };

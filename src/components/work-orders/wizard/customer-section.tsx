@@ -69,7 +69,7 @@ export function CustomerSection() {
                     type="button"
                     key={c.id}
                     onClick={() => ctx.handleSelectCustomer(c)}
-                    className="flex items-center gap-3 p-3 text-left transition-colors hover:bg-muted/50 min-h-[48px]"
+                    className="flex items-center gap-3 p-3 text-left transition-colors hover:bg-muted/50 min-h-[52px]"
                   >
                     <User className="size-5 shrink-0 text-muted-foreground" />
                     <div>

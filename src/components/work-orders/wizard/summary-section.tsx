@@ -50,11 +50,12 @@ export function SummarySection() {
       {/* Submit */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <div className="flex flex-col gap-4 sm:flex-row sm:justify-end">
             <Button
               variant="outline"
               size="lg"
               render={<Link href="/dashboard/work-orders" />}
+              className="min-h-[48px]"
             >
               {t("cancel")}
             </Button>
@@ -64,14 +65,14 @@ export function SummarySection() {
               disabled={!ctx.isFormValid}
               className="min-h-[48px] gap-2"
             >
-              <Wrench className="size-4" />
+              <Wrench className="size-5" />
               {ctx.saving
                 ? t("creating")
                 : t("createWorkOrder", { total: formatMNT(ctx.grandTotal) })}
             </Button>
           </div>
           {(!ctx.selectedCustomer || !ctx.selectedVehicle) && (
-            <p className="text-xs text-muted-foreground text-center mt-3">
+            <p className="text-sm text-muted-foreground text-center mt-4">
               {t("createDisabledHint")}
             </p>
           )}

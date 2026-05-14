@@ -1,11 +1,12 @@
 "use client";
 
-import { Trash2, Wrench } from "lucide-react";
+import { Check, Clock, Trash2, Wrench } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { SearchInput } from "@/components/search-input";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { SearchInput } from "@/components/search-input";
 import { useWizardContext } from "./wizard-context";
-import { useTranslations } from "next-intl";
 
 function formatMNT(amount: number): string {
   return new Intl.NumberFormat("mn-MN", {
@@ -33,7 +34,72 @@ export function ServicesSection() {
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3">
+      <CardContent className="flex flex-col gap-4">
+        {/* From last visit suggestions */}
+        {ctx.showLastVisitSuggestions &&
+          (ctx.lastVisitData?.services.length ?? 0) > 0 && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50/40 dark:border-amber-800/30 dark:bg-amber-950/10 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Clock className="size-4 text-amber-600" />
+                <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                  {t("fromLastVisit")}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto h-9 min-h-[36px]"
+                  onClick={ctx.addAllFromLastVisit}
+                >
+                  <Check className="size-3.5 mr-1" />
+                  {t("addAll")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 min-h-[36px]"
+                  onClick={() => ctx.setShowLastVisitSuggestions(false)}
+                >
+                  {t("dismiss")}
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {ctx.lastVisitData?.services.map((svc, i) => {
+                  const isAdded = ctx.serviceLines.some(
+                    (s) =>
+                      s.service_catalog_id === svc.service_catalog_id &&
+                      svc.service_catalog_id,
+                  );
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      disabled={isAdded}
+                      onClick={() => {
+                        const catItem = ctx.catalog.find(
+                          (c) => c.id === svc.service_catalog_id,
+                        );
+                        if (catItem) {
+                          ctx.addService(catItem);
+                        }
+                      }}
+                      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors min-h-[44px] ${
+                        isAdded
+                          ? "border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950/20 dark:text-green-400"
+                          : "border-amber-200 bg-white hover:bg-amber-50 dark:border-amber-700 dark:bg-amber-950/20 dark:hover:bg-amber-900/30"
+                      }`}
+                    >
+                      {isAdded && <Check className="size-3.5" />}
+                      <span className="font-medium">{svc.service_name}</span>
+                      <span className="text-muted-foreground">
+                        {formatMNT(svc.unit_price)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
         {/* Service search */}
         <div className="relative">
           <SearchInput
@@ -50,10 +116,9 @@ export function ServicesSection() {
                     s.name
                       .toLowerCase()
                       .includes(ctx.serviceSearch.toLowerCase()) ||
-                    (s.category &&
-                      s.category
-                        .toLowerCase()
-                        .includes(ctx.serviceSearch.toLowerCase())),
+                    s.category
+                      ?.toLowerCase()
+                      .includes(ctx.serviceSearch.toLowerCase()),
                 )
                 .slice(0, 12)
                 .map((svc) => {
@@ -103,10 +168,9 @@ export function ServicesSection() {
                   s.name
                     .toLowerCase()
                     .includes(ctx.serviceSearch.toLowerCase()) ||
-                  (s.category &&
-                    s.category
-                      .toLowerCase()
-                      .includes(ctx.serviceSearch.toLowerCase())),
+                  s.category
+                    ?.toLowerCase()
+                    .includes(ctx.serviceSearch.toLowerCase()),
               ).length === 0 && (
                 <div className="p-4 text-sm text-muted-foreground text-center">
                   {t("noServicesMatch")}
@@ -123,13 +187,15 @@ export function ServicesSection() {
               {ctx.serviceLines.map((svc, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-2 p-3 hover:bg-muted/20"
+                  className="flex flex-wrap items-center gap-2 p-3 hover:bg-muted/20"
                 >
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-[120px]">
                     <p className="text-sm font-medium truncate">{svc.name}</p>
                     {svc.last_price && (
                       <p className="text-[11px] text-amber-600">
-                        Last sold: {formatMNT(svc.last_price)}
+                        {t("lastSoldShort", {
+                          price: formatMNT(svc.last_price),
+                        })}
                       </p>
                     )}
                   </div>
@@ -137,9 +203,13 @@ export function ServicesSection() {
                     type="number"
                     value={svc.quantity}
                     onChange={(e) =>
-                      ctx.updateService(idx, "quantity", parseInt(e.target.value, 10) || 1)
+                      ctx.updateService(
+                        idx,
+                        "quantity",
+                        parseInt(e.target.value, 10) || 1,
+                      )
                     }
-                    className="w-14 h-10 text-center"
+                    className="w-16 h-11 text-center"
                     min={1}
                     aria-label="Quantity"
                   />
@@ -147,9 +217,13 @@ export function ServicesSection() {
                     type="number"
                     value={svc.base_price}
                     onChange={(e) =>
-                      ctx.updateService(idx, "base_price", parseFloat(e.target.value) || 0)
+                      ctx.updateService(
+                        idx,
+                        "base_price",
+                        parseFloat(e.target.value) || 0,
+                      )
                     }
-                    className="w-24 h-10"
+                    className="w-28 h-11"
                     aria-label="Price"
                   />
                   <div className="flex items-center gap-1">
@@ -163,7 +237,7 @@ export function ServicesSection() {
                           parseFloat(e.target.value) || 0,
                         )
                       }
-                      className="w-20 h-10"
+                      className="w-24 h-11"
                       placeholder={t("discount")}
                       aria-label="Discount amount"
                     />
@@ -174,10 +248,10 @@ export function ServicesSection() {
                   <button
                     type="button"
                     onClick={() => ctx.removeService(idx)}
-                    className="p-2 text-destructive hover:bg-destructive/10 rounded-lg shrink-0"
+                    className="p-2.5 text-destructive hover:bg-destructive/10 rounded-lg shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
                     aria-label="Remove service"
                   >
-                    <Trash2 className="size-4" />
+                    <Trash2 className="size-5" />
                   </button>
                 </div>
               ))}
@@ -185,7 +259,7 @@ export function ServicesSection() {
           </div>
         )}
 
-        {ctx.serviceLines.length === 0 && (
+        {ctx.serviceLines.length === 0 && !ctx.showLastVisitSuggestions && (
           <p className="text-sm text-muted-foreground text-center py-3">
             {t("noServicesFound")}
           </p>

@@ -2,20 +2,20 @@
 
 import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { Breadcrumb } from "@/components/breadcrumb";
-import { Link } from "@/lib/i18n/navigation";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  WizardProvider,
-  useWizardContext,
   CustomerSection,
-  VehicleSection,
-  ServicesSection,
-  PartsSection,
   MechanicSection,
+  PartsSection,
+  ServicesSection,
   SummarySection,
+  useWizardContext,
+  VehicleSection,
+  WizardProvider,
 } from "@/components/work-orders/wizard";
+import { Link } from "@/lib/i18n/navigation";
 
 function NewWorkOrderForm() {
   const t = useTranslations("workOrders");
@@ -30,7 +30,7 @@ function NewWorkOrderForm() {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl mx-auto">
+    <div className="flex flex-col gap-6 max-w-3xl mx-auto tablet-touch">
       <Breadcrumb
         items={[
           { label: t("title"), href: "/dashboard/work-orders" },
@@ -44,14 +44,15 @@ function NewWorkOrderForm() {
           render={<Link href="/dashboard/work-orders" />}
           variant="ghost"
           size="icon"
+          className="min-h-[44px] min-w-[44px]"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("newWorkOrder")}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t("createSubtitle")}
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t("newWorkOrder")}
+          </h1>
+          <p className="text-sm text-muted-foreground">{t("createSubtitle")}</p>
         </div>
       </div>
 

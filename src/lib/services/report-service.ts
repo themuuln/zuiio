@@ -1212,5 +1212,3 @@ export async function getDailyTimeline(orgId: string): Promise<TimelineEvent[]> 
     };
   });
 }
-
-

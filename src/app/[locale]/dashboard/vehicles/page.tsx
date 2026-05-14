@@ -2,16 +2,16 @@
 
 import { Car, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
-import type { ExportColumn } from "@/lib/export";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
-import { useTranslations } from "next-intl";
 import type { Vehicle } from "@/lib/types";
 
 interface VehicleWithOwner extends Vehicle {
@@ -107,7 +107,7 @@ export default function VehiclesPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-32" />
           <Skeleton className="h-10 w-32" />
@@ -125,7 +125,7 @@ export default function VehiclesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
@@ -146,11 +146,7 @@ export default function VehiclesPage() {
           onChange: handleSearch,
           loading: searching,
         }}
-        stats={
-          <span>
-            {t("searchResults", { count: vehicles.length })}
-          </span>
-        }
+        stats={<span>{t("searchResults", { count: vehicles.length })}</span>}
         actions={
           <div className="flex items-center gap-2">
             <ExportButton
@@ -173,9 +169,7 @@ export default function VehiclesPage() {
             <div className="flex flex-col items-center gap-3 py-16 px-4">
               <Car className="size-12 text-muted-foreground/40" />
               <p className="text-muted-foreground">
-                {search
-                  ? t("noMatchForPlateOrVin")
-                  : t("noVehicles")}
+                {search ? t("noMatchForPlateOrVin") : t("noVehicles")}
               </p>
               {!search && (
                 <Button

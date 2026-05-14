@@ -4,14 +4,15 @@ import { Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ExportButton } from "@/components/export-button";
-import type { ExportColumn } from "@/lib/export";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { ExportColumn } from "@/lib/export";
+import { useServiceLastUsedPrices } from "@/lib/queries/use-price-memory";
 
 interface ServiceItem {
   id: string;
@@ -43,6 +44,7 @@ export default function ServicesPage() {
   });
   const [saving, setSaving] = useState(false);
   const [orgId, setOrgId] = useState<string | null>(null);
+  const lastUsedPrices = useServiceLastUsedPrices(orgId ?? undefined);
 
   const exportColumns: ExportColumn<ServiceItem>[] = useMemo(
     () => [
@@ -141,11 +143,7 @@ export default function ServicesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Breadcrumb
-        items={[
-          { label: "Services" },
-        ]}
-      />
+      <Breadcrumb items={[{ label: "Services" }]} />
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight">Service Catalog</h1>
         <p className="text-muted-foreground">Manage your service prices</p>
@@ -159,7 +157,8 @@ export default function ServicesPage() {
         }}
         stats={
           <span>
-            {filtered.length} / {services.length} service{services.length !== 1 ? "s" : ""}
+            {filtered.length} / {services.length} service
+            {services.length !== 1 ? "s" : ""}
           </span>
         }
         actions={
@@ -277,6 +276,12 @@ export default function ServicesPage() {
                   <span className="font-medium text-lg tabular-nums shrink-0">
                     {formatMNT(Number(s.default_price))}
                   </span>
+                  {lastUsedPrices.data?.[s.id] && (
+                    <span className="hidden text-xs text-amber-600 tabular-nums md:inline">
+                      {t("services.lastUsedPrice")}:{" "}
+                      {formatMNT(lastUsedPrices.data[s.id].unit_price)}
+                    </span>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"

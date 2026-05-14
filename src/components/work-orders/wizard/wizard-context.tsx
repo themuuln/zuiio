@@ -3,17 +3,16 @@
 import { useRouter } from "next/navigation";
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 import type { Customer, ServiceCatalog, Vehicle } from "@/lib/types";
-
-// ── Line Item Types ──
 
 export interface ServiceLine {
   service_catalog_id: string | null;
@@ -39,16 +38,31 @@ export interface MechanicOption {
   id: string;
   fullName: string | null;
   email: string;
+  current_jobs?: number;
 }
 
-// ── Context Shape ──
+interface LastVisitInfo {
+  services: {
+    service_catalog_id: string | null;
+    service_name: string;
+    unit_price: number;
+    quantity: number;
+  }[];
+  parts: {
+    part_name: string;
+    part_number: string | null;
+    unit_price: number;
+    quantity: number;
+  }[];
+  mechanic_id: string | null;
+  notes: string | null;
+}
 
 interface WizardState {
   orgId: string | null;
   loading: boolean;
   saving: boolean;
 
-  // Customer
   customerSearch: string;
   customers: Customer[];
   selectedCustomer: Customer | null;
@@ -60,7 +74,6 @@ interface WizardState {
   creatingCustomer: boolean;
   customerCreateError: string | null;
 
-  // Vehicle
   vehicleSearch: string;
   vehicles: Vehicle[];
   selectedVehicle: Vehicle | null;
@@ -73,24 +86,26 @@ interface WizardState {
   creatingVehicle: boolean;
   vehicleCreateError: string | null;
 
-  // Services
   catalog: ServiceCatalog[];
   serviceLines: ServiceLine[];
-  priceHistory: Record<string, { last_price: number; last_make?: string; last_model?: string }>;
+  priceHistory: Record<
+    string,
+    { last_price: number; last_make?: string; last_model?: string }
+  >;
   serviceSearch: string;
 
-  // Parts
   partLines: PartLine[];
   partHistory: Record<string, number>;
 
-  // Mechanic
   mechanics: MechanicOption[];
   selectedMechanic: string;
 
-  // Notes
   description: string;
 
-  // Computed
+  lastVisitData: LastVisitInfo | null;
+  lastVisitLoading: boolean;
+  showLastVisitSuggestions: boolean;
+
   servicesTotal: number;
   partsTotal: number;
   grandTotal: number;
@@ -109,6 +124,7 @@ interface WizardActions {
 
   setVehicleSearch: (v: string) => void;
   setSelectedVehicle: (v: Vehicle | null) => void;
+  handleSelectVehicle: (v: Vehicle) => Promise<void>;
   setShowQuickVehicle: (v: boolean) => void;
   setQuickPlate: (v: string) => void;
   setQuickMake: (v: string) => void;
@@ -132,9 +148,13 @@ interface WizardActions {
     value: string | number,
   ) => void;
   removePart: (idx: number) => void;
+  setPartLines: React.Dispatch<React.SetStateAction<PartLine[]>>;
 
   setSelectedMechanic: (v: string) => void;
   setDescription: (v: string) => void;
+
+  setShowLastVisitSuggestions: (v: boolean) => void;
+  addAllFromLastVisit: () => void;
 
   handleCreate: () => Promise<void>;
 }
@@ -145,42 +165,33 @@ const WizardContext = createContext<WizardContextType | null>(null);
 
 export function useWizardContext() {
   const ctx = useContext(WizardContext);
-  if (!ctx) throw new Error("useWizardContext must be used within WizardProvider");
+  if (!ctx)
+    throw new Error("useWizardContext must be used within WizardProvider");
   return ctx;
 }
-
-function formatMNT(amount: number): string {
-  return new Intl.NumberFormat("mn-MN", {
-    style: "currency",
-    currency: "MNT",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-// ── Provider ──
 
 export function WizardProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
-  // #region State
   const [orgId, setOrgId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Customer
   const [customerSearch, setCustomerSearch] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
   const [showQuickCustomer, setShowQuickCustomer] = useState(false);
   const [quickFirstName, setQuickFirstName] = useState("");
   const [quickLastName, setQuickLastName] = useState("");
   const [quickPhone, setQuickPhone] = useState("");
   const [customerSearching, setCustomerSearching] = useState(false);
   const [creatingCustomer, setCreatingCustomer] = useState(false);
-  const [customerCreateError, setCustomerCreateError] = useState<string | null>(null);
+  const [customerCreateError, setCustomerCreateError] = useState<string | null>(
+    null,
+  );
 
-  // Vehicle
   const [vehicleSearch, setVehicleSearch] = useState("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
@@ -191,41 +202,47 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [quickYear, setQuickYear] = useState("");
   const [vehicleSearching, setVehicleSearching] = useState(false);
   const [creatingVehicle, setCreatingVehicle] = useState(false);
-  const [vehicleCreateError, setVehicleCreateError] = useState<string | null>(null);
+  const [vehicleCreateError, setVehicleCreateError] = useState<string | null>(
+    null,
+  );
 
-  // Services
   const [catalog, setCatalog] = useState<ServiceCatalog[]>([]);
   const [serviceLines, setServiceLines] = useState<ServiceLine[]>([]);
   const [priceHistory, setPriceHistory] = useState<
-    Record<string, { last_price: number; last_make?: string; last_model?: string }>
+    Record<
+      string,
+      { last_price: number; last_make?: string; last_model?: string }
+    >
   >({});
   const [serviceSearch, setServiceSearch] = useState("");
 
-  // Parts
   const [partLines, setPartLines] = useState<PartLine[]>([]);
   const [partHistory, setPartHistory] = useState<Record<string, number>>({});
 
-  // Mechanic
   const [mechanics, setMechanics] = useState<MechanicOption[]>([]);
   const [selectedMechanic, setSelectedMechanic] = useState("");
 
-  // Notes
   const [description, setDescription] = useState("");
-  // #endregion
 
-  // #region Computed
+  const [lastVisitData, setLastVisitData] = useState<LastVisitInfo | null>(
+    null,
+  );
+  const [lastVisitLoading, setLastVisitLoading] = useState(false);
+  const [showLastVisitSuggestions, setShowLastVisitSuggestions] =
+    useState(false);
+
   const servicesTotal = serviceLines.reduce((s, l) => s + l.final_price, 0);
   const partsTotal = partLines.reduce((s, l) => s + l.final_price, 0);
   const grandTotal = servicesTotal + partsTotal;
   const isFormValid = !!selectedCustomer && !!selectedVehicle && !saving;
-  // #endregion
 
-  // #region Customer handlers
   const handleSelectCustomer = useCallback(
     (customer: Customer) => {
       setSelectedCustomer(customer);
       setCustomerSearch("");
       setShowQuickCustomer(false);
+      setLastVisitData(null);
+      setShowLastVisitSuggestions(false);
       if (orgId) {
         fetch(`/api/organizations/${orgId}/vehicles?customer=${customer.id}`)
           .then((r) => r.json())
@@ -260,7 +277,9 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       });
       const json = await res.json();
       if (json.error) {
-        setCustomerCreateError(json.error.message ?? "Failed to create customer");
+        setCustomerCreateError(
+          json.error.message ?? "Failed to create customer",
+        );
       } else if (json.data) {
         handleSelectCustomer(json.data);
         setQuickFirstName("");
@@ -274,9 +293,130 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       setCreatingCustomer(false);
     }
   };
-  // #endregion
 
-  // #region Vehicle handlers
+  const handleSelectVehicle = useCallback(
+    async (vehicle: Vehicle) => {
+      setSelectedVehicle(vehicle);
+      setVehicleSearch("");
+      setShowQuickVehicle(false);
+      setLastVisitData(null);
+      setShowLastVisitSuggestions(false);
+
+      if (!orgId || !vehicle.id) return;
+
+      const supabase = createClient();
+
+      if (!selectedCustomer) {
+        const { data: ownerData } = await supabase
+          .from("vehicle_owners")
+          .select("customers(*)")
+          .eq("organization_id", orgId)
+          .eq("vehicle_id", vehicle.id)
+          .is("owned_until", null)
+          .limit(1)
+          .maybeSingle();
+        const customer = ownerData?.customers as Customer | null | undefined;
+        if (customer) setSelectedCustomer(customer);
+      }
+
+      setLastVisitLoading(true);
+      try {
+        const { data: workOrders } = await supabase
+          .from("work_orders")
+          .select("id, mechanic_id")
+          .eq("organization_id", orgId)
+          .eq("vehicle_id", vehicle.id)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        const workOrder = workOrders?.[0];
+        if (!workOrder) return;
+
+        const [servicesResult, partsResult] = await Promise.all([
+          supabase
+            .from("work_order_services")
+            .select("service_catalog_id, service_name, unit_price, quantity")
+            .eq("work_order_id", workOrder.id),
+          supabase
+            .from("work_order_parts")
+            .select("part_name, part_number, unit_price, quantity")
+            .eq("work_order_id", workOrder.id),
+        ]);
+
+        const data: LastVisitInfo = {
+          services: (servicesResult.data ?? []).map((service) => ({
+            service_catalog_id: service.service_catalog_id,
+            service_name: service.service_name,
+            unit_price: Number(service.unit_price),
+            quantity: Number(service.quantity),
+          })),
+          parts: (partsResult.data ?? []).map((part) => ({
+            part_name: part.part_name,
+            part_number: part.part_number,
+            unit_price: Number(part.unit_price),
+            quantity: Number(part.quantity),
+          })),
+          mechanic_id: workOrder.mechanic_id,
+          notes: null,
+        };
+        setLastVisitData(data);
+        if (data.services.length > 0 || data.parts.length > 0) {
+          setShowLastVisitSuggestions(true);
+        }
+      } finally {
+        setLastVisitLoading(false);
+      }
+    },
+    [orgId, selectedCustomer],
+  );
+
+  const addAllFromLastVisit = useCallback(() => {
+    if (!lastVisitData) return;
+    for (const svc of lastVisitData.services) {
+      if (
+        !serviceLines.find(
+          (s) =>
+            s.service_catalog_id === svc.service_catalog_id &&
+            svc.service_catalog_id,
+        )
+      ) {
+        if (svc.service_name) {
+          setServiceLines((prev) => [
+            ...prev,
+            {
+              service_catalog_id: svc.service_catalog_id,
+              name: svc.service_name,
+              base_price: svc.unit_price,
+              quantity: svc.quantity,
+              discount_amount_mnt: 0,
+              discount_percent: 0,
+              final_price: svc.unit_price * svc.quantity,
+              last_price: svc.unit_price,
+            },
+          ]);
+        }
+      }
+    }
+    for (const part of lastVisitData.parts) {
+      setPartLines((prev) => [
+        ...prev,
+        {
+          part_name: part.part_name,
+          part_number: part.part_number ?? "",
+          quantity: part.quantity,
+          unit_price: part.unit_price,
+          final_price: part.unit_price * part.quantity,
+          last_price: part.unit_price,
+        },
+      ]);
+    }
+    if (lastVisitData.mechanic_id) {
+      setSelectedMechanic(lastVisitData.mechanic_id);
+    }
+    setShowLastVisitSuggestions(false);
+  }, [lastVisitData, serviceLines]);
+
   const handleQuickCreateVehicle = async () => {
     if (!orgId || !quickPlate.trim()) {
       setVehicleCreateError("Plate number is required");
@@ -300,7 +440,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       if (json.error) {
         setVehicleCreateError(json.error.message ?? "Failed to create vehicle");
       } else if (json.data) {
-        setSelectedVehicle(json.data);
+        void handleSelectVehicle(json.data);
         setQuickPlate("");
         setQuickMake("");
         setQuickModel("");
@@ -313,9 +453,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       setCreatingVehicle(false);
     }
   };
-  // #endregion
 
-  // #region Service handlers
   const addService = useCallback(
     (svc: ServiceCatalog) => {
       if (serviceLines.find((s) => s.service_catalog_id === svc.id)) return;
@@ -358,12 +496,11 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   );
 
   const removeService = useCallback(
-    (idx: number) => setServiceLines((prev) => prev.filter((_, i) => i !== idx)),
+    (idx: number) =>
+      setServiceLines((prev) => prev.filter((_, i) => i !== idx)),
     [],
   );
-  // #endregion
 
-  // #region Part handlers
   const addPart = useCallback(() => {
     setPartLines((prev) => [
       ...prev,
@@ -382,7 +519,11 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       setPartLines((prev) => {
         const updated = [...prev];
         updated[idx] = { ...updated[idx], [field]: value };
-        if (field === "part_name" && typeof value === "string" && value.trim()) {
+        if (
+          field === "part_name" &&
+          typeof value === "string" &&
+          value.trim()
+        ) {
           const historyPrice = partHistory[value.trim().toLowerCase()];
           if (historyPrice && updated[idx].unit_price === 0) {
             updated[idx].unit_price = historyPrice;
@@ -403,9 +544,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     (idx: number) => setPartLines((prev) => prev.filter((_, i) => i !== idx)),
     [],
   );
-  // #endregion
 
-  // #region Create work order
   const handleCreate = async () => {
     if (!orgId || !selectedCustomer || !selectedVehicle) {
       toast.error("Customer and vehicle are required");
@@ -432,11 +571,14 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       const woId = woJson.data.id;
 
       for (const svc of serviceLines) {
-        await fetch(`/api/organizations/${orgId}/work-orders/${woId}/services`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(svc),
-        });
+        await fetch(
+          `/api/organizations/${orgId}/work-orders/${woId}/services`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(svc),
+          },
+        );
       }
       for (const part of partLines) {
         await fetch(`/api/organizations/${orgId}/work-orders/${woId}/parts`, {
@@ -453,28 +595,45 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       setSaving(false);
     }
   };
-  // #endregion
 
-  // #region Load initial data
   useEffect(() => {
     fetch("/api/profile")
       .then((r) => r.json())
       .then((d) => {
-        const orgId = d?.organizationId ?? d?.data?.organizationId;
-        if (orgId) {
-          setOrgId(orgId);
+        const id = d?.organizationId ?? d?.data?.organizationId;
+        if (id) {
+          setOrgId(id);
           Promise.all([
-            fetch(`/api/organizations/${orgId}/services`).then((r) => r.json()),
-            fetch(`/api/organizations/${orgId}/reports?type=mechanics`).then(
-              (r) => r.json(),
-            ),
-            fetch(`/api/organizations/${orgId}/price-history`).then((r) =>
+            fetch(`/api/organizations/${id}/services`).then((r) => r.json()),
+            fetch(`/api/organizations/${id}/reports?type=mechanics`).then((r) =>
               r.json(),
             ),
-          ]).then(([catJson, mechJson, priceJson]) => {
+            fetch(`/api/organizations/${id}/price-history`).then((r) =>
+              r.json(),
+            ),
+            fetch(`/api/organizations/${id}/work-orders`).then((r) => r.json()),
+          ]).then(([catJson, mechJson, priceJson, workOrdersJson]) => {
             if (catJson.data) setCatalog(catJson.data);
-            if (mechJson.data?.mechanics)
-              setMechanics(mechJson.data.mechanics);
+            if (mechJson.data?.mechanics) {
+              const activeWorkOrders = (workOrdersJson.data ?? []).filter(
+                (wo: { status: string }) =>
+                  [
+                    "New",
+                    "Diagnosing",
+                    "In Progress",
+                    "Ready for Pickup",
+                  ].includes(wo.status),
+              );
+              setMechanics(
+                mechJson.data.mechanics.map((mechanic: MechanicOption) => ({
+                  ...mechanic,
+                  current_jobs: activeWorkOrders.filter(
+                    (wo: { mechanic_id: string | null }) =>
+                      wo.mechanic_id === mechanic.id,
+                  ).length,
+                })),
+              );
+            }
             if (priceJson.data) {
               setPriceHistory(priceJson.data.services ?? {});
               setPartHistory(priceJson.data.parts ?? {});
@@ -485,20 +644,40 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       .catch(() => setLoading(false))
       .finally(() => setLoading(false));
   }, []);
-  // #endregion
 
-  // #region Search effects
   useEffect(() => {
     if (!orgId || !customerSearch) {
       if (!customerSearch) setCustomers([]);
       return;
     }
     setCustomerSearching(true);
-    fetch(
-      `/api/organizations/${orgId}/customers?q=${encodeURIComponent(customerSearch)}`,
-    )
-      .then((r) => r.json())
-      .then((d) => setCustomers(d.data ?? []))
+    const supabase = createClient();
+    Promise.all([
+      fetch(
+        `/api/organizations/${orgId}/customers?q=${encodeURIComponent(customerSearch)}`,
+      ).then((r) => r.json()),
+      supabase
+        .from("vehicles")
+        .select("vehicle_owners!inner(customers(*))")
+        .eq("organization_id", orgId)
+        .ilike("plate_number", `%${customerSearch}%`)
+        .is("deleted_at", null)
+        .is("vehicle_owners.owned_until", null)
+        .limit(5),
+    ])
+      .then(([customerJson, plateResult]) => {
+        const customerMap = new Map<string, Customer>();
+        for (const customer of customerJson.data ?? []) {
+          customerMap.set(customer.id, customer);
+        }
+        for (const row of plateResult.data ?? []) {
+          const owners = row.vehicle_owners as unknown as { customers?: Customer | Customer[] }[];
+          const ownerCustomer = owners?.[0]?.customers;
+          const customer = Array.isArray(ownerCustomer) ? ownerCustomer[0] : ownerCustomer;
+          if (customer) customerMap.set(customer.id, customer);
+        }
+        setCustomers(Array.from(customerMap.values()));
+      })
       .finally(() => setCustomerSearching(false));
   }, [orgId, customerSearch]);
 
@@ -516,57 +695,99 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       .then((d) => setVehicles(d.data ?? []))
       .finally(() => setVehicleSearching(false));
   }, [orgId, vehicleSearch, selectedCustomer]);
-  // #endregion
 
   const customerRef = useRef<HTMLDivElement>(null);
 
   const value: WizardContextType = {
-    // State
-    orgId, loading, saving,
-    customerSearch, customers, selectedCustomer, showQuickCustomer,
-    quickFirstName, quickLastName, quickPhone,
-    customerSearching, creatingCustomer, customerCreateError,
-    vehicleSearch, vehicles, selectedVehicle, showQuickVehicle,
-    quickPlate, quickMake, quickModel, quickYear,
-    vehicleSearching, creatingVehicle, vehicleCreateError,
-    catalog, serviceLines, priceHistory, serviceSearch,
-    partLines, partHistory,
-    mechanics, selectedMechanic, description,
-    servicesTotal, partsTotal, grandTotal, isFormValid,
+    orgId,
+    loading,
+    saving,
+    customerSearch,
+    customers,
+    selectedCustomer,
+    showQuickCustomer,
+    quickFirstName,
+    quickLastName,
+    quickPhone,
+    customerSearching,
+    creatingCustomer,
+    customerCreateError,
+    vehicleSearch,
+    vehicles,
+    selectedVehicle,
+    showQuickVehicle,
+    quickPlate,
+    quickMake,
+    quickModel,
+    quickYear,
+    vehicleSearching,
+    creatingVehicle,
+    vehicleCreateError,
+    catalog,
+    serviceLines,
+    priceHistory,
+    serviceSearch,
+    partLines,
+    partHistory,
+    mechanics,
+    selectedMechanic,
+    description,
+    lastVisitData,
+    lastVisitLoading,
+    showLastVisitSuggestions,
+    servicesTotal,
+    partsTotal,
+    grandTotal,
+    isFormValid,
 
-    // Actions — Customer
     setCustomerSearch,
-    setSelectedCustomer: (c) => { setSelectedCustomer(c); if (!c) { setVehicles([]); setSelectedVehicle(null); } },
+    setSelectedCustomer: (c) => {
+      setSelectedCustomer(c);
+      if (!c) {
+        setVehicles([]);
+        setSelectedVehicle(null);
+        setLastVisitData(null);
+        setShowLastVisitSuggestions(false);
+      }
+    },
     setShowQuickCustomer,
-    setQuickFirstName, setQuickLastName, setQuickPhone,
-    handleSelectCustomer, handleQuickCreateCustomer,
+    setQuickFirstName,
+    setQuickLastName,
+    setQuickPhone,
+    handleSelectCustomer,
+    handleQuickCreateCustomer,
 
-    // Actions — Vehicle
     setVehicleSearch,
     setSelectedVehicle,
+    handleSelectVehicle,
     setShowQuickVehicle,
-    setQuickPlate, setQuickMake, setQuickModel, setQuickYear,
+    setQuickPlate,
+    setQuickMake,
+    setQuickModel,
+    setQuickYear,
     handleQuickCreateVehicle,
 
-    // Actions — Services
-    setServiceSearch, addService, updateService, removeService,
+    setServiceSearch,
+    addService,
+    updateService,
+    removeService,
 
-    // Actions — Parts
-    addPart, updatePart, removePart,
+    addPart,
+    updatePart,
+    removePart,
+    setPartLines,
 
-    // Actions — Misc
-    setSelectedMechanic, setDescription,
+    setSelectedMechanic,
+    setDescription,
+    setShowLastVisitSuggestions,
+    addAllFromLastVisit,
 
-    // Actions — Submit
     handleCreate,
-  } as WizardContextType;
+  };
 
-  // Attach ref to context
   (value as unknown as Record<string, unknown>).customerRef = customerRef;
 
   return (
-    <WizardContext.Provider value={value}>
-      {children}
-    </WizardContext.Provider>
+    <WizardContext.Provider value={value}>{children}</WizardContext.Provider>
   );
 }

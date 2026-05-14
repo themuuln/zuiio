@@ -65,8 +65,8 @@ export function VehicleSection() {
                   <button
                     type="button"
                     key={v.id}
-                    onClick={() => ctx.setSelectedVehicle(v)}
-                    className="flex items-center gap-3 p-3 text-left transition-colors hover:bg-muted/50 min-h-[48px]"
+                    onClick={() => ctx.handleSelectVehicle(v)}
+                    className="flex items-center gap-3 p-3 text-left transition-colors hover:bg-muted/50 min-h-[52px]"
                   >
                     <Car className="size-5 shrink-0 text-muted-foreground" />
                     <div>

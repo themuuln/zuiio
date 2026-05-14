@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertTriangle,
   BarChart3,
   BookOpen,
   Building2,
@@ -13,6 +14,8 @@ import {
   Package,
   Settings,
   Shield,
+  TrendingUp,
+  Truck,
   Users,
   Warehouse,
   Wrench,
@@ -79,14 +82,45 @@ const navigationConfig: NavGroupConfig = {
       ],
     },
     {
-      labelKey: "nav.group.business",
-      icon: DollarSign,
+      labelKey: "nav.group.inventory",
+      icon: Package,
       children: [
         {
-          labelKey: "nav.inventory",
+          labelKey: "nav.inventoryParts",
           href: "/dashboard/inventory",
           icon: Package,
         },
+        {
+          labelKey: "nav.inventoryMovements",
+          href: "/dashboard/inventory/movements",
+          icon: ClipboardList,
+        },
+        {
+          labelKey: "nav.inventoryPurchaseOrders",
+          href: "/dashboard/inventory/purchase-orders",
+          icon: Truck,
+        },
+        {
+          labelKey: "nav.inventorySuppliers",
+          href: "/dashboard/inventory/suppliers",
+          icon: Building2,
+        },
+        {
+          labelKey: "nav.inventoryAlerts",
+          href: "/dashboard/inventory/alerts",
+          icon: AlertTriangle,
+        },
+        {
+          labelKey: "nav.inventoryValuation",
+          href: "/dashboard/inventory/valuation",
+          icon: TrendingUp,
+        },
+      ],
+    },
+    {
+      labelKey: "nav.group.business",
+      icon: DollarSign,
+      children: [
         {
           labelKey: "nav.finance",
           href: "/dashboard/finance",
@@ -138,7 +172,7 @@ export function useNavigation() {
     if (href === "/dashboard") {
       return pathname === "/dashboard";
     }
-    return pathname.startsWith(href);
+    return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   function groupHasActive(group: NavGroup) {

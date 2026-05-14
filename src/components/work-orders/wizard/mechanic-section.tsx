@@ -22,6 +22,7 @@ export function MechanicSection() {
             onChange={ctx.setSelectedMechanic}
             mechanics={ctx.mechanics}
             size="lg"
+            showJobCount
           />
         </CardContent>
       </Card>
