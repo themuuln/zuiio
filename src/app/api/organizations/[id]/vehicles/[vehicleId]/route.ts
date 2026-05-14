@@ -10,8 +10,10 @@ import { requireActiveSubscription } from "@/lib/services/subscription-enforceme
 
 export const GET = createRouteHandler(async ({ orgId, params }) => {
   const { vehicleId } = params;
-  const vehicle = await getVehicle(vehicleId, orgId);
-  const serviceHistory = await getVehicleServiceHistory(orgId, vehicleId);
+  const [vehicle, serviceHistory] = await Promise.all([
+    getVehicle(vehicleId, orgId),
+    getVehicleServiceHistory(orgId, vehicleId),
+  ]);
   return NextResponse.json({ data: { ...vehicle, service_history: serviceHistory } });
 });
 

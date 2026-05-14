@@ -21,6 +21,7 @@ export function usePartsCatalog(orgId: string | undefined) {
       return (json.data ?? []) as PartsCatalogItem[];
     },
     enabled: !!orgId,
+    staleTime: 60_000,
   });
 }
 
@@ -35,6 +36,7 @@ export function useInventoryBalances(orgId: string | undefined) {
       return (json.data ?? []) as InventoryBalance[];
     },
     enabled: !!orgId,
+    staleTime: 30_000,
   });
 }
 
@@ -195,6 +197,7 @@ export function usePurchaseOrders(orgId: string | undefined) {
       return (json.data ?? []) as PurchaseOrderWithSupplier[];
     },
     enabled: !!orgId,
+    staleTime: 30_000,
   });
 }
 
@@ -211,6 +214,7 @@ export function usePurchaseOrderItems(orgId: string | undefined, poId: string | 
       return (json.data ?? []) as (PurchaseOrderItem & { part_name: string })[];
     },
     enabled: !!orgId && !!poId,
+    staleTime: 30_000,
   });
 }
 
@@ -317,5 +321,6 @@ export function useStockThresholds(orgId: string | undefined) {
       return (json.data ?? []) as StockThreshold[];
     },
     enabled: !!orgId,
+    staleTime: 60_000,
   });
 }

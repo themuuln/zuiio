@@ -25,5 +25,6 @@ export function useCustomers(
       return (json.data ?? []) as CustomerWithVehicleCount[];
     },
     enabled: !!orgId,
+    staleTime: 30_000,
   });
 }

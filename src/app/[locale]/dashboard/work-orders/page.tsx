@@ -2,8 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -12,18 +11,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useWorkOrders, type WorkOrderListItem } from "@/lib/queries/use-work-orders";
 
-interface WorkOrder {
-  id: string;
-  status: string;
-  created_at: string;
-  mechanic_id: string | null;
-  customer: { first_name: string; last_name: string | null } | null;
-  vehicle: { plate_number: string } | null;
-  grand_total?: number;
-}
-
-const exportColumns: ExportColumn<WorkOrder>[] = [
+const exportColumns: ExportColumn<WorkOrderListItem>[] = [
   { key: "id", label: "WO #", value: (wo) => wo.id.slice(0, 8) },
   {
     key: "customer",
@@ -77,47 +68,18 @@ const STATUS_KEYS = [
 
 export default function WorkOrdersPage() {
   const t = useTranslations();
-  const [orders, setOrders] = useState<WorkOrder[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [statusIdx, setStatusIdx] = useState(0);
-  const [orgId, setOrgId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    setLoading(true);
-    fetch("/api/organizations")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.data?.id) setOrgId(d.data.id);
-      })
-      .catch(() => {
-        toast.error("Failed to load organization");
-        setError("Failed to load organization");
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: org } = useCurrentOrg();
+  const status = statusIdx > 0 ? STATUS_KEYS[statusIdx] : "";
+  const { data: orders, isLoading, isFetching, error, refetch } = useWorkOrders(org?.orgId, status, search);
 
-  useEffect(() => {
-    if (!orgId) return;
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (statusIdx > 0) params.set("status", STATUS_KEYS[statusIdx]);
-    if (search) params.set("q", search);
-    const query = params.toString();
-    fetch(`/api/organizations/${orgId}/work-orders${query ? `?${query}` : ""}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.error) setError(d.error.message);
-        else setOrders(d.data ?? []);
-      })
-      .catch(() => setError("Failed to load work orders"))
-      .finally(() => setLoading(false));
-  }, [orgId, statusIdx, search]);
+  const list = orders ?? [];
 
-  const handleSearch = useCallback((value: string) => {
+  const handleSearch = (value: string) => {
     setSearch(value);
-  }, []);
+  };
 
   const statusChips: FilterChip[] = useMemo(
     () =>
@@ -153,13 +115,13 @@ export default function WorkOrdersPage() {
             "Search by customer, plate, or ID...",
           value: search,
           onChange: handleSearch,
-          loading,
+          loading: isFetching,
         }}
         filters={<FilterChips items={statusChips} />}
         stats={
           <span>
-            {orders.length}{" "}
-            {orders.length === 1
+            {list.length}{" "}
+            {list.length === 1
               ? t("workOrders.workOrder")
               : t("workOrders.workOrders")}
           </span>
@@ -167,7 +129,7 @@ export default function WorkOrdersPage() {
         actions={
           <div className="flex items-center gap-2">
             <ExportButton
-              data={orders}
+              data={list}
               columns={exportColumns}
               filename={`work-orders-${new Date().toISOString().split("T")[0]}.xlsx`}
               sheetName="Work Orders"
@@ -183,7 +145,7 @@ export default function WorkOrdersPage() {
 
       <Card>
         <CardContent className="p-0">
-          {loading ? (
+          {isLoading && !orders ? (
             <div className="divide-y divide-border">
               {[1, 2, 3, 4, 5].map((n) => (
                 <div key={n} className="flex items-center gap-4 px-4 py-4">
@@ -196,12 +158,12 @@ export default function WorkOrdersPage() {
             </div>
           ) : error ? (
             <div className="flex flex-col items-center gap-4 py-12">
-              <p className="text-destructive">{error}</p>
-              <Button variant="outline" onClick={() => setLoading(true)}>
+              <p className="text-destructive">{error.message}</p>
+              <Button variant="outline" onClick={() => refetch()}>
                 Retry
               </Button>
             </div>
-          ) : orders.length === 0 ? (
+          ) : list.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-12">
               <p className="text-muted-foreground">
                 {t("workOrders.noWorkOrders")}
@@ -212,7 +174,7 @@ export default function WorkOrdersPage() {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {orders.map((wo) => (
+              {list.map((wo) => (
                 <Link
                   key={wo.id}
                   href={`/dashboard/work-orders/${wo.id}`}

@@ -20,17 +20,18 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
   if (woError) throw new Error(woError.message);
   if (!lastWo) return NextResponse.json({ data: null });
 
-  const { data: services } = await supabase
-    .from("work_order_services")
-    .select("service_catalog_id, service_name, unit_price, quantity")
-    .eq("work_order_id", lastWo.id)
-    .eq("organization_id", orgId);
-
-  const { data: parts } = await supabase
-    .from("work_order_parts")
-    .select("part_name, part_number, unit_price, quantity")
-    .eq("work_order_id", lastWo.id)
-    .eq("organization_id", orgId);
+  const [{ data: services }, { data: parts }] = await Promise.all([
+    supabase
+      .from("work_order_services")
+      .select("service_catalog_id, service_name, unit_price, quantity")
+      .eq("work_order_id", lastWo.id)
+      .eq("organization_id", orgId),
+    supabase
+      .from("work_order_parts")
+      .select("part_name, part_number, unit_price, quantity")
+      .eq("work_order_id", lastWo.id)
+      .eq("organization_id", orgId),
+  ]);
 
   return NextResponse.json({
     data: {

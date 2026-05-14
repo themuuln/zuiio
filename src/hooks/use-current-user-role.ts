@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 interface UserProfile {
   id: string;
@@ -12,25 +12,28 @@ interface UserProfile {
 
 type RoleName = "Admin" | "Mechanic" | null;
 
-export function useCurrentUserRole() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+const profileKeys = {
+  current: () => ["profile", "current"] as const,
+};
 
-  useEffect(() => {
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then((data) => {
-        setProfile({
-          id: data.id ?? "",
-          fullName: data.fullName ?? null,
-          roleName: data.roleName ?? null,
-          organizationId: data.organizationId ?? null,
-          branchId: data.branchId ?? null,
-        });
-      })
-      .catch(() => setProfile(null))
-      .finally(() => setLoading(false));
-  }, []);
+export function useCurrentUserRole() {
+  const { data: profile, isLoading: loading } = useQuery<UserProfile | null>({
+    queryKey: profileKeys.current(),
+    queryFn: async () => {
+      const res = await fetch("/api/profile");
+      if (!res.ok) return null;
+      const data = await res.json();
+      return {
+        id: data.id ?? "",
+        fullName: data.fullName ?? null,
+        roleName: data.roleName ?? null,
+        organizationId: data.organizationId ?? null,
+        branchId: data.branchId ?? null,
+      };
+    },
+    staleTime: 5 * 60_000,
+    retry: 1,
+  });
 
   const role: RoleName =
     profile?.roleName === "Admin" || profile?.roleName === "Mechanic"

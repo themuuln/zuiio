@@ -4,17 +4,15 @@ import { useEffect } from "react";
 import { redirectToLogin } from "@/lib/auth-redirect";
 
 /**
- * Checks whether the current session is valid by fetching /api/profile.
- * If the server responds with 401 (X-Auth-Required header), the user is
- * redirected to /auth/login.
- *
- * Call this once in a root layout or page that requires authentication.
+ * Verifies the session is valid by checking /api/profile.
+ * Proxy middleware handles auth at the edge — this is a safety net.
+ * Uses a lightweight HEAD-style check to avoid full profile fetch.
  */
 export function useRequireAuth(): void {
   useEffect(() => {
     let ignore = false;
 
-    fetch("/api/profile")
+    fetch("/api/profile", { method: "HEAD" })
       .then((res) => {
         if (
           !ignore &&
@@ -24,10 +22,7 @@ export function useRequireAuth(): void {
           redirectToLogin();
         }
       })
-      .catch(() => {
-        // Network errors are handled silently — the page will stay
-        // in whatever state it is (loading / error) so the user can retry.
-      });
+      .catch(() => {});
 
     return () => {
       ignore = true;

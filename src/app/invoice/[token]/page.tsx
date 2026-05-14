@@ -200,18 +200,9 @@ export default function PublicInvoicePage() {
     window.print();
   };
 
-  // ── Loading ────────────────────────────────────────────
-  if (loading) {
-    return <InvoiceSkeleton />;
-  }
-
-  // ── Error ──────────────────────────────────────────────
-  if (error || !invoice) {
-    return <InvoiceError message={error ?? "Invoice not found"} />;
-  }
-
-  const items = invoice.items ?? [];
-  const payments = invoice.payments ?? [];
+  // All hooks must be called before early returns (Rules of Hooks)
+  const items = (invoice?.items ?? []);
+  const payments = (invoice?.payments ?? []);
 
   const invoiceItemColumns: ExportColumn<InvoiceItem>[] = useMemo(
     () => [
@@ -234,12 +225,23 @@ export default function PublicInvoicePage() {
     ],
     [],
   );
+
   const servicesTotal = items
     .filter((i) => i.item_type === "service")
     .reduce((sum, i) => sum + Number(i.total_price), 0);
   const partsTotal = items
     .filter((i) => i.item_type === "part")
     .reduce((sum, i) => sum + Number(i.total_price), 0);
+
+  // ── Loading ────────────────────────────────────────────
+  if (loading) {
+    return <InvoiceSkeleton />;
+  }
+
+  // ── Error ──────────────────────────────────────────────
+  if (error || !invoice) {
+    return <InvoiceError message={error ?? "Invoice not found"} />;
+  }
 
   return (
     <div className="min-h-dvh bg-gray-50/50 dark:bg-gray-950/50 print:bg-white">

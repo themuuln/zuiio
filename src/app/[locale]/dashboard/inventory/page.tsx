@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -263,7 +264,8 @@ function SortKeyHeader({
 export default function InventoryPage() {
   const locale = useLocale();
   const t = useTranslations("inventory");
-  const [orgId, setOrgId] = useState<string | null>(null);
+  const { data: org, isLoading: orgLoading } = useCurrentOrg();
+  const orgId = org?.orgId ?? null;
   const [tab, setTab] = useState<Tab>("parts");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -317,16 +319,9 @@ export default function InventoryPage() {
     }));
   }, [movementFilter]);
   useEffect(() => {
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then((d) => {
-        const id = d?.organizationId ?? d?.data?.organizationId;
-        if (id) setOrgId(id);
-        else setError("No organization found");
-      })
-      .catch(() => setError("Failed to load profile"))
-      .finally(() => setLoading(false));
-  }, []);
+    if (!orgId) return;
+    setLoading(false);
+  }, [orgId]);
 
   // ── Fetch data ─────────────────────────────────────────────
   const fetchParts = useCallback(async () => {

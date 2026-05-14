@@ -604,6 +604,46 @@ function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
   );
 }
 
+// ── Field input (module scope — NOT inside component) ──
+
+function FormField({
+  label,
+  field,
+  form,
+  onFieldChange,
+  type = "text",
+  className = "",
+  placeholder,
+  uppercase,
+}: {
+  label: string;
+  field: keyof VehicleFormState;
+  form: VehicleFormState;
+  onFieldChange: (field: keyof VehicleFormState, value: string) => void;
+  type?: string;
+  className?: string;
+  placeholder?: string;
+  uppercase?: boolean;
+}) {
+  return (
+    <div className={className}>
+      <label className="mb-1 block text-sm font-medium" htmlFor={field}>
+        {label}
+      </label>
+      <Input
+        id={field}
+        type={type}
+        value={form[field]}
+        onChange={(e) =>
+          onFieldChange(field, uppercase ? e.target.value.toUpperCase() : e.target.value)
+        }
+        className="h-11"
+        placeholder={placeholder}
+      />
+    </div>
+  );
+}
+
 // ── Condensed Edit Form ───────────────────────────
 
 function VehicleEditForm({
@@ -620,47 +660,15 @@ function VehicleEditForm({
     onChange((prev) => ({ ...prev, [field]: value }));
   };
 
-  const Field = ({
-    label,
-    field,
-    type = "text",
-    className = "",
-    placeholder,
-    uppercase,
-  }: {
-    label: string;
-    field: keyof VehicleFormState;
-    type?: string;
-    className?: string;
-    placeholder?: string;
-    uppercase?: boolean;
-  }) => (
-    <div className={className}>
-      <label className="mb-1 block text-sm font-medium" htmlFor={field}>
-        {label}
-      </label>
-      <Input
-        id={field}
-        type={type}
-        value={form[field]}
-        onChange={(e) =>
-          setField(field, uppercase ? e.target.value.toUpperCase() : e.target.value)
-        }
-        className="h-11"
-        placeholder={placeholder}
-      />
-    </div>
-  );
-
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={t("plate")} field="plateNumber" className="sm:col-span-2" uppercase placeholder="ABC123" />
-        <Field label={t("make")} field="make" />
-        <Field label={t("model")} field="model" />
-        <Field label={t("year")} field="year" type="number" />
-        <Field label={t("vin")} field="vin" className="font-mono" placeholder="17-character VIN" />
-        <Field label={t("odometer")} field="odometer" type="number" />
+        <FormField label={t("plate")} field="plateNumber" form={form} onFieldChange={setField} className="sm:col-span-2" uppercase placeholder="ABC123" />
+        <FormField label={t("make")} field="make" form={form} onFieldChange={setField} />
+        <FormField label={t("model")} field="model" form={form} onFieldChange={setField} />
+        <FormField label={t("year")} field="year" form={form} onFieldChange={setField} type="number" />
+        <FormField label={t("vin")} field="vin" form={form} onFieldChange={setField} className="font-mono" placeholder="17-character VIN" />
+        <FormField label={t("odometer")} field="odometer" form={form} onFieldChange={setField} type="number" />
       </div>
 
       <button
@@ -678,16 +686,16 @@ function VehicleEditForm({
 
       {showMore && (
         <div className="grid gap-4 sm:grid-cols-2 animate-in fade-in slide-in-from-top-1 duration-200">
-          <Field label={t("chassisNumber")} field="chassisNumber" />
-          <Field label={t("trim")} field="trim" />
-          <Field label={t("color")} field="color" />
-          <Field label={t("engine")} field="engine" />
-          <Field label={t("fuelType")} field="fuelType" placeholder="Gasoline, Diesel, Electric..." />
-          <Field label={t("transmission")} field="transmission" placeholder="Manual, Automatic, CVT..." />
-          <Field label={t("drivetrain")} field="drivetrain" placeholder="FWD, RWD, AWD..." />
-          <Field label={t("bodyType")} field="bodyType" placeholder="Sedan, SUV, Pickup..." />
-          <Field label={t("licenseExpiry")} field="licenseExpiryAt" type="date" />
-          <Field label={t("nextService")} field="nextServiceAt" type="date" />
+          <FormField label={t("chassisNumber")} field="chassisNumber" form={form} onFieldChange={setField} />
+          <FormField label={t("trim")} field="trim" form={form} onFieldChange={setField} />
+          <FormField label={t("color")} field="color" form={form} onFieldChange={setField} />
+          <FormField label={t("engine")} field="engine" form={form} onFieldChange={setField} />
+          <FormField label={t("fuelType")} field="fuelType" form={form} onFieldChange={setField} placeholder="Gasoline, Diesel, Electric..." />
+          <FormField label={t("transmission")} field="transmission" form={form} onFieldChange={setField} placeholder="Manual, Automatic, CVT..." />
+          <FormField label={t("drivetrain")} field="drivetrain" form={form} onFieldChange={setField} placeholder="FWD, RWD, AWD..." />
+          <FormField label={t("bodyType")} field="bodyType" form={form} onFieldChange={setField} placeholder="Sedan, SUV, Pickup..." />
+          <FormField label={t("licenseExpiry")} field="licenseExpiryAt" form={form} onFieldChange={setField} type="date" />
+          <FormField label={t("nextService")} field="nextServiceAt" form={form} onFieldChange={setField} type="date" />
           <div className="sm:col-span-2">
             <label className="mb-1 block text-sm font-medium" htmlFor="notes-edit">
               {t("notes")}

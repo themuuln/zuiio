@@ -10,8 +10,10 @@ import { getCustomerVehicles } from "@/lib/services/vehicle-service";
 
 export const GET = createRouteHandler(async ({ orgId, params }) => {
   const { customerId } = params;
-  const customer = await getCustomer(customerId, orgId);
-  const vehicles = await getCustomerVehicles(orgId, customerId);
+  const [customer, vehicles] = await Promise.all([
+    getCustomer(customerId, orgId),
+    getCustomerVehicles(orgId, customerId),
+  ]);
   return NextResponse.json({ data: { ...customer, vehicles } });
 });
 

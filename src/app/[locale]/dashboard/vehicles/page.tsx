@@ -1,10 +1,8 @@
 "use client";
 
 import { Car, Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
@@ -12,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useVehicles } from "@/lib/queries/use-vehicles";
 import type { Vehicle } from "@/lib/types";
 
 interface VehicleWithOwner extends Vehicle {
@@ -32,80 +32,15 @@ function VehicleRowSkeleton() {
 }
 
 export default function VehiclesPage() {
-  const [vehicles, setVehicles] = useState<VehicleWithOwner[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searching, setSearching] = useState(false);
   const [search, setSearch] = useState("");
-  const [_error, setError] = useState<string | null>(null);
-
-  const exportColumns: ExportColumn<VehicleWithOwner>[] = useMemo(
-    () => [
-      { key: "plate_number", label: "Plate" },
-      { key: "year", label: "Year" },
-      { key: "make", label: "Make" },
-      { key: "model", label: "Model" },
-      { key: "vin", label: "VIN" },
-      { key: "owner_name", label: "Owner" },
-    ],
-    [],
-  );
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const router = useRouter();
   const t = useTranslations("vehicles");
 
-  useEffect(() => {
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then((d) => {
-        const id = d?.organizationId ?? d?.data?.organizationId;
-        if (id) setOrgId(id);
-        else {
-          setError("No organization found");
-          router.replace(
-            "/auth/select-organization?returnUrl=/dashboard/vehicles",
-          );
-        }
-      })
-      .catch(() => {
-        toast.error("Failed to load profile");
-        setError("Failed to load profile");
-      })
-      .finally(() => setLoading(false));
-  }, [router]);
+  const { data: org } = useCurrentOrg();
+  const { data: vehicles, isLoading, isFetching } = useVehicles(org?.orgId, search);
 
-  const fetchVehicles = useCallback(
-    async (query = "") => {
-      if (!orgId) return;
-      setSearching(true);
-      try {
-        const url = `/api/organizations/${orgId}/vehicles${query ? `?q=${encodeURIComponent(query)}` : ""}`;
-        const res = await fetch(url);
-        const json = await res.json();
-        if (json.error) setError(json.error.message);
-        else setVehicles(json.data ?? []);
-      } catch {
-        setError("Failed to load vehicles");
-      } finally {
-        setSearching(false);
-        setLoading(false);
-      }
-    },
-    [orgId],
-  );
+  const list: Array<Vehicle & { owner_name?: string }> = vehicles ?? [];
 
-  useEffect(() => {
-    if (orgId) fetchVehicles();
-  }, [orgId, fetchVehicles]);
-
-  const handleSearch = useCallback(
-    (value: string) => {
-      setSearch(value);
-      fetchVehicles(value);
-    },
-    [fetchVehicles],
-  );
-
-  if (loading) {
+  if (isLoading && !vehicles) {
     return (
       <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
         <div className="flex items-center justify-between">
@@ -124,13 +59,22 @@ export default function VehiclesPage() {
     );
   }
 
+  const exportColumns: ExportColumn<Vehicle & { owner_name?: string }>[] = [
+    { key: "plate_number", label: "Plate" },
+    { key: "year", label: "Year" },
+    { key: "make", label: "Make" },
+    { key: "model", label: "Model" },
+    { key: "vin", label: "VIN" },
+    { key: "owner_name", label: "Owner" },
+  ];
+
   return (
     <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground">
-            {t("searchResults", { count: vehicles.length })}
+            {t("searchResults", { count: list.length })}
           </p>
         </div>
         <Button render={<Link href="/dashboard/vehicles/new" />} size="lg">
@@ -143,14 +87,14 @@ export default function VehiclesPage() {
         search={{
           placeholder: t("searchByPlateOrVin"),
           value: search,
-          onChange: handleSearch,
-          loading: searching,
+          onChange: setSearch,
+          loading: isFetching,
         }}
-        stats={<span>{t("searchResults", { count: vehicles.length })}</span>}
+        stats={<span>{t("searchResults", { count: list.length })}</span>}
         actions={
           <div className="flex items-center gap-2">
             <ExportButton
-              data={vehicles}
+              data={list}
               columns={exportColumns}
               filename={`vehicles-${new Date().toISOString().split("T")[0]}.xlsx`}
               sheetName="Vehicles"
@@ -165,7 +109,7 @@ export default function VehiclesPage() {
 
       <Card>
         <CardContent className="p-0">
-          {vehicles.length === 0 ? (
+          {list.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 px-4">
               <Car className="size-12 text-muted-foreground/40" />
               <p className="text-muted-foreground">
@@ -182,7 +126,7 @@ export default function VehiclesPage() {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {vehicles.map((vehicle) => (
+              {list.map((vehicle) => (
                 <Link
                   key={vehicle.id}
                   href={`/dashboard/vehicles/${vehicle.id}`}
