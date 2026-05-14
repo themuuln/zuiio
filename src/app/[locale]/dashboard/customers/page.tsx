@@ -1,12 +1,32 @@
 "use client";
 
-import { Phone, Plus, Users } from "lucide-react";
-import { useState } from "react";
+import {
+  Building2,
+  Car,
+  ChevronRight,
+  Clock,
+  Plus,
+  User,
+  Users,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
+import { CustomerDetailDrawer } from "@/components/customer-detail-drawer";
 import { ListToolbar } from "@/components/list-toolbar";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { Customer } from "@/lib/database.types";
 import { Link } from "@/lib/i18n/navigation";
 import { useCustomers } from "@/lib/queries/use-customers";
@@ -27,20 +47,83 @@ function getCustomerDisplayName(customer: CustomerWithVehicleCount) {
   );
 }
 
-function CustomerRowSkeleton() {
+function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="flex items-center gap-4 border-b border-border p-4">
-      <div className="flex-1 space-y-1.5">
-        <Skeleton className="h-5 w-32" />
-        <Skeleton className="h-4 w-24" />
-      </div>
-      <Skeleton className="h-5 w-16 rounded-full" />
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Customer</TableHead>
+          <TableHead className="hidden sm:table-cell">Contact</TableHead>
+          <TableHead className="text-center">Vehicles</TableHead>
+          <TableHead className="hidden md:table-cell">Visits</TableHead>
+          <TableHead className="hidden lg:table-cell">Last Visit</TableHead>
+          <TableHead className="w-10" />
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Array.from({ length: rows }).map((_, i) => (
+          <TableRow key={i}>
+            <TableCell>
+              <div className="space-y-1.5">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-3.5 w-16" />
+              </div>
+            </TableCell>
+            <TableCell className="hidden sm:table-cell">
+              <Skeleton className="h-4 w-28" />
+            </TableCell>
+            <TableCell className="text-center">
+              <Skeleton className="mx-auto h-5 w-8 rounded-full" />
+            </TableCell>
+            <TableCell className="hidden md:table-cell">
+              <Skeleton className="h-4 w-8" />
+            </TableCell>
+            <TableCell className="hidden lg:table-cell">
+              <Skeleton className="h-4 w-20" />
+            </TableCell>
+            <TableCell>
+              <Skeleton className="size-4" />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
+function formatDate(dateString: string | null) {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  return date.toLocaleDateString();
+}
+
 export default function CustomersPage() {
+  const t = useTranslations("customers");
   const [search, setSearch] = useState("");
+  const [detailCustomerId, setDetailCustomerId] = useState<string | null>(
+    null,
+  );
+
+  const exportColumns: ExportColumn<CustomerWithVehicleCount>[] = useMemo(
+    () => [
+      { key: "first_name", label: "Name", value: (c) => getCustomerDisplayName(c) },
+      { key: "type", label: "Type" },
+      { key: "phone", label: "Phone" },
+      { key: "email", label: "Email" },
+      { key: "vehicle_count", label: "Vehicles" },
+      { key: "total_visits", label: "Visits" },
+      { key: "last_visit_at", label: "Last Visit", format: "date" },
+    ],
+    [],
+  );
 
   const {
     data: org,
@@ -57,9 +140,10 @@ export default function CustomersPage() {
     refetch,
   } = useCustomers(org?.orgId, search);
 
-  const loading = orgLoading || (customersLoading && !customers);
+  const isFirstLoad = !customers && !search;
+  const showLoadingScreen = orgLoading || (customersLoading && isFirstLoad);
 
-  if (loading) {
+  if (showLoadingScreen) {
     return (
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
@@ -69,9 +153,7 @@ export default function CustomersPage() {
         <SearchInput placeholder="Search customers..." loading disabled />
         <Card>
           <CardContent className="p-0">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <CustomerRowSkeleton key={i} />
-            ))}
+            <TableSkeleton />
           </CardContent>
         </Card>
       </div>
@@ -82,10 +164,10 @@ export default function CustomersPage() {
     return (
       <div className="flex flex-col gap-6">
         <p className="text-destructive">
-          {error?.message ?? "No organization found"}
+          {error?.message ?? t("noOrganization")}
         </p>
         <Button onClick={() => refetch()} variant="outline">
-          Retry
+          {t("retry")}
         </Button>
       </div>
     );
@@ -95,7 +177,7 @@ export default function CustomersPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Customers</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground">
             {(customers ?? []).length} customer
             {(customers ?? []).length !== 1 ? "s" : ""}
@@ -103,80 +185,147 @@ export default function CustomersPage() {
         </div>
         <Button render={<Link href="/dashboard/customers/new" />} size="lg">
           <Plus className="size-4" />
-          Add Customer
+          {t("addCustomer")}
         </Button>
       </div>
 
       <ListToolbar
         search={{
-          placeholder: "Search by name, phone, or email...",
+          placeholder: t("searchPlaceholder"),
           value: search,
           onChange: setSearch,
           loading: customersFetching,
         }}
         stats={
           <span>
-            {(customers ?? []).length} customer{(customers ?? []).length !== 1 ? "s" : ""}
+            {(customers ?? []).length} customer
+            {(customers ?? []).length !== 1 ? "s" : ""}
           </span>
+        }
+        actions={
+          <ExportButton
+            data={customers ?? []}
+            columns={exportColumns}
+            filename={`customers-${new Date().toISOString().split("T")[0]}.xlsx`}
+            sheetName="Customers"
+          />
         }
       />
 
-      <Card>
+      <Card className="py-0">
         <CardContent className="p-0">
           {(customers ?? []).length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 px-4">
               <Users className="size-12 text-muted-foreground/40" />
-              <p className="text-muted-foreground">No customers found</p>
+              <p className="text-muted-foreground">{t("noCustomers")}</p>
               <Button
                 render={<Link href="/dashboard/customers/new" />}
                 variant="outline"
               >
-                Add your first customer
+                {t("addFirstCustomer")}
               </Button>
             </div>
           ) : (
-            <div className="divide-y divide-border">
-              {customers?.map((customer) => {
-                return (
-                  <Link
-                    key={customer.id}
-                    href={`/dashboard/customers/${customer.id}`}
-                    className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/50 min-h-[72px]"
-                  >
-                    <div className="flex flex-1 flex-col gap-1">
-                      <span className="text-base font-medium">
-                        {getCustomerDisplayName(customer)}
-                      </span>
-                      {customer.phone && (
-                        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                          <Phone className="size-3.5" />
-                          {customer.phone}
-                        </span>
-                      )}
-                      {!customer.phone && customer.email && (
-                        <span className="text-sm text-muted-foreground">
-                          {customer.email}
-                        </span>
-                      )}
-                    </div>
-                    {customer.vehicle_count !== undefined && (
-                      <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <span className="text-base font-semibold tabular-nums">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead className="hidden sm:table-cell">
+                    Contact
+                  </TableHead>
+                  <TableHead className="text-center">Vehicles</TableHead>
+                  <TableHead className="hidden md:table-cell">Visits</TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    Last Visit
+                  </TableHead>
+                  <TableHead className="w-10" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {customers?.map((customer) => {
+                  const lastVisit = formatDate(customer.last_visit_at);
+                  return (
+                    <TableRow
+                      key={customer.id}
+                      className="cursor-pointer"
+                      onClick={() => setDetailCustomerId(customer.id)}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 ring-1 ring-border">
+                            {customer.type === "company" ? (
+                              <Building2 className="size-4 text-muted-foreground/70" />
+                            ) : (
+                              <User className="size-4 text-muted-foreground/70" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">
+                              {getCustomerDisplayName(customer)}
+                            </p>
+                            <p className="text-xs text-muted-foreground capitalize">
+                              {customer.type}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <div className="min-w-0 max-w-44">
+                          {customer.phone ? (
+                            <p className="truncate text-sm">{customer.phone}</p>
+                          ) : customer.email ? (
+                            <p className="truncate text-sm text-muted-foreground">
+                              {customer.email}
+                            </p>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/50">
+                              &mdash;
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="inline-flex items-center justify-center rounded-full bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums">
+                          <Car className="mr-1 size-3 text-muted-foreground/60" />
                           {customer.vehicle_count ?? 0}
                         </span>
-                        <span className="hidden sm:inline">
-                          vehicle
-                          {customer.vehicle_count !== 1 ? "s" : ""}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <span className="text-sm tabular-nums">
+                          {customer.total_visits}
                         </span>
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {lastVisit ? (
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Clock className="size-3.5 shrink-0 text-muted-foreground/50" />
+                            <span>{lastVisit}</span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground/50">
+                            Never
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <ChevronRight className="size-4 text-muted-foreground/40" />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
+
+      <CustomerDetailDrawer
+        customerId={detailCustomerId}
+        open={detailCustomerId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDetailCustomerId(null);
+        }}
+      />
     </div>
   );
 }

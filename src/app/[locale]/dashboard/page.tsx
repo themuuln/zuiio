@@ -19,12 +19,14 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import type { DashboardData } from "@/lib/types";
+import type { DashboardData, WorkOrderDetail } from "@/lib/types";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useDashboard } from "@/lib/queries/use-dashboard";
 import {
@@ -188,13 +190,25 @@ function RecentWorkOrdersTable({
   workOrders,
   router,
   t,
+  workOrdersForExport,
 }: {
   workOrders: DashboardData["recentWorkOrders"];
   router: ReturnType<typeof useRouter>;
   t: ReturnType<typeof useTranslations>;
+  workOrdersForExport: ExportColumn<WorkOrderDetail>[];
 }) {
   return (
     <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-0">
+        <div />
+        <ExportButton
+          data={workOrders}
+          columns={workOrdersForExport}
+          filename={`dashboard-recent-${new Date().toISOString().split("T")[0]}.xlsx`}
+          sheetName="Recent Work Orders"
+          title={t("dashboard.recentWorkOrders")}
+        />
+      </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -551,6 +565,23 @@ export default function DashboardPage() {
   if (!data) return null;
 
   const { summary, recentWorkOrders } = data;
+
+  const dashboardExportColumns: ExportColumn<WorkOrderDetail>[] = useMemo(
+    () => [
+      { key: "id", label: "WO #", value: (wo) => wo.id.slice(0, 8) },
+      { key: "customer", label: "Customer", value: (wo) =>
+        wo.customer ? `${wo.customer.first_name ?? ""} ${wo.customer.last_name ?? ""}`.trim() : "—" },
+      { key: "vehicle", label: "Vehicle", value: (wo) => wo.vehicle?.plate_number ?? "—" },
+      { key: "status", label: "Status" },
+      {
+        key: "grand_total", label: "Total", format: "currency" as const, value: (wo) =>
+          wo.services.reduce((s: number, x: { final_price: number }) => s + Number(x.final_price), 0) +
+          wo.parts.reduce((s: number, x: { final_price: number }) => s + Number(x.final_price), 0),
+      },
+      { key: "created_at", label: "Date", format: "date" as const },
+    ],
+    [],
+  );
   const hasRevenue = summary.totalRevenue > 0;
   const hasActiveWos = summary.activeWorkOrders > 0;
 
@@ -725,6 +756,7 @@ export default function DashboardPage() {
             workOrders={recentWorkOrders}
             router={router}
             t={t}
+            workOrdersForExport={dashboardExportColumns}
           />
         </div>
 
@@ -805,6 +837,7 @@ export default function DashboardPage() {
           workOrders={recentWorkOrders}
           router={router}
           t={t}
+          workOrdersForExport={dashboardExportColumns}
         />
       </div>
 

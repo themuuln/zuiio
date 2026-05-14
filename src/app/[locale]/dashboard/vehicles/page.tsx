@@ -2,13 +2,16 @@
 
 import { Car, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/lib/i18n/navigation";
+import { useTranslations } from "next-intl";
 import type { Vehicle } from "@/lib/types";
 
 interface VehicleWithOwner extends Vehicle {
@@ -34,8 +37,21 @@ export default function VehiclesPage() {
   const [searching, setSearching] = useState(false);
   const [search, setSearch] = useState("");
   const [_error, setError] = useState<string | null>(null);
+
+  const exportColumns: ExportColumn<VehicleWithOwner>[] = useMemo(
+    () => [
+      { key: "plate_number", label: "Plate" },
+      { key: "year", label: "Year" },
+      { key: "make", label: "Make" },
+      { key: "model", label: "Model" },
+      { key: "vin", label: "VIN" },
+      { key: "owner_name", label: "Owner" },
+    ],
+    [],
+  );
   const [orgId, setOrgId] = useState<string | null>(null);
   const router = useRouter();
+  const t = useTranslations("vehicles");
 
   useEffect(() => {
     fetch("/api/profile")
@@ -112,34 +128,42 @@ export default function VehiclesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Vehicles</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground">
-            {vehicles.length} vehicle{vehicles.length !== 1 ? "s" : ""}
+            {t("searchResults", { count: vehicles.length })}
           </p>
         </div>
         <Button render={<Link href="/dashboard/vehicles/new" />} size="lg">
           <Plus className="size-4" />
-          Add Vehicle
+          {t("addVehicle")}
         </Button>
       </div>
 
       <ListToolbar
         search={{
-          placeholder: "Search by plate number or VIN...",
+          placeholder: t("searchByPlateOrVin"),
           value: search,
           onChange: handleSearch,
           loading: searching,
         }}
         stats={
           <span>
-            {vehicles.length} vehicle{vehicles.length !== 1 ? "s" : ""}
+            {t("searchResults", { count: vehicles.length })}
           </span>
         }
         actions={
-          <Button render={<Link href="/dashboard/vehicles/new" />} size="lg">
-            <Plus className="size-4" />
-            Add Vehicle
-          </Button>
+          <div className="flex items-center gap-2">
+            <ExportButton
+              data={vehicles}
+              columns={exportColumns}
+              filename={`vehicles-${new Date().toISOString().split("T")[0]}.xlsx`}
+              sheetName="Vehicles"
+            />
+            <Button render={<Link href="/dashboard/vehicles/new" />} size="lg">
+              <Plus className="size-4" />
+              {t("addVehicle")}
+            </Button>
+          </div>
         }
       />
 
@@ -150,15 +174,15 @@ export default function VehiclesPage() {
               <Car className="size-12 text-muted-foreground/40" />
               <p className="text-muted-foreground">
                 {search
-                  ? "No vehicles match this plate number or VIN"
-                  : "No vehicles yet"}
+                  ? t("noMatchForPlateOrVin")
+                  : t("noVehicles")}
               </p>
               {!search && (
                 <Button
                   render={<Link href="/dashboard/vehicles/new" />}
                   variant="outline"
                 >
-                  Add your first vehicle
+                  {t("addFirstVehicle")}
                 </Button>
               )}
             </div>
@@ -184,7 +208,7 @@ export default function VehiclesPage() {
                     </span>
                     {vehicle.vin && (
                       <span className="text-xs font-mono text-muted-foreground">
-                        VIN: {vehicle.vin}
+                        {t("vinLabel", { vin: vehicle.vin })}
                       </span>
                     )}
                   </div>

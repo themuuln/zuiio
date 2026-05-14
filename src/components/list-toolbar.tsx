@@ -43,6 +43,7 @@ export function ListToolbar({
             <div className="flex-1">
               <SearchInput
                 placeholder={search.placeholder}
+                value={search.value}
                 onSearch={search.onChange}
                 loading={search.loading}
                 debounceMs={400}

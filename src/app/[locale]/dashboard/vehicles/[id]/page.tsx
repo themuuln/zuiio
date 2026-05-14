@@ -2,15 +2,17 @@
 
 import { ArrowLeft, ChevronDown, ChevronRight, Pencil, Save, X } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import type { WorkOrderStatus } from "@/lib/database.types";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 
@@ -118,11 +120,20 @@ function formatDate(value: string | null) {
 }
 
 export default function VehicleDetailPage() {
+  const t = useTranslations("vehicles");
   const params = useParams();
   const router = useRouter();
   const vehicleId = params.id as string;
 
   const [vehicle, setVehicle] = useState<VehicleDetailResponse | null>(null);
+
+  const serviceHistoryColumns: ExportColumn<VehicleServiceHistoryItem>[] = [
+    { key: "status", label: "Status" },
+    { key: "created_at", label: "Date", format: "date" as const },
+    { key: "complaint", label: "Complaint" },
+    { key: "description", label: "Description" },
+    { key: "total", label: "Total", format: "currency" as const },
+  ];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -174,11 +185,11 @@ export default function VehicleDetailPage() {
       setVehicle(json.data);
       syncForm(json.data);
     } catch {
-      setError("Failed to load vehicle");
+      setError(t("failedToLoad"));
     } finally {
       setLoading(false);
     }
-  }, [orgId, syncForm, vehicleId]);
+  }, [orgId, syncForm, vehicleId, t]);
 
   useEffect(() => {
     fetch("/api/profile")
@@ -186,7 +197,7 @@ export default function VehicleDetailPage() {
       .then((data) => {
         const nextOrgId = data?.organizationId ?? data?.data?.organizationId;
         if (!nextOrgId) {
-          setError("No organization found");
+          setError(t("noOrganization"));
           return;
         }
 
@@ -194,7 +205,7 @@ export default function VehicleDetailPage() {
       })
       .catch(() => setError("Failed to load profile"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (orgId) {
@@ -253,10 +264,10 @@ export default function VehicleDetailPage() {
       setVehicle(nextVehicle);
       syncForm(nextVehicle);
       setEditing(false);
-      toast.success("Vehicle updated");
+      toast.success(t("vehicleUpdated"));
     } catch {
-      toast.error("Failed to save vehicle");
-      setError("Failed to save vehicle");
+      toast.error(t("failedToSave"));
+      setError(t("failedToSave"));
     } finally {
       setSaving(false);
     }
@@ -286,7 +297,7 @@ export default function VehicleDetailPage() {
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <p className="text-muted-foreground">{error}</p>
             <Button onClick={() => void fetchVehicle()} variant="outline">
-              Retry
+              {t("retry")}
             </Button>
           </CardContent>
         </Card>
@@ -307,7 +318,7 @@ export default function VehicleDetailPage() {
     <div className="flex max-w-3xl flex-col gap-6">
       <Breadcrumb
         items={[
-          { label: "Vehicles", href: "/dashboard/vehicles" },
+          { label: t("title"), href: "/dashboard/vehicles" },
           { label: vehicle.plate_number },
         ]}
       />
@@ -340,7 +351,7 @@ export default function VehicleDetailPage() {
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={saving}>
               <Save className="size-4" />
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("saving") : "Save"}
             </Button>
             <Button
               variant="ghost"
@@ -367,7 +378,7 @@ export default function VehicleDetailPage() {
       {primaryOwner && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Owner</CardTitle>
+            <CardTitle className="text-base">{t("owner")}</CardTitle>
           </CardHeader>
           <CardContent>
             <button
@@ -380,7 +391,7 @@ export default function VehicleDetailPage() {
               <div>
                 <p className="text-sm font-medium">{primaryOwner.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {primaryOwner.phone || "No phone number"}
+                  {primaryOwner.phone || t("noPhoneNumber")}
                 </p>
               </div>
               <ArrowLeft className="size-4 rotate-180 text-muted-foreground" />
@@ -391,7 +402,7 @@ export default function VehicleDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Vehicle information</CardTitle>
+          <CardTitle className="text-base">{t("vehicleInformation")}</CardTitle>
         </CardHeader>
         <CardContent>
           {editing ? (
@@ -407,19 +418,19 @@ export default function VehicleDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Service dates</CardTitle>
+          <CardTitle className="text-base">{t("serviceDates")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg bg-muted/50 p-3">
-              <p className="mb-1 text-xs text-muted-foreground">Last visit</p>
+              <p className="mb-1 text-xs text-muted-foreground">{t("lastVisit")}</p>
               <p className="text-sm font-medium">
                 {formatDate(vehicle.last_visit_at)}
               </p>
             </div>
             <div className="rounded-lg bg-muted/50 p-3">
               <p className="mb-1 text-xs text-muted-foreground">
-                Next service due
+                {t("nextService")}
               </p>
               <p className="text-sm font-medium">
                 {formatDate(vehicle.next_service_at)}
@@ -427,20 +438,20 @@ export default function VehicleDetailPage() {
             </div>
             <div className="rounded-lg bg-muted/50 p-3">
               <p className="mb-1 text-xs text-muted-foreground">
-                License expiry
+                {t("licenseExpiry")}
               </p>
               <p className="text-sm font-medium">
                 {formatDate(vehicle.license_expiry_at)}
               </p>
             </div>
             <div className="rounded-lg bg-muted/50 p-3">
-              <p className="mb-1 text-xs text-muted-foreground">Created</p>
+              <p className="mb-1 text-xs text-muted-foreground">{t("created")}</p>
               <p className="text-sm font-medium">
                 {formatDate(vehicle.created_at)}
               </p>
             </div>
             <div className="rounded-lg bg-muted/50 p-3 sm:col-span-2">
-              <p className="mb-1 text-xs text-muted-foreground">Notes</p>
+              <p className="mb-1 text-xs text-muted-foreground">{t("notes")}</p>
               <p className="whitespace-pre-wrap text-sm font-medium">
                 {vehicle.notes || "—"}
               </p>
@@ -450,15 +461,22 @@ export default function VehicleDetailPage() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">
-            Service history ({vehicle.service_history.length})
+            {t("serviceHistory")} ({vehicle.service_history.length})
           </CardTitle>
+          <ExportButton
+            data={vehicle.service_history}
+            columns={serviceHistoryColumns}
+            filename={`vehicle-${vehicle.id.slice(0, 8)}-history.xlsx`}
+            sheetName="Service History"
+            label="Export"
+          />
         </CardHeader>
         <CardContent>
           {vehicle.service_history.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No service history yet.
+              {t("noServiceHistory")}
             </p>
           ) : (
             <div className="flex flex-col gap-3">
@@ -482,7 +500,7 @@ export default function VehicleDetailPage() {
                       <p className="text-sm font-medium">
                         {workOrder.complaint ||
                           workOrder.description ||
-                          "General service"}
+                          t("generalService")}
                       </p>
                       {workOrder.work_order_services.length > 0 && (
                         <p className="text-xs text-muted-foreground">
@@ -515,29 +533,30 @@ export default function VehicleDetailPage() {
 // ── Condensed Read-Only View ─────────────────────
 
 function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
+  const t = useTranslations("vehicles");
   const [showMore, setShowMore] = useState(false);
 
   const primaryFields = [
-    ["Plate number", vehicle.plate_number],
-    ["Make", vehicle.make],
-    ["Model", vehicle.model],
-    ["Year", vehicle.year ? String(vehicle.year) : null],
-    ["VIN", vehicle.vin],
-    ["Odometer", vehicle.odometer ? `${vehicle.odometer.toLocaleString()} km` : null],
+    [t("plate"), vehicle.plate_number],
+    [t("make"), vehicle.make],
+    [t("model"), vehicle.model],
+    [t("year"), vehicle.year ? String(vehicle.year) : null],
+    [t("vin"), vehicle.vin],
+    [t("odometer"), vehicle.odometer ? `${vehicle.odometer.toLocaleString()} km` : null],
   ];
 
   const detailFields = [
-    ["Chassis number", vehicle.chassis_number],
-    ["Trim / series", vehicle.trim],
-    ["Color", vehicle.color],
-    ["Engine", vehicle.engine],
-    ["Fuel type", vehicle.fuel_type],
-    ["Transmission", vehicle.transmission],
-    ["Drivetrain", vehicle.drivetrain],
-    ["Body type", vehicle.body_type],
-    ["Last visit", vehicle.last_visit_at ? new Date(vehicle.last_visit_at).toLocaleDateString() : null],
-    ["License expiry", vehicle.license_expiry_at ? new Date(vehicle.license_expiry_at).toLocaleDateString() : null],
-    ["Next service", vehicle.next_service_at ? new Date(vehicle.next_service_at).toLocaleDateString() : null],
+    [t("chassisNumber"), vehicle.chassis_number],
+    [t("trim"), vehicle.trim],
+    [t("color"), vehicle.color],
+    [t("engine"), vehicle.engine],
+    [t("fuelType"), vehicle.fuel_type],
+    [t("transmission"), vehicle.transmission],
+    [t("drivetrain"), vehicle.drivetrain],
+    [t("bodyType"), vehicle.body_type],
+    [t("lastVisit"), vehicle.last_visit_at ? new Date(vehicle.last_visit_at).toLocaleDateString() : null],
+    [t("licenseExpiry"), vehicle.license_expiry_at ? new Date(vehicle.license_expiry_at).toLocaleDateString() : null],
+    [t("nextService"), vehicle.next_service_at ? new Date(vehicle.next_service_at).toLocaleDateString() : null],
   ];
 
   return (
@@ -561,7 +580,7 @@ function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
         ) : (
           <ChevronRight className="size-4" />
         )}
-        {showMore ? "Show less" : `Show ${detailFields.filter(([, v]) => v).length} more details`}
+        {showMore ? t("showLess") : t("showMoreDetails", { count: detailFields.filter(([, v]) => v).length })}
       </button>
 
       {showMore && (
@@ -577,7 +596,7 @@ function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
 
       {vehicle.notes && (
         <div className="rounded-lg bg-muted/50 p-3">
-          <p className="mb-1 text-xs text-muted-foreground">Notes</p>
+          <p className="mb-1 text-xs text-muted-foreground">{t("notes")}</p>
           <p className="text-sm">{vehicle.notes}</p>
         </div>
       )}
@@ -594,6 +613,7 @@ function VehicleEditForm({
   form: VehicleFormState;
   onChange: (updater: (prev: VehicleFormState) => VehicleFormState) => void;
 }) {
+  const t = useTranslations("vehicles");
   const [showMore, setShowMore] = useState(false);
 
   const setField = (field: keyof VehicleFormState, value: string) => {
@@ -635,12 +655,12 @@ function VehicleEditForm({
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Plate number" field="plateNumber" className="sm:col-span-2" uppercase placeholder="ABC123" />
-        <Field label="Make" field="make" />
-        <Field label="Model" field="model" />
-        <Field label="Year" field="year" type="number" />
-        <Field label="VIN" field="vin" className="font-mono" placeholder="17-character VIN" />
-        <Field label="Odometer (km)" field="odometer" type="number" />
+        <Field label={t("plate")} field="plateNumber" className="sm:col-span-2" uppercase placeholder="ABC123" />
+        <Field label={t("make")} field="make" />
+        <Field label={t("model")} field="model" />
+        <Field label={t("year")} field="year" type="number" />
+        <Field label={t("vin")} field="vin" className="font-mono" placeholder="17-character VIN" />
+        <Field label={t("odometer")} field="odometer" type="number" />
       </div>
 
       <button
@@ -653,24 +673,24 @@ function VehicleEditForm({
         ) : (
           <ChevronRight className="size-4" />
         )}
-        {showMore ? "Show less" : "Show more details"}
+        {showMore ? t("showLess") : t("showMoreDetails", { count: "" })}
       </button>
 
       {showMore && (
         <div className="grid gap-4 sm:grid-cols-2 animate-in fade-in slide-in-from-top-1 duration-200">
-          <Field label="Chassis number" field="chassisNumber" />
-          <Field label="Trim / series" field="trim" />
-          <Field label="Color" field="color" />
-          <Field label="Engine" field="engine" />
-          <Field label="Fuel type" field="fuelType" placeholder="Gasoline, Diesel, Electric..." />
-          <Field label="Transmission" field="transmission" placeholder="Manual, Automatic, CVT..." />
-          <Field label="Drivetrain" field="drivetrain" placeholder="FWD, RWD, AWD..." />
-          <Field label="Body type" field="bodyType" placeholder="Sedan, SUV, Pickup..." />
-          <Field label="License expiry" field="licenseExpiryAt" type="date" />
-          <Field label="Next service due" field="nextServiceAt" type="date" />
+          <Field label={t("chassisNumber")} field="chassisNumber" />
+          <Field label={t("trim")} field="trim" />
+          <Field label={t("color")} field="color" />
+          <Field label={t("engine")} field="engine" />
+          <Field label={t("fuelType")} field="fuelType" placeholder="Gasoline, Diesel, Electric..." />
+          <Field label={t("transmission")} field="transmission" placeholder="Manual, Automatic, CVT..." />
+          <Field label={t("drivetrain")} field="drivetrain" placeholder="FWD, RWD, AWD..." />
+          <Field label={t("bodyType")} field="bodyType" placeholder="Sedan, SUV, Pickup..." />
+          <Field label={t("licenseExpiry")} field="licenseExpiryAt" type="date" />
+          <Field label={t("nextService")} field="nextServiceAt" type="date" />
           <div className="sm:col-span-2">
             <label className="mb-1 block text-sm font-medium" htmlFor="notes-edit">
-              Notes
+              {t("notes")}
             </label>
             <textarea
               id="notes-edit"

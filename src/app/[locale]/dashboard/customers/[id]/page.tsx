@@ -2,12 +2,15 @@
 
 import { ArrowLeft, Building2, Car, Pencil, Save, X } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
+import { Breadcrumb } from "@/components/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Breadcrumb } from "@/components/breadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 
@@ -77,11 +80,20 @@ function getCustomerDisplayName(customer: CustomerDetailResponse) {
 }
 
 export default function CustomerDetailPage() {
+  const t = useTranslations("customers");
+  const commonT = useTranslations("common");
   const params = useParams();
   const router = useRouter();
   const customerId = params.id as string;
 
   const [customer, setCustomer] = useState<CustomerDetailResponse | null>(null);
+
+  const vehicleExportColumns: ExportColumn<CustomerVehicleSummary>[] = [
+    { key: "plate_number", label: "Plate" },
+    { key: "make", label: "Make" },
+    { key: "model", label: "Model" },
+    { key: "year", label: "Year" },
+  ];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -125,11 +137,11 @@ export default function CustomerDetailPage() {
       setCustomer(json.data);
       syncForm(json.data);
     } catch {
-      setError("Failed to load customer");
+      setError(t("failedToLoad"));
     } finally {
       setLoading(false);
     }
-  }, [customerId, orgId, syncForm]);
+  }, [customerId, orgId, syncForm, t]);
 
   useEffect(() => {
     fetch("/api/profile")
@@ -137,7 +149,7 @@ export default function CustomerDetailPage() {
       .then((data) => {
         const nextOrgId = data?.organizationId ?? data?.data?.organizationId;
         if (!nextOrgId) {
-          setError("No organization found");
+          setError(t("noOrganization"));
           return;
         }
 
@@ -145,7 +157,7 @@ export default function CustomerDetailPage() {
       })
       .catch(() => setError("Failed to load profile"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (orgId) {
@@ -188,8 +200,8 @@ export default function CustomerDetailPage() {
       setEditing(false);
       toast.success("Customer updated");
     } catch {
-      toast.error("Failed to save customer");
-      setError("Failed to save customer");
+      toast.error(t("failedToSave"));
+      setError(t("failedToSave"));
     } finally {
       setSaving(false);
     }
@@ -213,13 +225,13 @@ export default function CustomerDetailPage() {
           className="w-fit"
         >
           <ArrowLeft className="size-4" />
-          Back
+          {commonT("back")}
         </Button>
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <p className="text-muted-foreground">{error}</p>
             <Button onClick={() => void fetchCustomer()} variant="outline">
-              Retry
+              {t("retry")}
             </Button>
           </CardContent>
         </Card>
@@ -237,7 +249,7 @@ export default function CustomerDetailPage() {
     <div className="flex max-w-3xl flex-col gap-6">
       <Breadcrumb
         items={[
-          { label: "Customers", href: "/dashboard/customers" },
+          { label: t("title"), href: "/dashboard/customers" },
           { label: customerName },
         ]}
       />
@@ -246,7 +258,7 @@ export default function CustomerDetailPage() {
           render={<Link href="/dashboard/customers" />}
           variant="ghost"
           size="icon"
-          aria-label="Back"
+          aria-label={commonT("back")}
         >
           <ArrowLeft className="size-5" />
         </Button>
@@ -259,13 +271,13 @@ export default function CustomerDetailPage() {
         {!editing ? (
           <Button variant="outline" onClick={() => setEditing(true)}>
             <Pencil className="size-4" />
-            Edit
+            {commonT("edit")}
           </Button>
         ) : (
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={saving}>
               <Save className="size-4" />
-              {saving ? "Saving..." : "Save"}
+              {saving ? commonT("saving") : commonT("save")}
             </Button>
             <Button
               variant="ghost"
@@ -275,7 +287,7 @@ export default function CustomerDetailPage() {
               }}
             >
               <X className="size-4" />
-              Cancel
+              {commonT("cancel")}
             </Button>
           </div>
         )}
@@ -291,7 +303,7 @@ export default function CustomerDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Customer information</CardTitle>
+          <CardTitle className="text-base">{t("details")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {editing ? (
@@ -301,7 +313,7 @@ export default function CustomerDetailPage() {
                   className="mb-1 block text-sm font-medium"
                   htmlFor="type"
                 >
-                  Customer type
+                  {t("type")}
                 </label>
                 <select
                   id="type"
@@ -314,8 +326,8 @@ export default function CustomerDetailPage() {
                   }
                   className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm"
                 >
-                  <option value="individual">Individual</option>
-                  <option value="company">Company</option>
+                  <option value="individual">{t("individual")}</option>
+                  <option value="company">{t("company")}</option>
                 </select>
               </div>
 
@@ -326,7 +338,7 @@ export default function CustomerDetailPage() {
                       className="mb-1 block text-sm font-medium"
                       htmlFor="companyName"
                     >
-                      Company name
+                      {t("companyName")}
                     </label>
                     <Input
                       id="companyName"
@@ -345,7 +357,7 @@ export default function CustomerDetailPage() {
                       className="mb-1 block text-sm font-medium"
                       htmlFor="contactPerson"
                     >
-                      Contact person
+                      {t("contactPerson")}
                     </label>
                     <Input
                       id="contactPerson"
@@ -367,7 +379,7 @@ export default function CustomerDetailPage() {
                       className="mb-1 block text-sm font-medium"
                       htmlFor="firstName"
                     >
-                      First name
+                      {t("firstName")}
                     </label>
                     <Input
                       id="firstName"
@@ -386,7 +398,7 @@ export default function CustomerDetailPage() {
                       className="mb-1 block text-sm font-medium"
                       htmlFor="lastName"
                     >
-                      Last name
+                      {t("lastName")}
                     </label>
                     <Input
                       id="lastName"
@@ -408,7 +420,7 @@ export default function CustomerDetailPage() {
                   className="mb-1 block text-sm font-medium"
                   htmlFor="phone"
                 >
-                  Phone
+                  {t("phone")}
                 </label>
                 <Input
                   id="phone"
@@ -427,7 +439,7 @@ export default function CustomerDetailPage() {
                   className="mb-1 block text-sm font-medium"
                   htmlFor="email"
                 >
-                  Email
+                  {t("email")}
                 </label>
                 <Input
                   id="email"
@@ -447,7 +459,7 @@ export default function CustomerDetailPage() {
                   className="mb-1 block text-sm font-medium"
                   htmlFor="address"
                 >
-                  Address
+                  {t("address")}
                 </label>
                 <Input
                   id="address"
@@ -466,7 +478,7 @@ export default function CustomerDetailPage() {
                   className="mb-1 block text-sm font-medium"
                   htmlFor="notes"
                 >
-                  Notes
+                  {t("notes")}
                 </label>
                 <textarea
                   id="notes"
@@ -485,27 +497,37 @@ export default function CustomerDetailPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-lg bg-muted/50 p-3">
-                <p className="mb-1 text-xs text-muted-foreground">Phone</p>
+                <p className="mb-1 text-xs text-muted-foreground">
+                  {t("phone")}
+                </p>
                 <p className="text-sm font-medium">{customer.phone || "—"}</p>
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
-                <p className="mb-1 text-xs text-muted-foreground">Email</p>
+                <p className="mb-1 text-xs text-muted-foreground">
+                  {t("email")}
+                </p>
                 <p className="text-sm font-medium">{customer.email || "—"}</p>
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
-                <p className="mb-1 text-xs text-muted-foreground">Type</p>
+                <p className="mb-1 text-xs text-muted-foreground">
+                  {t("type")}
+                </p>
                 <p className="text-sm font-medium capitalize">
                   {customer.type}
                 </p>
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
-                <p className="mb-1 text-xs text-muted-foreground">Contact</p>
+                <p className="mb-1 text-xs text-muted-foreground">
+                  {t("contactPerson")}
+                </p>
                 <p className="text-sm font-medium">
                   {customer.contact_person || customer.first_name || "—"}
                 </p>
               </div>
               <div className="rounded-lg bg-muted/50 p-3 sm:col-span-2">
-                <p className="mb-1 text-xs text-muted-foreground">Address</p>
+                <p className="mb-1 text-xs text-muted-foreground">
+                  {t("address")}
+                </p>
                 <p className="text-sm font-medium">{customer.address || "—"}</p>
               </div>
               {customer.type === "company" && (
@@ -520,7 +542,9 @@ export default function CustomerDetailPage() {
                 </div>
               )}
               <div className="rounded-lg bg-muted/50 p-3 sm:col-span-2">
-                <p className="mb-1 text-xs text-muted-foreground">Notes</p>
+                <p className="mb-1 text-xs text-muted-foreground">
+                  {t("notes")}
+                </p>
                 <p className="whitespace-pre-wrap text-sm font-medium">
                   {customer.notes || "—"}
                 </p>
@@ -534,24 +558,33 @@ export default function CustomerDetailPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">
-              Vehicles ({customer.vehicles.length})
+              {t("vehicles")} ({customer.vehicles.length})
             </CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                router.push(`/dashboard/vehicles/new?customerId=${customer.id}`)
-              }
-            >
-              <Car className="size-4" />
-              Add vehicle
-            </Button>
+            <div className="flex items-center gap-2">
+              <ExportButton
+                data={customer.vehicles}
+                columns={vehicleExportColumns}
+                filename={`customer-${customer.id.slice(0, 8)}-vehicles.xlsx`}
+                sheetName="Vehicles"
+                label="Export"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  router.push(`/dashboard/vehicles/new?customerId=${customer.id}`)
+                }
+              >
+                <Car className="size-4" />
+                {t("addVehicle")}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           {customer.vehicles.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No vehicles registered yet.
+              {t("noVehicles")}
             </p>
           ) : (
             <div className="flex flex-col gap-2">

@@ -1,8 +1,11 @@
 "use client";
 
 import { ChevronDown, ChevronRight, Plus, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,6 +87,7 @@ const bodyTypeOptions = [
 // ── Page component ────────────────────────────────────────────
 
 export default function VehicleModelsPage() {
+  const t = useTranslations("vehicleModels");
   const [models, setModels] = useState<VehicleModelItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -285,6 +289,19 @@ export default function VehicleModelsPage() {
     });
   };
 
+  const exportColumns: ExportColumn<VehicleModelItem>[] = useMemo(
+    () => [
+      { key: "make", label: "Make" },
+      { key: "model", label: "Model" },
+      { key: "generation", label: "Generation" },
+      { key: "engine", label: "Engine" },
+      { key: "body_type", label: "Body Type" },
+      { key: "year_start", label: "Year Start" },
+      { key: "year_end", label: "Year End" },
+    ],
+    [],
+  );
+
   // ── Filtering & tree building ─────────────────────────────────
 
   const tree = buildTree(
@@ -307,36 +324,44 @@ export default function VehicleModelsPage() {
     <div className="flex flex-col gap-6">
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">Vehicle Models</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground">
-          Browse car makes and models your shop services
+          {t("subtitle")}
         </p>
       </div>
 
       <ListToolbar
         search={{
-          placeholder: "Search makes, models, or engines...",
+          placeholder: t("searchPlaceholder"),
           value: search,
           onChange: setSearch,
         }}
         stats={
           <span>
-            {tree.reduce((s, m) => s + m.models.length, 0)} models · {totalCount} variants
+            {t("modelCount", { count: tree.reduce((s, m) => s + m.models.length, 0) })} · {t("variantCount", { count: totalCount })}
           </span>
         }
         actions={
-          <Button
-            size="lg"
-            className="h-12"
-            onClick={() => {
-              setShowAdd(!showAdd);
-              setEditingId(null);
-              resetForm();
-            }}
-          >
-            <Plus className="size-5" />{" "}
-            {showAdd ? "Cancel" : "Add Vehicle Model"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <ExportButton
+              data={models}
+              columns={exportColumns}
+              filename={`vehicle-models-${new Date().toISOString().split("T")[0]}.xlsx`}
+              sheetName="Vehicle Models"
+            />
+            <Button
+              size="lg"
+              className="h-12"
+              onClick={() => {
+                setShowAdd(!showAdd);
+                setEditingId(null);
+                resetForm();
+              }}
+            >
+              <Plus className="size-5" />{" "}
+              {showAdd ? "Cancel" : t("addModel")}
+            </Button>
+          </div>
         }
       />
 
@@ -345,7 +370,7 @@ export default function VehicleModelsPage() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">
-              {editingId ? "Edit Variant" : "Add New Vehicle Model"}
+              {editingId ? t("editVariant") : t("addNewModel")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -353,10 +378,10 @@ export default function VehicleModelsPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <label className="text-sm font-medium">
-                  Make <span className="text-destructive">*</span>
+                  {t("makeRequired")} <span className="text-destructive">*</span>
                 </label>
                 <Input
-                  placeholder="e.g. Toyota, Honda, BMW"
+                  placeholder={t("makePlaceholder")}
                   value={editForm.make}
                   onChange={(e) =>
                     setEditForm({ ...editForm, make: e.target.value })
@@ -369,10 +394,10 @@ export default function VehicleModelsPage() {
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">
-                  Model <span className="text-destructive">*</span>
+                  {t("modelRequired")} <span className="text-destructive">*</span>
                 </label>
                 <Input
-                  placeholder="e.g. Harrier, Camry, X5"
+                  placeholder={t("modelPlaceholder")}
                   value={editForm.model}
                   onChange={(e) =>
                     setEditForm({ ...editForm, model: e.target.value })
@@ -396,15 +421,15 @@ export default function VehicleModelsPage() {
               ) : (
                 <ChevronRight className="size-4" />
               )}
-              {showDetails ? "Hide details" : "Add details (year, engine, etc.)"}
+              {showDetails ? t("hideDetails") : t("addDetails")}
             </button>
 
             {showDetails && (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-top-1 duration-200">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">Generation</label>
+                  <label className="text-sm font-medium">{t("generation")}</label>
                   <Input
-                    placeholder="e.g. XU60, MK3"
+                    placeholder={t("generationPlaceholder")}
                     value={editForm.generation}
                     onChange={(e) =>
                       setEditForm({ ...editForm, generation: e.target.value })
@@ -413,7 +438,7 @@ export default function VehicleModelsPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">Year from</label>
+                  <label className="text-sm font-medium">{t("yearFrom")}</label>
                   <Input
                     type="number"
                     min="1900"
@@ -427,7 +452,7 @@ export default function VehicleModelsPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">Year to</label>
+                  <label className="text-sm font-medium">{t("yearTo")}</label>
                   <Input
                     type="number"
                     min="1900"
@@ -441,9 +466,9 @@ export default function VehicleModelsPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">Engine</label>
+                  <label className="text-sm font-medium">{t("engine")}</label>
                   <Input
-                    placeholder="e.g. 2.0L Turbo, 2.5L Hybrid"
+                    placeholder={t("enginePlaceholder")}
                     value={editForm.engine}
                     onChange={(e) =>
                       setEditForm({ ...editForm, engine: e.target.value })
@@ -452,7 +477,7 @@ export default function VehicleModelsPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">Body type</label>
+                  <label className="text-sm font-medium">{t("bodyType")}</label>
                   <select
                     value={editForm.body_type}
                     onChange={(e) =>
@@ -460,7 +485,7 @@ export default function VehicleModelsPage() {
                     }
                     className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <option value="">Select body type</option>
+                    <option value="">{t("selectBodyType")}</option>
                     {bodyTypeOptions.map((bt) => (
                       <option key={bt} value={bt}>
                         {bt.charAt(0).toUpperCase() + bt.slice(1)}
@@ -480,10 +505,10 @@ export default function VehicleModelsPage() {
                 size="lg"
               >
                 {saving
-                  ? "Saving..."
+                  ? t("saving")
                   : editingId
-                    ? "Save Changes"
-                    : "Save Model"}
+                    ? t("saveChanges")
+                    : t("saveModel")}
               </Button>
               <Button
                 variant="outline"
@@ -523,8 +548,8 @@ export default function VehicleModelsPage() {
             <div className="flex flex-col items-center gap-4 py-12">
               <p className="text-muted-foreground">
                 {search
-                  ? "No models match your search"
-                  : "No vehicle models yet"}
+                  ? t("noModelsMatch")
+                  : t("noModels")}
               </p>
               {!search && (
                 <Button
@@ -535,7 +560,7 @@ export default function VehicleModelsPage() {
                     resetForm();
                   }}
                 >
-                  <Plus className="size-4" /> Add your first model
+                  <Plus className="size-4" /> {t("addFirstModel")}
                 </Button>
               )}
             </div>
@@ -565,10 +590,8 @@ export default function VehicleModelsPage() {
                         {makeGroup.make}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {makeGroup.models.length} model
-                        {makeGroup.models.length !== 1 ? "s" : ""} ·{" "}
-                        {variantCount} variant
-                        {variantCount !== 1 ? "s" : ""}
+                        {t("modelCount", { count: makeGroup.models.length })} ·{" "}
+                        {t("variantCount", { count: variantCount })}
                       </span>
                     </button>
 
@@ -603,10 +626,7 @@ export default function VehicleModelsPage() {
                                   {modelGroup.model}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                  {modelGroup.variants.length} variant
-                                  {modelGroup.variants.length !== 1
-                                    ? "s"
-                                    : ""}
+                                  {t("variantCount", { count: modelGroup.variants.length })}
                                 </span>
                               </button>
 
@@ -628,7 +648,7 @@ export default function VehicleModelsPage() {
                                             </>
                                           ) : (
                                             <span className="italic text-muted-foreground/60">
-                                              Base variant
+                                              {t("baseVariant")}
                                             </span>
                                           )}
                                         </p>
@@ -647,7 +667,7 @@ export default function VehicleModelsPage() {
                                           size="icon"
                                           onClick={() => handleDelete(v.id)}
                                           className="h-8 w-8"
-                                          aria-label="Delete variant"
+                                          aria-label={t("deleteVariant")}
                                         >
                                           <X className="size-3.5" />
                                         </Button>

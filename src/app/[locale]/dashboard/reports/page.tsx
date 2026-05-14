@@ -17,6 +17,8 @@ import {
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -559,10 +561,28 @@ export default function ReportsPage() {
 
           {/* EOD Mechanic Breakdown Table */}
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-semibold">
                 Per-Mechanic Breakdown
               </CardTitle>
+              <ExportButton
+                data={eodReport.mechanics.map((m) => ({
+                  ...m,
+                  avg_per_wo: m.work_orders_completed > 0
+                    ? Math.round(m.total_revenue / m.work_orders_completed)
+                    : 0,
+                }))}
+                columns={[
+                  { key: "mechanic_name", label: "Mechanic" },
+                  { key: "work_orders_completed", label: "Jobs" },
+                  { key: "services_performed", label: "Services" },
+                  { key: "parts_used", label: "Parts" },
+                  { key: "total_revenue", label: "Revenue", format: "currency" },
+                  { key: "avg_per_wo", label: "Avg/WO", format: "currency" },
+                ]}
+                filename={`eod-breakdown-${date}.xlsx`}
+                sheetName="EOD Breakdown"
+              />
             </CardHeader>
             <CardContent className="overflow-x-auto p-0">
               <table className="w-full text-sm">

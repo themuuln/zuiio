@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Search, X } from "lucide-react";
-import { type ComponentProps, useCallback, useRef, useState } from "react";
+import { type ComponentProps, useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface SearchInputProps extends Omit<ComponentProps<"input">, "onChange"> {
@@ -10,22 +10,26 @@ interface SearchInputProps extends Omit<ComponentProps<"input">, "onChange"> {
   placeholder?: string;
   debounceMs?: number;
   className?: string;
+  value?: string;
 }
 
-/**
- * Large, prominent search input optimized for tablet use.
- * Supports debounced or on-submit search with loading state.
- */
 export function SearchInput({
   onSearch = () => {},
   loading = false,
   placeholder = "Search...",
   debounceMs,
   className,
+  value: externalValue,
   ...inputProps
 }: SearchInputProps) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(externalValue ?? "");
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    if (externalValue !== undefined) {
+      setValue(externalValue);
+    }
+  }, [externalValue]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

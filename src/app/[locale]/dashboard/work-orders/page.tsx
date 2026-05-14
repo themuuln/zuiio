@@ -3,6 +3,8 @@
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
 import { toast } from "sonner";
 import { FilterChips, type FilterChip } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -20,6 +22,15 @@ interface WorkOrder {
   vehicle: { plate_number: string } | null;
   grand_total?: number;
 }
+
+const exportColumns: ExportColumn<WorkOrder>[] = [
+  { key: "id", label: "WO #", value: (wo) => wo.id.slice(0, 8) },
+  { key: "customer", label: "Customer", value: (wo) => `${wo.customer?.first_name ?? ""} ${wo.customer?.last_name ?? ""}`.trim() || "—" },
+  { key: "vehicle", label: "Vehicle", value: (wo) => wo.vehicle?.plate_number ?? "—" },
+  { key: "status", label: "Status" },
+  { key: "created_at", label: "Date", format: "date" },
+  { key: "grand_total", label: "Grand Total", format: "currency" },
+];
 
 const STATUS_COLORS: Record<string, string> = {
   New: "bg-blue-500",
@@ -44,17 +55,18 @@ function translateStatus(t: (key: string) => string, key: string): string {
   return nameKey ? t(`workOrders.${nameKey}`) : key;
 }
 
+const STATUS_KEYS = [
+  "",
+  "New",
+  "Diagnosing",
+  "In Progress",
+  "Ready for Pickup",
+  "Completed",
+  "Cancelled",
+] as const;
+
 export default function WorkOrdersPage() {
   const t = useTranslations();
-  const STATUS_KEYS = [
-    "",
-    "New",
-    "Diagnosing",
-    "In Progress",
-    "Ready for Pickup",
-    "Completed",
-    "Cancelled",
-  ] as const;
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +103,7 @@ export default function WorkOrdersPage() {
       })
       .catch(() => setError("Failed to load work orders"))
       .finally(() => setLoading(false));
-  }, [orgId, statusIdx, STATUS_KEYS[statusIdx], search]);
+  }, [orgId, statusIdx, search]);
 
   const handleSearch = useCallback((value: string) => {
     setSearch(value);
@@ -138,11 +150,19 @@ export default function WorkOrdersPage() {
           </span>
         }
         actions={
-          <Link href="/dashboard/work-orders/new">
-            <Button size="lg" className="h-12">
-              <Plus className="size-5" /> {t("workOrders.newWorkOrder")}
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <ExportButton
+              data={orders}
+              columns={exportColumns}
+              filename={`work-orders-${new Date().toISOString().split("T")[0]}.xlsx`}
+              sheetName="Work Orders"
+            />
+            <Link href="/dashboard/work-orders/new">
+              <Button size="lg" className="h-12">
+                <Plus className="size-5" /> {t("workOrders.newWorkOrder")}
+              </Button>
+            </Link>
+          </div>
         }
       />
 

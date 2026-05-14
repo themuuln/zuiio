@@ -1,9 +1,12 @@
 "use client";
 
 import { ArrowLeft, FileText, Plus, Trash2, AlertTriangle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { StatusBadge } from "@/components/status-badge";
@@ -13,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "@/lib/i18n/navigation";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
+import type { WorkOrderService, WorkOrderPart } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
 
 const STATUSES = [
@@ -36,6 +40,7 @@ export default function WorkOrderDetailPage() {
   const params = useParams();
   const router = useRouter();
   const woId = params.id as string;
+  const t = useTranslations("workOrderDetail");
 
   const [wo, setWo] = useState<WorkOrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,6 +66,27 @@ export default function WorkOrderDetailPage() {
   const [mechanics, setMechanics] = useState<
     { id: string; full_name: string }[]
   >([]);
+
+  const serviceExportColumns: ExportColumn<WorkOrderService>[] = useMemo(
+    () => [
+      { key: "service_name", label: "Service" },
+      { key: "quantity", label: "Qty" },
+      { key: "unit_price", label: "Unit Price", format: "currency" },
+      { key: "discount_amount", label: "Discount", format: "currency" },
+      { key: "final_price", label: "Final Price", format: "currency" },
+    ],
+    [],
+  );
+
+  const partExportColumns: ExportColumn<WorkOrderPart>[] = useMemo(
+    () => [
+      { key: "part_name", label: "Part" },
+      { key: "quantity", label: "Qty" },
+      { key: "unit_price", label: "Unit Price", format: "currency" },
+      { key: "final_price", label: "Final Price", format: "currency" },
+    ],
+    [],
+  );
 
   useEffect(() => {
     fetch("/api/organizations")
@@ -323,7 +349,7 @@ export default function WorkOrderDetailPage() {
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <p className="text-muted-foreground">
-              {error ?? "Work order not found"}
+              {error ?? t("workOrderNotFound")}
             </p>
             <Button onClick={fetchWo} variant="outline">
               Retry
@@ -391,7 +417,7 @@ export default function WorkOrderDetailPage() {
       {/* Status Change */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Status</CardTitle>
+          <CardTitle className="text-base">{t("status")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
@@ -420,17 +446,17 @@ export default function WorkOrderDetailPage() {
                 <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-500" />
                 <div>
                   <p className="font-medium text-sm">
-                    Change status to <strong>{confirmStatus}</strong>?
+                    {t("changeStatusTo", { status: confirmStatus })}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {confirmStatus === "Completed"
-                      ? "This will mark the work order as complete and calculate final totals."
-                      : "This will cancel the work order. This action cannot be undone."}
+                      ? t("markComplete")
+                      : t("markCancelled")}
                   </p>
                 </div>
               </div>
               <Input
-                placeholder="Add notes about this status change (optional)"
+                placeholder={t("addNotesOptional")}
                 value={statusNotes}
                 onChange={(e) => setStatusNotes(e.target.value)}
                 className="h-11"
@@ -450,7 +476,7 @@ export default function WorkOrderDetailPage() {
                   disabled={saving}
                   onClick={() => changeStatus(confirmStatus)}
                 >
-                  {saving ? "Updating..." : `Confirm ${confirmStatus}`}
+                  {saving ? t("updating") : t("confirm", { status: confirmStatus })}
                 </Button>
               </div>
             </div>
@@ -461,7 +487,7 @@ export default function WorkOrderDetailPage() {
       {/* Customer & Vehicle Info */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Customer & Vehicle</CardTitle>
+          <CardTitle className="text-base">{t("customerAndVehicle")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {wo.customer && (
@@ -490,7 +516,7 @@ export default function WorkOrderDetailPage() {
           )}
           {!wo.customer && !wo.vehicle && (
             <p className="text-sm text-muted-foreground">
-              No customer or vehicle assigned.
+              {t("noCustomerOrVehicle")}
             </p>
           )}
         </CardContent>
@@ -499,7 +525,7 @@ export default function WorkOrderDetailPage() {
       {/* Mechanic Assignment */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Mechanic</CardTitle>
+          <CardTitle className="text-base">{t("mechanic")}</CardTitle>
         </CardHeader>
         <CardContent>
           <MechanicSelect
@@ -514,14 +540,23 @@ export default function WorkOrderDetailPage() {
       {/* Services */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Services</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowAddService(!showAddService)}
-          >
-            <Plus className="size-4" /> Add
-          </Button>
+          <CardTitle className="text-base">{t("services")}</CardTitle>
+          <div className="flex items-center gap-2">
+            <ExportButton
+              data={wo.services ?? []}
+              columns={serviceExportColumns}
+              filename={`wo-${woId.slice(0, 8)}-services.xlsx`}
+              sheetName="Services"
+              label="Export Services"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAddService(!showAddService)}
+            >
+              <Plus className="size-4" /> {t("add")}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {showAddService && (
@@ -563,7 +598,7 @@ export default function WorkOrderDetailPage() {
           )}
           {(wo.services ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">
-              No services added.
+              {t("noServicesAdded")}
             </p>
           ) : (
             (wo.services ?? []).map((s) => (
@@ -605,21 +640,30 @@ export default function WorkOrderDetailPage() {
       {/* Parts */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Parts</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowAddPart(!showAddPart)}
-          >
-            <Plus className="size-4" /> Add
-          </Button>
+          <CardTitle className="text-base">{t("parts")}</CardTitle>
+          <div className="flex items-center gap-2">
+            <ExportButton
+              data={wo.parts ?? []}
+              columns={partExportColumns}
+              filename={`wo-${woId.slice(0, 8)}-parts.xlsx`}
+              sheetName="Parts"
+              label="Export Parts"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAddPart(!showAddPart)}
+            >
+              <Plus className="size-4" /> {t("add")}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {showAddPart && (
             <div className="flex items-end gap-2 mb-2 flex-wrap">
               <div className="flex-1 min-w-[160px]">
                 <Input
-                  placeholder="Part name"
+                  placeholder={t("partName")}
                   value={newPart.part_name}
                   onChange={(e) =>
                     setNewPart((p) => ({ ...p, part_name: e.target.value }))
@@ -630,7 +674,7 @@ export default function WorkOrderDetailPage() {
               <div className="w-20">
                 <Input
                   type="number"
-                  placeholder="Qty"
+                  placeholder={t("qty")}
                   value={newPart.quantity}
                   onChange={(e) =>
                     setNewPart((p) => ({
@@ -644,7 +688,7 @@ export default function WorkOrderDetailPage() {
               <div className="w-28">
                 <Input
                   type="number"
-                  placeholder="Price"
+                  placeholder={t("unitPrice")}
                   value={newPart.unit_price || ""}
                   onChange={(e) =>
                     setNewPart((p) => ({
@@ -660,13 +704,13 @@ export default function WorkOrderDetailPage() {
                 onClick={addPartLine}
                 disabled={!newPart.part_name.trim()}
               >
-                Add
+                {t("add")}
               </Button>
             </div>
           )}
           {(wo.parts ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">
-              No parts added.
+              {t("noPartsAdded")}
             </p>
           ) : (
             (wo.parts ?? []).map((p) => (
@@ -709,7 +753,7 @@ export default function WorkOrderDetailPage() {
                 <AlertTriangle className="mt-0.5 size-5 shrink-0 text-destructive" />
                 <div>
                   <p className="font-medium text-sm">
-                    Remove {deleteConfirm.type === 'service' ? 'service' : 'part'}?
+                    {t("removeConfirm", { item: deleteConfirm.type })}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     <strong>{deleteConfirm.name}</strong> will be removed from this work order.
@@ -723,7 +767,7 @@ export default function WorkOrderDetailPage() {
                   size="sm"
                   onClick={() => setDeleteConfirm(null)}
                 >
-                  Keep
+                  {t("keep")}
                 </Button>
                 <Button
                   variant="destructive"
@@ -739,7 +783,7 @@ export default function WorkOrderDetailPage() {
                     setDeleteConfirm(null);
                   }}
                 >
-                  Remove
+                  {t("remove")}
                 </Button>
               </div>
             </div>
@@ -751,7 +795,7 @@ export default function WorkOrderDetailPage() {
       {wo.status_history && wo.status_history.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Status History</CardTitle>
+            <CardTitle className="text-base">{t("statusHistory")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-2">
@@ -794,11 +838,11 @@ export default function WorkOrderDetailPage() {
               <div className="flex items-start gap-3">
                 <FileText className="mt-0.5 size-5 shrink-0 text-green-600" />
                 <div>
-                  <p className="font-medium text-sm">Invoice Ready</p>
+                  <p className="font-medium text-sm">{t("invoiceReady")}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {existingInvoiceId
-                      ? "An invoice has been created for this work order."
-                      : "Generate an invoice to send to the customer."}
+                      ? t("invoiceReadyDesc")
+                      : t("generateInvoiceDesc")}
                   </p>
                 </div>
               </div>
@@ -810,10 +854,10 @@ export default function WorkOrderDetailPage() {
               >
                 <FileText className="size-4" />
                 {creatingInvoice
-                  ? "Generating..."
+                  ? t("generating")
                   : existingInvoiceId
-                    ? "View Invoice"
-                    : "Generate Invoice"}
+                    ? t("viewInvoice")
+                    : t("generateInvoice")}
               </Button>
             </div>
           </CardContent>
@@ -823,18 +867,18 @@ export default function WorkOrderDetailPage() {
       {/* Totals */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Totals</CardTitle>
+          <CardTitle className="text-base">{t("totals")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Services</span>
+              <span className="text-muted-foreground">{t("services")}</span>
               <span className="font-medium tabular-nums">
                 {formatMNT(servicesTotal)}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Parts</span>
+              <span className="text-muted-foreground">{t("parts")}</span>
               <span className="font-medium tabular-nums">
                 {formatMNT(partsTotal)}
               </span>
@@ -849,7 +893,7 @@ export default function WorkOrderDetailPage() {
             )}
             <hr className="border-border" />
             <div className="flex justify-between text-lg font-bold">
-              <span>Grand Total</span>
+              <span>{t("grandTotal")}</span>
               <span className="tabular-nums">
                 {formatMNT(Number(wo.total))}
               </span>

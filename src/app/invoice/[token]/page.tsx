@@ -9,11 +9,13 @@ import {
   XCircle,
 } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { InvoiceWithItems } from "@/lib/database.types";
+import type { InvoiceItem, InvoicePayment, InvoiceWithItems } from "@/lib/database.types";
 import { cn, formatCurrency } from "@/lib/utils";
 
 // ── Invoice status badge ─────────────────────────────────
@@ -210,6 +212,28 @@ export default function PublicInvoicePage() {
 
   const items = invoice.items ?? [];
   const payments = invoice.payments ?? [];
+
+  const invoiceItemColumns: ExportColumn<InvoiceItem>[] = useMemo(
+    () => [
+      { key: "item_type", label: "Type" },
+      { key: "description", label: "Description" },
+      { key: "quantity", label: "Qty" },
+      { key: "unit_price", label: "Unit Price", format: "currency" },
+      { key: "discount_amount", label: "Discount", format: "currency" },
+      { key: "total_price", label: "Total", format: "currency" },
+    ],
+    [],
+  );
+
+  const paymentColumns: ExportColumn<InvoicePayment>[] = useMemo(
+    () => [
+      { key: "paid_at", label: "Date", format: "date" },
+      { key: "method", label: "Method" },
+      { key: "reference", label: "Reference" },
+      { key: "amount", label: "Amount", format: "currency" },
+    ],
+    [],
+  );
   const servicesTotal = items
     .filter((i) => i.item_type === "service")
     .reduce((sum, i) => sum + Number(i.total_price), 0);
@@ -229,6 +253,22 @@ export default function PublicInvoicePage() {
             <span className="text-sm font-semibold">TOLOM</span>
           </div>
           <div className="flex items-center gap-2">
+            <ExportButton
+              data={items}
+              columns={invoiceItemColumns}
+              filename={`invoice-${invoice.invoice_number}-items.xlsx`}
+              sheetName="Line Items"
+              label="Items"
+            />
+            {payments.length > 0 && (
+              <ExportButton
+                data={payments}
+                columns={paymentColumns}
+                filename={`invoice-${invoice.invoice_number}-payments.xlsx`}
+                sheetName="Payments"
+                label="Payments"
+              />
+            )}
             <Button variant="outline" size="sm" onClick={handlePrint}>
               <Printer className="size-4" />
               <span className="hidden sm:inline ml-1">Print</span>
@@ -237,7 +277,6 @@ export default function PublicInvoicePage() {
               variant="outline"
               size="sm"
               onClick={() => {
-                /* Future: PDF download */
                 handlePrint();
               }}
             >

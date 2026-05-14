@@ -2,8 +2,10 @@
 
 import { Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
@@ -41,6 +43,15 @@ export default function ServicesPage() {
   });
   const [saving, setSaving] = useState(false);
   const [orgId, setOrgId] = useState<string | null>(null);
+
+  const exportColumns: ExportColumn<ServiceItem>[] = useMemo(
+    () => [
+      { key: "name", label: "Name" },
+      { key: "category", label: "Category" },
+      { key: "default_price", label: "Price", format: "currency" },
+    ],
+    [],
+  );
 
   useEffect(() => {
     fetch("/api/organizations")
@@ -152,13 +163,21 @@ export default function ServicesPage() {
           </span>
         }
         actions={
-          <Button
-            size="lg"
-            className="h-12"
-            onClick={() => setShowAdd(!showAdd)}
-          >
-            <Plus className="size-5" /> {showAdd ? "Cancel" : "Add Service"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <ExportButton
+              data={filtered}
+              columns={exportColumns}
+              filename={`services-${new Date().toISOString().split("T")[0]}.xlsx`}
+              sheetName="Services"
+            />
+            <Button
+              size="lg"
+              className="h-12"
+              onClick={() => setShowAdd(!showAdd)}
+            >
+              <Plus className="size-5" /> {showAdd ? "Cancel" : "Add Service"}
+            </Button>
+          </div>
         }
       />
 

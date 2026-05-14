@@ -15,9 +15,11 @@ import {
   Truck,
   X,
 } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
@@ -137,12 +139,14 @@ const PO_STATUS_LABELS: Record<string, string> = {
   cancelled: "Cancelled",
 };
 
-const TABS: { key: Tab; label: string; icon: typeof Package }[] = [
-  { key: "parts", label: "Parts & Stock", icon: Package },
-  { key: "movements", label: "Movements", icon: ClipboardList },
-  { key: "suppliers", label: "Suppliers", icon: Building2 },
-  { key: "purchase-orders", label: "Purchase Orders", icon: Truck },
-];
+function getTabs(t: (key: string) => string): { key: Tab; label: string; icon: typeof Package }[] {
+  return [
+    { key: "parts", label: t("tabParts"), icon: Package },
+    { key: "movements", label: t("tabMovements"), icon: ClipboardList },
+    { key: "suppliers", label: t("tabSuppliers"), icon: Building2 },
+    { key: "purchase-orders", label: t("tabPurchaseOrders"), icon: Truck },
+  ];
+}
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -258,6 +262,7 @@ function SortKeyHeader({
 
 export default function InventoryPage() {
   const locale = useLocale();
+  const t = useTranslations("inventory");
   const [orgId, setOrgId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("parts");
   const [loading, setLoading] = useState(true);
@@ -702,6 +707,43 @@ export default function InventoryPage() {
     }
   }
 
+  const partExportColumns: ExportColumn<Part & { quantity_on_hand?: number; stock_status?: string }>[] = useMemo(
+    () => [
+      { key: "name", label: "Name", value: (p) => locale === "mn" && p.name_mn ? p.name_mn : p.name },
+      { key: "part_number", label: "Part #" },
+      { key: "category", label: "Category" },
+      { key: "default_price", label: "Price", format: "currency" },
+      { key: "quantity_on_hand", label: "On Hand" },
+      { key: "stock_status", label: "Status" },
+    ],
+    [locale],
+  );
+
+  const movementExportColumns: ExportColumn<Movement>[] = [
+    { key: "created_at", label: "Date", format: "date" },
+    { key: "movement_type", label: "Type" },
+    { key: "part_name", label: "Part" },
+    { key: "quantity", label: "Qty" },
+    { key: "unit_cost", label: "Unit Cost", format: "currency" },
+    { key: "reference_type", label: "Ref" },
+    { key: "notes", label: "Notes" },
+  ];
+
+  const supplierExportColumns: ExportColumn<Supplier>[] = [
+    { key: "name", label: "Name" },
+    { key: "contact_person", label: "Contact" },
+    { key: "phone", label: "Phone" },
+    { key: "email", label: "Email" },
+  ];
+
+  const poExportColumns: ExportColumn<PurchaseOrder>[] = [
+    { key: "order_number", label: "PO #" },
+    { key: "supplier", label: "Supplier", value: (po) => po.supplier?.name ?? "—" },
+    { key: "status", label: "Status" },
+    { key: "total_amount", label: "Total", format: "currency" },
+    { key: "created_at", label: "Date", format: "date" },
+  ];
+
   // ── Build balance map ──────────────────────────────────────
   const balanceMap = new Map<string, Balance>();
   for (const b of balances) {
@@ -778,7 +820,7 @@ export default function InventoryPage() {
   if (error && !orgId) {
     return (
       <div className="flex flex-col gap-6">
-        <h1 className="text-2xl font-bold tracking-tight">Inventory</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <p className="text-muted-foreground">{error}</p>
@@ -792,29 +834,29 @@ export default function InventoryPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Inventory</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground">
-          Manage parts, stock, suppliers, and purchase orders
+          {t("subtitleParts")}
         </p>
       </div>
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-2">
-        {TABS.map((t) => {
-          const Icon = t.icon;
+        {getTabs(t).map((tabItem) => {
+          const Icon = tabItem.icon;
           return (
             <button
-              key={t.key}
+              key={tabItem.key}
               type="button"
-              onClick={() => handleTabChange(t.key)}
+              onClick={() => handleTabChange(tabItem.key)}
               className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-colors min-h-[48px] ${
-                tab === t.key
+                tab === tabItem.key
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-background border-border text-muted-foreground hover:bg-muted"
               }`}
             >
               <Icon className="size-4" />
-              {t.label}
+              {tabItem.label}
             </button>
           );
         })}
@@ -825,22 +867,34 @@ export default function InventoryPage() {
         <div className="flex flex-col gap-4">
           <ListToolbar
             search={{
-              placeholder: "Search parts by name, #, or category...",
+              placeholder: t("searchParts"),
               value: search,
               onChange: setSearch,
             }}
             stats={<span>{sortedParts.length} parts</span>}
             actions={
-              <>
+              <div className="flex items-center gap-2">
+                <ExportButton
+                  data={sortedParts.map((p) => {
+                    const bal = balanceMap.get(p.id);
+                    const qty = bal?.quantity_on_hand ?? 0;
+                    const min = thresholds[p.id] ?? 5;
+                    const status = qty <= 0 ? "Out of Stock" : qty < min ? "Low Stock" : "In Stock";
+                    return { ...p, quantity_on_hand: qty, stock_status: status };
+                  })}
+                  columns={partExportColumns}
+                  filename={`inventory-parts-${new Date().toISOString().split("T")[0]}.xlsx`}
+                  sheetName="Parts"
+                />
                 <Button size="lg" onClick={() => setShowAddMovement(true)}>
                   <ClipboardList className="size-4" />
-                  Record Movement
+{t("recordMovement")}
                 </Button>
                 <Button size="lg" onClick={() => setShowAddPart(true)}>
                   <Plus className="size-4" />
                   Add Part
                 </Button>
-              </>
+              </div>
             }
           />
 
@@ -850,9 +904,9 @@ export default function InventoryPage() {
             <Card>
               <CardContent className="flex flex-col items-center gap-3 py-16">
                 <Package className="size-12 text-muted-foreground/40" />
-                <p className="text-muted-foreground">No parts in catalog</p>
+                <p className="text-muted-foreground">{t("noParts")}</p>
                 <Button variant="outline" onClick={() => setShowAddPart(true)}>
-                  Add your first part
+                  {t("addFirstPart")}
                 </Button>
               </CardContent>
             </Card>
@@ -988,10 +1042,10 @@ export default function InventoryPage() {
                                 <AlertTriangle className="size-3" />
                               )}
                               {status === "out"
-                                ? "Out"
+                                ? t("outOfStock")
                                 : status === "low"
-                                  ? "Low"
-                                  : "In Stock"}
+                                  ? t("lowStock")
+                                  : t("inStock")}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -1045,12 +1099,20 @@ export default function InventoryPage() {
         <div className="flex flex-col gap-4">
           <ListToolbar
             search={{
-              placeholder: "Search movements by part name...",
+              placeholder: t("searchMovements"),
               value: search,
               onChange: setSearch,
             }}
             filters={<FilterChips items={movementChips} />}
             stats={<span>{movements.length} movements</span>}
+            actions={
+              <ExportButton
+                data={movements}
+                columns={movementExportColumns}
+                filename={`inventory-movements-${new Date().toISOString().split("T")[0]}.xlsx`}
+                sheetName="Movements"
+              />
+            }
           />
 
           {loading ? (
@@ -1059,7 +1121,7 @@ export default function InventoryPage() {
             <Card>
               <CardContent className="flex flex-col items-center gap-3 py-16">
                 <ClipboardList className="size-12 text-muted-foreground/40" />
-                <p className="text-muted-foreground">No movements recorded</p>
+                <p className="text-muted-foreground">{t("noMovements")}</p>
               </CardContent>
             </Card>
           ) : (
@@ -1135,22 +1197,30 @@ export default function InventoryPage() {
         <div className="flex flex-col gap-4">
           <ListToolbar
             search={{
-              placeholder: "Search suppliers by name, contact, or phone...",
+              placeholder: t("searchSuppliers"),
               value: search,
               onChange: setSearch,
             }}
             stats={<span>{filteredSuppliers.length} suppliers</span>}
             actions={
-              <Button
-                size="lg"
-                onClick={() => {
-                  setShowAddSupplier(true);
-                  setEditingSupplier(null);
-                }}
-              >
-                <Plus className="size-4" />
-                Add Supplier
-              </Button>
+              <div className="flex items-center gap-2">
+                <ExportButton
+                  data={suppliers.filter((s) => s.is_active)}
+                  columns={supplierExportColumns}
+                  filename={`inventory-suppliers-${new Date().toISOString().split("T")[0]}.xlsx`}
+                  sheetName="Suppliers"
+                />
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    setShowAddSupplier(true);
+                    setEditingSupplier(null);
+                  }}
+                >
+                  <Plus className="size-4" />
+                  {t("addSupplier")}
+                </Button>
+              </div>
             }
           />
 
@@ -1160,7 +1230,7 @@ export default function InventoryPage() {
             <Card>
               <CardContent className="flex flex-col items-center gap-3 py-16">
                 <Building2 className="size-12 text-muted-foreground/40" />
-                <p className="text-muted-foreground">No suppliers</p>
+                <p className="text-muted-foreground">{t("noSuppliers")}</p>
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -1168,7 +1238,7 @@ export default function InventoryPage() {
                     setEditingSupplier(null);
                   }}
                 >
-                  Add your first supplier
+                  {t("addFirstSupplier")}
                 </Button>
               </CardContent>
             </Card>
@@ -1247,16 +1317,24 @@ export default function InventoryPage() {
         <div className="flex flex-col gap-4">
           <ListToolbar
             search={{
-              placeholder: "Search POs by order #, supplier, or status...",
+              placeholder: t("searchPOs"),
               value: search,
               onChange: setSearch,
             }}
             stats={<span>{filteredPOs.length} orders</span>}
             actions={
-              <Button size="lg" onClick={() => setShowAddPO(true)}>
-                <Plus className="size-4" />
-                Create PO
-              </Button>
+              <div className="flex items-center gap-2">
+                <ExportButton
+                  data={purchaseOrders}
+                  columns={poExportColumns}
+                  filename={`inventory-pos-${new Date().toISOString().split("T")[0]}.xlsx`}
+                  sheetName="Purchase Orders"
+                />
+                <Button size="lg" onClick={() => setShowAddPO(true)}>
+                  <Plus className="size-4" />
+                  Create PO
+                </Button>
+              </div>
             }
           />
 
@@ -1266,7 +1344,7 @@ export default function InventoryPage() {
             <Card>
               <CardContent className="flex flex-col items-center gap-3 py-16">
                 <Truck className="size-12 text-muted-foreground/40" />
-                <p className="text-muted-foreground">No purchase orders</p>
+                <p className="text-muted-foreground">{t("noPurchaseOrders")}</p>
                 <Button variant="outline" onClick={() => setShowAddPO(true)}>
                   Create your first PO
                 </Button>
@@ -1284,7 +1362,7 @@ export default function InventoryPage() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium">{po.order_number}</p>
                       <p className="text-sm text-muted-foreground">
-                        {po.supplier?.name ?? "No supplier"}
+                        {po.supplier?.name ?? t("noSupplier")}
                       </p>
                     </div>
                     <span
@@ -1378,7 +1456,7 @@ export default function InventoryPage() {
 
       {/* Add Part Modal */}
       {showAddPart && (
-        <Modal title="Add Part" onClose={() => setShowAddPart(false)}>
+        <Modal title={t("addPart")} onClose={() => setShowAddPart(false)}>
           <form onSubmit={handleAddPart} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Name *</label>
@@ -1532,7 +1610,7 @@ export default function InventoryPage() {
       {/* Add/Edit Supplier Modal */}
       {showAddSupplier && (
         <Modal
-          title={editingSupplier ? "Edit Supplier" : "Add Supplier"}
+          title={editingSupplier ? "Edit Supplier" : t("addSupplier")}
           onClose={() => {
             setShowAddSupplier(false);
             setEditingSupplier(null);

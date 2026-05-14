@@ -15,6 +15,8 @@ import {
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ExportButton } from "@/components/export-button";
+import type { ExportColumn } from "@/lib/export";
 import { ListToolbar } from "@/components/list-toolbar";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -22,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DashboardData } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 type Period = "today" | "week" | "month" | "all";
 type Tab = "overview" | "transactions" | "invoices";
@@ -341,27 +344,16 @@ function InvoicesTab({
     toast.success("Link copied to clipboard");
   };
 
-  const handleExportCsv = () => {
-    const headers = ["Invoice #","Customer","Vehicle","Status","Total","Paid","Balance","Date"];
-    const rows = invoices.map((inv) => [
-      inv.invoice_number,
-      inv.customer_name ?? "",
-      inv.vehicle_plate ?? "",
-      inv.status,
-      inv.total,
-      inv.amount_paid,
-      inv.balance_due,
-      new Date(inv.issued_at).toLocaleDateString(),
-    ]);
-    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `invoices-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const invoiceExportColumns: ExportColumn<InvoiceListItem>[] = [
+    { key: "invoice_number", label: "Invoice #" },
+    { key: "customer_name", label: "Customer" },
+    { key: "vehicle_plate", label: "Vehicle" },
+    { key: "status", label: "Status" },
+    { key: "total", label: "Total", format: "currency" },
+    { key: "amount_paid", label: "Paid", format: "currency" },
+    { key: "balance_due", label: "Balance", format: "currency" },
+    { key: "issued_at", label: "Date", format: "date" },
+  ];
 
   const isLoading = loading && !stats;
 
@@ -416,10 +408,12 @@ function InvoicesTab({
           ))}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleExportCsv}>
-            <Download className="size-3.5" />
-            Export CSV
-          </Button>
+          <ExportButton
+            data={invoices}
+            columns={invoiceExportColumns}
+            filename={`invoices-${new Date().toISOString().split("T")[0]}.xlsx`}
+            sheetName="Invoices"
+          />
         </div>
       </div>
 
@@ -525,46 +519,44 @@ function formatDate(iso: string) {
 
 export default function FinancePage() {
   const t = useTranslations();
-  const [orgId, setOrgId] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>("all");
   const [tab, setTab] = useState<Tab>("overview");
   const [search, setSearch] = useState("");
 
-  // ── Fetch org ID ─────────────────────────────────────
-  useEffect(() => {
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then((d) => {
-        const id = d?.organizationId ?? d?.data?.organizationId;
-        if (id) setOrgId(id);
-        else setError("No organization found");
-      })
-      .catch(() => setError("Failed to load profile"))
-      .finally(() => setLoading(false));
-  }, []);
+  const {
+    data: org,
+    isPending: orgLoading,
+    error: orgError,
+  } = useCurrentOrg();
+  const orgId = org?.orgId ?? null;
+  const loading = orgLoading || (!!orgId && dataLoading && !data);
+  const error = orgError
+    ? "Failed to load organization"
+    : !orgId && !orgLoading
+      ? "No organization found"
+      : fetchError;
 
-  // ── Fetch dashboard data ─────────────────────────────
   const fetchData = useCallback(
     async (oid: string, p: Period) => {
-      setLoading(true);
-      setError(null);
+      setDataLoading(true);
+      setFetchError(null);
       try {
         const res = await fetch(
           `/api/organizations/${oid}/reports?type=dashboard&period=${p}`,
         );
         const json = await res.json();
         if (json.error) {
-          setError(json.error.message);
+          setFetchError(json.error.message);
         } else {
           setData(json.data);
         }
       } catch {
         toast.error("Failed to load finance data");
       } finally {
-        setLoading(false);
+        setDataLoading(false);
       }
     },
     [],
@@ -574,13 +566,9 @@ export default function FinancePage() {
     if (orgId) fetchData(orgId, period);
   }, [orgId, period, fetchData]);
 
-  const handlePeriodChange = useCallback(
-    (p: Period) => {
-      setPeriod(p);
-      if (orgId) fetchData(orgId, p);
-    },
-    [orgId, fetchData],
-  );
+  const handlePeriodChange = useCallback((p: Period) => {
+    setPeriod(p);
+  }, []);
 
   // ── Derived summary ──────────────────────────────────
   const summary = data?.summary;
@@ -887,10 +875,31 @@ export default function FinancePage() {
                   </span>
                 }
                 actions={
-                  <Button variant="outline" size="lg">
-                    <Download className="size-4" />
-                    Export
-                  </Button>
+                  <ExportButton
+                    data={filteredWorkOrders}
+                    columns={[
+                      { key: "id", label: "WO #", value: (wo) => wo.id.slice(0, 8) },
+                      { key: "customer", label: "Customer", value: (wo) => {
+                        const c = wo.customer;
+                        return c ? `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() : "—";
+                      }},
+                      { key: "vehicle", label: "Vehicle", value: (wo) => wo.vehicle?.plate_number ?? "—" },
+                      { key: "status", label: "Status" },
+                      { key: "services", label: "Services", format: "currency", value: (wo) => {
+                        return wo.services.reduce((s, x) => s + Number(x.final_price), 0);
+                      }},
+                      { key: "parts", label: "Parts", format: "currency", value: (wo) => {
+                        return wo.parts.reduce((s, x) => s + Number(x.final_price), 0);
+                      }},
+                      { key: "grand_total", label: "Total", format: "currency", value: (wo) => {
+                        return wo.services.reduce((s, x) => s + Number(x.final_price), 0) +
+                               wo.parts.reduce((s, x) => s + Number(x.final_price), 0);
+                      }},
+                      { key: "created_at", label: "Date", format: "date" },
+                    ]}
+                    filename={`transactions-${new Date().toISOString().split("T")[0]}.xlsx`}
+                    sheetName="Transactions"
+                  />
                 }
               />
               <Card>
