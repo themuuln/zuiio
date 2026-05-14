@@ -7,6 +7,8 @@ import {
   Clock,
   DollarSign,
   Download,
+  Loader2,
+  Mail,
   Percent,
   TrendingUp,
   Users,
@@ -275,9 +277,11 @@ interface InvoiceListItem {
   balance_due: number;
   amount_paid: number;
   customer_name: string | null;
+  customer_email: string | null;
   customer_phone: string | null;
   vehicle_plate: string | null;
   public_token: string;
+  email_sent_at: string | null;
   issued_at: string;
   due_at: string | null;
 }
@@ -303,6 +307,7 @@ function InvoicesTab({
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("");
   const [search, setSearch] = useState("");
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   const fetchInvoices = useCallback(async (oid: string, statusFilter: string) => {
     setLoading(true);
@@ -325,6 +330,35 @@ function InvoicesTab({
   useEffect(() => {
     if (orgId) fetchInvoices(orgId, filter);
   }, [orgId, filter, fetchInvoices]);
+
+  const handleSendEmail = useCallback(
+    async (invoiceId: string, invoiceNumber: string) => {
+      if (!orgId) return;
+      setSendingId(invoiceId);
+      try {
+        const res = await fetch(
+          `/api/organizations/${orgId}/invoices/${invoiceId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "send_email" }),
+          },
+        );
+        const json = await res.json();
+        if (json.error) {
+          toast.error(json.error.message ?? "Failed to send email");
+        } else {
+          toast.success(`Invoice #${invoiceNumber} sent via email`);
+          if (orgId) fetchInvoices(orgId, filter);
+        }
+      } catch {
+        toast.error("Failed to send invoice email");
+      } finally {
+        setSendingId(null);
+      }
+    },
+    [orgId, fetchInvoices, filter],
+  );
 
   // Filter by search
   const filtered = useMemo(() => {
@@ -479,6 +513,15 @@ function InvoicesTab({
                       </td>
                       <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {inv.email_sent_at && (
+                            <span
+                              className="inline-flex items-center gap-1 rounded bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-600 dark:bg-green-950/20 dark:text-green-400"
+                              title={`Sent ${new Date(inv.email_sent_at).toLocaleDateString()}`}
+                            >
+                              <Mail className="size-3" />
+                              Sent
+                            </span>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -488,6 +531,26 @@ function InvoicesTab({
                             <ArrowUpRight className="size-3.5" />
                             Share
                           </Button>
+                          {!inv.email_sent_at && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSendEmail(inv.id, inv.invoice_number)}
+                              disabled={sendingId === inv.id}
+                              title={
+                                inv.customer_email
+                                  ? `Send invoice to ${inv.customer_email}`
+                                  : "No customer email on this invoice"
+                              }
+                            >
+                              {sendingId === inv.id ? (
+                                <Loader2 className="size-3.5 animate-spin" />
+                              ) : (
+                                <Mail className="size-3.5" />
+                              )}
+                              Email
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>

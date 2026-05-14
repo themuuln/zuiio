@@ -9,6 +9,7 @@ import type {
 } from "@/lib/database.types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import { sendInvoiceEmail } from "@/lib/services/email-service";
 
 // ── Generate the next invoice number for an org ───
 export async function generateInvoiceNumber(
@@ -429,6 +430,53 @@ export async function markInvoiceEmailed(
   revalidateTag(cacheTags.invoice(id), "max");
   revalidateTag(cacheTags.invoices(orgId), "max");
   return data;
+}
+
+export async function sendInvoiceAndMarkEmailed(
+  invoiceId: string,
+  orgId: string,
+): Promise<{ emailed: boolean }> {
+  const supabase = await createClient();
+
+  const invoice = await getInvoice(invoiceId);
+
+  if (!invoice.customer_email) {
+    throw new ValidationError(
+      "Invoice has no customer email address. Add an email to the customer first.",
+    );
+  }
+
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("name")
+    .eq("id", orgId)
+    .single();
+
+  const { data: branch } = await supabase
+    .from("branches")
+    .select("email")
+    .eq("organization_id", orgId)
+    .eq("is_main", true)
+    .maybeSingle();
+
+  const orgName = org?.name ?? "Your Mechanic Shop";
+  const bccEmail = branch?.email ?? undefined;
+
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const publicInvoiceUrl = `${siteUrl}/invoice/${invoice.public_token}`;
+
+  await sendInvoiceEmail({
+    invoice,
+    orgName,
+    recipientEmail: invoice.customer_email,
+    bccEmail,
+    publicInvoiceUrl,
+  });
+
+  await markInvoiceEmailed(invoiceId, orgId);
+
+  return { emailed: true };
 }
 
 // ── Record a payment against an invoice ───────────

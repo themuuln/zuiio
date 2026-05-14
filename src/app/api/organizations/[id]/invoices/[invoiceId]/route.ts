@@ -5,6 +5,7 @@ import {
   getInvoice,
   markInvoiceEmailed,
   recordPayment,
+  sendInvoiceAndMarkEmailed,
   updateInvoiceStatus,
 } from "@/lib/services/invoice-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
@@ -19,6 +20,11 @@ export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
   await requireActiveSubscription(orgId);
   const { invoiceId } = params;
   const body = await request.json();
+
+  if (body.action === "send_email") {
+    const result = await sendInvoiceAndMarkEmailed(invoiceId, orgId);
+    return NextResponse.json({ data: result });
+  }
 
   if (body.action === "mark_emailed") {
     const invoice = await markInvoiceEmailed(invoiceId, orgId);
