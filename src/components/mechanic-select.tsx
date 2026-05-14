@@ -1,7 +1,14 @@
 "use client";
 
 import { User } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxEmpty,
+} from "@/components/ui/combobox";
 
 interface Mechanic {
   id: string;
@@ -22,14 +29,22 @@ interface MechanicSelectProps {
   size?: "sm" | "default" | "lg";
 }
 
-const SIZE_STYLES = {
-  sm: "h-9 text-xs px-2 py-1",
-  default: "h-11 text-sm px-3 py-2",
-  lg: "h-12 text-base px-4 py-3",
+const SIZE_CLASSES = {
+  sm: "h-9 text-xs",
+  default: "h-11 text-sm",
+  lg: "h-12 text-base",
 };
 
 function getMechanicName(m: Mechanic): string {
   return m.full_name ?? m.fullName ?? m.email ?? "Unknown";
+}
+
+function getMechanicLabel(m: Mechanic, showJobCount?: boolean): string {
+  const name = getMechanicName(m);
+  if (showJobCount && m.current_jobs !== undefined && m.current_jobs > 0) {
+    return `${name} (${m.current_jobs} job${m.current_jobs !== 1 ? "s" : ""})`;
+  }
+  return name;
 }
 
 export function MechanicSelect({
@@ -42,34 +57,39 @@ export function MechanicSelect({
   className,
   size = "default",
 }: MechanicSelectProps) {
+  const selectedMechanic =
+    mechanics.find((m) => m.id === value) ?? null;
+
   return (
-    <div className={cn("relative", className)}>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+    <div className={className}>
+      <Combobox
+        items={mechanics}
+        value={selectedMechanic}
+        onValueChange={(mechanic) => {
+          onChange(mechanic?.id ?? "");
+        }}
+        isItemEqualToValue={(a, b) => a.id === b.id}
         disabled={disabled}
-        className={cn(
-          "w-full rounded-lg border border-input bg-background transition-colors",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-          "disabled:cursor-not-allowed disabled:opacity-50",
-          "appearance-none",
-          SIZE_STYLES[size],
-        )}
-        aria-label="Assign mechanic"
       >
-        <option value="">{placeholder}</option>
-        {mechanics.map((m) => (
-          <option key={m.id} value={m.id}>
-            {getMechanicName(m)}
-            {showJobCount && m.current_jobs !== undefined && m.current_jobs > 0
-              ? ` (${m.current_jobs} job${m.current_jobs !== 1 ? "s" : ""})`
-              : ""}
-          </option>
-        ))}
-      </select>
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-        <User className="size-4 text-muted-foreground/50" aria-hidden="true" />
-      </div>
+        <ComboboxInput
+          placeholder={placeholder}
+          disabled={disabled}
+          showTrigger
+          showClear={!!value}
+          className={SIZE_CLASSES[size]}
+        />
+        <ComboboxContent>
+          <ComboboxList>
+            {(mechanic: Mechanic) => (
+              <ComboboxItem key={mechanic.id} value={mechanic}>
+                <User className="size-4 shrink-0 text-muted-foreground" />
+                <span>{getMechanicLabel(mechanic, showJobCount)}</span>
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+          <ComboboxEmpty>No mechanics found</ComboboxEmpty>
+        </ComboboxContent>
+      </Combobox>
     </div>
   );
 }

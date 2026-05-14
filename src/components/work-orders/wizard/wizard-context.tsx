@@ -614,7 +614,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
             fetch(`/api/organizations/${id}/work-orders`).then((r) => r.json()),
           ]).then(([catJson, mechJson, priceJson, workOrdersJson]) => {
             if (catJson.data) setCatalog(catJson.data);
-            if (mechJson.data?.mechanics) {
+            const mechanicsList = mechJson.data;
+            if (Array.isArray(mechanicsList)) {
               const activeWorkOrders = (workOrdersJson.data ?? []).filter(
                 (wo: { status: string }) =>
                   [
@@ -625,13 +626,17 @@ export function WizardProvider({ children }: { children: ReactNode }) {
                   ].includes(wo.status),
               );
               setMechanics(
-                mechJson.data.mechanics.map((mechanic: MechanicOption) => ({
-                  ...mechanic,
-                  current_jobs: activeWorkOrders.filter(
-                    (wo: { mechanic_id: string | null }) =>
-                      wo.mechanic_id === mechanic.id,
-                  ).length,
-                })),
+                mechanicsList.map(
+                  (mechanic: { id: string; full_name: string | null }) => ({
+                    id: mechanic.id,
+                    fullName: mechanic.full_name ?? null,
+                    email: "",
+                    current_jobs: activeWorkOrders.filter(
+                      (wo: { mechanic_id: string | null }) =>
+                        wo.mechanic_id === mechanic.id,
+                    ).length,
+                  }),
+                ),
               );
             }
             if (priceJson.data) {
