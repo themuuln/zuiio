@@ -17,6 +17,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { MechanicSelect } from "@/components/mechanic-select";
 import { ExportButton } from "@/components/export-button";
 import type { ExportColumn } from "@/lib/export";
 import { Button } from "@/components/ui/button";
@@ -307,8 +308,16 @@ export default function ReportsPage() {
     try {
       const res = await fetch(`/api/organizations/${oid}/reports?type=mechanics`);
       const json = await res.json();
-      if (!json.error && json.data?.mechanics) {
-        setMechanics(json.data.mechanics);
+      if (!json.error && Array.isArray(json.data)) {
+        setMechanics(
+          (json.data as Array<{ id: string; full_name: string | null }>).map(
+            (m) => ({
+              id: m.id,
+              fullName: m.full_name ?? null,
+              email: "",
+            }),
+          ),
+        );
       }
     } catch {
       // silent
@@ -433,19 +442,13 @@ export default function ReportsPage() {
           })}
         </div>
         <div className="flex items-center gap-2">
-          <select
+          <MechanicSelect
             value={selectedMechanic}
-            onChange={(e) => setSelectedMechanic(e.target.value)}
-            className="h-11 rounded-lg border border-input bg-background px-3 text-sm min-w-[160px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            aria-label="Filter by mechanic"
-          >
-            <option value="">All Mechanics</option>
-            {mechanics.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.fullName ?? m.email}
-              </option>
-            ))}
-          </select>
+            onChange={setSelectedMechanic}
+            mechanics={mechanics}
+            placeholder="All Mechanics"
+            size="default"
+          />
         </div>
       </div>
 

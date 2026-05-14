@@ -23,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { MechanicSelect } from "@/components/mechanic-select";
 import { StatusPill } from "./status-pill";
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -1006,19 +1007,13 @@ export function WorkOrderDetailDrawer({
                   <span className="text-[9px] text-muted-foreground/60 font-medium uppercase">
                     {t("mech")}
                   </span>
-                  <select
+                  <MechanicSelect
                     value={wo.mechanic_id ?? ""}
-                    onChange={(e) => assignMechanic(e.target.value)}
+                    onChange={assignMechanic}
+                    mechanics={mechanics}
                     disabled={saving}
-                    className="h-7 rounded-md border border-border bg-muted/30 px-1.5 text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 hover:border-muted-foreground/30 transition-colors"
-                  >
-                    <option value="">{t("unassigned")}</option>
-                    {mechanics.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.full_name}
-                      </option>
-                    ))}
-                  </select>
+                    size="sm"
+                  />
                 </div>
               </div>
             </div>
