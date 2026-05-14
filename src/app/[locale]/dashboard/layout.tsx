@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -10,6 +9,7 @@ import {
 import { AppSidebar } from "@/components/app-sidebar";
 import { SubscriptionGuard } from "@/components/subscription-guard";
 import { useRequireAuth } from "@/hooks/use-require-auth";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { Separator } from "@/components/ui/separator";
 
 export default function DashboardLayout({
@@ -18,21 +18,7 @@ export default function DashboardLayout({
   children: ReactNode;
 }) {
   useRequireAuth();
-  const [orgInfo, setOrgInfo] = useState<{
-    orgId: string;
-    orgName: string;
-  } | null>(null);
-
-  useEffect(() => {
-    fetch("/api/profile")
-      .then((res) => res.json())
-      .then((d) => {
-        const id = d?.organizationId ?? d?.data?.organizationId;
-        const name = d?.organizationName ?? d?.data?.organizationName;
-        if (id) setOrgInfo({ orgId: id, orgName: name ?? "Organization" });
-      })
-      .catch(() => {});
-  }, []);
+  const { data: orgInfo } = useCurrentOrg();
 
   const wrapped = (
     <SidebarProvider defaultOpen={false}>
@@ -53,7 +39,7 @@ export default function DashboardLayout({
   if (!orgInfo) return wrapped;
 
   return (
-    <SubscriptionGuard orgId={orgInfo.orgId} orgName={orgInfo.orgName}>
+    <SubscriptionGuard orgId={orgInfo.orgId} orgName={orgInfo.orgName ?? "Organization"}>
       {wrapped}
     </SubscriptionGuard>
   );

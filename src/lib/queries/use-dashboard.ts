@@ -30,7 +30,7 @@ export function useDashboard(
       return json.data as DashboardData;
     },
     enabled: !!orgId,
-    staleTime: 5_000,
+    staleTime: 60_000,
     retry: 1,
   });
 }

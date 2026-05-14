@@ -57,7 +57,7 @@ export const cacheDurations = {
 
   // Expensive reports - cache aggressively
   reports: 300, // 5 minutes
-  dashboardMetrics: 60, // 1 minute
+  dashboardMetrics: 300, // 5 minutes (was 1m)
 
   // Inventory - balances change with every sale/movement
   partsCatalog: 3600, // 1 hour (rarely changes)
