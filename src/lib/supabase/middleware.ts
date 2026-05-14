@@ -37,9 +37,10 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = pathname.includes("/auth/");
   const isInvoiceRoute = pathname.startsWith("/invoice/");
   const isInviteRoute = pathname.startsWith("/invite/");
+  const isPricingRoute = pathname.startsWith("/pricing");
   const isLoginRoute = pathname.includes("/auth/login");
 
-  if (!user && !isAuthRoute && !isInvoiceRoute && !isInviteRoute) {
+  if (!user && !isAuthRoute && !isInvoiceRoute && !isInviteRoute && !isPricingRoute) {
     const url = request.nextUrl.clone();
     // With localePrefix: "never" the URL has no locale segment
     url.pathname = "/auth/login";
