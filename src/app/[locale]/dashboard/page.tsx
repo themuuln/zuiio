@@ -767,7 +767,7 @@ export default function DashboardPage() {
 
         <aside className="hidden lg:block">
           <div className="sticky top-8 space-y-6">
-            <DailyTimeline orgId={orgId} />
+            <DailyTimeline orgId={orgId ?? ""} />
           </div>
         </aside>
       </div>
@@ -856,7 +856,7 @@ export default function DashboardPage() {
 
       <aside className="hidden lg:block">
         <div className="sticky top-8 space-y-6">
-          <DailyTimeline orgId={orgId} />
+          <DailyTimeline orgId={orgId ?? ""} />
         </div>
       </aside>
     </div>

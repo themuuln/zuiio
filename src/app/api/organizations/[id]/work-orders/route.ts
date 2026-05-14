@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import type { WorkOrderStatus } from "@/lib/database.types";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import { createWorkOrder, getWorkOrders } from "@/lib/services/work-order-service";
 
 export const GET = createRouteHandler(async ({ request, orgId }) => {
@@ -16,6 +17,7 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
 });
 
 export const POST = createRouteHandler(async ({ request, orgId }) => {
+  await requireActiveSubscription(orgId);
   const body = await request.json();
   const workOrder = await createWorkOrder(orgId, body);
   return NextResponse.json({ data: workOrder }, { status: 201 });

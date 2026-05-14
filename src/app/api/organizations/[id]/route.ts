@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   getOrganization,
   updateOrganization,
@@ -19,6 +20,7 @@ export const GET = createRouteHandler(async ({ orgId }) => {
  * Updates an organization's name or settings.
  */
 export const PATCH = createRouteHandler(async ({ request, orgId }) => {
+  await requireActiveSubscription(orgId);
   const body = await request.json();
   const org = await updateOrganization(orgId, body);
   return NextResponse.json({ data: org });

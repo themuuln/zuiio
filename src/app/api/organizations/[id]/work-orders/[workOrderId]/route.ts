@@ -6,6 +6,7 @@ import {
   getWorkOrder,
   updateWorkOrderStatus,
 } from "@/lib/services/work-order-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ params, orgId }) => {
   const { workOrderId } = params;
@@ -14,6 +15,7 @@ export const GET = createRouteHandler(async ({ params, orgId }) => {
 });
 
 export const PATCH = createRouteHandler(async ({ request, params, orgId }) => {
+  await requireActiveSubscription(orgId);
   const { workOrderId } = params;
   const body = await request.json();
 
@@ -45,6 +47,7 @@ export const PATCH = createRouteHandler(async ({ request, params, orgId }) => {
 });
 
 export const DELETE = createRouteHandler(async ({ params, orgId }) => {
+  await requireActiveSubscription(orgId);
   const { workOrderId } = params;
   await cancelWorkOrder(workOrderId, orgId);
   return NextResponse.json({ data: null });

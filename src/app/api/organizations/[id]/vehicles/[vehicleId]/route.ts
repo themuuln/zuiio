@@ -6,6 +6,7 @@ import {
   getVehicleServiceHistory,
   updateVehicle,
 } from "@/lib/services/vehicle-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ orgId, params }) => {
   const { vehicleId } = params;
@@ -15,6 +16,7 @@ export const GET = createRouteHandler(async ({ orgId, params }) => {
 });
 
 export const PATCH = createRouteHandler(async ({ request, orgId, params, user }) => {
+  await requireActiveSubscription(orgId);
   const { vehicleId } = params;
   const body = await request.json();
   const vehicle = await updateVehicle(vehicleId, orgId, body, user.id);
@@ -22,6 +24,7 @@ export const PATCH = createRouteHandler(async ({ request, orgId, params, user })
 });
 
 export const DELETE = createRouteHandler(async ({ orgId, params, user }) => {
+  await requireActiveSubscription(orgId);
   const { vehicleId } = params;
   await deleteVehicle(vehicleId, orgId, user.id);
   return NextResponse.json({ data: null });

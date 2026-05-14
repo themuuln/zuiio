@@ -5,6 +5,7 @@ import {
   getService,
   updateService,
 } from "@/lib/services/service-catalog-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ params }) => {
   const { serviceId } = params;
@@ -13,6 +14,7 @@ export const GET = createRouteHandler(async ({ params }) => {
 });
 
 export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
+  await requireActiveSubscription(orgId);
   const { serviceId } = params;
   const body = await request.json();
   const service = await updateService(serviceId, orgId, body);
@@ -20,6 +22,7 @@ export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
 });
 
 export const DELETE = createRouteHandler(async ({ orgId, params }) => {
+  await requireActiveSubscription(orgId);
   const { serviceId } = params;
   await deleteService(serviceId, orgId);
   return NextResponse.json({ data: null });

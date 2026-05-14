@@ -149,7 +149,18 @@ export interface SubscriptionPlanInfo {
   status: string;
   startedAt: string;
   expiresAt: string | null;
+  gracePeriodEnd: string | null;
   trial: boolean;
+}
+
+export interface SubscriptionStatus {
+  status: string;
+  expired: boolean;
+  plan_type: string;
+  expires_at: string | null;
+  grace_period_end: string | null;
+  trial: boolean;
+  message?: string;
 }
 
 export interface UpdateSubscriptionParams {

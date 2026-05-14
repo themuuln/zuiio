@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import { createBranch, getBranches } from "@/lib/services/branch-service";
 
 export const GET = createRouteHandler(async ({ orgId }) => {
@@ -8,6 +9,7 @@ export const GET = createRouteHandler(async ({ orgId }) => {
 });
 
 export const POST = createRouteHandler(async ({ request, orgId }) => {
+  await requireActiveSubscription(orgId);
   const body = await request.json();
   const branch = await createBranch(orgId, body);
   return NextResponse.json({ data: branch }, { status: 201 });

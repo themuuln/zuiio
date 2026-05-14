@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   getPartsCatalog,
   createPart,
@@ -12,12 +13,14 @@ export const GET = createRouteHandler(async ({ orgId }) => {
 });
 
 export const POST = createRouteHandler(async ({ request, orgId, user }) => {
+  await requireActiveSubscription(orgId);
   const body = await request.json();
   const part = await createPart(orgId, body, user.id);
   return NextResponse.json({ data: part }, { status: 201 });
 });
 
 export const PATCH = createRouteHandler(async ({ request, orgId }) => {
+  await requireActiveSubscription(orgId);
   const { searchParams } = new URL(request.url);
   const itemId = searchParams.get("partId") ?? searchParams.get("id");
   if (!itemId) {

@@ -95,6 +95,14 @@ The rule: pages use hooks, hooks call API routes, API routes call services, serv
 - **Regenerate TypeScript types after every migration.** After creating or modifying any migration file, update `src/lib/database.types.ts` so the frontend types match the actual schema.
 - Committing a migration without updating `database.types.ts` is a build break waiting to happen — the frontend will reference columns/types that no longer exist or miss new ones.
 
+## Supabase Remote Sync Rule
+
+- **Sync migrations to remote after every migration.** After creating or modifying any migration file, run `supabase db push --linked` to apply it to the remote Supabase database.
+- If there's a version mismatch (e.g., a migration was applied manually via `--linked` queries without a migration history record), run `supabase migration repair --status applied <version> --linked` to sync the history.
+- If a migration was reverted or misaligned, use `supabase migration repair --status reverted <version> --linked` to fix the history, then re-push.
+- Verify sync with `supabase migration list --linked` — both `Local` and `Remote` columns should match.
+- Never leave the remote schema out of sync with local migrations — it causes silent build failures and data inconsistencies.
+
 ## Testing Guidelines
 
 - **Framework**: vitest (unit/integration), Playwright (E2E).

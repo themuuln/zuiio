@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import { recordPayment } from "@/lib/services/invoice-service";
 
 export const POST = createRouteHandler(async ({ request, orgId, params }) => {
+  await requireActiveSubscription(orgId);
   const { invoiceId } = params;
   const body = await request.json();
 

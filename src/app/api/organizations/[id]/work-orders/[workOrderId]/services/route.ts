@@ -4,15 +4,18 @@ import {
   addServiceToWorkOrder,
   removeServiceFromWorkOrder,
 } from "@/lib/services/work-order-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const POST = createRouteHandler(async ({ request, params, orgId }) => {
+  await requireActiveSubscription(orgId);
   const { workOrderId } = params;
   const body = await request.json();
   const service = await addServiceToWorkOrder(workOrderId, orgId, body);
   return NextResponse.json({ data: service }, { status: 201 });
 });
 
-export const DELETE = createRouteHandler(async ({ request, params }) => {
+export const DELETE = createRouteHandler(async ({ request, params, orgId }) => {
+  await requireActiveSubscription(orgId);
   const { workOrderId } = params;
   const { searchParams } = new URL(request.url);
   const serviceId = searchParams.get("serviceId");

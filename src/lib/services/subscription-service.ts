@@ -4,7 +4,10 @@ import type { SubscriptionPlan } from "@/lib/database.types";
 import type {
   SubscriptionPlanInfo,
   UpdateSubscriptionParams,
+  SubscriptionStatus,
 } from "@/lib/types";
+
+export { checkSubscriptionExpired } from "./subscription-enforcement";
 
 function mapSubscription(plan: SubscriptionPlan): SubscriptionPlanInfo {
   const settings =
@@ -19,6 +22,7 @@ function mapSubscription(plan: SubscriptionPlan): SubscriptionPlanInfo {
     status: plan.status,
     startedAt: plan.started_at,
     expiresAt: plan.expires_at,
+    gracePeriodEnd: plan.grace_period_end ?? null,
     trial: settings.trial === true,
   };
 }
@@ -41,6 +45,23 @@ export async function getOrganizationSubscription(
   }
 
   return data ? mapSubscription(data) : null;
+}
+
+export async function checkSubscriptionStatus(
+  orgId: string,
+): Promise<SubscriptionStatus> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc(
+    "check_org_subscription_status",
+    { target_org_id: orgId },
+  );
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to check subscription status");
+  }
+
+  return data as unknown as SubscriptionStatus;
 }
 
 export async function createSubscription(
@@ -91,4 +112,21 @@ export async function updateSubscription(
   }
 
   return mapSubscription(data);
+}
+
+export async function renewSubscription(
+  orgId: string,
+): Promise<SubscriptionPlanInfo> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc(
+    "renew_organization_subscription",
+    { target_org_id: orgId },
+  );
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to renew subscription");
+  }
+
+  return data as unknown as SubscriptionPlanInfo;
 }

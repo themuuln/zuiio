@@ -759,6 +759,22 @@
     "ctaSubtitle": "Start your free trial today. No credit card required. Every feature on this page is ready to use.",
     "ctaButton": "Start Free Trial"
   },
+  "subscription": {
+    "expiredTitle": "Subscription Expired",
+    "expiredDescription": "Your subscription has ended. To continue using TOLOM, please transfer the payment to the following account.",
+    "selectBank": "Select Bank",
+    "bankTransfer": "Bank Transfer",
+    "bankName": "Bank",
+    "account": "Account",
+    "description": "Description (org name)",
+    "instruction": "Use your organization name as the transfer description so we can match the payment.",
+    "graceEnds": "Grace period ends:",
+    "afterPayment": "After sending the transfer, we will verify and activate your subscription within 24 hours.",
+    "copied": "Copied to clipboard!",
+    "renewButton": "I've sent the payment, activate my account",
+    "renewedTitle": "Subscription renewed!",
+    "renewedDescription": "Refreshing your dashboard..."
+  },
   "invite": {
     "title": "You're invited!",
     "subtitle": "You've been invited to join {organization} on TOLOM.",

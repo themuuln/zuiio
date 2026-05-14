@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   getSupplier,
   updateSupplier,
@@ -13,6 +14,7 @@ export const GET = createRouteHandler(async ({ orgId, params }) => {
 });
 
 export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
+  await requireActiveSubscription(orgId);
   const { supplierId } = params;
   const body = await request.json();
   const supplier = await updateSupplier(supplierId, orgId, body);
@@ -20,6 +22,7 @@ export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
 });
 
 export const DELETE = createRouteHandler(async ({ orgId, params }) => {
+  await requireActiveSubscription(orgId);
   const { supplierId } = params;
   await deleteSupplier(supplierId, orgId);
   return NextResponse.json({ data: null });

@@ -178,3 +178,97 @@ end;
 $$;
 
 grant execute on function accept_invite to authenticated;
+
+-- ============================================================
+-- 7. Update default subscription to include grace period
+-- ============================================================
+create or replace function create_default_subscription(target_org_id uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  sub_id uuid;
+begin
+  insert into public.subscription_plans (
+    organization_id,
+    plan_type,
+    status,
+    started_at,
+    expires_at,
+    grace_period_end,
+    settings
+  ) values (
+    target_org_id,
+    'starter'::plan_type,
+    'trial',
+    now(),
+    now() + interval '14 days',
+    now() + interval '21 days',
+    '{"trial": true}'::jsonb
+  )
+  returning id into sub_id;
+
+  return sub_id;
+end;
+$$;
+
+-- ============================================================
+-- 8. Check & auto-expire subscription status
+-- ============================================================
+create or replace function check_org_subscription_status(target_org_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  sub_record record;
+begin
+  select * into sub_record
+  from public.subscription_plans
+  where organization_id = target_org_id
+  order by created_at desc
+  limit 1;
+
+  if not found then
+    return jsonb_build_object('status', 'none', 'expired', true, 'plan_type', 'none', 'message', 'No subscription found');
+  end if;
+
+  if sub_record.status in ('trial', 'active') and sub_record.expires_at is not null and sub_record.expires_at < now() then
+    update public.subscription_plans
+    set status = 'expired', updated_at = now()
+    where id = sub_record.id;
+
+    return jsonb_build_object(
+      'status', 'expired', 'expired', true,
+      'plan_type', sub_record.plan_type,
+      'expires_at', sub_record.expires_at,
+      'grace_period_end', sub_record.grace_period_end,
+      'message', 'Your subscription has expired'
+    );
+  end if;
+
+  if sub_record.status = 'expired' then
+    return jsonb_build_object(
+      'status', 'expired', 'expired', true,
+      'plan_type', sub_record.plan_type,
+      'expires_at', sub_record.expires_at,
+      'grace_period_end', sub_record.grace_period_end,
+      'message', 'Your subscription has expired'
+    );
+  end if;
+
+  return jsonb_build_object(
+    'status', sub_record.status,
+    'expired', false,
+    'plan_type', sub_record.plan_type,
+    'expires_at', sub_record.expires_at,
+    'grace_period_end', sub_record.grace_period_end,
+    'trial', (sub_record.settings->>'trial')::boolean = true
+  );
+end;
+$$;
+
+grant execute on function check_org_subscription_status to authenticated;

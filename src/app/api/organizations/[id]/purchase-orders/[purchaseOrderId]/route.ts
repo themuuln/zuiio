@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import { receivePurchaseOrder } from "@/lib/services/inventory-service";
 
 export const GET = createRouteHandler(async ({ supabase, params, orgId }) => {
@@ -34,6 +35,7 @@ export const GET = createRouteHandler(async ({ supabase, params, orgId }) => {
 });
 
 export const PATCH = createRouteHandler(async ({ request, supabase, params, orgId, user }) => {
+  await requireActiveSubscription(orgId);
   const { purchaseOrderId } = params;
   const body = await request.json();
 
@@ -68,6 +70,7 @@ export const PATCH = createRouteHandler(async ({ request, supabase, params, orgI
 });
 
 export const POST = createRouteHandler(async ({ request, params, orgId }) => {
+  await requireActiveSubscription(orgId);
   const { purchaseOrderId } = params;
   const body = await request.json();
 

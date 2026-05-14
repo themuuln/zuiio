@@ -121,6 +121,8 @@ export interface SubscriptionPlan {
   status: string;
   started_at: string;
   expires_at: string | null;
+  grace_period_end: string | null;
+  auto_renew: boolean;
   settings: Record<string, unknown>;
   created_at: string;
   updated_at: string;

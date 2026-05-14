@@ -7,6 +7,7 @@ import {
   recordPayment,
   updateInvoiceStatus,
 } from "@/lib/services/invoice-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ params }) => {
   const { invoiceId } = params;
@@ -15,6 +16,7 @@ export const GET = createRouteHandler(async ({ params }) => {
 });
 
 export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
+  await requireActiveSubscription(orgId);
   const { invoiceId } = params;
   const body = await request.json();
 
@@ -45,6 +47,7 @@ export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
 });
 
 export const DELETE = createRouteHandler(async ({ orgId, params }) => {
+  await requireActiveSubscription(orgId);
   const { invoiceId } = params;
   await deleteInvoice(invoiceId, orgId);
   return NextResponse.json({ data: null });

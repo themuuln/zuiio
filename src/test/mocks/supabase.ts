@@ -5,8 +5,8 @@ function chainableMock() {
   const proxy = new Proxy(
     {},
     {
-      get(_target, prop) {
-        if (typeof prop === "string" && !(prop in methods)) {
+      get(_target, prop: string) {
+        if (!(prop in methods)) {
           methods[prop] = vi.fn().mockReturnValue(chainableMock());
         }
         return methods[prop];

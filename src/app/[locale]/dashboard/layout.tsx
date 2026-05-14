@@ -1,12 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { SubscriptionGuard } from "@/components/subscription-guard";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { Separator } from "@/components/ui/separator";
 
@@ -16,8 +18,23 @@ export default function DashboardLayout({
   children: ReactNode;
 }) {
   useRequireAuth();
+  const [orgInfo, setOrgInfo] = useState<{
+    orgId: string;
+    orgName: string;
+  } | null>(null);
 
-  return (
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then((d) => {
+        const id = d?.organizationId ?? d?.data?.organizationId;
+        const name = d?.organizationName ?? d?.data?.organizationName;
+        if (id) setOrgInfo({ orgId: id, orgName: name ?? "Organization" });
+      })
+      .catch(() => {});
+  }, []);
+
+  const wrapped = (
     <SidebarProvider defaultOpen={false}>
       <AppSidebar />
       <SidebarInset>
@@ -31,5 +48,13 @@ export default function DashboardLayout({
         </div>
       </SidebarInset>
     </SidebarProvider>
+  );
+
+  if (!orgInfo) return wrapped;
+
+  return (
+    <SubscriptionGuard orgId={orgInfo.orgId} orgName={orgInfo.orgName}>
+      {wrapped}
+    </SubscriptionGuard>
   );
 }
