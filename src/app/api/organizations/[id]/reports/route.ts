@@ -3,6 +3,7 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
 import {
   getDailyReport,
+  getDailyTimeline,
   getDashboardData,
   getEndOfDaySummary,
   getMechanicsList,
@@ -47,6 +48,10 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
     case "eod": {
       const summary = await getEndOfDaySummary(orgId, date);
       return NextResponse.json({ data: summary });
+    }
+    case "timeline": {
+      const timeline = await getDailyTimeline(orgId);
+      return NextResponse.json({ data: timeline });
     }
     default:
       throw new ValidationError(

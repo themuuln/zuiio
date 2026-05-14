@@ -1,5 +1,6 @@
 import { revalidateTag } from "next/cache";
-import { cacheTags } from "@/lib/cache/keys";
+import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { withCache } from "@/lib/cache/with-cache";
 import type {
   Customer,
   MechanicAssignment,
@@ -65,36 +66,53 @@ export async function getWorkOrders(
 ): Promise<WorkOrderWithRefs[]> {
   const supabase = await createClient();
 
-  let query = supabase
-    .from("work_orders")
-    .select(`
-      *,
-      customer:customers(first_name, last_name, phone),
-      vehicle:vehicles(plate_number, make, model)
-    `)
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+  return withCache(
+    ["getWorkOrders", orgId, JSON.stringify(filters ?? {})],
+    async () => {
+      let query = supabase
+        .from("work_orders")
+        .select(`
+        *,
+        customer:customers(first_name, last_name, phone),
+        vehicle:vehicles(plate_number, make, model)
+      `)
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
 
-  if (filters?.status) query = query.eq("status", filters.status);
-  if (filters?.mechanic_id)
-    query = query.eq("mechanic_id", filters.mechanic_id);
-  if (filters?.date) {
-    const dayStart = `${filters.date}T00:00:00`;
-    const dayEnd = `${filters.date}T23:59:59`;
-    query = query.gte("created_at", dayStart).lte("created_at", dayEnd);
-  }
+      if (filters?.status) query = query.eq("status", filters.status);
+      if (filters?.mechanic_id)
+        query = query.eq("mechanic_id", filters.mechanic_id);
+      if (filters?.date) {
+        const dayStart = `${filters.date}T00:00:00`;
+        const dayEnd = `${filters.date}T23:59:59`;
+        query = query.gte("created_at", dayStart).lte("created_at", dayEnd);
+      }
 
-  const { data, error } = await query;
+      const { data, error } = await query;
 
-  if (error) throw new Error(error.message ?? "Failed to fetch work orders");
-  return (data ?? []) as WorkOrderWithRefs[];
+      if (error) throw new Error(error.message ?? "Failed to fetch work orders");
+      return (data ?? []) as WorkOrderWithRefs[];
+    },
+    {
+      tags: [cacheTags.workOrders(orgId)],
+      revalidate: cacheDurations.workOrders,
+    },
+  );
 }
 
 // ── Get Single Work Order (with detail) ───────────────────────
 export async function getWorkOrder(id: string): Promise<WorkOrderDetail> {
   const supabase = await createClient();
-  return _getWorkOrderDetail(supabase, id);
+
+  return withCache(
+    ["getWorkOrder", id],
+    async () => _getWorkOrderDetail(supabase, id),
+    {
+      tags: [cacheTags.workOrderDetail(id)],
+      revalidate: cacheDurations.workOrderDetail,
+    },
+  );
 }
 
 // ── Create Work Order ──────────────────────────────────────────
@@ -526,18 +544,27 @@ export async function getDailyWorkOrders(
 
   const targetDate = date ?? new Date().toISOString().split("T")[0];
 
-  const { data, error } = await supabase
-    .from("work_orders")
-    .select("*")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .gte("created_at", `${targetDate}T00:00:00`)
-    .lte("created_at", `${targetDate}T23:59:59`)
-    .order("created_at", { ascending: false });
+  return withCache(
+    ["getDailyWorkOrders", orgId, targetDate],
+    async () => {
+      const { data, error } = await supabase
+        .from("work_orders")
+        .select("*")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .gte("created_at", `${targetDate}T00:00:00`)
+        .lte("created_at", `${targetDate}T23:59:59`)
+        .order("created_at", { ascending: false });
 
-  if (error)
-    throw new Error(error.message ?? "Failed to fetch daily work orders");
-  return data ?? [];
+      if (error)
+        throw new Error(error.message ?? "Failed to fetch daily work orders");
+      return data ?? [];
+    },
+    {
+      tags: [cacheTags.dailyWorkOrders(orgId, targetDate)],
+      revalidate: cacheDurations.workOrders,
+    },
+  );
 }
 
 // ── Soft Delete Work Order ─────────────────────────────────────

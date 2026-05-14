@@ -1,4 +1,7 @@
+import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
+import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { withCache } from "@/lib/cache/with-cache";
 import type { Customer } from "@/lib/database.types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -17,40 +20,59 @@ export async function getCustomers(
 ): Promise<CustomerWithVehicleCount[]> {
   const supabase = await createClient();
 
-  let query = supabase
-    .from("customers")
-    .select("*")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+  return withCache(
+    ["getCustomers", orgId, search ?? ""],
+    async () => {
+      let query = supabase
+        .from("customers")
+        .select("*")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
 
-  if (search?.trim()) {
-    const term = `%${search.trim()}%`;
-    query = query.or(
-      `first_name.ilike.${term},last_name.ilike.${term},full_name.ilike.${term},company_name.ilike.${term},contact_person.ilike.${term},phone.ilike.${term},email.ilike.${term}`,
-    );
-  }
+      if (search?.trim()) {
+        const term = `%${search.trim()}%`;
+        query = query.or(
+          `first_name.ilike.${term},last_name.ilike.${term},full_name.ilike.${term},company_name.ilike.${term},contact_person.ilike.${term},phone.ilike.${term},email.ilike.${term}`,
+        );
+      }
 
-  const { data: customers, error } = await query;
+      const { data: customers, error } = await query;
 
-  if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message);
 
-  // Fetch vehicle counts for each customer
-  const customersWithCounts: CustomerWithVehicleCount[] = [];
-  for (const customer of customers ?? []) {
-    const { count, error: countError } = await supabase
-      .from("vehicle_owners")
-      .select("id", { count: "exact", head: true })
-      .eq("customer_id", customer.id)
-      .is("owned_until", null);
+      // Batch fetch vehicle counts for all customers
+      const customerIds = (customers ?? []).map((c) => c.id);
+      let vehicleCounts = new Map<string, number>();
 
-    customersWithCounts.push({
-      ...customer,
-      vehicle_count: countError ? 0 : (count ?? 0),
-    });
-  }
+      if (customerIds.length > 0) {
+        const { data: counts } = await supabase
+          .from("vehicle_owners")
+          .select("customer_id", { count: "exact" })
+          .in("customer_id", customerIds)
+          .is("owned_until", null);
 
-  return customersWithCounts;
+        // Calculate count per customer_id from the batched results
+        if (counts) {
+          const countMap = new Map<string, number>();
+          for (const row of counts) {
+            const cid = row.customer_id as string;
+            countMap.set(cid, (countMap.get(cid) ?? 0) + 1);
+          }
+          vehicleCounts = countMap;
+        }
+      }
+
+      return (customers ?? []).map((customer) => ({
+        ...customer,
+        vehicle_count: vehicleCounts.get(customer.id) ?? 0,
+      }));
+    },
+    {
+      tags: [cacheTags.customers(orgId)],
+      revalidate: cacheDurations.customers,
+    },
+  );
 }
 
 /**
@@ -62,19 +84,28 @@ export async function getCustomer(
 ): Promise<Customer> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("customers")
-    .select("*")
-    .eq("id", id)
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .single();
+  return withCache(
+    ["getCustomer", id],
+    async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("*")
+        .eq("id", id)
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .single();
 
-  if (error || !data) {
-    throw new NotFoundError("Customer not found");
-  }
+      if (error || !data) {
+        throw new NotFoundError("Customer not found");
+      }
 
-  return data;
+      return data;
+    },
+    {
+      tags: [cacheTags.customers(orgId)],
+      revalidate: cacheDurations.customers,
+    },
+  );
 }
 
 /**
@@ -147,6 +178,8 @@ export async function createCustomer(
     organization_id: orgId,
     new_data: data as unknown as Record<string, unknown>,
   });
+
+  revalidateTag(cacheTags.customers(orgId), "max");
 
   return data;
 }
@@ -221,6 +254,8 @@ export async function updateCustomer(
     new_data: data as unknown as Record<string, unknown>,
   });
 
+  revalidateTag(cacheTags.customers(orgId), "max");
+
   return data;
 }
 
@@ -262,6 +297,8 @@ export async function deleteCustomer(
     user_id: userId,
     organization_id: orgId,
   });
+
+  revalidateTag(cacheTags.customers(orgId), "max");
 }
 
 /**

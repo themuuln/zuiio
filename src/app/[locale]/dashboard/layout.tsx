@@ -21,12 +21,12 @@ export default function DashboardLayout({
     <SidebarProvider defaultOpen={false}>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 md:hidden">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 lg:hidden">
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-4" />
           <span className="font-semibold">TOLOM</span>
         </header>
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <div className="flex-1 overflow-y-auto p-4 tablet:p-5 lg:p-8">
           {children}
         </div>
       </SidebarInset>

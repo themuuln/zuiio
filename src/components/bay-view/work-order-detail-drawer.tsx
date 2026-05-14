@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
@@ -61,6 +61,7 @@ export function WorkOrderDetailDrawer({
   onOpenChange,
   onRefresh,
 }: Props) {
+  const t = useTranslations("bayView");
   const [wo, setWo] = useState<WorkOrderDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -369,10 +370,10 @@ export function WorkOrderDetailDrawer({
                 <SheetTitle className="text-base">
                   {wo ? (
                     <span className="truncate block">
-                      {wo.vehicle?.plate_number ?? "Work Order"}
+                      {wo.vehicle?.plate_number ?? t("workOrder")}
                     </span>
                   ) : (
-                    "Work Order"
+                    t("workOrder")
                   )}
                 </SheetTitle>
                 {wo && (
@@ -394,7 +395,7 @@ export function WorkOrderDetailDrawer({
                 type="button"
                 onClick={() => onOpenChange(false)}
                 className="rounded-md p-1.5 hover:bg-muted transition-colors"
-                aria-label="Close"
+                aria-label={t("close")}
               >
                 <X className="size-4" />
               </button>
@@ -461,17 +462,17 @@ export function WorkOrderDetailDrawer({
         {!loading && !error && wo && (
           <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
             {/* ── All sections stacked in card wrappers ── */}
-            <ScrollArea className="flex-1">
-              <div className="px-4 py-3 space-y-4">
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <div className="px-3 py-2 space-y-3">
                 {/* ── Services Section ── */}
-                <section className="rounded-xl border border-border/60 bg-card/40 p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center justify-center size-6 rounded-lg bg-blue-500/10">
-                        <Wrench className="size-3.5 text-blue-500" />
+                <section className="rounded-lg border border-border/60 bg-card/40 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex items-center justify-center size-5 rounded-md bg-blue-500/10">
+                        <Wrench className="size-3 text-blue-500" />
                       </div>
                       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        Services
+                        {t("services")}
                       </span>
                       {(wo.services?.length ?? 0) > 0 && (
                         <span className="rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 text-[10px] font-bold">
@@ -479,29 +480,20 @@ export function WorkOrderDetailDrawer({
                         </span>
                       )}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAddService(!showAddService)}
-                      className="h-7 text-xs gap-1"
-                    >
-                      <Plus className="size-3" />
-                      Add
-                    </Button>
                   </div>
 
                   {/* Service search dropdown */}
                   {showAddService && (
-                    <div className="relative mb-3">
+                    <div className="relative mb-2">
                       <Input
                         value={serviceSearch}
                         onChange={(e) => setServiceSearch(e.target.value)}
-                        placeholder="Search services..."
-                        className="h-9 text-sm"
+                        placeholder={t("searchServices")}
+                        className="h-8 text-xs"
                         autoFocus
                       />
                       {serviceSearch && (
-                        <div className="absolute top-full left-0 right-0 z-10 mt-1 border rounded-lg bg-background shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute top-full left-0 right-0 z-10 mt-1 border rounded-lg bg-background shadow-lg max-h-40 overflow-y-auto">
                           {catalog
                             .filter((s) =>
                               s.name
@@ -526,14 +518,14 @@ export function WorkOrderDetailDrawer({
                                   }}
                                   disabled={added}
                                   className={cn(
-                                    "flex items-center justify-between w-full px-3 py-2.5 text-left transition-colors hover:bg-muted/50",
+                                    "flex items-center justify-between w-full px-2.5 py-2 text-left transition-colors hover:bg-muted/50 text-xs",
                                     added && "opacity-40",
                                   )}
                                 >
-                                  <span className="text-sm font-medium truncate mr-2">
+                                  <span className="font-medium truncate mr-2">
                                     {svc.name}
                                   </span>
-                                  <span className="text-sm tabular-nums font-medium shrink-0">
+                                  <span className="tabular-nums font-medium shrink-0">
                                     {formatMNT(Number(svc.default_price))}
                                   </span>
                                 </button>
@@ -544,8 +536,8 @@ export function WorkOrderDetailDrawer({
                               .toLowerCase()
                               .includes(serviceSearch.toLowerCase()),
                           ).length === 0 && (
-                            <div className="px-3 py-4 text-xs text-muted-foreground text-center">
-                              No services match
+                            <div className="px-3 py-3 text-xs text-muted-foreground text-center">
+                              {t("noMatchService")}
                             </div>
                           )}
                         </div>
@@ -555,47 +547,44 @@ export function WorkOrderDetailDrawer({
 
                   {/* Service list */}
                   {(wo.services ?? []).length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-6 text-muted-foreground/50 rounded-lg border border-dashed border-border/60">
-                      <Wrench className="size-6 mb-2 opacity-60" />
-                      <p className="text-xs font-medium">No services yet</p>
-                      <p className="text-[10px] mt-0.5">
-                        Tap <strong>Add</strong> to add line items
-                      </p>
+                    <div className="flex flex-col items-center justify-center py-4 text-muted-foreground/50 rounded-lg border border-dashed border-border/60">
+                      <Wrench className="size-5 mb-1.5 opacity-60" />
+                      <p className="text-[11px] font-medium">{t("noServicesYet")}</p>
                     </div>
                   ) : (
-                    <div className="-mx-1">
+                    <div className="-mx-0.5">
                       {/* Header row */}
-                      <div className="flex items-center gap-3 px-1 mb-1 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                        <div className="flex-1">Service</div>
-                        <div className="w-16 text-right">Qty</div>
-                        <div className="w-24 text-right">Price</div>
-                        <div className="w-8" />
+                      <div className="flex items-center gap-2 px-1 mb-0.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                        <div className="flex-1">{t("service")}</div>
+                        <div className="w-14 text-right">{t("qty")}</div>
+                        <div className="w-20 text-right">{t("price")}</div>
+                        <div className="w-7" />
                       </div>
-                      <div className="space-y-0.5">
+                      <div className="space-y-px">
                         {wo.services?.map((svc) => (
                           <div
                             key={svc.id}
-                            className="group flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/40 transition-colors"
+                            className="group flex items-center gap-2 rounded-md px-1.5 py-1.5 hover:bg-muted/40 transition-colors"
                           >
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">
                                 {svc.service_name}
                               </p>
                             </div>
-                            <div className="w-16 text-right text-sm text-muted-foreground tabular-nums">
+                            <div className="w-14 text-right text-xs text-muted-foreground tabular-nums">
                               {svc.quantity}
                             </div>
-                            <div className="w-24 text-right text-sm font-semibold tabular-nums">
+                            <div className="w-20 text-right text-xs font-semibold tabular-nums">
                               {formatMNT(Number(svc.final_price))}
                             </div>
-                            <div className="w-8 flex justify-center">
+                            <div className="w-7 flex justify-center">
                               <button
                                 type="button"
                                 onClick={() => removeService(svc.id)}
-                                className="p-1 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="p-0.5 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
                                 aria-label="Remove service"
                               >
-                                <Trash2 className="size-3.5" />
+                                <Trash2 className="size-3" />
                               </button>
                             </div>
                           </div>
@@ -603,17 +592,27 @@ export function WorkOrderDetailDrawer({
                       </div>
                     </div>
                   )}
+
+                  {/* Full-width Add button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAddService(!showAddService)}
+                    className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-muted-foreground/25 py-2 text-xs font-medium text-muted-foreground/60 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <Plus className="size-4" />
+                    {t("addService")}
+                  </button>
                 </section>
 
                 {/* ── Parts Section ── */}
-                <section className="rounded-xl border border-border/60 bg-card/40 p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center justify-center size-6 rounded-lg bg-amber-500/10">
-                        <span className="text-xs font-bold text-amber-600">P</span>
+                <section className="rounded-lg border border-border/60 bg-card/40 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex items-center justify-center size-5 rounded-md bg-amber-500/10">
+                        <span className="text-[10px] font-bold text-amber-600">P</span>
                       </div>
                       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        Parts
+                        {t("parts")}
                       </span>
                       {(wo.parts?.length ?? 0) > 0 && (
                         <span className="rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 text-[10px] font-bold">
@@ -621,36 +620,27 @@ export function WorkOrderDetailDrawer({
                         </span>
                       )}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAddPart(!showAddPart)}
-                      className="h-7 text-xs gap-1"
-                    >
-                      <Plus className="size-3" />
-                      Add
-                    </Button>
                   </div>
 
                   {/* Add part form */}
                   {showAddPart && (
-                    <div className="flex flex-col gap-2 p-3 mb-3 rounded-lg border border-border bg-muted/30">
+                    <div className="flex flex-col gap-1.5 p-2 mb-2 rounded-lg border border-border bg-muted/30">
                       <Input
                         value={newPartName}
                         onChange={(e) => setNewPartName(e.target.value)}
-                        placeholder="Part name"
-                        className="h-9 text-sm"
+                        placeholder={t("partName")}
+                        className="h-8 text-xs"
                         autoFocus
                       />
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         <Input
                           type="number"
                           value={newPartQty}
                           onChange={(e) =>
                             setNewPartQty(Number(e.target.value) || 1)
                           }
-                          placeholder="Qty"
-                          className="h-9 w-16 text-center text-sm"
+                          placeholder={t("qty")}
+                          className="h-8 w-14 text-center text-xs"
                         />
                         <Input
                           type="number"
@@ -658,14 +648,14 @@ export function WorkOrderDetailDrawer({
                           onChange={(e) =>
                             setNewPartPrice(Number(e.target.value) || 0)
                           }
-                          placeholder="Unit price"
-                          className="h-9 flex-1 text-sm"
+                          placeholder={t("unitPrice")}
+                          className="h-8 flex-1 text-xs"
                         />
                         <Button
                           size="sm"
                           onClick={addPartLine}
                           disabled={!newPartName.trim()}
-                          className="h-9 px-3"
+                          className="h-8 px-2 text-xs"
                         >
                           Add
                         </Button>
@@ -675,49 +665,46 @@ export function WorkOrderDetailDrawer({
 
                   {/* Parts list */}
                   {(wo.parts ?? []).length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-6 text-muted-foreground/50 rounded-lg border border-dashed border-border/60">
-                      <p className="text-xs font-medium">No parts yet</p>
-                      <p className="text-[10px] mt-0.5">
-                        Tap <strong>Add</strong> to add parts
-                      </p>
+                    <div className="flex flex-col items-center justify-center py-4 text-muted-foreground/50 rounded-lg border border-dashed border-border/60">
+                      <p className="text-[11px] font-medium">{t("noPartsYet")}</p>
                     </div>
                   ) : (
-                    <div className="-mx-1">
+                    <div className="-mx-0.5">
                       {/* Header row */}
-                      <div className="flex items-center gap-3 px-1 mb-1 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                        <div className="flex-1">Part</div>
-                        <div className="w-16 text-right">Qty</div>
-                        <div className="w-24 text-right">Total</div>
-                        <div className="w-8" />
+                      <div className="flex items-center gap-2 px-1 mb-0.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                        <div className="flex-1">{t("part")}</div>
+                        <div className="w-14 text-right">{t("qty")}</div>
+                        <div className="w-20 text-right">{t("total")}</div>
+                        <div className="w-7" />
                       </div>
-                      <div className="space-y-0.5">
+                      <div className="space-y-px">
                         {wo.parts?.map((part) => (
                           <div
                             key={part.id}
-                            className="group flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/40 transition-colors"
+                            className="group flex items-center gap-2 rounded-md px-1.5 py-1.5 hover:bg-muted/40 transition-colors"
                           >
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">
                                 {part.part_name}
                               </p>
                               <p className="text-[10px] text-muted-foreground/60">
-                                {formatMNT(Number(part.unit_price))}/ea
+                                {formatMNT(Number(part.unit_price))}{t("perUnit")}
                               </p>
                             </div>
-                            <div className="w-16 text-right text-sm text-muted-foreground tabular-nums">
+                            <div className="w-14 text-right text-xs text-muted-foreground tabular-nums">
                               {part.quantity}
                             </div>
-                            <div className="w-24 text-right text-sm font-semibold tabular-nums">
+                            <div className="w-20 text-right text-xs font-semibold tabular-nums">
                               {formatMNT(Number(part.final_price))}
                             </div>
-                            <div className="w-8 flex justify-center">
+                            <div className="w-7 flex justify-center">
                               <button
                                 type="button"
                                 onClick={() => removePart(part.id)}
-                                className="p-1 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="p-0.5 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
                                 aria-label="Remove part"
                               >
-                                <Trash2 className="size-3.5" />
+                                <Trash2 className="size-3" />
                               </button>
                             </div>
                           </div>
@@ -725,26 +712,36 @@ export function WorkOrderDetailDrawer({
                       </div>
                     </div>
                   )}
+
+                  {/* Full-width Add button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPart(!showAddPart)}
+                    className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-muted-foreground/25 py-2 text-xs font-medium text-muted-foreground/60 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <Plus className="size-4" />
+                    {t("addPart")}
+                  </button>
                 </section>
 
                 {/* ── Totals Summary (prominent) ── */}
-                <section className="rounded-xl bg-gradient-to-br from-primary/5 to-primary/[0.02] border border-primary/10 p-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Services</span>
+                <section className="rounded-lg bg-gradient-to-br from-primary/5 to-primary/[0.02] border border-primary/10 p-3">
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">{t("services")}</span>
                       <span className="font-medium tabular-nums">
                         {formatMNT(servicesTotal)}
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Parts</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">{t("parts")}</span>
                       <span className="font-medium tabular-nums">
                         {formatMNT(partsTotal)}
                       </span>
                     </div>
                     <Separator className="bg-primary/10" />
-                    <div className="flex justify-between text-base font-bold">
-                      <span>Grand Total</span>
+                    <div className="flex justify-between text-sm font-bold">
+                      <span>{t("grandTotal")}</span>
                       <span className="tabular-nums text-primary">
                         {formatMNT(Number(wo.total))}
                       </span>
@@ -753,20 +750,20 @@ export function WorkOrderDetailDrawer({
                 </section>
 
                 {/* ── Status Timeline ── */}
-                <section className="rounded-xl border border-border/60 bg-card/40 p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="flex items-center justify-center size-6 rounded-lg bg-purple-500/10">
-                      <History className="size-3.5 text-purple-500" />
+                <section className="rounded-lg border border-border/60 bg-card/40 p-3">
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <div className="flex items-center justify-center size-5 rounded-md bg-purple-500/10">
+                      <History className="size-3 text-purple-500" />
                     </div>
                     <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Status Timeline
+                      {t("statusTimeline")}
                     </span>
                   </div>
 
                   {(wo.status_history ?? []).length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-6 text-muted-foreground/50">
-                      <History className="size-6 mb-2 opacity-60" />
-                      <p className="text-xs">No history yet</p>
+                    <div className="flex flex-col items-center justify-center py-4 text-muted-foreground/50">
+                      <History className="size-5 mb-1.5 opacity-60" />
+                      <p className="text-xs">{t("noHistoryYet")}</p>
                     </div>
                   ) : (
                     <div className="space-y-0">
@@ -776,15 +773,15 @@ export function WorkOrderDetailDrawer({
                         return (
                           <div
                             key={h.id}
-                            className="relative flex gap-3 pb-4 last:pb-0"
+                            className="relative flex gap-2 pb-3 last:pb-0"
                           >
                             {!isLast && (
-                              <div className="absolute left-[13px] top-6 bottom-0 w-px bg-gradient-to-b from-border to-transparent" />
+                              <div className="absolute left-[10px] top-5 bottom-0 w-px bg-gradient-to-b from-border to-transparent" />
                             )}
-                            <div className="relative z-10 mt-1.5 shrink-0">
+                            <div className="relative z-10 mt-1 shrink-0">
                               <div
                                 className={cn(
-                                  "size-[26px] rounded-full ring-[3px] ring-background flex items-center justify-center shadow-sm",
+                                  "size-5 rounded-full ring-2 ring-background flex items-center justify-center",
                                   h.status === "Completed"
                                     ? "bg-green-500"
                                     : h.status === "Cancelled"
@@ -795,13 +792,13 @@ export function WorkOrderDetailDrawer({
                                 )}
                               >
                                 {h.status === "Completed" || h.status === "Ready for Pickup" ? (
-                                  <CheckCircle2 className="size-3.5 text-white" />
+                                  <CheckCircle2 className="size-3 text-white" />
                                 ) : (
-                                  <div className="size-2.5 rounded-full bg-white/80" />
+                                  <div className="size-2 rounded-full bg-white/80" />
                                 )}
                               </div>
                             </div>
-                            <div className="flex-1 min-w-0 pt-0.5">
+                            <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2">
                                 <StatusPill status={h.status} />
                                 <span className="text-[10px] text-muted-foreground/60 shrink-0 font-mono">
@@ -816,7 +813,7 @@ export function WorkOrderDetailDrawer({
                                 </span>
                               </div>
                               {h.notes && (
-                                <p className="text-xs text-muted-foreground mt-1.5 bg-muted/30 rounded-lg px-2.5 py-1.5 border border-border/40">
+                                <p className="text-xs text-muted-foreground mt-1 bg-muted/30 rounded-md px-2 py-1 border border-border/40">
                                   {h.notes}
                                 </p>
                               )}
@@ -829,44 +826,44 @@ export function WorkOrderDetailDrawer({
                 </section>
 
                 {/* ── Notes Section ── */}
-                <section className="rounded-xl border border-border/60 bg-card/40 p-4">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Complaint & Notes
+                <section className="rounded-lg border border-border/60 bg-card/40 p-3">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t("complaintAndNotes")}
                   </span>
-                  <div className="mt-3 space-y-3">
+                  <div className="mt-2 space-y-2">
                     {wo.complaint && (
                       <div>
-                        <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
-                          Complaint
+                        <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                          {t("complaint")}
                         </span>
-                        <p className="text-sm mt-1 p-3 rounded-lg bg-muted/40 border border-border/50">
+                        <p className="text-xs mt-0.5 p-2 rounded-md bg-muted/40 border border-border/50">
                           {wo.complaint}
                         </p>
                       </div>
                     )}
                     {wo.diagnosis && (
                       <div>
-                        <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
-                          Diagnosis
+                        <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                          {t("diagnosis")}
                         </span>
-                        <p className="text-sm mt-1 p-3 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-800/40">
+                        <p className="text-xs mt-0.5 p-2 rounded-md bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-800/40">
                           {wo.diagnosis}
                         </p>
                       </div>
                     )}
                     {wo.notes && (
                       <div>
-                        <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
-                          Internal Notes
+                        <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                          {t("internalNotes")}
                         </span>
-                        <p className="text-sm mt-1 p-3 rounded-lg bg-muted/40 border border-border/50">
+                        <p className="text-xs mt-0.5 p-2 rounded-md bg-muted/40 border border-border/50">
                           {wo.notes}
                         </p>
                       </div>
                     )}
                     {!wo.complaint && !wo.diagnosis && !wo.notes && (
-                      <p className="text-xs text-muted-foreground/50 italic">
-                        No notes recorded
+                      <p className="text-[11px] text-muted-foreground/50 italic">
+                        {t("noNotesRecorded")}
                       </p>
                     )}
                   </div>
@@ -875,33 +872,33 @@ export function WorkOrderDetailDrawer({
                 {/* Spacer for footer */}
                 <div className="h-2" />
               </div>
-            </ScrollArea>
+            </div>
 
             {/* ── Footer: Status actions + mechanic ── */}
-            <div className="shrink-0 border-t border-border bg-background px-4 py-3 space-y-3">
+            <div className="shrink-0 border-t border-border bg-background px-3 py-2 space-y-2">
               {/* Status change confirmation */}
               {confirmStatus && (
-                <div className="rounded-xl border border-amber-200/60 bg-amber-50/40 dark:border-amber-800/30 dark:bg-amber-950/10 p-3 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
+                <div className="rounded-lg border border-amber-200/60 bg-amber-50/40 dark:border-amber-800/30 dark:bg-amber-950/10 p-2 space-y-1.5">
+                  <div className="flex items-start gap-1.5">
+                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
                     <div>
-                      <p className="text-xs font-medium">
-                        Change to <strong>{confirmStatus}</strong>?
+                      <p className="text-[11px] font-medium">
+                        {t("statusNotesGenericTitle", { status: confirmStatus })}?
                       </p>
                       <p className="text-[10px] text-muted-foreground/70 mt-0.5">
                         {confirmStatus === "Completed"
-                          ? "This will mark the work order as complete and calculate final totals."
-                          : "This will cancel the work order. Cannot be undone."}
+                          ? t("confirmComplete")
+                          : t("confirmCancel")}
                       </p>
                     </div>
                   </div>
                   <Input
-                    placeholder="Add notes about this change (optional)"
+                    placeholder={t("addNotesOptional")}
                     value={statusNotes}
                     onChange={(e) => setStatusNotes(e.target.value)}
-                    className="h-9 text-xs"
+                    className="h-8 text-xs"
                   />
-                  <div className="flex gap-2 justify-end">
+                  <div className="flex gap-1.5 justify-end">
                     <Button
                       variant="outline"
                       size="sm"
@@ -909,8 +906,9 @@ export function WorkOrderDetailDrawer({
                         setConfirmStatus(null);
                         setStatusNotes("");
                       }}
+                      className="h-7 text-xs"
                     >
-                      Cancel
+                      {t("cancel")}
                     </Button>
                     <Button
                       size="sm"
@@ -919,60 +917,60 @@ export function WorkOrderDetailDrawer({
                       }
                       disabled={saving}
                       onClick={() => changeStatus(confirmStatus)}
-                      className="min-w-[100px]"
+                      className="h-7 text-xs min-w-[90px]"
                     >
-                      {saving ? "Updating..." : `Confirm ${confirmStatus}`}
+                      {saving ? t("updating") : t("confirm")}
                     </Button>
                   </div>
                 </div>
               )}
 
               {/* Primary status flow action */}
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 {wo.status === "New" && (
                   <Button
-                    className="flex-1 h-10 text-sm font-semibold"
+                    className="flex-1 h-9 text-xs font-semibold"
                     onClick={() => changeStatus("Diagnosing")}
                     disabled={saving}
                   >
-                    <ArrowRight className="size-4" />
-                    Start Diagnosing
+                    <ArrowRight className="size-3.5" />
+                    {t("startDiagnosing")}
                   </Button>
                 )}
                 {wo.status === "Diagnosing" && (
                   <Button
-                    className="flex-1 h-10 text-sm font-semibold"
+                    className="flex-1 h-9 text-xs font-semibold"
                     onClick={() => changeStatus("In Progress")}
                     disabled={saving}
                   >
-                    <ArrowRight className="size-4" />
-                    Start Work
+                    <ArrowRight className="size-3.5" />
+                    {t("startWork")}
                   </Button>
                 )}
                 {wo.status === "In Progress" && (
                   <Button
-                    className="flex-1 h-10 text-sm font-semibold"
+                    className="flex-1 h-9 text-xs font-semibold"
                     onClick={() => changeStatus("Ready for Pickup")}
                     disabled={saving}
                   >
-                    <CheckCircle2 className="size-4" />
-                    Mark Ready for Pickup
+                    <CheckCircle2 className="size-3.5" />
+                    {t("markReady")}
                   </Button>
                 )}
                 {wo.status === "Ready for Pickup" && (
                   <Button
-                    className="flex-1 h-10 text-sm font-semibold"
+                    className="flex-1 h-9 text-xs font-semibold"
                     onClick={() => changeStatus("Completed")}
                     disabled={saving}
                   >
-                    <CheckCircle2 className="size-4" />
-                    Complete & Close
+                    <CheckCircle2 className="size-3.5" />
+                    {t("complete")}
                   </Button>
                 )}
               </div>
 
               {/* Secondary actions */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {/* Cancel */}
                 {canCancel && (
                   <Button
@@ -980,10 +978,10 @@ export function WorkOrderDetailDrawer({
                     size="sm"
                     onClick={() => changeStatus("Cancelled")}
                     disabled={saving}
-                    className="h-9 text-xs text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50"
+                    className="h-7 text-[10px] text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50"
                   >
-                    <X className="size-3.5" />
-                    Cancel Work Order
+                    <X className="size-3" />
+                    {t("cancel")}
                   </Button>
                 )}
 
@@ -992,29 +990,29 @@ export function WorkOrderDetailDrawer({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 text-xs"
+                    className="h-7 text-[10px]"
                     onClick={generateInvoice}
                     disabled={creatingInvoice}
                   >
-                    <FileText className="size-3.5" />
-                    {creatingInvoice ? "Creating..." : "Generate Invoice"}
+                    <FileText className="size-3" />
+                    {creatingInvoice ? t("creating") : t("invoice")}
                   </Button>
                 )}
 
                 <div className="flex-1" />
 
                 {/* Mechanic selector */}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-muted-foreground/70 font-medium uppercase tracking-wider">
-                    Mech:
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] text-muted-foreground/60 font-medium uppercase">
+                    {t("mech")}
                   </span>
                   <select
                     value={wo.mechanic_id ?? ""}
                     onChange={(e) => assignMechanic(e.target.value)}
                     disabled={saving}
-                    className="h-8 rounded-lg border border-border bg-muted/30 px-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 hover:border-muted-foreground/30 transition-colors"
+                    className="h-7 rounded-md border border-border bg-muted/30 px-1.5 text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 hover:border-muted-foreground/30 transition-colors"
                   >
-                    <option value="">Unassigned</option>
+                    <option value="">{t("unassigned")}</option>
                     {mechanics.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.full_name}

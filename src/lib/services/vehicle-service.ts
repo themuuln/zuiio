@@ -1,4 +1,7 @@
+import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
+import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { withCache } from "@/lib/cache/with-cache";
 import type { Vehicle, WorkOrder } from "@/lib/database.types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -21,41 +24,50 @@ export async function getVehicles(
 ): Promise<VehicleWithOwner[]> {
   const supabase = await createClient();
 
-  let query = supabase
-    .from("vehicles")
-    .select(
-      "*, vehicle_owners!inner(customer_id, customers!inner(first_name, last_name, phone))",
-    )
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .is("vehicle_owners.owned_until", null)
-    .order("created_at", { ascending: false });
+  return withCache(
+    ["getVehicles", orgId, JSON.stringify(options ?? {})],
+    async () => {
+      let query = supabase
+        .from("vehicles")
+        .select(
+          "*, vehicle_owners!inner(customer_id, customers!inner(first_name, last_name, phone))",
+        )
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .is("vehicle_owners.owned_until", null)
+        .order("created_at", { ascending: false });
 
-  if (options?.search?.trim()) {
-    const term = `%${options.search.trim()}%`;
-    query = query.or(`plate_number.ilike.${term},vin.ilike.${term}`);
-  }
+      if (options?.search?.trim()) {
+        const term = `%${options.search.trim()}%`;
+        query = query.or(`plate_number.ilike.${term},vin.ilike.${term}`);
+      }
 
-  if (options?.customerId) {
-    query = query.eq("vehicle_owners.customer_id", options.customerId);
-  }
+      if (options?.customerId) {
+        query = query.eq("vehicle_owners.customer_id", options.customerId);
+      }
 
-  const { data, error } = await query;
+      const { data, error } = await query;
 
-  if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message);
 
-  return (data ?? []).map((row: Record<string, unknown>) => {
-    const owners = (row.vehicle_owners as Record<string, unknown>[]) ?? [];
-    const primaryOwner = owners[0];
-    const customer = (primaryOwner?.customers as Record<string, unknown>) ?? {};
-    return {
-      ...(row as unknown as Vehicle),
-      owner_name:
-        [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
-        null,
-      owner_phone: (customer.phone as string) ?? null,
-    } as VehicleWithOwner;
-  });
+      return (data ?? []).map((row: Record<string, unknown>) => {
+        const owners = (row.vehicle_owners as Record<string, unknown>[]) ?? [];
+        const primaryOwner = owners[0];
+        const customer = (primaryOwner?.customers as Record<string, unknown>) ?? {};
+        return {
+          ...(row as unknown as Vehicle),
+          owner_name:
+            [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
+            null,
+          owner_phone: (customer.phone as string) ?? null,
+        } as VehicleWithOwner;
+      });
+    },
+    {
+      tags: [cacheTags.vehicles(orgId)],
+      revalidate: cacheDurations.vehicles,
+    },
+  );
 }
 
 /**
@@ -67,58 +79,67 @@ export async function getVehicle(
 ): Promise<VehicleDetail> {
   const supabase = await createClient();
 
-  const { data: vehicle, error } = await supabase
-    .from("vehicles")
-    .select("*")
-    .eq("id", id)
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .single();
+  return withCache(
+    ["getVehicle", id],
+    async () => {
+      const { data: vehicle, error } = await supabase
+        .from("vehicles")
+        .select("*")
+        .eq("id", id)
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .single();
 
-  if (error || !vehicle) {
-    throw new NotFoundError("Vehicle not found");
-  }
+      if (error || !vehicle) {
+        throw new NotFoundError("Vehicle not found");
+      }
 
-  // Get owners
-  const { data: owners } = await supabase
-    .from("vehicle_owners")
-    .select("customer_id, is_primary, customers(first_name, last_name, phone)")
-    .eq("vehicle_id", id)
-    .eq("organization_id", orgId)
-    .is("owned_until", null);
+      // Get owners
+      const { data: owners } = await supabase
+        .from("vehicle_owners")
+        .select("customer_id, is_primary, customers(first_name, last_name, phone)")
+        .eq("vehicle_id", id)
+        .eq("organization_id", orgId)
+        .is("owned_until", null);
 
-  // Get recent work orders
-  const { data: workOrders } = await supabase
-    .from("work_orders")
-    .select("id, status, complaint, total, created_at")
-    .eq("vehicle_id", id)
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-    .limit(10);
+      // Get recent work orders
+      const { data: workOrders } = await supabase
+        .from("work_orders")
+        .select("id, status, complaint, total, created_at")
+        .eq("vehicle_id", id)
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-  return {
-    ...vehicle,
-    owners: (owners ?? []).map((o: Record<string, unknown>) => {
-      const c = (o.customers as Record<string, unknown>) ?? {};
       return {
-        customer_id: o.customer_id as string,
-        name:
-          [c.first_name, c.last_name].filter(Boolean).join(" ") || "Unknown",
-        phone: (c.phone as string) ?? null,
-        is_primary: o.is_primary as boolean,
+        ...vehicle,
+        owners: (owners ?? []).map((o: Record<string, unknown>) => {
+          const c = (o.customers as Record<string, unknown>) ?? {};
+          return {
+            customer_id: o.customer_id as string,
+            name:
+              [c.first_name, c.last_name].filter(Boolean).join(" ") || "Unknown",
+            phone: (c.phone as string) ?? null,
+            is_primary: o.is_primary as boolean,
+          };
+        }),
+        recent_work_orders: (workOrders ?? []).map(
+          (wo: Record<string, unknown>) => ({
+            id: wo.id as string,
+            status: wo.status as string,
+            complaint: (wo.complaint as string) ?? null,
+            total: wo.total as number,
+            created_at: wo.created_at as string,
+          }),
+        ),
       };
-    }),
-    recent_work_orders: (workOrders ?? []).map(
-      (wo: Record<string, unknown>) => ({
-        id: wo.id as string,
-        status: wo.status as string,
-        complaint: (wo.complaint as string) ?? null,
-        total: wo.total as number,
-        created_at: wo.created_at as string,
-      }),
-    ),
-  };
+    },
+    {
+      tags: [cacheTags.vehicles(orgId)],
+      revalidate: cacheDurations.vehicles,
+    },
+  );
 }
 
 /**
@@ -214,6 +235,8 @@ export async function createVehicle(
     organization_id: orgId,
     new_data: vehicle as unknown as Record<string, unknown>,
   });
+
+  revalidateTag(cacheTags.vehicles(orgId), "max");
 
   return vehicle;
 }
@@ -317,6 +340,8 @@ export async function updateVehicle(
     new_data: data as unknown as Record<string, unknown>,
   });
 
+  revalidateTag(cacheTags.vehicles(orgId), "max");
+
   return data;
 }
 
@@ -358,6 +383,8 @@ export async function deleteVehicle(
     user_id: userId,
     organization_id: orgId,
   });
+
+  revalidateTag(cacheTags.vehicles(orgId), "max");
 }
 
 /**
@@ -379,19 +406,28 @@ export async function getVehicleServiceHistory(
 ): Promise<(WorkOrder & { work_order_services: Record<string, unknown>[] })[]> {
   const supabase = await createClient();
 
-  const { data: workOrders, error } = await supabase
-    .from("work_orders")
-    .select("*, work_order_services(*)")
-    .eq("organization_id", orgId)
-    .eq("vehicle_id", vehicleId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+  return withCache(
+    ["getVehicleServiceHistory", orgId, vehicleId],
+    async () => {
+      const { data: workOrders, error } = await supabase
+        .from("work_orders")
+        .select("*, work_order_services(*)")
+        .eq("organization_id", orgId)
+        .eq("vehicle_id", vehicleId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
 
-  if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message);
 
-  return (workOrders ?? []) as (WorkOrder & {
-    work_order_services: Record<string, unknown>[];
-  })[];
+      return (workOrders ?? []) as (WorkOrder & {
+        work_order_services: Record<string, unknown>[];
+      })[];
+    },
+    {
+      tags: [cacheTags.vehicles(orgId)],
+      revalidate: cacheDurations.vehicles,
+    },
+  );
 }
 
 /**
@@ -403,21 +439,30 @@ export async function getCustomerVehicles(
 ): Promise<VehicleWithOwner[]> {
   const supabase = await createClient();
 
-  const { data: owners, error } = await supabase
-    .from("vehicle_owners")
-    .select("vehicle_id, vehicles(*)")
-    .eq("organization_id", orgId)
-    .eq("customer_id", customerId)
-    .is("owned_until", null);
+  return withCache(
+    ["getCustomerVehicles", orgId, customerId],
+    async () => {
+      const { data: owners, error } = await supabase
+        .from("vehicle_owners")
+        .select("vehicle_id, vehicles(*)")
+        .eq("organization_id", orgId)
+        .eq("customer_id", customerId)
+        .is("owned_until", null);
 
-  if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message);
 
-  return (owners ?? []).map((o: Record<string, unknown>) => {
-    const v = (o.vehicles as Record<string, unknown>) ?? {};
-    return {
-      ...(v as unknown as Vehicle),
-      owner_name: null,
-      owner_phone: null,
-    } as VehicleWithOwner;
-  });
+      return (owners ?? []).map((o: Record<string, unknown>) => {
+        const v = (o.vehicles as Record<string, unknown>) ?? {};
+        return {
+          ...(v as unknown as Vehicle),
+          owner_name: null,
+          owner_phone: null,
+        } as VehicleWithOwner;
+      });
+    },
+    {
+      tags: [cacheTags.vehicles(orgId)],
+      revalidate: cacheDurations.vehicles,
+    },
+  );
 }

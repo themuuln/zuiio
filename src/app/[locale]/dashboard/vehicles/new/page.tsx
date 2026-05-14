@@ -2,14 +2,15 @@
 
 import { ArrowLeft, CarFront, Loader2, User } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Breadcrumb } from "@/components/breadcrumb";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Breadcrumb } from "@/components/breadcrumb";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import type { Customer } from "@/lib/types";
 
@@ -53,18 +54,19 @@ const initialForm: VehicleFormState = {
   notes: "",
 };
 
-function getCustomerLabel(customer: Customer) {
+function getCustomerLabel(customer: Customer, t?: (key: string) => string) {
   return (
     [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
     customer.company_name ||
     customer.contact_person ||
     customer.full_name ||
     customer.phone ||
-    "Unnamed customer"
+    (t?.("unnamedCustomer") ?? "Unnamed customer")
   );
 }
 
 export default function NewVehiclePage() {
+  const t = useTranslations("vehicles");
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedCustomerId = searchParams.get("customerId");
@@ -86,7 +88,7 @@ export default function NewVehiclePage() {
       .then((data) => {
         const nextOrgId = data?.organizationId ?? data?.data?.organizationId;
         if (!nextOrgId) {
-          setError("No organization found");
+          setError(t("noOrganization"));
           return;
         }
 
@@ -94,7 +96,7 @@ export default function NewVehiclePage() {
       })
       .catch(() => setError("Failed to load profile"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!orgId || !preselectedCustomerId) {
@@ -139,7 +141,7 @@ export default function NewVehiclePage() {
     event.preventDefault();
 
     if (!orgId) {
-      setError("No organization found");
+      setError(t("noOrganization"));
       return;
     }
 
@@ -170,11 +172,11 @@ export default function NewVehiclePage() {
         return;
       }
 
-      toast.success("Vehicle created");
+      toast.success(t("vehicleCreated"));
       router.replace(`/dashboard/vehicles/${json.data.id}`);
     } catch {
-      toast.error("Failed to create vehicle");
-      setError("Failed to create vehicle");
+      toast.error(t("failedToCreate"));
+      setError(t("failedToCreate"));
     } finally {
       setSaving(false);
     }
@@ -193,7 +195,7 @@ export default function NewVehiclePage() {
     <div className="flex max-w-4xl flex-col gap-6">
       <Breadcrumb
         items={[
-          { label: "Vehicles", href: "/dashboard/vehicles" },
+          { label: t("title"), href: "/dashboard/vehicles" },
           { label: "New Vehicle" },
         ]}
       />
@@ -225,7 +227,7 @@ export default function NewVehiclePage() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Owner</CardTitle>
+            <CardTitle className="text-base">{t("owner")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {selectedCustomer ? (
@@ -236,12 +238,12 @@ export default function NewVehiclePage() {
                   </div>
                   <div>
                     <p className="font-medium">
-                      {getCustomerLabel(selectedCustomer)}
+                      {getCustomerLabel(selectedCustomer, t)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {selectedCustomer.phone ||
-                        selectedCustomer.email ||
-                        "No contact info"}
+                        {selectedCustomer.phone ||
+                          selectedCustomer.email ||
+                          t("noContactInfo")}
                     </p>
                   </div>
                 </div>
@@ -279,12 +281,12 @@ export default function NewVehiclePage() {
                         </div>
                         <div>
                           <p className="font-medium">
-                            {getCustomerLabel(customer)}
+                            {getCustomerLabel(customer, t)}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {customer.phone ||
                               customer.email ||
-                              "No contact info"}
+                              t("noContactInfo")}
                           </p>
                         </div>
                       </button>
@@ -298,7 +300,7 @@ export default function NewVehiclePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Vehicle information</CardTitle>
+            <CardTitle className="text-base">{t("vehicleInformation")}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -306,7 +308,7 @@ export default function NewVehiclePage() {
                 className="mb-1 block text-sm font-medium"
                 htmlFor="plateNumber"
               >
-                Plate number
+                {t("plate")}
               </label>
               <Input
                 id="plateNumber"
@@ -323,7 +325,7 @@ export default function NewVehiclePage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="vin">
-                VIN
+                {t("vin")}
               </label>
               <Input
                 id="vin"
@@ -340,7 +342,7 @@ export default function NewVehiclePage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="make">
-                Make
+                {t("make")}
               </label>
               <Input
                 id="make"
@@ -357,7 +359,7 @@ export default function NewVehiclePage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="model">
-                Model
+                {t("model")}
               </label>
               <Input
                 id="model"
@@ -374,7 +376,7 @@ export default function NewVehiclePage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="year">
-                Year
+                {t("year")}
               </label>
               <Input
                 id="year"
@@ -395,7 +397,7 @@ export default function NewVehiclePage() {
                 className="mb-1 block text-sm font-medium"
                 htmlFor="odometer"
               >
-                Odometer
+                {t("odometer")}
               </label>
               <Input
                 id="odometer"
@@ -413,7 +415,7 @@ export default function NewVehiclePage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="trim">
-                Trim / series
+                {t("trim")}
               </label>
               <Input
                 id="trim"
@@ -429,7 +431,7 @@ export default function NewVehiclePage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="color">
-                Color
+                {t("color")}
               </label>
               <Input
                 id="color"
@@ -448,7 +450,7 @@ export default function NewVehiclePage() {
                 className="mb-1 block text-sm font-medium"
                 htmlFor="engine"
               >
-                Engine
+                {t("engine")}
               </label>
               <Input
                 id="engine"
@@ -467,7 +469,7 @@ export default function NewVehiclePage() {
                 className="mb-1 block text-sm font-medium"
                 htmlFor="chassisNumber"
               >
-                Chassis number
+                {t("chassisNumber")}
               </label>
               <Input
                 id="chassisNumber"
@@ -486,7 +488,7 @@ export default function NewVehiclePage() {
                 className="mb-1 block text-sm font-medium"
                 htmlFor="fuelType"
               >
-                Fuel type
+                {t("fuelType")}
               </label>
               <Input
                 id="fuelType"
@@ -506,7 +508,7 @@ export default function NewVehiclePage() {
                 className="mb-1 block text-sm font-medium"
                 htmlFor="transmission"
               >
-                Transmission
+                {t("transmission")}
               </label>
               <Input
                 id="transmission"
@@ -526,7 +528,7 @@ export default function NewVehiclePage() {
                 className="mb-1 block text-sm font-medium"
                 htmlFor="drivetrain"
               >
-                Drivetrain
+                {t("drivetrain")}
               </label>
               <Input
                 id="drivetrain"
@@ -546,7 +548,7 @@ export default function NewVehiclePage() {
                 className="mb-1 block text-sm font-medium"
                 htmlFor="bodyType"
               >
-                Body type
+                {t("bodyType")}
               </label>
               <Input
                 id="bodyType"
@@ -566,7 +568,7 @@ export default function NewVehiclePage() {
                 className="mb-1 block text-sm font-medium"
                 htmlFor="licenseExpiryAt"
               >
-                License expiry
+                {t("licenseExpiry")}
               </label>
               <Input
                 id="licenseExpiryAt"
@@ -586,7 +588,7 @@ export default function NewVehiclePage() {
                 className="mb-1 block text-sm font-medium"
                 htmlFor="nextServiceAt"
               >
-                Next service due
+                {t("nextService")}
               </label>
               <Input
                 id="nextServiceAt"
@@ -603,7 +605,7 @@ export default function NewVehiclePage() {
             </div>
             <div className="sm:col-span-2">
               <label className="mb-1 block text-sm font-medium" htmlFor="notes">
-                Notes
+                {t("notes")}
               </label>
               <textarea
                 id="notes"
@@ -636,7 +638,7 @@ export default function NewVehiclePage() {
             ) : (
               <CarFront className="size-4" />
             )}
-            {saving ? "Creating..." : "Create vehicle"}
+            {saving ? t("saving") : "Create vehicle"}
           </Button>
         </div>
       </form>

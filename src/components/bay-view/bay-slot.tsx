@@ -3,6 +3,7 @@
 import { useDroppable } from "@dnd-kit/core";
 import { Clock, MapPin, Maximize2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
 import { MechanicBadge } from "./mechanic-badge";
@@ -96,6 +97,7 @@ export function BaySlot({
   onRemoveFromBay,
   onOpenDetail,
 }: BaySlotProps) {
+  const t = useTranslations("bayView");
   const { setNodeRef, isOver } = useDroppable({ id: `bay-${bay.bayNumber}` });
   const wo = bay.workOrder;
 
@@ -145,7 +147,7 @@ export function BaySlot({
               : "bg-muted/50 text-muted-foreground/50",
           )}
         >
-          BAY {bay.bayNumber}
+          {t("bayLabel", { number: bay.bayNumber })}
         </span>
         {wo && <StatusPill status={wo.status} />}
       </div>
@@ -162,7 +164,7 @@ export function BaySlot({
             />
           ) : (
             <div className="flex items-center justify-center flex-1 text-muted-foreground text-xs">
-              No vehicle assigned
+              {t("noVehicleAssigned")}
             </div>
           )}
 
@@ -173,16 +175,16 @@ export function BaySlot({
           </div>
 
           {/* Quick actions row */}
-          <div className="flex gap-1.5 mt-1" role="group" aria-label="Work order actions">
+          <div className="flex gap-1.5 mt-1" role="group" aria-label={t("manage")}>
             {/* Contextual status action */}
             {wo.status !== "Ready for Pickup" && wo.status !== "Completed" && wo.status !== "Cancelled" && (
               <button
                 type="button"
                 onClick={() => onStatusChange(wo.id, "Ready for Pickup")}
                 className="flex-1 rounded-md bg-green-500/10 px-2 py-1.5 text-xs font-medium text-green-600 hover:bg-green-500/20 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
-                aria-label="Mark work order ready for pickup"
+                aria-label={t("markReady")}
               >
-                Mark Ready
+                {t("markReady")}
               </button>
             )}
             {wo.status === "Ready for Pickup" && (
@@ -190,9 +192,9 @@ export function BaySlot({
                 type="button"
                 onClick={() => onStatusChange(wo.id, "Completed")}
                 className="flex-1 rounded-md bg-green-500/10 px-2 py-1.5 text-xs font-medium text-green-600 hover:bg-green-500/20 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
-                aria-label="Mark work order as completed"
+                aria-label={t("complete")}
               >
-                Complete
+                {t("complete")}
               </button>
             )}
             {/* Open detail drawer */}
@@ -200,10 +202,10 @@ export function BaySlot({
               type="button"
               onClick={() => onOpenDetail(wo.id)}
               className="flex items-center justify-center gap-1 rounded-md bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              aria-label="Open work order details"
+              aria-label={t("manage")}
             >
               <Maximize2 className="size-3" />
-              <span className="hidden sm:inline">Manage</span>
+              <span className="hidden sm:inline">{t("manage")}</span>
             </button>
           </div>
         </div>
@@ -215,7 +217,7 @@ export function BaySlot({
               <div className="size-3 rounded-full bg-primary/40 animate-ping" />
             </div>
           </div>
-          <span className="text-xs font-medium">Drop vehicle here</span>
+          <span className="text-xs font-medium">{t("dropVehicleHere")}</span>
         </div>
       )}
     </div>

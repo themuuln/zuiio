@@ -2,6 +2,7 @@
 
 import { MessageSquare, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,18 +14,13 @@ interface StatusNotesModalProps {
   onCancel: () => void;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  "Ready for Pickup": "Mark Ready for Pickup",
-  Completed: "Complete Work Order",
-  Cancelled: "Cancel Work Order",
-};
-
 export function StatusNotesModal({
   woId,
   newStatus,
   onConfirm,
   onCancel,
 }: StatusNotesModalProps) {
+  const t = useTranslations("bayView");
   const [notes, setNotes] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -43,7 +39,12 @@ export function StatusNotesModal({
     onConfirm(woId, newStatus, notes.trim() || undefined);
   };
 
-  const title = STATUS_LABELS[newStatus] ?? `Change to ${newStatus}`;
+  const LABEL_MAP: Record<string, string> = {
+    "Ready for Pickup": t("statusNotesTitle"),
+    Completed: t("statusNotesCompleteTitle"),
+    Cancelled: t("statusNotesCancelTitle"),
+  };
+  const title = LABEL_MAP[newStatus] ?? t("statusNotesGenericTitle", { status: newStatus });
 
   return (
     <div
@@ -64,21 +65,20 @@ export function StatusNotesModal({
             type="button"
             onClick={onCancel}
             className="rounded-md p-1 hover:bg-muted transition-colors"
-            aria-label="Cancel"
+            aria-label={t("cancel")}
           >
             <X className="size-4" />
           </button>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <p className="text-sm text-muted-foreground">
-            Add a note about this status change{" "}
-            <span className="text-xs text-muted-foreground/60">(optional)</span>
+            {t("addNotePrompt")}
           </p>
           <Input
             ref={inputRef}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder='e.g. "Oil change completed, test drove OK"'
+            placeholder={t("notePlaceholder")}
             className="h-11"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -89,7 +89,7 @@ export function StatusNotesModal({
           />
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={onCancel} size="lg">
-              Cancel
+              {t("cancel")}
             </Button>
             <Button onClick={handleSubmit} size="lg">
               {title}

@@ -4,15 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { useWizardContext } from "./wizard-context";
+import { useTranslations } from "next-intl";
 
 export function MechanicSection() {
   const ctx = useWizardContext();
+  const t = useTranslations("workOrderWizard");
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Mechanic</CardTitle>
+          <CardTitle className="text-base">{t("mechanic")}</CardTitle>
         </CardHeader>
         <CardContent>
           <MechanicSelect
@@ -26,11 +28,11 @@ export function MechanicSection() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Notes</CardTitle>
+          <CardTitle className="text-base">{t("notes")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Input
-            placeholder="Description / Notes (optional)"
+            placeholder={t("descriptionOrNotes")}
             value={ctx.description}
             onChange={(e) => ctx.setDescription(e.target.value)}
             className="h-11"

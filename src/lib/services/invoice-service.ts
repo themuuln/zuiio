@@ -1,3 +1,6 @@
+import { revalidateTag } from "next/cache";
+import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { withCache } from "@/lib/cache/with-cache";
 import type {
   Invoice,
   InvoiceWithItems,
@@ -55,27 +58,36 @@ export async function getInvoices(
 ): Promise<InvoiceWithItems[]> {
   const supabase = await createClient();
 
-  let query = supabase
-    .from("invoices")
-    .select("*")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+  return withCache(
+    ["getInvoices", orgId, JSON.stringify(options ?? {})],
+    async () => {
+      let query = supabase
+        .from("invoices")
+        .select("*")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
 
-  if (options?.status) {
-    query = query.eq("status", options.status);
-  }
-  if (options?.limit) {
-    query = query.limit(options.limit);
-  }
-  if (options?.offset) {
-    query = query.range(options.offset, options.offset + (options.limit ?? 20) - 1);
-  }
+      if (options?.status) {
+        query = query.eq("status", options.status);
+      }
+      if (options?.limit) {
+        query = query.limit(options.limit);
+      }
+      if (options?.offset) {
+        query = query.range(options.offset, options.offset + (options.limit ?? 20) - 1);
+      }
 
-  const { data, error } = await query;
+      const { data, error } = await query;
 
-  if (error) throw new Error(error.message ?? "Failed to fetch invoices");
-  return (data ?? []) as InvoiceWithItems[];
+      if (error) throw new Error(error.message ?? "Failed to fetch invoices");
+      return (data ?? []) as InvoiceWithItems[];
+    },
+    {
+      tags: [cacheTags.invoices(orgId)],
+      revalidate: cacheDurations.invoices,
+    },
+  );
 }
 
 // ── Get a single invoice by ID ────────────────────
@@ -84,34 +96,42 @@ export async function getInvoice(
 ): Promise<InvoiceWithItems> {
   const supabase = await createClient();
 
-  const { data: invoice, error } = await supabase
-    .from("invoices")
-    .select("*")
-    .eq("id", id)
-    .is("deleted_at", null)
-    .single();
+  return withCache(
+    ["getInvoice", id],
+    async () => {
+      const { data: invoice, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("id", id)
+        .is("deleted_at", null)
+        .single();
 
-  if (error || !invoice) throw new NotFoundError("Invoice not found");
+      if (error || !invoice) throw new NotFoundError("Invoice not found");
 
-  // Fetch related items in parallel
-  const [{ data: items }, { data: payments }] = await Promise.all([
-    supabase
-      .from("invoice_items")
-      .select("*")
-      .eq("invoice_id", id)
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("invoice_payments")
-      .select("*")
-      .eq("invoice_id", id)
-      .order("paid_at", { ascending: false }),
-  ]);
+      const [{ data: items }, { data: payments }] = await Promise.all([
+        supabase
+          .from("invoice_items")
+          .select("*")
+          .eq("invoice_id", id)
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("invoice_payments")
+          .select("*")
+          .eq("invoice_id", id)
+          .order("paid_at", { ascending: false }),
+      ]);
 
-  return {
-    ...invoice,
-    items: (items ?? []) as InvoiceItem[],
-    payments: (payments ?? []) as InvoicePayment[],
-  } as InvoiceWithItems;
+      return {
+        ...invoice,
+        items: (items ?? []) as InvoiceItem[],
+        payments: (payments ?? []) as InvoicePayment[],
+      } as InvoiceWithItems;
+    },
+    {
+      tags: [cacheTags.invoice(id)],
+      revalidate: cacheDurations.invoice,
+    },
+  );
 }
 
 // ── Get invoice by public token (no auth needed) ──
@@ -120,33 +140,42 @@ export async function getInvoiceByPublicToken(
 ): Promise<InvoiceWithItems> {
   const supabase = await createClient();
 
-  const { data: invoice, error } = await supabase
-    .from("invoices")
-    .select("*")
-    .eq("public_token", token)
-    .is("deleted_at", null)
-    .single();
+  return withCache(
+    ["getInvoiceByPublicToken", token],
+    async () => {
+      const { data: invoice, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("public_token", token)
+        .is("deleted_at", null)
+        .single();
 
-  if (error || !invoice) throw new NotFoundError("Invoice not found");
+      if (error || !invoice) throw new NotFoundError("Invoice not found");
 
-  const [{ data: items }, { data: payments }] = await Promise.all([
-    supabase
-      .from("invoice_items")
-      .select("*")
-      .eq("invoice_id", invoice.id)
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("invoice_payments")
-      .select("*")
-      .eq("invoice_id", invoice.id)
-      .order("paid_at", { ascending: false }),
-  ]);
+      const [{ data: items }, { data: payments }] = await Promise.all([
+        supabase
+          .from("invoice_items")
+          .select("*")
+          .eq("invoice_id", invoice.id)
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("invoice_payments")
+          .select("*")
+          .eq("invoice_id", invoice.id)
+          .order("paid_at", { ascending: false }),
+      ]);
 
-  return {
-    ...invoice,
-    items: (items ?? []) as InvoiceItem[],
-    payments: (payments ?? []) as InvoicePayment[],
-  } as InvoiceWithItems;
+      return {
+        ...invoice,
+        items: (items ?? []) as InvoiceItem[],
+        payments: (payments ?? []) as InvoicePayment[],
+      } as InvoiceWithItems;
+    },
+    {
+      tags: [cacheTags.invoice(token)],
+      revalidate: cacheDurations.invoice,
+    },
+  );
 }
 
 // ── Create invoice from a work order ──────────────
@@ -326,6 +355,7 @@ export async function createInvoiceFromWorkOrder(
     if (itemsError) throw new Error(itemsError.message);
   }
 
+  revalidateTag(cacheTags.invoices(orgId), "max");
   return getInvoice(invoice.id);
 }
 
@@ -370,6 +400,8 @@ export async function updateInvoiceStatus(
     .single();
 
   if (error || !data) throw new NotFoundError("Invoice not found");
+  revalidateTag(cacheTags.invoice(id), "max");
+  revalidateTag(cacheTags.invoices(data.organization_id as string), "max");
   return data;
 }
 
@@ -394,6 +426,8 @@ export async function markInvoiceEmailed(
     .single();
 
   if (error || !data) throw new NotFoundError("Invoice not found");
+  revalidateTag(cacheTags.invoice(id), "max");
+  revalidateTag(cacheTags.invoices(orgId), "max");
   return data;
 }
 
@@ -459,6 +493,9 @@ export async function recordPayment(
     })
     .eq("id", invoiceId);
 
+  revalidateTag(cacheTags.invoice(invoiceId), "max");
+  revalidateTag(cacheTags.invoices(orgId), "max");
+
   // Return updated payments
   const { data: updatedPayments } = await supabase
     .from("invoice_payments")
@@ -483,29 +520,36 @@ export async function getInvoiceStats(
 }> {
   const supabase = await createClient();
 
-  const { data: invoices } = await supabase
-    .from("invoices")
-    .select("*")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null);
+  return withCache(
+    ["getInvoiceStats", orgId],
+    async () => {
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select("status, total, balance_due")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null);
 
-  const all = invoices ?? [];
+      const all = invoices ?? [];
 
-  const stats = {
-    total: all.length,
-    draft: all.filter((i) => i.status === "draft").length,
-    sent: all.filter((i) => i.status === "sent").length,
-    paid: all.filter((i) => i.status === "paid").length,
-    overdue: all.filter((i) => i.status === "overdue").length,
-    totalRevenue: all
-      .filter((i) => i.status === "paid")
-      .reduce((sum, i) => sum + Number(i.total), 0),
-    outstanding: all
-      .filter((i) => i.status !== "paid" && i.status !== "cancelled")
-      .reduce((sum, i) => sum + Number(i.balance_due), 0),
-  };
-
-  return stats;
+      return {
+        total: all.length,
+        draft: all.filter((i) => i.status === "draft").length,
+        sent: all.filter((i) => i.status === "sent").length,
+        paid: all.filter((i) => i.status === "paid").length,
+        overdue: all.filter((i) => i.status === "overdue").length,
+        totalRevenue: all
+          .filter((i) => i.status === "paid")
+          .reduce((sum, i) => sum + Number(i.total), 0),
+        outstanding: all
+          .filter((i) => i.status !== "paid" && i.status !== "cancelled")
+          .reduce((sum, i) => sum + Number(i.balance_due), 0),
+      };
+    },
+    {
+      tags: [cacheTags.invoices(orgId)],
+      revalidate: cacheDurations.invoices,
+    },
+  );
 }
 
 // ── Delete (soft) an invoice ──────────────────────
@@ -527,4 +571,6 @@ export async function deleteInvoice(
     .is("deleted_at", null);
 
   if (error) throw new NotFoundError("Invoice not found");
+  revalidateTag(cacheTags.invoice(id), "max");
+  revalidateTag(cacheTags.invoices(orgId), "max");
 }

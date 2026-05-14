@@ -10,12 +10,14 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface Props {
   onClose: () => void;
 }
 
 export function MechanicRegistrationDialog({ onClose }: Props) {
+  const t = useTranslations("bayView");
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -79,9 +81,9 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
               <Wrench className="size-5 text-purple-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Register Mechanic</h2>
+              <h2 className="text-lg font-bold">{t("registerMechanicBtn")}</h2>
               <p className="text-xs text-muted-foreground">
-                Add a new mechanic to the roster
+                {t("registerMechanicDesc")}
               </p>
             </div>
           </div>
@@ -89,7 +91,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
             type="button"
             onClick={onClose}
             className="rounded-md p-1.5 hover:bg-muted transition-colors"
-            aria-label="Close"
+            aria-label={t("close")}
           >
             <X className="size-5" />
           </button>
@@ -106,14 +108,14 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
             <div className="rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 px-4 py-2.5 text-xs text-green-600 dark:text-green-400 flex items-center gap-2">
               <CheckCircle2 className="size-4 shrink-0" />
               <span>
-                Mechanic <strong>{fullName}</strong> registered successfully!
+                {t("mechanicRegistered", { name: fullName })}
               </span>
             </div>
           )}
 
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-              Full Name *
+              {t("fullName")}
             </label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -122,7 +124,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="e.g. Bat Erdene"
+                placeholder={t("namePlaceholder")}
                 required
                 disabled={success}
                 className="w-full h-11 rounded-xl border border-border bg-background pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all disabled:opacity-50"
@@ -132,7 +134,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
 
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-              Email *
+              {t("email")}
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -140,7 +142,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. bat.erdene@example.com"
+                placeholder={t("emailPlaceholder")}
                 required
                 disabled={success}
                 className="w-full h-11 rounded-xl border border-border bg-background pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all disabled:opacity-50"
@@ -150,7 +152,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
 
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-              Phone <span className="text-muted-foreground/60">(optional)</span>
+              {t("phone")} <span className="text-muted-foreground/60">(optional)</span>
             </label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -158,7 +160,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="e.g. 99110001"
+                placeholder={t("phonePlaceholder")}
                 disabled={success}
                 className="w-full h-11 rounded-xl border border-border bg-background pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all disabled:opacity-50"
               />
@@ -176,7 +178,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
               ) : (
                 <User className="size-4" />
               )}
-              {saving ? "Registering..." : "Register Mechanic"}
+              {saving ? t("registering") : t("registerMechanicBtn")}
             </button>
           )}
 
@@ -187,7 +189,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               <CheckCircle2 className="size-4" />
-              Done
+              {t("done")}
             </button>
           )}
         </form>

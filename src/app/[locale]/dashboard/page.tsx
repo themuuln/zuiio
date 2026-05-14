@@ -27,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import type { DashboardData, WorkOrderDetail } from "@/lib/types";
+import { DailyTimeline } from "./_daily-timeline";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useDashboard } from "@/lib/queries/use-dashboard";
 import {
@@ -713,24 +714,82 @@ export default function DashboardPage() {
   // ── Active WOs exist but none completed ──
   if (!hasRevenue && hasActiveWos) {
     return (
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+        <div className="flex flex-col gap-8">
+          {header}
+
+          <Card className="border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10">
+            <CardContent className="flex items-start gap-3 py-4">
+              <TrendingUp className="mt-0.5 size-5 shrink-0 text-amber-500" />
+              <Typography.Muted>
+                <span className="font-semibold text-foreground">
+                  {summary.activeWorkOrders} work order
+                  {summary.activeWorkOrders === 1 ? "" : "s"} in progress.
+                </span>{" "}
+                Revenue and metrics appear here once work orders are marked{" "}
+                <strong>Completed</strong>.
+              </Typography.Muted>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-2 lg:gap-5">
+            <KpiCard
+              label={t("dashboard.activeWorkOrders")}
+              value={String(summary.activeWorkOrders)}
+              icon={Clock}
+              loading={dashboardLoading}
+            />
+            <KpiCard
+              label={t("dashboard.totalCustomers")}
+              value={String(summary.totalCustomers)}
+              icon={Users}
+              loading={dashboardLoading}
+            />
+          </div>
+
+          <ChartsSection data={data} />
+
+          <div>
+            <SectionHeader
+              title={t("dashboard.recentWorkOrders")}
+              description={t("dashboard.recentWorkOrdersDesc")}
+            />
+            <RecentWorkOrdersTable
+              workOrders={recentWorkOrders}
+              router={router}
+              t={t}
+              workOrdersForExport={dashboardExportColumns}
+            />
+          </div>
+
+          <QuickActions t={t} />
+        </div>
+
+        <aside className="hidden lg:block">
+          <div className="sticky top-8 space-y-6">
+            <DailyTimeline orgId={orgId} />
+          </div>
+        </aside>
+      </div>
+    );
+  }
+
+  // ── Full dashboard state (has revenue) ──
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
       <div className="flex flex-col gap-8">
         {header}
 
-        <Card className="border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10">
-          <CardContent className="flex items-start gap-3 py-4">
-            <TrendingUp className="mt-0.5 size-5 shrink-0 text-amber-500" />
-            <Typography.Muted>
-              <span className="font-semibold text-foreground">
-                {summary.activeWorkOrders} work order
-                {summary.activeWorkOrders === 1 ? "" : "s"} in progress.
-              </span>{" "}
-              Revenue and metrics appear here once work orders are marked{" "}
-              <strong>Completed</strong>.
-            </Typography.Muted>
-          </CardContent>
-        </Card>
+        {goalCard}
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-2 lg:gap-5">
+        <SectionHeader title={t("dashboard.keyMetrics")} />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+          <KpiCard
+            label={t("dashboard.totalRevenue")}
+            value={formatCurrency(summary.totalRevenue)}
+            icon={DollarSign}
+            loading={dashboardLoading}
+          />
           <KpiCard
             label={t("dashboard.activeWorkOrders")}
             value={String(summary.activeWorkOrders)}
@@ -738,9 +797,41 @@ export default function DashboardPage() {
             loading={dashboardLoading}
           />
           <KpiCard
+            label={t("dashboard.avgRepairOrder")}
+            value={formatCurrency(summary.avgRepairOrderValue)}
+            icon={TrendingUp}
+            loading={dashboardLoading}
+          />
+          <KpiCard
             label={t("dashboard.totalCustomers")}
             value={String(summary.totalCustomers)}
             icon={Users}
+            loading={dashboardLoading}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+          <KpiCard
+            label={t("dashboard.serviceRevenue")}
+            value={formatCurrency(summary.serviceRevenue)}
+            icon={Wrench}
+            loading={dashboardLoading}
+          />
+          <KpiCard
+            label={t("dashboard.partsRevenue")}
+            value={formatCurrency(summary.partsRevenue)}
+            icon={ClipboardList}
+            loading={dashboardLoading}
+          />
+          <KpiCard
+            label={t("dashboard.totalVehicles")}
+            value={String(summary.totalVehicles)}
+            icon={Car}
+            loading={dashboardLoading}
+          />
+          <KpiCard
+            label="Service Mix"
+            value={`${summary.totalRevenue > 0 ? Math.round((summary.serviceRevenue / summary.totalRevenue) * 100) : 0}%`}
+            icon={Percent}
             loading={dashboardLoading}
           />
         </div>
@@ -762,86 +853,12 @@ export default function DashboardPage() {
 
         <QuickActions t={t} />
       </div>
-    );
-  }
 
-  // ── Full dashboard state (has revenue) ──
-  return (
-    <div className="flex flex-col gap-8">
-      {header}
-
-      {goalCard}
-
-      <SectionHeader title={t("dashboard.keyMetrics")} />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
-        <KpiCard
-          label={t("dashboard.totalRevenue")}
-          value={formatCurrency(summary.totalRevenue)}
-          icon={DollarSign}
-          loading={dashboardLoading}
-        />
-        <KpiCard
-          label={t("dashboard.activeWorkOrders")}
-          value={String(summary.activeWorkOrders)}
-          icon={Clock}
-          loading={dashboardLoading}
-        />
-        <KpiCard
-          label={t("dashboard.avgRepairOrder")}
-          value={formatCurrency(summary.avgRepairOrderValue)}
-          icon={TrendingUp}
-          loading={dashboardLoading}
-        />
-        <KpiCard
-          label={t("dashboard.totalCustomers")}
-          value={String(summary.totalCustomers)}
-          icon={Users}
-          loading={dashboardLoading}
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
-        <KpiCard
-          label={t("dashboard.serviceRevenue")}
-          value={formatCurrency(summary.serviceRevenue)}
-          icon={Wrench}
-          loading={dashboardLoading}
-        />
-        <KpiCard
-          label={t("dashboard.partsRevenue")}
-          value={formatCurrency(summary.partsRevenue)}
-          icon={ClipboardList}
-          loading={dashboardLoading}
-        />
-        <KpiCard
-          label={t("dashboard.totalVehicles")}
-          value={String(summary.totalVehicles)}
-          icon={Car}
-          loading={dashboardLoading}
-        />
-        <KpiCard
-          label="Service Mix"
-          value={`${summary.totalRevenue > 0 ? Math.round((summary.serviceRevenue / summary.totalRevenue) * 100) : 0}%`}
-          icon={Percent}
-          loading={dashboardLoading}
-        />
-      </div>
-
-      <ChartsSection data={data} />
-
-      <div>
-        <SectionHeader
-          title={t("dashboard.recentWorkOrders")}
-          description={t("dashboard.recentWorkOrdersDesc")}
-        />
-        <RecentWorkOrdersTable
-          workOrders={recentWorkOrders}
-          router={router}
-          t={t}
-          workOrdersForExport={dashboardExportColumns}
-        />
-      </div>
-
-      <QuickActions t={t} />
+      <aside className="hidden lg:block">
+        <div className="sticky top-8 space-y-6">
+          <DailyTimeline orgId={orgId} />
+        </div>
+      </aside>
     </div>
   );
 }

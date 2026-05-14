@@ -17,6 +17,7 @@ export default function RootErrorPage({
         </p>
         <div className="mt-6 flex items-center justify-center gap-3">
           <button
+            type="button"
             onClick={reset}
             className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background hover:bg-foreground/90"
           >

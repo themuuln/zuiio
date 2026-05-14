@@ -1,3 +1,6 @@
+import { revalidateTag } from "next/cache";
+import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { withCache } from "@/lib/cache/with-cache";
 import type { Branch } from "@/lib/database.types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -36,6 +39,8 @@ export async function createBranch(
     throw new Error(error?.message ?? "Failed to create branch");
   }
 
+  revalidateTag(cacheTags.branches(orgId), "max");
+
   return data;
 }
 
@@ -45,18 +50,27 @@ export async function createBranch(
 export async function getBranches(orgId: string): Promise<Branch[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("branches")
-    .select("*")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: true });
+  return withCache(
+    ["getBranches", orgId],
+    async () => {
+      const { data, error } = await supabase
+        .from("branches")
+        .select("*")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: true });
 
-  if (error) {
-    throw new Error(error.message ?? "Failed to fetch branches");
-  }
+      if (error) {
+        throw new Error(error.message ?? "Failed to fetch branches");
+      }
 
-  return data ?? [];
+      return data ?? [];
+    },
+    {
+      tags: [cacheTags.branches(orgId)],
+      revalidate: cacheDurations.branches,
+    },
+  );
 }
 
 /**
@@ -96,6 +110,8 @@ export async function updateBranch(
     throw new NotFoundError("Branch not found");
   }
 
+  revalidateTag(cacheTags.branches(orgId), "max");
+
   return data;
 }
 
@@ -118,4 +134,6 @@ export async function deleteBranch(
   if (error) {
     throw new NotFoundError("Branch not found or already deleted");
   }
+
+  revalidateTag(cacheTags.branches(orgId), "max");
 }

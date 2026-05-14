@@ -1,3 +1,6 @@
+import { revalidateTag } from "next/cache";
+import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { withCache } from "@/lib/cache/with-cache";
 import type { ServiceCatalog, ServicePriceHistory } from "@/lib/database.types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -8,35 +11,53 @@ export async function getServices(
 ): Promise<ServiceCatalog[]> {
   const supabase = await createClient();
 
-  let query = supabase
-    .from("service_catalog")
-    .select("*")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("name");
+  return withCache(
+    ["getServices", orgId, category ?? ""],
+    async () => {
+      let query = supabase
+        .from("service_catalog")
+        .select("*")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .order("name");
 
-  if (category) {
-    query = query.eq("category", category);
-  }
+      if (category) {
+        query = query.eq("category", category);
+      }
 
-  const { data, error } = await query;
+      const { data, error } = await query;
 
-  if (error) throw new Error(error.message ?? "Failed to fetch services");
-  return data ?? [];
+      if (error) throw new Error(error.message ?? "Failed to fetch services");
+      return data ?? [];
+    },
+    {
+      tags: [cacheTags.serviceCatalog(orgId)],
+      revalidate: cacheDurations.serviceCatalog,
+    },
+  );
 }
 
 export async function getService(id: string): Promise<ServiceCatalog> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("service_catalog")
-    .select("*")
-    .eq("id", id)
-    .is("deleted_at", null)
-    .single();
+  return withCache(
+    ["getService", id],
+    async () => {
+      const { data, error } = await supabase
+        .from("service_catalog")
+        .select("*")
+        .eq("id", id)
+        .is("deleted_at", null)
+        .single();
 
-  if (error || !data) throw new NotFoundError("Service not found");
-  return data;
+      if (error || !data) throw new NotFoundError("Service not found");
+      return data;
+    },
+    {
+      tags: [cacheTags.serviceCatalog(id)],
+      revalidate: cacheDurations.serviceCatalog,
+    },
+  );
 }
 
 export async function createService(
@@ -71,6 +92,9 @@ export async function createService(
 
   if (error || !data)
     throw new Error(error?.message ?? "Failed to create service");
+
+  revalidateTag(cacheTags.serviceCatalog(orgId), "max");
+
   return data;
 }
 
@@ -108,6 +132,9 @@ export async function updateService(
     .single();
 
   if (error || !data) throw new NotFoundError("Service not found");
+
+  revalidateTag(cacheTags.serviceCatalog(orgId), "max");
+
   return data;
 }
 
@@ -122,6 +149,8 @@ export async function deleteService(id: string, orgId: string): Promise<void> {
     .is("deleted_at", null);
 
   if (error) throw new NotFoundError("Service not found or already deleted");
+
+  revalidateTag(cacheTags.serviceCatalog(orgId), "max");
 }
 
 export async function getLastSoldPrice(

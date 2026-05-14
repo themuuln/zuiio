@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWizardContext } from "./wizard-context";
+import { useTranslations } from "next-intl";
 
 function formatMNT(amount: number): string {
   return new Intl.NumberFormat("mn-MN", {
@@ -17,24 +18,29 @@ function formatMNT(amount: number): string {
 
 export function PartsSection() {
   const ctx = useWizardContext();
+  const t = useTranslations("workOrderWizard");
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">Parts</CardTitle>
+        <CardTitle className="text-base">{t("parts")}</CardTitle>
         <Button variant="outline" size="sm" onClick={ctx.addPart}>
-          <Plus className="size-4" /> Add Part
+          <Plus className="size-4" /> {t("addPart")}
         </Button>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {ctx.partLines.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-3">
-            No parts added yet
+            {t("noPartsAdded")}
           </p>
         ) : (
           <div className="border rounded-lg overflow-hidden">
             <div className="divide-y">
-              {ctx.partLines.map((part, idx) => (
+              {ctx.partLines.map((part, idx) => {
+                  const partLast = part.part_name
+                    ? ctx.partHistory[part.part_name.toLowerCase()]
+                    : undefined;
+                  return (
                 <div
                   key={idx}
                   className="flex items-center gap-2 p-3 hover:bg-muted/20"
@@ -44,9 +50,14 @@ export function PartsSection() {
                       value={part.part_name}
                       onChange={(e) => ctx.updatePart(idx, "part_name", e.target.value)}
                       className="h-10"
-                      placeholder="Part name"
+                      placeholder={t("partName")}
                       aria-label="Part name"
                     />
+                    {partLast && (
+                      <p className="mt-0.5 text-[11px] text-amber-600">
+                        Last sold: {formatMNT(partLast)}
+                      </p>
+                    )}
                   </div>
                   <Input
                     type="number"
@@ -79,7 +90,8 @@ export function PartsSection() {
                     <Trash2 className="size-4" />
                   </button>
                 </div>
-              ))}
+                  );
+                })}
             </div>
           </div>
         )}

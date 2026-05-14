@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface Props {
   onClose: () => void;
@@ -102,12 +103,13 @@ function ServiceTimeline({
 }: {
   history: LookupResult["serviceHistory"];
 }) {
+  const t = useTranslations("bayView");
   if (history.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-muted-foreground/50">
         <HistoryIcon className="size-10 mb-2" />
-        <p className="text-sm">No service history yet</p>
-        <p className="text-xs mt-1">Service records will appear here</p>
+        <p className="text-sm">{t("noServiceHistory")}</p>
+        <p className="text-xs mt-1">{t("serviceRecordsHere")}</p>
       </div>
     );
   }
@@ -194,6 +196,7 @@ export function VehicleRegistrationDialog({
   onClose,
   initialMode = "register",
 }: Props) {
+  const t = useTranslations("bayView");
   const [mode, setMode] = useState<"register" | "lookup">(initialMode);
   const [plate, setPlate] = useState("");
   const [lookupResult, setLookupResult] = useState<LookupResult>(EMPTY_LOOKUP);
@@ -347,13 +350,13 @@ export function VehicleRegistrationDialog({
             <div>
               <h2 className="text-lg font-bold">
                 {mode === "lookup"
-                  ? "Vehicle Service History"
-                  : "Vehicle Registration"}
+                  ? t("vehicleServiceHistory")
+                  : t("vehicleRegistration")}
               </h2>
               <p className="text-xs text-muted-foreground">
                 {mode === "lookup"
-                  ? "Look up a vehicle by plate to see service records"
-                  : "Register a new vehicle or look up existing"}
+                  ? t("lookupSubtitle")
+                  : t("registerSubtitle")}
               </p>
             </div>
           </div>
@@ -371,13 +374,13 @@ export function VehicleRegistrationDialog({
               }}
               className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted transition-colors"
             >
-              {mode === "register" ? "Switch to Lookup" : "Switch to Register"}
+              {mode === "register" ? t("switchToLookup") : t("switchToRegister")}
             </button>
             <button
               type="button"
               onClick={onClose}
               className="rounded-md p-1.5 hover:bg-muted transition-colors"
-              aria-label="Close"
+              aria-label={t("close")}
             >
               <X className="size-5" />
             </button>
@@ -399,7 +402,7 @@ export function VehicleRegistrationDialog({
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleLookup();
                   }}
-                  placeholder="Enter plate number..."
+                  placeholder={t("enterPlate")}
                   className="w-full h-11 rounded-xl border border-border bg-muted/30 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
               </div>
@@ -414,7 +417,7 @@ export function VehicleRegistrationDialog({
                 ) : (
                   <Search className="size-4" />
                 )}
-                Lookup
+                {t("lookup")}
               </button>
             </div>
 
@@ -434,14 +437,14 @@ export function VehicleRegistrationDialog({
               <div className="mb-4 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 px-4 py-2 text-xs text-green-600 dark:text-green-400 flex items-center gap-2">
                 <CheckCircle2 className="size-4" />
                 {saveMode === "updated"
-                  ? "Vehicle updated successfully!"
-                  : "Vehicle registered successfully!"}
+                  ? t("vehicleUpdated")
+                  : t("vehicleRegistered")}
               </div>
             )}
 
             {lookupDone && !lookupResult.exists && (
               <div className="mb-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-4 py-2 text-xs text-amber-600 dark:text-amber-400">
-                Vehicle not found. Fill in the details below to register it.
+                {t("vehicleNotFound")}
               </div>
             )}
 
@@ -455,14 +458,14 @@ export function VehicleRegistrationDialog({
               {/* Vehicle fields */}
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                  Vehicle Info
+                  {t("vehicleInfo")}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
                     value={make}
                     onChange={(e) => setMake(e.target.value)}
-                    placeholder="Make *"
+                    placeholder={t("makeRequired")}
                     required
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
@@ -470,7 +473,7 @@ export function VehicleRegistrationDialog({
                     type="text"
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
-                    placeholder="Model *"
+                    placeholder={t("modelRequired")}
                     required
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
@@ -478,14 +481,14 @@ export function VehicleRegistrationDialog({
                     type="number"
                     value={year}
                     onChange={(e) => setYear(e.target.value)}
-                    placeholder="Year"
+                    placeholder={t("year")}
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                   <input
                     type="text"
                     value={color}
                     onChange={(e) => setColor(e.target.value)}
-                    placeholder="Color"
+                    placeholder={t("color")}
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                 </div>
@@ -494,28 +497,28 @@ export function VehicleRegistrationDialog({
               {/* Additional vehicle details */}
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                  Additional Details
+                  {t("additionalDetails")}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
                     value={vin}
                     onChange={(e) => setVin(e.target.value)}
-                    placeholder="VIN"
+                    placeholder={t("vin")}
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                   <input
                     type="text"
                     value={engine}
                     onChange={(e) => setEngine(e.target.value)}
-                    placeholder="Engine"
+                    placeholder={t("engine")}
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                   <input
                     type="number"
                     value={odometer}
                     onChange={(e) => setOdometer(e.target.value)}
-                    placeholder="Odometer (km)"
+                    placeholder={t("odometer")}
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                 </div>
@@ -524,28 +527,28 @@ export function VehicleRegistrationDialog({
               {/* Customer fields */}
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                  Owner Info <span className="text-muted-foreground/60">(optional)</span>
+                  {t("ownerInfo")} <span className="text-muted-foreground/60">(optional)</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
                     value={custFirstName}
                     onChange={(e) => setCustFirstName(e.target.value)}
-                    placeholder="First Name"
+                    placeholder={t("firstName")}
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                   <input
                     type="text"
                     value={custLastName}
                     onChange={(e) => setCustLastName(e.target.value)}
-                    placeholder="Last Name"
+                    placeholder={t("lastName")}
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                   <input
                     type="tel"
                     value={custPhone}
                     onChange={(e) => setCustPhone(e.target.value)}
-                    placeholder="Phone"
+                    placeholder={t("phone")}
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                 </div>
@@ -565,10 +568,10 @@ export function VehicleRegistrationDialog({
                   <Car className="size-4" />
                 )}
                 {saving
-                  ? "Saving..."
+                  ? t("saving")
                   : lookupResult.exists
-                    ? "Update Vehicle"
-                    : "Register Vehicle"}
+                    ? t("updateVehicle")
+                    : t("registerVehicleBtn")}
               </button>
             </form>
           </div>
@@ -579,7 +582,7 @@ export function VehicleRegistrationDialog({
               <div className="flex items-center justify-center size-7 rounded-lg bg-amber-500/10">
                 <HistoryIcon className="size-3.5 text-amber-500" />
               </div>
-              <span className="text-sm font-semibold">Service Timeline</span>
+              <span className="text-sm font-semibold">{t("serviceTimeline")}</span>
               {lookupResult.serviceHistory.length > 0 && (
                 <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
                   {lookupResult.serviceHistory.length}
@@ -624,7 +627,7 @@ export function VehicleRegistrationDialog({
                           lookupResult.customer.last_name,
                         ]
                           .filter(Boolean)
-                          .join(" ") || "Unknown"}{" "}
+                          .join(" ") || t("unknown")}{" "}
                         · {lookupResult.customer.phone}
                       </div>
                     )}
@@ -639,10 +642,10 @@ export function VehicleRegistrationDialog({
               <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/40">
                 <Car className="size-12 mb-3" />
                 <p className="text-sm font-medium">
-                  Enter a plate number above
+                  {t("enterPlateAbove")}
                 </p>
                 <p className="text-xs mt-1">
-                  Service timeline will appear here
+                  {t("timelineWillAppear")}
                 </p>
               </div>
             )}

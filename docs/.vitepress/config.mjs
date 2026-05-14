@@ -42,6 +42,13 @@ export default defineConfig({
         ],
       },
       {
+        text: "Үйлчилгээ, сэлбэг",
+        items: [
+          { text: "Үйлчилгээний каталог", link: "/services" },
+          { text: "Автомашины загвар", link: "/vehicle-models" },
+        ],
+      },
+      {
         text: "Бараа, санхүү",
         items: [
           { text: "Бараа материал", link: "/inventory" },
@@ -54,6 +61,7 @@ export default defineConfig({
         items: [
           { text: "Системийн тохиргоо", link: "/settings" },
           { text: "Байгууллагын удирдлага", link: "/organization" },
+          { text: "Нөөц, экспорт", link: "/backup" },
         ],
       },
       {

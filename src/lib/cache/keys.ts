@@ -18,6 +18,29 @@ export const cacheTags = {
   reports: (orgId: string) => `reports:${orgId}`,
   dashboardMetrics: (orgId: string, branchId?: string) =>
     branchId ? `dashboard:${orgId}:${branchId}` : `dashboard:${orgId}:all`,
+
+  // Inventory
+  partsCatalog: (orgId: string) => `parts-catalog:${orgId}`,
+  inventoryBalances: (orgId: string) => `inventory-balances:${orgId}`,
+  inventoryMovements: (orgId: string) => `inventory-movements:${orgId}`,
+  purchaseOrders: (orgId: string) => `purchase-orders:${orgId}`,
+  stockThresholds: (orgId: string) => `stock-thresholds:${orgId}`,
+  suppliers: (orgId: string) => `suppliers:${orgId}`,
+
+  // Invoices
+  invoices: (orgId: string) => `invoices:${orgId}`,
+  invoice: (id: string) => `invoice:${id}`,
+
+  // Users
+  organizationUsers: (orgId: string) => `org-users:${orgId}`,
+  userProfile: (userId: string) => `user-profile:${userId}`,
+
+  // Vehicle Models
+  vehicleModels: (orgId: string) => `vehicle-models:${orgId}`,
+
+  // Bay View
+  bayView: (orgId: string, branchId: string) =>
+    `bay-view:${orgId}:${branchId}`,
 } as const;
 
 // Cache duration constants (in seconds)
@@ -35,4 +58,26 @@ export const cacheDurations = {
   // Expensive reports - cache aggressively
   reports: 300, // 5 minutes
   dashboardMetrics: 60, // 1 minute
+
+  // Inventory - balances change with every sale/movement
+  partsCatalog: 3600, // 1 hour (rarely changes)
+  inventoryBalances: 60, // 1 minute
+  inventoryMovements: 120, // 2 minutes
+  purchaseOrders: 60, // 1 minute
+  stockThresholds: 300, // 5 minutes
+  suppliers: 3600, // 1 hour
+
+  // Invoices
+  invoices: 60, // 1 minute
+  invoice: 30, // 30 seconds
+
+  // Users - rarely changes within a session
+  organizationUsers: 300, // 5 minutes
+  userProfile: 300,
+
+  // Vehicle Models - reference data, rarely changes
+  vehicleModels: 3600, // 1 hour
+
+  // Bay View - real-time data, short cache
+  bayView: 30, // 30 seconds
 } as const;

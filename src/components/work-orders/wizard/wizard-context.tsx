@@ -76,7 +76,7 @@ interface WizardState {
   // Services
   catalog: ServiceCatalog[];
   serviceLines: ServiceLine[];
-  priceHistory: Record<string, number>;
+  priceHistory: Record<string, { last_price: number; last_make?: string; last_model?: string }>;
   serviceSearch: string;
 
   // Parts
@@ -196,7 +196,9 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   // Services
   const [catalog, setCatalog] = useState<ServiceCatalog[]>([]);
   const [serviceLines, setServiceLines] = useState<ServiceLine[]>([]);
-  const [priceHistory, setPriceHistory] = useState<Record<string, number>>({});
+  const [priceHistory, setPriceHistory] = useState<
+    Record<string, { last_price: number; last_make?: string; last_model?: string }>
+  >({});
   const [serviceSearch, setServiceSearch] = useState("");
 
   // Parts
@@ -317,18 +319,19 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const addService = useCallback(
     (svc: ServiceCatalog) => {
       if (serviceLines.find((s) => s.service_catalog_id === svc.id)) return;
-      const last = priceHistory[svc.name] ?? Number(svc.default_price);
+      const history = priceHistory[svc.id];
+      const last = history?.last_price ?? Number(svc.default_price);
       setServiceLines((prev) => [
         ...prev,
         {
           service_catalog_id: svc.id,
           name: svc.name,
-          base_price: Number(svc.default_price),
+          base_price: last,
           quantity: 1,
           discount_amount_mnt: 0,
           discount_percent: 0,
           final_price: last,
-          last_price: last !== Number(svc.default_price) ? last : undefined,
+          last_price: history ? last : undefined,
         },
       ]);
     },
@@ -379,6 +382,13 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       setPartLines((prev) => {
         const updated = [...prev];
         updated[idx] = { ...updated[idx], [field]: value };
+        if (field === "part_name" && typeof value === "string" && value.trim()) {
+          const historyPrice = partHistory[value.trim().toLowerCase()];
+          if (historyPrice && updated[idx].unit_price === 0) {
+            updated[idx].unit_price = historyPrice;
+            updated[idx].last_price = historyPrice;
+          }
+        }
         if (field === "quantity" || field === "unit_price") {
           updated[idx].final_price =
             Number(updated[idx].quantity) * Number(updated[idx].unit_price);
@@ -386,7 +396,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         return updated;
       });
     },
-    [],
+    [partHistory],
   );
 
   const removePart = useCallback(
@@ -458,21 +468,16 @@ export function WizardProvider({ children }: { children: ReactNode }) {
             fetch(`/api/organizations/${orgId}/reports?type=mechanics`).then(
               (r) => r.json(),
             ),
-            fetch(
-              `/api/organizations/${orgId}/reports?type=dashboard&period=all`,
-            ).then((r) => r.json()),
-          ]).then(([catJson, mechJson, dashJson]) => {
+            fetch(`/api/organizations/${orgId}/price-history`).then((r) =>
+              r.json(),
+            ),
+          ]).then(([catJson, mechJson, priceJson]) => {
             if (catJson.data) setCatalog(catJson.data);
             if (mechJson.data?.mechanics)
               setMechanics(mechJson.data.mechanics);
-            if (dashJson.data?.topServices) {
-              const prices: Record<string, number> = {};
-              for (const svc of dashJson.data.topServices) {
-                if (svc.revenue > 0 && svc.count > 0) {
-                  prices[svc.name] = Math.round(svc.revenue / svc.count);
-                }
-              }
-              setPriceHistory(prices);
+            if (priceJson.data) {
+              setPriceHistory(priceJson.data.services ?? {});
+              setPartHistory(priceJson.data.parts ?? {});
             }
           });
         }

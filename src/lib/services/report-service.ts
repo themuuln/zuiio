@@ -1,3 +1,5 @@
+import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { withCache } from "@/lib/cache/with-cache";
 import type { WorkOrderDetail } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
@@ -16,26 +18,6 @@ import type {
   WorkOrderStatusDistribution,
 } from "@/lib/types";
 
-// ── Simple in-memory cache for expensive dashboard queries ────
-const cache = new Map<string, { data: unknown; expiresAt: number }>();
-const CACHE_TTL_MS = 30_000; // 30 seconds
-
-function getCached<T>(key: string): T | null {
-  const entry = cache.get(key);
-  if (entry && Date.now() < entry.expiresAt) return entry.data as T;
-  cache.delete(key);
-  return null;
-}
-
-function setCache<T>(key: string, data: T): void {
-  cache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
-  // Evict old entries if cache grows too large
-  if (cache.size > 50) {
-    const firstKey = cache.keys().next().value;
-    if (firstKey) cache.delete(firstKey);
-  }
-}
-
 // ── Helpers ──────────────────────────────────────────────────
 
 export async function getMechanicsList(
@@ -43,22 +25,31 @@ export async function getMechanicsList(
 ): Promise<{ id: string; full_name: string | null }[]> {
   const supabase = await createClient();
 
-  const { data: mechanics } = await supabase
-    .from("organization_users")
-    .select("user_id, roles!inner(name)")
-    .eq("organization_id", orgId)
-    .eq("roles.name", "mechanic");
+  return withCache(
+    ["getMechanicsList", orgId],
+    async () => {
+      const { data: mechanics } = await supabase
+        .from("organization_users")
+        .select("user_id, roles!inner(name)")
+        .eq("organization_id", orgId)
+        .eq("roles.name", "mechanic");
 
-  if (!mechanics?.length) return [];
+      if (!mechanics?.length) return [];
 
-  const userIds = mechanics.map((m) => m.user_id);
+      const userIds = mechanics.map((m) => m.user_id);
 
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, full_name")
-    .in("id", userIds);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
 
-  return (profiles ?? []).map((p) => ({ id: p.id, full_name: p.full_name }));
+      return (profiles ?? []).map((p) => ({ id: p.id, full_name: p.full_name }));
+    },
+    {
+      tags: [cacheTags.reports(orgId)],
+      revalidate: cacheDurations.reports,
+    },
+  );
 }
 
 export async function getDailyReport(
@@ -68,67 +59,76 @@ export async function getDailyReport(
 ): Promise<DailyReport> {
   const supabase = await createClient();
 
-  let mechanicName = "All Mechanics";
-  if (mechanicId) {
-    const { data: mechanic } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", mechanicId)
-      .single();
-    mechanicName = mechanic?.full_name ?? "Unknown";
-  }
+  return withCache(
+    ["getDailyReport", orgId, mechanicId ?? "all", date],
+    async () => {
+      let mechanicName = "All Mechanics";
+      if (mechanicId) {
+        const { data: mechanic } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", mechanicId)
+          .single();
+        mechanicName = mechanic?.full_name ?? "Unknown";
+      }
 
-  let query = supabase
-    .from("work_orders")
-    .select("id")
-    .eq("organization_id", orgId)
-    .gte("created_at", `${date}T00:00:00`)
-    .lte("created_at", `${date}T23:59:59`)
-    .eq("status", "Completed")
-    .is("deleted_at", null);
+      let query = supabase
+        .from("work_orders")
+        .select("id")
+        .eq("organization_id", orgId)
+        .gte("created_at", `${date}T00:00:00`)
+        .lte("created_at", `${date}T23:59:59`)
+        .eq("status", "Completed")
+        .is("deleted_at", null);
 
-  if (mechanicId) {
-    query = query.eq("mechanic_id", mechanicId);
-  }
+      if (mechanicId) {
+        query = query.eq("mechanic_id", mechanicId);
+      }
 
-  const { data: workOrders } = await query;
+      const { data: workOrders } = await query;
 
-  const woIds = (workOrders ?? []).map((w) => w.id);
-  const details: WorkOrderDetail[] = [];
+      const woIds = (workOrders ?? []).map((w) => w.id);
+      const details: WorkOrderDetail[] = [];
 
-  let servicesCount = 0;
-  let partsCount = 0;
-  let totalRevenue = 0;
-  let totalDiscounts = 0;
+      let servicesCount = 0;
+      let partsCount = 0;
+      let totalRevenue = 0;
+      let totalDiscounts = 0;
 
-  for (const woId of woIds) {
-    const detail = await getWorkOrderDetail(supabase, woId);
-    details.push(detail);
+      for (const woId of woIds) {
+        const detail = await getWorkOrderDetail(supabase, woId);
+        details.push(detail);
 
-    servicesCount += detail.services.length;
-    partsCount += detail.parts.length;
+        servicesCount += detail.services.length;
+        partsCount += detail.parts.length;
 
-    for (const s of detail.services) {
-      totalRevenue += Number(s.final_price);
-      totalDiscounts += Number(s.discount_amount ?? 0);
-    }
-    for (const p of detail.parts) {
-      totalRevenue += Number(p.final_price);
-      totalDiscounts += Number(p.discount_amount ?? 0);
-    }
-  }
+        for (const s of detail.services) {
+          totalRevenue += Number(s.final_price);
+          totalDiscounts += Number(s.discount_amount ?? 0);
+        }
+        for (const p of detail.parts) {
+          totalRevenue += Number(p.final_price);
+          totalDiscounts += Number(p.discount_amount ?? 0);
+        }
+      }
 
-  return {
-    date,
-    mechanic_id: mechanicId ?? "",
-    mechanic_name: mechanicName,
-    work_orders_completed: woIds.length,
-    services_count: servicesCount,
-    parts_count: partsCount,
-    total_revenue: totalRevenue,
-    total_discounts: totalDiscounts,
-    work_orders: details,
-  };
+      return {
+        date,
+        mechanic_id: mechanicId ?? "",
+        mechanic_name: mechanicName,
+        work_orders_completed: woIds.length,
+        services_count: servicesCount,
+        parts_count: partsCount,
+        total_revenue: totalRevenue,
+        total_discounts: totalDiscounts,
+        work_orders: details,
+      };
+    },
+    {
+      tags: [cacheTags.reports(orgId)],
+      revalidate: cacheDurations.reports,
+    },
+  );
 }
 
 export async function getWeeklyReport(
@@ -347,11 +347,11 @@ export async function getDashboardData(
   orgId: string,
   period: "today" | "week" | "month" | "all" = "all",
 ): Promise<DashboardData> {
-  const cacheKey = `dashboard:${orgId}:${period}`;
-  const cached = getCached<DashboardData>(cacheKey);
-  if (cached) return cached;
-
   const supabase = await createClient();
+
+  return withCache(
+    ["getDashboardData", orgId, period],
+    async () => {
   const today = new Date().toISOString().split("T")[0];
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
     .toISOString()
@@ -561,8 +561,13 @@ export async function getDashboardData(
     customerAcquisitionTrend,
   };
 
-  setCache(cacheKey, dashboardData);
   return dashboardData;
+    },
+    {
+      tags: [cacheTags.dashboardMetrics(orgId)],
+      revalidate: cacheDurations.dashboardMetrics,
+    },
+  );
 }
 
 // ── Previous Period Comparison ──────────────────────────────
@@ -1123,6 +1128,89 @@ async function getCustomerAcquisitionTrendBatched(
   }
 
   return trend;
+}
+
+export interface TimelineEvent {
+  id: string;
+  workOrderId: string;
+  customerName: string | null;
+  vehiclePlate: string | null;
+  status: string;
+  previousStatus: string | null;
+  mechanicName: string | null;
+  notes: string | null;
+  createdAt: string;
+  bayNumber: number | null;
+}
+
+export async function getDailyTimeline(orgId: string): Promise<TimelineEvent[]> {
+  const supabase = await createClient();
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data: wos, error: woError } = await supabase
+    .from("work_orders")
+    .select("id, customer:customers(first_name, last_name), vehicle:vehicles(plate_number), bay_number")
+    .eq("organization_id", orgId)
+    .gte("updated_at", `${today}T00:00:00`)
+    .order("updated_at", { ascending: false })
+    .limit(40);
+
+  if (woError || !wos?.length) return [];
+
+  const woIds = wos.map((w) => w.id);
+
+  const { data: history, error: histError } = await supabase
+    .from("work_order_status_history")
+    .select("id, work_order_id, previous_status, status, notes, changed_by, created_at")
+    .in("work_order_id", woIds)
+    .eq("organization_id", orgId)
+    .order("created_at", { ascending: false })
+    .limit(60);
+
+  if (histError || !history?.length) return [];
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in(
+      "id",
+      history.map((h) => h.changed_by).filter(Boolean) as string[],
+    );
+
+  const profileMap = new Map<string, string>();
+  for (const p of profiles ?? []) {
+    if (p.full_name) profileMap.set(p.id as string, p.full_name as string);
+  }
+
+  const woMap = new Map<
+    string,
+    { customerName: string | null; vehiclePlate: string | null; bayNumber: number | null }
+  >();
+  for (const wo of wos) {
+    const customer = Array.isArray(wo.customer) ? wo.customer[0] : (wo.customer as Record<string, string> | null);
+    const vehicle = Array.isArray(wo.vehicle) ? wo.vehicle[0] : (wo.vehicle as Record<string, string> | null);
+    woMap.set(wo.id as string, {
+      customerName: customer ? `${(customer as Record<string, string>).first_name ?? ""} ${(customer as Record<string, string>).last_name ?? ""}`.trim() || null : null,
+      vehiclePlate: vehicle ? ((vehicle as Record<string, string>).plate_number ?? null) : null,
+      bayNumber: wo.bay_number ?? null,
+    });
+  }
+
+  return history.map((h) => {
+    const wo = woMap.get(h.work_order_id as string);
+    return {
+      id: h.id as string,
+      workOrderId: h.work_order_id as string,
+      customerName: wo?.customerName ?? null,
+      vehiclePlate: wo?.vehiclePlate ?? null,
+      status: h.status as string,
+      previousStatus: h.previous_status ?? null,
+      mechanicName: profileMap.get(h.changed_by as string) ?? null,
+      notes: h.notes ?? null,
+      createdAt: h.created_at as string,
+      bayNumber: wo?.bayNumber ?? null,
+    };
+  });
 }
 
 

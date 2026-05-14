@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Breadcrumb } from "@/components/breadcrumb";
@@ -17,6 +18,7 @@ import {
 } from "@/components/work-orders/wizard";
 
 function NewWorkOrderForm() {
+  const t = useTranslations("workOrders");
   const { loading } = useWizardContext();
 
   if (loading) {
@@ -31,8 +33,8 @@ function NewWorkOrderForm() {
     <div className="flex flex-col gap-6 max-w-3xl mx-auto">
       <Breadcrumb
         items={[
-          { label: "Work Orders", href: "/dashboard/work-orders" },
-          { label: "New Work Order" },
+          { label: t("title"), href: "/dashboard/work-orders" },
+          { label: t("newWorkOrder") },
         ]}
       />
 
@@ -46,9 +48,9 @@ function NewWorkOrderForm() {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">New Work Order</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("newWorkOrder")}</h1>
           <p className="text-sm text-muted-foreground">
-            Create a work order in one page — all fields visible at a glance
+            {t("createSubtitle")}
           </p>
         </div>
       </div>

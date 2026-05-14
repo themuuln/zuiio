@@ -2,25 +2,30 @@
 
 import { LayoutGrid, List, Minus, Plus, RefreshCw } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { updateBayCount } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
 
-type ViewMode = "grid" | "list";
+export type ViewMode = "grid" | "list";
 
 interface BayViewToolbarProps {
   bayCount: number;
   onRefresh: () => void;
   onBayCountChange: (count: number) => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
 }
 
 export function BayViewToolbar({
   bayCount,
   onRefresh,
   onBayCountChange,
+  viewMode,
+  onViewModeChange,
 }: BayViewToolbarProps) {
+  const t = useTranslations("bayView");
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   async function handleChangeCount(delta: number) {
     const newCount = bayCount + delta;
@@ -43,27 +48,27 @@ export function BayViewToolbar({
       <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-0.5">
         <button
           type="button"
-          onClick={() => setViewMode("grid")}
+          onClick={() => onViewModeChange("grid")}
           className={cn(
             "rounded-md p-1.5 transition-colors",
             viewMode === "grid"
               ? "bg-background shadow-sm text-primary"
               : "hover:bg-background text-muted-foreground",
           )}
-          aria-label="Grid view"
+          aria-label={t("gridView")}
         >
           <LayoutGrid className="size-4" />
         </button>
         <button
           type="button"
-          onClick={() => setViewMode("list")}
+          onClick={() => onViewModeChange("list")}
           className={cn(
             "rounded-md p-1.5 transition-colors",
             viewMode === "list"
               ? "bg-background shadow-sm text-primary"
               : "hover:bg-background text-muted-foreground",
           )}
-          aria-label="List view"
+          aria-label={t("listView")}
         >
           <List className="size-4" />
         </button>
@@ -76,7 +81,7 @@ export function BayViewToolbar({
           onClick={() => handleChangeCount(-1)}
           disabled={loading || bayCount <= 1}
           className="rounded-md p-1.5 hover:bg-background transition-colors disabled:opacity-30"
-          aria-label="Decrease bay count"
+          aria-label={t("decreaseBayCount")}
         >
           <Minus className="size-4" />
         </button>
@@ -88,7 +93,7 @@ export function BayViewToolbar({
           onClick={() => handleChangeCount(1)}
           disabled={loading || bayCount >= 50}
           className="rounded-md p-1.5 hover:bg-background transition-colors disabled:opacity-30"
-          aria-label="Increase bay count"
+          aria-label={t("increaseBayCount")}
         >
           <Plus className="size-4" />
         </button>
@@ -98,7 +103,7 @@ export function BayViewToolbar({
         variant="ghost"
         size="icon"
         onClick={onRefresh}
-        aria-label="Refresh bay view"
+        aria-label={t("refresh")}
         className="size-8"
       >
         <RefreshCw className="size-4" />

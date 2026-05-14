@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useRouter } from "@/lib/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 type CustomerType = "individual" | "company";
 
@@ -43,6 +44,7 @@ export default function NewCustomerPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<CustomerFormState>(initialForm);
+  const t = useTranslations("customers");
 
   useEffect(() => {
     fetch("/api/profile")
@@ -108,7 +110,7 @@ export default function NewCustomerPage() {
     <div className="flex max-w-3xl flex-col gap-6">
       <Breadcrumb
         items={[
-          { label: "Customers", href: "/dashboard/customers" },
+          { label: t("title"), href: "/dashboard/customers" },
           { label: "New Customer" },
         ]}
       />
@@ -140,7 +142,7 @@ export default function NewCustomerPage() {
       <form onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Customer information</CardTitle>
+            <CardTitle className="text-base">{t("details")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -149,7 +151,7 @@ export default function NewCustomerPage() {
                   className="mb-1 block text-sm font-medium"
                   htmlFor="type"
                 >
-                  Customer type
+                  {t("type")}
                 </label>
                 <select
                   id="type"
@@ -163,8 +165,8 @@ export default function NewCustomerPage() {
                   className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   aria-label="Customer type"
                 >
-                  <option value="individual">Individual</option>
-                  <option value="company">Company</option>
+                  <option value="individual">{t("individual")}</option>
+                  <option value="company">{t("company")}</option>
                 </select>
               </div>
 
@@ -175,7 +177,7 @@ export default function NewCustomerPage() {
                       className="mb-1 block text-sm font-medium"
                       htmlFor="companyName"
                     >
-                      Company name
+                      {t("companyName")}
                     </label>
                     <Input
                       id="companyName"
@@ -195,7 +197,7 @@ export default function NewCustomerPage() {
                       className="mb-1 block text-sm font-medium"
                       htmlFor="contactPerson"
                     >
-                      Contact person
+                      {t("contactPerson")}
                     </label>
                     <Input
                       id="contactPerson"
@@ -218,7 +220,7 @@ export default function NewCustomerPage() {
                       className="mb-1 block text-sm font-medium"
                       htmlFor="firstName"
                     >
-                      First name
+                      {t("firstName")}
                     </label>
                     <Input
                       id="firstName"
@@ -238,7 +240,7 @@ export default function NewCustomerPage() {
                       className="mb-1 block text-sm font-medium"
                       htmlFor="lastName"
                     >
-                      Last name
+                      {t("lastName")}
                     </label>
                     <Input
                       id="lastName"
@@ -261,7 +263,7 @@ export default function NewCustomerPage() {
                   className="mb-1 block text-sm font-medium"
                   htmlFor="phone"
                 >
-                  Phone
+                  {t("phone")}
                 </label>
                 <Input
                   id="phone"
@@ -281,7 +283,7 @@ export default function NewCustomerPage() {
                   className="mb-1 block text-sm font-medium"
                   htmlFor="email"
                 >
-                  Email
+                  {t("email")}
                 </label>
                 <Input
                   id="email"
@@ -302,7 +304,7 @@ export default function NewCustomerPage() {
                   className="mb-1 block text-sm font-medium"
                   htmlFor="address"
                 >
-                  Address
+                  {t("address")}
                 </label>
                 <Input
                   id="address"
@@ -322,7 +324,7 @@ export default function NewCustomerPage() {
                   className="mb-1 block text-sm font-medium"
                   htmlFor="notes"
                 >
-                  Notes
+                  {t("notes")}
                 </label>
                 <textarea
                   id="notes"
@@ -354,7 +356,7 @@ export default function NewCustomerPage() {
                 ) : (
                   <UserPlus className="size-4" />
                 )}
-                {saving ? "Creating..." : "Create customer"}
+                {saving ? "Creating..." : t("addCustomer")}
               </Button>
             </div>
           </CardContent>

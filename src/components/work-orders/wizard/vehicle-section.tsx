@@ -6,16 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/search-input";
 import { useWizardContext } from "./wizard-context";
+import { useTranslations } from "next-intl";
 
 export function VehicleSection() {
   const ctx = useWizardContext();
+  const t = useTranslations("workOrderWizard");
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Car className="size-4" />
-          Vehicle
+          {t("vehicle")}
           {ctx.selectedVehicle && (
             <span className="ml-auto text-sm font-normal text-muted-foreground">
               {ctx.selectedVehicle.plate_number}
@@ -46,13 +48,13 @@ export function VehicleSection() {
               size="sm"
               onClick={() => ctx.setSelectedVehicle(null)}
             >
-              Change
+              {t("change")}
             </Button>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             <SearchInput
-              placeholder="Search by plate number..."
+              placeholder={t("searchByPlate")}
               loading={ctx.vehicleSearching}
               onSearch={ctx.setVehicleSearch}
               debounceMs={400}
@@ -84,33 +86,33 @@ export function VehicleSection() {
                 className="flex items-center gap-2 rounded-lg border border-dashed p-3 text-muted-foreground hover:bg-muted/30 min-h-[48px]"
               >
                 <Plus className="size-4" />
-                Quick create vehicle
+                {t("quickCreateVehicle")}
               </button>
             )}
             {ctx.showQuickVehicle && (
               <div className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/20">
-                <p className="text-sm font-medium">New Vehicle</p>
+                <p className="text-sm font-medium">{t("newVehicle")}</p>
                 <Input
-                  placeholder="Plate number *"
+                  placeholder={t("plateRequired")}
                   value={ctx.quickPlate}
                   onChange={(e) => ctx.setQuickPlate(e.target.value)}
                   className="h-11"
                 />
                 <div className="grid grid-cols-3 gap-3">
                   <Input
-                    placeholder="Make"
+                    placeholder={t("make")}
                     value={ctx.quickMake}
                     onChange={(e) => ctx.setQuickMake(e.target.value)}
                     className="h-11"
                   />
                   <Input
-                    placeholder="Model"
+                    placeholder={t("model")}
                     value={ctx.quickModel}
                     onChange={(e) => ctx.setQuickModel(e.target.value)}
                     className="h-11"
                   />
                   <Input
-                    placeholder="Year"
+                    placeholder={t("year")}
                     type="number"
                     value={ctx.quickYear}
                     onChange={(e) => ctx.setQuickYear(e.target.value)}
@@ -132,14 +134,15 @@ export function VehicleSection() {
                       ctx.setQuickYear("");
                     }}
                   >
-                    Cancel
+                    {t("cancel")}
+                    
                   </Button>
                   <Button
                     size="sm"
                     disabled={ctx.creatingVehicle || !ctx.quickPlate.trim()}
                     onClick={ctx.handleQuickCreateVehicle}
                   >
-                    {ctx.creatingVehicle ? "Creating..." : "Create & Select Vehicle"}
+                    {ctx.creatingVehicle ? t("creating") : t("createAndSelectVehicle")}
                   </Button>
                 </div>
               </div>

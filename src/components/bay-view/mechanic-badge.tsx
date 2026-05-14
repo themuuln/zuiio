@@ -2,6 +2,7 @@
 
 import { useDraggable } from "@dnd-kit/core";
 import { User } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
@@ -35,10 +36,11 @@ export function MechanicBadge({ workOrderId, mechanic }: MechanicBadgeProps) {
     : undefined;
 
   if (!mechanic) {
+    const t = useTranslations("bayView");
     return (
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground/40 px-1.5 py-0.5 rounded-full bg-muted/30">
-        <User className="size-3" />
-        <span>Unassigned</span>
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground/40 px-2 py-1 rounded-full bg-muted/30">
+        <User className="size-3.5" />
+        <span>{t("unassigned")}</span>
       </div>
     );
   }
@@ -59,20 +61,20 @@ export function MechanicBadge({ workOrderId, mechanic }: MechanicBadgeProps) {
       {...attributes}
       style={style}
       className={cn(
-        "flex items-center gap-1.5 rounded-full border border-border/60 bg-background/80 backdrop-blur-sm px-2 py-1 cursor-grab active:cursor-grabbing select-none transition-all touch-manipulation",
+        "flex items-center gap-2 rounded-full border border-border/60 bg-background/80 backdrop-blur-sm px-3 py-1.5 cursor-grab active:cursor-grabbing select-none transition-all touch-manipulation min-h-[36px]",
         isDragging && "opacity-50 shadow-lg",
         !isDragging && "hover:shadow-sm hover:border-primary/30",
       )}
     >
-      <Avatar className="size-5 shrink-0">
+      <Avatar className="size-7 shrink-0">
         {mechanic.avatar_url && (
           <AvatarImage src={mechanic.avatar_url} alt="" />
         )}
-        <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+        <AvatarFallback className="text-xs bg-primary/10 text-primary">
           {initials}
         </AvatarFallback>
       </Avatar>
-      <span className="text-xs font-medium truncate max-w-[80px]">
+      <span className="text-xs font-medium truncate max-w-[90px]">
         {mechanic.full_name}
       </span>
     </div>

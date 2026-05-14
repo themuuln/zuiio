@@ -12,8 +12,10 @@ import {
   type LucideIcon,
   Package,
   Settings,
+  Shield,
   Users,
   Warehouse,
+  Wrench,
 } from "lucide-react";
 import { usePathname } from "@/lib/i18n/navigation";
 
@@ -41,21 +43,38 @@ const navigationConfig: NavGroupConfig = {
       href: "/dashboard",
       icon: LayoutDashboard,
     },
+    {
+      labelKey: "nav.mechanic",
+      href: "/dashboard/mechanic",
+      icon: Wrench,
+    },
   ],
   groups: [
     {
       labelKey: "nav.group.operations",
       icon: LayoutGrid,
       children: [
-        { labelKey: "nav.bayView", href: "/dashboard/bay-view", icon: LayoutGrid },
-        { labelKey: "nav.workOrders", href: "/dashboard/work-orders", icon: ClipboardList },
+        {
+          labelKey: "nav.bayView",
+          href: "/dashboard/bay-view",
+          icon: LayoutGrid,
+        },
+        {
+          labelKey: "nav.workOrders",
+          href: "/dashboard/work-orders",
+          icon: ClipboardList,
+        },
       ],
     },
     {
       labelKey: "nav.group.crm",
       icon: Users,
       children: [
-        { labelKey: "nav.customers", href: "/dashboard/customers", icon: Users },
+        {
+          labelKey: "nav.customers",
+          href: "/dashboard/customers",
+          icon: Users,
+        },
         { labelKey: "nav.vehicles", href: "/dashboard/vehicles", icon: Car },
       ],
     },
@@ -63,17 +82,27 @@ const navigationConfig: NavGroupConfig = {
       labelKey: "nav.group.business",
       icon: DollarSign,
       children: [
-        { labelKey: "nav.inventory", href: "/dashboard/inventory", icon: Package },
-        { labelKey: "nav.finance", href: "/dashboard/finance", icon: DollarSign },
-        { labelKey: "nav.reports", href: "/dashboard/reports", icon: BarChart3 },
+        {
+          labelKey: "nav.inventory",
+          href: "/dashboard/inventory",
+          icon: Package,
+        },
+        {
+          labelKey: "nav.finance",
+          href: "/dashboard/finance",
+          icon: DollarSign,
+        },
+        {
+          labelKey: "nav.reports",
+          href: "/dashboard/reports",
+          icon: BarChart3,
+        },
       ],
     },
     {
       labelKey: "nav.group.resources",
       icon: BookOpen,
-      children: [
-        { labelKey: "nav.guide", href: "/guide", icon: BookOpen },
-      ],
+      children: [{ labelKey: "nav.guide", href: "/guide", icon: BookOpen }],
     },
   ],
 };
@@ -82,9 +111,23 @@ const settingsGroup: NavGroup = {
   labelKey: "nav.group.settings",
   icon: Settings,
   children: [
-    { labelKey: "nav.vehicleModels", href: "/dashboard/vehicle-models", icon: Warehouse },
-    { labelKey: "nav.organization", href: "/dashboard/organization", icon: Building2 },
+    {
+      labelKey: "nav.vehicleModels",
+      href: "/dashboard/vehicle-models",
+      icon: Warehouse,
+    },
+    {
+      labelKey: "nav.organization",
+      href: "/dashboard/organization",
+      icon: Building2,
+    },
+    {
+      labelKey: "nav.members",
+      href: "/dashboard/organization/members",
+      icon: Users,
+    },
     { labelKey: "nav.settings", href: "/dashboard/settings", icon: Settings },
+    { labelKey: "nav.admin", href: "/dashboard/admin", icon: Shield },
   ],
 };
 

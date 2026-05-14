@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
+import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { withCache } from "@/lib/cache/with-cache";
 import type { Profile, Vehicle, WorkOrder } from "@/lib/database.types";
 import {
   NotFoundError,
@@ -58,6 +61,11 @@ export async function getBayViewData(): Promise<BayViewData> {
   const supabase = await createClient();
   const orgId = await getOrgId();
 
+  // Use orgId as branchId placeholder since we use is_main branch
+  return withCache(
+    ["getBayViewData", orgId],
+    async () => {
+
   // Get branch with bay_count setting
   const { data: branch } = await supabase
     .from("branches")
@@ -81,7 +89,8 @@ export async function getBayViewData(): Promise<BayViewData> {
     .eq("organization_id", orgId)
     .not("status", "in", '("Completed","Cancelled")')
     .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+    .order("queue_order", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: true });
 
   const workOrders = activeWOs ?? [];
 
@@ -142,12 +151,18 @@ export async function getBayViewData(): Promise<BayViewData> {
     current_jobs: workOrders.filter((wo) => wo.mechanic_id === p.id).length,
   }));
 
-  return {
-    bayCount,
-    bays,
-    waitingQueue: waiting as BayViewData["waitingQueue"],
-    mechanics: mechList,
-  };
+      return {
+        bayCount,
+        bays,
+        waitingQueue: waiting as BayViewData["waitingQueue"],
+        mechanics: mechList,
+      };
+    },
+    {
+      tags: [cacheTags.bayView(orgId, orgId)],
+      revalidate: cacheDurations.bayView,
+    },
+  );
 }
 
 // ── Assign Vehicle to Bay ─────────────────────────────────────
@@ -201,6 +216,8 @@ export async function assignVehicleToBay(
 
   if (error)
     throw new Error(error.message ?? "Failed to assign vehicle to bay");
+
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 }
 
 // ── Remove Vehicle from Bay ───────────────────────────────────
@@ -221,6 +238,8 @@ export async function removeVehicleFromBay(workOrderId: string): Promise<void> {
 
   if (error)
     throw new Error(error.message ?? "Failed to remove vehicle from bay");
+
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 }
 
 // ── Assign Mechanic ────────────────────────────────────────────
@@ -263,6 +282,8 @@ export async function unassignMechanicFromWorkOrder(
     .eq("organization_id", orgId);
 
   if (error) throw new Error(error.message ?? "Failed to unassign mechanic");
+
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 }
 
 // ── Update Work Order Status ───────────────────────────────────
@@ -322,6 +343,8 @@ export async function updateWorkOrderStatus(
       created_by: userId,
     });
   }
+
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 }
 
 // ── Update Bay Count ───────────────────────────────────────────
@@ -370,6 +393,7 @@ export async function updateBayCount(count: number): Promise<number> {
 
   if (error) throw new Error(error.message ?? "Failed to update bay count");
 
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   return count;
 }
 
@@ -505,5 +529,220 @@ export async function seedWaitingQueue(): Promise<{ created: number; errors: str
     }
   }
 
+  // Invalidate bay view cache so the UI picks up the new queue entries
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
+
   return { created, errors };
+}
+
+// ── Assign Vehicle to First Available Bay ─────────────────────
+
+export async function assignToFirstAvailableBay(
+  workOrderId: string,
+): Promise<number> {
+  const supabase = await createClient();
+  const orgId = await getOrgId();
+
+  // Get current bay count
+  const { data: branch } = await supabase
+    .from("branches")
+    .select("settings")
+    .eq("organization_id", orgId)
+    .eq("is_main", true)
+    .maybeSingle();
+
+  const bayCount =
+    ((branch?.settings as Record<string, unknown> | null)
+      ?.bay_count as number) ?? 6;
+
+  // Find occupied bays
+  const { data: active } = await supabase
+    .from("work_orders")
+    .select("bay_number")
+    .eq("organization_id", orgId)
+    .not("status", "in", '("Completed","Cancelled")')
+    .is("deleted_at", null)
+    .not("bay_number", "is", null);
+
+  const occupied = new Set((active ?? []).map((w) => w.bay_number));
+
+  // Find first empty bay
+  let firstEmpty = 1;
+  for (let i = 1; i <= bayCount; i++) {
+    if (!occupied.has(i)) {
+      firstEmpty = i;
+      break;
+    }
+  }
+
+  // Assign to that bay
+  const { error } = await supabase
+    .from("work_orders")
+    .update({
+      bay_number: firstEmpty,
+      status: "Diagnosing" as const,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", workOrderId)
+    .eq("organization_id", orgId);
+
+  if (error) {
+    throw new Error(error.message ?? "Failed to assign vehicle to bay");
+  }
+
+  return firstEmpty;
+}
+
+// ── Reorder Waiting Queue ────────────────────────────────────
+
+export async function reorderQueue(
+  updates: { id: string; queue_order: number }[],
+): Promise<void> {
+  const supabase = await createClient();
+  const orgId = await getOrgId();
+
+  for (const u of updates) {
+    const { error } = await supabase
+      .from("work_orders")
+      .update({
+        queue_order: u.queue_order,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", u.id)
+      .eq("organization_id", orgId);
+
+    if (error) {
+      throw new Error(error.message ?? "Failed to reorder queue");
+    }
+  }
+}
+
+// ── Shift Report ─────────────────────────────────────────────
+
+export interface ShiftReport {
+  completedToday: number;
+  revenueToday: number;
+  avgDurationMinutes: number;
+  bayUtilization: number;
+  bayCount: number;
+  activeJobs: number;
+}
+
+export async function getShiftReport(): Promise<ShiftReport> {
+  const supabase = await createClient();
+  const orgId = await getOrgId();
+
+  // Get bay count
+  const { data: branch } = await supabase
+    .from("branches")
+    .select("settings")
+    .eq("organization_id", orgId)
+    .eq("is_main", true)
+    .maybeSingle();
+
+  const bayCount =
+    ((branch?.settings as Record<string, unknown> | null)
+      ?.bay_count as number) ?? 6;
+
+  // Today's completed work orders
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const { data: completed } = await supabase
+    .from("work_orders")
+    .select("total, completed_at, started_at")
+    .eq("organization_id", orgId)
+    .eq("status", "Completed")
+    .gte("completed_at", todayStart.toISOString())
+    .is("deleted_at", null);
+
+  const completedToday = completed?.length ?? 0;
+  const revenueToday =
+    completed?.reduce((sum, wo) => sum + Number(wo.total), 0) ?? 0;
+
+  // Average duration of completed jobs today
+  let avgDurationMinutes = 0;
+  if (completedToday > 0 && completed) {
+    const totalMinutes = completed.reduce((sum, wo) => {
+      if (!wo.started_at || !wo.completed_at) return sum;
+      const start = new Date(wo.started_at).getTime();
+      const end = new Date(wo.completed_at).getTime();
+      return sum + Math.round((end - start) / 60000);
+    }, 0);
+    avgDurationMinutes = Math.round(totalMinutes / completedToday);
+  }
+
+  // Active jobs (non-completed, non-cancelled)
+  const { data: active } = await supabase
+    .from("work_orders")
+    .select("id")
+    .eq("organization_id", orgId)
+    .not("status", "in", '("Completed","Cancelled")')
+    .is("deleted_at", null);
+
+  const activeJobs = active?.length ?? 0;
+
+  // Bay utilization: active jobs in bays / total bays
+  const { data: inBay } = await supabase
+    .from("work_orders")
+    .select("id")
+    .eq("organization_id", orgId)
+    .not("status", "in", '("Completed","Cancelled")')
+    .is("deleted_at", null)
+    .not("bay_number", "is", null);
+
+  const bayUtilization =
+    bayCount > 0
+      ? Math.round(((inBay?.length ?? 0) / bayCount) * 100)
+      : 0;
+
+  return {
+    completedToday,
+    revenueToday,
+    avgDurationMinutes,
+    bayUtilization,
+    bayCount,
+    activeJobs,
+  };
+}
+
+// ── Update Bay View PIN ──────────────────────────────────────
+
+export async function updateBayViewPin(
+  currentPin: string,
+  newPin: string,
+  confirmPin: string,
+): Promise<void> {
+  if (!/^[0-9]{4,6}$/.test(newPin)) {
+    throw new ValidationError("PIN must be 4 to 6 digits");
+  }
+  if (newPin !== confirmPin) {
+    throw new ValidationError("PIN confirmation does not match");
+  }
+
+  const supabase = await createClient();
+  const orgId = await getOrgId();
+
+  // Verify current PIN first
+  const { data: verified } = await supabase.rpc(
+    "verify_organization_bay_view_pin",
+    {
+      target_org_id: orgId,
+      plain_pin: currentPin,
+    },
+  );
+
+  if (!verified) {
+    throw new ValidationError("Current PIN is incorrect");
+  }
+
+  // Set new PIN
+  const { error } = await supabase.rpc("set_organization_bay_view_pin", {
+    target_org_id: orgId,
+    plain_pin: newPin,
+  });
+
+  if (error) {
+    throw new ValidationError(error.message);
+  }
 }

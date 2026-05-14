@@ -1,3 +1,6 @@
+import { revalidateTag } from "next/cache";
+import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { withCache } from "@/lib/cache/with-cache";
 import type { VehicleModel } from "@/lib/database.types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -8,51 +11,78 @@ export async function getVehicleModels(
 ): Promise<VehicleModel[]> {
   const supabase = await createClient();
 
-  let query = supabase
-    .from("vehicle_models")
-    .select("*")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("make")
-    .order("model");
+  return withCache(
+    ["getVehicleModels", orgId, make ?? ""],
+    async () => {
+      let query = supabase
+        .from("vehicle_models")
+        .select("*")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .order("make")
+        .order("model");
 
-  if (make) {
-    query = query.eq("make", make);
-  }
+      if (make) {
+        query = query.eq("make", make);
+      }
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message ?? "Failed to fetch vehicle models");
-  return data ?? [];
+      const { data, error } = await query;
+      if (error) throw new Error(error.message ?? "Failed to fetch vehicle models");
+      return data ?? [];
+    },
+    {
+      tags: [cacheTags.vehicleModels(orgId)],
+      revalidate: cacheDurations.vehicleModels,
+    },
+  );
 }
 
 export async function getVehicleModel(id: string): Promise<VehicleModel> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("vehicle_models")
-    .select("*")
-    .eq("id", id)
-    .is("deleted_at", null)
-    .single();
+  return withCache(
+    ["getVehicleModel", id],
+    async () => {
+      const { data, error } = await supabase
+        .from("vehicle_models")
+        .select("*")
+        .eq("id", id)
+        .is("deleted_at", null)
+        .single();
 
-  if (error || !data) throw new NotFoundError("Vehicle model not found");
-  return data;
+      if (error || !data) throw new NotFoundError("Vehicle model not found");
+      return data;
+    },
+    {
+      tags: [cacheTags.vehicleModels(id)],
+      revalidate: cacheDurations.vehicleModels,
+    },
+  );
 }
 
 export async function getDistinctMakes(orgId: string): Promise<string[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("vehicle_models")
-    .select("make")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("make");
+  return withCache(
+    ["getDistinctMakes", orgId],
+    async () => {
+      const { data, error } = await supabase
+        .from("vehicle_models")
+        .select("make")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .order("make");
 
-  if (error) throw new Error(error.message ?? "Failed to fetch makes");
+      if (error) throw new Error(error.message ?? "Failed to fetch makes");
 
-  const makes = [...new Set(data.map((r) => r.make))];
-  return makes;
+      const makes = [...new Set(data.map((r) => r.make))];
+      return makes;
+    },
+    {
+      tags: [cacheTags.vehicleModels(orgId)],
+      revalidate: cacheDurations.vehicleModels,
+    },
+  );
 }
 
 export async function createVehicleModel(
@@ -93,6 +123,9 @@ export async function createVehicleModel(
 
   if (error || !data)
     throw new Error(error?.message ?? "Failed to create vehicle model");
+
+  revalidateTag(cacheTags.vehicleModels(orgId), "max");
+
   return data;
 }
 
@@ -136,6 +169,9 @@ export async function updateVehicleModel(
     .single();
 
   if (error || !data) throw new NotFoundError("Vehicle model not found");
+
+  revalidateTag(cacheTags.vehicleModels(orgId), "max");
+
   return data;
 }
 
@@ -154,4 +190,6 @@ export async function deleteVehicleModel(
 
   if (error)
     throw new NotFoundError("Vehicle model not found or already deleted");
+
+  revalidateTag(cacheTags.vehicleModels(orgId), "max");
 }

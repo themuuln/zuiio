@@ -285,6 +285,7 @@ export interface WorkOrder {
   notes: string | null;
   mechanic_id: string | null;
   bay_number: number | null;
+  queue_order: number;
   discount_amount: number | null;
   discount_percentage: number | null;
   subtotal: number;
@@ -525,6 +526,27 @@ export interface WorkOrderDetail extends WorkOrder {
   services: WorkOrderService[];
   parts: WorkOrderPart[];
   status_history: WorkOrderStatusHistory[];
+}
+
+// ============================================================
+// Org Invites Types
+// Added 2026-05-14
+// ============================================================
+
+export type InviteStatus = "pending" | "accepted" | "expired" | "cancelled";
+
+export interface OrgInvite {
+  id: string;
+  organization_id: string;
+  email: string;
+  role_id: string | null;
+  token: string;
+  status: InviteStatus;
+  invited_by: string | null;
+  message: string | null;
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // ============================================================
@@ -1027,6 +1049,21 @@ export type FeatureFlagInsert = Omit<
   updated_at?: string;
 };
 
+export type OrgInviteInsert = Omit<
+  OrgInvite,
+  "id" | "created_at" | "updated_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type OrgInviteUpdate = Partial<
+  Omit<OrgInvite, "id" | "created_at">
+> & {
+  updated_at?: string;
+};
+
 export type OrganizationSettingsInsert = Omit<
   OrganizationSettings,
   "created_at" | "updated_at"
@@ -1208,6 +1245,18 @@ export interface Database {
         Row: FeatureFlag;
         Insert: FeatureFlagInsert;
         Update: FeatureFlagUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
+      org_invites: {
+        Row: OrgInvite;
+        Insert: OrgInviteInsert;
+        Update: OrgInviteUpdate;
         Relationships: {
           foreignKeyName: string;
           columns: string[];
@@ -1615,6 +1664,28 @@ export interface Database {
           plain_pin: string;
         };
         Returns: boolean;
+      };
+      lookup_user_by_email: {
+        Args: {
+          target_email: string;
+        };
+        Returns: {
+          user_id: string;
+          email: string;
+        }[];
+      };
+      create_default_subscription: {
+        Args: {
+          target_org_id: string;
+        };
+        Returns: string;
+      };
+      accept_invite: {
+        Args: {
+          invite_token: string;
+          accepting_user_id: string;
+        };
+        Returns: Record<string, unknown>;
       };
     };
     Enums: {

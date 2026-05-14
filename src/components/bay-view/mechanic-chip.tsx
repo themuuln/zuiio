@@ -43,7 +43,7 @@ export function MechanicChip({ mechanic }: MechanicChipProps) {
       {...attributes}
       style={style}
       className={cn(
-        "flex items-center gap-2.5 rounded-lg border bg-card p-2 cursor-grab active:cursor-grabbing select-none transition-all touch-manipulation",
+        "flex items-center gap-2.5 rounded-lg border bg-card p-2.5 cursor-grab active:cursor-grabbing select-none transition-all touch-manipulation min-h-[52px]",
         isDragging && "opacity-50 shadow-xl",
         !isDragging && "hover:shadow-sm hover:border-primary/30",
         isOverloaded
@@ -51,11 +51,11 @@ export function MechanicChip({ mechanic }: MechanicChipProps) {
           : "border-border",
       )}
     >
-      <GripHorizontal className="size-3.5 text-muted-foreground/40 shrink-0" />
-      <Avatar className="size-7 shrink-0">
+      <GripHorizontal className="size-5 text-muted-foreground/40 shrink-0" />
+      <Avatar className="size-8 shrink-0">
         <AvatarFallback
           className={cn(
-            "text-[11px]",
+            "text-xs",
             isOverloaded
               ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
               : "bg-primary/10 text-primary",
@@ -68,7 +68,7 @@ export function MechanicChip({ mechanic }: MechanicChipProps) {
         <div className="text-sm font-medium truncate">
           {mechanic.full_name ?? "Unknown"}
         </div>
-        <div className="text-[10px] text-muted-foreground">
+        <div className="text-[11px] text-muted-foreground">
           {jobCount === 0
             ? "Available"
             : `${jobCount} job${jobCount !== 1 ? "s" : ""}`}

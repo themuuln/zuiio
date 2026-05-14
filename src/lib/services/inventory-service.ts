@@ -1,3 +1,6 @@
+import { revalidateTag } from "next/cache";
+import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { withCache } from "@/lib/cache/with-cache";
 import { createClient } from "@/lib/supabase/server";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import type {
@@ -24,56 +27,70 @@ import type {
 export async function getPartsCatalog(orgId: string): Promise<PartsCatalogItem[]> {
   const supabase = await createClient();
 
-  // Fetch parts
-  const { data: parts, error } = await supabase
-    .from("parts_catalog")
-    .select("*")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null);
-  if (error) throw new Error(error.message);
+  return withCache(
+    ["getPartsCatalog", orgId],
+    async () => {
+      const { data: parts, error } = await supabase
+        .from("parts_catalog")
+        .select("*")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null);
+      if (error) throw new Error(error.message);
 
-  // Fetch popularity: count how many vehicle models each part is assigned to
-  const { data: assignments } = await supabase
-    .from("vehicle_model_parts")
-    .select("part_id, count")
-    .eq("organization_id", orgId);
+      const { data: assignments } = await supabase
+        .from("vehicle_model_parts")
+        .select("part_id, count")
+        .eq("organization_id", orgId);
 
-  const popularityMap: Record<string, number> = {};
-  if (assignments) {
-    // Group by part_id and count
-    const countMap: Record<string, number> = {};
-    for (const a of assignments) {
-      const pid = a.part_id as string;
-      countMap[pid] = (countMap[pid] || 0) + 1;
-    }
-    // Normalize: 26 models = score 100, proportionally less for fewer
-    const maxModels = 26;
-    for (const [pid, count] of Object.entries(countMap)) {
-      popularityMap[pid] = Math.round((count / maxModels) * 100);
-    }
-  }
+      const popularityMap: Record<string, number> = {};
+      if (assignments) {
+        const countMap: Record<string, number> = {};
+        for (const a of assignments) {
+          const pid = a.part_id as string;
+          countMap[pid] = (countMap[pid] || 0) + 1;
+        }
+        const maxModels = 26;
+        for (const [pid, count] of Object.entries(countMap)) {
+          popularityMap[pid] = Math.round((count / maxModels) * 100);
+        }
+      }
 
-  // Attach popularity score and sort by it descending
-  const result = (parts ?? []).map((p) => ({
-    ...p,
-    popularity_score: popularityMap[p.id] ?? 0,
-  }));
+      const result = (parts ?? []).map((p) => ({
+        ...p,
+        popularity_score: popularityMap[p.id] ?? 0,
+      }));
 
-  result.sort((a, b) => (b.popularity_score ?? 0) - (a.popularity_score ?? 0));
+      result.sort((a, b) => (b.popularity_score ?? 0) - (a.popularity_score ?? 0));
 
-  return result;
+      return result;
+    },
+    {
+      tags: [cacheTags.partsCatalog(orgId)],
+      revalidate: cacheDurations.partsCatalog,
+    },
+  );
 }
 
 export async function getPart(id: string): Promise<PartsCatalogItem> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("parts_catalog")
-    .select("*")
-    .eq("id", id)
-    .is("deleted_at", null)
-    .single();
-  if (error || !data) throw new NotFoundError("Part not found");
-  return data;
+
+  return withCache(
+    ["getPart", id],
+    async () => {
+      const { data, error } = await supabase
+        .from("parts_catalog")
+        .select("*")
+        .eq("id", id)
+        .is("deleted_at", null)
+        .single();
+      if (error || !data) throw new NotFoundError("Part not found");
+      return data;
+    },
+    {
+      tags: [cacheTags.partsCatalog(id)],
+      revalidate: cacheDurations.partsCatalog,
+    },
+  );
 }
 
 export async function createPart(
@@ -100,6 +117,7 @@ export async function createPart(
     .select("*")
     .single();
   if (error || !data) throw new Error(error?.message ?? "Failed to create part");
+  revalidateTag(cacheTags.partsCatalog(orgId), "max");
   return data;
 }
 
@@ -128,6 +146,7 @@ export async function updatePart(
     .select("*")
     .single();
   if (error || !data) throw new NotFoundError("Part not found");
+  revalidateTag(cacheTags.partsCatalog(orgId), "max");
   return data;
 }
 
@@ -140,6 +159,7 @@ export async function deletePart(id: string, orgId: string): Promise<void> {
     .eq("id", id)
     .eq("organization_id", orgId);
   if (error) throw new NotFoundError("Part not found");
+  revalidateTag(cacheTags.partsCatalog(orgId), "max");
 }
 
 // ── Inventory Balances ────────────────────────────────────────
@@ -148,12 +168,22 @@ export async function getInventoryBalances(
   orgId: string,
 ): Promise<InventoryBalance[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("inventory_balances")
-    .select("*")
-    .eq("organization_id", orgId);
-  if (error) throw new Error(error.message);
-  return data ?? [];
+
+  return withCache(
+    ["getInventoryBalances", orgId],
+    async () => {
+      const { data, error } = await supabase
+        .from("inventory_balances")
+        .select("*")
+        .eq("organization_id", orgId);
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+    {
+      tags: [cacheTags.inventoryBalances(orgId)],
+      revalidate: cacheDurations.inventoryBalances,
+    },
+  );
 }
 
 // ── Inventory Movements ───────────────────────────────────────
@@ -164,20 +194,30 @@ export async function getInventoryMovements(
   limit = 50,
 ): Promise<InventoryMovement[]> {
   const supabase = await createClient();
-  let query = supabase
-    .from("inventory_movements")
-    .select("*, part:parts_catalog(name, part_number)")
-    .eq("organization_id", orgId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (type) query = query.eq("movement_type", type);
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return (data ?? []).map((m: Record<string, unknown>) => ({
-    ...m,
-    part_name: ((m.part as { name: string } | null)?.name) ?? "Unknown",
-    part: undefined,
-  })) as unknown as InventoryMovement[];
+
+  return withCache(
+    ["getInventoryMovements", orgId, type ?? "", String(limit)],
+    async () => {
+      let query = supabase
+        .from("inventory_movements")
+        .select("*, part:parts_catalog(name, part_number)")
+        .eq("organization_id", orgId)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (type) query = query.eq("movement_type", type);
+      const { data, error } = await query;
+      if (error) throw new Error(error.message);
+      return (data ?? []).map((m: Record<string, unknown>) => ({
+        ...m,
+        part_name: ((m.part as { name: string } | null)?.name) ?? "Unknown",
+        part: undefined,
+      })) as unknown as InventoryMovement[];
+    },
+    {
+      tags: [cacheTags.inventoryMovements(orgId)],
+      revalidate: cacheDurations.inventoryMovements,
+    },
+  );
 }
 
 export async function createMovement(
@@ -218,6 +258,8 @@ export async function createMovement(
     .select("*")
     .single();
   if (error || !data) throw new Error(error?.message ?? "Failed to record movement");
+  revalidateTag(cacheTags.inventoryMovements(orgId), "max");
+  revalidateTag(cacheTags.inventoryBalances(orgId), "max");
   return data;
 }
 
@@ -225,27 +267,47 @@ export async function createMovement(
 
 export async function getSupplier(id: string, orgId: string): Promise<Supplier> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("suppliers")
-    .select("*")
-    .eq("id", id)
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .single();
-  if (error || !data) throw new NotFoundError("Supplier not found");
-  return data;
+
+  return withCache(
+    ["getSupplier", id],
+    async () => {
+      const { data, error } = await supabase
+        .from("suppliers")
+        .select("*")
+        .eq("id", id)
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .single();
+      if (error || !data) throw new NotFoundError("Supplier not found");
+      return data;
+    },
+    {
+      tags: [cacheTags.suppliers(orgId)],
+      revalidate: cacheDurations.suppliers,
+    },
+  );
 }
 
 export async function getSuppliers(orgId: string): Promise<Supplier[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("suppliers")
-    .select("*")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("name");
-  if (error) throw new Error(error.message);
-  return data ?? [];
+
+  return withCache(
+    ["getSuppliers", orgId],
+    async () => {
+      const { data, error } = await supabase
+        .from("suppliers")
+        .select("*")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .order("name");
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+    {
+      tags: [cacheTags.suppliers(orgId)],
+      revalidate: cacheDurations.suppliers,
+    },
+  );
 }
 
 export async function createSupplier(
@@ -273,6 +335,7 @@ export async function createSupplier(
     .select("*")
     .single();
   if (error || !data) throw new Error(error?.message ?? "Failed to create supplier");
+  revalidateTag(cacheTags.suppliers(orgId), "max");
   return data;
 }
 
@@ -302,6 +365,7 @@ export async function updateSupplier(
     .select("*")
     .single();
   if (error || !data) throw new NotFoundError("Supplier not found");
+  revalidateTag(cacheTags.suppliers(orgId), "max");
   return data;
 }
 
@@ -314,36 +378,57 @@ export async function deleteSupplier(id: string, orgId: string): Promise<void> {
     .eq("id", id)
     .eq("organization_id", orgId);
   if (error) throw new NotFoundError("Supplier not found");
+  revalidateTag(cacheTags.suppliers(orgId), "max");
 }
 
 // ── Purchase Orders ───────────────────────────────────────────
 
 export async function getPurchaseOrders(orgId: string): Promise<PurchaseOrder[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("purchase_orders")
-    .select("*, supplier:suppliers(name)")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as PurchaseOrder[];
+
+  return withCache(
+    ["getPurchaseOrders", orgId],
+    async () => {
+      const { data, error } = await supabase
+        .from("purchase_orders")
+        .select("*, supplier:suppliers(name)")
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      return (data ?? []) as unknown as PurchaseOrder[];
+    },
+    {
+      tags: [cacheTags.purchaseOrders(orgId)],
+      revalidate: cacheDurations.purchaseOrders,
+    },
+  );
 }
 
 export async function getPurchaseOrderItems(
   poId: string,
 ): Promise<(PurchaseOrderItem & { part_name: string })[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("purchase_order_items")
-    .select("*, part:parts_catalog(name)")
-    .eq("purchase_order_id", poId)
-    .order("created_at");
-  if (error) throw new Error(error.message);
-  return (data ?? []).map((item: Record<string, unknown>) => ({
-    ...item,
-    part_name: ((item.part as { name: string } | null)?.name) ?? "Unknown",
-  })) as (PurchaseOrderItem & { part_name: string })[];
+
+  return withCache(
+    ["getPurchaseOrderItems", poId],
+    async () => {
+      const { data, error } = await supabase
+        .from("purchase_order_items")
+        .select("*, part:parts_catalog(name)")
+        .eq("purchase_order_id", poId)
+        .order("created_at");
+      if (error) throw new Error(error.message);
+      return (data ?? []).map((item: Record<string, unknown>) => ({
+        ...item,
+        part_name: ((item.part as { name: string } | null)?.name) ?? "Unknown",
+      })) as (PurchaseOrderItem & { part_name: string })[];
+    },
+    {
+      tags: [cacheTags.purchaseOrders(poId)],
+      revalidate: cacheDurations.purchaseOrders,
+    },
+  );
 }
 
 export async function createPurchaseOrder(
@@ -395,6 +480,7 @@ export async function createPurchaseOrder(
     if (itemError) throw new Error(itemError?.message ?? "Failed to add PO item");
   }
 
+  revalidateTag(cacheTags.purchaseOrders(orgId), "max");
   return po;
 }
 
@@ -419,6 +505,7 @@ export async function updatePurchaseOrder(
     .select("*")
     .single();
   if (error || !data) throw new NotFoundError("Purchase order not found");
+  revalidateTag(cacheTags.purchaseOrders(orgId), "max");
   return data;
 }
 
@@ -492,6 +579,8 @@ export async function receivePurchaseOrder(
     .single();
 
   if (error || !data) throw new NotFoundError("Purchase order not found");
+  revalidateTag(cacheTags.purchaseOrders(orgId), "max");
+  revalidateTag(cacheTags.inventoryBalances(orgId), "max");
   return data;
 }
 
@@ -499,12 +588,22 @@ export async function receivePurchaseOrder(
 
 export async function getStockThresholds(orgId: string): Promise<StockThreshold[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("stock_thresholds")
-    .select("*")
-    .eq("organization_id", orgId);
-  if (error) throw new Error(error.message);
-  return data ?? [];
+
+  return withCache(
+    ["getStockThresholds", orgId],
+    async () => {
+      const { data, error } = await supabase
+        .from("stock_thresholds")
+        .select("*")
+        .eq("organization_id", orgId);
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+    {
+      tags: [cacheTags.stockThresholds(orgId)],
+      revalidate: cacheDurations.stockThresholds,
+    },
+  );
 }
 
 export async function setStockThreshold(
@@ -531,5 +630,6 @@ export async function setStockThreshold(
     .select("*")
     .single();
   if (error || !data) throw new Error(error?.message ?? "Failed to set threshold");
+  revalidateTag(cacheTags.stockThresholds(orgId), "max");
   return data;
 }

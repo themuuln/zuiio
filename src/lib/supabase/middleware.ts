@@ -6,8 +6,6 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
-  // With Fluid compute, don't put this client in a global environment
-  // variable. Always create a new one on each request.
   const supabase = createServerClient(
     env("NEXT_PUBLIC_SUPABASE_URL"),
     env("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"),
@@ -31,52 +29,29 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Do not run code between createServerClient and
-  // supabase.auth.getClaims(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
-  // IMPORTANT: If you remove getClaims() and you use server-side rendering
-  // with the Supabase client, your users may be randomly logged out.
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
   const pathname = request.nextUrl.pathname;
 
-  // Detect locale prefix (e.g., /mn/auth/login → locale is "mn")
-  const localeMatch = pathname.match(/^\/([a-z]{2})\//);
-  const locale = localeMatch ? localeMatch[1] : null;
-
   const isAuthRoute = pathname.includes("/auth/");
+  const isInvoiceRoute = pathname.startsWith("/invoice/");
+  const isInviteRoute = pathname.startsWith("/invite/");
   const isLoginRoute = pathname.includes("/auth/login");
 
-  // Default locale fallback (auth tree only lives under [locale])
-  const defaultLocale = locale ?? "mn";
-
-  if (!user && !isAuthRoute) {
+  if (!user && !isAuthRoute && !isInvoiceRoute && !isInviteRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = `/${defaultLocale}/auth/login`;
+    // With localePrefix: "never" the URL has no locale segment
+    url.pathname = "/auth/login";
+    url.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(url);
   }
 
-  // If user is authenticated and on the login page, continue through org verification
   if (user && isLoginRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = `/${defaultLocale}/auth/select-organization`;
+    url.pathname = "/auth/select-organization";
     return NextResponse.redirect(url);
   }
-
-  // IMPORTANT: You *must* return the supabaseResponse object as it is.
-  // If you're creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
 
   return supabaseResponse;
 }

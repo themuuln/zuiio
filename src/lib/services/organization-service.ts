@@ -1,3 +1,6 @@
+import { revalidateTag } from "next/cache";
+import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { withCache } from "@/lib/cache/with-cache";
 import type { Organization } from "@/lib/database.types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -6,11 +9,6 @@ import type {
   UpdateOrganizationParams,
 } from "@/lib/types";
 
-/**
- * Creates a new organization, adds the creating user as an admin
- * via organization_users, creates default Admin and Mechanic roles,
- * creates a default branch, and a profile row. All within a best-effort sequence.
- */
 export async function createOrganization(
   params: CreateOrganizationParams,
   userId: string,
@@ -22,7 +20,6 @@ export async function createOrganization(
 
   const supabase = await createClient();
 
-  // Check slug uniqueness
   const { data: existing } = await supabase
     .from("organizations")
     .select("id")
@@ -34,7 +31,6 @@ export async function createOrganization(
     throw new ConflictError("An organization with this slug already exists");
   }
 
-  // 1. Create the organization
   const { data: org, error: orgError } = await supabase
     .from("organizations")
     .insert({
@@ -52,7 +48,7 @@ export async function createOrganization(
     throw new Error(orgError?.message ?? "Failed to create organization");
   }
 
-  // 2. Create the Admin role
+  // Create roles, branch, membership, profile
   const { data: adminRole, error: adminRoleError } = await supabase
     .from("roles")
     .insert({
@@ -66,12 +62,10 @@ export async function createOrganization(
     .single();
 
   if (adminRoleError || !adminRole) {
-    // Best-effort cleanup
     await supabase.from("organizations").delete().eq("id", org.id);
     throw new Error(adminRoleError?.message ?? "Failed to create Admin role");
   }
 
-  // 3. Create the Mechanic role
   const { error: mechanicRoleError } = await supabase.from("roles").insert({
     organization_id: org.id,
     name: "Mechanic",
@@ -81,14 +75,12 @@ export async function createOrganization(
   });
 
   if (mechanicRoleError) {
-    // Best-effort cleanup
     await supabase.from("organizations").delete().eq("id", org.id);
     throw new Error(
       mechanicRoleError?.message ?? "Failed to create Mechanic role",
     );
   }
 
-  // 4. Create the default branch
   const { data: branch, error: branchError } = await supabase
     .from("branches")
     .insert({
@@ -107,7 +99,6 @@ export async function createOrganization(
     throw new Error(branchError?.message ?? "Failed to create default branch");
   }
 
-  // 5. Add the creator as an admin member
   const { error: memberError } = await supabase
     .from("organization_users")
     .insert({
@@ -124,7 +115,6 @@ export async function createOrganization(
     );
   }
 
-  // 6. Create / update the user's profile
   const { error: profileError } = await supabase.from("profiles").upsert({
     id: userId,
     organization_id: org.id,
@@ -134,62 +124,78 @@ export async function createOrganization(
   });
 
   if (profileError) {
-    // Non-fatal — profile can be created later
     console.error("Failed to upsert profile:", profileError.message);
+  }
+
+  try {
+    await supabase.rpc("create_default_subscription", {
+      target_org_id: org.id,
+    });
+  } catch (subError) {
+    console.error("Failed to create default subscription:", subError);
   }
 
   return org;
 }
 
-/**
- * Returns a single organization by ID.
- */
 export async function getOrganization(orgId: string): Promise<Organization> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("organizations")
-    .select("*")
-    .eq("id", orgId)
-    .is("deleted_at", null)
-    .single();
+  return withCache(
+    ["getOrganization", orgId],
+    async () => {
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("*")
+        .eq("id", orgId)
+        .is("deleted_at", null)
+        .single();
 
-  if (error || !data) {
-    throw new NotFoundError("Organization not found");
-  }
+      if (error || !data) {
+        throw new NotFoundError("Organization not found");
+      }
 
-  return data;
+      return data;
+    },
+    {
+      tags: [cacheTags.branches(orgId)],
+      revalidate: cacheDurations.branches,
+    },
+  );
 }
 
-/**
- * Returns the organization the current user belongs to, or null.
- */
 export async function getUserOrganization(
   userId: string,
 ): Promise<Organization | null> {
   const supabase = await createClient();
 
-  const { data: membership } = await supabase
-    .from("organization_users")
-    .select("organization_id")
-    .eq("user_id", userId)
-    .maybeSingle();
+  return withCache(
+    ["getUserOrganization", userId],
+    async () => {
+      const { data: membership } = await supabase
+        .from("organization_users")
+        .select("organization_id")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-  if (!membership) return null;
+      if (!membership) return null;
 
-  const { data: org } = await supabase
-    .from("organizations")
-    .select("*")
-    .eq("id", membership.organization_id)
-    .is("deleted_at", null)
-    .single();
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("*")
+        .eq("id", membership.organization_id)
+        .is("deleted_at", null)
+        .single();
 
-  return org ?? null;
+      return org ?? null;
+    },
+    {
+      tags: [cacheTags.organizationUsers(userId)],
+      revalidate: cacheDurations.organizationUsers,
+    },
+  );
 }
 
-/**
- * Updates organization fields (name, logo_url, settings).
- */
 export async function updateOrganization(
   orgId: string,
   params: UpdateOrganizationParams,
@@ -204,7 +210,6 @@ export async function updateOrganization(
   updates.updated_by = (await supabase.auth.getUser()).data.user?.id;
 
   if (Object.keys(updates).length <= 1) {
-    // Only updated_by was set — no user-provided fields
     throw new ValidationError("No fields to update");
   }
 
@@ -219,6 +224,8 @@ export async function updateOrganization(
   if (error || !data) {
     throw new NotFoundError("Organization not found");
   }
+
+  revalidateTag(cacheTags.branches(orgId), "max");
 
   return data;
 }

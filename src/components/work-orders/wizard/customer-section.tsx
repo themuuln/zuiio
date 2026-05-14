@@ -6,16 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/search-input";
 import { useWizardContext } from "./wizard-context";
+import { useTranslations } from "next-intl";
 
 export function CustomerSection() {
   const ctx = useWizardContext();
+  const t = useTranslations("workOrderWizard");
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <User className="size-4" />
-          Customer
+          {t("customer")}
           {ctx.selectedCustomer && (
             <span className="ml-auto text-sm font-normal text-muted-foreground">
               {[ctx.selectedCustomer.first_name, ctx.selectedCustomer.last_name]
@@ -49,13 +51,13 @@ export function CustomerSection() {
               size="sm"
               onClick={() => ctx.setSelectedCustomer(null)}
             >
-              Change
+              {t("change")}
             </Button>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             <SearchInput
-              placeholder="Search by name or phone..."
+              placeholder={t("searchByNameOrPhone")}
               loading={ctx.customerSearching}
               onSearch={ctx.setCustomerSearch}
               debounceMs={400}
@@ -74,7 +76,7 @@ export function CustomerSection() {
                       <span className="font-medium">
                         {[c.first_name, c.last_name]
                           .filter(Boolean)
-                          .join(" ") || "No name"}
+                          .join(" ") || t("noName")}
                       </span>
                       {c.phone && (
                         <span className="ml-2 text-sm text-muted-foreground">
@@ -93,12 +95,12 @@ export function CustomerSection() {
                 className="flex items-center gap-2 rounded-lg border border-dashed p-3 text-muted-foreground hover:bg-muted/30 min-h-[48px]"
               >
                 <Plus className="size-4" />
-                Quick create customer
+                {t("quickCreateCustomer")}
               </button>
             )}
             {ctx.showQuickCustomer && (
               <div className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/20">
-                <p className="text-sm font-medium">New Customer</p>
+                <p className="text-sm font-medium">{t("newCustomer")}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <Input
                     placeholder="First name *"
@@ -133,14 +135,15 @@ export function CustomerSection() {
                       ctx.setQuickPhone("");
                     }}
                   >
-                    Cancel
+                    {t("cancel")}
+                    
                   </Button>
                   <Button
                     size="sm"
                     disabled={ctx.creatingCustomer || !ctx.quickFirstName.trim()}
                     onClick={ctx.handleQuickCreateCustomer}
                   >
-                    {ctx.creatingCustomer ? "Creating..." : "Create & Select Customer"}
+                    {ctx.creatingCustomer ? t("creating") : t("createAndSelectCustomer")}
                   </Button>
                 </div>
               </div>

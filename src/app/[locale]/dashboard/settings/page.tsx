@@ -3,16 +3,19 @@
 import {
   Building2,
   CreditCard,
+  Database,
+  Download,
   FileText,
   Globe,
+  Loader2,
   MessageSquare,
   Monitor,
   Moon,
   Sun,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { useTheme } from "next-themes";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -395,7 +398,7 @@ export default function SettingsPage() {
                       className={`${inputClassName} pl-9`}
                       aria-label="Default currency"
                     >
-                      <option value="MNT">🇲🇳 MNT (Mongolian Tugrik)</option>
+                      <option value="MNT">🇲🇳 ₮ (Mongolian Tugrik)</option>
                       <option value="CNY">🇨🇳 CNY (Chinese Yuan)</option>
                       <option value="USD">🇺🇸 USD (US Dollar)</option>
                       <option value="EUR">🇪🇺 EUR (Euro)</option>
@@ -595,6 +598,113 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Data Export */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="size-4" />
+            Data Export & Backup
+          </CardTitle>
+          <CardDescription>
+            Export your organization data or back up the database.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-lg border border-border p-4 space-y-3">
+              <div className="flex items-center gap-2 font-medium">
+                <Download className="size-4" />
+                Export All Data
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Download all your organization data as a single JSON file.
+                Includes customers, vehicles, work orders, inventory, invoices,
+                and settings.
+              </p>
+              <ExportDataButton orgId={organization?.id ?? ""} />
+            </div>
+
+            <div className="rounded-lg border border-border p-4 space-y-3">
+              <div className="flex items-center gap-2 font-medium">
+                <Database className="size-4" />
+                Database Backup
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Back up the database from the command line. Run{" "}
+                <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
+                  ./scripts/backup.sh
+                </code>{" "}
+                for a local backup, or{" "}
+                <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
+                  ./scripts/backup.sh --remote
+                </code>{" "}
+                for the live database.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function ExportDataButton({ orgId }: { orgId: string }) {
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const handleExport = async () => {
+    if (!orgId) return;
+    setExporting(true);
+    setExportError(null);
+
+    try {
+      const response = await fetch(`/api/organizations/${orgId}/export`);
+      if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.error?.message ?? "Export failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `tolom-export-${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success("Data exported successfully");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Export failed";
+      setExportError(message);
+      toast.error(message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Button
+        variant="outline"
+        onClick={handleExport}
+        disabled={exporting || !orgId}
+        className="w-full"
+      >
+        {exporting ? (
+          <>
+            <Loader2 className="mr-2 size-4 animate-spin" />
+            Exporting...
+          </>
+        ) : (
+          <>
+            <Download className="mr-2 size-4" />
+            Export Data
+          </>
+        )}
+      </Button>
+      {exportError && <p className="text-xs text-destructive">{exportError}</p>}
     </div>
   );
 }

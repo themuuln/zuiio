@@ -597,7 +597,7 @@ Customer arrives
 
 Suggested Sellable Price
 
-Setup: ₮3M–₮5M
+Implementation: ₮2M
 Monthly: ₮299k
 
 ⸻
@@ -644,7 +644,7 @@ How much stock was used this week?
 
 Suggested Sellable Price
 
-Setup: ₮8M–₮12M
+Implementation: ₮8M
 Monthly: ₮699k
 
 ⸻
@@ -692,7 +692,7 @@ Repeat customer activity
 
 Suggested Sellable Price
 
-Setup: ₮10M–₮15M
+Implementation: ₮10M–₮15M
 Monthly: ₮899k–₮1.2M
 
 ⸻
@@ -732,8 +732,8 @@ A business with 2–5 branches can operate from one dashboard.
 
 Suggested Sellable Price
 
-Setup: ₮15M–₮35M
-Monthly: ₮1.5M–₮3M
+Implementation: ₮20M+
+Monthly: From ₮1.5M
 
 ⸻
 
@@ -790,7 +790,7 @@ Offline should not support:
 
 Suggested Add-On Price
 
-Setup: ₮15M–₮40M
+Implementation: ₮15M–₮40M
 Monthly: +₮500k–₮1.5M
 
 ⸻
@@ -831,7 +831,7 @@ Subscription revenue
 
 Suggested Enterprise Price
 
-Setup: ₮50M–₮150M+
+Implementation: ₮50M–₮150M+
 Monthly: ₮3M–₮10M+
 Transaction fees: optional
 
@@ -998,21 +998,37 @@ You should support three pricing models, but push one as the default.
 
 Best Default
 
-Hybrid = setup fee + monthly subscription
+Hybrid = implementation + monthly subscription
 
 Why?
 
 Because Mongolian customers often want “implementation,” but you need recurring revenue.
 
+Psychological Foundation
+
+TOLOM pricing is designed around how Mongolian garage owners actually make decisions:
+
+1. Anchoring Effect — Enterprise pricing exists to make Pro feel reasonable
+2. Compromise Effect — Pro is the psychological target (middle = safe)
+3. Loss Aversion — Market “stop losing money” not “better dashboard”
+4. Price = Quality Signal — Cheap software creates distrust in Mongolia
+5. Setup Fees Increase Trust — Call it “Implementation & Onboarding”
+6. Endowment Effect — Deep onboarding creates psychological ownership
+7. Cognitive Load — Public website shows ONLY 4 plans
+
+The highest-performing SaaS companies win because they understand buyer fear, status signaling, loss aversion, trust, risk reduction, identity, and decision psychology.
+
+The strongest pricing question is not “How much is the software worth?” but “How expensive is the customer’s chaos?”
+
 ⸻
 
 14. SaaS Pricing Plans
 
-SaaS Tier 1 — Starter
+SaaS Tier 1 — Core
 
 Target
 
-Startup and small garage.
+Small garages just starting out.
 
 Price
 
@@ -1070,7 +1086,7 @@ Included
 
 1 branch
 10 users
-Everything in Starter
+Everything in Core
 Inventory management
 Parts tracking
 Supplier records
@@ -1171,9 +1187,9 @@ Setup
 
 This should be your main pricing model.
 
-Hybrid Starter
+Hybrid Core
 
-Setup: ₮3M–₮5M
+Implementation: ₮2M
 Monthly: ₮299k
 
 Includes
@@ -1184,18 +1200,18 @@ Basic customization
 Service catalog and pricing setup
 Staff training
 Data import template
-Starter SaaS features
+Core SaaS features
 
 ⸻
 
 Hybrid Pro
 
-Setup: ₮8M–₮12M
+Implementation: ₮8M
 Monthly: ₮699k
 
 Includes
 
-Everything in Starter
+Everything in Core
 Inventory setup
 Service category setup
 Mechanic workflow setup
@@ -1208,8 +1224,8 @@ Initial data migration
 
 Hybrid Business
 
-Setup: ₮15M–₮35M
-Monthly: ₮1.59M
+Implementation: ₮20M+
+Monthly: From ₮1.59M
 
 Includes
 
@@ -1227,8 +1243,8 @@ Dedicated onboarding
 
 Hybrid Enterprise
 
-Setup: ₮50M–₮150M+
-Monthly: ₮3M–₮10M+
+Implementation: Custom
+Monthly: Custom
 
 Includes
 
@@ -1338,14 +1354,14 @@ Follow-up messages
 
 QPay Integration
 
-Setup: ₮1M–₮3M
+Implementation: ₮1M–₮3M
 Monthly: ₮50k–₮150k
 
 ⸻
 
 Accounting Integration
 
-Setup: ₮5M–₮20M
+Implementation: ₮5M–₮20M
 Monthly: ₮300k–₮1M
 
 Depends on the accounting system.
@@ -1354,21 +1370,21 @@ Depends on the accounting system.
 
 Mechanic Mobile App
 
-Setup: ₮15M–₮40M
+Implementation: ₮15M–₮40M
 Monthly: ₮500k–₮1.5M
 
 ⸻
 
 Advanced BI Dashboard
 
-Setup: ₮5M–₮15M
+Implementation: ₮5M–₮15M
 Monthly: ₮300k–₮800k
 
 ⸻
 
 Fleet Management Module
 
-Setup: ₮10M–₮30M
+Implementation: ₮10M–₮30M
 Monthly: ₮500k–₮2M
 
 Or price per vehicle:
@@ -1379,7 +1395,7 @@ Or price per vehicle:
 
 AI Estimate Assistant
 
-Setup: ₮20M–₮60M
+Implementation: ₮20M–₮60M
 Monthly: ₮1M+
 Usage fee per estimate
 
@@ -1405,7 +1421,7 @@ custom dashboards
 
 Dedicated Deployment
 
-Setup: ₮10M–₮30M
+Implementation: ₮10M–₮30M
 Monthly: ₮1M–₮3M
 
 Only for large customers.
@@ -1438,7 +1454,7 @@ Only accept this if it can become reusable.
 
 Use Three Main Plans
 
-Starter
+Core
 Pro
 Business
 
@@ -1446,23 +1462,23 @@ Pro should be the default choice.
 
 Structure Value Like This
 
-Starter = record keeping
+Core = record keeping
 Pro = control and profit
 Business = scale and management
 
-Do Not Make Starter Too Cheap
+Do Not Make Core Too Cheap
 
-If Starter is ₮99k, weak customers will consume support and kill margins.
+If Core is ₮99k, weak customers will consume support and kill margins.
 
 Better:
 
-Starter: ₮299k
+Core: ₮299k
 Pro: ₮699k
 Business: ₮1.59M
 
 Use Setup Fees to Filter Serious Buyers
 
-Setup fee protects you from customers who are not committed.
+Implementation protects you from customers who are not committed.
 
 Use Annual Plans
 
@@ -1483,7 +1499,7 @@ Discount setup instead.
 
 Good:
 
-Setup ₮8M → ₮5M
+Implementation ₮8M → ₮5M
 Monthly stays ₮699k
 
 Bad:
@@ -1505,7 +1521,7 @@ Estimated Monthly Cost to Serve
 These are internal planning estimates.
 
 Plan	Monthly Price	Infra + Support Cost	Gross Margin
-Starter	₮299k	₮60k–₮90k	70%–80%
+Core	₮299k	₮60k–₮90k	70%–80%
 Pro	₮699k	₮120k–₮200k	71%–83%
 Business	₮1.59M	₮300k–₮500k	68%–81%
 Enterprise	₮3M+	variable	70%+ target
@@ -1534,7 +1550,7 @@ Support SLA
 
 Recommended Limits
 
-Limit	Starter	Pro	Business
+Limit	Core	Pro	Business
 Branches	1	1	3
 Users	3	10	25
 Work orders/month	300	1,500	5,000
@@ -1686,7 +1702,7 @@ Repair approvals, photos, estimate, claim documentation.
 
 Pricing
 
-Setup: ₮20M–₮100M
+Implementation: ₮20M–₮100M
 Monthly: ₮2M–₮10M
 Per claim fee: optional
 
@@ -1752,18 +1768,25 @@ Sandbox environment
 
 23. Final Recommended Pricing Table
 
-Primary Hybrid Pricing
+Primary Hybrid Pricing (Psychologically Optimized)
 
-Plan	Setup	Monthly	Best For
-Starter	₮3M–₮5M	₮299k	Startup or small garage
-Pro	₮8M–₮12M	₮699k	Serious garage
-Business	₮15M–₮35M	₮1.59M	Multi-branch shop
-Enterprise	₮50M–₮150M+	₮3M–₮10M+	Chains, fleets, dealerships
+Plan	Implementation	Monthly	Best For	Psychological Role
+Core	₮2M	₮299k	Small garage	Safe entry anchor
+Pro	₮8M	₮699k	Serious garage	Main conversion target
+Business	₮20M+	From ₮1.59M	Multi-branch shop	Premium anchor
+Enterprise	Custom	Custom	Chains, fleets, dealerships	Value ceiling anchor
+
+Public Website Rules:
+- Show ONLY these 4 plans
+- Display order: Enterprise → Business → Pro → Core (left to right)
+- Pro must be visually dominant (bigger, brighter, centered)
+- Never show one-time pricing or add-ons publicly
+- All add-ons and custom work are internal sales only
 
 SaaS-Only Pricing
 
 Plan	Monthly	Annual
-Starter	₮299k	₮2.99M
+Core	₮299k	₮2.99M
 Pro	₮699k	₮6.99M
 Business	₮1.59M	₮15.9M
 Enterprise	Custom	Custom

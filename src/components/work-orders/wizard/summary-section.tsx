@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@/lib/i18n/navigation";
 import { useWizardContext } from "./wizard-context";
+import { useTranslations } from "next-intl";
 
 function formatMNT(amount: number): string {
   return new Intl.NumberFormat("mn-MN", {
@@ -17,6 +18,7 @@ function formatMNT(amount: number): string {
 
 export function SummarySection() {
   const ctx = useWizardContext();
+  const t = useTranslations("workOrderWizard");
 
   return (
     <>
@@ -25,20 +27,20 @@ export function SummarySection() {
         <CardContent className="p-6">
           <div className="flex flex-col gap-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Services</span>
+              <span className="text-muted-foreground">{t("servicesTotal")}</span>
               <span className="font-medium tabular-nums">
                 {formatMNT(ctx.servicesTotal)}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Parts</span>
+              <span className="text-muted-foreground">{t("partsTotal")}</span>
               <span className="font-medium tabular-nums">
                 {formatMNT(ctx.partsTotal)}
               </span>
             </div>
             <hr className="border-border" />
             <div className="flex justify-between text-xl font-bold">
-              <span>Grand Total</span>
+              <span>{t("grandTotal")}</span>
               <span className="tabular-nums">{formatMNT(ctx.grandTotal)}</span>
             </div>
           </div>
@@ -54,7 +56,7 @@ export function SummarySection() {
               size="lg"
               render={<Link href="/dashboard/work-orders" />}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               size="lg"
@@ -64,13 +66,13 @@ export function SummarySection() {
             >
               <Wrench className="size-4" />
               {ctx.saving
-                ? "Creating..."
-                : `Create Work Order — ${formatMNT(ctx.grandTotal)}`}
+                ? t("creating")
+                : t("createWorkOrder", { total: formatMNT(ctx.grandTotal) })}
             </Button>
           </div>
           {(!ctx.selectedCustomer || !ctx.selectedVehicle) && (
             <p className="text-xs text-muted-foreground text-center mt-3">
-              Select a customer and vehicle to enable creation
+              {t("createDisabledHint")}
             </p>
           )}
         </CardContent>

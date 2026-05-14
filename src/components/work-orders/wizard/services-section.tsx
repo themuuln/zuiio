@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/search-input";
 import { useWizardContext } from "./wizard-context";
+import { useTranslations } from "next-intl";
 
 function formatMNT(amount: number): string {
   return new Intl.NumberFormat("mn-MN", {
@@ -17,16 +18,17 @@ function formatMNT(amount: number): string {
 
 export function ServicesSection() {
   const ctx = useWizardContext();
+  const t = useTranslations("workOrderWizard");
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Wrench className="size-4" />
-          Services
+          {t("services")}
           {ctx.serviceLines.length > 0 && (
             <span className="ml-auto text-sm font-normal text-muted-foreground">
-              {ctx.serviceLines.length} service{ctx.serviceLines.length !== 1 ? "s" : ""}
+              {ctx.serviceLines.length} {t("services")}
             </span>
           )}
         </CardTitle>
@@ -35,7 +37,7 @@ export function ServicesSection() {
         {/* Service search */}
         <div className="relative">
           <SearchInput
-            placeholder="Search services to add..."
+            placeholder={t("searchServicesToAdd")}
             loading={false}
             onSearch={ctx.setServiceSearch}
             debounceMs={300}
@@ -55,7 +57,8 @@ export function ServicesSection() {
                 )
                 .slice(0, 12)
                 .map((svc) => {
-                  const last = ctx.priceHistory[svc.name] ?? Number(svc.default_price);
+                  const history = ctx.priceHistory[svc.id];
+                  const last = history?.last_price ?? Number(svc.default_price);
                   const isAdded = ctx.serviceLines.some(
                     (s) => s.service_catalog_id === svc.id,
                   );
@@ -88,7 +91,7 @@ export function ServicesSection() {
                         </span>
                         {last !== Number(svc.default_price) && last > 0 && (
                           <span className="ml-2 text-xs text-amber-600">
-                            last: {formatMNT(last)}
+                            {t("lastSold", { price: formatMNT(last) })}
                           </span>
                         )}
                       </div>
@@ -106,7 +109,7 @@ export function ServicesSection() {
                       .includes(ctx.serviceSearch.toLowerCase())),
               ).length === 0 && (
                 <div className="p-4 text-sm text-muted-foreground text-center">
-                  No services found
+                  {t("noServicesMatch")}
                 </div>
               )}
             </div>
@@ -161,7 +164,7 @@ export function ServicesSection() {
                         )
                       }
                       className="w-20 h-10"
-                      placeholder="Disc ₮"
+                      placeholder={t("discount")}
                       aria-label="Discount amount"
                     />
                   </div>
@@ -184,7 +187,7 @@ export function ServicesSection() {
 
         {ctx.serviceLines.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-3">
-            Search and add services above
+            {t("noServicesFound")}
           </p>
         )}
       </CardContent>

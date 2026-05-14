@@ -1,0 +1,227 @@
+"use client";
+
+import { Check, Loader2, Shield, ShieldAlert } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { AdminOrg } from "@/lib/services/admin-service";
+
+const PLAN_COLORS: Record<string, string> = {
+  starter: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  pro: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  business:
+    "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  enterprise:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  active:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  trial: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
+  cancelled: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  expired: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
+};
+
+const PLAN_OPTIONS = ["starter", "pro", "business", "enterprise"];
+
+export default function AdminPage() {
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean | null>(null);
+  const [orgs, setOrgs] = useState<AdminOrg[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [savingOrgId, setSavingOrgId] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/admin/me").then((r) => r.json()),
+      fetch("/api/admin/organizations").then((r) => r.json()),
+    ])
+      .then(([meJson, orgsJson]) => {
+        setIsSuperAdmin(meJson.data?.isSuperAdmin ?? false);
+        if (orgsJson.data) setOrgs(orgsJson.data);
+      })
+      .catch(() => setIsSuperAdmin(false))
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handlePlanChange(orgId: string, planType: string) {
+    setSavingOrgId(orgId);
+    try {
+      const res = await fetch(
+        `/api/admin/organizations/${orgId}/subscription`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ planType, status: "active" }),
+        },
+      );
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      setOrgs((prev) =>
+        prev.map((o) =>
+          o.id === orgId && o.subscription
+            ? { ...o, subscription: { ...o.subscription, plan_type: planType } }
+            : o,
+        ),
+      );
+      toast.success(`Updated to ${planType}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update");
+    } finally {
+      setSavingOrgId(null);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="mt-2 h-5 w-64" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSuperAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <ShieldAlert className="size-12 text-destructive" />
+        <h2 className="text-xl font-semibold">Access Denied</h2>
+        <p className="text-muted-foreground text-center max-w-md">
+          You need super admin privileges to access this dashboard.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Shield className="size-6" />
+            Admin Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Manage organizations and their subscriptions
+          </p>
+        </div>
+        <Badge variant="outline" className="text-xs">
+          {orgs.length} org{orgs.length === 1 ? "" : "s"}
+        </Badge>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">Organizations</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="divide-y">
+            <div className="hidden md:grid md:grid-cols-[1fr_120px_100px_160px] gap-4 px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <span>Organization</span>
+              <span>Plan</span>
+              <span>Status</span>
+              <span className="text-right">Actions</span>
+            </div>
+            {orgs.length === 0 ? (
+              <div className="px-6 py-12 text-center text-sm text-muted-foreground">
+                No organizations found.
+              </div>
+            ) : (
+              orgs.map((org) => (
+                <div
+                  key={org.id}
+                  className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px_160px] gap-3 md:gap-4 px-6 py-4 items-center"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{org.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {org.slug}
+                    </p>
+                  </div>
+
+                  <div>
+                    {org.subscription ? (
+                      <Badge
+                        className={
+                          PLAN_COLORS[org.subscription.plan_type] ?? "bg-muted"
+                        }
+                        variant="secondary"
+                      >
+                        {org.subscription.plan_type}
+                        {org.subscription.trial && (
+                          <span className="ml-1 text-[10px]">(trial)</span>
+                        )}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        No plan
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    {org.subscription ? (
+                      <Badge
+                        className={
+                          STATUS_COLORS[org.subscription.status] ?? "bg-muted"
+                        }
+                        variant="secondary"
+                      >
+                        {org.subscription.status}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-end gap-1.5">
+                    {PLAN_OPTIONS.map((plan) => (
+                      <Button
+                        key={plan}
+                        size="sm"
+                        variant={
+                          org.subscription?.plan_type === plan
+                            ? "default"
+                            : "outline"
+                        }
+                        disabled={
+                          savingOrgId === org.id ||
+                          org.subscription?.plan_type === plan
+                        }
+                        onClick={() => handlePlanChange(org.id, plan)}
+                        className="h-7 text-[11px] px-2 capitalize"
+                      >
+                        {savingOrgId === org.id ? (
+                          <Loader2 className="size-3 animate-spin" />
+                        ) : org.subscription?.plan_type === plan ? (
+                          <Check className="size-3" />
+                        ) : (
+                          plan
+                        )}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <p className="text-xs text-muted-foreground">
+        Changes take effect immediately. The subscription plan limits are not
+        enforced yet — this only updates the plan type in the database.
+      </p>
+    </div>
+  );
+}

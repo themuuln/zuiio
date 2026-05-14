@@ -19,7 +19,9 @@ export type {
   CustomerType,
   FeatureFlag,
   FuelType,
+  InviteStatus,
   MechanicAssignment,
+  OrgInvite,
   Organization,
   OrganizationSettings,
   OrganizationUser,
@@ -137,6 +139,21 @@ export interface UpdateBranchParams {
 export interface InviteUserParams {
   email: string;
   roleId?: string;
+  message?: string;
+}
+
+export interface SubscriptionPlanInfo {
+  id: string;
+  organizationId: string;
+  planType: string;
+  status: string;
+  startedAt: string;
+  expiresAt: string | null;
+  trial: boolean;
+}
+
+export interface UpdateSubscriptionParams {
+  planType: string;
 }
 
 export interface UpdateUserRoleParams {
