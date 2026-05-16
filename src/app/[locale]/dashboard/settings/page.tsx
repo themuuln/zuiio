@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
   CreditCard,
@@ -11,14 +12,16 @@ import {
   MessageSquare,
   Monitor,
   Moon,
+  Palette,
   Sun,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { applyBrandThemePreview } from "@/components/brand-theme-provider";
+import OrgLogoUpload from "@/components/org-logo-upload";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,10 +32,30 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { orgKeys } from "@/lib/queries/keys";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization } from "@/lib/types";
 import { setCookie } from "@/lib/utils";
+
+const BRAND_COLOR_PRESETS = [
+  { label: "Default", value: "" },
+  { label: "Slate", value: "#334155" },
+  { label: "Blue", value: "#2563eb" },
+  { label: "Green", value: "#16a34a" },
+  { label: "Red", value: "#dc2626" },
+  { label: "Orange", value: "#ea580c" },
+  { label: "Purple", value: "#9333ea" },
+  { label: "Teal", value: "#0d9488" },
+  { label: "Pink", value: "#db2777" },
+];
+
+const RADIUS_OPTIONS = [
+  { value: "none", label: "None" },
+  { value: "sm", label: "Small" },
+  { value: "md", label: "Medium" },
+  { value: "lg", label: "Large" },
+  { value: "xl", label: "Extra Large" },
+] as const;
 
 type SettingsForm = {
   invoicePrefix: string;
@@ -43,7 +66,16 @@ type SettingsForm = {
   language: string;
   smsEnabled: boolean;
   qpayEnabled: boolean;
+  brandColor: string;
+  borderRadius: string;
+  uiSize: string;
 };
+
+const UI_SIZE_OPTIONS = [
+  { value: "sm", label: "Compact" },
+  { value: "md", label: "Default" },
+  { value: "lg", label: "Large" },
+] as const;
 
 const DEFAULT_FORM: SettingsForm = {
   invoicePrefix: "INV",
@@ -54,6 +86,9 @@ const DEFAULT_FORM: SettingsForm = {
   language: "mn",
   smsEnabled: false,
   qpayEnabled: false,
+  brandColor: "",
+  borderRadius: "lg",
+  uiSize: "md",
 };
 
 const inputClassName =
@@ -99,36 +134,59 @@ function buildFormFromOrganization(organization: Organization): SettingsForm {
 
   return {
     invoicePrefix: getStringSetting(
-      settings,
+      settings as Record<string, unknown>,
       "invoice_prefix",
       DEFAULT_FORM.invoicePrefix,
     ),
     defaultCurrency: getStringSetting(
-      settings,
+      settings as Record<string, unknown>,
       "default_currency",
       DEFAULT_FORM.defaultCurrency,
     ),
-    language: getStringSetting(settings, "language", DEFAULT_FORM.language),
+    language: getStringSetting(
+      settings as Record<string, unknown>,
+      "language",
+      DEFAULT_FORM.language,
+    ),
     defaultTaxRate: getNumberSetting(
-      settings,
+      settings as Record<string, unknown>,
       "default_tax_rate",
       DEFAULT_FORM.defaultTaxRate,
     ),
-    timezone: getStringSetting(settings, "timezone", DEFAULT_FORM.timezone),
+    timezone: getStringSetting(
+      settings as Record<string, unknown>,
+      "timezone",
+      DEFAULT_FORM.timezone,
+    ),
     dateFormat: getStringSetting(
-      settings,
+      settings as Record<string, unknown>,
       "date_format",
       DEFAULT_FORM.dateFormat,
     ),
     smsEnabled: getBooleanSetting(
-      settings,
+      settings as Record<string, unknown>,
       "sms_enabled",
       DEFAULT_FORM.smsEnabled,
     ),
     qpayEnabled: getBooleanSetting(
-      settings,
+      settings as Record<string, unknown>,
       "qpay_enabled",
       DEFAULT_FORM.qpayEnabled,
+    ),
+    brandColor: getStringSetting(
+      settings as Record<string, unknown>,
+      "brand_color",
+      DEFAULT_FORM.brandColor,
+    ),
+    borderRadius: getStringSetting(
+      settings as Record<string, unknown>,
+      "border_radius",
+      DEFAULT_FORM.borderRadius,
+    ),
+    uiSize: getStringSetting(
+      settings as Record<string, unknown>,
+      "ui_size",
+      DEFAULT_FORM.uiSize,
     ),
   };
 }
@@ -170,6 +228,24 @@ export default function SettingsPage() {
     retry: 1,
   });
 
+  // Populate form from API data on page load (otherwise DEFAULT_FORM persists)
+  useEffect(() => {
+    if (organization) {
+      setForm(buildFormFromOrganization(organization));
+    }
+  }, [organization]);
+
+  const preview = useCallback(
+    (color: string, radius: string, size?: string) => {
+      applyBrandThemePreview({
+        brand_color: color || undefined,
+        border_radius: radius || undefined,
+        ui_size: size || undefined,
+      });
+    },
+    [],
+  );
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -185,7 +261,7 @@ export default function SettingsPage() {
 
     try {
       const nextSettings = {
-        ...organization.settings,
+        ...(organization.settings as Record<string, unknown>),
         invoice_prefix: form.invoicePrefix.trim() || DEFAULT_FORM.invoicePrefix,
         default_currency:
           form.defaultCurrency.trim() || DEFAULT_FORM.defaultCurrency,
@@ -195,6 +271,9 @@ export default function SettingsPage() {
         language: form.language || DEFAULT_FORM.language,
         sms_enabled: form.smsEnabled,
         qpay_enabled: form.qpayEnabled,
+        brand_color: form.brandColor.trim() || undefined,
+        border_radius: form.borderRadius || DEFAULT_FORM.borderRadius,
+        ui_size: form.uiSize || DEFAULT_FORM.uiSize,
       };
 
       const response = await fetch(`/api/organizations/${organization.id}`, {
@@ -316,6 +395,14 @@ export default function SettingsPage() {
             <CardDescription>Current workspace</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {orgId && (
+              <OrgLogoUpload
+                orgId={orgId}
+                logoUrl={organization?.logo_url ?? null}
+                orgName={organization?.name ?? "Org"}
+                onLogoChange={() => refetch()}
+              />
+            )}
             <div>
               <p className="text-sm text-muted-foreground">Name</p>
               <p className="font-medium">{organization?.name ?? "—"}</p>
@@ -580,6 +667,136 @@ export default function SettingsPage() {
                 </button>
               );
             })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="size-4" />
+            UI Customization
+          </CardTitle>
+          <CardDescription>
+            Customize the look and feel of your workspace.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-3">
+            <label className="text-sm font-medium">Brand color</label>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <input
+                  type="color"
+                  value={
+                    form.brandColor ||
+                    getComputedStyle(document.documentElement)
+                      .getPropertyValue("--primary")
+                      .trim() ||
+                    "#000000"
+                  }
+                  onChange={(e) => {
+                    const color = e.target.value;
+                    setForm((prev) => ({ ...prev, brandColor: color }));
+                    preview(color, form.borderRadius);
+                  }}
+                  className="size-10 cursor-pointer rounded-md border border-border p-0.5"
+                />
+              </div>
+              <Input
+                value={form.brandColor}
+                onChange={(e) => {
+                  const color = e.target.value;
+                  setForm((prev) => ({ ...prev, brandColor: color }));
+                  if (/^#[0-9a-fA-F]{6}$/.test(color)) {
+                    preview(color, form.borderRadius);
+                  }
+                }}
+                placeholder="#334155"
+                className="w-32 font-mono text-sm"
+                maxLength={7}
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {BRAND_COLOR_PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => {
+                    setForm((prev) => ({
+                      ...prev,
+                      brandColor: preset.value,
+                    }));
+                    preview(preset.value, form.borderRadius);
+                  }}
+                  className={`size-7 rounded-full border-2 transition-all ${
+                    form.brandColor === preset.value ||
+                    (!form.brandColor && preset.value === "")
+                      ? "border-foreground scale-110"
+                      : "border-border hover:scale-110"
+                  }`}
+                  style={{
+                    backgroundColor:
+                      preset.value ||
+                      getComputedStyle(document.documentElement)
+                        .getPropertyValue("--primary")
+                        .trim() ||
+                      "#000000",
+                  }}
+                  title={preset.label}
+                  aria-label={preset.label}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-medium">Border radius</label>
+            <div className="flex gap-1 rounded-xl border border-border bg-card p-1 w-fit">
+              {RADIUS_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setForm((prev) => ({
+                      ...prev,
+                      borderRadius: option.value,
+                    }));
+                    preview(form.brandColor, option.value);
+                  }}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                    form.borderRadius === option.value
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-medium">UI size</label>
+            <div className="flex gap-1 rounded-xl border border-border bg-card p-1 w-fit">
+              {UI_SIZE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setForm((prev) => ({ ...prev, uiSize: option.value }));
+                    preview(form.brandColor, form.borderRadius, option.value);
+                  }}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                    form.uiSize === option.value
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>

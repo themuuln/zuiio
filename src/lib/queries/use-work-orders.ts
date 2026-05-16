@@ -6,8 +6,9 @@ export interface WorkOrderListItem {
   status: string;
   created_at: string;
   mechanic_id: string | null;
+  mechanic: { full_name: string | null } | null;
   customer: { first_name: string; last_name: string | null } | null;
-  vehicle: { plate_number: string } | null;
+  vehicle: { plate_number: string; make: string | null; model: string | null } | null;
   grand_total?: number;
 }
 

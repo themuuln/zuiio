@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AuditLogInsert, Database } from "@/lib/database.types";
+import type { AuditLogInsert, Database, Json } from "@/lib/database.types";
 
 /**
  * Parameters for creating an audit log entry.
@@ -108,8 +108,8 @@ export async function createAuditLog(
     action,
     table_name,
     record_id,
-    old_data: old_data ?? null,
-    new_data: new_data ?? null,
+    old_data: old_data as Json | undefined,
+    new_data: new_data as Json | undefined,
   };
 
   if (branch_id) {

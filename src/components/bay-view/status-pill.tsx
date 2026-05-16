@@ -32,16 +32,18 @@ const STATUS_ICONS: Record<string, React.ReactNode> = {
 };
 
 export function StatusPill({ status }: { status: string }) {
+  const isInProgress = status === "In Progress";
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+        "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
         STATUS_STYLES[status] ?? "bg-muted text-muted-foreground",
+        isInProgress && "animate-[pulse-ring-warning_2s_ease-in-out_infinite]",
       )}
     >
       {STATUS_ICONS[status] ?? <Circle className="size-2.5" />}
-      {status === "In Progress" && (
-        <span className="size-1 rounded-full bg-current animate-pulse" />
+      {isInProgress && (
+        <span className="size-1.5 rounded-full bg-current animate-pulse" />
       )}
       <span className="hidden sm:inline">{status}</span>
     </span>

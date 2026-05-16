@@ -56,7 +56,7 @@ export function useCreateCustomerNote(
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: customerNoteKeys.all(orgId ?? "", customerId ?? ""),
+        queryKey: customerNoteKeys.all(orgId ?? ""),
       });
     },
   });
@@ -84,7 +84,7 @@ export function useDeleteCustomerNote(
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: customerNoteKeys.all(orgId ?? "", customerId ?? ""),
+        queryKey: customerNoteKeys.all(orgId ?? ""),
       });
     },
   });

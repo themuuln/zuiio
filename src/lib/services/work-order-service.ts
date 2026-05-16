@@ -58,6 +58,7 @@ async function insertStatusHistory(
 interface WorkOrderWithRefs extends WorkOrder {
   customer: Pick<Customer, "first_name" | "last_name" | "phone"> | null;
   vehicle: Pick<Vehicle, "plate_number" | "make" | "model"> | null;
+  mechanic: { full_name: string | null } | null;
 }
 
 // ── Get Work Orders ──────────────────────────────────────────
@@ -93,7 +94,30 @@ export async function getWorkOrders(
       const { data, error } = await query;
 
       if (error) throw new Error(error.message ?? "Failed to fetch work orders");
-      return (data ?? []) as WorkOrderWithRefs[];
+
+      // ── Enrich with mechanic names ─────────────────────────
+      const rows = (data ?? []) as Array<
+        WorkOrderWithRefs & { mechanic_id: string | null }
+      >;
+      const mechanicIds = [
+        ...new Set(rows.map((r) => r.mechanic_id).filter(Boolean)),
+      ] as string[];
+      const mechanicMap = new Map<string, string | null>();
+      if (mechanicIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", mechanicIds);
+        for (const p of profiles ?? []) {
+          mechanicMap.set(p.id, p.full_name);
+        }
+      }
+      return rows.map((r) => ({
+        ...r,
+        mechanic: r.mechanic_id
+          ? { full_name: mechanicMap.get(r.mechanic_id) ?? null }
+          : null,
+      })) as WorkOrderWithRefs[];
     },
     {
       tags: [cacheTags.workOrders(orgId)],
@@ -509,11 +533,11 @@ export async function getWorkOrderTotals(workOrderId: string) {
 
   const wo = await getWorkOrder(workOrderId);
 
-  const servicesTotal = wo.services.reduce(
+  const servicesTotal = (wo.services ?? []).reduce(
     (sum, s) => sum + Number(s.unit_price) * s.quantity,
     0,
   );
-  const servicesDiscount = wo.services.reduce(
+  const servicesDiscount = (wo.services ?? []).reduce(
     (sum, s) =>
       sum +
       Number(s.discount_amount ?? 0) +
@@ -522,11 +546,11 @@ export async function getWorkOrderTotals(workOrderId: string) {
         s.quantity,
     0,
   );
-  const partsTotal = wo.parts.reduce(
+  const partsTotal = (wo.parts ?? []).reduce(
     (sum, p) => sum + Number(p.unit_price) * p.quantity,
     0,
   );
-  const partsDiscount = wo.parts.reduce(
+  const partsDiscount = (wo.parts ?? []).reduce(
     (sum, p) =>
       sum +
       Number(p.discount_amount ?? 0) +

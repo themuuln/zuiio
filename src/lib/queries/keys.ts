@@ -94,6 +94,13 @@ export const vehicleModelKeys = {
     [...vehicleModelKeys.all(orgId), "detail", id] as const,
 };
 
+export const customerCommunicationKeys = {
+  all: (orgId: string, customerId: string) =>
+    ["organizations", orgId, "customers", customerId, "communications"] as const,
+  list: (orgId: string, customerId: string) =>
+    [...customerCommunicationKeys.all(orgId, customerId), "list"] as const,
+};
+
 export const customerNoteKeys = {
   all: (orgId: string) => [...customerKeys.all(orgId), "notes"] as const,
   list: (orgId: string, customerId: string) =>
@@ -122,6 +129,12 @@ export const inventoryKeys = {
     [...inventoryKeys.all(orgId), "balances"] as const,
   thresholds: (orgId: string) =>
     [...inventoryKeys.all(orgId), "thresholds"] as const,
+  partsCars: (orgId: string) =>
+    [...inventoryKeys.all(orgId), "parts-cars"] as const,
+  partsCar: (orgId: string, carId: string) =>
+    [...inventoryKeys.partsCars(orgId), carId] as const,
+  partsCarParts: (orgId: string, carId: string) =>
+    [...inventoryKeys.partsCars(orgId), carId, "parts"] as const,
 };
 
 export const serviceReminderKeys = {

@@ -30,8 +30,8 @@ export default function AlertsPage() {
 
     return balances
       .map((b) => {
-        const min = thresholdMap.get(b.part_id) ?? 0;
-        const shortage = Math.max(0, min - b.quantity_on_hand);
+        const min = thresholdMap.get(b.part_id ?? "") ?? 0;
+        const shortage = Math.max(0, min - (b.quantity_on_hand ?? 0));
         return { ...b, min, shortage };
       })
       .filter((b) => b.shortage > 0)

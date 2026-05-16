@@ -58,6 +58,7 @@ interface CustomerDetailResponse {
   email: string | null;
   address: string | null;
   notes: string | null;
+  source: string | null;
   created_at: string;
   vehicles: CustomerVehicleSummary[];
   work_orders?: WorkOrderSummary[];
@@ -72,6 +73,7 @@ const emptyForm: CustomerFormState = {
   phone: "",
   email: "",
   address: "",
+  source: "",
   notes: "",
 };
 
@@ -142,6 +144,7 @@ export default function CustomerDetailPage() {
       phone: nextCustomer.phone ?? "",
       email: nextCustomer.email ?? "",
       address: nextCustomer.address ?? "",
+      source: "",
       notes: nextCustomer.notes ?? "",
     });
   }, []);

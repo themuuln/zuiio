@@ -147,6 +147,20 @@ This repo follows the global guidelines in `~/.factory/AGENTS.md`:
 - **Read `MASTER_PLAN.md` before building** — the development order (Phase 0 → Phase 1 → ...) is intentional and should not be reordered.
 - **Phase 0 (multi-tenant foundation) is the completion gate** — no product features until auth, orgs, branches, roles, and RLS are solid.
 
+## Installed Agent Skills (Global)
+
+The following skills are installed globally (`~/.agents/skills/`) and MUST be loaded via `skill(name="...")` when the task matches their domain. They auto-trigger on relevant keywords.
+
+| Skill | When to Load | Trigger Keywords |
+|-------|-------------|-----------------|
+| **frontend-design** | Designing/redesigning any UI — pages, components, layouts. Rejects generic AI aesthetics. | `design UI`, `redesign`, `make it look good`, `frontend`, `landing page`, `aesthetic` |
+| **ui-ux-pro-max** | Choosing colors, typography, layout patterns, or reviewing UX. 50+ styles, 161 palettes, 57 font pairings. | `color palette`, `typography`, `UX pattern`, `design system`, `style guide`, `UI review` |
+| **web-design-guidelines** | Auditing UI code for design and accessibility compliance against Vercel standards. | `audit design`, `check UI`, `accessibility review`, `design review`, `polish` |
+| **marketing-psychology** | Applying behavioral science, cognitive biases, or psychology to conversion, onboarding, or pricing pages. | `psychology`, `cognitive bias`, `conversion`, `behavioral science`, `persuasion`, `A/B test` |
+| **product-management** | Product strategy, roadmap, prioritization, PRDs, OKRs, PMF measurement, stakeholder decisions. | `roadmap`, `prioritize`, `PRD`, `OKR`, `product strategy`, `PMF`, `RICE`, `backlog` |
+
+**Usage**: When a task matches any trigger keyword above, call `skill(name="<skill-name>")` before proceeding.
+
 ## Гарын авлага (VitePress Documentation) Sync Rule
 
 - **Always update docs after code changes.** After implementing, modifying, or removing any user-facing feature, page, API, or UI element, check whether the corresponding page in `docs/*.md` (VitePress source) needs updating.

@@ -43,7 +43,7 @@ export function MechanicChip({ mechanic }: MechanicChipProps) {
       {...attributes}
       style={style}
       className={cn(
-        "flex items-center gap-2.5 rounded-lg border bg-card p-2.5 cursor-grab active:cursor-grabbing select-none transition-all touch-manipulation min-h-[52px]",
+        "flex items-center gap-2 rounded-lg border bg-card p-2 cursor-grab active:cursor-grabbing select-none transition-all touch-manipulation min-h-[46px]",
         isDragging && "opacity-50 shadow-xl",
         !isDragging && "hover:shadow-sm hover:border-primary/30",
         isOverloaded
@@ -52,7 +52,7 @@ export function MechanicChip({ mechanic }: MechanicChipProps) {
       )}
     >
       <GripHorizontal className="size-5 text-muted-foreground/40 shrink-0" />
-      <Avatar className="size-8 shrink-0">
+      <Avatar className="size-7 shrink-0">
         <AvatarFallback
           className={cn(
             "text-xs",
@@ -65,10 +65,10 @@ export function MechanicChip({ mechanic }: MechanicChipProps) {
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium truncate">
+        <div className="text-xs font-medium truncate">
           {mechanic.full_name ?? "Unknown"}
         </div>
-        <div className="text-[11px] text-muted-foreground">
+        <div className="text-[10px] text-muted-foreground">
           {jobCount === 0
             ? "Available"
             : `${jobCount} job${jobCount !== 1 ? "s" : ""}`}
@@ -77,7 +77,7 @@ export function MechanicChip({ mechanic }: MechanicChipProps) {
       {jobCount > 0 && (
         <div
           className={cn(
-            "flex items-center justify-center size-6 rounded-full text-[10px] font-bold shrink-0",
+            "flex items-center justify-center size-5 rounded-full text-[9px] font-bold shrink-0",
             isOverloaded
               ? "bg-red-500 text-white"
               : jobCount > 1

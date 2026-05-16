@@ -1,7 +1,11 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/navigation";
+import { orgKeys } from "@/lib/queries/keys";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import type { Organization } from "@/lib/types";
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +31,20 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
+  const { data: orgInfo } = useCurrentOrg();
+  const { data: org } = useQuery({
+    queryKey: orgKeys.detail(orgInfo?.orgId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(`/api/organizations/${orgInfo?.orgId}`);
+      const json = await res.json();
+      return json.data as Organization;
+    },
+    enabled: !!orgInfo?.orgId,
+    staleTime: 60_000,
+  });
+
+  const logoUrl = org?.logo_url;
+
   function renderItems(
     items: Array<{
       href: string;
@@ -39,6 +57,7 @@ export function AppSidebar() {
       return (
         <SidebarMenuItem key={item.href}>
           <SidebarMenuButton
+            size="sm"
             render={<Link href={item.href} />}
             isActive={isActive(item.href)}
             tooltip={t(item.labelKey)}
@@ -56,32 +75,40 @@ export function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center justify-between gap-2 px-1 py-0.5 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-2">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="flex size-7 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">
-              T
-            </span>
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={org?.name ?? "TOLOM"}
+                className="size-7 rounded-md object-contain"
+              />
+            ) : (
+              <span className="flex size-7 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">
+                T
+              </span>
+            )}
             <span className="truncate text-sm font-semibold group-data-[state=collapsed]:hidden">
-              TOLOM
+              {org?.name ?? "TOLOM"}
             </span>
           </Link>
           <SidebarTrigger />
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="p-1">
           <SidebarGroupContent>
             <SidebarMenu>{renderItems(standalone)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         {groups.map((group) => (
-          <SidebarGroup key={group.labelKey}>
-            <SidebarGroupLabel>{t(group.labelKey)}</SidebarGroupLabel>
+          <SidebarGroup key={group.labelKey} className="p-1">
+            <SidebarGroupLabel className="h-6">{t(group.labelKey)}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>{renderItems(group.children)}</SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
-        <SidebarGroup>
-          <SidebarGroupLabel>{t(settingsGroup.labelKey)}</SidebarGroupLabel>
+        <SidebarGroup className="p-1">
+          <SidebarGroupLabel className="h-6">{t(settingsGroup.labelKey)}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>{renderItems(settingsGroup.children)}</SidebarMenu>
           </SidebarGroupContent>

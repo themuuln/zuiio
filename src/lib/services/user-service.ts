@@ -63,6 +63,7 @@ export async function getOrganizationUsers(
           avatarUrl: profile?.avatar_url ?? null,
           organizationId: orgId,
           organizationName: null,
+          organizationLogoUrl: null,
           branchId: m.branch_id ?? null,
           roleId: m.role_id ?? null,
           roleName: role?.name ?? null,

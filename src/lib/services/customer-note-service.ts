@@ -74,7 +74,7 @@ export async function createCustomerNote(
     new_data: data as unknown as Record<string, unknown>,
   });
 
-  revalidateTag(cacheTags.customerNotes(orgId, customerId));
+  revalidateTag(cacheTags.customerNotes(orgId, customerId), "max");
 
   return data;
 }
@@ -120,5 +120,5 @@ export async function deleteCustomerNote(
     organization_id: orgId,
   });
 
-  revalidateTag(cacheTags.customerNotes(orgId, customerId));
+  revalidateTag(cacheTags.customerNotes(orgId, customerId), "max");
 }

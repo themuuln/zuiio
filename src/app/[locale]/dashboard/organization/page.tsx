@@ -1,14 +1,19 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
   CalendarClock,
   CreditCard,
+  Pencil,
+  Save,
   Users,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,9 +22,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { orgKeys } from "@/lib/queries/keys";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization, SubscriptionPlanInfo } from "@/lib/types";
 
 export default function OrganizationPage() {
@@ -31,6 +37,7 @@ export default function OrganizationPage() {
     data: organization,
     isLoading: orgLoading,
     error: orgError,
+    refetch: refetchOrg,
   } = useQuery({
     queryKey: orgKeys.detail(orgId ?? ""),
     queryFn: async () => {
@@ -58,6 +65,48 @@ export default function OrganizationPage() {
     enabled: !!orgId,
     staleTime: 30_000,
   });
+
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ name: "", logoUrl: "" });
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (organization) {
+      setForm({
+        name: organization.name ?? "",
+        logoUrl: organization.logo_url ?? "",
+      });
+    }
+  }, [organization]);
+
+  const handleSave = async () => {
+    if (!orgId) return;
+    setIsSaving(true);
+    try {
+      const res = await fetch(`/api/organizations/${orgId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: form.name, logoUrl: form.logoUrl || null }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      toast.success("Organization updated");
+      await refetchOrg();
+      setEditing(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update organization");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setForm({
+      name: organization?.name ?? "",
+      logoUrl: organization?.logo_url ?? "",
+    });
+    setEditing(false);
+  };
 
   const loading = orgInfoQuery.isLoading || orgLoading || subLoading;
   const error = orgInfoQuery.error?.message ?? orgError?.message ?? subError?.message ?? null;
@@ -141,18 +190,83 @@ export default function OrganizationPage() {
             <CardTitle className="flex items-center gap-2">
               <Building2 className="size-4" />
               Organization
+              {!editing && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="ml-auto size-7"
+                  onClick={() => setEditing(true)}
+                >
+                  <Pencil className="size-3.5" />
+                </Button>
+              )}
             </CardTitle>
             <CardDescription>Workspace details</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div>
-              <p className="text-sm text-muted-foreground">Name</p>
-              <p className="font-medium">{organization?.name ?? "\u2014"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Slug</p>
-              <p className="font-medium">{organization?.slug ?? "\u2014"}</p>
-            </div>
+            {editing ? (
+              <>
+                <div>
+                  <p className="text-sm text-muted-foreground">Name</p>
+                  <Input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="Organization name"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Slug</p>
+                  <p className="font-medium">{organization?.slug ?? "\u2014"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Logo URL</p>
+                  <Input
+                    value={form.logoUrl}
+                    onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
+                    placeholder="https://example.com/logo.png"
+                  />
+                  {form.logoUrl && (
+                    <div className="mt-2 rounded border p-1">
+                      {/* biome-ignore lint/performance/noImgElement: user-provided external URL, Next Image requires known domains */}
+                      <img
+                        src={form.logoUrl}
+                        alt="Logo preview"
+                        className="max-h-20 rounded"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button onClick={handleSave} disabled={isSaving} size="sm">
+                    <Save className="mr-1 size-3.5" />
+                    {isSaving ? "Saving..." : "Save"}
+                  </Button>
+                  <Button
+                    onClick={handleCancel}
+                    variant="outline"
+                    size="sm"
+                    disabled={isSaving}
+                  >
+                    <X className="mr-1 size-3.5" />
+                    Cancel
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-sm text-muted-foreground">Name</p>
+                  <p className="font-medium">{organization?.name ?? "\u2014"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Slug</p>
+                  <p className="font-medium">{organization?.slug ?? "\u2014"}</p>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 

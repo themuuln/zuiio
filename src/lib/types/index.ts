@@ -72,7 +72,19 @@ export type {
   PurchaseOrderUpdate,
   PurchaseOrderItemUpdate,
   StockThresholdUpdate,
+  PartsCars,
+  PartsCarsInsert,
+  PartsCarsUpdate,
+  PartsCarParts,
+  PartsCarPartsInsert,
+  PartsCarPartsUpdate,
 } from "@/lib/database.types";
+export type PartsCarStatus = "arrived" | "disassembling" | "completed" | "cancelled";
+export type PartsCarLocationGroup =
+  | "engine" | "transmission" | "suspension" | "brake"
+  | "body" | "interior" | "electrical" | "cooling"
+  | "exhaust" | "fuel" | "steering" | "ac" | "other";
+export type { PartsCars, PartsCarsInsert, PartsCarsUpdate, PartsCarParts, PartsCarPartsInsert, PartsCarPartsUpdate };
 
 // ── API Response Wrappers ────────────────────────────────────────
 
@@ -392,6 +404,14 @@ export interface UpdateCustomerParams {
 export interface CreateCustomerNoteParams {
   content: string;
   type?: CustomerNoteType;
+}
+
+export interface CreateCustomerCommunicationParams {
+  type: "call" | "sms" | "email" | "in_person" | "note";
+  direction: "inbound" | "outbound";
+  subject?: string;
+  content: string;
+  customerId?: string;
 }
 
 export interface CreateVehicleParams {

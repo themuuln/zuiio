@@ -86,6 +86,8 @@ export function QueuedVehicleCard({
     return () => clearInterval(interval);
   }, [workOrder.created_at]);
 
+  const isOverdue = waitInfo.urgent && waitInfo.text.includes("h+");
+
   return (
     <div
       ref={setNodeRef}
@@ -94,28 +96,24 @@ export function QueuedVehicleCard({
       style={style}
       onClick={() => onItemClick?.(workOrder)}
       className={cn(
-        "relative flex items-center gap-4 overflow-hidden rounded-lg border border-border bg-card p-3.5 pl-3 cursor-pointer active:cursor-grabbing select-none transition-all duration-200 touch-manipulation min-h-[68px]",
+        "relative flex items-center gap-2 overflow-hidden rounded-lg border border-border bg-card p-2 cursor-pointer active:cursor-grabbing select-none transition-all duration-200 touch-manipulation min-h-[44px] animate-[scale-in_0.25s_ease-out]",
         isDragging && "opacity-50 shadow-xl z-50 scale-[1.01]",
         !isDragging && "hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5",
         waitInfo.urgent &&
           "border-amber-400/40 bg-amber-50/40 dark:bg-amber-950/10",
+        isOverdue &&
+          "animate-[urgent-flash_2s_ease-in-out_infinite]",
       )}
     >
       <div
         className={cn(
-          "absolute left-0 top-0 bottom-0 w-1 rounded-l-lg transition-colors",
-          waitInfo.urgent ? "bg-amber-500" : "bg-muted-foreground/20",
-        )}
-      />
-      <div
-        className={cn(
-          "flex items-center justify-center size-10 rounded-lg shrink-0",
+          "flex items-center justify-center size-8 rounded-md shrink-0",
           waitInfo.urgent ? "bg-amber-100 dark:bg-amber-900/30" : "bg-muted",
         )}
       >
         <Car
           className={cn(
-            "size-5",
+            "size-4",
             waitInfo.urgent ? "text-amber-600" : "text-muted-foreground",
           )}
         />
@@ -123,20 +121,20 @@ export function QueuedVehicleCard({
       <div className="flex-1 min-w-0">
         {v ? (
           <>
-            <div className="font-semibold text-sm truncate flex items-center gap-1.5">
+            <div className="text-xs font-semibold truncate flex items-center gap-1">
               {v.plate_number}
               {waitInfo.urgent && (
-                <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span className="size-1 rounded-full bg-amber-500 animate-pulse" />
               )}
             </div>
-            <div className="text-xs text-muted-foreground truncate">
+            <div className="text-[10px] text-muted-foreground truncate">
               {v.make} {v.model}
               {v.year ? ` · ${v.year}` : ""}
             </div>
             {mechanicName && (
-              <div className="flex items-center gap-1 mt-1">
-                <div className="size-1.5 rounded-full bg-primary/40" />
-                <span className="text-[11px] text-primary/70 truncate font-medium">
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="size-1 rounded-full bg-primary/40" />
+                <span className="text-[9px] text-primary/70 truncate font-medium">
                   {mechanicName}
                 </span>
               </div>
@@ -144,10 +142,10 @@ export function QueuedVehicleCard({
           </>
         ) : (
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">
+            <p className="truncate text-xs font-medium">
               {workOrder.complaint || `WO ${workOrder.id.slice(0, 8)}`}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground">
               {t("noVehicle")}
             </p>
           </div>
@@ -164,23 +162,20 @@ export function QueuedVehicleCard({
               e.stopPropagation();
               onQuickAssign(workOrder.id);
             }}
-            className="group relative flex items-center justify-center size-8 rounded-lg border border-primary/20 bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary/90 hover:shadow-md hover:shadow-primary/30 transition-all duration-200 active:scale-90"
+            className="flex items-center justify-center size-7 rounded-md border border-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             aria-label={t("quickAssign")}
             title={t("assignToFirstBay")}
           >
-            <CornerDownRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:translate-y-0.5" />
-            <span className="pointer-events-none absolute right-full mr-2 top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-md bg-popover px-2 py-1 text-[10px] font-medium text-popover-foreground shadow-lg ring-1 ring-border group-hover:block">
-              {t("quickAssign")}
-            </span>
+            <CornerDownRight className="size-3.5" />
           </button>
         )}
         <div
           className={cn(
-            "flex items-center gap-1 text-xs font-medium",
+            "flex items-center gap-0.5 text-[10px] font-medium",
             waitInfo.urgent ? "text-amber-600" : "text-muted-foreground/50",
           )}
         >
-          <Clock className="size-3" />
+          <Clock className="size-2.5" />
           {waitInfo.text}
         </div>
       </div>
@@ -231,21 +226,19 @@ export function WaitingQueue({
     : items;
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div className="overflow-hidden">
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold hover:bg-muted/30 transition-colors"
+        className="flex w-full items-center justify-between px-2 py-1.5 text-xs font-semibold transition-colors hover:bg-muted/30"
       >
-        <span className="flex items-center gap-2">
-          <div className="flex items-center justify-center size-7 rounded-lg bg-amber-500/10">
-            <Clock className="size-3.5 text-amber-500" />
-          </div>
+        <span className="flex items-center gap-1.5">
+          <Clock className="size-3.5 text-amber-500" />
           <span>{t("waitingQueue")}</span>
           {items.length > 0 && (
             <span
               className={cn(
-                "rounded-full px-1.5 py-0.5 text-[10px] font-bold shadow-sm",
+                "rounded-full px-1.5 py-0.5 text-[9px] font-bold",
                 items.length > 5
                   ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
                   : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300",
@@ -256,9 +249,9 @@ export function WaitingQueue({
           )}
         </span>
         {collapsed ? (
-          <ChevronUp className="size-4 text-muted-foreground" />
+          <ChevronUp className="size-3.5 text-muted-foreground" />
         ) : (
-          <ChevronDown className="size-4 text-muted-foreground" />
+          <ChevronDown className="size-3.5 text-muted-foreground" />
         )}
       </button>
 
@@ -266,26 +259,26 @@ export function WaitingQueue({
         <div
           ref={setQueueDropRef}
           className={cn(
-            "px-3 pb-3 transition-colors duration-200",
+            "px-1.5 pb-1.5 transition-colors duration-200",
             isQueueOver && "bg-primary/5 rounded-lg",
           )}
         >
           {/* Search input */}
           {items.length > 0 && (
             <div className="relative mb-2 group">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/50 transition-colors duration-200 group-focus-within:text-primary" />
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground/50 transition-colors group-focus-within:text-primary" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("queueSearchPlaceholder")}
-                className="w-full h-8 rounded-lg border border-border bg-muted/30 pl-7 pr-7 text-xs shadow-sm transition-all duration-200 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-background focus:shadow-md focus:shadow-primary/10"
+                className="w-full h-7 rounded-md border border-border bg-muted/30 pl-6 pr-6 text-[10px] transition-colors placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-background"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground/50 hover:bg-muted hover:text-foreground transition-all duration-200"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground/50 hover:bg-muted hover:text-foreground transition-colors"
                 >
                   <X className="size-3" />
                 </button>
@@ -303,38 +296,28 @@ export function WaitingQueue({
           )}
 
           {items.length === 0 ? (
-            <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-border/80 bg-gradient-to-br from-muted/40 via-background to-amber-500/5 py-8 gap-3 text-muted-foreground/70">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--muted-foreground)/0.12)_1px,transparent_0)] [background-size:14px_14px]" />
-              <div className="relative flex flex-col items-center gap-2">
-                <div className="flex items-center justify-center size-12 rounded-full bg-background shadow-sm ring-1 ring-border">
-                  <Car className="size-6 text-amber-500/80" />
-                </div>
-                <p className="text-xs font-medium">{t("noVehiclesWaiting")}</p>
-              </div>
+              <div className="flex flex-col items-center justify-center py-4 gap-1.5 text-muted-foreground/70">
+              <Car className="size-4 text-amber-500/60" />
+              <p className="text-[11px] font-medium">{t("noVehiclesWaiting")}</p>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-border/80 bg-gradient-to-br from-muted/40 via-background to-primary/5 py-8 gap-3 text-muted-foreground/70">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--muted-foreground)/0.12)_1px,transparent_0)] [background-size:14px_14px]" />
-              <div className="relative flex flex-col items-center gap-2">
-                <div className="flex items-center justify-center size-12 rounded-full bg-background shadow-sm ring-1 ring-border">
-                  <Search className="size-6 text-primary/70" />
-                </div>
-                <p className="text-xs font-medium">{t("noMatchSearch")}</p>
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-medium text-primary hover:bg-primary/15 transition-colors"
-                >
-                  {t("clearSearch")}
-                </button>
-              </div>
+            <div className="flex flex-col items-center justify-center py-4 gap-1.5 text-muted-foreground/70">
+              <Search className="size-5 text-primary/60" />
+              <p className="text-[11px] font-medium">{t("noMatchSearch")}</p>
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/15 transition-colors"
+              >
+                {t("clearSearch")}
+              </button>
             </div>
           ) : (
             <SortableContext
               items={queueIds}
               strategy={verticalListSortingStrategy}
             >
-              <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
+              <div className="flex flex-col gap-1 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
                 {filtered.map((wo) => (
                   <QueuedVehicleCard
                     key={wo.id}

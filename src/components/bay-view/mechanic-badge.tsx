@@ -58,12 +58,12 @@ export function MechanicBadge({ workOrderId, mechanic }: MechanicBadgeProps) {
       {...attributes}
       style={style}
       className={cn(
-        "flex items-center gap-2 rounded-full border border-border/60 bg-background/80 backdrop-blur-sm px-3 py-1.5 cursor-grab active:cursor-grabbing select-none transition-all touch-manipulation min-h-[36px]",
+        "flex items-center gap-1.5 rounded-full border border-border/60 bg-background/80 backdrop-blur-sm px-2.5 py-1 cursor-grab active:cursor-grabbing select-none transition-all touch-manipulation min-h-[32px]",
         isDragging && "opacity-50 shadow-lg",
         !isDragging && "hover:shadow-sm hover:border-primary/30",
       )}
     >
-      <Avatar className="size-7 shrink-0">
+      <Avatar className="size-6 shrink-0">
         {mechanic.avatar_url && (
           <AvatarImage src={mechanic.avatar_url} alt="" />
         )}
@@ -71,7 +71,7 @@ export function MechanicBadge({ workOrderId, mechanic }: MechanicBadgeProps) {
           {initials}
         </AvatarFallback>
       </Avatar>
-      <span className="text-xs font-medium truncate max-w-[90px]">
+      <span className="text-xs font-medium truncate max-w-[110px]">
         {mechanic.full_name}
       </span>
     </div>

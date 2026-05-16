@@ -231,3 +231,127 @@
     transform: scale(1.2);
   }
 }
+
+/* ── UI Size Variants ──────────────────────────────────────── */
+/* Sizing is driven by CSS vars set via BrandThemeProvider.
+   Default (md) uses standard shadcn sizes.
+   Compact (sm) and Large (lg) override key interactive elements. */
+
+html[data-ui-size="sm"] [data-slot="sidebar-menu-button"] {
+  min-height: 0;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+html[data-ui-size="sm"] [data-slot="sidebar-group-label"] {
+  height: 1.5rem;
+  font-size: 0.7rem;
+}
+
+html[data-ui-size="sm"] [data-slot="card"] {
+  padding: var(--ui-card-p);
+}
+
+html[data-ui-size="sm"] [data-slot="card-header"] {
+  padding: var(--ui-card-p);
+  padding-bottom: 0.5rem;
+}
+
+html[data-ui-size="sm"] [data-slot="card-content"] {
+  padding: 0 var(--ui-card-p) var(--ui-card-p);
+}
+
+html[data-ui-size="lg"] [data-slot="card"] {
+  padding: var(--ui-card-p);
+}
+
+html[data-ui-size="lg"] [data-slot="card-header"] {
+  padding: var(--ui-card-p);
+  padding-bottom: 0.75rem;
+}
+
+html[data-ui-size="lg"] [data-slot="card-content"] {
+  padding: 0 var(--ui-card-p) var(--ui-card-p);
+}
+
+/* Buttons — target shadcn button data-slot */
+html[data-ui-size="sm"] [data-slot="button"] {
+  height: var(--ui-btn-h);
+}
+
+html[data-ui-size="lg"] [data-slot="button"] {
+  height: var(--ui-btn-h);
+}
+
+/* Inputs — target shadcn input data-slot */
+html[data-ui-size="sm"] [data-slot="input"] {
+  height: var(--ui-input-h);
+}
+
+html[data-ui-size="lg"] [data-slot="input"] {
+  height: var(--ui-input-h);
+}
+
+@keyframes progress-stripe {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 20px 0;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 oklch(0.6 0.18 145 / 40%);
+  }
+  70% {
+    box-shadow: 0 0 0 8px oklch(0.6 0.18 145 / 0%);
+  }
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.6 0.18 145 / 0%);
+  }
+}
+
+@keyframes pulse-ring-warning {
+  0% {
+    box-shadow: 0 0 0 0 oklch(0.65 0.15 50 / 40%);
+  }
+  70% {
+    box-shadow: 0 0 0 8px oklch(0.65 0.15 50 / 0%);
+  }
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.65 0.15 50 / 0%);
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes urgent-flash {
+  0%, 100% {
+    background-color: oklch(0.75 0.15 50 / 8%);
+  }
+  50% {
+    background-color: oklch(0.75 0.15 50 / 18%);
+  }
+}

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { WorkOrderPart, WorkOrderService } from "@/lib/database.types";
+import type { WorkOrderPart, WorkOrderService, WorkOrderStatus } from "@/lib/database.types";
 import type { ExportColumn } from "@/lib/export";
 import { useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -305,7 +305,7 @@ export default function WorkOrderDetailPage() {
             <h1 className="text-2xl font-bold tracking-tight">
               WO #{wo.id.slice(0, 8)}
             </h1>
-            <StatusBadge status={wo.status} />
+            <StatusBadge status={wo.status as WorkOrderStatus} />
           </div>
           <p className="text-sm text-muted-foreground">
             {new Date(wo.created_at).toLocaleDateString()}
@@ -772,12 +772,12 @@ export default function WorkOrderDetailPage() {
                         i === 0 ? "bg-primary" : "bg-muted-foreground/30",
                       )}
                     />
-                    {i < wo.status_history?.length - 1 && (
+                    {i < (wo.status_history?.length ?? 0) - 1 && (
                       <div className="w-px h-4 bg-border" />
                     )}
                   </div>
                   <div>
-                    <StatusBadge status={h.status} />
+                    <StatusBadge status={h.status as WorkOrderStatus} />
                     <span className="ml-2 text-xs text-muted-foreground">
                       {new Date(h.created_at).toLocaleString()}
                     </span>

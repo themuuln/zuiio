@@ -4,6 +4,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { Car } from "lucide-react";
 import type { Vehicle } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "./brand-logo";
 
 // ── Color map for common makes ────────────────────────────
 const MAKE_COLORS: Record<string, string> = {
@@ -64,7 +65,7 @@ export function VehicleCard({
       {...attributes}
       style={style}
       className={cn(
-        "flex items-start gap-3 rounded-lg border border-border bg-card p-2.5 cursor-grab active:cursor-grabbing select-none transition-all touch-manipulation",
+        "flex items-start gap-3 rounded-lg border border-border bg-card p-2 cursor-grab active:cursor-grabbing select-none transition-all touch-manipulation",
         isDragging && "opacity-50 shadow-xl rotate-1",
         !isDragging && "hover:shadow-md hover:border-primary/30",
       )}
@@ -72,17 +73,17 @@ export function VehicleCard({
       {/* Colored make badge */}
       <div
         className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-md text-xs font-bold mt-0.5",
+          "flex size-9 shrink-0 items-center justify-center rounded-lg",
           getMakeColor(vehicle.make),
         )}
       >
-        {vehicle.make.slice(0, 2).toUpperCase()}
+        <BrandLogo make={vehicle.make} className="size-5" />
       </div>
 
       {/* Vehicle details */}
       <div className="flex-1 min-w-0 space-y-0.5">
         <div className="font-semibold text-sm truncate flex items-center gap-1.5">
-          {vehicle.plate_number}
+          <span className="truncate">{vehicle.plate_number}</span>
           {customerName && (
             <span className="text-[10px] font-normal text-muted-foreground truncate hidden sm:inline">
               · {customerName}
@@ -96,7 +97,7 @@ export function VehicleCard({
           </div>
         )}
         {serviceDescription && !compact && (
-          <div className="text-[10px] text-muted-foreground/70 truncate max-w-[140px]">
+          <div className="text-[10px] text-muted-foreground/70 truncate max-w-[160px]">
             {serviceDescription}
           </div>
         )}
@@ -104,8 +105,8 @@ export function VehicleCard({
 
       <Car
         className={cn(
-          "size-4 shrink-0 mt-0.5",
-          isDragging ? "text-primary" : "text-muted-foreground/40",
+          "size-4 shrink-0 mt-1",
+          isDragging ? "text-primary" : "text-muted-foreground/30",
         )}
       />
     </div>

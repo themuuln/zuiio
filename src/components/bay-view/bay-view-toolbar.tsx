@@ -8,6 +8,7 @@ import { updateBayCount } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
 
 export type ViewMode = "grid" | "list";
+export type ColumnsMode = "auto" | "2" | "3";
 
 interface BayViewToolbarProps {
   bayCount: number;
@@ -15,7 +16,15 @@ interface BayViewToolbarProps {
   onBayCountChange: (count: number) => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  columns: ColumnsMode;
+  onColumnsChange: (mode: ColumnsMode) => void;
 }
+
+const COLUMNS_OPTIONS: { value: ColumnsMode; label: string }[] = [
+  { value: "auto", label: "Auto" },
+  { value: "2", label: "2" },
+  { value: "3", label: "3" },
+];
 
 export function BayViewToolbar({
   bayCount,
@@ -23,6 +32,8 @@ export function BayViewToolbar({
   onBayCountChange,
   viewMode,
   onViewModeChange,
+  columns,
+  onColumnsChange,
 }: BayViewToolbarProps) {
   const t = useTranslations("bayView");
   const [loading, setLoading] = useState(false);
@@ -43,62 +54,82 @@ export function BayViewToolbar({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/70 p-1.5 shadow-sm shadow-black/5 backdrop-blur-sm">
+    <div className="flex items-center gap-1.5">
       {/* View mode toggle */}
-      <div className="flex items-center gap-1 rounded-xl bg-muted/40 p-1">
+      <div className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5 ring-1 ring-border/30">
         <button
           type="button"
           onClick={() => onViewModeChange("grid")}
           className={cn(
-            "rounded-lg p-2.5 transition-all duration-200 hover:scale-105 active:scale-95",
+            "rounded-md p-1.5 transition-all duration-150",
             viewMode === "grid"
-              ? "bg-background text-primary shadow-sm ring-1 ring-border/70"
-              : "text-muted-foreground hover:bg-background/80 hover:text-foreground",
+              ? "bg-background text-primary shadow-sm ring-1 ring-border/60"
+              : "text-muted-foreground hover:bg-background/60 hover:text-foreground active:scale-95",
           )}
           aria-label={t("gridView")}
         >
-          <LayoutGrid className="size-4" />
+          <LayoutGrid className="size-3.5" />
         </button>
         <button
           type="button"
           onClick={() => onViewModeChange("list")}
           className={cn(
-            "rounded-lg p-2.5 transition-all duration-200 hover:scale-105 active:scale-95",
+            "rounded-md p-1.5 transition-all duration-150",
             viewMode === "list"
-              ? "bg-background text-primary shadow-sm ring-1 ring-border/70"
-              : "text-muted-foreground hover:bg-background/80 hover:text-foreground",
+              ? "bg-background text-primary shadow-sm ring-1 ring-border/60"
+              : "text-muted-foreground hover:bg-background/60 hover:text-foreground active:scale-95",
           )}
           aria-label={t("listView")}
         >
-          <List className="size-4" />
+          <List className="size-3.5" />
         </button>
       </div>
 
-      {/* Subtle divider */}
-      <div className="h-8 w-px bg-border/70" aria-hidden="true" />
+      {viewMode === "grid" && (
+        <div className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5 ring-1 ring-border/30">
+          {COLUMNS_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onColumnsChange(opt.value)}
+              className={cn(
+                "rounded-md px-1.5 py-1 text-[10px] font-semibold transition-all duration-150",
+                columns === opt.value
+                  ? "bg-background text-primary shadow-sm ring-1 ring-border/60"
+                  : "text-muted-foreground hover:bg-background/60 hover:text-foreground active:scale-95",
+              )}
+              aria-label={`${opt.label} columns`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="h-5 w-px bg-border/40" />
 
       {/* Bay count control */}
-      <div className="flex items-center gap-1 rounded-xl bg-muted/40 p-1">
+      <div className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5 ring-1 ring-border/30">
         <button
           type="button"
           onClick={() => handleChangeCount(-1)}
           disabled={loading || bayCount <= 1}
-          className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:scale-105 hover:bg-background/80 hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+          className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 hover:bg-background/60 hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-30"
           aria-label={t("decreaseBayCount")}
         >
-          <Minus className="size-3.5" />
+          <Minus className="size-3" />
         </button>
-        <span className="flex h-9 min-w-10 items-center justify-center rounded-lg bg-background px-2 text-sm font-bold tabular-nums text-foreground shadow-sm ring-1 ring-border/70">
+        <span className="flex h-7 min-w-8 items-center justify-center rounded-md bg-background px-1 text-xs font-bold tabular-nums tracking-tight text-foreground shadow-sm ring-1 ring-border/50">
           {bayCount}
         </span>
         <button
           type="button"
           onClick={() => handleChangeCount(1)}
           disabled={loading || bayCount >= 50}
-          className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:scale-105 hover:bg-background/80 hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+          className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 hover:bg-background/60 hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-30"
           aria-label={t("increaseBayCount")}
         >
-          <Plus className="size-3.5" />
+          <Plus className="size-3" />
         </button>
       </div>
 
@@ -107,9 +138,9 @@ export function BayViewToolbar({
         size="icon"
         onClick={onRefresh}
         aria-label={t("refresh")}
-        className="size-10 rounded-xl transition-all duration-200 hover:scale-105 hover:bg-muted active:scale-95"
+        className="size-7 rounded-md text-muted-foreground hover:bg-muted/60 hover:text-foreground active:scale-95"
       >
-        <RefreshCw className={cn("size-4", loading && "animate-spin")} />
+        <RefreshCw className={cn("size-3.5", loading && "animate-spin")} />
       </Button>
     </div>
   );

@@ -37,14 +37,14 @@ export default function ValuationPage() {
       const q = search.toLowerCase();
       list = list.filter(
         (b) =>
-          b.part_name.toLowerCase().includes(q) ||
+          (b.part_name ?? "").toLowerCase().includes(q) ||
           (b.part_number ?? "").toLowerCase().includes(q),
       );
     }
     return list.map((b) => ({
       ...b,
       avgUnitCost: b.default_price ?? 0,
-      totalValue: (b.default_price ?? 0) * b.quantity_on_hand,
+      totalValue: (b.default_price ?? 0) * (b.quantity_on_hand ?? 0),
     }));
   }, [balances, categoryFilter, search]);
 

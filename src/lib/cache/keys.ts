@@ -55,6 +55,14 @@ export const cacheTags = {
   // Customer Notes
   customerNotes: (orgId: string, customerId: string) =>
     `customer-notes:${orgId}:${customerId}`,
+
+  // Customer Communications
+  customerCommunications: (orgId: string, customerId: string) =>
+    `customer-communications:${orgId}:${customerId}`,
+
+  // Parts Cars / Disassembly
+  partsCars: (orgId: string) => `parts-cars:${orgId}`,
+  partsCarParts: (carId: string) => `parts-car-parts:${carId}`,
 } as const;
 
 // Cache duration constants (in seconds)

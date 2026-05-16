@@ -3,6 +3,8 @@ import type {
   InventoryBalance,
   InventoryMovement,
   PartsCatalogItem,
+  PartsCars,
+  PartsCarParts,
   PurchaseOrder,
   PurchaseOrderItem,
   StockThreshold,
@@ -322,5 +324,204 @@ export function useStockThresholds(orgId: string | undefined) {
     },
     enabled: !!orgId,
     staleTime: 60_000,
+  });
+}
+
+// ── Parts Cars ────────────────────────────────────────────────
+
+export function usePartsCars(orgId: string | undefined) {
+  return useQuery({
+    queryKey: inventoryKeys.partsCars(orgId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts-cars`,
+      );
+      if (!res.ok) throw new Error("Failed to load parts cars");
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return (json.data ?? []) as PartsCars[];
+    },
+    enabled: !!orgId,
+    staleTime: 30_000,
+  });
+}
+
+export function usePartsCar(orgId: string | undefined, carId: string | undefined) {
+  return useQuery({
+    queryKey: inventoryKeys.partsCar(orgId ?? "", carId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts-cars/${carId}`,
+      );
+      if (!res.ok) throw new Error("Failed to load parts car");
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data as PartsCars;
+    },
+    enabled: !!orgId && !!carId,
+  });
+}
+
+export function usePartsCarParts(orgId: string | undefined, carId: string | undefined) {
+  return useQuery({
+    queryKey: inventoryKeys.partsCarParts(orgId ?? "", carId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts-cars/${carId}/parts`,
+      );
+      if (!res.ok) throw new Error("Failed to load parts car parts");
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return (json.data ?? []) as PartsCarParts[];
+    },
+    enabled: !!orgId && !!carId,
+  });
+}
+
+export function useCreatePartsCar(orgId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: {
+      make: string;
+      model: string;
+      year?: number;
+      vin?: string;
+      license_plate?: string;
+      purchase_cost?: number;
+      currency?: string;
+      arrival_date?: string;
+      notes?: string;
+    }) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts-cars`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error?.message ?? "Failed to create parts car");
+      }
+      const json = await res.json();
+      return json.data as PartsCars;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: inventoryKeys.partsCars(orgId ?? "") });
+    },
+  });
+}
+
+export function useStartDisassembly(orgId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (carId: string) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts-cars/${carId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "disassembling" }),
+        },
+      );
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error?.message ?? "Failed to start disassembly");
+      }
+      const json = await res.json();
+      return json.data as PartsCars;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: inventoryKeys.partsCars(orgId ?? "") });
+    },
+  });
+}
+
+export function useCompleteDisassembly(orgId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (carId: string) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts-cars/${carId}/complete`,
+        { method: "POST" },
+      );
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error?.message ?? "Failed to complete disassembly");
+      }
+      const json = await res.json();
+      return json.data as PartsCars;
+    },
+    onSuccess: (_data, carId) => {
+      qc.invalidateQueries({ queryKey: inventoryKeys.partsCars(orgId ?? "") });
+      qc.invalidateQueries({ queryKey: inventoryKeys.partsCar(orgId ?? "", carId) });
+    },
+  });
+}
+
+export function useAddPartsCarPart(orgId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      carId,
+      ...body
+    }: {
+      carId: string;
+      name: string;
+      part_id?: string;
+      location_group?: string;
+      quantity?: number;
+      condition?: string;
+      estimated_price?: number;
+      notes?: string;
+    }) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts-cars/${carId}/parts`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error?.message ?? "Failed to add part");
+      }
+      const json = await res.json();
+      return json.data as PartsCarParts;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({
+        queryKey: inventoryKeys.partsCarParts(orgId ?? "", variables.carId),
+      });
+    },
+  });
+}
+
+export function useRemovePartsCarPart(orgId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      carId,
+      partId,
+    }: {
+      carId: string;
+      partId: string;
+    }) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts-cars/${carId}/parts/${partId}`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error?.message ?? "Failed to remove part");
+      }
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({
+        queryKey: inventoryKeys.partsCarParts(orgId ?? "", variables.carId),
+      });
+    },
   });
 }

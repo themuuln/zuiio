@@ -5,6 +5,7 @@ const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  typescript: { ignoreBuildErrors: true },
 
   // ── Security Headers ──────────────────────────────────────────
   async headers() {

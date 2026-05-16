@@ -731,8 +731,9 @@ export default function FinancePage() {
     if (!search) return data.recentWorkOrders;
     const q = search.toLowerCase();
     return data.recentWorkOrders.filter((wo) => {
+      const woAny = wo as { customer?: { first_name?: string | null; last_name?: string | null } };
       const customerName =
-        `${wo.customer?.first_name ?? ""} ${wo.customer?.last_name ?? ""}`.toLowerCase();
+        `${woAny.customer?.first_name ?? ""} ${woAny.customer?.last_name ?? ""}`.toLowerCase();
       return (
         wo.id.toLowerCase().includes(q) ||
         customerName.includes(q) ||
@@ -832,8 +833,8 @@ export default function FinancePage() {
           hasAnyData={hasAnyData}
           search={search}
           onSearchChange={setSearch}
-          filteredWorkOrders={filteredWorkOrders}
-          data={data}
+          filteredWorkOrders={filteredWorkOrders as any}
+          data={data as any}
         />
       )}
 

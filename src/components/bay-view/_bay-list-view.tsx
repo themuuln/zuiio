@@ -39,8 +39,8 @@ export function BayListView({
   t,
 }: BayListViewProps) {
   return (
-    <div className="max-h-[calc(100vh-22rem)] overflow-y-auto space-y-1">
-      <div className="flex items-center gap-3 px-3 py-1.5 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider border-b border-border/50">
+    <div className="h-full overflow-y-auto space-y-1 p-1">
+      <div className="flex items-center gap-3 px-2 py-1 text-[9px] font-semibold text-muted-foreground/60 uppercase tracking-wider border-b border-border/50">
         <span className="w-12 shrink-0">{t("listHeaderBay")}</span>
         <span className="flex-1 min-w-0">{t("listHeaderVehicle")}</span>
         <span className="w-24 shrink-0 hidden sm:block">
@@ -61,7 +61,7 @@ export function BayListView({
           <div
             key={bay.bayNumber}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
+              "flex items-center gap-3 rounded-lg px-2 py-2 transition-colors",
               wo
                 ? "bg-card hover:bg-muted/40 border border-border/50"
                 : "bg-muted/10 border border-dashed border-border/30",

@@ -112,6 +112,11 @@ const navigationConfig: NavGroupConfig = {
           icon: Building2,
         },
         {
+          labelKey: "nav.inventoryPartsCars",
+          href: "/dashboard/inventory/parts-cars",
+          icon: Truck,
+        },
+        {
           labelKey: "nav.inventoryAlerts",
           href: "/dashboard/inventory/alerts",
           icon: AlertTriangle,
