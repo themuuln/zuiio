@@ -53,7 +53,14 @@ export default defineConfig({
         items: [
           { text: "Бараа материал", link: "/inventory" },
           { text: "Санхүү", link: "/finance" },
+          { text: "Зарлагын бүртгэл", link: "/expenses" },
           { text: "Тайлан", link: "/reports" },
+        ],
+      },
+      {
+        text: "Үйлчилгээний сануулга",
+        items: [
+          { text: "Үйлчилгээний сануулга", link: "/service-reminders" },
         ],
       },
       {
@@ -62,6 +69,7 @@ export default defineConfig({
           { text: "Системийн тохиргоо", link: "/settings" },
           { text: "Байгууллагын удирдлага", link: "/organization" },
           { text: "Нөөц, экспорт", link: "/backup" },
+          { text: "Алсын синхрончлол", link: "/sync" },
         ],
       },
       {

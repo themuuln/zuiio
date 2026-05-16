@@ -344,6 +344,10 @@ High-quality customers:
 - Vehicle models catalog, organization settings & roles
 - Theme toggle, multi-locale (Mongolian, English)
 - Invoice generation, daily revenue goal tracking
+- Expense tracking with categories, payment status, and tax support
+- CRM with customer notes, type-based categorization, and referral source tracking
+- Service reminders with configurable intervals (months/km) and notification channels
+- Service intervals in catalog with auto-seed for common services
 
 **Not yet built (roadmap):**
 - QPay payment integration
@@ -351,7 +355,6 @@ High-quality customers:
 - API access
 - Multi-branch dashboard
 - Advanced BI
-- Expense tracking / accounting export
 - Mechanic mobile app (Flutter)
 - Fleet management module
 - AI estimate assistant
