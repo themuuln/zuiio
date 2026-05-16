@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   CreateCustomerParams,
   CustomerWithVehicleCount,
+  PaginatedResponse,
   UpdateCustomerParams,
 } from "@/lib/types";
 

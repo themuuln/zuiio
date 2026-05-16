@@ -345,6 +345,34 @@ export default function NewCustomerPage() {
               <div className="sm:col-span-2">
                 <label
                   className="mb-1 block text-sm font-medium"
+                  htmlFor="source"
+                >
+                  {t("source")}
+                </label>
+                <select
+                  id="source"
+                  value={form.source}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      source: event.target.value,
+                    }))
+                  }
+                  className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  aria-label="Source"
+                >
+                  <option value="">{t("sourcePlaceholder")}</option>
+                  <option value="referral">{t("sourceReferral")}</option>
+                  <option value="website">{t("sourceWebsite")}</option>
+                  <option value="walk-in">{t("sourceWalkIn")}</option>
+                  <option value="social_media">{t("sourceSocialMedia")}</option>
+                  <option value="phone">{t("sourcePhone")}</option>
+                  <option value="other">{t("sourceOther")}</option>
+                </select>
+              </div>
+              <div className="sm:col-span-2">
+                <label
+                  className="mb-1 block text-sm font-medium"
                   htmlFor="notes"
                 >
                   {t("notes")}

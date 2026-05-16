@@ -14,6 +14,7 @@ export interface CustomerFormState {
   phone: string;
   email: string;
   address: string;
+  source: string;
   notes: string;
 }
 
