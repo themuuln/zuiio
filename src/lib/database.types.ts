@@ -205,10 +205,32 @@ export interface Customer {
   address: string | null;
   notes: string | null;
   tags: string[] | null;
+  source: string | null;
   total_visits: number;
   last_visit_at: string | null;
   created_by: string | null;
   updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type CustomerNoteType =
+  | "general"
+  | "follow_up"
+  | "complaint"
+  | "call"
+  | "email"
+  | "meeting"
+  | "other";
+
+export interface CustomerNote {
+  id: string;
+  organization_id: string;
+  customer_id: string;
+  content: string;
+  type: CustomerNoteType;
+  created_by: string;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -256,61 +278,6 @@ export interface VehicleOwner {
   created_at: string;
 }
 
-export interface VehicleServiceSchedule {
-  id: string;
-  organization_id: string;
-  branch_id: string | null;
-  vehicle_id: string;
-  service_catalog_id: string | null;
-  service_name: string;
-  interval_months: number | null;
-  interval_km: number | null;
-  last_service_date: string | null;
-  last_service_odometer: number | null;
-  next_due_date: string | null;
-  next_due_km: number | null;
-  reminder_enabled: boolean;
-  notes: string | null;
-  created_by: string | null;
-  updated_by: string | null;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-}
-
-export type VehicleServiceScheduleInsert = Omit<
-  VehicleServiceSchedule,
-  "id" | "created_at" | "updated_at"
-> & {
-  id?: string;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type VehicleServiceScheduleUpdate = Partial<VehicleServiceScheduleInsert>;
-
-export interface ReminderLog {
-  id: string;
-  organization_id: string;
-  vehicle_service_schedule_id: string | null;
-  vehicle_id: string;
-  customer_id: string | null;
-  service_catalog_id: string | null;
-  service_name: string;
-  reminder_type: "service_due" | "service_overdue" | "custom";
-  channel: "sms" | "email" | "both" | "in_app";
-  status: "pending" | "sent" | "failed" | "cancelled";
-  scheduled_at: string;
-  sent_at: string | null;
-  error_message: string | null;
-  created_at: string;
-}
-
-export type ReminderLogInsert = Omit<ReminderLog, "id" | "created_at"> & {
-  id?: string;
-  created_at?: string;
-};
-
 export interface ServiceCatalog {
   id: string;
   organization_id: string;
@@ -320,8 +287,6 @@ export interface ServiceCatalog {
   category: string | null;
   default_price: number | null;
   estimated_duration_minutes: number | null;
-  interval_months: number | null;
-  interval_km: number | null;
   is_active: boolean;
   created_by: string | null;
   updated_by: string | null;
@@ -578,13 +543,54 @@ export interface WorkOrderRow extends WorkOrder {
   mechanic_name: string | null;
 }
 
-export interface WorkOrderDetail extends WorkOrder {
+export interface WorkOrderDetail extends Omit<WorkOrder, "notes"> {
   customer: Customer | null;
   vehicle: Vehicle | null;
   mechanic: { id: string; full_name: string | null } | null;
   services: WorkOrderService[];
   parts: WorkOrderPart[];
+  notes: WorkOrderNote | null;
   status_history: WorkOrderStatusHistory[];
+  status_duration: number | null;
+}
+
+export interface VehicleServiceSchedule {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  vehicle_id: string;
+  service_catalog_id: string | null;
+  service_name: string;
+  interval_months: number | null;
+  interval_km: number | null;
+  last_service_date: string | null;
+  last_service_odometer: number | null;
+  next_due_date: string | null;
+  next_due_km: number | null;
+  reminder_enabled: boolean;
+  notes: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface ReminderLog {
+  id: string;
+  organization_id: string;
+  vehicle_service_schedule_id: string | null;
+  vehicle_id: string;
+  customer_id: string | null;
+  service_catalog_id: string | null;
+  service_name: string;
+  reminder_type: "service_due" | "service_overdue" | "custom";
+  channel: "sms" | "email" | "both" | "in_app";
+  status: "pending" | "sent" | "failed" | "cancelled";
+  scheduled_at: string;
+  sent_at: string | null;
+  error_message: string | null;
+  created_at: string;
 }
 
 // ============================================================
@@ -849,6 +855,21 @@ export type WorkOrderStatusHistoryInsert = Omit<
 > & {
   id?: string;
   created_at?: string;
+};
+
+export type CustomerNoteInsert = Omit<
+  CustomerNote,
+  "id" | "created_at" | "updated_at" | "deleted_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type CustomerNoteUpdate = Partial<
+  Omit<CustomerNote, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
 };
 
 export type MechanicAssignmentInsert = Omit<
@@ -1336,6 +1357,18 @@ export interface Database {
           referencedColumns: string[];
         }[];
       };
+      customer_notes: {
+        Row: CustomerNote;
+        Insert: CustomerNoteInsert;
+        Update: CustomerNoteUpdate;
+        Relationships: {
+          foreignKeyName: string;
+          columns: string[];
+          isOneToOne?: boolean;
+          referencedRelation: string;
+          referencedColumns: string[];
+        }[];
+      };
       customers: {
         Row: Customer;
         Insert: CustomerInsert;
@@ -1664,30 +1697,6 @@ export interface Database {
         Row: InvoicePayment;
         Insert: Record<string, never>;
         Update: Record<string, never>;
-        Relationships: {
-          foreignKeyName: string;
-          columns: string[];
-          isOneToOne?: boolean;
-          referencedRelation: string;
-          referencedColumns: string[];
-        }[];
-      };
-      vehicle_service_schedules: {
-        Row: VehicleServiceSchedule;
-        Insert: VehicleServiceScheduleInsert;
-        Update: VehicleServiceScheduleUpdate;
-        Relationships: {
-          foreignKeyName: string;
-          columns: string[];
-          isOneToOne?: boolean;
-          referencedRelation: string;
-          referencedColumns: string[];
-        }[];
-      };
-      reminder_logs: {
-        Row: ReminderLog;
-        Insert: ReminderLogInsert;
-        Update: ReminderLogInsert;
         Relationships: {
           foreignKeyName: string;
           columns: string[];
