@@ -51,6 +51,10 @@ export const cacheTags = {
   serviceSchedules: (orgId: string) => `service-schedules:${orgId}`,
   serviceSchedule: (id: string) => `service-schedule:${id}`,
   reminderLogs: (orgId: string) => `reminder-logs:${orgId}`,
+
+  // Customer Notes
+  customerNotes: (orgId: string, customerId: string) =>
+    `customer-notes:${orgId}:${customerId}`,
 } as const;
 
 // Cache duration constants (in seconds)
