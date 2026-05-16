@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags, cacheDurations } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
+import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";
 import type {
   Customer,
   MechanicAssignment,
@@ -207,6 +208,17 @@ export async function updateWorkOrderStatus(
   if (error || !data) throw new NotFoundError("Work order not found");
 
   await insertStatusHistory(supabase, id, orgId, newStatus, notes);
+
+  // Auto-create/update service schedules when work order completes
+  if (newStatus === "Completed") {
+    await supabase
+      .from("work_orders")
+      .update({ completed_at: new Date().toISOString() })
+      .eq("id", id);
+    syncWorkOrderToSchedules(id).catch((err) =>
+      console.error("Failed to sync work order to schedules:", err),
+    );
+  }
 
   // Invalidate caches
   revalidateTag(cacheTags.workOrders(orgId), "max");

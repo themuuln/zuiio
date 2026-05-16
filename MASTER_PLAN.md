@@ -191,8 +191,8 @@ Garage OS
 │   └── Revenue reports
 │
 ├── Customer Retention
-│   ├── SMS reminders
-│   ├── Service due dates
+│   ├── SMS reminders (service interval reminders LIVE)
+│   ├── Service due dates (vehicle_service_schedules table LIVE)
 │   ├── Follow-ups
 │   └── Customer return tracking
 │
@@ -314,8 +314,10 @@ discounts
 tax_rules
 cash_register_sessions
 
-Retention Tables
+Retention Tables (Implemented)
 
+vehicle_service_schedules  — per-vehicle service interval tracking with auto-sync from completed work orders
+reminder_logs              — audit trail for sent/pending reminders (populated by cron edge function)
 reminders
 reminder_templates
 notification_logs
@@ -420,7 +422,7 @@ Next.js server:
 Supabase Edge Functions:
 - QPay webhooks
 - SMS webhooks
-- scheduled reminder jobs
+- [LIVE] check-service-reminders — daily cron that scans upcoming vehicle_service_schedules and creates reminder_logs
 - lightweight external API callbacks
 Frontend:
 - UI only
@@ -664,8 +666,11 @@ Features
 - QPay integration
 - Payment confirmation
 - SMS reminder module
-- Service interval reminders
-- Oil change reminder
+- [DONE] Service interval reminders — vehicle_service_schedules table with per-vehicle config, reminder_logs audit trail, cron-driven check-service-reminders edge function
+- [DONE] Oil change reminder — generic interval system supports all service types (oil, tires, brakes, etc.)
+- [DONE] Auto-sync from work order completion — when a work order status changes to "Completed", services are auto-created/updated in vehicle_service_schedules
+- [DONE] Service catalog interval columns — interval_months and interval_km added to service_catalog for automatic next-due-date calculation
+- [DONE] Backfill from history — "Sync from history" button scans all completed work orders and creates schedules
 - Customer follow-up schedule
 - Revenue dashboard
 - Inventory valuation
@@ -685,7 +690,7 @@ Owner can see:
 Daily revenue
 Unpaid invoices
 Low stock
-Upcoming reminders
+Upcoming reminders        ← LIVE on /dashboard/service-reminders
 Completed work
 Mechanic output
 Repeat customer activity
@@ -888,7 +893,7 @@ No repair history	Hard to upsell or diagnose	Service history per vehicle	Phase 1
 No work order discipline	Jobs get forgotten	Work order workflow	Phase 1
 Inventory leakage	Parts disappear or get misused	Inventory movement ledger	Phase 2
 Mechanic accountability	Owner cannot measure staff	Mechanic assignment + performance	Phase 2
-No repeat reminders	Customers do not return	SMS/service interval reminders	Phase 3
+No repeat reminders	Customers do not return	SMS/service interval reminders	Phase 3 — LIVE (service intervals tracked, reminders queued via cron, SMS channel ready)
 Payment confusion	Unpaid invoices get lost	Payment status + QPay	Phase 3
 Multi-branch chaos	Larger shops need control	Branch system + transfer	Phase 4
 Poor mechanic adoption	Mechanics hate admin dashboards	Flutter mechanic app	Phase 5
@@ -1381,14 +1386,14 @@ Otherwise you destroy your own product business.
 
 Add-ons are where profit grows.
 
-SMS Reminder Module
+SMS Reminder Module  ← ENGINE READY (service reminders + cron + logs built; SMS/Email send integration pending)
 
 ₮80k–₮200k/month
 + actual SMS cost
 
 Includes:
 
-Oil change reminders
+Oil change reminders (generic interval system supports all service types)
 Appointment reminders
 Pickup reminders
 Follow-up messages
@@ -1860,7 +1865,7 @@ Build this exact order:
 11. Inventory ledger
 12. Mechanic tracking
 13. Payments
-14. SMS reminders
+14. [LIVE] Service interval reminders (vehicle_service_schedules + reminder_logs + cron edge function + auto-sync from work orders)
 15. Advanced reports
 16. Multi-branch
 17. Accounting export

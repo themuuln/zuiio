@@ -95,13 +95,32 @@ The rule: pages use hooks, hooks call API routes, API routes call services, serv
 - **Regenerate TypeScript types after every migration.** After creating or modifying any migration file, update `src/lib/database.types.ts` so the frontend types match the actual schema.
 - Committing a migration without updating `database.types.ts` is a build break waiting to happen — the frontend will reference columns/types that no longer exist or miss new ones.
 
-## Supabase Remote Sync Rule
+## Supabase Remote Sync Rule (MANDATORY — never skip)
 
-- **Sync migrations to remote after every migration.** After creating or modifying any migration file, run `supabase db push --linked` to apply it to the remote Supabase database.
-- If there's a version mismatch (e.g., a migration was applied manually via `--linked` queries without a migration history record), run `supabase migration repair --status applied <version> --linked` to sync the history.
-- If a migration was reverted or misaligned, use `supabase migration repair --status reverted <version> --linked` to fix the history, then re-push.
-- Verify sync with `supabase migration list --linked` — both `Local` and `Remote` columns should match.
-- Never leave the remote schema out of sync with local migrations — it causes silent build failures and data inconsistencies.
+**Solo dev → remote direct workflow.** No local Supabase needed. Every migration/function change goes straight to the linked Supabase project. Never leave local changes unapplied — it causes silent runtime failures.
+
+### Step 1 — Push migrations
+```bash
+supabase db push --linked
+```
+
+### Step 2 — Deploy Edge Functions (if any were added/changed)
+```bash
+supabase functions deploy <function-name>
+```
+
+### Step 3 — Regenerate TypeScript types
+```bash
+supabase gen types typescript --linked > src/lib/database.types.ts
+```
+
+### Step 4 — Verify end-to-end
+```bash
+npm run build   # Catches type mismatches
+```
+
+### Failure consequence
+Skipping any step causes **"Failed to load..." errors** — API routes/Supabase queries fail because tables or functions don't exist yet on remote. All development blocks until resolved.
 
 ## Testing Guidelines
 
