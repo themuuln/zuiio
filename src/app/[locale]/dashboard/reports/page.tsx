@@ -12,6 +12,7 @@ import {
   Lightbulb,
   Percent,
   RefreshCw,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -282,6 +283,7 @@ export default function ReportsPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
   const [report, setReport] = useState<Record<string, unknown> | null>(null);
+  const [expenses, setExpenses] = useState<{ totalAmount: number; thisMonth: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -333,12 +335,26 @@ export default function ReportsPage() {
       if (reportType === "monthly") dateParam = month;
       if (dateParam) params.set("date", dateParam);
 
-      const res = await fetch(`/api/organizations/${orgId}/reports?${params}`);
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message);
-        setError(json.error.message);
-      } else setReport(json.data ?? null);
+      const [reportRes, expenseRes] = await Promise.all([
+        fetch(`/api/organizations/${orgId}/reports?${params}`),
+        fetch(`/api/organizations/${orgId}/expenses?type=stats`),
+      ]);
+      const reportJson = await reportRes.json();
+      const expenseJson = await expenseRes.json();
+
+      if (reportJson.error) {
+        toast.error(reportJson.error.message);
+        setError(reportJson.error.message);
+      } else {
+        setReport(reportJson.data ?? null);
+      }
+
+      if (!expenseJson.error && expenseJson.data) {
+        setExpenses({
+          totalAmount: expenseJson.data.totalAmount ?? 0,
+          thisMonth: expenseJson.data.thisMonth ?? 0,
+        });
+      }
     } catch {
       toast.error("Failed to load report");
       setError("Failed to load report");
@@ -708,16 +724,6 @@ export default function ReportsPage() {
                   }
                 />
                 <ReportKpiCard
-                  label="Parts Used"
-                  value={String(r?.parts_used ?? 0)}
-                  icon={TrendingUp}
-                  subtitle={
-                    r?.parts_used && r?.work_orders_completed
-                      ? `${Math.round((r.parts_used / r.work_orders_completed) * 10) / 10}/WO`
-                      : undefined
-                  }
-                />
-                <ReportKpiCard
                   label="Total Revenue"
                   value={formatCurrency(r?.total_revenue ?? 0)}
                   icon={DollarSign}
@@ -727,7 +733,30 @@ export default function ReportsPage() {
                       : undefined
                   }
                 />
+                <ReportKpiCard
+                  label="Expenses"
+                  value={formatCurrency(expenses?.thisMonth ?? 0)}
+                  icon={Wallet}
+                  subtitle={expenses?.totalAmount ? `${formatCurrency(expenses.totalAmount)} all time` : undefined}
+                />
               </div>
+
+              {/* Net Profit */}
+              {r && expenses && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <p className="text-xs font-medium text-muted-foreground">Net Profit</p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className={`text-2xl font-bold tabular-nums ${r.total_revenue - expenses.thisMonth < 0 ? "text-red-500" : "text-green-600 dark:text-green-400"}`}>
+                      {formatCurrency(r.total_revenue - expenses.thisMonth)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatCurrency(r.total_revenue)} revenue &minus; {formatCurrency(expenses.thisMonth)} expenses
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Revenue breakdown bar */}
               {r && r.total_revenue > 0 && (

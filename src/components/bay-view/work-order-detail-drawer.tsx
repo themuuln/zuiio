@@ -901,7 +901,7 @@ export function WorkOrderDetailDrawer({
                           {t("internalNotes")}
                         </span>
                         <p className="text-xs mt-0.5 p-2 rounded-md bg-muted/40 border border-border/50">
-                          {wo.notes}
+                          {wo.notes.content}
                         </p>
                       </div>
                     )}
