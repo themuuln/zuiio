@@ -118,6 +118,16 @@ export const inventoryKeys = {
     [...inventoryKeys.all(orgId), "thresholds"] as const,
 };
 
+export const serviceReminderKeys = {
+  all: (orgId: string) => ["organizations", orgId, "service-reminders"] as const,
+  list: (orgId: string, vehicleId?: string) =>
+    [...serviceReminderKeys.all(orgId), "list", vehicleId ?? ""] as const,
+  detail: (orgId: string, id: string) =>
+    [...serviceReminderKeys.all(orgId), "detail", id] as const,
+  logs: (orgId: string, vehicleId?: string) =>
+    [...serviceReminderKeys.all(orgId), "logs", vehicleId ?? ""] as const,
+};
+
 export const expenseKeys = {
   all: (orgId: string) => ["organizations", orgId, "expenses"] as const,
   list: (orgId: string, filters?: Record<string, string>) =>
