@@ -5,6 +5,21 @@
 -- ============================================================
 
 -- ------------------------------------------------------------
+-- Helper: get_current_org_id — used by RLS policies
+-- ------------------------------------------------------------
+create or replace function public.get_current_org_id()
+returns uuid
+language sql
+stable
+security definer
+as $$
+  select organization_id
+  from public.organization_users
+  where user_id = auth.uid()
+  limit 1;
+$$;
+
+-- ------------------------------------------------------------
 -- expense_categories: Categorize expenses (rent, utilities, etc.)
 -- ------------------------------------------------------------
 create table if not exists expense_categories (
@@ -102,6 +117,8 @@ create policy "Users can delete expenses in their org"
 -- ------------------------------------------------------------
 -- Updated_at triggers
 -- ------------------------------------------------------------
+create extension if not exists moddatetime schema extensions;
+
 create trigger handle_expense_categories_updated_at
   before update on expense_categories
   for each row execute function moddatetime();

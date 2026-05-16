@@ -46,6 +46,11 @@ export const cacheTags = {
   expenses: (orgId: string) => `expenses:${orgId}`,
   expense: (id: string) => `expense:${id}`,
   expenseCategories: (orgId: string) => `expense-categories:${orgId}`,
+
+  // Service Reminders
+  serviceSchedules: (orgId: string) => `service-schedules:${orgId}`,
+  serviceSchedule: (id: string) => `service-schedule:${id}`,
+  reminderLogs: (orgId: string) => `reminder-logs:${orgId}`,
 } as const;
 
 // Cache duration constants (in seconds)
@@ -89,4 +94,8 @@ export const cacheDurations = {
   // Expenses
   expenses: 300, // 5 minutes
   expenseCategories: 3600, // 1 hour (rarely changes)
+
+  // Service Reminders
+  serviceSchedules: 120, // 2 minutes (updated when services are performed)
+  reminderLogs: 300, // 5 minutes
 } as const;
