@@ -51,3 +51,4 @@ opencode/
 public/guide/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
+.sisyphus/

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { ExportColumn } from "@/lib/export";
 
 export function useExcelExport() {
@@ -18,6 +18,14 @@ export function useExcelExport() {
       setIsExporting(true);
 
       try {
+        const transformedData: Record<string, unknown>[] = data.map((row) => {
+          const newRow: Record<string, unknown> = {};
+          for (const col of columns) {
+            newRow[col.key as string] = col.value ? col.value(row) : (row as Record<string, unknown>)[col.key as string];
+          }
+          return newRow;
+        });
+
         const res = await fetch("/api/export", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -27,7 +35,7 @@ export function useExcelExport() {
               label: c.label,
               format: c.format,
             })),
-            data: data as Record<string, unknown>[],
+            data: transformedData,
             filename,
             sheetName,
             title,
