@@ -273,6 +273,9 @@ export async function addServiceToWorkOrder(
 ): Promise<WorkOrderService> {
   const supabase = await createClient();
 
+  // Get current user for RLS compliance
+  const { data: { user } } = await supabase.auth.getUser();
+
   const quantity = serviceData.quantity ?? 1;
   const unitPrice = serviceData.unit_price;
   let finalPrice = unitPrice * quantity;
@@ -299,6 +302,7 @@ export async function addServiceToWorkOrder(
       discount_percentage: serviceData.discount_percentage ?? 0,
       final_price: finalPrice,
       notes: serviceData.notes ?? null,
+      created_by: user?.id ?? null,
     })
     .select("*")
     .single();

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ChevronDown, ChevronRight, Pencil, Save, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Pencil, Save, Trash2, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { WorkOrderStatus } from "@/lib/database.types";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -117,6 +118,7 @@ function formatDate(value: string | null) {
 
 export default function VehicleDetailPage() {
   const t = useTranslations("vehicles");
+  const commonT = useTranslations("common");
   const params = useParams();
   const router = useRouter();
   const vehicleId = params.id as string;
@@ -230,6 +232,25 @@ export default function VehicleDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!orgId || !vehicleId) return;
+    try {
+      const response = await fetch(
+        `/api/organizations/${orgId}/vehicles/${vehicleId}`,
+        { method: "DELETE" },
+      );
+      const json = await response.json();
+      if (json.error) {
+        toast.error(json.error.message);
+        return;
+      }
+      toast.success(t("deleted"));
+      router.push("/dashboard/vehicles");
+    } catch {
+      toast.error(t("failedToSave"));
+    }
+  };
+
   if (orgQuery.isLoading || loading) {
     return (
       <div className="flex max-w-3xl flex-col gap-6">
@@ -248,7 +269,7 @@ export default function VehicleDetailPage() {
           className="w-fit"
         >
           <ArrowLeft className="size-4" />
-          Back
+          {commonT("back")}
         </Button>
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
@@ -285,7 +306,7 @@ export default function VehicleDetailPage() {
           render={<Link href="/dashboard/vehicles" />}
           variant="ghost"
           size="icon"
-          aria-label="Back"
+          aria-label={commonT("back")}
         >
           <ArrowLeft className="size-5" />
         </Button>
@@ -300,15 +321,37 @@ export default function VehicleDetailPage() {
           </p>
         </div>
         {!editing ? (
-          <Button variant="outline" onClick={() => { syncForm(vehicle); setEditing(true); }}>
-            <Pencil className="size-4" />
-            Edit
-          </Button>
+          <>
+            <Button variant="outline" onClick={() => { syncForm(vehicle); setEditing(true); }}>
+              <Pencil className="size-4" />
+              {commonT("edit")}
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger render={<Button variant="outline" className="text-destructive hover:text-destructive" />}>
+                <Trash2 className="size-4" />
+                {commonT("delete")}
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t("deleteConfirm")}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} variant="destructive">
+                    {commonT("delete")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
         ) : (
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={saving}>
               <Save className="size-4" />
-              {saving ? t("saving") : "Save"}
+              {saving ? t("saving") : commonT("save")}
             </Button>
             <Button
               variant="ghost"
@@ -318,7 +361,7 @@ export default function VehicleDetailPage() {
               }}
             >
               <X className="size-4" />
-              Cancel
+              {commonT("cancel")}
             </Button>
           </div>
         )}
@@ -427,7 +470,6 @@ export default function VehicleDetailPage() {
             columns={serviceHistoryColumns}
             filename={`vehicle-${vehicle.id.slice(0, 8)}-history.xlsx`}
             sheetName="Service History"
-            label="Export"
           />
         </CardHeader>
         <CardContent>

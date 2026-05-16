@@ -41,6 +41,11 @@ export const cacheTags = {
   // Bay View
   bayView: (orgId: string, branchId: string) =>
     `bay-view:${orgId}:${branchId}`,
+
+  // Expenses
+  expenses: (orgId: string) => `expenses:${orgId}`,
+  expense: (id: string) => `expense:${id}`,
+  expenseCategories: (orgId: string) => `expense-categories:${orgId}`,
 } as const;
 
 // Cache duration constants (in seconds)
@@ -80,4 +85,8 @@ export const cacheDurations = {
 
   // Bay View - real-time data, short cache
   bayView: 30, // 30 seconds
+
+  // Expenses
+  expenses: 300, // 5 minutes
+  expenseCategories: 3600, // 1 hour (rarely changes)
 } as const;

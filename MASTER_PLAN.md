@@ -809,12 +809,55 @@ Modules
 
 - Parts supplier portal
 - Fleet maintenance portal
+- Customer self-service portal
+- Estimate / quote approval
+- Invoicing + payment capture
+- Appointment booking
+- SMS / email notifications
+- Photo / video inspection
+- Warranty / repeat repair tracking
+- Role-based permissions
+- Audit log
+- Backup / restore
 - Warranty claim workflow
 - Insurance repair workflow
 - API access
+- Webhooks
+- Third-party integrations (accounting, WhatsApp, SMS, payment gateways)
+- Offline mode + sync queue
 - Advanced BI
 - AI estimate assistant
 - Predictive maintenance engine
+
+Missing High-Value Features to Add
+
+These are the main gaps I would explicitly include in the master plan, even if they are delivered in later phases.
+
+Phase 3 candidates
+
+- Estimate / quote approval
+- Invoicing and payment recording
+- SMS / email notifications
+- Appointment booking
+- Customer self-service portal
+- Photo / video inspection
+- Warranty and repeat repair tracking
+
+Phase 4 candidates
+
+- Role-based permissions
+- Audit log
+- Backup / restore
+
+Phase 5 candidates
+
+- Offline mode for weak internet environments
+
+Phase 6 candidates
+
+- API / webhooks
+- Third-party integrations
+- Advanced warranty workflows
 
 Why This Matters
 

@@ -1,0 +1,90 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import type { useRouter } from "@/lib/i18n/navigation";
+import { StatusBadge } from "@/components/status-badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatMNT } from "@/lib/utils";
+import type { WorkOrderStatus } from "@/lib/database.types";
+
+interface WorkOrderSummary {
+  id: string;
+  status: WorkOrderStatus;
+  description: string | null;
+  complaint: string | null;
+  total: number;
+  created_at: string;
+  vehicles?: { plate_number: string; make: string; model: string } | null;
+}
+
+interface Props {
+  workOrders: WorkOrderSummary[];
+  router: ReturnType<typeof useRouter>;
+}
+
+function formatDate(value: string | null) {
+  return value ? new Date(value).toLocaleDateString() : "—";
+}
+
+export function CustomerWorkOrderHistory({ workOrders, router }: Props) {
+  const t = useTranslations("vehicles");
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">
+          {t("serviceHistory")} ({workOrders.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {workOrders.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            {t("noServiceHistory")}
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {workOrders.map((workOrder) => (
+              <button
+                key={workOrder.id}
+                type="button"
+                onClick={() =>
+                  router.push(`/dashboard/work-orders/${workOrder.id}`)
+                }
+                className="rounded-lg bg-muted/50 p-4 text-left transition-colors hover:bg-muted"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <StatusBadge status={workOrder.status} />
+                      <span className="text-sm text-muted-foreground">
+                        {formatDate(workOrder.created_at)}
+                      </span>
+                    </div>
+                    {workOrder.vehicles && (
+                      <p className="text-xs text-muted-foreground">
+                        {workOrder.vehicles.plate_number}
+                        {workOrder.vehicles.make && workOrder.vehicles.model
+                          ? ` · ${workOrder.vehicles.make} ${workOrder.vehicles.model}`
+                          : ""}
+                      </p>
+                    )}
+                    <p className="text-sm font-medium">
+                      {workOrder.complaint ||
+                        workOrder.description ||
+                        "General service"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-sm font-semibold tabular-nums">
+                      {formatMNT(Number(workOrder.total))}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

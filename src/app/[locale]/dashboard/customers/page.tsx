@@ -36,27 +36,31 @@ interface CustomerWithVehicleCount extends Customer {
   vehicle_count?: number;
 }
 
-function getCustomerDisplayName(customer: CustomerWithVehicleCount) {
+function getCustomerDisplayName(
+  customer: CustomerWithVehicleCount,
+  t?: (key: string, params?: Record<string, string | number | Date>) => string,
+) {
   return (
     [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
     customer.company_name ||
     customer.contact_person ||
     customer.full_name ||
     customer.phone ||
-    "No name"
+    (t?.("noContactInfo") ?? "No name")
   );
 }
 
 function TableSkeleton({ rows = 5 }: { rows?: number }) {
+  const t = useTranslations("customers");
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Customer</TableHead>
-          <TableHead className="hidden sm:table-cell">Contact</TableHead>
-          <TableHead className="text-center">Vehicles</TableHead>
-          <TableHead className="hidden md:table-cell">Visits</TableHead>
-          <TableHead className="hidden lg:table-cell">Last Visit</TableHead>
+          <TableHead>{t("name")}</TableHead>
+          <TableHead className="hidden sm:table-cell">{t("contact")}</TableHead>
+          <TableHead className="text-center">{t("vehicles")}</TableHead>
+          <TableHead className="hidden md:table-cell">{t("totalVisits")}</TableHead>
+          <TableHead className="hidden lg:table-cell">{t("lastVisit")}</TableHead>
           <TableHead className="w-10" />
         </TableRow>
       </TableHeader>
@@ -91,17 +95,20 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
   );
 }
 
-function formatDate(dateString: string | null) {
+function formatDate(
+  dateString: string | null,
+  t: (key: string, params?: Record<string, string | number | Date>) => string,
+) {
   if (!dateString) return null;
   const date = new Date(dateString);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  if (days === 0) return t("today");
+  if (days === 1) return t("yesterday");
+  if (days < 7) return t("daysAgo", { days });
+  if (days < 30) return t("weeksAgo", { weeks: Math.floor(days / 7) });
   return date.toLocaleDateString();
 }
 
@@ -152,7 +159,7 @@ export default function CustomersPage() {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-36" />
         </div>
-        <SearchInput placeholder="Search customers..." loading disabled />
+        <SearchInput placeholder={t("searchPlaceholder")} loading disabled />
         <Card>
           <CardContent className="p-0">
             <TableSkeleton />
@@ -181,7 +188,8 @@ export default function CustomersPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground">
-            {(customers ?? []).length} customer
+            {(customers ?? []).length}{" "}
+            {t("name").toLowerCase()}
             {(customers ?? []).length !== 1 ? "s" : ""}
           </p>
         </div>
@@ -200,7 +208,8 @@ export default function CustomersPage() {
         }}
         stats={
           <span>
-            {(customers ?? []).length} customer
+            {(customers ?? []).length}{" "}
+            {t("name").toLowerCase()}
             {(customers ?? []).length !== 1 ? "s" : ""}
           </span>
         }
@@ -231,21 +240,21 @@ export default function CustomersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Customer</TableHead>
+                  <TableHead>{t("name")}</TableHead>
                   <TableHead className="hidden sm:table-cell">
-                    Contact
+                    {t("contact")}
                   </TableHead>
-                  <TableHead className="text-center">Vehicles</TableHead>
-                  <TableHead className="hidden md:table-cell">Visits</TableHead>
+                  <TableHead className="text-center">{t("vehicles")}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t("totalVisits")}</TableHead>
                   <TableHead className="hidden lg:table-cell">
-                    Last Visit
+                    {t("lastVisit")}
                   </TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {customers?.map((customer) => {
-                  const lastVisit = formatDate(customer.last_visit_at);
+                  const lastVisit = formatDate(customer.last_visit_at, t);
                   return (
                     <TableRow
                       key={customer.id}
@@ -263,7 +272,7 @@ export default function CustomersPage() {
                           </div>
                           <div className="min-w-0">
                             <p className="truncate text-sm font-medium">
-                              {getCustomerDisplayName(customer)}
+                              {getCustomerDisplayName(customer, t)}
                             </p>
                             <p className="text-xs text-muted-foreground capitalize">
                               {customer.type}
@@ -305,7 +314,7 @@ export default function CustomersPage() {
                           </div>
                         ) : (
                           <span className="text-sm text-muted-foreground/50">
-                            Never
+                            {t("never")}
                           </span>
                         )}
                       </TableCell>

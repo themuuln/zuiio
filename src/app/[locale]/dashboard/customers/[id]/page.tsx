@@ -1,12 +1,23 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Pencil, Save, X } from "lucide-react";
+import { ArrowLeft, Building2, Pencil, Save, Trash2, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Breadcrumb } from "@/components/breadcrumb";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,14 +25,26 @@ import type { ExportColumn } from "@/lib/export";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { customerKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import type { WorkOrderStatus } from "@/lib/database.types";
 import {
   CustomerEditForm,
   type CustomerFormState,
 } from "./_customer-edit-form";
 import type { CustomerVehicleSummary } from "./_vehicle-list-card";
 import { VehicleListCard } from "./_vehicle-list-card";
+import { CustomerWorkOrderHistory } from "./_customer-work-order-history";
 
 type CustomerType = "individual" | "company";
+
+interface WorkOrderSummary {
+  id: string;
+  status: WorkOrderStatus;
+  description: string | null;
+  complaint: string | null;
+  total: number;
+  created_at: string;
+  vehicles?: { plate_number: string; make: string; model: string } | null;
+}
 
 interface CustomerDetailResponse {
   id: string;
@@ -37,6 +60,7 @@ interface CustomerDetailResponse {
   notes: string | null;
   created_at: string;
   vehicles: CustomerVehicleSummary[];
+  work_orders?: WorkOrderSummary[];
 }
 
 const emptyForm: CustomerFormState = {
@@ -155,6 +179,25 @@ export default function CustomerDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!orgId || !customerId) return;
+    try {
+      const response = await fetch(
+        `/api/organizations/${orgId}/customers/${customerId}`,
+        { method: "DELETE" },
+      );
+      const json = await response.json();
+      if (json.error) {
+        toast.error(json.error.message);
+        return;
+      }
+      toast.success(t("deleted"));
+      router.push("/dashboard/customers");
+    } catch {
+      toast.error(t("failedToSave"));
+    }
+  };
+
   if (orgQuery.isLoading || loading) {
     return (
       <div className="flex max-w-3xl flex-col gap-6">
@@ -217,16 +260,38 @@ export default function CustomerDetailPage() {
           </p>
         </div>
         {!editing ? (
-          <Button
-            variant="outline"
-            onClick={() => {
-              syncForm(customer);
-              setEditing(true);
-            }}
-          >
-            <Pencil className="size-4" />
-            {commonT("edit")}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                syncForm(customer);
+                setEditing(true);
+              }}
+            >
+              <Pencil className="size-4" />
+              {commonT("edit")}
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger render={<Button variant="outline" className="text-destructive hover:text-destructive" />}>
+                <Trash2 className="size-4" />
+                {commonT("delete")}
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t("deleteConfirm")}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>
+                    {commonT("delete")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         ) : (
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={saving}>
@@ -329,6 +394,13 @@ export default function CustomerDetailPage() {
         vehicleExportColumns={vehicleExportColumns}
         t={t}
       />
+
+      {customer.work_orders && (
+        <CustomerWorkOrderHistory
+          workOrders={customer.work_orders}
+          router={router}
+        />
+      )}
     </div>
   );
 }

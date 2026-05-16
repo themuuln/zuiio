@@ -3,9 +3,12 @@
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import type { BayViewData } from "@/lib/services/bay-view-service";
+import type { Vehicle } from "@/lib/database.types";
+import type { WorkOrder } from "@/lib/database.types";
 import {
   assignMechanicToWorkOrder,
   assignVehicleToBay,
+  removeVehicleFromBay,
   reorderQueue,
   unassignMechanicFromWorkOrder,
 } from "@/lib/services/bay-view-service";
@@ -111,7 +114,7 @@ export function useBayDragHandlers({
             bay_number: bayNumber,
             status: "Diagnosing" as const,
             mechanic: null,
-            customer_name: null,
+            customer_name: (movedWO as unknown as Record<string, unknown>).customer_name as string | null ?? null,
           };
           return {
             ...d,
@@ -132,7 +135,46 @@ export function useBayDragHandlers({
         return;
       }
 
-      // Case 2: Dragging a mechanic from roster to a bay/vehicle
+      // Case 2: Dragging vehicle from a bay back to waiting queue
+      if (
+        activeData?.type === "vehicle" &&
+        (overId === "waiting-queue" || overId.startsWith("vehicle-")) &&
+        data?.bays.some((b) => b.workOrder?.id === activeData.workOrderId)
+      ) {
+        const woId = activeData.workOrderId;
+        const sourceBay = data?.bays.find((b) => b.workOrder?.id === woId);
+        if (!sourceBay?.workOrder) return;
+
+        markPending(woId);
+
+        setData((d) => {
+          if (!d) return d;
+          const movedWO = sourceBay.workOrder;
+          const cleaned = {
+            ...movedWO,
+            bay_number: null,
+            status: "New" as const,
+            mechanic: null,
+            mechanic_id: null,
+          } as unknown as WorkOrder & { vehicle: Vehicle | null };
+          return {
+            ...d,
+            waitingQueue: [cleaned, ...d.waitingQueue],
+            bays: d.bays.map((b) =>
+              b.bayNumber === sourceBay.bayNumber
+                ? { ...b, workOrder: null }
+                : b,
+            ),
+          };
+        });
+
+        await removeVehicleFromBay(woId);
+        clearPending(woId);
+        fetchData(false);
+        return;
+      }
+
+      // Case 3: Dragging a mechanic from roster to a bay/vehicle
       if (activeData?.type === "mechanic") {
         let targetWoId: string | null = null;
 
@@ -197,11 +239,45 @@ export function useBayDragHandlers({
         return;
       }
 
-      // Case 3: Dragging an assigned mechanic to another bay
+      // Case 4: Dragging an assigned mechanic to another bay
       if (activeData?.type === "mechanic-assigned") {
         const mechanicId = activeData.mechanicId;
         const currentWoId = activeData.workOrderId;
         if (!mechanicId) return;
+
+        if (overId.startsWith("mechanic-")) {
+          markPending(currentWoId);
+          setData((d) =>
+            d
+              ? {
+                  ...d,
+                  bays: d.bays.map((b) =>
+                    b.workOrder?.id === currentWoId
+                      ? {
+                          ...b,
+                          workOrder: b.workOrder
+                            ? {
+                                ...b.workOrder,
+                                mechanic: null,
+                                mechanic_id: null,
+                              }
+                            : null,
+                        }
+                      : b,
+                  ),
+                }
+              : d,
+          );
+          try {
+            await unassignMechanicFromWorkOrder(currentWoId);
+          } catch {
+            setData(prevData);
+          } finally {
+            clearPending(currentWoId);
+            fetchData(false);
+          }
+          return;
+        }
 
         const findTargetWoId = (): string | null => {
           if (overId.startsWith("vehicle-")) {
@@ -268,7 +344,7 @@ export function useBayDragHandlers({
         return;
       }
 
-      // Case 4: Reorder within waiting queue
+      // Case 5: Reorder within waiting queue
       if (activeData?.type === "vehicle" && overId.startsWith("vehicle-")) {
         const activeWoId = activeData.workOrderId;
         const targetWoId = overId.replace("vehicle-", "");

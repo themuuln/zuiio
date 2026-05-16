@@ -117,3 +117,15 @@ export const inventoryKeys = {
   thresholds: (orgId: string) =>
     [...inventoryKeys.all(orgId), "thresholds"] as const,
 };
+
+export const expenseKeys = {
+  all: (orgId: string) => ["organizations", orgId, "expenses"] as const,
+  list: (orgId: string, filters?: Record<string, string>) =>
+    [...expenseKeys.all(orgId), "list", JSON.stringify(filters ?? {})] as const,
+  detail: (orgId: string, id: string) =>
+    [...expenseKeys.all(orgId), "detail", id] as const,
+  stats: (orgId: string, period?: string) =>
+    [...expenseKeys.all(orgId), "stats", period ?? "all"] as const,
+  categories: (orgId: string) =>
+    [...expenseKeys.all(orgId), "categories"] as const,
+};

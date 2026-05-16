@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowRight,
   ArrowUpRight,
   BarChart3,
   ClipboardList,
@@ -9,6 +10,7 @@ import {
   Loader2,
   Mail,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
@@ -18,16 +20,18 @@ import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "@/lib/i18n/navigation";
 import type { ExportColumn } from "@/lib/export";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useExpenses, useExpenseStats } from "@/lib/queries/use-expenses";
 import type { DashboardData } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatMNT } from "@/lib/utils";
 import { KpiCard } from "./_kpi-card";
 import { OverviewTab } from "./_overview-tab";
 import { TransactionsTab } from "./_transactions-tab";
 
 type Period = "today" | "week" | "month" | "all";
-type Tab = "overview" | "transactions" | "invoices";
+type Tab = "overview" | "transactions" | "invoices" | "expenses";
 
 type PeriodOption = { key: Period; label: string };
 
@@ -76,6 +80,7 @@ function TabBar({
     { key: "overview", label: "Overview", icon: BarChart3 },
     { key: "transactions", label: "Transactions", icon: ClipboardList },
     { key: "invoices", label: "Invoices", icon: DollarSign },
+    { key: "expenses", label: "Expenses", icon: TrendingUp },
   ];
 
   return (
@@ -506,6 +511,136 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
   );
 }
 
+// ── Expenses Tab ──────────────────────────────────
+function ExpensesTab({ orgId }: { orgId: string | null }) {
+  const t = useTranslations();
+  const { data: expenses, isLoading: expLoading } = useExpenses(orgId ?? undefined);
+  const { data: stats, isLoading: statsLoading } = useExpenseStats(orgId ?? undefined);
+  const isLoading = statsLoading || (expLoading && !expenses);
+  const loading = isLoading && !stats;
+
+  const recentExpenses = (expenses ?? []).slice(0, 10);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          label="Total Expenses"
+          value={loading ? "\u2014" : String(stats?.totalExpenses ?? 0)}
+          icon={Wallet}
+          loading={loading}
+        />
+        <KpiCard
+          label="Total Amount"
+          value={loading ? "\u2014" : formatMNT(stats?.totalAmount ?? 0)}
+          icon={DollarSign}
+          loading={loading}
+        />
+        <KpiCard
+          label="This Month"
+          value={loading ? "\u2014" : formatMNT(stats?.thisMonth ?? 0)}
+          icon={TrendingUp}
+          loading={loading}
+        />
+        <KpiCard
+          label="Unpaid"
+          value={loading ? "\u2014" : formatMNT(stats?.unpaidAmount ?? 0)}
+          icon={Clock}
+          subtitle={stats ? `${stats.unpaidAmount > 0 ? `${((stats.unpaidAmount / stats.totalAmount) * 100).toFixed(0)}% of total` : "All paid"}` : undefined}
+          loading={loading}
+        />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-muted-foreground">
+          Recent Expenses
+        </p>
+        <Button
+          render={<Link href="/dashboard/expenses" />}
+          variant="outline"
+          size="sm"
+        >
+          <ArrowRight className="size-4" />
+          View All
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="p-5">
+              <Skeleton className="h-8 w-full" />
+            </div>
+          ) : recentExpenses.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-12">
+              <Wallet className="size-10 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">No expenses recorded yet</p>
+              <Button
+                render={<Link href="/dashboard/expenses/new" />}
+                variant="outline"
+                size="sm"
+              >
+                Add Expense
+              </Button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">Date</th>
+                    <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">Description</th>
+                    <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">Category</th>
+                    <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">Amount</th>
+                    <th className="px-5 py-3.5 text-center font-medium text-muted-foreground">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentExpenses.map((exp) => (
+                    <tr key={exp.id} className="border-b border-border transition-colors hover:bg-muted/30">
+                      <td className="px-5 py-3.5 text-muted-foreground">
+                        {new Date(exp.expense_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </td>
+                      <td className="px-5 py-3.5 font-medium">{exp.description}</td>
+                      <td className="px-5 py-3.5">
+                        {exp.category ? (
+                          <span
+                            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
+                            style={{ backgroundColor: `${exp.category.color}20`, color: exp.category.color }}
+                          >
+                            <span className="size-1.5 rounded-full" style={{ backgroundColor: exp.category.color }} />
+                            {exp.category.name}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">&mdash;</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3.5 text-right font-medium tabular-nums">
+                        {formatMNT(exp.amount)}
+                      </td>
+                      <td className="px-5 py-3.5 text-center">
+                        {exp.paid_at ? (
+                          <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            Paid
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                            Unpaid
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 interface FinanceDataState {
   loading: boolean;
   error: string | null;
@@ -703,6 +838,8 @@ export default function FinancePage() {
       )}
 
       {tab === "invoices" && <InvoicesTab orgId={orgId} />}
+
+      {tab === "expenses" && <ExpensesTab orgId={orgId} />}
     </div>
   );
 }

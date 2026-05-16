@@ -176,6 +176,9 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
       });
+      queryClient.invalidateQueries({
+        queryKey: workOrderKeys.all(orgId ?? ""),
+      });
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -209,6 +212,9 @@ export function useAssignMechanic(orgId: string | undefined) {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: workOrderKeys.all(orgId ?? ""),
       });
     },
     onError: (err: Error) => {
@@ -249,6 +255,9 @@ export function useAddService(orgId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
       });
+      queryClient.invalidateQueries({
+        queryKey: workOrderKeys.all(orgId ?? ""),
+      });
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -282,6 +291,9 @@ export function useRemoveService(orgId: string | undefined) {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: workOrderKeys.all(orgId ?? ""),
       });
     },
     onError: (err: Error) => {
@@ -321,6 +333,9 @@ export function useAddPart(orgId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
       });
+      queryClient.invalidateQueries({
+        queryKey: workOrderKeys.all(orgId ?? ""),
+      });
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -355,6 +370,9 @@ export function useRemovePart(orgId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
       });
+      queryClient.invalidateQueries({
+        queryKey: workOrderKeys.all(orgId ?? ""),
+      });
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -363,6 +381,8 @@ export function useRemovePart(orgId: string | undefined) {
 }
 
 export function useCreateInvoice(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ woId }: { woId: string }) => {
       const res = await fetch(`/api/organizations/${orgId}/invoices`, {
@@ -377,6 +397,14 @@ export function useCreateInvoice(orgId: string | undefined) {
         invoice_number: string;
         public_token: string;
       };
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: workOrderKeys.all(orgId ?? ""),
+      });
     },
     onError: (err: Error) => {
       toast.error(err.message);

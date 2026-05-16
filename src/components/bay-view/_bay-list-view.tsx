@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircle2, Maximize2 } from "lucide-react";
 import type { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "./status-pill";
@@ -114,18 +115,20 @@ export function BayListView({
                   <button
                     type="button"
                     onClick={() => onStatusClick(wo.id, "Ready for Pickup")}
-                    className="rounded-md bg-green-500/10 px-2 py-1 text-[10px] font-medium text-green-600 hover:bg-green-500/20 transition-colors"
+                    className="flex size-7 items-center justify-center rounded-md bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
+                    aria-label={t("markReady")}
                   >
-                    {t("markReady")}
+                    <CheckCircle2 className="size-3.5" />
                   </button>
                 )}
               {wo && (
                 <button
                   type="button"
                   onClick={() => onOpenDetail(wo.id)}
-                  className="rounded-md bg-primary/10 px-2 py-1 text-[10px] font-medium text-primary hover:bg-primary/20 transition-colors"
+                  className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                  aria-label={t("open")}
                 >
-                  {t("open")}
+                  <Maximize2 className="size-3.5" />
                 </button>
               )}
             </div>

@@ -6,15 +6,16 @@ import {
   updateCustomer,
 } from "@/lib/services/customer-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
-import { getCustomerVehicles } from "@/lib/services/vehicle-service";
+import { getCustomerVehicles, getCustomerWorkOrders } from "@/lib/services/vehicle-service";
 
 export const GET = createRouteHandler(async ({ orgId, params }) => {
   const { customerId } = params;
-  const [customer, vehicles] = await Promise.all([
+  const [customer, vehicles, workOrders] = await Promise.all([
     getCustomer(customerId, orgId),
     getCustomerVehicles(orgId, customerId),
+    getCustomerWorkOrders(orgId, customerId),
   ]);
-  return NextResponse.json({ data: { ...customer, vehicles } });
+  return NextResponse.json({ data: { ...customer, vehicles, work_orders: workOrders } });
 });
 
 export const PATCH = createRouteHandler(async ({ request, orgId, params, user }) => {

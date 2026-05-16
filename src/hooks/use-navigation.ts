@@ -127,6 +127,11 @@ const navigationConfig: NavGroupConfig = {
           icon: DollarSign,
         },
         {
+          labelKey: "nav.expenses",
+          href: "/dashboard/expenses",
+          icon: TrendingUp,
+        },
+        {
           labelKey: "nav.reports",
           href: "/dashboard/reports",
           icon: BarChart3,

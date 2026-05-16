@@ -2,8 +2,8 @@ import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags, cacheDurations } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
-import type { Vehicle, WorkOrder } from "@/lib/database.types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import type { Vehicle, WorkOrder } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
 import type {
   CreateVehicleParams,
@@ -459,6 +459,44 @@ export async function getCustomerVehicles(
           owner_phone: null,
         } as VehicleWithOwner;
       });
+    },
+    {
+      tags: [cacheTags.vehicles(orgId)],
+      revalidate: cacheDurations.vehicles,
+    },
+  );
+}
+
+/**
+ * Gets work orders for a specific customer with vehicle info.
+ */
+export async function getCustomerWorkOrders(
+  orgId: string,
+  customerId: string,
+): Promise<(WorkOrder & {
+  work_order_services: Record<string, unknown>[];
+  vehicles?: { plate_number: string; make: string; model: string } | null;
+})[]> {
+  const supabase = await createClient();
+
+  return withCache(
+    ["getCustomerWorkOrders", orgId, customerId],
+    async () => {
+      const { data: workOrders, error } = await supabase
+        .from("work_orders")
+        .select("*, work_order_services(*), vehicles(plate_number, make, model)")
+        .eq("organization_id", orgId)
+        .eq("customer_id", customerId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) throw new Error(error.message);
+
+      return (workOrders ?? []) as (WorkOrder & {
+        work_order_services: Record<string, unknown>[];
+        vehicles?: { plate_number: string; make: string; model: string } | null;
+      })[];
     },
     {
       tags: [cacheTags.vehicles(orgId)],

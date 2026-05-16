@@ -1,5 +1,6 @@
 "use client";
 
+import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
@@ -35,12 +36,16 @@ interface QueuedVehicleCardProps {
   workOrder: WorkOrder & { vehicle: Vehicle | null };
   isPending?: boolean;
   onQuickAssign?: (workOrderId: string) => void;
+  mechanicName?: string | null;
+  onItemClick?: (workOrder: WorkOrder & { vehicle: Vehicle | null }) => void;
 }
 
 export function QueuedVehicleCard({
   workOrder,
   isPending,
   onQuickAssign,
+  mechanicName,
+  onItemClick,
 }: QueuedVehicleCardProps) {
   const t = useTranslations("bayView");
   const {
@@ -87,23 +92,30 @@ export function QueuedVehicleCard({
       {...listeners}
       {...attributes}
       style={style}
+      onClick={() => onItemClick?.(workOrder)}
       className={cn(
-        "flex items-center gap-3 rounded-lg border border-border bg-card p-2.5 cursor-grab active:cursor-grabbing select-none transition-all touch-manipulation",
-        isDragging && "opacity-50 shadow-xl z-50",
-        !isDragging && "hover:shadow-sm hover:border-primary/30",
+        "relative flex items-center gap-4 overflow-hidden rounded-lg border border-border bg-card p-3.5 pl-3 cursor-pointer active:cursor-grabbing select-none transition-all duration-200 touch-manipulation min-h-[68px]",
+        isDragging && "opacity-50 shadow-xl z-50 scale-[1.01]",
+        !isDragging && "hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5",
         waitInfo.urgent &&
-          "border-amber-400/40 bg-amber-50/30 dark:bg-amber-950/10",
+          "border-amber-400/40 bg-amber-50/40 dark:bg-amber-950/10",
       )}
     >
       <div
         className={cn(
-          "flex items-center justify-center size-8 rounded-lg shrink-0",
+          "absolute left-0 top-0 bottom-0 w-1 rounded-l-lg transition-colors",
+          waitInfo.urgent ? "bg-amber-500" : "bg-muted-foreground/20",
+        )}
+      />
+      <div
+        className={cn(
+          "flex items-center justify-center size-10 rounded-lg shrink-0",
           waitInfo.urgent ? "bg-amber-100 dark:bg-amber-900/30" : "bg-muted",
         )}
       >
         <Car
           className={cn(
-            "size-4",
+            "size-5",
             waitInfo.urgent ? "text-amber-600" : "text-muted-foreground",
           )}
         />
@@ -121,9 +133,24 @@ export function QueuedVehicleCard({
               {v.make} {v.model}
               {v.year ? ` · ${v.year}` : ""}
             </div>
+            {mechanicName && (
+              <div className="flex items-center gap-1 mt-1">
+                <div className="size-1.5 rounded-full bg-primary/40" />
+                <span className="text-[11px] text-primary/70 truncate font-medium">
+                  {mechanicName}
+                </span>
+              </div>
+            )}
           </>
         ) : (
-          <div className="text-sm text-muted-foreground">{t("noVehicle")}</div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">
+              {workOrder.complaint || `WO ${workOrder.id.slice(0, 8)}`}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t("noVehicle")}
+            </p>
+          </div>
         )}
       </div>
       <div className="flex items-center gap-1 shrink-0">
@@ -137,11 +164,14 @@ export function QueuedVehicleCard({
               e.stopPropagation();
               onQuickAssign(workOrder.id);
             }}
-            className="flex items-center justify-center size-7 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors active:scale-90"
-            aria-label="Quick assign to first available bay"
-            title="Assign to first empty bay"
+            className="group relative flex items-center justify-center size-8 rounded-lg border border-primary/20 bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary/90 hover:shadow-md hover:shadow-primary/30 transition-all duration-200 active:scale-90"
+            aria-label={t("quickAssign")}
+            title={t("assignToFirstBay")}
           >
-            <CornerDownRight className="size-3.5" />
+            <CornerDownRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:translate-y-0.5" />
+            <span className="pointer-events-none absolute right-full mr-2 top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-md bg-popover px-2 py-1 text-[10px] font-medium text-popover-foreground shadow-lg ring-1 ring-border group-hover:block">
+              {t("quickAssign")}
+            </span>
           </button>
         )}
         <div
@@ -164,16 +194,27 @@ interface WaitingQueueProps {
   items: (WorkOrder & { vehicle: Vehicle | null })[];
   pendingWoIds?: Record<string, boolean>;
   onQuickAssign?: (workOrderId: string) => void;
+  mechanics?: { id: string; full_name: string | null }[];
+  onItemClick?: (workOrder: WorkOrder & { vehicle: Vehicle | null }) => void;
 }
 
 export function WaitingQueue({
   items,
   pendingWoIds = {},
   onQuickAssign,
+  mechanics,
+  onItemClick,
 }: WaitingQueueProps) {
+  const { setNodeRef: setQueueDropRef, isOver: isQueueOver } = useDroppable({
+    id: "waiting-queue",
+  });
   const [collapsed, setCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const t = useTranslations("bayView");
 
+  const mechanicMap = new Map(
+    (mechanics ?? []).map((m) => [m.id, m.full_name]),
+  );
   const queueIds = items.map((wo) => `vehicle-${wo.id}`);
 
   const filtered = searchQuery.trim()
@@ -200,11 +241,11 @@ export function WaitingQueue({
           <div className="flex items-center justify-center size-7 rounded-lg bg-amber-500/10">
             <Clock className="size-3.5 text-amber-500" />
           </div>
-          <span>Waiting Queue</span>
+          <span>{t("waitingQueue")}</span>
           {items.length > 0 && (
             <span
               className={cn(
-                "rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                "rounded-full px-1.5 py-0.5 text-[10px] font-bold shadow-sm",
                 items.length > 5
                   ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
                   : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300",
@@ -222,23 +263,29 @@ export function WaitingQueue({
       </button>
 
       {!collapsed && (
-        <div className="px-3 pb-3">
+        <div
+          ref={setQueueDropRef}
+          className={cn(
+            "px-3 pb-3 transition-colors duration-200",
+            isQueueOver && "bg-primary/5 rounded-lg",
+          )}
+        >
           {/* Search input */}
           {items.length > 0 && (
-            <div className="relative mb-2">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/50" />
+            <div className="relative mb-2 group">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/50 transition-colors duration-200 group-focus-within:text-primary" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search plate, make, model..."
-                className="w-full h-8 rounded-lg border border-border bg-muted/30 pl-8 pr-7 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                placeholder={t("queueSearchPlaceholder")}
+                className="w-full h-8 rounded-lg border border-border bg-muted/30 pl-7 pr-7 text-xs shadow-sm transition-all duration-200 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-background focus:shadow-md focus:shadow-primary/10"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground/50 hover:text-foreground transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground/50 hover:bg-muted hover:text-foreground transition-all duration-200"
                 >
                   <X className="size-3" />
                 </button>
@@ -246,35 +293,56 @@ export function WaitingQueue({
             </div>
           )}
 
+          {searchQuery.trim() && filtered.length > 0 && (
+            <div className="mb-2 flex justify-end">
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                <span className="hidden sm:inline">Showing </span>
+                {filtered.length}/{items.length}
+              </span>
+            </div>
+          )}
+
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-6 gap-2 text-muted-foreground/50">
-              <Car className="size-6" />
-              <p className="text-xs">No vehicles waiting</p>
+            <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-border/80 bg-gradient-to-br from-muted/40 via-background to-amber-500/5 py-8 gap-3 text-muted-foreground/70">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--muted-foreground)/0.12)_1px,transparent_0)] [background-size:14px_14px]" />
+              <div className="relative flex flex-col items-center gap-2">
+                <div className="flex items-center justify-center size-12 rounded-full bg-background shadow-sm ring-1 ring-border">
+                  <Car className="size-6 text-amber-500/80" />
+                </div>
+                <p className="text-xs font-medium">{t("noVehiclesWaiting")}</p>
+              </div>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-6 gap-2 text-muted-foreground/50">
-              <Search className="size-6" />
-              <p className="text-xs">No vehicles match your search</p>
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                className="text-[10px] text-primary hover:underline"
-              >
-                Clear search
-              </button>
+            <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-border/80 bg-gradient-to-br from-muted/40 via-background to-primary/5 py-8 gap-3 text-muted-foreground/70">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--muted-foreground)/0.12)_1px,transparent_0)] [background-size:14px_14px]" />
+              <div className="relative flex flex-col items-center gap-2">
+                <div className="flex items-center justify-center size-12 rounded-full bg-background shadow-sm ring-1 ring-border">
+                  <Search className="size-6 text-primary/70" />
+                </div>
+                <p className="text-xs font-medium">{t("noMatchSearch")}</p>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-medium text-primary hover:bg-primary/15 transition-colors"
+                >
+                  {t("clearSearch")}
+                </button>
+              </div>
             </div>
           ) : (
             <SortableContext
               items={queueIds}
               strategy={verticalListSortingStrategy}
             >
-              <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto pr-1">
+              <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
                 {filtered.map((wo) => (
                   <QueuedVehicleCard
                     key={wo.id}
                     workOrder={wo}
                     isPending={!!pendingWoIds[wo.id]}
                     onQuickAssign={onQuickAssign}
+                    mechanicName={wo.mechanic_id ? mechanicMap.get(wo.mechanic_id) ?? null : null}
+                    onItemClick={onItemClick}
                   />
                 ))}
               </div>

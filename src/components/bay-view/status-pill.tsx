@@ -35,7 +35,7 @@ export function StatusPill({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+        "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
         STATUS_STYLES[status] ?? "bg-muted text-muted-foreground",
       )}
     >
@@ -43,7 +43,7 @@ export function StatusPill({ status }: { status: string }) {
       {status === "In Progress" && (
         <span className="size-1 rounded-full bg-current animate-pulse" />
       )}
-      {status}
+      <span className="hidden sm:inline">{status}</span>
     </span>
   );
 }

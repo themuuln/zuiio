@@ -2,7 +2,6 @@
 
 import { useDraggable } from "@dnd-kit/core";
 import { User } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +15,6 @@ interface MechanicBadgeProps {
 }
 
 export function MechanicBadge({ workOrderId, mechanic }: MechanicBadgeProps) {
-  const t = useTranslations("bayView");
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: `mechanic-on-wo-${workOrderId}`,
@@ -38,9 +36,8 @@ export function MechanicBadge({ workOrderId, mechanic }: MechanicBadgeProps) {
 
   if (!mechanic) {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground/40 px-2 py-1 rounded-full bg-muted/30">
+      <div className="flex items-center justify-center size-8 rounded-full bg-muted/30 text-muted-foreground/40">
         <User className="size-3.5" />
-        <span>{t("unassigned")}</span>
       </div>
     );
   }

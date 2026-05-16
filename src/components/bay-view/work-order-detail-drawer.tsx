@@ -85,21 +85,28 @@ export function WorkOrderDetailDrawer({
   // Fetch catalog on first open
   useEffect(() => {
     if (!open || catalog.length > 0) return;
+    let cancelled = false;
     fetch("/api/profile")
       .then((r) => r.json())
       .then((d) => {
+        if (cancelled) return;
         const id = d?.organizationId ?? d?.data?.organizationId;
         if (id) {
           setOrgId(id);
           fetch(`/api/organizations/${id}/services`)
             .then((r) => r.json())
             .then((res) => {
-              if (res.data) setCatalog(res.data);
+              if (!cancelled && res.data) setCatalog(res.data);
             })
-            .catch(() => {});
+            .catch((err) => {
+              if (!cancelled) console.error("Failed to load services:", err);
+            });
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (!cancelled) console.error("Failed to fetch profile:", err);
+      });
+    return () => { cancelled = true; };
   }, [open, catalog.length]);
 
   // Fetch work order detail
@@ -181,12 +188,16 @@ export function WorkOrderDetailDrawer({
 
   useEffect(() => {
     if (!orgId || mechanics.length > 0) return;
+    let cancelled = false;
     fetch(`/api/organizations/${orgId}/reports?type=mechanics`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.data) setMechanics(d.data);
+        if (!cancelled && d.data) setMechanics(d.data);
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (!cancelled) console.error("Failed to load mechanics:", err);
+      });
+    return () => { cancelled = true; };
   }, [orgId, mechanics.length]);
 
   async function assignMechanic(mechanicId: string) {
@@ -219,7 +230,7 @@ export function WorkOrderDetailDrawer({
   async function addService(svc: ServiceCatalog) {
     if (!orgId || !workOrderId) return;
     try {
-      await fetch(
+      const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/services`,
         {
           method: "POST",
@@ -232,6 +243,11 @@ export function WorkOrderDetailDrawer({
           }),
         },
       );
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message ?? "Failed to add service");
+        return;
+      }
       fetchWo();
       onRefresh();
     } catch {
@@ -242,14 +258,15 @@ export function WorkOrderDetailDrawer({
   async function removeService(serviceId: string) {
     if (!orgId || !workOrderId) return;
     try {
-      await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}/services`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: serviceId }),
-        },
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${workOrderId}/services?serviceId=${serviceId}`,
+        { method: "DELETE" },
       );
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message ?? "Failed to remove service");
+        return;
+      }
       fetchWo();
       onRefresh();
     } catch {
@@ -262,7 +279,7 @@ export function WorkOrderDetailDrawer({
   async function addPartLine() {
     if (!orgId || !workOrderId || !newPartName.trim()) return;
     try {
-      await fetch(
+      const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/parts`,
         {
           method: "POST",
@@ -274,6 +291,11 @@ export function WorkOrderDetailDrawer({
           }),
         },
       );
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message ?? "Failed to add part");
+        return;
+      }
       fetchWo();
       onRefresh();
       setNewPartName("");
@@ -290,14 +312,15 @@ export function WorkOrderDetailDrawer({
   async function removePart(partId: string) {
     if (!orgId || !workOrderId) return;
     try {
-      await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}/parts`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: partId }),
-        },
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${workOrderId}/parts?partId=${partId}`,
+        { method: "DELETE" },
       );
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message ?? "Failed to remove part");
+        return;
+      }
       fetchWo();
       onRefresh();
     } catch {

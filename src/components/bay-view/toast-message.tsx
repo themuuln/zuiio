@@ -27,9 +27,9 @@ export function ToastMessage({
   return (
     <div
       className={cn(
-        "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-lg border px-4 py-3 shadow-lg text-sm font-medium animate-in slide-in-from-bottom-4 fade-in duration-200",
-        variant === "info" && "border-primary/30 bg-primary/10 text-primary",
-        variant === "error" && "border-red-500/30 bg-red-500/10 text-red-500",
+        "fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2.5 rounded-2xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-300 sm:bottom-10",
+        variant === "info" && "border-primary/25 bg-background/90 text-primary shadow-primary/15 ring-1 ring-primary/10",
+        variant === "error" && "border-red-500/25 bg-background/90 text-red-500 shadow-red-500/15 ring-1 ring-red-500/10",
       )}
     >
       {variant === "info" ? (
@@ -42,7 +42,7 @@ export function ToastMessage({
         <button
           type="button"
           onClick={onDismiss}
-          className="ml-2 rounded-md hover:bg-muted/50 px-1 py-0.5 text-xs"
+          className="ml-2 rounded-md px-1 py-0.5 text-xs transition-colors hover:bg-muted/70"
         >
           ✕
         </button>

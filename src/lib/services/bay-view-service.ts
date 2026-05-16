@@ -57,113 +57,128 @@ async function getOrgId(): Promise<string> {
 
 // ── Get Bay View Data ──────────────────────────────────────────
 
-export async function getBayViewData(): Promise<BayViewData> {
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+async function fetchBayViewData(orgId: string): Promise<BayViewData> {
+  const supabase = await createClient();
+  // Get branch with bay_count setting
+  const { data: branch } = await supabase
+    .from("branches")
+    .select("settings")
+    .eq("organization_id", orgId)
+    .eq("is_main", true)
+    .maybeSingle();
 
-  // Use orgId as branchId placeholder since we use is_main branch
-  return withCache(
-    ["getBayViewData", orgId],
-    async () => {
-      // Get branch with bay_count setting
-      const { data: branch } = await supabase
-        .from("branches")
-        .select("settings")
-        .eq("organization_id", orgId)
-        .eq("is_main", true)
-        .maybeSingle();
+  const bayCount =
+    ((branch?.settings as Record<string, unknown> | null)
+      ?.bay_count as number) ?? 6;
 
-      const bayCount =
-        ((branch?.settings as Record<string, unknown> | null)
-          ?.bay_count as number) ?? 6;
-
-      // Get all active (non-completed/cancelled) work orders
-      const { data: activeWOs } = await supabase
-        .from("work_orders")
-        .select(`
+  // Get all active (non-completed/cancelled) work orders
+  const { data: activeWOs } = await supabase
+    .from("work_orders")
+    .select(`
       *,
       vehicle:vehicle_id (*),
       customer:customer_id (full_name, company_name)
     `)
-        .eq("organization_id", orgId)
-        .not("status", "in", '("Completed","Cancelled")')
-        .is("deleted_at", null)
-        .order("queue_order", { ascending: true, nullsFirst: false })
-        .order("created_at", { ascending: true });
+    .eq("organization_id", orgId)
+    .not("status", "in", '("Completed","Cancelled")')
+    .is("deleted_at", null)
+    .order("queue_order", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: true });
 
-      const workOrders = activeWOs ?? [];
+  const workOrders = activeWOs ?? [];
 
-      // Batch-fetch mechanic profiles for all assigned mechanics
-      const mechanicIds = [
-        ...new Set(
-          workOrders
-            .filter((wo) => wo.mechanic_id)
-            .map((wo) => wo.mechanic_id as string),
-        ),
-      ];
+  // Batch-fetch mechanic profiles for all assigned mechanics
+  const mechanicIds = [
+    ...new Set(
+      workOrders
+        .filter((wo) => wo.mechanic_id)
+        .map((wo) => wo.mechanic_id as string),
+    ),
+  ];
 
-      const mechanicMap = new Map<
-        string,
-        { id: string; full_name: string | null; avatar_url: string | null }
-      >();
-      if (mechanicIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name, avatar_url")
-          .in("id", mechanicIds);
-        for (const p of profiles ?? []) {
-          mechanicMap.set(p.id, p);
-        }
-      }
+  const mechanicMap = new Map<
+    string,
+    { id: string; full_name: string | null; avatar_url: string | null }
+  >();
+  if (mechanicIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url")
+      .in("id", mechanicIds);
+    for (const p of profiles ?? []) {
+      mechanicMap.set(p.id, p);
+    }
+  }
 
-      // Attach mechanic info and customer name to work orders
-      const woWithDetails = workOrders.map((wo) => ({
-        ...wo,
-        mechanic: wo.mechanic_id
-          ? (mechanicMap.get(wo.mechanic_id) ?? null)
-          : null,
-        customer_name:
-          wo.customer?.company_name ?? wo.customer?.full_name ?? null,
-      }));
+  // Attach mechanic info and customer name to work orders
+  const woWithDetails = workOrders.map((wo) => ({
+    ...wo,
+    mechanic: wo.mechanic_id
+      ? (mechanicMap.get(wo.mechanic_id) ?? null)
+      : null,
+    customer_name:
+      wo.customer?.company_name ?? wo.customer?.full_name ?? null,
+  }));
 
-      // Separate bay-assigned vs waiting queue
-      const inBay = woWithDetails.filter((wo) => wo.bay_number != null);
-      const waiting = woWithDetails.filter((wo) => wo.bay_number == null);
+  // Separate bay-assigned vs waiting queue
+  const inBay = woWithDetails.filter((wo) => wo.bay_number != null);
+  const waiting = woWithDetails.filter((wo) => wo.bay_number == null);
 
-      // Build bay slots
-      const bays: BaySlotData[] = [];
-      for (let i = 1; i <= bayCount; i++) {
-        const wo = inBay.find((w) => w.bay_number === i) ?? null;
-        bays.push({
-          bayNumber: i,
-          workOrder: wo as BaySlotData["workOrder"],
-        });
-      }
+  // Build bay slots
+  const bays: BaySlotData[] = [];
+  for (let i = 1; i <= bayCount; i++) {
+    const wo = inBay.find((w) => w.bay_number === i) ?? null;
+    bays.push({
+      bayNumber: i,
+      workOrder: wo as BaySlotData["workOrder"],
+    });
+  }
 
-      // Get mechanics (users with mechanic role)
-      const { data: mechanics } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("organization_id", orgId)
-        .eq("is_active", true)
-        .order("full_name");
+  // Get mechanics (users with mechanic role)
+  const { data: mechanics } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("organization_id", orgId)
+    .eq("is_active", true)
+    .order("full_name");
 
-      const mechList = (mechanics ?? []).map((p) => ({
-        ...p,
-        current_jobs: workOrders.filter((wo) => wo.mechanic_id === p.id).length,
-      }));
+  const mechList = (mechanics ?? []).map((p) => ({
+    ...p,
+    current_jobs: workOrders.filter((wo) => wo.mechanic_id === p.id).length,
+  }));
 
-      return {
-        bayCount,
-        bays,
-        waitingQueue: waiting as BayViewData["waitingQueue"],
-        mechanics: mechList,
-      };
-    },
+  return {
+    bayCount,
+    bays,
+    waitingQueue: waiting as BayViewData["waitingQueue"],
+    mechanics: mechList,
+  };
+}
+
+/**
+ * Cached version — good for initial load and auto-refresh polling.
+ * Cache is invalidated by revalidateTag calls in mutation functions.
+ */
+export async function getBayViewData(): Promise<BayViewData> {
+  const orgId = await getOrgId();
+
+  return withCache(
+    ["getBayViewData", orgId],
+    () => fetchBayViewData(orgId),
     {
       tags: [cacheTags.bayView(orgId, orgId)],
       revalidate: cacheDurations.bayView,
     },
   );
+}
+
+/**
+ * Fresh (uncached) version — call after any mutation to ensure
+ * the UI sees the committed database state immediately.
+ */
+export async function getBayViewDataFresh(): Promise<BayViewData> {
+  const orgId = await getOrgId();
+  return fetchBayViewData(orgId);
 }
 
 // ── Assign Vehicle to Bay ─────────────────────────────────────

@@ -43,17 +43,17 @@ export function BayViewToolbar({
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/70 p-1.5 shadow-sm shadow-black/5 backdrop-blur-sm">
       {/* View mode toggle */}
-      <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-0.5">
+      <div className="flex items-center gap-1 rounded-xl bg-muted/40 p-1">
         <button
           type="button"
           onClick={() => onViewModeChange("grid")}
           className={cn(
-            "rounded-md p-1.5 transition-colors",
+            "rounded-lg p-2.5 transition-all duration-200 hover:scale-105 active:scale-95",
             viewMode === "grid"
-              ? "bg-background shadow-sm text-primary"
-              : "hover:bg-background text-muted-foreground",
+              ? "bg-background text-primary shadow-sm ring-1 ring-border/70"
+              : "text-muted-foreground hover:bg-background/80 hover:text-foreground",
           )}
           aria-label={t("gridView")}
         >
@@ -63,10 +63,10 @@ export function BayViewToolbar({
           type="button"
           onClick={() => onViewModeChange("list")}
           className={cn(
-            "rounded-md p-1.5 transition-colors",
+            "rounded-lg p-2.5 transition-all duration-200 hover:scale-105 active:scale-95",
             viewMode === "list"
-              ? "bg-background shadow-sm text-primary"
-              : "hover:bg-background text-muted-foreground",
+              ? "bg-background text-primary shadow-sm ring-1 ring-border/70"
+              : "text-muted-foreground hover:bg-background/80 hover:text-foreground",
           )}
           aria-label={t("listView")}
         >
@@ -74,28 +74,31 @@ export function BayViewToolbar({
         </button>
       </div>
 
+      {/* Subtle divider */}
+      <div className="h-8 w-px bg-border/70" aria-hidden="true" />
+
       {/* Bay count control */}
-      <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-0.5">
+      <div className="flex items-center gap-1 rounded-xl bg-muted/40 p-1">
         <button
           type="button"
           onClick={() => handleChangeCount(-1)}
           disabled={loading || bayCount <= 1}
-          className="rounded-md p-1.5 hover:bg-background transition-colors disabled:opacity-30"
+          className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:scale-105 hover:bg-background/80 hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-30"
           aria-label={t("decreaseBayCount")}
         >
-          <Minus className="size-4" />
+          <Minus className="size-3.5" />
         </button>
-        <span className="min-w-[2rem] text-center text-sm font-semibold tabular-nums">
+        <span className="flex h-9 min-w-10 items-center justify-center rounded-lg bg-background px-2 text-sm font-bold tabular-nums text-foreground shadow-sm ring-1 ring-border/70">
           {bayCount}
         </span>
         <button
           type="button"
           onClick={() => handleChangeCount(1)}
           disabled={loading || bayCount >= 50}
-          className="rounded-md p-1.5 hover:bg-background transition-colors disabled:opacity-30"
+          className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:scale-105 hover:bg-background/80 hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-30"
           aria-label={t("increaseBayCount")}
         >
-          <Plus className="size-4" />
+          <Plus className="size-3.5" />
         </button>
       </div>
 
@@ -104,9 +107,9 @@ export function BayViewToolbar({
         size="icon"
         onClick={onRefresh}
         aria-label={t("refresh")}
-        className="size-8"
+        className="size-10 rounded-xl transition-all duration-200 hover:scale-105 hover:bg-muted active:scale-95"
       >
-        <RefreshCw className="size-4" />
+        <RefreshCw className={cn("size-4", loading && "animate-spin")} />
       </Button>
     </div>
   );
