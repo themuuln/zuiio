@@ -1,6 +1,7 @@
 // ── Imports (needed for type references within this file) ────────
 import type {
   Customer,
+  CustomerNoteType,
   InventoryMovementType,
   InvoiceStatus,
   Vehicle,
@@ -16,6 +17,8 @@ export type {
   AuditLog,
   Branch,
   Customer,
+  CustomerNote,
+  CustomerNoteType,
   CustomerType,
   FeatureFlag,
   FuelType,
@@ -370,6 +373,7 @@ export interface CreateCustomerParams {
   email?: string;
   address?: string;
   notes?: string;
+  source?: string;
 }
 
 export interface UpdateCustomerParams {
@@ -382,6 +386,12 @@ export interface UpdateCustomerParams {
   email?: string;
   address?: string;
   notes?: string;
+  source?: string;
+}
+
+export interface CreateCustomerNoteParams {
+  content: string;
+  type?: CustomerNoteType;
 }
 
 export interface CreateVehicleParams {
