@@ -158,6 +158,7 @@ export async function createCustomer(
       email: params.email?.trim() || null,
       address: params.address?.trim() || null,
       notes: params.notes?.trim() || null,
+      source: params.source?.trim() || null,
       created_by: userId,
       updated_by: userId,
     })
@@ -223,6 +224,7 @@ export async function updateCustomer(
   if (params.address !== undefined)
     updates.address = params.address?.trim() || null;
   if (params.notes !== undefined) updates.notes = params.notes?.trim() || null;
+  if (params.source !== undefined) updates.source = params.source?.trim() || null;
   updates.updated_by = userId;
 
   if (Object.keys(updates).length <= 1) {

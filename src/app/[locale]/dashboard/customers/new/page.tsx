@@ -23,6 +23,7 @@ type CustomerFormState = {
   phone: string;
   email: string;
   address: string;
+  source: string;
   notes: string;
 };
 
@@ -35,6 +36,7 @@ const initialForm: CustomerFormState = {
   phone: "",
   email: "",
   address: "",
+  source: "",
   notes: "",
 };
 

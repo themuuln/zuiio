@@ -94,6 +94,12 @@ export const vehicleModelKeys = {
     [...vehicleModelKeys.all(orgId), "detail", id] as const,
 };
 
+export const customerNoteKeys = {
+  all: (orgId: string) => [...customerKeys.all(orgId), "notes"] as const,
+  list: (orgId: string, customerId: string) =>
+    [...customerNoteKeys.all(orgId), customerId] as const,
+};
+
 export const dashboardKeys = {
   all: (orgId: string) => ["organizations", orgId, "dashboard"] as const,
   summary: (orgId: string, period: string) =>
