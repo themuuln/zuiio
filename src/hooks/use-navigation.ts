@@ -3,6 +3,7 @@
 import {
   AlertTriangle,
   BarChart3,
+  Bell,
   BookOpen,
   Building2,
   Car,
@@ -79,6 +80,11 @@ const navigationConfig: NavGroupConfig = {
           icon: Users,
         },
         { labelKey: "nav.vehicles", href: "/dashboard/vehicles", icon: Car },
+        {
+          labelKey: "nav.serviceReminders",
+          href: "/dashboard/service-reminders",
+          icon: Bell,
+        },
       ],
     },
     {

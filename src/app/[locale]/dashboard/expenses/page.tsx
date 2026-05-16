@@ -151,6 +151,8 @@ export default function ExpensesPage() {
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [paidFilter, setPaidFilter] = useState<PaidFilter>("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const { data: org, isLoading: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId;
@@ -167,6 +169,8 @@ export default function ExpensesPage() {
     q: search || undefined,
     categoryId: categoryId || undefined,
     paid: paidParam,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
   });
 
   const { data: stats, isLoading: statsLoading } = useExpenseStats(orgId);
@@ -338,6 +342,25 @@ export default function ExpensesPage() {
                 </option>
               ))}
             </select>
+
+            {/* Date range */}
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="h-9 rounded-lg border border-input bg-background px-3 text-xs font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Start date"
+              title="Start date"
+            />
+            <span className="text-xs text-muted-foreground">&ndash;</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="h-9 rounded-lg border border-input bg-background px-3 text-xs font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="End date"
+              title="End date"
+            />
 
             {/* Paid / Unpaid toggle */}
             <div className="flex gap-1">
