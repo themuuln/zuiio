@@ -84,9 +84,9 @@ export function BayViewHeader({
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center justify-between border-b border-border/50 py-1.5">
+      <div className="flex items-center justify-between border-b border-border/50 py-1">
         <div className="flex items-center gap-2">
-          <h1 className="text-base font-bold tracking-tight">{t("title")}</h1>
+          <h1 className="text-base font-semibold tracking-tight">{t("title")}</h1>
           {userIsMechanic && (
             <button
               type="button"
@@ -116,11 +116,11 @@ export function BayViewHeader({
                   <button
                     type="button"
                     onClick={onShowVehicleReg}
-                    className="flex items-center justify-center size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="flex items-center justify-center size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                   />
                 }
               >
-                <Car className="size-3.5" />
+                <Car className="size-2.5" />
               </TooltipTrigger>
               <TooltipContent>{t("registerVehicle")}</TooltipContent>
             </Tooltip>
@@ -130,11 +130,11 @@ export function BayViewHeader({
                   <button
                     type="button"
                     onClick={onShowMechanicReg}
-                    className="flex items-center justify-center size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="flex items-center justify-center size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                   />
                 }
               >
-                <Wrench className="size-3.5" />
+                <Wrench className="size-2.5" />
               </TooltipTrigger>
               <TooltipContent>{t("registerMechanic")}</TooltipContent>
             </Tooltip>
@@ -144,11 +144,11 @@ export function BayViewHeader({
                   <button
                     type="button"
                     onClick={onShowServiceLookup}
-                    className="flex items-center justify-center size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="flex items-center justify-center size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                   />
                 }
               >
-                <History className="size-3.5" />
+                <History className="size-2.5" />
               </TooltipTrigger>
               <TooltipContent>{t("serviceHistory")}</TooltipContent>
             </Tooltip>
@@ -158,11 +158,11 @@ export function BayViewHeader({
                   <button
                     type="button"
                     onClick={onShowShiftReport}
-                    className="flex items-center justify-center size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="flex items-center justify-center size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                   />
                 }
               >
-                <LayoutDashboard className="size-3.5" />
+                <LayoutDashboard className="size-2.5" />
               </TooltipTrigger>
               <TooltipContent>{t("shiftReport")}</TooltipContent>
             </Tooltip>
@@ -172,11 +172,11 @@ export function BayViewHeader({
                   <button
                     type="button"
                     onClick={onShowPinSettings}
-                    className="flex items-center justify-center size-7 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="flex items-center justify-center size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                   />
                 }
               >
-                <KeyRound className="size-3.5" />
+                <KeyRound className="size-2.5" />
               </TooltipTrigger>
               <TooltipContent>{t("bayPinSettings")}</TooltipContent>
             </Tooltip>
@@ -195,7 +195,7 @@ export function BayViewHeader({
           />
 
           {(isRefreshing || hasPendingOps) && (
-            <div className="ml-1 flex items-center gap-1 rounded bg-muted/50 px-1.5 py-1 text-[9px] text-muted-foreground">
+            <div className="ml-1 flex items-center gap-1 rounded bg-muted/50 px-1.5 py-0.5 text-[9px] text-muted-foreground">
               {hasPendingOps ? (
                 <Loader2 className="size-2.5 animate-spin" />
               ) : (
@@ -207,7 +207,7 @@ export function BayViewHeader({
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-b border-border/50 py-1.5">
+      <div className="flex items-center justify-between border-b border-border/50 py-1">
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1.5 rounded-md bg-muted/40 px-2 py-0.5">
             <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px] shadow-emerald-400/50" />
@@ -261,7 +261,7 @@ export function BayViewHeader({
               disabled={seeding}
               className="rounded bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              {seeding ? t("adding") : "Confirm"}
+              {seeding ? t("adding") : t("confirm")}
             </button>
             <button
               type="button"

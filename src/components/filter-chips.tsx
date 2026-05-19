@@ -21,7 +21,7 @@ interface FilterChipsProps {
 /**
  * Horizontal row of filter chips/pills.
  * Used for status filters, type filters, tab-like selections.
- * Tablet-friendly with large touch targets (min-h-[44px]).
+ * Tablet-friendly with large touch targets (var(--ui-touch-target)).
  */
 export function FilterChips({ items, className }: FilterChipsProps) {
   return (
@@ -30,11 +30,12 @@ export function FilterChips({ items, className }: FilterChipsProps) {
         <button
           key={chip.key}
           type="button"
+          data-slot="filter-chip"
           onClick={chip.onClick}
           className={cn(
             "inline-flex items-center gap-2 rounded-full border px-4 py-2.5",
             "text-sm font-medium transition-colors",
-            "min-h-[44px]",
+            "min-h-[var(--ui-touch-target)]",
             chip.active
               ? "bg-primary text-primary-foreground border-primary"
               : "bg-background border-border text-muted-foreground hover:bg-muted",

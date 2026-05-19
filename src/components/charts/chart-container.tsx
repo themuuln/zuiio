@@ -1,7 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
-import { ResponsiveContainer } from "recharts";
+
+const ResponsiveContainer = dynamic(
+  () => import("recharts").then((m) => m.ResponsiveContainer),
+  { ssr: false },
+);
 
 interface ChartContainerProps {
   children: ReactNode;

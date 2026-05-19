@@ -25,6 +25,37 @@ import { useNavigation } from "@/hooks/use-navigation";
 import ThemeToggle from "@/components/theme-toggle";
 import UserMenu from "@/components/user-menu";
 
+function SidebarItemList({
+  items,
+  t,
+  isActive,
+}: {
+  items: Array<{
+    href: string;
+    labelKey: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }>;
+  t: (key: string) => string;
+  isActive: (href: string) => boolean;
+}) {
+  return items.map((item) => {
+    const Icon = item.icon;
+    return (
+      <SidebarMenuItem key={item.href}>
+        <SidebarMenuButton
+          size="sm"
+          render={<Link href={item.href} />}
+          isActive={isActive(item.href)}
+          tooltip={t(item.labelKey)}
+        >
+          <Icon />
+          <span>{t(item.labelKey)}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  });
+}
+
 export function AppSidebar() {
   const t = useTranslations();
   const { standalone, groups, settingsGroup, isActive } = useNavigation();
@@ -45,44 +76,20 @@ export function AppSidebar() {
 
   const logoUrl = org?.logo_url;
 
-  function renderItems(
-    items: Array<{
-      href: string;
-      labelKey: string;
-      icon: React.ComponentType<{ className?: string }>;
-    }>,
-  ) {
-    return items.map((item) => {
-      const Icon = item.icon;
-      return (
-        <SidebarMenuItem key={item.href}>
-          <SidebarMenuButton
-            size="sm"
-            render={<Link href={item.href} />}
-            isActive={isActive(item.href)}
-            tooltip={t(item.labelKey)}
-          >
-            <Icon />
-            <span>{t(item.labelKey)}</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      );
-    });
-  }
-
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center justify-between gap-2 px-1 py-0.5 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-2">
           <Link href="/dashboard" className="flex items-center gap-2">
             {logoUrl ? (
+              // TODO: use next/image for optimized images
               <img
                 src={logoUrl}
                 alt={org?.name ?? "TOLOM"}
                 className="size-7 rounded-md object-contain"
               />
             ) : (
-              <span className="flex size-7 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">
+              <span className="flex size-7 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground text-xs font-semibold">
                 T
               </span>
             )}
@@ -96,21 +103,27 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup className="p-1">
           <SidebarGroupContent>
-            <SidebarMenu>{renderItems(standalone)}</SidebarMenu>
+            <SidebarMenu>
+              <SidebarItemList items={standalone} t={t} isActive={isActive} />
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         {groups.map((group) => (
           <SidebarGroup key={group.labelKey} className="p-1">
             <SidebarGroupLabel className="h-6">{t(group.labelKey)}</SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>{renderItems(group.children)}</SidebarMenu>
+              <SidebarMenu>
+                <SidebarItemList items={group.children} t={t} isActive={isActive} />
+              </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
         <SidebarGroup className="p-1">
           <SidebarGroupLabel className="h-6">{t(settingsGroup.labelKey)}</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>{renderItems(settingsGroup.children)}</SidebarMenu>
+            <SidebarMenu>
+              <SidebarItemList items={settingsGroup.children} t={t} isActive={isActive} />
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

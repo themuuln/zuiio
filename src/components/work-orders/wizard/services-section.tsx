@@ -6,6 +6,7 @@ import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { NumericKeypad } from "@/components/ui/numeric-keypad";
 import { formatCurrency } from "@/lib/utils";
 import { useWizardContext } from "./wizard-context";
 
@@ -39,7 +40,7 @@ export function ServicesSection() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="ml-auto h-9 min-h-[36px]"
+                  className="ml-auto min-h-[var(--ui-touch-target)]"
                   onClick={ctx.addAllFromLastVisit}
                 >
                   <Check className="size-3.5 mr-1" />
@@ -48,7 +49,7 @@ export function ServicesSection() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-9 min-h-[36px]"
+                  className="min-h-[var(--ui-touch-target)]"
                   onClick={() => ctx.setShowLastVisitSuggestions(false)}
                 >
                   {t("dismiss")}
@@ -74,7 +75,8 @@ export function ServicesSection() {
                           ctx.addService(catItem);
                         }
                       }}
-                      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors min-h-[44px] ${
+                      data-slot="touch-target"
+                      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
                         isAdded
                           ? "border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950/20 dark:text-green-400"
                           : "border-amber-200 bg-white hover:bg-amber-50 dark:border-amber-700 dark:bg-amber-950/20 dark:hover:bg-amber-900/30"
@@ -114,8 +116,9 @@ export function ServicesSection() {
                 )
                 .slice(0, 12)
                 .map((svc) => {
+                  const vehiclePrice = ctx.vehicleServicePrices[svc.id];
                   const history = ctx.priceHistory[svc.id];
-                  const last = history?.last_price ?? Number(svc.default_price);
+                  const last = vehiclePrice ?? history?.last_price ?? Number(svc.default_price);
                   const isAdded = ctx.serviceLines.some(
                     (s) => s.service_catalog_id === svc.id,
                   );
@@ -147,7 +150,8 @@ export function ServicesSection() {
                           {formatCurrency(Number(svc.default_price))}
                         </span>
                         {last !== Number(svc.default_price) && last > 0 && (
-                          <span className="ml-2 text-xs text-amber-600">
+                          <span className={`ml-2 text-xs ${Number(svc.default_price) <= last ? 'text-green-600' : 'text-amber-600'}`}>
+                            {Number(svc.default_price) <= last ? '✓ ' : '↑ '}
                             {t("lastSold", { price: formatCurrency(last) })}
                           </span>
                         )}
@@ -184,55 +188,61 @@ export function ServicesSection() {
                   <div className="flex-1 min-w-[120px]">
                     <p className="text-sm font-medium truncate">{svc.name}</p>
                     {svc.last_price && (
-                      <p className="text-[11px] text-amber-600">
+                      <p className={`text-[11px] ${svc.base_price <= svc.last_price ? 'text-green-600' : 'text-amber-600'}`}>
+                        {svc.base_price <= svc.last_price ? '✓ ' : '↑ '}
                         {t("lastSoldShort", {
                           price: formatCurrency(svc.last_price),
                         })}
                       </p>
                     )}
                   </div>
-                  <Input
-                    type="number"
+                  <NumericKeypad
                     value={svc.quantity}
-                    onChange={(e) =>
+                    onChange={(val) =>
                       ctx.updateService(
                         idx,
                         "quantity",
-                        parseInt(e.target.value, 10) || 1,
+                        Math.round(val) || 1,
                       )
                     }
-                    className="w-16 h-11 text-center"
-                    min={1}
-                    aria-label="Quantity"
-                  />
-                  <Input
-                    type="number"
-                    value={svc.base_price}
-                    onChange={(e) =>
-                      ctx.updateService(
-                        idx,
-                        "base_price",
-                        parseFloat(e.target.value) || 0,
-                      )
-                    }
-                    className="w-28 h-11"
-                    aria-label="Price"
-                  />
-                  <div className="flex items-center gap-1">
+                  >
                     <Input
-                      type="number"
-                      value={svc.discount_amount_mnt || ""}
-                      onChange={(e) =>
+                      value={svc.quantity}
+                      className="w-16 h-11 text-center cursor-pointer"
+                      min={1}
+                      aria-label="Quantity"
+                    />
+                  </NumericKeypad>
+                  <NumericKeypad
+                    value={svc.base_price}
+                    onChange={(val) =>
+                      ctx.updateService(idx, "base_price", val)
+                    }
+                  >
+                    <Input
+                      value={svc.base_price}
+                      className="w-28 h-11 cursor-pointer"
+                      aria-label="Price"
+                    />
+                  </NumericKeypad>
+                  <div className="flex items-center gap-1">
+                    <NumericKeypad
+                      value={svc.discount_amount_mnt}
+                      onChange={(val) =>
                         ctx.updateService(
                           idx,
                           "discount_amount_mnt",
-                          parseFloat(e.target.value) || 0,
+                          val,
                         )
                       }
-                      className="w-24 h-11"
-                      placeholder={t("discount")}
-                      aria-label="Discount amount"
-                    />
+                    >
+                      <Input
+                        value={svc.discount_amount_mnt || ""}
+                        className="w-24 h-11 cursor-pointer"
+                        placeholder={t("discount")}
+                        aria-label="Discount amount"
+                      />
+                    </NumericKeypad>
                   </div>
                   <span className="w-24 text-right text-sm font-semibold tabular-nums shrink-0">
                     {formatCurrency(svc.final_price)}
@@ -240,7 +250,8 @@ export function ServicesSection() {
                   <button
                     type="button"
                     onClick={() => ctx.removeService(idx)}
-                    className="p-2.5 text-destructive hover:bg-destructive/10 rounded-lg shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                    data-slot="touch-target"
+                    className="p-2.5 text-destructive hover:bg-destructive/10 rounded-lg shrink-0 min-w-[44px] flex items-center justify-center"
                     aria-label="Remove service"
                   >
                     <Trash2 className="size-5" />

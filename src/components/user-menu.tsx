@@ -12,11 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useRouter } from "@/lib/i18n/navigation";
 import type { UserProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -34,7 +29,7 @@ interface UserMenuProps {
 
 export default function UserMenu({ collapsed }: UserMenuProps) {
   const t = useTranslations("userMenu");
-  const router = useRouter();
+  const { push, refresh } = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -58,8 +53,8 @@ export default function UserMenu({ collapsed }: UserMenuProps) {
 
   const handleSignOut = async () => {
     await fetch("/auth/signout", { method: "POST" });
-    router.push("/auth/login");
-    router.refresh();
+    push("/auth/login");
+    refresh();
   };
 
   const displayName = profile?.fullName ?? "User";
@@ -87,40 +82,29 @@ export default function UserMenu({ collapsed }: UserMenuProps) {
     );
   }
 
-  const triggerButton = (
-    <DropdownMenuTrigger
-      className={cn(
-        "flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors cursor-pointer",
-        "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-        collapsed && "lg:w-auto lg:justify-center",
-      )}
-    >
-      <Avatar className="size-8">
-        <AvatarFallback>{initials}</AvatarFallback>
-      </Avatar>
-      {!collapsed && (
-        <div className="flex-1 truncate text-left">
-          <div className="text-sm font-medium leading-none">
-            {displayName}
-          </div>
-          <div className="text-xs text-sidebar-foreground/60 truncate">
-            {email}
-          </div>
-        </div>
-      )}
-    </DropdownMenuTrigger>
-  );
-
   return (
     <DropdownMenu>
-      {collapsed ? (
-        <Tooltip>
-          <TooltipTrigger render={triggerButton} />
-          <TooltipContent side="right">{displayName}</TooltipContent>
-        </Tooltip>
-      ) : (
-        triggerButton
-      )}
+      <DropdownMenuTrigger
+        className={cn(
+          "flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors cursor-pointer",
+          "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          collapsed && "lg:w-auto lg:justify-center",
+        )}
+      >
+        <Avatar className="size-8">
+          <AvatarFallback>{initials}</AvatarFallback>
+        </Avatar>
+        {!collapsed && (
+          <div className="flex-1 truncate text-left">
+            <div className="text-sm font-medium leading-none">
+              {displayName}
+            </div>
+            <div className="text-xs text-sidebar-foreground/60 truncate">
+              {email}
+            </div>
+          </div>
+        )}
+      </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
         className="w-56 max-w-[calc(100vw-2rem)]"

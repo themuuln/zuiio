@@ -15,7 +15,7 @@ export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
         {items.map((item, i) => {
           const isLast = i === items.length - 1;
           return (
-            <li key={`${item.label}-${i}`} className="flex items-center gap-1">
+            <li key={item.label} className="flex items-center gap-1">
               {i > 0 && (
                 <ChevronRight className="size-3 shrink-0 text-muted-foreground/50" aria-hidden="true" />
               )}

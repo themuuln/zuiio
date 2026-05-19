@@ -34,17 +34,18 @@ export function VehicleSelect({
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  // Search vehicles
+  // Search vehicles — normalize plate input (strip separators, uppercase)
   const handleSearch = (q: string) => {
+    const normalized = q.replace(/[\s-]/g, "").toUpperCase();
     setVehicleSearch(q);
-    if (!orgId || !q || q.length < 2) {
+    if (!orgId || !normalized || normalized.length < 2) {
       setVehicles([]);
       return;
     }
     setSearching(true);
     const url = customerId
-      ? `/api/organizations/${orgId}/vehicles?customer=${customerId}&plate=${encodeURIComponent(q)}`
-      : `/api/organizations/${orgId}/vehicles?plate=${encodeURIComponent(q)}`;
+      ? `/api/organizations/${orgId}/vehicles?customer=${customerId}&plate=${encodeURIComponent(normalized)}`
+      : `/api/organizations/${orgId}/vehicles?plate=${encodeURIComponent(normalized)}`;
     fetch(url)
       .then((r) => r.json())
       .then((d) => setVehicles(d.data ?? []))

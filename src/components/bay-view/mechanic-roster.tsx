@@ -33,7 +33,7 @@ export function MechanicRoster({ mechanics }: MechanicRosterProps) {
             <Users className="size-3 text-blue-600 dark:text-blue-400" />
           </div>
           <span>{t("mechanics")}</span>
-          <span className="rounded-full bg-muted/60 px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground">
+          <span className="rounded-full bg-muted/60 px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground">
             {mechanics.length}
           </span>
         </span>

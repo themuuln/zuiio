@@ -105,6 +105,7 @@ export function QueueAssignmentDialog({
       <div
         ref={dialogRef}
         tabIndex={-1}
+        role="dialog"
         className="mx-4 w-full max-w-xl rounded-2xl border border-border bg-card shadow-2xl outline-none"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={() => {}}
@@ -118,10 +119,10 @@ export function QueueAssignmentDialog({
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2.5">
-                  <h2 className="text-xl font-bold tracking-tight">
+                  <h2 className="text-xl font-semibold tracking-tight">
                     {v?.plate_number ?? t("noVehicle")}
                   </h2>
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
                     {waitText}
                   </span>
                 </div>
@@ -177,7 +178,7 @@ export function QueueAssignmentDialog({
               </div>
               {availableBays.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/20 py-8 text-center">
-                  <span className="text-3xl font-bold text-muted-foreground/30">
+                  <span className="text-3xl font-semibold text-muted-foreground/30">
                     {bays.length}
                   </span>
                   <span className="text-xs text-muted-foreground/60 mt-1">
@@ -196,7 +197,7 @@ export function QueueAssignmentDialog({
                         onClick={() => isAvailable && setSelectedBay(bay.bayNumber)}
                         disabled={!isAvailable}
                         className={cn(
-                          "flex flex-col items-center gap-1.5 rounded-xl border-2 px-3 py-3.5 text-center transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                          "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3.5 text-center transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                           isSelected
                             ? "border-primary bg-primary/10 shadow-sm shadow-primary/20 ring-1 ring-primary/20"
                             : isAvailable
@@ -206,7 +207,7 @@ export function QueueAssignmentDialog({
                       >
                         <span
                           className={cn(
-                            "text-lg font-bold tabular-nums",
+                            "text-lg font-semibold tabular-nums",
                             isSelected
                               ? "text-primary"
                               : isAvailable
@@ -270,7 +271,7 @@ export function QueueAssignmentDialog({
                       )}
                     >
                       <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted-foreground/10 text-muted-foreground">
-                        <span className="text-xs font-bold">—</span>
+                        <span className="text-xs font-semibold">&ndash;</span>
                       </div>
                       <div className="min-w-0">
                         <span className="text-sm font-medium">
@@ -302,7 +303,7 @@ export function QueueAssignmentDialog({
                         >
                           <div
                             className={cn(
-                              "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+                              "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
                               isSelected
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-muted-foreground/10 text-muted-foreground",

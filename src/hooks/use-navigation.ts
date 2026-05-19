@@ -158,7 +158,7 @@ const navigationConfig: NavGroupConfig = {
 };
 
 const settingsGroup: NavGroup = {
-  labelKey: "nav.group.settings",
+  labelKey: "nav.group.user",
   icon: Settings,
   children: [
     {

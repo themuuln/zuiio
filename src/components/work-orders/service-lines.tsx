@@ -106,7 +106,7 @@ export function ServiceLines({
                         {formatCurrency(Number(svc.default_price))}
                       </span>
                       {last !== Number(svc.default_price) && last > 0 && (
-                        <span className="ml-2 text-xs text-amber-600">
+                        <span className={`ml-2 text-xs ${Number(svc.default_price) <= last ? 'text-green-600' : 'text-amber-600'}`}>
                           last: {formatCurrency(last)}
                         </span>
                       )}
@@ -135,8 +135,8 @@ export function ServiceLines({
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{svc.name}</p>
                     {svc.last_price && (
-                      <p className="text-[11px] text-amber-600">
-                        Last sold: {formatCurrency(svc.last_price)}
+                      <p className={`text-[11px] ${svc.base_price <= svc.last_price ? 'text-green-600' : 'text-amber-600'}`}>
+                        {svc.base_price <= svc.last_price ? '✓' : '↑'} Last: {formatCurrency(svc.last_price)}
                       </p>
                     )}
                   </div>
@@ -161,7 +161,7 @@ export function ServiceLines({
                     variant="ghost"
                     size="icon"
                     onClick={() => onRemove(idx)}
-                    className="size-8 shrink-0"
+                    className="shrink-0 min-w-[44px] min-h-[var(--ui-touch-target)]"
                     aria-label={`Remove ${svc.name}`}
                   >
                     <Trash2 className="size-4 text-destructive" />

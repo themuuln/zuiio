@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Camera, Loader2, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
@@ -105,13 +106,16 @@ export default function OrgLogoUpload({
     <div className="flex items-center gap-4">
       <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
         {logoUrl ? (
-          <img
+          <Image
             src={logoUrl}
             alt={`${orgName} logo`}
+            width={64}
+            height={64}
             className="size-full object-contain p-1"
+            unoptimized
           />
         ) : (
-          <span className="text-lg font-bold text-muted-foreground">
+          <span className="text-lg font-semibold text-muted-foreground">
             {orgName.charAt(0).toUpperCase()}
           </span>
         )}

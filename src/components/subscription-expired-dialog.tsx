@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { AlertTriangle, Building2, Copy, Landmark, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -22,9 +23,11 @@ interface BankOption {
 
 function KhanbankLogo() {
   return (
-    <img
+    <Image
       src="/khanbank-logo.png"
       alt="Khanbank"
+      width={20}
+      height={20}
       className="size-5 shrink-0 rounded"
     />
   );
@@ -32,9 +35,11 @@ function KhanbankLogo() {
 
 function TdbLogo() {
   return (
-    <img
+    <Image
       src="/tdb-logo.png"
       alt="TDB"
+      width={20}
+      height={20}
       className="size-5 shrink-0 rounded"
     />
   );
@@ -70,19 +75,23 @@ export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
   const [renewed, setRenewed] = useState(false);
 
   useEffect(() => {
+    const abort = new AbortController();
     async function check() {
       try {
         const res = await fetch(
           `/api/organizations/${orgId}/subscription/status`,
+          { signal: abort.signal },
         );
         const body = await res.json();
-        if (body.data) setStatus(body.data as SubscriptionStatus);
-      } catch {
+        if (!abort.signal.aborted && body.data) setStatus(body.data as SubscriptionStatus);
+      } catch (e) {
+        if (!abort.signal.aborted) console.error(e);
       } finally {
-        setLoading(false);
+        if (!abort.signal.aborted) setLoading(false);
       }
     }
     check();
+    return () => abort.abort();
   }, [orgId]);
 
   if (loading) {

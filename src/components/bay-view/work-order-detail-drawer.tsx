@@ -17,6 +17,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "@/lib/i18n/navigation";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,18 +30,16 @@ import {
 } from "@/components/ui/sheet";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
 import { cn, formatMNT } from "@/lib/utils";
+import {
+  getWorkOrderServicesWithIntervals,
+  savePostServiceData,
+  saveCompletionData,
+} from "@/lib/services/post-service-service";
+import { PostServiceForm } from "./post-service-form";
+import type { PostServiceFormData } from "./post-service-form";
+import { PickupCompleteForm } from "./pickup-complete-form";
+import type { PickupCompleteData } from "./pickup-complete-form";
 import { StatusPill } from "./status-pill";
-
-// ── Helpers ──────────────────────────────────────────────────
-
-const STATUSES = [
-  "New",
-  "Diagnosing",
-  "In Progress",
-  "Ready for Pickup",
-  "Completed",
-  "Cancelled",
-] as const;
 
 // ── Props ────────────────────────────────────────────────────
 
@@ -60,6 +59,7 @@ export function WorkOrderDetailDrawer({
   onRefresh,
 }: Props) {
   const t = useTranslations("bayView");
+  const { push } = useRouter();
   const [wo, setWo] = useState<WorkOrderDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,44 +75,71 @@ export function WorkOrderDetailDrawer({
   const [newPartQty, setNewPartQty] = useState(1);
   const [newPartPrice, setNewPartPrice] = useState(0);
 
+  // Post-service form state
+  const [showPostServiceForm, setShowPostServiceForm] = useState(false);
+  const [postFormServices, setPostFormServices] = useState<
+    Array<{
+      id: string;
+      service_name: string;
+      service_catalog_id: string | null;
+      catalog_interval_months: number | null;
+      catalog_interval_km: number | null;
+    }>
+  >([]);
+
+  // Pickup complete form state
+  const [showPickupForm, setShowPickupForm] = useState(false);
+
   // Status change confirmation
   const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
   const [statusNotes, setStatusNotes] = useState("");
 
   // Org ID — extract from WO data
-  const [orgId, setOrgId] = useState<string | null>(null);
+  const orgIdRef = useRef<string | null>(null);
 
   // Fetch catalog on first open
+  // biome-ignore lint/correctness/useExhaustiveDependencies: orgIdRef is a ref, read at call time
   useEffect(() => {
     if (!open || catalog.length > 0) return;
-    let cancelled = false;
-    fetch("/api/profile")
+    const abort = new AbortController();
+    const signal = abort.signal;
+    fetch("/api/profile", { signal })
       .then((r) => r.json())
       .then((d) => {
-        if (cancelled) return;
+        if (signal.aborted) return;
         const id = d?.organizationId ?? d?.data?.organizationId;
         if (id) {
-          setOrgId(id);
-          fetch(`/api/organizations/${id}/services`)
+          orgIdRef.current = id;
+          fetch(`/api/organizations/${id}/services`, { signal })
             .then((r) => r.json())
             .then((res) => {
-              if (!cancelled && res.data) setCatalog(res.data);
+              if (!signal.aborted && res.data) setCatalog(res.data);
             })
             .catch((err) => {
-              if (!cancelled) console.error("Failed to load services:", err);
+              if (!signal.aborted) console.error("Failed to load services:", err);
+            });
+          fetch(`/api/organizations/${id}/reports?type=mechanics`, { signal })
+            .then((r) => r.json())
+            .then((d) => {
+              if (!signal.aborted && d.data) setMechanics(d.data);
+            })
+            .catch((err) => {
+              if (!signal.aborted) console.error("Failed to load mechanics:", err);
             });
         }
       })
       .catch((err) => {
-        if (!cancelled) console.error("Failed to fetch profile:", err);
+        if (!signal.aborted) console.error("Failed to fetch profile:", err);
       });
-    return () => { cancelled = true; };
+    return () => abort.abort();
   }, [open, catalog.length]);
 
   // Fetch work order detail
-  const fetchWo = useCallback(async () => {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: orgIdRef is stable, .current read at call time
+  const fetchWo = useCallback(async (silent = false) => {
+    const orgId = orgIdRef.current;
     if (!workOrderId || !orgId) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const res = await fetch(
@@ -129,7 +156,7 @@ export function WorkOrderDetailDrawer({
     } finally {
       setLoading(false);
     }
-  }, [workOrderId, orgId]);
+  }, [workOrderId]);
 
   useEffect(() => {
     if (open && workOrderId) fetchWo();
@@ -138,9 +165,9 @@ export function WorkOrderDetailDrawer({
   // ── Status change ────────────────────────────────────────
 
   async function changeStatus(newStatus: string) {
+    const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
 
-    // Require confirmation for Completed/Cancelled
     if (
       (newStatus === "Completed" || newStatus === "Cancelled") &&
       confirmStatus !== newStatus
@@ -186,21 +213,8 @@ export function WorkOrderDetailDrawer({
     { id: string; full_name: string }[]
   >([]);
 
-  useEffect(() => {
-    if (!orgId || mechanics.length > 0) return;
-    let cancelled = false;
-    fetch(`/api/organizations/${orgId}/reports?type=mechanics`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (!cancelled && d.data) setMechanics(d.data);
-      })
-      .catch((err) => {
-        if (!cancelled) console.error("Failed to load mechanics:", err);
-      });
-    return () => { cancelled = true; };
-  }, [orgId, mechanics.length]);
-
   async function assignMechanic(mechanicId: string) {
+    const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
     setSaving(true);
     try {
@@ -228,6 +242,7 @@ export function WorkOrderDetailDrawer({
   // ── Services ─────────────────────────────────────────────
 
   async function addService(svc: ServiceCatalog) {
+    const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
     try {
       const res = await fetch(
@@ -248,7 +263,7 @@ export function WorkOrderDetailDrawer({
         toast.error(json.error.message ?? "Failed to add service");
         return;
       }
-      fetchWo();
+      await fetchWo(true);
       onRefresh();
     } catch {
       toast.error("Failed to add service");
@@ -256,6 +271,7 @@ export function WorkOrderDetailDrawer({
   }
 
   async function removeService(serviceId: string) {
+    const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
     try {
       const res = await fetch(
@@ -267,7 +283,7 @@ export function WorkOrderDetailDrawer({
         toast.error(json.error.message ?? "Failed to remove service");
         return;
       }
-      fetchWo();
+      await fetchWo(true);
       onRefresh();
     } catch {
       toast.error("Failed to remove service");
@@ -277,6 +293,7 @@ export function WorkOrderDetailDrawer({
   // ── Parts ────────────────────────────────────────────────
 
   async function addPartLine() {
+    const orgId = orgIdRef.current;
     if (!orgId || !workOrderId || !newPartName.trim()) return;
     try {
       const res = await fetch(
@@ -296,7 +313,7 @@ export function WorkOrderDetailDrawer({
         toast.error(json.error.message ?? "Failed to add part");
         return;
       }
-      fetchWo();
+      await fetchWo(true);
       onRefresh();
       setNewPartName("");
       setNewPartQty(1);
@@ -310,6 +327,7 @@ export function WorkOrderDetailDrawer({
   const [showAddPart, setShowAddPart] = useState(false);
 
   async function removePart(partId: string) {
+    const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
     try {
       const res = await fetch(
@@ -321,7 +339,7 @@ export function WorkOrderDetailDrawer({
         toast.error(json.error.message ?? "Failed to remove part");
         return;
       }
-      fetchWo();
+      await fetchWo(true);
       onRefresh();
     } catch {
       toast.error("Failed to remove part");
@@ -333,6 +351,7 @@ export function WorkOrderDetailDrawer({
   const [creatingInvoice, setCreatingInvoice] = useState(false);
 
   async function generateInvoice() {
+    const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
     setCreatingInvoice(true);
     try {
@@ -346,7 +365,7 @@ export function WorkOrderDetailDrawer({
         toast.error(json.error.message);
       } else {
         toast.success(`Invoice ${json.data.invoice_number} created`);
-        window.open(`/invoice/${json.data.public_token}`, "_blank");
+        push(`/invoice/${json.data.public_token}`);
       }
     } catch {
       toast.error("Failed to create invoice");
@@ -362,10 +381,113 @@ export function WorkOrderDetailDrawer({
   const partsTotal =
     wo?.parts?.reduce((s, p) => s + Number(p.final_price), 0) ?? 0;
 
+  // ── Post-service form handlers ────────────────────────────
+
+  async function handleReadyForPickup() {
+    if (!workOrderId || !wo?.vehicle_id) {
+      // Fallback: direct status change
+      changeStatus("Ready for Pickup");
+      return;
+    }
+
+    try {
+      const services = await getWorkOrderServicesWithIntervals(workOrderId);
+      setPostFormServices(services);
+      setShowPostServiceForm(true);
+    } catch {
+      changeStatus("Ready for Pickup");
+    }
+  }
+
+  async function handlePostServiceFormSubmit(data: PostServiceFormData) {
+    if (!workOrderId || !wo?.vehicle_id) return;
+    setSaving(true);
+
+    try {
+      await savePostServiceData({
+        workOrderId,
+        vehicleId: wo.vehicle_id as string,
+        odometerReading: data.odometerReading,
+        recommendations: data.recommendations,
+        mechanicNotes: data.mechanicNotes,
+      });
+
+      // Then update status
+      const orgId = orgIdRef.current;
+      if (!orgId) return;
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${workOrderId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            status: "Ready for Pickup",
+            notes: data.mechanicNotes || undefined,
+          }),
+        },
+      );
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message ?? "Failed to update status");
+      } else {
+        setWo(json.data);
+        toast.success("Ready for Pickup — recommendations saved");
+        onRefresh();
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save post-service data",
+      );
+    } finally {
+      setSaving(false);
+      setShowPostServiceForm(false);
+      setPostFormServices([]);
+    }
+  }
+
+  async function handlePickupSubmit(data: PickupCompleteData) {
+    const orgId = orgIdRef.current;
+    if (!orgId || !workOrderId || !wo?.vehicle_id) return;
+    setSaving(true);
+
+    try {
+      await saveCompletionData({
+        workOrderId,
+        vehicleId: wo.vehicle_id as string,
+        odometerReading: null,
+        customerSatisfaction: data.customerSatisfaction,
+        customerFeedback: data.customerFeedback,
+        nextAppointmentDate: data.nextAppointmentDate,
+      });
+
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${workOrderId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Completed" }),
+        },
+      );
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message ?? "Failed to complete");
+      } else {
+        setWo(json.data);
+        toast.success("Work order completed");
+        onRefresh();
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to complete work order",
+      );
+    } finally {
+      setSaving(false);
+      setShowPickupForm(false);
+    }
+  }
+
   // ── Available status transitions ────────────────────────
 
-  const canComplete =
-    wo?.status === "In Progress" || wo?.status === "Ready for Pickup";
   const canCancel =
     wo?.status && !["Completed", "Cancelled"].includes(wo.status);
   const canInvoice =
@@ -500,7 +622,7 @@ export function WorkOrderDetailDrawer({
                         {t("services")}
                       </span>
                       {(wo.services?.length ?? 0) > 0 && (
-                        <span className="rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 text-[10px] font-bold">
+                        <span className="rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 text-[10px] font-semibold">
                           {wo.services?.length}
                         </span>
                       )}
@@ -515,7 +637,7 @@ export function WorkOrderDetailDrawer({
                         onChange={(e) => setServiceSearch(e.target.value)}
                         placeholder={t("searchServices")}
                         className="h-8 text-xs"
-                        autoFocus
+                        
                       />
                       {serviceSearch && (
                         <div className="absolute top-full left-0 right-0 z-10 mt-1 border rounded-lg bg-background shadow-lg max-h-40 overflow-y-auto">
@@ -561,7 +683,7 @@ export function WorkOrderDetailDrawer({
                               .toLowerCase()
                               .includes(serviceSearch.toLowerCase()),
                           ).length === 0 && (
-                            <div className="px-3 py-3 text-xs text-muted-foreground text-center">
+                            <div className="p-3 text-xs text-muted-foreground text-center">
                               {t("noMatchService")}
                             </div>
                           )}
@@ -591,7 +713,7 @@ export function WorkOrderDetailDrawer({
                         {wo.services?.map((svc) => (
                           <div
                             key={svc.id}
-                            className="group flex items-center gap-2 rounded-md px-1.5 py-1.5 hover:bg-muted/40 transition-colors"
+                            className="group flex items-center gap-2 rounded-md p-1.5 hover:bg-muted/40 transition-colors"
                           >
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">
@@ -636,7 +758,7 @@ export function WorkOrderDetailDrawer({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5">
                       <div className="flex items-center justify-center size-5 rounded-md bg-amber-500/10">
-                        <span className="text-[10px] font-bold text-amber-600">
+                        <span className="text-[10px] font-semibold text-amber-600">
                           P
                         </span>
                       </div>
@@ -644,7 +766,7 @@ export function WorkOrderDetailDrawer({
                         {t("parts")}
                       </span>
                       {(wo.parts?.length ?? 0) > 0 && (
-                        <span className="rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 text-[10px] font-bold">
+                        <span className="rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 text-[10px] font-semibold">
                           {wo.parts?.length}
                         </span>
                       )}
@@ -659,7 +781,7 @@ export function WorkOrderDetailDrawer({
                         onChange={(e) => setNewPartName(e.target.value)}
                         placeholder={t("partName")}
                         className="h-8 text-xs"
-                        autoFocus
+                        
                       />
                       <div className="flex gap-1.5">
                         <Input
@@ -712,7 +834,7 @@ export function WorkOrderDetailDrawer({
                         {wo.parts?.map((part) => (
                           <div
                             key={part.id}
-                            className="group flex items-center gap-2 rounded-md px-1.5 py-1.5 hover:bg-muted/40 transition-colors"
+                            className="group flex items-center gap-2 rounded-md p-1.5 hover:bg-muted/40 transition-colors"
                           >
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">
@@ -776,7 +898,7 @@ export function WorkOrderDetailDrawer({
                       </span>
                     </div>
                     <Separator className="bg-primary/10" />
-                    <div className="flex justify-between text-sm font-bold">
+                    <div className="flex justify-between text-sm font-semibold">
                       <span>{t("grandTotal")}</span>
                       <span className="tabular-nums text-primary">
                         {formatMNT(Number(wo.total))}
@@ -999,7 +1121,7 @@ export function WorkOrderDetailDrawer({
                 {wo.status === "In Progress" && (
                   <Button
                     className="flex-1 h-9 text-xs font-semibold"
-                    onClick={() => changeStatus("Ready for Pickup")}
+                    onClick={handleReadyForPickup}
                     disabled={saving}
                   >
                     <CheckCircle2 className="size-3.5" />
@@ -1009,7 +1131,7 @@ export function WorkOrderDetailDrawer({
                 {wo.status === "Ready for Pickup" && (
                   <Button
                     className="flex-1 h-9 text-xs font-semibold"
-                    onClick={() => changeStatus("Completed")}
+                    onClick={() => setShowPickupForm(true)}
                     disabled={saving}
                   >
                     <CheckCircle2 className="size-3.5" />
@@ -1067,6 +1189,33 @@ export function WorkOrderDetailDrawer({
             </div>
           </div>
         )}
+      {/* Post-service form overlay inside drawer */}
+      {showPostServiceForm && wo && (
+        <PostServiceForm
+          woId={workOrderId ?? ""}
+          vehicleId={(wo.vehicle_id as string) ?? ""}
+          vehiclePlate={(wo.vehicle as { plate_number?: string })?.plate_number ?? ""}
+          currentOdometer={(wo.vehicle as { odometer?: number | null })?.odometer ?? null}
+          services={postFormServices}
+          newStatus="Ready for Pickup"
+          onConfirm={handlePostServiceFormSubmit}
+          onCancel={() => {
+            setShowPostServiceForm(false);
+            setPostFormServices([]);
+          }}
+        />
+      )}
+
+      {/* Pickup complete form overlay inside drawer */}
+      {showPickupForm && wo && (
+        <PickupCompleteForm
+          woId={workOrderId ?? ""}
+          vehiclePlate={(wo.vehicle as { plate_number?: string })?.plate_number ?? ""}
+          totalCost={Number(wo.total ?? 0)}
+          onConfirm={handlePickupSubmit}
+          onCancel={() => setShowPickupForm(false)}
+        />
+      )}
       </SheetContent>
     </Sheet>
   );

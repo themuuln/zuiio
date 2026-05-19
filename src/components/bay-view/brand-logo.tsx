@@ -39,7 +39,7 @@ export function BrandLogo({
 
   if (!Component) {
     return (
-      <span className="text-[10px] font-bold leading-none">
+      <span className="text-[10px] font-semibold leading-none">
         {make.slice(0, 2).toUpperCase()}
       </span>
     );

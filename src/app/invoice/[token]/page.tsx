@@ -15,8 +15,22 @@ import type { ExportColumn } from "@/lib/export";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { InvoiceItem, InvoicePayment, InvoiceWithItems } from "@/lib/database.types";
 import { cn, formatCurrency } from "@/lib/utils";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Invoice | TOLOM",
+  description: "Invoice details",
+};
 
 // ── Invoice status badge ─────────────────────────────────
 
@@ -121,7 +135,7 @@ function InvoiceSkeleton() {
           </div>
           <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+              <Skeleton key={`skeleton-${i}`} className="h-12 w-full" />
             ))}
           </div>
           <div className="mt-6 flex flex-col items-end gap-2">
@@ -249,7 +263,7 @@ export default function PublicInvoicePage() {
       <div className="sticky top-0 z-10 border-b border-border bg-white/80 backdrop-blur-sm dark:bg-gray-950/80 print:hidden">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 md:px-8">
           <div className="flex items-center gap-3">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground">
               T
             </span>
             <span className="text-sm font-semibold">TOLOM</span>
@@ -296,7 +310,7 @@ export default function PublicInvoicePage() {
             {/* Header */}
             <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                   {orgName || "INVOICE"}
                 </h1>
                 <p className="mt-1.5 text-sm text-muted-foreground">
@@ -374,43 +388,43 @@ export default function PublicInvoicePage() {
 
             {/* Line items table */}
             <div className="mb-8 overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="pb-3 text-left font-semibold text-muted-foreground">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-border">
+                    <TableHead className="pb-3 text-left font-semibold text-muted-foreground">
                       Item
-                    </th>
-                    <th className="pb-3 text-right font-semibold text-muted-foreground">
+                    </TableHead>
+                    <TableHead className="pb-3 text-right font-semibold text-muted-foreground">
                       Qty
-                    </th>
-                    <th className="pb-3 text-right font-semibold text-muted-foreground">
+                    </TableHead>
+                    <TableHead className="pb-3 text-right font-semibold text-muted-foreground">
                       Unit Price
-                    </th>
-                    <th className="pb-3 text-right font-semibold text-muted-foreground">
+                    </TableHead>
+                    <TableHead className="pb-3 text-right font-semibold text-muted-foreground">
                       Discount
-                    </th>
-                    <th className="pb-3 text-right font-semibold text-muted-foreground">
+                    </TableHead>
+                    <TableHead className="pb-3 text-right font-semibold text-muted-foreground">
                       Total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {items.length === 0 ? (
-                    <tr>
-                      <td
+                    <TableRow>
+                      <TableCell
                         colSpan={5}
                         className="py-12 text-center text-muted-foreground"
                       >
                         No line items on this invoice
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ) : (
                     items.map((item) => (
-                      <tr
+                      <TableRow
                         key={item.id}
                         className="border-b border-border/50 transition-colors hover:bg-muted/30"
                       >
-                        <td className="py-3 pr-4">
+                        <TableCell className="py-3 pr-4">
                           <div className="flex items-center gap-2">
                             <span
                               className={cn(
@@ -426,26 +440,26 @@ export default function PublicInvoicePage() {
                               {item.description}
                             </span>
                           </div>
-                        </td>
-                        <td className="py-3 text-right tabular-nums">
+                        </TableCell>
+                        <TableCell className="py-3 text-right tabular-nums">
                           {item.quantity}
-                        </td>
-                        <td className="py-3 text-right tabular-nums">
+                        </TableCell>
+                        <TableCell className="py-3 text-right tabular-nums">
                           {formatCurrency(Number(item.unit_price))}
-                        </td>
-                        <td className="py-3 text-right tabular-nums text-muted-foreground">
+                        </TableCell>
+                        <TableCell className="py-3 text-right tabular-nums text-muted-foreground">
                           {Number(item.discount_amount) > 0
                             ? `-${formatCurrency(Number(item.discount_amount))}`
                             : "\u2014"}
-                        </td>
-                        <td className="py-3 text-right font-semibold tabular-nums">
+                        </TableCell>
+                        <TableCell className="py-3 text-right font-semibold tabular-nums">
                           {formatCurrency(Number(item.total_price))}
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
 
             {/* Category subtotals */}
@@ -486,7 +500,7 @@ export default function PublicInvoicePage() {
                   </span>
                 </div>
               )}
-              <div className="flex w-full max-w-xs items-center justify-between border-t border-border pt-2 text-lg font-bold">
+              <div className="flex w-full max-w-xs items-center justify-between border-t border-border pt-2 text-lg font-semibold">
                 <span>Grand Total</span>
                 <span className="tabular-nums">
                   {formatCurrency(Number(invoice.total))}
@@ -500,7 +514,7 @@ export default function PublicInvoicePage() {
                       -{formatCurrency(Number(invoice.amount_paid))}
                     </span>
                   </div>
-                  <div className="flex w-full max-w-xs items-center justify-between border-t border-border pt-1 text-base font-bold">
+                  <div className="flex w-full max-w-xs items-center justify-between border-t border-border pt-1 text-base font-semibold">
                     <span>Balance Due</span>
                     <span className="tabular-nums">
                       {formatCurrency(Number(invoice.balance_due))}
@@ -517,45 +531,45 @@ export default function PublicInvoicePage() {
                   Payment History
                 </h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="pb-2 pr-4 text-left font-medium text-muted-foreground">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-b border-border">
+                        <TableHead className="pb-2 pr-4 text-left font-medium text-muted-foreground">
                           Date
-                        </th>
-                        <th className="pb-2 pr-4 text-left font-medium text-muted-foreground">
+                        </TableHead>
+                        <TableHead className="pb-2 pr-4 text-left font-medium text-muted-foreground">
                           Method
-                        </th>
-                        <th className="pb-2 pr-4 text-left font-medium text-muted-foreground">
+                        </TableHead>
+                        <TableHead className="pb-2 pr-4 text-left font-medium text-muted-foreground">
                           Reference
-                        </th>
-                        <th className="pb-2 text-right font-medium text-muted-foreground">
+                        </TableHead>
+                        <TableHead className="pb-2 text-right font-medium text-muted-foreground">
                           Amount
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {payments.map((p) => (
-                        <tr
+                        <TableRow
                           key={p.id}
                           className="border-b border-border/50"
                         >
-                          <td className="py-2 pr-4 text-muted-foreground">
+                          <TableCell className="py-2 pr-4 text-muted-foreground">
                             {formatDate(p.paid_at)}
-                          </td>
-                          <td className="py-2 pr-4 capitalize">
+                          </TableCell>
+                          <TableCell className="py-2 pr-4 capitalize">
                             {p.method}
-                          </td>
-                          <td className="py-2 pr-4 text-muted-foreground">
+                          </TableCell>
+                          <TableCell className="py-2 pr-4 text-muted-foreground">
                             {p.reference || "\u2014"}
-                          </td>
-                          <td className="py-2 text-right font-medium tabular-nums text-green-600">
+                          </TableCell>
+                          <TableCell className="py-2 text-right font-medium tabular-nums text-green-600">
                             {formatCurrency(Number(p.amount))}
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
             )}
@@ -595,7 +609,7 @@ export default function PublicInvoicePage() {
       </div>
 
       {/* ── CSS for print ─────────────────────────────── */}
-      <style jsx global>{`
+      <style>{`
         @media print {
           @page {
             margin: 15mm;

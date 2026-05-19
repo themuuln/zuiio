@@ -181,6 +181,7 @@ function FieldError({
 }: React.ComponentProps<"div"> & {
   errors?: Array<{ message?: string } | undefined>
 }) {
+  // NOTE: useMemo is defined before early return (Rules of Hooks)
   const content = useMemo(() => {
     if (children) {
       return children
@@ -202,7 +203,7 @@ function FieldError({
       <ul className="ml-4 flex list-disc flex-col gap-1">
         {uniqueErrors.map(
           (error, index) =>
-            error?.message && <li key={index}>{error.message}</li>
+            error?.message && <li key={error.message}>{error.message}</li>
         )}
       </ul>
     )

@@ -77,7 +77,7 @@ export function MechanicChip({ mechanic }: MechanicChipProps) {
       {jobCount > 0 && (
         <div
           className={cn(
-            "flex items-center justify-center size-5 rounded-full text-[9px] font-bold shrink-0",
+            "flex items-center justify-center size-5 rounded-full text-[9px] font-semibold shrink-0",
             isOverloaded
               ? "bg-red-500 text-white"
               : jobCount > 1

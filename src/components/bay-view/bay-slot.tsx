@@ -15,6 +15,11 @@ import { useEffect, useRef, useState } from "react";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
 import { MechanicBadge } from "./mechanic-badge";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 
 const WARN_THRESHOLD = 90;
 const OVERDUE_THRESHOLD = 180;
@@ -166,7 +171,7 @@ export function BaySlot({
       {wo ? (
         <div className="relative z-10 flex flex-1 flex-col gap-2.5 pl-2">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold tracking-tight text-muted-foreground/60">
+            <span className="text-[11px] font-semibold tracking-tight text-muted-foreground/60">
               #{bay.bayNumber}
             </span>
           </div>
@@ -178,7 +183,7 @@ export function BaySlot({
               </div>
               <div className="flex-1 min-w-0 space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-sm font-bold text-foreground/90">
+                  <span className="truncate text-sm font-semibold text-foreground/90">
                     {v.plate_number}
                   </span>
                   <span className="shrink-0 rounded bg-muted/60 px-1 py-0.5 text-[9px] font-semibold text-muted-foreground">
@@ -217,50 +222,70 @@ export function BaySlot({
                 {wo.status !== "Ready for Pickup" &&
                   wo.status !== "Completed" &&
                   wo.status !== "Cancelled" && (
-                    <button
-                      type="button"
-                      onClick={() => onStatusChange(wo.id, "Ready for Pickup")}
-                      className="flex items-center justify-center rounded-md size-7 text-green-600 bg-green-500/10 ring-1 ring-green-500/15 transition-all hover:bg-green-500/20 active:scale-90"
-                      aria-label={t("markReady")}
-                    >
-                      <CheckCircle2 className="size-3.5" />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => onStatusChange(wo.id, "Ready for Pickup")}
+                          className="flex items-center justify-center rounded-md size-7 text-green-600 bg-green-500/10 ring-1 ring-green-500/15 transition-all hover:bg-green-500/20 active:scale-90"
+                          aria-label={t("markReady")}
+                        >
+                          <CheckCircle2 className="size-3.5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">{t("markReady")}</TooltipContent>
+                    </Tooltip>
                   )}
                 {wo.status === "Ready for Pickup" && (
-                  <button
-                    type="button"
-                    onClick={() => onStatusChange(wo.id, "Completed")}
-                    className="flex items-center justify-center rounded-md size-7 text-green-600 bg-green-500/10 ring-1 ring-green-500/15 transition-all hover:bg-green-500/20 active:scale-90"
-                    aria-label={t("complete")}
-                  >
-                    <CheckCircle2 className="size-3.5" />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => onStatusChange(wo.id, "Completed")}
+                        className="flex items-center justify-center rounded-md size-7 text-green-600 bg-green-500/10 ring-1 ring-green-500/15 transition-all hover:bg-green-500/20 active:scale-90"
+                        aria-label={t("complete")}
+                      >
+                        <CheckCircle2 className="size-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">{t("complete")}</TooltipContent>
+                  </Tooltip>
                 )}
                 {wo.status !== "Completed" && wo.status !== "Cancelled" && (
-                  <button
-                    type="button"
-                    onClick={() => onRemoveFromBay(wo.id)}
-                    className="flex items-center justify-center rounded-md size-7 text-destructive bg-destructive/10 ring-1 ring-destructive/15 transition-all hover:bg-destructive/20 active:scale-90"
-                    aria-label={t("removeFromBay")}
-                  >
-                    <Trash2 className="size-3" />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => onRemoveFromBay(wo.id)}
+                        className="flex items-center justify-center rounded-md size-7 text-destructive bg-destructive/10 ring-1 ring-destructive/15 transition-all hover:bg-destructive/20 active:scale-90"
+                        aria-label={t("removeFromBay")}
+                      >
+                        <Trash2 className="size-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">{t("removeFromBay")}</TooltipContent>
+                  </Tooltip>
                 )}
-                <button
-                  type="button"
-                  onClick={() => onOpenDetail(wo.id)}
-                  className="flex items-center justify-center rounded-md size-7 text-muted-foreground bg-muted/50 ring-1 ring-border/40 transition-all hover:bg-muted/80 hover:text-foreground active:scale-90"
-                  aria-label={t("manage")}
-                >
-                  <Maximize2 className="size-3" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => onOpenDetail(wo.id)}
+                      className="flex items-center justify-center rounded-md size-7 text-muted-foreground bg-muted/50 ring-1 ring-border/40 transition-all hover:bg-muted/80 hover:text-foreground active:scale-90"
+                      aria-label={t("manage")}
+                    >
+                      <Maximize2 className="size-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{t("manage")}</TooltipContent>
+                </Tooltip>
               </div>
             </div>
           </div>
         </div>
       ) : (
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-2">
-          <span className="text-[10px] font-bold tracking-tight text-muted-foreground/40">
+          <span className="text-[10px] font-semibold tracking-tight text-muted-foreground/40">
             #{bay.bayNumber}
           </span>
           <div className="rounded-full bg-background/60 p-2.5 ring-1 ring-border/30 transition-all duration-200 group-hover:scale-110 group-hover:shadow-md group-hover:ring-primary/30">

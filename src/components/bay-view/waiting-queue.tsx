@@ -94,9 +94,13 @@ export function QueuedVehicleCard({
       {...listeners}
       {...attributes}
       style={style}
+      role="button"
+      tabIndex={0}
       onClick={() => onItemClick?.(workOrder)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onItemClick?.(workOrder); }}
+      data-slot="touch-target"
       className={cn(
-        "relative flex items-center gap-2 overflow-hidden rounded-lg border border-border bg-card p-2 cursor-pointer active:cursor-grabbing select-none transition-all duration-200 touch-manipulation min-h-[44px] animate-[scale-in_0.25s_ease-out]",
+        "relative flex items-center gap-2 overflow-hidden rounded-lg border border-border bg-card p-2 cursor-pointer active:cursor-grabbing select-none transition-all duration-200 touch-manipulation animate-[scale-in_0.25s_ease-out]",
         isDragging && "opacity-50 shadow-xl z-50 scale-[1.01]",
         !isDragging && "hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5",
         waitInfo.urgent &&
@@ -193,9 +197,11 @@ interface WaitingQueueProps {
   onItemClick?: (workOrder: WorkOrder & { vehicle: Vehicle | null }) => void;
 }
 
+const EMPTY_RECORD: Record<string, boolean> = {};
+
 export function WaitingQueue({
   items,
-  pendingWoIds = {},
+  pendingWoIds = EMPTY_RECORD,
   onQuickAssign,
   mechanics,
   onItemClick,
@@ -238,7 +244,7 @@ export function WaitingQueue({
           {items.length > 0 && (
             <span
               className={cn(
-                "rounded-full px-1.5 py-0.5 text-[9px] font-bold",
+                "rounded-full px-1.5 py-0.5 text-[9px] font-semibold",
                 items.length > 5
                   ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
                   : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300",

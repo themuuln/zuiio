@@ -42,6 +42,7 @@ export function StatusBadge({
 
   return (
     <span
+      data-slot="status-badge"
       className={cn(
         "inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold min-h-[32px]",
         config.className,

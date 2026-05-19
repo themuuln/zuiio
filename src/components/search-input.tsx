@@ -31,7 +31,7 @@ export function SearchInput({
     }
   }, [externalValue]);
 
-  const handleChange = useCallback(
+  const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
       setValue(newValue);
@@ -69,12 +69,13 @@ export function SearchInput({
       />
       <input
         type="text"
+        data-slot="search-input"
         value={value}
-        onChange={handleChange}
+        onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={cn(
-          "flex h-12 w-full rounded-xl border border-input bg-background",
+          "flex h-11 w-full rounded-xl border border-input bg-background",
           "pl-11 pr-10 text-base placeholder:text-muted-foreground",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           "disabled:cursor-not-allowed disabled:opacity-50",
@@ -91,7 +92,8 @@ export function SearchInput({
         <button
           type="button"
           onClick={handleClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-muted"
+          data-slot="touch-target"
+          className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center min-w-[44px] rounded-md hover:bg-muted"
           aria-label="Clear search"
         >
           <X className="size-4 text-muted-foreground" />

@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -77,21 +77,28 @@ export function CustomerDetailDrawer({
   const [customer, setCustomer] = useState<CustomerDetailData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [orgId, setOrgId] = useState<string | null>(null);
+  const orgIdRef = useRef<string | null>(null);
 
   // Resolve org ID on first open
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchCustomer excluded intentionally — called directly in .then() after orgIdRef is set
   useEffect(() => {
-    if (!open || orgId) return;
-    fetch("/api/profile")
+    if (!open || orgIdRef.current) return;
+    const abort = new AbortController();
+    fetch("/api/profile", { signal: abort.signal })
       .then((r) => r.json())
       .then((d) => {
         const id = d?.organizationId ?? d?.data?.organizationId;
-        if (id) setOrgId(id);
+        if (id) {
+          orgIdRef.current = id;
+          void fetchCustomer();
+        }
       })
       .catch(() => {});
-  }, [open, orgId]);
+    return () => abort.abort();
+  }, [open]);
 
   const fetchCustomer = useCallback(async () => {
+    const orgId = orgIdRef.current;
     if (!customerId || !orgId) return;
     setLoading(true);
     setError(null);
@@ -110,11 +117,12 @@ export function CustomerDetailDrawer({
     } finally {
       setLoading(false);
     }
-  }, [customerId, orgId]);
+  }, [customerId]);
 
   useEffect(() => {
+    const orgId = orgIdRef.current;
     if (open && customerId && orgId) void fetchCustomer();
-  }, [open, customerId, orgId, fetchCustomer]);
+  }, [open, customerId, fetchCustomer]);
 
   // Reset state on close
   useEffect(() => {
@@ -146,7 +154,7 @@ export function CustomerDetailDrawer({
                 <SheetTitle className="text-base">
                   {loading ? (
                     <span className="text-muted-foreground/60">
-                      Loading...
+                      Loading…
                     </span>
                   ) : customer ? (
                     <span className="truncate block">
@@ -201,7 +209,7 @@ export function CustomerDetailDrawer({
 
         {/* Content — scrollable body */}
         {!loading && !error && customer && (
-          <div className="flex-1 overflow-y-auto min-h-0 px-3 py-3 space-y-3">
+          <div className="flex-1 overflow-y-auto min-h-0 p-3 space-y-3">
             {/* Contact section */}
             <section className="rounded-lg border border-border/60 bg-card/40 p-3 space-y-2.5">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -280,7 +288,7 @@ export function CustomerDetailDrawer({
                   Vehicles
                 </span>
                 {customer.vehicles.length > 0 && (
-                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
                     {customer.vehicles.length}
                   </span>
                 )}

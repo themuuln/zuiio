@@ -338,6 +338,7 @@ export function VehicleRegistrationDialog({
     >
       <div
         className="relative mx-4 w-full max-w-4xl bg-background rounded-2xl shadow-2xl border border-border overflow-hidden"
+        role="dialog"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -347,7 +348,7 @@ export function VehicleRegistrationDialog({
               <Car className="size-5 text-blue-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">
+              <h2 className="text-lg font-semibold">
                 {mode === "lookup"
                   ? t("vehicleServiceHistory")
                   : t("vehicleRegistration")}
@@ -451,6 +452,7 @@ export function VehicleRegistrationDialog({
 
             <form
               onSubmit={(e) => {
+                // TODO: convert to <form action={serverAction}> for progressive enhancement
                 e.preventDefault();
                 handleSave();
               }}
@@ -590,7 +592,7 @@ export function VehicleRegistrationDialog({
                 {t("serviceTimeline")}
               </span>
               {lookupResult.serviceHistory.length > 0 && (
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
                   {lookupResult.serviceHistory.length}
                 </span>
               )}
@@ -603,7 +605,7 @@ export function VehicleRegistrationDialog({
                   <div className="mb-4 rounded-lg bg-muted/30 border border-border/60 p-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="font-bold text-sm">
+                        <div className="font-semibold text-sm">
                           {lookupResult.vehicle.plate_number}
                         </div>
                         <div className="text-xs text-muted-foreground">

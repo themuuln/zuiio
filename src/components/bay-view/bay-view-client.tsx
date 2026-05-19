@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -8,18 +9,23 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Vehicle, WorkOrder } from "@/lib/database.types";
 import type { BayViewData } from "@/lib/services/bay-view-service";
 import {
   assignMechanicToWorkOrder,
   assignVehicleToBay,
   getBayViewDataFresh,
   seedWaitingQueue,
+  updateWorkOrderStatus,
 } from "@/lib/services/bay-view-service";
-import type { Vehicle, WorkOrder } from "@/lib/database.types";
+import {
+  savePostServiceData,
+  saveCompletionData,
+  getWorkOrderServicesWithIntervals,
+  getRecommendations,
+} from "@/lib/services/post-service-service";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import { useBayActionHandlers } from "./_bay-action-handlers";
 import { useBayDragHandlers } from "./_bay-drag-handlers";
@@ -32,6 +38,11 @@ import { MechanicRegistrationDialog } from "./mechanic-registration-dialog";
 import { PinSettingsDialog } from "./pin-settings-dialog";
 import { ShiftReportModal } from "./shift-report-modal";
 import { StatusNotesModal } from "./status-notes-modal";
+import { PostServiceForm } from "./post-service-form";
+import type { PostServiceFormData } from "./post-service-form";
+import { PickupCompleteForm } from "./pickup-complete-form";
+import type { PickupCompleteData } from "./pickup-complete-form";
+import { PickupSummary } from "./_pickup-summary";
 import { ToastMessage } from "./toast-message";
 import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
 import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
@@ -54,11 +65,52 @@ export function BayViewClient() {
     id: string;
     full_name: string | null;
   } | null>(null);
+  const [orgId, setOrgId] = useState<string | null>(null);
   const [myJobsOnly, setMyJobsOnly] = useState(false);
 
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     woId: string;
     status: string;
+  } | null>(null);
+
+  // Post-service form state
+  const [postServiceData, setPostServiceData] = useState<{
+    woId: string;
+    vehicleId: string;
+    vehiclePlate: string;
+    currentOdometer: number | null;
+    services: Array<{
+      id: string;
+      service_name: string;
+      service_catalog_id: string | null;
+      catalog_interval_months: number | null;
+      catalog_interval_km: number | null;
+    }>;
+    status: string;
+  } | null>(null);
+
+  // Pickup completion state
+  const [pickupCompleteData, setPickupCompleteData] = useState<{
+    woId: string;
+    vehicleId: string;
+    vehiclePlate: string;
+    totalCost: number;
+  } | null>(null);
+
+  // Pickup summary state
+  const [pickupSummary, setPickupSummary] = useState<{
+    woId: string;
+    vehiclePlate: string;
+    totalCost: number;
+    invoiceId: string | null;
+    invoiceTotal: number;
+    invoiceStatus: string;
+    recommendations: Array<{
+      serviceName: string;
+      nextDueDate: string | null;
+      nextDueKm: number | null;
+      priority: "standard" | "important" | "urgent";
+    }>;
   } | null>(null);
 
   const [detailWoId, setDetailWoId] = useState<string | null>(null);
@@ -119,30 +171,31 @@ export function BayViewClient() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
+    const abort = new AbortController();
 
     fetchData(true);
 
-    fetch("/api/profile")
+    fetch("/api/profile", { signal: abort.signal })
       .then((r) => r.json())
       .then((d) => {
-        if (cancelled) return;
+        if (abort.signal.aborted) return;
         const profile = d?.profile ?? d?.data;
         if (profile?.id) {
           setCurrentProfile({
             id: profile.id,
             full_name: profile.full_name ?? null,
           });
+          setOrgId(d?.organizationId ?? d?.data?.organizationId ?? null);
         }
       })
       .catch((err) => {
-        if (!cancelled) console.error("Failed to fetch profile:", err);
+        if (!abort.signal.aborted) console.error("Failed to fetch profile:", err);
       });
 
     refreshIntervalRef.current = setInterval(() => fetchData(false), 30000);
 
     return () => {
-      cancelled = true;
+      abort.abort();
       if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current);
     };
   }, [fetchData]);
@@ -168,7 +221,6 @@ export function BayViewClient() {
   const {
     handleStatusClick,
     handleStatusChangeConfirm,
-    handleQuickAssign,
     handleRemoveFromBay,
     handleBayCountChange,
   } = useBayActionHandlers({
@@ -211,6 +263,150 @@ export function BayViewClient() {
       });
     } finally {
       clearPending(workOrderId);
+    }
+  }
+
+  // Intercept status clicks: route to correct form based on status
+  const handleStatusClickWithPostService = useCallback(
+    async (woId: string, status: string) => {
+      if (status === "Cancelled") {
+        handleStatusClick(woId, status);
+        return;
+      }
+
+      // Find the bay slot or waiting queue item to get vehicle info
+      const baySlot = data?.bays.find((b) => b.workOrder?.id === woId);
+      const queueItem = data?.waitingQueue.find((w) => w.id === woId);
+      const wo = baySlot?.workOrder ?? queueItem;
+
+      if (status === "Completed") {
+        // Show pickup complete form (customer satisfaction)
+        const baysWithWork = (data?.bays ?? []).filter(
+          (b) => b.workOrder?.id === woId,
+        );
+        const workOrder = baysWithWork[0]?.workOrder ?? queueItem;
+        setPickupCompleteData({
+          woId,
+          vehicleId: wo?.vehicle?.id ?? "",
+          vehiclePlate: wo?.vehicle?.plate_number ?? "",
+          totalCost: Number(workOrder?.total ?? 0),
+        });
+        return;
+      }
+
+      // "Ready for Pickup" — show PostServiceForm
+      try {
+        const services = await getWorkOrderServicesWithIntervals(woId);
+
+        setPostServiceData({
+          woId,
+          vehicleId: wo?.vehicle?.id ?? "",
+          vehiclePlate: wo?.vehicle?.plate_number ?? "",
+          currentOdometer: wo?.vehicle?.odometer ?? null,
+          services,
+          status,
+        });
+      } catch {
+        // Fallback to old behavior if fetch fails
+        handleStatusClick(woId, status);
+      }
+    },
+    [data, handleStatusClick],
+  );
+
+  async function handlePostServiceConfirm(formData: PostServiceFormData) {
+    if (!postServiceData) return;
+    const { woId, status } = postServiceData;
+
+    try {
+      await savePostServiceData({
+        workOrderId: woId,
+        vehicleId: postServiceData.vehicleId,
+        odometerReading: formData.odometerReading,
+        recommendations: formData.recommendations,
+        mechanicNotes: formData.mechanicNotes,
+      });
+
+      // Then update the work order status
+      await updateWorkOrderStatus(
+        woId,
+        status as "Ready for Pickup" | "Completed",
+        formData.mechanicNotes || undefined,
+      );
+
+      setPostServiceData(null);
+      fetchData(false);
+    } catch (err) {
+      setToast({
+        message: `Failed: ${err instanceof Error ? err.message : "Error"}`,
+        variant: "error",
+      });
+    }
+  }
+
+  async function handleCompleteConfirm(data: PickupCompleteData) {
+    if (!pickupCompleteData) return;
+    const { woId, vehicleId } = pickupCompleteData;
+
+    try {
+      await saveCompletionData({
+        workOrderId: woId,
+        vehicleId,
+        odometerReading: null,
+        customerSatisfaction: data.customerSatisfaction,
+        customerFeedback: data.customerFeedback,
+        nextAppointmentDate: data.nextAppointmentDate,
+      });
+
+      await updateWorkOrderStatus(woId, "Completed");
+
+      // Auto-generate invoice
+      let invoiceId: string | null = null;
+      let invoiceTotal = pickupCompleteData.totalCost;
+      let invoiceStatus = "pending";
+
+      if (orgId) {
+        try {
+          const invRes = await fetch(`/api/organizations/${orgId}/invoices`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ work_order_id: woId }),
+          });
+          if (invRes.ok) {
+            const invJson = await invRes.json();
+            if (invJson.data) {
+              invoiceId = invJson.data.id;
+              invoiceTotal = Number(invJson.data.total ?? pickupCompleteData.totalCost);
+              invoiceStatus = invJson.data.status ?? "pending";
+            }
+          }
+        } catch {
+          // Invoice generation is optional — don't block completion
+        }
+      }
+
+      // Fetch recommendations for the summary
+      const recs = await getRecommendations(woId);
+      setPickupCompleteData(null);
+      setPickupSummary({
+        woId,
+        vehiclePlate: pickupCompleteData.vehiclePlate,
+        totalCost: pickupCompleteData.totalCost,
+        invoiceId,
+        invoiceTotal,
+        invoiceStatus,
+        recommendations: recs.map((r: { service_name: string; next_due_date: string | null; next_due_km: number | null; priority: string }) => ({
+          serviceName: r.service_name,
+          nextDueDate: r.next_due_date,
+          nextDueKm: r.next_due_km,
+          priority: r.priority as "standard" | "important" | "urgent",
+        })),
+      });
+    } catch (err) {
+      setToast({
+        message: `Failed to complete: ${err instanceof Error ? err.message : "Error"}`,
+        variant: "error",
+      });
     }
   }
 
@@ -332,7 +528,7 @@ export function BayViewClient() {
               viewMode={viewMode}
               columns={columns}
               pendingWoIds={pendingWoIds}
-              onStatusChange={handleStatusClick}
+              onStatusChange={handleStatusClickWithPostService}
               onRemoveFromBay={handleRemoveFromBay}
               onOpenDetail={handleOpenDetail}
               t={t}
@@ -342,11 +538,7 @@ export function BayViewClient() {
           <div className="md:w-72 lg:w-80 shrink-0 h-full min-h-0 max-md:max-h-80">
             <BayViewSidebar
               items={filteredQueue}
-              mechanics={data.mechanics.map((m) => ({
-                id: m.id,
-                full_name: m.full_name,
-                current_jobs: m.current_jobs,
-              }))}
+              mechanics={data.mechanics}
               pendingWoIds={pendingWoIds}
               onQuickAssign={(woId) => {
                 const bay = data.bays.find((b) => !b.workOrder);
@@ -358,6 +550,65 @@ export function BayViewClient() {
         </div>
       </div>
 
+      {/* Post-service form for service statuses */}
+      {postServiceData && (
+        <PostServiceForm
+          woId={postServiceData.woId}
+          vehicleId={postServiceData.vehicleId}
+          vehiclePlate={postServiceData.vehiclePlate}
+          currentOdometer={postServiceData.currentOdometer}
+          services={postServiceData.services}
+          newStatus={postServiceData.status}
+          onConfirm={handlePostServiceConfirm}
+          onCancel={() => setPostServiceData(null)}
+        />
+      )}
+
+      {/* Pickup complete form (customer satisfaction) */}
+      {pickupCompleteData && (
+        <PickupCompleteForm
+          woId={pickupCompleteData.woId}
+          vehiclePlate={pickupCompleteData.vehiclePlate}
+          totalCost={pickupCompleteData.totalCost}
+          onConfirm={handleCompleteConfirm}
+          onCancel={() => setPickupCompleteData(null)}
+        />
+      )}
+
+      {/* Pickup summary after completion */}
+      {pickupSummary && (
+        <PickupSummary
+          vehiclePlate={pickupSummary.vehiclePlate}
+          totalCost={pickupSummary.totalCost}
+          invoiceId={pickupSummary.invoiceId}
+          invoiceTotal={pickupSummary.invoiceTotal}
+          invoiceStatus={pickupSummary.invoiceStatus}
+          recommendations={pickupSummary.recommendations}
+          orgId={orgId}
+          onDone={() => {
+            setPickupSummary(null);
+            fetchData(false);
+          }}
+          onSaveAppointment={async (date: string) => {
+            try {
+              await saveCompletionData({
+                workOrderId: pickupSummary.woId,
+                vehicleId: "",
+                odometerReading: null,
+                nextAppointmentDate: date,
+              });
+              setToast({ message: "Appointment saved", variant: "info" });
+            } catch (err) {
+              setToast({
+                message: `Failed to save: ${err instanceof Error ? err.message : "Error"}`,
+                variant: "error",
+              });
+            }
+          }}
+        />
+      )}
+
+      {/* Simple notes modal for Cancelled only */}
       {pendingStatusChange && (
         <StatusNotesModal
           woId={pendingStatusChange.woId}

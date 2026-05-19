@@ -2,6 +2,7 @@
 
 import { CheckCircle2, Maximize2 } from "lucide-react";
 import type { useTranslations } from "next-intl";
+import { useClientNow } from "@/hooks/use-client-now";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "./status-pill";
 
@@ -38,6 +39,7 @@ export function BayListView({
   onOpenDetail,
   t,
 }: BayListViewProps) {
+  const now = useClientNow();
   return (
     <div className="h-full overflow-y-auto space-y-1 p-1">
       <div className="flex items-center gap-3 px-2 py-1 text-[9px] font-semibold text-muted-foreground/60 uppercase tracking-wider border-b border-border/50">
@@ -61,13 +63,13 @@ export function BayListView({
           <div
             key={bay.bayNumber}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-2 py-2 transition-colors",
+              "flex items-center gap-3 rounded-lg p-2 transition-colors",
               wo
                 ? "bg-card hover:bg-muted/40 border border-border/50"
                 : "bg-muted/10 border border-dashed border-border/30",
             )}
           >
-            <span className="w-12 shrink-0 text-xs font-bold tabular-nums text-muted-foreground">
+            <span className="w-12 shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">
               #{bay.bayNumber}
             </span>
             <div className="flex-1 min-w-0">
@@ -102,7 +104,7 @@ export function BayListView({
                     const timestamp = wo?.started_at ?? wo?.created_at;
                     if (!timestamp) return "—";
                     const d = new Date(timestamp);
-                    const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+                    const mins = Math.floor((now.getTime() - d.getTime()) / 60000);
                     return mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h`;
                   })()
                 : "—"}

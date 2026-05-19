@@ -95,7 +95,7 @@ export function PartLines({ lines, onAdd, onUpdate, onRemove }: PartLinesProps) 
                     variant="ghost"
                     size="icon"
                     onClick={() => onRemove(idx)}
-                    className="size-8 shrink-0"
+                    className="shrink-0 min-w-[44px] min-h-[var(--ui-touch-target)]"
                     aria-label={`Remove ${part.part_name || "part"}`}
                   >
                     <Trash2 className="size-4 text-destructive" />
@@ -109,7 +109,7 @@ export function PartLines({ lines, onAdd, onUpdate, onRemove }: PartLinesProps) 
           variant="outline"
           size="sm"
           onClick={onAdd}
-          className="self-start"
+          className="self-start min-h-[var(--ui-touch-target)]"
         >
           <Plus className="size-4" />
           Add part

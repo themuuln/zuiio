@@ -1,3 +1,4 @@
+export { ComplaintSection } from "./complaint-section";
 export { CustomerSection } from "./customer-section";
 export { MechanicSection } from "./mechanic-section";
 export { PartsSection } from "./parts-section";

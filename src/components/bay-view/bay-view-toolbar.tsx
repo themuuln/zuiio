@@ -114,19 +114,19 @@ export function BayViewToolbar({
           type="button"
           onClick={() => handleChangeCount(-1)}
           disabled={loading || bayCount <= 1}
-          className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 hover:bg-background/60 hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+          className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 hover:bg-background/60 hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-30"
           aria-label={t("decreaseBayCount")}
         >
           <Minus className="size-3" />
         </button>
-        <span className="flex h-7 min-w-8 items-center justify-center rounded-md bg-background px-1 text-xs font-bold tabular-nums tracking-tight text-foreground shadow-sm ring-1 ring-border/50">
+        <span className="flex h-6 min-w-7 items-center justify-center rounded-md bg-background px-1 text-[11px] font-semibold tabular-nums tracking-tight text-foreground shadow-sm ring-1 ring-border/50">
           {bayCount}
         </span>
         <button
           type="button"
           onClick={() => handleChangeCount(1)}
           disabled={loading || bayCount >= 50}
-          className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 hover:bg-background/60 hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+          className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 hover:bg-background/60 hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-30"
           aria-label={t("increaseBayCount")}
         >
           <Plus className="size-3" />
@@ -138,7 +138,7 @@ export function BayViewToolbar({
         size="icon"
         onClick={onRefresh}
         aria-label={t("refresh")}
-        className="size-7 rounded-md text-muted-foreground hover:bg-muted/60 hover:text-foreground active:scale-95"
+        className="size-6 rounded-md text-muted-foreground hover:bg-muted/60 hover:text-foreground active:scale-95"
       >
         <RefreshCw className={cn("size-3.5", loading && "animate-spin")} />
       </Button>

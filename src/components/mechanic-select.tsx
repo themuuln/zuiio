@@ -65,6 +65,7 @@ export function MechanicSelect({
       <Combobox
         items={mechanics}
         value={selectedMechanic}
+        getItemValue={(m) => getMechanicName(m)}
         onValueChange={(mechanic) => {
           onChange(mechanic?.id ?? "");
         }}

@@ -88,7 +88,7 @@ export function ShiftReportModal({ onClose }: Props) {
                   <div className="flex items-center justify-center size-8 rounded-full bg-green-500/10 mx-auto mb-1.5">
                     <Car className="size-4 text-green-600" />
                   </div>
-                  <div className="text-2xl font-bold tabular-nums text-green-700 dark:text-green-300">
+                  <div className="text-2xl font-semibold tabular-nums text-green-700 dark:text-green-300">
                     {report.completedToday}
                   </div>
                   <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">
@@ -99,7 +99,7 @@ export function ShiftReportModal({ onClose }: Props) {
                   <div className="flex items-center justify-center size-8 rounded-full bg-blue-500/10 mx-auto mb-1.5">
                     <DollarSign className="size-4 text-blue-600" />
                   </div>
-                  <div className="text-xl font-bold tabular-nums text-blue-700 dark:text-blue-300 truncate">
+                  <div className="text-xl font-semibold tabular-nums text-blue-700 dark:text-blue-300 truncate">
                     {formatMNT(report.revenueToday)}
                   </div>
                   <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">

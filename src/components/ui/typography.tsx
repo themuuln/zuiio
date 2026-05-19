@@ -11,7 +11,7 @@ function H1({
   return (
     <h1
       className={cn(
-        "scroll-m-20 text-3xl font-bold tracking-tight lg:text-4xl",
+        "scroll-m-20 text-3xl font-semibold tracking-tight lg:text-4xl",
         className,
       )}
       {...props}

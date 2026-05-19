@@ -49,7 +49,7 @@ export default function SidebarGroup({
   if (collapsed) {
     return (
       <div>
-        <div className="flex items-center justify-center px-2 py-2">
+        <div className="flex items-center justify-center p-2">
           <Tooltip>
             <TooltipTrigger
               render={

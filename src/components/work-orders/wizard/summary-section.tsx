@@ -33,7 +33,7 @@ export function SummarySection() {
               </span>
             </div>
             <hr className="border-border" />
-            <div className="flex justify-between text-xl font-bold">
+            <div className="flex justify-between text-xl font-semibold">
               <span>{t("grandTotal")}</span>
               <span className="tabular-nums">
                 {formatCurrency(ctx.grandTotal)}

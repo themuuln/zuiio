@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import {
   type LastVisitInfo,
   type MechanicOption,
+  fetchVehiclePartPrice,
+  fetchVehicleServicePrice,
   useCreateCustomer,
   useCreateVehicle,
   useCreateWorkOrder,
@@ -82,6 +84,9 @@ interface WizardState {
     string,
     { last_price: number; last_make?: string; last_model?: string }
   >;
+  /** Vehicle-contextualized prices — last price for THIS vehicle's make/model */
+  vehicleServicePrices: Record<string, number>;
+  vehiclePartPrices: Record<string, number>;
   serviceSearch: string;
 
   partLines: PartLine[];
@@ -91,6 +96,8 @@ interface WizardState {
   selectedMechanic: string;
 
   description: string;
+  complaint: string;
+  diagnosisLabelId: string;
 
   lastVisitData: LastVisitInfo | null;
   showLastVisitSuggestions: boolean;
@@ -141,6 +148,8 @@ interface WizardActions {
 
   setSelectedMechanic: (v: string) => void;
   setDescription: (v: string) => void;
+  setComplaint: (v: string) => void;
+  setDiagnosisLabelId: (v: string) => void;
 
   setShowLastVisitSuggestions: (v: boolean) => void;
   addAllFromLastVisit: () => void;
@@ -160,7 +169,7 @@ export function useWizardContext() {
 }
 
 export function WizardProvider({ children }: { children: ReactNode }) {
-  const router = useRouter();
+  const { push } = useRouter();
 
   const [customerSearch, setCustomerSearch] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -199,11 +208,20 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
   const [partLines, setPartLines] = useState<PartLine[]>([]);
   const [partHistory, setPartHistory] = useState<Record<string, number>>({});
+  const [vehicleServicePrices, setVehicleServicePrices] = useState<
+    Record<string, number>
+  >({});
+  const [vehiclePartPrices, setVehiclePartPrices] = useState<
+    Record<string, number>
+  >({});
+  const vehiclePartsFetchedRef = useRef<Set<string>>(new Set());
 
   const [mechanics, setMechanics] = useState<MechanicOption[]>([]);
   const [selectedMechanic, setSelectedMechanic] = useState("");
 
   const [description, setDescription] = useState("");
+const [complaint, setComplaint] = useState("");
+const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
 
   const [lastVisitData, setLastVisitData] = useState<LastVisitInfo | null>(
     null,
@@ -354,6 +372,9 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setShowQuickVehicle(false);
     setLastVisitData(null);
     setShowLastVisitSuggestions(false);
+    setVehicleServicePrices({});
+    setVehiclePartPrices({});
+    vehiclePartsFetchedRef.current = new Set();
     lastProcessedVehicleRef.current = null;
   }, []);
 
@@ -448,8 +469,41 @@ export function WizardProvider({ children }: { children: ReactNode }) {
           last_price: history ? last : undefined,
         },
       ]);
+      // Fetch vehicle-specific price for this service
+      if (orgId && selectedVehicle?.make) {
+        void fetchVehicleServicePrice(
+          orgId,
+          svc.id,
+          selectedVehicle.make,
+          selectedVehicle.model ?? undefined,
+        ).then((vehiclePrice) => {
+          if (vehiclePrice !== null) {
+            setVehicleServicePrices((prev) => ({
+              ...prev,
+              [svc.id]: vehiclePrice,
+            }));
+            // Only update line if price differs from aggregate default
+            if (vehiclePrice !== last) {
+              setServiceLines((prev) => {
+                const idx = prev.findIndex(
+                  (s) => s.service_catalog_id === svc.id,
+                );
+                if (idx === -1) return prev;
+                const updated = [...prev];
+                updated[idx] = {
+                  ...updated[idx],
+                  base_price: vehiclePrice,
+                  final_price: vehiclePrice * updated[idx].quantity,
+                  last_price: vehiclePrice,
+                };
+                return updated;
+              });
+            }
+          }
+        });
+      }
     },
-    [serviceLines, priceHistory],
+    [serviceLines, priceHistory, orgId, selectedVehicle],
   );
 
   const updateService = useCallback(
@@ -500,7 +554,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
           typeof value === "string" &&
           value.trim()
         ) {
-          const historyPrice = partHistory[value.trim().toLowerCase()];
+          const pname = value.trim().toLowerCase();
+          const historyPrice = partHistory[pname];
           if (historyPrice && updated[idx].unit_price === 0) {
             updated[idx].unit_price = historyPrice;
             updated[idx].last_price = historyPrice;
@@ -512,8 +567,42 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         }
         return updated;
       });
+      // Fetch vehicle-specific price for this part
+      if (
+        field === "part_name" &&
+        typeof value === "string" &&
+        value.trim() &&
+        orgId &&
+        selectedVehicle?.make &&
+        !vehiclePartsFetchedRef.current.has(value.trim().toLowerCase())
+      ) {
+        const pname = value.trim().toLowerCase();
+        vehiclePartsFetchedRef.current.add(pname);
+        void fetchVehiclePartPrice(
+          orgId,
+          value.trim(),
+          selectedVehicle.make,
+        ).then((vehiclePrice) => {
+          if (vehiclePrice !== null) {
+            setVehiclePartPrices((prev) => ({ ...prev, [pname]: vehiclePrice }));
+            setPartLines((prev) => {
+              const idx = prev.findIndex(
+                (p) => p.part_name.toLowerCase() === pname,
+              );
+              if (idx === -1) return prev;
+              const updated = [...prev];
+              if (updated[idx].unit_price === 0) {
+                updated[idx].unit_price = vehiclePrice;
+                updated[idx].final_price = vehiclePrice * updated[idx].quantity;
+                updated[idx].last_price = vehiclePrice;
+              }
+              return updated;
+            });
+          }
+        });
+      }
     },
-    [partHistory],
+    [partHistory, orgId, selectedVehicle],
   );
 
   const removePart = useCallback(
@@ -549,13 +638,15 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         vehicle_id: selectedVehicle.id,
         mechanic_id: selectedMechanic || null,
         notes: description || undefined,
+        complaint: complaint || undefined,
+        diagnosis_label_id: diagnosisLabelId || null,
         services,
         parts,
       },
       {
         onSuccess: (data) => {
           toast.success("Work order created");
-          router.push(`/dashboard/work-orders/${data.id}`);
+          push(`/dashboard/work-orders/${data.id}`);
         },
         onError: () => {
           toast.error("Failed to create work order");
@@ -594,12 +685,16 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     catalog,
     serviceLines,
     priceHistory,
+    vehicleServicePrices,
+    vehiclePartPrices,
     serviceSearch,
     partLines,
     partHistory,
     mechanics,
     selectedMechanic,
     description,
+    complaint,
+    diagnosisLabelId,
     lastVisitData,
     showLastVisitSuggestions,
     servicesTotal,
@@ -646,6 +741,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
     setSelectedMechanic,
     setDescription,
+    setComplaint,
+    setDiagnosisLabelId,
     setShowLastVisitSuggestions,
     addAllFromLastVisit,
 

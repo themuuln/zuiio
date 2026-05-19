@@ -72,6 +72,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
     >
       <div
         className="relative mx-4 w-full max-w-md bg-background rounded-2xl shadow-2xl border border-border overflow-hidden"
+        role="dialog"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -81,7 +82,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
               <Wrench className="size-5 text-purple-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">{t("registerMechanicBtn")}</h2>
+              <h2 className="text-lg font-semibold">{t("registerMechanicBtn")}</h2>
               <p className="text-xs text-muted-foreground">
                 {t("registerMechanicDesc")}
               </p>

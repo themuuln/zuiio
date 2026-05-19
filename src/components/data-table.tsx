@@ -38,6 +38,7 @@ export function DataTable<T>({
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={`skeleton-${i}`}
+            data-slot="data-table-row"
             className="flex items-center gap-4 rounded-xl border border-border p-4"
           >
             {columns.map((col) => (
@@ -71,8 +72,8 @@ export function DataTable<T>({
 
   return (
     <div className={cn("flex flex-col", className)}>
-      {/* Header - hidden on mobile, visible on tablet+ */}
-      <div className="hidden md:flex items-center gap-4 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      {/* Header - hidden on tablet/mobile, visible on desktop+ */}
+      <div className="hidden lg:flex items-center gap-4 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         {columns.map((col) => (
           <div key={col.key} className={cn("flex-1", col.className)}>
             {col.header}
@@ -86,9 +87,10 @@ export function DataTable<T>({
           <button
             key={keyExtractor(item)}
             type="button"
+            data-slot="data-table-row"
             onClick={() => onRowClick?.(item)}
             className={cn(
-              "flex flex-col md:flex-row md:items-center gap-1 md:gap-4",
+              "flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-4",
               "rounded-xl border border-border bg-card px-4 py-3 text-left",
               "transition-colors",
               onRowClick &&
@@ -102,10 +104,10 @@ export function DataTable<T>({
                   "flex-1 min-w-0",
                   col.className,
                   // Show header as label on mobile
-                  "flex md:block items-baseline gap-2",
+                  "flex lg:block items-baseline gap-2",
                 )}
               >
-                <span className="md:hidden text-xs font-medium text-muted-foreground shrink-0">
+                <span className="lg:hidden text-xs font-medium text-muted-foreground shrink-0">
                   {col.header}
                 </span>
                 <span className="truncate text-sm">{col.cell(item)}</span>

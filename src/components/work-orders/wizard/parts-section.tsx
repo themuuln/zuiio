@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { NumericKeypad } from "@/components/ui/numeric-keypad";
 import { formatCurrency } from "@/lib/utils";
 import { useWizardContext } from "./wizard-context";
 
@@ -20,7 +21,7 @@ export function PartsSection() {
           variant="outline"
           size="sm"
           onClick={ctx.addPart}
-          className="min-h-[44px]"
+          className="min-h-[var(--ui-touch-target)]"
         >
           <Plus className="size-4" /> {t("addPart")}
         </Button>
@@ -38,7 +39,7 @@ export function PartsSection() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="ml-auto h-9 min-h-[36px]"
+                  className="ml-auto min-h-[var(--ui-touch-target)]"
                   onClick={ctx.addAllFromLastVisit}
                 >
                   <Check className="size-3.5 mr-1" />
@@ -63,7 +64,8 @@ export function PartsSection() {
                         },
                       ]);
                     }}
-                    className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm transition-colors hover:bg-amber-50 min-h-[44px] dark:border-amber-700 dark:bg-amber-950/20 dark:hover:bg-amber-900/30"
+                    data-slot="touch-target"
+                    className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm transition-colors hover:bg-amber-50 dark:border-amber-700 dark:bg-amber-950/20 dark:hover:bg-amber-900/30"
                   >
                     <span className="font-medium">{part.part_name}</span>
                     <span className="text-muted-foreground">
@@ -83,8 +85,10 @@ export function PartsSection() {
           <div className="border rounded-lg overflow-hidden">
             <div className="divide-y">
               {ctx.partLines.map((part, idx) => {
+                const pname = part.part_name.toLowerCase();
+                const vehiclePrice = ctx.vehiclePartPrices[pname];
                 const partLast = part.part_name
-                  ? ctx.partHistory[part.part_name.toLowerCase()]
+                  ? (vehiclePrice ?? ctx.partHistory[pname])
                   : undefined;
                 return (
                   <div
@@ -102,48 +106,52 @@ export function PartsSection() {
                         aria-label="Part name"
                       />
                       {partLast && (
-                        <p className="mt-1 text-[11px] text-amber-600">
+                        <p className={`mt-1 text-[11px] ${part.unit_price <= partLast ? 'text-green-600' : 'text-amber-600'}`}>
+                          {part.unit_price <= partLast ? '✓ ' : '↑ '}
                           {t("lastSoldShort", {
                             price: formatCurrency(partLast),
                           })}
                         </p>
                       )}
                     </div>
-                    <Input
-                      type="number"
+                    <NumericKeypad
                       value={part.quantity}
-                      onChange={(e) =>
+                      onChange={(val) =>
                         ctx.updatePart(
                           idx,
                           "quantity",
-                          parseInt(e.target.value, 10) || 1,
+                          Math.round(val) || 1,
                         )
                       }
-                      className="w-16 h-11 text-center"
-                      min={1}
-                      aria-label="Quantity"
-                    />
-                    <Input
-                      type="number"
-                      value={part.unit_price || ""}
-                      onChange={(e) =>
-                        ctx.updatePart(
-                          idx,
-                          "unit_price",
-                          parseFloat(e.target.value) || 0,
-                        )
+                    >
+                      <Input
+                        value={part.quantity}
+                        className="w-16 h-11 text-center cursor-pointer"
+                        min={1}
+                        aria-label="Quantity"
+                      />
+                    </NumericKeypad>
+                    <NumericKeypad
+                      value={part.unit_price}
+                      onChange={(val) =>
+                        ctx.updatePart(idx, "unit_price", val)
                       }
-                      className="w-28 h-11"
-                      aria-label="Unit price"
-                    />
+                    >
+                      <Input
+                        value={part.unit_price || ""}
+                        className="w-28 h-11 cursor-pointer"
+                        aria-label="Unit price"
+                      />
+                    </NumericKeypad>
                     <span className="w-24 text-right text-sm font-semibold tabular-nums shrink-0">
                       {formatCurrency(part.final_price)}
                     </span>
                     <button
                       type="button"
                       onClick={() => ctx.removePart(idx)}
-                      className="p-2.5 text-destructive hover:bg-destructive/10 rounded-lg shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
-                      aria-label="Remove part"
+                    data-slot="touch-target"
+                    className="p-2.5 text-destructive hover:bg-destructive/10 rounded-lg shrink-0 min-w-[44px] flex items-center justify-center"
+                    aria-label="Remove part"
                     >
                       <Trash2 className="size-5" />
                     </button>
