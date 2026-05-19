@@ -14,7 +14,7 @@ export default async function AuthLayout({
           <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary shadow-sm">
             <Wrench className="size-7 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             {t("name")}
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">

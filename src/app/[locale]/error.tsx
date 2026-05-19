@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function LocaleErrorPage({
   error,
   reset,
@@ -10,7 +12,7 @@ export default function LocaleErrorPage({
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-4">
       <div className="text-center">
-        <h1 className="text-6xl font-bold text-destructive/30">500</h1>
+        <h1 className="text-6xl font-semibold text-destructive/30">500</h1>
         <h2 className="mt-4 text-xl font-semibold">Алдаа гарлаа</h2>
         <p className="mt-2 text-muted-foreground">
           Уучлаарай, системийн алдаа гарлаа. Дахин оролдоно уу.
@@ -23,12 +25,12 @@ export default function LocaleErrorPage({
           >
             Дахин оролдох
           </button>
-          <a
+          <Link
             href="/dashboard"
             className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
           >
             Хяналтын самбар
-          </a>
+          </Link>
         </div>
       </div>
     </div>

@@ -6,9 +6,24 @@ import { completeOrganizationLogin } from "@/lib/actions/complete-organization-l
 import { UnauthorizedError } from "@/lib/errors";
 import { listUserOrganizations } from "@/lib/services/organization-access-service";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "auth.selectOrganization" });
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
+
 export default async function SelectOrganizationPage() {
-  const t = await getTranslations("auth.selectOrganization");
-  const setupT = await getTranslations("auth.setup");
+  const [t, setupT] = await Promise.all([
+    getTranslations("auth.selectOrganization"),
+    getTranslations("auth.setup"),
+  ]);
 
   try {
     const organizations = await listUserOrganizations();
@@ -47,10 +62,9 @@ export default async function SelectOrganizationPage() {
       />
     );
   } catch (error) {
-    if (error instanceof UnauthorizedError) {
-      redirect("/auth/login");
+    if (!(error instanceof UnauthorizedError)) {
+      throw error;
     }
-
-    throw error;
   }
+  redirect("/auth/login");
 }

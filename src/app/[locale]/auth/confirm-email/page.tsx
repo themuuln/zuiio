@@ -2,17 +2,23 @@
 
 import { CheckCircle2, ChevronDown, Loader2, Mail } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Confirm Email | TOLOM",
+  description: "Confirm your email address",
+};
 
 export default function ConfirmEmailPage() {
   const t = useTranslations("auth.confirmEmail");
   const [showResend, setShowResend] = useState(false);
   const [email, setEmail] = useState("");
   const [resent, setResent] = useState(false);
-  const [isPending, setIsPending] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   async function handleResend(e: React.FormEvent) {
@@ -21,16 +27,16 @@ export default function ConfirmEmailPage() {
       setError("Please enter your email address");
       return;
     }
-    setIsPending(true);
     setError(null);
     const supabase = createClient();
-    const { error: resendError } = await supabase.auth.resend({
-      type: "signup",
-      email,
+    startTransition(async () => {
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email,
+      });
+      if (resendError) setError(resendError.message);
+      else setResent(true);
     });
-    if (resendError) setError(resendError.message);
-    else setResent(true);
-    setIsPending(false);
   }
 
   return (

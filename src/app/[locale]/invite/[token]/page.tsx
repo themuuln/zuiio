@@ -15,6 +15,12 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ApiResponse } from "@/lib/types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Invitation | TOLOM",
+  description: "Team invitation",
+};
 
 interface InviteData {
   id: string;
@@ -38,7 +44,7 @@ export default function InviteRedeemPage() {
   const t = useTranslations("invite");
   const appT = useTranslations("app");
   const params = useParams();
-  const router = useRouter();
+  const { push } = useRouter();
   const token = params.token as string;
   const [state, setState] = useState<PageState>({ type: "loading" });
   const [accepting, setAccepting] = useState(false);
@@ -97,7 +103,7 @@ export default function InviteRedeemPage() {
       }
       setAccepted(true);
       setTimeout(() => {
-        router.push("/dashboard");
+        push("/dashboard");
       }, 1500);
     } catch (err) {
       setAcceptError(
@@ -113,7 +119,7 @@ export default function InviteRedeemPage() {
       <div className="flex min-h-dvh items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <Skeleton className="mx-auto mb-2 h-12 w-12 rounded-full" />
+            <Skeleton className="mx-auto mb-2 size-12 rounded-full" />
             <Skeleton className="mx-auto h-6 w-48" />
             <Skeleton className="mx-auto mt-2 h-4 w-32" />
           </CardHeader>
@@ -141,7 +147,7 @@ export default function InviteRedeemPage() {
           <CardFooter className="justify-center">
             <Button
               variant="outline"
-              onClick={() => router.push("/auth/login")}
+              onClick={() => push("/auth/login")}
             >
               {t("backToLogin")}
             </Button>
@@ -169,7 +175,7 @@ export default function InviteRedeemPage() {
             </CardDescription>
           </CardHeader>
           <CardFooter className="justify-center">
-            <Button onClick={() => router.push("/dashboard")}>
+            <Button onClick={() => push("/dashboard")}>
               {t("goToDashboard")}
             </Button>
           </CardFooter>
@@ -238,7 +244,7 @@ export default function InviteRedeemPage() {
             <>
               <Button
                 className="w-full"
-                onClick={() => router.push(`/auth/login?redirectTo=/invite/${token}`)}
+                onClick={() => push(`/auth/login?redirectTo=/invite/${token}`)}
               >
                 <LogIn className="mr-2 size-4" />
                 {t("signInToAccept")}
