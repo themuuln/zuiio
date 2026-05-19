@@ -28,8 +28,8 @@ npm run build        # Production build
 npm run lint         # ESLint check
 npm run test         # Run all tests (vitest / jest)
 npm run docs:build   # Rebuild VitePress Гарын авлага into public/guide/
-supabase start       # Start local Supabase stack
-supabase migration new <name>  # Create a new migration
+supabase start       # Start local Supabase stack (CLI only — no MCP equivalent)
+supabase migration new <name>  # Create a new migration file (CLI only — creates local file)
 ```
 
 Verify before committing:
@@ -95,32 +95,62 @@ The rule: pages use hooks, hooks call API routes, API routes call services, serv
 - **Regenerate TypeScript types after every migration.** After creating or modifying any migration file, update `src/lib/database.types.ts` so the frontend types match the actual schema.
 - Committing a migration without updating `database.types.ts` is a build break waiting to happen — the frontend will reference columns/types that no longer exist or miss new ones.
 
-## Supabase Remote Sync Rule (MANDATORY — never skip)
+## Supabase MCP Preference (MANDATORY)
 
-**Solo dev → remote direct workflow.** No local Supabase needed. Every migration/function change goes straight to the linked Supabase project. Never leave local changes unapplied — it causes silent runtime failures.
+**Prefer Supabase MCP tools over the Supabase CLI whenever the MCP has an equivalent operation.** The Supabase MCP is connected to the linked project and provides richer error handling, audit logging, and tighter integration with the agent workflow. Use the CLI only for operations that create or modify local files (e.g., `supabase migration new <name>`).
 
-### Step 1 — Push migrations
+### MCP ↔ CLI Mapping
+
+| Operation | MCP Tool (preferred) | CLI (fallback only) |
+|-----------|---------------------|---------------------|
+| Apply migration | `supabase-tolom_apply_migration(name, query)` | `supabase db push --linked` |
+| Deploy edge function | `supabase-tolom_deploy_edge_function(name, entrypoint_path, files, verify_jwt)` | `supabase functions deploy <name>` |
+| Generate TS types | `supabase-tolom_generate_typescript_types()` — writes to `src/lib/database.types.ts` automatically | `supabase gen types typescript --linked > src/lib/database.types.ts` |
+| Execute SQL query | `supabase-tolom_execute_sql(query)` | `psql` / Supabase Studio |
+| Get logs | `supabase-tolom_get_logs(service)` | `supabase logs` |
+| List tables / migrations | `supabase-tolom_list_tables()`, `supabase-tolom_list_migrations()` | `supabase db dump` |
+| Create migration file | — | **CLI required**: `supabase migration new <name>` (creates local file; no MCP equivalent) |
+| Check security/performance | `supabase-tolom_get_advisors(type)` | Supabase Studio dashboard |
+| Create dev branch | `supabase-tolom_create_branch(name)` | `supabase branches create` |
+
+### Local Dev + Remote Sync Workflow (MANDATORY — never skip)
+
+Develop against local Supabase for fast iteration, then sync to remote. Never leave local migrations unapplied on remote — it causes silent runtime failures.
+
+#### Daily Dev Loop (local)
 ```bash
-supabase db push --linked
+supabase start            # Boot local Supabase
+supabase migration new <name>  # Create migration file
+# ... write SQL in the generated migration file ...
+supabase db push          # Apply to local stack
+# or: restart supabase to auto-apply pending migrations
+# ... test, develop, repeat ...
 ```
 
-### Step 2 — Deploy Edge Functions (if any were added/changed)
-```bash
-supabase functions deploy <function-name>
+#### Deploy to Remote (MCP)
+Apply each migration file individually:
+```
+supabase-tolom_apply_migration(name="<migration-name>", query="<sql>")
 ```
 
-### Step 3 — Regenerate TypeScript types
-```bash
-supabase gen types typescript --linked > src/lib/database.types.ts
+If any edge functions changed:
+```
+supabase-tolom_deploy_edge_function(name="<function-name>", entrypoint_path="index.ts", files=[...], verify_jwt=true)
 ```
 
-### Step 4 — Verify end-to-end
-```bash
+Regenerate TypeScript types from remote:
+```
+supabase-tolom_generate_typescript_types()
+```
+The MCP writes the updated types to `src/lib/database.types.ts` automatically.
+
+Verify end-to-end:
+```
 npm run build   # Catches type mismatches
 ```
 
 ### Failure consequence
-Skipping any step causes **"Failed to load..." errors** — API routes/Supabase queries fail because tables or functions don't exist yet on remote. All development blocks until resolved.
+Skipping the deploy step causes **"Failed to load..." errors** — API routes/Supabase queries fail because the remote database doesn't have the latest tables/functions. All development blocks until resolved.
 
 ## Testing Guidelines
 

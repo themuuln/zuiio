@@ -142,7 +142,7 @@ Too many choices reduce conversions.
 Everything in Core, plus:
 - 10 users, 1,500 work orders/month
 - Inventory management & stock control
-- SMS reminders & QPay integration
+- SMS reminders
 - Dashboard analytics & priority support
 - **Psychological role**: The compromise choice. Most buyers land here.
 
@@ -191,7 +191,7 @@ Everything in Pro, plus:
 - Everything in Core
 - Inventory system setup
 - Mechanic workflow configuration
-- QPay & SMS integration setup
+- SMS integration setup
 - Report configuration
 - Initial data migration
 
@@ -243,7 +243,6 @@ These are NOT shown on the public website. They are presented during sales conve
 | Add-On | Implementation | Monthly | Notes |
 |--------|---------------|---------|-------|
 | SMS Reminders | — | ₮80k–₮200k | + actual SMS cost |
-| QPay Integration | ₮1M–₮3M | ₮50k–₮150k | |
 | Accounting Integration | ₮5M–₮20M | ₮300k–₮1M | Depends on system |
 | Mechanic Mobile App | ₮15M–₮40M | ₮500k–₮1.5M | Flutter, offline-first |
 | Advanced BI | ₮5M–₮15M | ₮300k–₮800k | |
@@ -350,7 +349,6 @@ High-quality customers:
 - Service intervals in catalog with auto-seed for common services
 
 **Not yet built (roadmap):**
-- QPay payment integration
 - SMS reminders
 - API access
 - Multi-branch dashboard

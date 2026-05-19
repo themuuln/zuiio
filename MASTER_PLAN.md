@@ -197,7 +197,6 @@ Garage OS
 │   └── Customer return tracking
 │
 ├── Integrations
-│   ├── QPay
 │   ├── SMS provider
 │   ├── Accounting export
 │   ├── Messenger later
@@ -327,7 +326,6 @@ customer_followups
 Integration Tables
 
 integration_accounts
-qpay_transactions
 sms_messages
 webhook_events
 api_keys
@@ -420,7 +418,6 @@ Next.js server:
 - report aggregation
 - permission checks beyond RLS
 Supabase Edge Functions:
-- QPay webhooks
 - SMS webhooks
 - [LIVE] check-service-reminders — daily cron that scans upcoming vehicle_service_schedules and creates reminder_logs
 - lightweight external API callbacks
@@ -549,7 +546,6 @@ Do Not Build In Phase 1
 
 - invoice workflow
 - payment flow
-- QPay
 - SMS reminders
 - advanced inventory control
 - supplier management
@@ -663,7 +659,6 @@ Turn the system into a revenue engine.
 
 Features
 
-- QPay integration
 - Payment confirmation
 - SMS reminder module
 - [DONE] Service interval reminders — vehicle_service_schedules table with per-vehicle config, reminder_logs audit trail, cron-driven check-service-reminders edge function
@@ -894,7 +889,7 @@ No work order discipline	Jobs get forgotten	Work order workflow	Phase 1
 Inventory leakage	Parts disappear or get misused	Inventory movement ledger	Phase 2
 Mechanic accountability	Owner cannot measure staff	Mechanic assignment + performance	Phase 2
 No repeat reminders	Customers do not return	SMS/service interval reminders	Phase 3 — LIVE (service intervals tracked, reminders queued via cron, SMS channel ready)
-Payment confusion	Unpaid invoices get lost	Payment status + QPay	Phase 3
+Payment confusion	Unpaid invoices get lost	Payment status	Phase 3
 Multi-branch chaos	Larger shops need control	Branch system + transfer	Phase 4
 Poor mechanic adoption	Mechanics hate admin dashboards	Flutter mechanic app	Phase 5
 Internet instability	Shops may lose access	Offline mechanic mode	Phase 5
@@ -1021,7 +1016,7 @@ Approximate monthly infrastructure early:
 Supabase: low-cost paid tier
 Vercel: low-cost paid tier
 Domain/email/tools
-SMS/QPay costs only when used
+SMS costs only when used
 
 Real cost is your time.
 
@@ -1106,7 +1101,6 @@ Up to 300 work orders/month
 Up to 1,000 customers
 Up to 1GB storage
 No inventory
-No QPay
 No SMS automation
 No advanced reports
 
@@ -1143,7 +1137,6 @@ Mechanic assignment
 Mechanic performance
 Advanced reports
 SMS reminders
-QPay integration
 Payment history
 Dashboard analytics
 Priority support
@@ -1263,7 +1256,6 @@ Everything in Core
 Inventory setup
 Service category setup
 Mechanic workflow setup
-QPay setup
 SMS setup
 Report configuration
 Initial data migration
@@ -1397,13 +1389,6 @@ Oil change reminders (generic interval system supports all service types)
 Appointment reminders
 Pickup reminders
 Follow-up messages
-
-⸻
-
-QPay Integration
-
-Implementation: ₮1M–₮3M
-Monthly: ₮50k–₮150k
 
 ⸻
 
@@ -1606,7 +1591,6 @@ Customers	1,000	10,000	50,000
 Storage	1GB	10GB	50GB
 Inventory	No	Yes	Yes
 SMS reminders	No	Yes	Yes
-QPay	Add-on	Included	Included
 API	No	No	Yes
 Multi-branch	No	No	Yes
 BI	No	Basic	Advanced

@@ -47,6 +47,9 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-expo: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 :root {
@@ -82,6 +85,27 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --header-height: 3.5rem;
+
+  /* ── UI size (compact) ──────────────────────────────── */
+  --ui-btn-h: 1.5rem;
+  --ui-input-h: 1.5rem;
+  --ui-card-p: 0.5rem;
+  --ui-badge-h: 1rem;
+  --ui-select-h: 1.5rem;
+  --ui-native-select-h: 1.5rem;
+  --ui-table-head-h: 1.625rem;
+  --ui-table-cell-p: 0.25rem;
+  --ui-tabs-list-h: 1.375rem;
+  --ui-textarea-min-h: 2.5rem;
+  --ui-search-input-h: 1.75rem;
+  --ui-skeleton-h: 0.625rem;
+  --ui-pagination-h: 1.5rem;
+  --ui-gap: 0.25rem;
+  --ui-icon: 0.75rem;
+  --ui-sidebar-menu-h: 1.5rem;
+  --ui-touch-target: 2.25rem;
+  --ui-touch-target-sm: 2rem;
 }
 
 .dark {
@@ -137,7 +161,7 @@
   [role="button"] {
     -webkit-touch-callout: none;
   }
-  @media (min-width: 768px) and (pointer: coarse) {
+  @media (min-width: 768px) {
     button,
     a,
     input,
@@ -150,11 +174,31 @@
   .tablet-touch {
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  /* Tablet-friendly card padding inside tablet-touch wrappers */
+  @container (min-width: 768px) {
+    .tablet-touch [data-slot="card"],
+    .tablet-touch [data-slot="card-content"] {
+      padding: 1.25rem;
+    }
   }
   @media (min-width: 768px) {
     .tablet-touch .card,
     .tablet-touch [role="card"] {
       padding: 1.25rem;
+    }
+    /* Ensure consistent gap + padding rhythm on tablet */
+    .tablet-touch .tablet-content {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    /* Touch-friendly interactive elements inside tablet-touch sections */
+    .tablet-touch [data-slot="button"]:not([data-size="icon"]):not([data-size="icon-xs"]):not([data-size="icon-sm"]):not([data-size="icon-lg"]),
+    .tablet-touch a,
+    .tablet-touch select,
+    .tablet-touch [role="button"] {
+      min-height: 44px;
     }
   }
   code,
@@ -232,65 +276,56 @@
   }
 }
 
-/* ── UI Size Variants ──────────────────────────────────────── */
-/* Sizing is driven by CSS vars set via BrandThemeProvider.
-   Default (md) uses standard shadcn sizes.
-   Compact (sm) and Large (lg) override key interactive elements. */
-
-html[data-ui-size="sm"] [data-slot="sidebar-menu-button"] {
-  min-height: 0;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
+@keyframes fade-slide-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes fade-slide-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-6px); }
 }
 
-html[data-ui-size="sm"] [data-slot="sidebar-group-label"] {
-  height: 1.5rem;
-  font-size: 0.7rem;
+/* ── Sidebar stagger entrance ─────────────────────── */
+[data-slot="sidebar"][data-state="expanded"] [data-slot="sidebar-menu-item"] {
+  animation: fade-slide-in 300ms ease-out-quart backwards;
+  animation-delay: calc(var(--stagger, 0) * 50ms);
 }
 
-html[data-ui-size="sm"] [data-slot="card"] {
-  padding: var(--ui-card-p);
-}
-
-html[data-ui-size="sm"] [data-slot="card-header"] {
-  padding: var(--ui-card-p);
-  padding-bottom: 0.5rem;
-}
-
-html[data-ui-size="sm"] [data-slot="card-content"] {
-  padding: 0 var(--ui-card-p) var(--ui-card-p);
-}
-
-html[data-ui-size="lg"] [data-slot="card"] {
-  padding: var(--ui-card-p);
-}
-
-html[data-ui-size="lg"] [data-slot="card-header"] {
-  padding: var(--ui-card-p);
-  padding-bottom: 0.75rem;
-}
-
-html[data-ui-size="lg"] [data-slot="card-content"] {
-  padding: 0 var(--ui-card-p) var(--ui-card-p);
-}
-
-/* Buttons — target shadcn button data-slot */
-html[data-ui-size="sm"] [data-slot="button"] {
+/* ── UI size element selectors ─────────────────────────── */
+[data-slot="button"]:where([data-size="default"],[data-size="xs"],[data-size="sm"],[data-size="lg"]) {
   height: var(--ui-btn-h);
 }
-
-html[data-ui-size="lg"] [data-slot="button"] {
-  height: var(--ui-btn-h);
+[data-slot="card"] { padding: var(--ui-card-p); }
+[data-slot="card-header"] { padding: var(--ui-card-p); }
+[data-slot="card-content"] { padding: 0 var(--ui-card-p) var(--ui-card-p); }
+[data-slot="input"] { height: var(--ui-input-h); }
+[data-slot="badge"] { height: var(--ui-badge-h); }
+[data-slot="select-trigger"] { height: var(--ui-select-h); }
+[data-slot="native-select"] { height: var(--ui-native-select-h); }
+[data-slot="table-head"] {
+  height: var(--ui-table-head-h);
+  padding-left: var(--ui-table-cell-p);
+  padding-right: var(--ui-table-cell-p);
 }
-
-/* Inputs — target shadcn input data-slot */
-html[data-ui-size="sm"] [data-slot="input"] {
-  height: var(--ui-input-h);
+[data-slot="table-cell"] { padding: var(--ui-table-cell-p); }
+[data-slot="tabs-list"] { height: var(--ui-tabs-list-h); }
+[data-slot="textarea"] { min-height: var(--ui-textarea-min-h); }
+[data-slot="search-input"] { height: var(--ui-search-input-h); }
+[data-slot="status-badge"] { min-height: var(--ui-badge-h); }
+[data-slot="filter-chip"] { min-height: var(--ui-search-input-h); }
+[data-slot="data-table-row"] {
+  padding: var(--ui-card-p);
+  gap: var(--ui-gap);
 }
-
-html[data-ui-size="lg"] [data-slot="input"] {
-  height: var(--ui-input-h);
+[data-slot="sidebar-menu-button"] { min-height: var(--ui-sidebar-menu-h); }
+[data-slot="pagination-ellipsis"] {
+  height: var(--ui-pagination-h);
+  width: var(--ui-pagination-h);
 }
+[data-slot="combobox-chips"] { min-height: var(--ui-native-select-h); }
+[data-slot="sidebar-menu-skeleton"] { height: var(--ui-skeleton-h); }
+[data-slot="touch-target"] { min-height: var(--ui-touch-target); }
+[data-slot="touch-target-sm"] { min-height: var(--ui-touch-target-sm); }
 
 @keyframes progress-stripe {
   0% {
