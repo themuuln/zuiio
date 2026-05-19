@@ -3,6 +3,7 @@
 import { Car, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ function VehicleRowSkeleton() {
       <Skeleton className="size-10 rounded-lg bg-muted" />
       <div className="flex-1 space-y-1.5">
         <Skeleton className="h-5 w-24" />
-        <Skeleton className="h-4 w-40" />
+        <Skeleton className="size-40" />
       </div>
       <Skeleton className="h-4 w-20" />
     </div>
@@ -34,6 +35,7 @@ function VehicleRowSkeleton() {
 export default function VehiclesPage() {
   const [search, setSearch] = useState("");
   const t = useTranslations("vehicles");
+  const now = useClientNow();
 
   const { data: org } = useCurrentOrg();
   const { data: vehicles, isLoading, isFetching } = useVehicles(org?.orgId, search);
@@ -42,7 +44,7 @@ export default function VehiclesPage() {
 
   if (isLoading && !vehicles) {
     return (
-      <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
+      <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-32" />
           <Skeleton className="h-10 w-32" />
@@ -51,7 +53,7 @@ export default function VehiclesPage() {
         <Card>
           <CardContent className="p-0">
             {[1, 2, 3].map((i) => (
-              <VehicleRowSkeleton key={i} />
+              <VehicleRowSkeleton key={`skeleton-${i}`} />
             ))}
           </CardContent>
         </Card>
@@ -69,10 +71,10 @@ export default function VehiclesPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
+    <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground">
             {t("searchResults", { count: list.length })}
           </p>
@@ -96,7 +98,7 @@ export default function VehiclesPage() {
             <ExportButton
               data={list}
               columns={exportColumns}
-              filename={`vehicles-${new Date().toISOString().split("T")[0]}.xlsx`}
+              filename={`vehicles-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Vehicles"
             />
             <Button render={<Link href="/dashboard/vehicles/new" />} size="lg">
@@ -111,7 +113,7 @@ export default function VehiclesPage() {
         <CardContent className="p-0">
           {list.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 px-4">
-              <Car className="size-12 text-muted-foreground/40" />
+              <Car className="size-10 text-muted-foreground/40" />
               <p className="text-muted-foreground">
                 {search ? t("noMatchForPlateOrVin") : t("noVehicles")}
               </p>

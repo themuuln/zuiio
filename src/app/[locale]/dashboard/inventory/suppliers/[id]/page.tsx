@@ -17,7 +17,7 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 export default function EditSupplierPage() {
   const t = useTranslations("inventory");
   const params = useParams();
-  const router = useRouter();
+  const { push, back } = useRouter();
   const supplierId = params.id as string;
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
@@ -69,7 +69,7 @@ export default function EditSupplierPage() {
         },
       });
       toast.success(t("supplierUpdated"));
-      router.push("/dashboard/inventory/suppliers");
+      push("/dashboard/inventory/suppliers");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("failedToUpdate"));
     }
@@ -93,14 +93,14 @@ export default function EditSupplierPage() {
   if (!supplier) {
     return (
       <div className="flex flex-col gap-6 max-w-2xl">
-        <Button variant="ghost" onClick={() => router.back()} className="w-fit">
+        <Button variant="ghost" onClick={() => back()} className="w-fit">
           <ArrowLeft className="size-4" /> {t("back")}
         </Button>
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <p className="text-muted-foreground">{t("supplierNotFound")}</p>
             <Button
-              onClick={() => router.push("/dashboard/inventory/suppliers")}
+              onClick={() => push("/dashboard/inventory/suppliers")}
             >
               {t("backToList")}
             </Button>
@@ -116,12 +116,12 @@ export default function EditSupplierPage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => router.back()}
+          onClick={() => back()}
           aria-label={t("back")}
         >
           <ArrowLeft className="size-5" />
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight">
           {t("editSupplier")}
         </h1>
       </div>
@@ -219,7 +219,7 @@ export default function EditSupplierPage() {
         </Card>
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+          <Button type="button" variant="outline" onClick={() => back()}>
             {t("cancel")}
           </Button>
           <Button type="submit" disabled={updateSupplier.isPending}>

@@ -18,6 +18,7 @@ import {
   Wind,
   Wrench,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
@@ -46,33 +47,27 @@ import { toast } from "sonner";
 import { useCallback, useRef, useState } from "react";
 import type { PartsCarLocationGroup } from "@/lib/types";
 
-const STATUS_BADGE: Record<
-  string,
-  { label: string; color: string }
-> = {
-  arrived: { label: "Ирсэн", color: "bg-blue-100 text-blue-700" },
-  disassembling: {
-    label: "Задалж байна",
-    color: "bg-amber-100 text-amber-700",
-  },
-  completed: { label: "Дууссан", color: "bg-green-100 text-green-700" },
-  cancelled: { label: "Цуцлагдсан", color: "bg-red-100 text-red-700" },
+const STATUS_BADGE_COLORS: Record<string, string> = {
+  arrived: "bg-blue-100 text-blue-700",
+  disassembling: "bg-amber-100 text-amber-700",
+  completed: "bg-green-100 text-green-700",
+  cancelled: "bg-red-100 text-red-700",
 };
 
-const LOCATION_GROUPS: { value: PartsCarLocationGroup; label: string }[] = [
-  { value: "engine", label: "Хөдөлгүүр" },
-  { value: "transmission", label: "Хурдны хайрцаг" },
-  { value: "suspension", label: "Түдүүр" },
-  { value: "brake", label: "Тормоз" },
-  { value: "body", label: "Их бие / Кузов" },
-  { value: "interior", label: "Салон" },
-  { value: "electrical", label: "Цахилгаан" },
-  { value: "cooling", label: "Хөргөлт" },
-  { value: "exhaust", label: "Яндан" },
-  { value: "fuel", label: "Түлш" },
-  { value: "steering", label: "Жолооны механизм" },
-  { value: "ac", label: "Кондиционер" },
-  { value: "other", label: "Бусад" },
+const LOCATION_GROUPS: PartsCarLocationGroup[] = [
+  "engine",
+  "transmission",
+  "suspension",
+  "brake",
+  "body",
+  "interior",
+  "electrical",
+  "cooling",
+  "exhaust",
+  "fuel",
+  "steering",
+  "ac",
+  "other",
 ];
 
 const LOCATION_GROUP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -92,6 +87,7 @@ const LOCATION_GROUP_ICONS: Record<string, React.ComponentType<{ className?: str
 };
 
 export default function PartsCarDetailPage() {
+  const t = useTranslations("partsCars");
   const params = useParams<{ id: string }>();
   const carId = params.id;
   const { data: org } = useCurrentOrg();
@@ -116,25 +112,25 @@ export default function PartsCarDetailPage() {
   const handleStart = useCallback(async () => {
     try {
       await startDisassembly.mutateAsync(carId);
-      toast.success("Задалж эхэллээ");
+      toast.success(t('toast.started'));
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Эхлэхэд алдаа гарлаа",
+        err instanceof Error ? err.message : t('toast.startError'),
       );
     }
-  }, [startDisassembly, carId]);
+  }, [startDisassembly, carId, t]);
 
   const handleComplete = useCallback(async () => {
-    if (!confirm("Задлага дуусгах уу? Бүх сэлбэгүүд бүртгэгдсэн эсэхийг шалгаарай.")) return;
+    if (!confirm(t('toast.completeConfirm'))) return;
     try {
       await completeDisassembly.mutateAsync(carId);
-      toast.success("Задлага дууслаа");
+      toast.success(t('toast.completed'));
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Дуусгахад алдаа гарлаа",
+        err instanceof Error ? err.message : t('toast.completeError'),
       );
     }
-  }, [completeDisassembly, carId]);
+  }, [completeDisassembly, carId, t]);
 
   const handleAddPart = useCallback(
     async (e: React.FormEvent) => {
@@ -155,13 +151,13 @@ export default function PartsCarDetailPage() {
         nameInputRef.current?.focus();
       } catch (err) {
         toast.error(
-          err instanceof Error ? err.message : "Нэмэхэд алдаа гарлаа",
+          err instanceof Error ? err.message : t('toast.addError'),
         );
       } finally {
         setAdding(false);
       }
     },
-    [addPart, carId, partName, partLocation, partQty, partPrice],
+    [addPart, carId, partName, partLocation, partQty, partPrice, t],
   );
 
   const handleRemovePart = useCallback(
@@ -170,11 +166,11 @@ export default function PartsCarDetailPage() {
         await removePart.mutateAsync({ carId, partId });
       } catch (err) {
         toast.error(
-          err instanceof Error ? err.message : "Устгахад алдаа гарлаа",
+          err instanceof Error ? err.message : t('toast.deleteError'),
         );
       }
     },
-    [removePart, carId],
+    [removePart, carId, t],
   );
 
   const totalCost = car?.purchase_cost ?? 0;
@@ -206,10 +202,10 @@ export default function PartsCarDetailPage() {
   if (!car) {
     return (
       <div className="flex flex-col items-center gap-4 py-16">
-        <Package className="size-12 text-muted-foreground/40" />
-        <p className="text-muted-foreground">Машин олдсонгүй</p>
+        <Package className="size-10 text-muted-foreground/40" />
+        <p className="text-muted-foreground">{t('notFound')}</p>
         <Button variant="outline" render={<Link href="/dashboard/inventory/parts-cars" />}>
-          Буцах
+          {t('back')}
         </Button>
       </div>
     );
@@ -228,18 +224,18 @@ export default function PartsCarDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight">
+              <h1 className="text-2xl font-semibold tracking-tight">
                 {car.make} {car.model}
               </h1>
               <span
-                className={`rounded-full px-3 py-0.5 text-xs font-medium ${STATUS_BADGE[car.status]?.color ?? ""}`}
+                className={`rounded-full px-3 py-0.5 text-xs font-medium ${STATUS_BADGE_COLORS[car.status] ?? ""}`}
               >
-                {STATUS_BADGE[car.status]?.label ?? car.status}
+                {t('status.' + car.status)}
               </span>
             </div>
             <p className="text-muted-foreground text-sm mt-0.5">
               {car.year && `${car.year} · `}
-              Өртөг: {formatMNT(car.purchase_cost)}
+              {t('fields.cost')}: {formatMNT(car.purchase_cost)}
               {car.vin && ` · VIN: ${car.vin}`}
             </p>
           </div>
@@ -249,8 +245,8 @@ export default function PartsCarDetailPage() {
           {car.status === "arrived" && (
             <Button onClick={handleStart} disabled={startDisassembly.isPending}>
               {startDisassembly.isPending
-                ? "Эхлүүлж байна..."
-                : "Задалж эхлэх"}
+                ? t('actions.starting')
+                : t('actions.startDisassembly')}
             </Button>
           )}
           {car.status === "disassembling" && (
@@ -259,8 +255,8 @@ export default function PartsCarDetailPage() {
               disabled={completeDisassembly.isPending || partsCount === 0}
             >
               {completeDisassembly.isPending
-                ? "Дуусгаж байна..."
-                : "Задлага дуусгах"}
+                ? t('actions.completing')
+                : t('actions.completeDisassembly')}
             </Button>
           )}
         </div>
@@ -270,23 +266,23 @@ export default function PartsCarDetailPage() {
       <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Сэлбэгийн тоо</p>
-            <p className="text-2xl font-bold">{partsCount}</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('fields.partCount')}</p>
+            <p className="text-2xl font-semibold">{partsCount}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Нийт үнэлгээ</p>
-            <p className="text-2xl font-bold text-blue-600">
+            <p className="text-xs text-muted-foreground mb-1">{t('fields.totalValue')}</p>
+            <p className="text-2xl font-semibold text-blue-600">
               {formatMNT(totalValue)}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Ашиг</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('fields.profit')}</p>
             <p
-              className={`text-2xl font-bold ${
+              className={`text-2xl font-semibold ${
                 profit >= 0 ? "text-green-600" : "text-red-600"
               }`}
             >
@@ -305,26 +301,26 @@ export default function PartsCarDetailPage() {
               <div className="flex items-center gap-2">
                 <Plus className="size-4 text-amber-600" />
                 <span className="font-medium text-sm">
-                  Сэлбэг хурдан нэмэх
+                  {t('actions.quickAddPart')}
                 </span>
               </div>
               <div className="flex flex-wrap items-end gap-3">
                 <div className="flex-1 min-w-[180px] space-y-1">
                   <Label htmlFor="partName" className="text-xs">
-                    Сэлбэгийн нэр
+                    {t('partForm.name')}
                   </Label>
                   <Input
                     ref={nameInputRef}
                     id="partName"
                     value={partName}
                     onChange={(e) => setPartName(e.target.value)}
-                    placeholder="Радиатор, хаалга, толгой гэрэл..."
-                    autoFocus
+                    placeholder={t('partForm.namePlaceholder')}
+                    
                   />
                 </div>
                 <div className="w-[140px] space-y-1">
                   <Label htmlFor="partLocation" className="text-xs">
-                    Бүлэг
+                    {t('partForm.group')}
                   </Label>
                   <Select
                     value={partLocation}
@@ -336,13 +332,13 @@ export default function PartsCarDetailPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {LOCATION_GROUPS.map((g) => {
-                        const GroupIcon = LOCATION_GROUP_ICONS[g.value] ?? Package;
+                      {LOCATION_GROUPS.map((group) => {
+                        const GroupIcon = LOCATION_GROUP_ICONS[group] ?? Package;
                         return (
-                          <SelectItem key={g.value} value={g.value}>
+                          <SelectItem key={group} value={group}>
                             <span className="flex items-center gap-2">
                               <GroupIcon className="size-3.5 text-muted-foreground" />
-                              {g.label}
+                              {t('locations.' + group)}
                             </span>
                           </SelectItem>
                         );
@@ -352,14 +348,14 @@ export default function PartsCarDetailPage() {
                 </div>
                 <div className="w-[80px] space-y-1">
                   <Label htmlFor="partQty" className="text-xs">
-                    Тоо
+                    {t('partForm.quantity')}
                   </Label>
                   <div className="flex items-center gap-0.5">
                     <button
                       type="button"
-                      onClick={() => setPartQty(Math.max(1, partQty - 1))}
+                      onClick={() => setPartQty((prev) => Math.max(1, prev - 1))}
                       className="flex size-11 items-center justify-center rounded-md border text-lg font-semibold hover:bg-muted transition-colors cursor-pointer"
-                      aria-label="Тоо хэмжээ хасах"
+                      aria-label={t('partForm.decrementAria')}
                     >
                       −
                     </button>
@@ -368,9 +364,9 @@ export default function PartsCarDetailPage() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => setPartQty(partQty + 1)}
+                      onClick={() => setPartQty((prev) => prev + 1)}
                       className="flex size-11 items-center justify-center rounded-md border text-lg font-semibold hover:bg-muted transition-colors cursor-pointer"
-                      aria-label="Тоо хэмжээ нэмэх"
+                      aria-label={t('partForm.incrementAria')}
                     >
                       +
                     </button>
@@ -378,7 +374,7 @@ export default function PartsCarDetailPage() {
                 </div>
                 <div className="w-[120px] space-y-1">
                   <Label htmlFor="partPrice" className="text-xs">
-                    Үнэ (₮)
+                    {t('partForm.price')}
                   </Label>
                   <Input
                     id="partPrice"
@@ -400,7 +396,7 @@ export default function PartsCarDetailPage() {
                   ) : (
                     <Plus className="size-4" />
                   )}
-                  Нэмэх
+                  {t('actions.addPart')}
                 </Button>
               </div>
             </form>
@@ -411,10 +407,10 @@ export default function PartsCarDetailPage() {
       {/* Parts List Grouped by Location */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">
-          Сэлбэгүүд
+          {t('partsSection.title')}
           {partsCount > 0 && (
             <span className="text-muted-foreground font-normal text-sm ml-2">
-              ({partsCount} ширхэг)
+              {t('partsSection.count', { count: partsCount })}
             </span>
           )}
         </h2>
@@ -427,15 +423,14 @@ export default function PartsCarDetailPage() {
               <Package className="size-10 text-muted-foreground/40" />
               <p className="text-muted-foreground text-sm">
                 {canAddParts
-                  ? "Дээрх формаар сэлбэгүүдээ нэмж эхлээрэй"
-                  : "Сэлбэг бүртгэгдээгүй байна"}
+                  ? t('partsSection.emptyCanAdd')
+                  : t('partsSection.emptyNoParts')}
               </p>
             </CardContent>
           </Card>
         ) : (
           Object.entries(grouped).map(([group, groupParts]) => {
-            const groupLabel =
-              LOCATION_GROUPS.find((g) => g.value === group)?.label ?? group;
+            const groupLabel = t('locations.' + group);
             const GroupIcon = LOCATION_GROUP_ICONS[group] ?? Package;
             const groupTotal = groupParts.reduce(
               (s, p) => s + (p.estimated_price ?? 0) * (p.quantity ?? 1),
@@ -450,7 +445,7 @@ export default function PartsCarDetailPage() {
                       {groupLabel}
                     </span>
                     <span className="text-sm text-muted-foreground tabular-nums">
-                      {groupParts.length} ширхэг ·{" "}
+                      {t('partsSection.itemCount', { count: groupParts.length })} ·{" "}
                       <span className="font-medium text-foreground">
                         {formatMNT(groupTotal)}
                       </span>
@@ -468,10 +463,10 @@ export default function PartsCarDetailPage() {
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {p.condition === "good"
-                              ? "Сайн"
+                              ? t('conditions.good')
                               : p.condition === "fair"
-                                ? "Дунд"
-                                : "Гэмтэлтэй"}
+                                ? t('conditions.fair')
+                                : t('conditions.damaged')}
                           </p>
                         </div>
                         <span className="text-sm font-semibold tabular-nums shrink-0">
@@ -486,12 +481,12 @@ export default function PartsCarDetailPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              if (confirm(`"${p.name}"-г устгах уу?`)) {
+                              if (confirm(t('deleteConfirm', { name: p.name }))) {
                                 handleRemovePart(p.id);
                               }
                             }}
                             className="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors shrink-0 cursor-pointer"
-                            aria-label={`${p.name}-г устгах`}
+                            aria-label={t('deleteAria', { name: p.name })}
                           >
                             <Trash2 className="size-4" />
                           </button>
@@ -513,11 +508,10 @@ export default function PartsCarDetailPage() {
             <CheckCircle2 className="size-5 text-green-600" />
             <div>
               <p className="font-medium text-sm text-green-800">
-                Задлага дуусгасан
+                {t('completed.title')}
               </p>
               <p className="text-xs text-green-600">
-                Нийт {car.total_parts_actual} сэлбэг, нийт{" "}
-                {formatMNT(car.total_estimated_value)} үнэлгээтэй
+                {t('completed.description', { count: car.total_parts_actual, value: formatMNT(car.total_estimated_value) })}
               </p>
             </div>
           </CardContent>

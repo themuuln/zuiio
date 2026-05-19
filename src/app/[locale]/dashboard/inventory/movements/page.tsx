@@ -3,6 +3,7 @@
 import { ClipboardList, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
@@ -48,6 +49,7 @@ const MOVEMENT_COLORS: Record<string, string> = {
 
 export default function MovementsPage() {
   const t = useTranslations("inventory");
+  const now = useClientNow();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const [typeFilter, setTypeFilter] = useState("");
@@ -131,7 +133,7 @@ export default function MovementsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight">
           {t("movementsTitle")}
         </h1>
         <p className="text-muted-foreground">{t("movementsSubtitle")}</p>
@@ -154,7 +156,7 @@ export default function MovementsPage() {
             <ExportButton
               data={filtered}
               columns={exportColumns}
-              filename={`movements-${new Date().toISOString().split("T")[0]}.xlsx`}
+              filename={`movements-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Movements"
             />
             <Button
@@ -173,7 +175,7 @@ export default function MovementsPage() {
           {isLoading ? (
             <div className="divide-y divide-border">
               {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-4 px-4 py-4">
+                <div key={n} className="flex items-center gap-4 p-4">
                   <Skeleton className="h-5 w-24" />
                   <Skeleton className="h-5 w-20" />
                   <Skeleton className="h-5 w-32" />
@@ -183,7 +185,7 @@ export default function MovementsPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-12">
-              <ClipboardList className="size-12 text-muted-foreground/40" />
+              <ClipboardList className="size-10 text-muted-foreground/40" />
               <p className="text-muted-foreground">{t("noMovements")}</p>
               <Button onClick={() => setShowDialog(true)}>
                 {t("recordFirstMovement")}
@@ -194,7 +196,7 @@ export default function MovementsPage() {
               {filtered.map((m) => (
                 <div
                   key={m.id}
-                  className="flex items-center gap-4 px-4 py-4 min-h-[64px]"
+                  className="flex items-center gap-4 p-4 min-h-[64px]"
                 >
                   <span className="text-xs text-muted-foreground w-24 shrink-0">
                     {new Date(m.created_at).toLocaleDateString("mn-MN")}
@@ -257,13 +259,17 @@ export default function MovementsPage() {
                 className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
               >
                 <option value="">{t("selectType")}</option>
-                {MOVEMENT_TYPES.filter(Boolean).map((tKey) => (
-                  <option key={tKey} value={tKey}>
-                    {t(
-                      `movement${tKey.charAt(0).toUpperCase() + tKey.slice(1)}` as string,
-                    )}
-                  </option>
-                ))}
+                {MOVEMENT_TYPES.flatMap((tKey) =>
+                  tKey
+                    ? [
+                        <option key={tKey} value={tKey}>
+                          {t(
+                            `movement${tKey.charAt(0).toUpperCase() + tKey.slice(1)}` as string,
+                          )}
+                        </option>,
+                      ]
+                    : [],
+                )}
               </select>
             </div>
             <div className="grid grid-cols-2 gap-3">

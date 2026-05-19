@@ -18,7 +18,7 @@ export function NoRevenueBanner({ activeWorkOrders }: NoRevenueBannerProps) {
             progress.
           </span>{" "}
           Revenue appears here once work orders are marked{" "}
-          <strong>Completed</strong> — close out jobs to see financial metrics,
+          <strong>Completed</strong>; close out jobs to see financial metrics,
           service mix, and breakdown.
         </div>
       </CardContent>

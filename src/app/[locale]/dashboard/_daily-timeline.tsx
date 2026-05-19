@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,14 +35,30 @@ export function DailyTimeline({ orgId }: { orgId: string }) {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const loadTimeline = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!orgId) return;
+      try {
+        const res = await fetch(
+          `/api/organizations/${orgId}/reports?type=timeline`,
+          { signal },
+        );
+        const d = await res.json();
+        setEvents(d.data ?? []);
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
+    },
+    [orgId],
+  );
+
   useEffect(() => {
-    if (!orgId) return;
-    fetch(`/api/organizations/${orgId}/reports?type=timeline`)
-      .then((r) => r.json())
-      .then((d) => setEvents(d.data ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [orgId]);
+    const abort = new AbortController();
+    loadTimeline(abort.signal);
+    return () => abort.abort();
+  }, [loadTimeline]);
 
   if (loading) {
     return (
@@ -56,10 +72,10 @@ export function DailyTimeline({ orgId }: { orgId: string }) {
         <CardContent>
           <div className="space-y-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex gap-3">
+              <div key={`skeleton-${i}`} className="flex gap-3">
                 <Skeleton className="size-2.5 rounded-full mt-1 shrink-0" />
                 <div className="flex-1 space-y-1.5">
-                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="size-32" />
                   <Skeleton className="h-3 w-24" />
                 </div>
               </div>

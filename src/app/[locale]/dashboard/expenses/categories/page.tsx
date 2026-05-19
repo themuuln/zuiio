@@ -3,7 +3,6 @@
 import { Circle, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Breadcrumb } from "@/components/breadcrumb";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,11 +57,11 @@ function SkeletonGrid() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <Card key={i}>
+        <Card key={`skel-${i}`}>
           <Skeleton className="h-1.5 rounded-none" />
           <CardHeader>
             <Skeleton className="h-5 w-32" />
-            <Skeleton className="mt-1.5 h-4 w-48" />
+            <Skeleton className="mt-1.5 size-48" />
           </CardHeader>
         </Card>
       ))}
@@ -141,11 +140,11 @@ export default function CategoriesPage() {
   // ── Loading ──
   if (orgLoading || (isLoading && !categories)) {
     return (
-      <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
+      <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
         <div className="flex items-center justify-between">
           <div>
             <Skeleton className="h-8 w-40" />
-            <Skeleton className="mt-2 h-5 w-56" />
+            <Skeleton className="mt-2 size-56" />
           </div>
           <Skeleton className="h-9 w-36" />
         </div>
@@ -157,7 +156,7 @@ export default function CategoriesPage() {
   // ── Error ──
   if (isError) {
     return (
-      <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
+      <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
         <Card>
           <CardContent className="flex flex-col items-start gap-4 py-6">
             <p className="text-destructive">
@@ -173,17 +172,11 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
+    <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Breadcrumb
-            items={[
-              { label: "Expenses", href: "/dashboard/expenses" },
-              { label: "Categories" },
-            ]}
-          />
-          <h1 className="text-2xl font-bold tracking-tight">Categories</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
           <p className="text-muted-foreground">
             Organize expenses into categories for better tracking
           </p>
@@ -198,7 +191,7 @@ export default function CategoriesPage() {
       {!categories || categories.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16">
-            <Circle className="size-12 text-muted-foreground/40" />
+            <Circle className="size-10 text-muted-foreground/40" />
             <p className="text-muted-foreground">No categories yet</p>
             <Button onClick={openAddDialog} variant="outline">
               <Plus className="size-4" />

@@ -17,7 +17,7 @@ import { useState } from "react";
 
 export default function NewPartsCarPage() {
   const t = useTranslations("inventory");
-  const router = useRouter();
+  const { push } = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const create = useCreatePartsCar(orgId);
@@ -45,7 +45,7 @@ export default function NewPartsCarPage() {
         notes: (form.get("notes") as string) || undefined,
       });
       toast.success("Машин бүртгэгдлээ");
-      router.push(`/dashboard/inventory/parts-cars/${car.id}`);
+      push(`/dashboard/inventory/parts-cars/${car.id}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Амжилтгүй боллоо");
     } finally {
@@ -60,7 +60,7 @@ export default function NewPartsCarPage() {
           <ArrowLeft className="size-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             Шинэ задаргааны машин
           </h1>
           <p className="text-muted-foreground">

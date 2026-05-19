@@ -1,8 +1,17 @@
 "use client";
 
+import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { ExportColumn } from "@/lib/export";
 import { formatCurrency } from "@/lib/utils";
 import { EmptyFinanceState } from "./_empty-finance-state";
@@ -43,6 +52,7 @@ export function TransactionsTab({
   filteredWorkOrders,
   data,
 }: TransactionsTabProps) {
+  const now = useClientNow();
   if (!hasAnyData) {
     return <EmptyFinanceState />;
   }
@@ -111,7 +121,7 @@ export function TransactionsTab({
           <ExportButton
             data={filteredWorkOrders}
             columns={exportColumns}
-            filename={`transactions-${new Date().toISOString().split("T")[0]}.xlsx`}
+            filename={`transactions-${now.toISOString().split("T")[0]}.xlsx`}
             sheetName="Transactions"
           />
         }
@@ -124,56 +134,56 @@ export function TransactionsTab({
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
                     #
-                  </th>
-                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
                     Customer
-                  </th>
-                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
                     Vehicle
-                  </th>
-                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
                     Status
-                  </th>
-                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
                     Services
-                  </th>
-                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
                     Parts
-                  </th>
-                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
                     Total
-                  </th>
-                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
                     Date
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredWorkOrders.length === 0 && search ? (
-                  <tr>
-                    <td
+                  <TableRow>
+                    <TableCell
                       colSpan={8}
                       className="px-5 py-16 text-center text-muted-foreground"
                     >
                       No work orders match your search
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   (!data?.recentWorkOrders ||
                     data.recentWorkOrders.length === 0) && (
-                    <tr>
-                      <td
+                    <TableRow>
+                      <TableCell
                         colSpan={8}
                         className="px-5 py-16 text-center text-muted-foreground"
                       >
                         No work orders in this period
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )
                 )}
                 {filteredWorkOrders.map((wo) => {
@@ -194,22 +204,22 @@ export function TransactionsTab({
                   const grandTotal = svcTotal + prtTotal;
 
                   return (
-                    <tr
+                    <TableRow
                       key={wo.id}
                       className="border-b border-border transition-colors hover:bg-muted/30"
                     >
-                      <td className="px-5 py-3.5 font-mono text-xs">
+                      <TableCell className="px-5 py-3.5 font-mono text-xs">
                         {wo.id.slice(0, 8)}...
-                      </td>
-                      <td className="px-5 py-3.5">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5">
                         {wo.customer
                           ? `${wo.customer.first_name} ${wo.customer.last_name ?? ""}`.trim()
                           : "\u2014"}
-                      </td>
-                      <td className="px-5 py-3.5 text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 text-muted-foreground">
                         {wo.vehicle?.plate_number ?? "\u2014"}
-                      </td>
-                      <td className="px-5 py-3.5">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5">
                         <span
                           className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
                           style={{
@@ -230,24 +240,24 @@ export function TransactionsTab({
                         >
                           {wo.status}
                         </span>
-                      </td>
-                      <td className="px-5 py-3.5 text-right tabular-nums">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 text-right tabular-nums">
                         {formatCurrency(svcTotal)}
-                      </td>
-                      <td className="px-5 py-3.5 text-right tabular-nums">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 text-right tabular-nums">
                         {formatCurrency(prtTotal)}
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-semibold tabular-nums">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 text-right font-semibold tabular-nums">
                         {formatCurrency(grandTotal)}
-                      </td>
-                      <td className="px-5 py-3.5 text-right text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 text-right text-muted-foreground">
                         {formatDate(wo.created_at)}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

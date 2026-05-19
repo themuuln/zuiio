@@ -3,12 +3,21 @@
 import { Building2, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
 import { useDeleteSupplier, useSuppliers } from "@/lib/queries/use-inventory";
@@ -17,6 +26,7 @@ import type { Supplier } from "@/lib/types";
 
 export default function SuppliersPage() {
   const t = useTranslations("inventory");
+  const now = useClientNow();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const { data: suppliers = [], isLoading } = useSuppliers(orgId);
@@ -56,7 +66,7 @@ export default function SuppliersPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight">
           {t("suppliersTitle")}
         </h1>
         <p className="text-muted-foreground">{t("suppliersSubtitle")}</p>
@@ -78,7 +88,7 @@ export default function SuppliersPage() {
             <ExportButton
               data={filtered}
               columns={exportColumns}
-              filename={`suppliers-${new Date().toISOString().split("T")[0]}.xlsx`}
+              filename={`suppliers-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Suppliers"
             />
             <Link href="/dashboard/inventory/suppliers/new">
@@ -95,7 +105,7 @@ export default function SuppliersPage() {
           {isLoading ? (
             <div className="divide-y divide-border">
               {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-4 px-4 py-4">
+                <div key={n} className="flex items-center gap-4 p-4">
                   <Skeleton className="h-5 w-32" />
                   <Skeleton className="h-5 w-24" />
                   <Skeleton className="h-5 w-24" />
@@ -105,55 +115,55 @@ export default function SuppliersPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-12">
-              <Building2 className="size-12 text-muted-foreground/40" />
+              <Building2 className="size-10 text-muted-foreground/40" />
               <p className="text-muted-foreground">{t("noSuppliers")}</p>
               <Link href="/dashboard/inventory/suppliers/new">
                 <Button>{t("addFirstSupplier")}</Button>
               </Link>
             </div>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                     {t("name")}
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                     {t("contactPerson")}
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                     {t("phone")}
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                     {t("email")}
-                  </th>
-                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-center font-medium text-muted-foreground">
                     {t("actions")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border">
                 {filtered.map((s) => (
-                  <tr
+                  <TableRow
                     key={s.id}
                     className="transition-colors hover:bg-muted/30"
                   >
-                    <td className="px-4 py-3 font-medium">
+                    <TableCell className="px-4 py-3 font-medium">
                       <Link
                         href={`/dashboard/inventory/suppliers/${s.id}`}
                         className="hover:underline"
                       >
                         {s.name}
                       </Link>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-muted-foreground">
                       {s.contact_person ?? "—"}
-                    </td>
-                    <td className="px-4 py-3">{s.phone ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="px-4 py-3">{s.phone ?? "—"}</TableCell>
+                    <TableCell className="px-4 py-3 text-muted-foreground">
                       {s.email ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 text-center">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <Link href={`/dashboard/inventory/suppliers/${s.id}`}>
                           <Button variant="ghost" size="sm">
@@ -169,11 +179,11 @@ export default function SuppliersPage() {
                           {t("delete")}
                         </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

@@ -3,7 +3,6 @@
 import { ArrowLeft, Loader2, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Breadcrumb } from "@/components/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,7 +40,7 @@ const initialForm: CustomerFormState = {
 };
 
 export default function NewCustomerPage() {
-  const router = useRouter();
+  const { replace } = useRouter();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? null;
   const [saving, setSaving] = useState(false);
@@ -53,7 +52,7 @@ export default function NewCustomerPage() {
     event.preventDefault();
 
     if (!orgId) {
-      setError("No organization found");
+      setError(t("noOrganization"));
       return;
     }
 
@@ -75,7 +74,7 @@ export default function NewCustomerPage() {
       }
 
       toast.success("Customer created");
-      router.replace(`/dashboard/customers/${json.data.id}`);
+      replace(`/dashboard/customers/${json.data.id}`);
     } catch {
       toast.error("Failed to create customer");
       setError("Failed to create customer");
@@ -96,12 +95,6 @@ export default function NewCustomerPage() {
   if (orgQuery.error) {
     return (
       <div className="flex max-w-3xl flex-col gap-6">
-        <Breadcrumb
-          items={[
-            { label: t("title"), href: "/dashboard/customers" },
-            { label: "New Customer" },
-          ]}
-        />
         <div className="flex items-center gap-3">
           <Button
             render={<Link href="/dashboard/customers" />}
@@ -112,7 +105,7 @@ export default function NewCustomerPage() {
             <ArrowLeft className="size-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">New Customer</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">New Customer</h1>
             <p className="text-sm text-muted-foreground">
               Create a customer record before check-in or invoicing.
             </p>
@@ -131,12 +124,6 @@ export default function NewCustomerPage() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      <Breadcrumb
-        items={[
-          { label: t("title"), href: "/dashboard/customers" },
-          { label: "New Customer" },
-        ]}
-      />
       <div className="flex items-center gap-3">
         <Button
           render={<Link href="/dashboard/customers" />}
@@ -147,7 +134,7 @@ export default function NewCustomerPage() {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">New Customer</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">New Customer</h1>
           <p className="text-sm text-muted-foreground">
             Create a customer record before check-in or invoicing.
           </p>
@@ -407,7 +394,7 @@ export default function NewCustomerPage() {
                 ) : (
                   <UserPlus className="size-4" />
                 )}
-                {saving ? "Creating..." : t("addCustomer")}
+                {saving ? t("saving") : t("addCustomer")}
               </Button>
             </div>
           </CardContent>

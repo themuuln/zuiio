@@ -19,15 +19,8 @@ const STATUS_STYLES: Record<string, string> = {
   cancelled: "bg-red-100 text-red-700",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  arrived: "Ирсэн",
-  disassembling: "Задалж байна",
-  completed: "Дууссан",
-  cancelled: "Цуцлагдсан",
-};
-
 export default function PartsCarsListPage() {
-  const t = useTranslations("inventory");
+  const t = useTranslations("partsCars");
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const { data: cars = [], isLoading } = usePartsCars(orgId);
@@ -50,25 +43,25 @@ export default function PartsCarsListPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Задаргааны машин
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t('title')}
         </h1>
         <p className="text-muted-foreground">
-          Хятадаас ирсэн задаргааны машинуудын бүртгэл
+          {t('subtitle')}
         </p>
       </div>
 
       <ListToolbar
         search={{
-          placeholder: "Машин, VIN, улсын дугаараар хайх...",
+          placeholder: t('searchPlaceholder'),
           value: search,
           onChange: setSearch,
         }}
-        stats={<span>{filtered.length} машин</span>}
+        stats={<span>{t('count', { count: filtered.length })}</span>}
         actions={
           <Button size="lg" render={<Link href="/dashboard/inventory/parts-cars/new" />}>
             <Plus className="size-4" />
-            Шинэ машин
+            {t('newCar')}
           </Button>
         }
       />
@@ -78,10 +71,10 @@ export default function PartsCarsListPage() {
       ) : filtered.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16">
-            <Truck className="size-12 text-muted-foreground/40" />
-            <p className="text-muted-foreground">Задаргааны машин байхгүй</p>
+            <Truck className="size-10 text-muted-foreground/40" />
+            <p className="text-muted-foreground">{t('empty')}</p>
             <Button variant="outline" render={<Link href="/dashboard/inventory/parts-cars/new" />}>
-              Шинэ машин бүртгэх
+              {t('emptyAction')}
             </Button>
           </CardContent>
         </Card>
@@ -108,7 +101,7 @@ export default function PartsCarsListPage() {
                     <span
                       className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[car.status] ?? ""}`}
                     >
-                      {STATUS_LABELS[car.status] ?? car.status}
+                      {t('status.' + car.status)}
                     </span>
                   </div>
 
@@ -124,7 +117,8 @@ export default function PartsCarsListPage() {
                       </p>
                     )}
                     <p className="text-muted-foreground">
-                      Өртөг:{" "}
+                      {t('fields.cost')}:
+                       {" "}
                       <span className="font-semibold text-foreground">
                         {formatMNT(car.purchase_cost)}
                       </span>
@@ -132,19 +126,19 @@ export default function PartsCarsListPage() {
                     {car.status === "completed" && (
                       <>
                         <p className="text-muted-foreground">
-                          Сэлбэг:{" "}
+                          {t('fields.parts')}:{" "}
                           <span className="font-semibold text-foreground">
-                            {car.total_parts_actual} ширхэг
+                            {t('fields.partsCount', { count: car.total_parts_actual })}
                           </span>
                         </p>
                         <p className="text-muted-foreground">
-                          Үнэлгээ:{" "}
+                          {t('fields.value')}:{" "}
                           <span className="font-semibold text-green-600">
                             {formatMNT(car.total_estimated_value)}
                           </span>
                         </p>
                         <p className="text-muted-foreground">
-                          Ашиг:{" "}
+                          {t('fields.profit')}:{" "}
                           <span
                             className={`font-semibold ${
                               car.total_estimated_value - car.purchase_cost > 0
@@ -161,12 +155,12 @@ export default function PartsCarsListPage() {
                     )}
                     {car.status === "disassembling" && (
                       <p className="text-xs text-amber-600 font-medium">
-                        ● Задалж байна
+                        {t('fields.disassemblingLabel')}
                       </p>
                     )}
                     {car.status === "arrived" && (
                       <p className="text-xs text-blue-600 font-medium">
-                        ● Задлаагүй
+                        {t('fields.notDisassembled')}
                       </p>
                     )}
                   </div>

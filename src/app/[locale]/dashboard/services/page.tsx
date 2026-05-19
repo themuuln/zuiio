@@ -3,8 +3,8 @@
 import { Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
-import { Breadcrumb } from "@/components/breadcrumb";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ interface ServiceItem {
 
 export default function ServicesPage() {
   const t = useTranslations();
+  const now = useClientNow();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 
@@ -133,9 +134,8 @@ export default function ServicesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Breadcrumb items={[{ label: "Services" }]} />
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">Service Catalog</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Service Catalog</h1>
         <p className="text-muted-foreground">Manage your service prices</p>
       </div>
 
@@ -156,7 +156,7 @@ export default function ServicesPage() {
             <ExportButton
               data={filtered}
               columns={exportColumns}
-              filename={`services-${new Date().toISOString().split("T")[0]}.xlsx`}
+              filename={`services-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Services"
             />
             <Button
@@ -181,7 +181,7 @@ export default function ServicesPage() {
                 placeholder="Service Name *"
                 value={newService.name}
                 onChange={(e) =>
-                  setNewService({ ...newService, name: e.target.value })
+                  setNewService(prev => ({ ...prev, name: e.target.value }))
                 }
                 className="h-11"
               />
@@ -189,7 +189,7 @@ export default function ServicesPage() {
                 placeholder="Category (e.g. Oil, Brakes)"
                 value={newService.category}
                 onChange={(e) =>
-                  setNewService({ ...newService, category: e.target.value })
+                  setNewService(prev => ({ ...prev, category: e.target.value }))
                 }
                 className="h-11"
               />
@@ -199,10 +199,7 @@ export default function ServicesPage() {
                 placeholder="Default Price (₮) *"
                 value={newService.default_price}
                 onChange={(e) =>
-                  setNewService({
-                    ...newService,
-                    default_price: e.target.value,
-                  })
+                  setNewService(prev => ({ ...prev, default_price: e.target.value }))
                 }
                 className="h-11"
               />
@@ -210,7 +207,7 @@ export default function ServicesPage() {
                 placeholder="Description"
                 value={newService.description}
                 onChange={(e) =>
-                  setNewService({ ...newService, description: e.target.value })
+                  setNewService(prev => ({ ...prev, description: e.target.value }))
                 }
                 className="h-11"
               />
@@ -233,7 +230,7 @@ export default function ServicesPage() {
           {orgQuery.isLoading || loading ? (
             <div className="divide-y divide-border">
               {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-4 px-4 py-4">
+                <div key={n} className="flex items-center gap-4 p-4">
                   <Skeleton className="h-5 w-40" />
                   <Skeleton className="h-5 w-24" />
                 </div>
@@ -255,7 +252,7 @@ export default function ServicesPage() {
               {filtered.map((s) => (
                 <div
                   key={s.id}
-                  className="flex items-center gap-4 px-4 py-4 min-h-[64px]"
+                  className="flex items-center gap-4 p-4 min-h-[64px]"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{s.name}</p>

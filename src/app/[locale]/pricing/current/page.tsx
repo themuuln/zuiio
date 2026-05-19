@@ -22,6 +22,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Current Plan | TOLOM",
+  description: "Your current pricing plan",
+};
 
 type FeatureStatus = boolean;
 
@@ -166,7 +172,7 @@ export default function PricingCurrentPage() {
               {t("badge")}
             </Badge>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
             {t("heroTitle")}
           </h1>
           <p className="mt-4 text-base text-muted-foreground sm:text-lg">
@@ -240,7 +246,7 @@ export default function PricingCurrentPage() {
                   <CardDescription>{t(`${plan.key}Desc`)}</CardDescription>
 
                   <div className="mt-4">
-                    <span className="text-3xl font-bold tracking-tight">
+                    <span className="text-3xl font-semibold tracking-tight">
                       {price}
                     </span>
                     {perUnit && (
@@ -254,7 +260,7 @@ export default function PricingCurrentPage() {
                 <CardContent className="flex-1">
                   <ul className="space-y-2.5">
                     {plan.features.map((f, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm">
+                      <li key={`feature-${i}`} className="flex items-start gap-2 text-sm">
                         <FeatureIcon status={f.included} />
                         <span
                           className={
@@ -287,14 +293,14 @@ export default function PricingCurrentPage() {
       {/* ── Enterprise ──────────────────────────────────────── */}
       <section className="border-t bg-muted/20 px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {t("enterpriseTitle")}
           </h2>
           <p className="mt-3 text-muted-foreground">{t("enterpriseDesc")}</p>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:text-left">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center gap-2 text-sm">
+              <div key={`item-${i}`} className="flex items-center gap-2 text-sm">
                 <Check className="size-4 shrink-0 text-emerald-500" />
                 <span>{t(`enterpriseFeature${i}`)}</span>
               </div>
@@ -313,14 +319,14 @@ export default function PricingCurrentPage() {
       {/* ── What's Coming Next ──────────────────────────────── */}
       <section className="border-t px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {t("comingTitle")}
           </h2>
           <p className="mt-3 text-muted-foreground">{t("comingSubtitle")}</p>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:text-left">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="flex items-center gap-2 text-sm">
+              <div key={`item-${i}`} className="flex items-center gap-2 text-sm">
                 <Check className="size-4 shrink-0 text-muted-foreground/40" />
                 <span className="text-muted-foreground">
                   {t(`comingItem${i}`)}
@@ -345,12 +351,12 @@ export default function PricingCurrentPage() {
       {/* ── FAQ ──────────────────────────────────────────────── */}
       <section className="border-t bg-muted/20 px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-2xl">
-          <h2 className="mb-8 text-center text-2xl font-bold tracking-tight sm:text-3xl">
+          <h2 className="mb-8 text-center text-2xl font-semibold tracking-tight sm:text-3xl">
             {t("faqTitle")}
           </h2>
           <Accordion>
             {FAQ_KEYS.map((item, i) => (
-              <AccordionItem key={i}>
+              <AccordionItem key={`faq-${i}`}>
                 <AccordionTrigger>
                   <span className="flex items-center gap-2">
                     <HelpCircle className="size-4 shrink-0 text-muted-foreground" />
@@ -369,7 +375,7 @@ export default function PricingCurrentPage() {
       {/* ── CTA ──────────────────────────────────────────────── */}
       <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
         <div className="mx-auto max-w-2xl">
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {t("ctaTitle")}
           </h2>
           <p className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</p>

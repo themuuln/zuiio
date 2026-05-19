@@ -14,12 +14,21 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Link } from "@/lib/i18n/navigation";
 import type { ExportColumn } from "@/lib/export";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -231,14 +240,12 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
     async (oid: string, statusFilter: string) => {
       dispatchInvoice({ type: "FETCH_START" });
       try {
-        const [statsRes, listRes] = await Promise.all([
-          fetch(`/api/organizations/${oid}/invoices?type=stats`),
+        const [statsJson, listJson] = await Promise.all([
+          fetch(`/api/organizations/${oid}/invoices?type=stats`).then((r) => r.json()),
           fetch(
             `/api/organizations/${oid}/invoices${statusFilter ? `?status=${statusFilter}` : ""}`,
-          ),
+          ).then((r) => r.json()),
         ]);
-        const statsJson = await statsRes.json();
-        const listJson = await listRes.json();
         dispatchInvoice({
           type: "FETCH_SUCCESS",
           stats: statsJson.data ?? null,
@@ -327,7 +334,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           label="Total Invoices"
           value={isLoading ? "—" : String(stats?.total ?? 0)}
@@ -376,7 +383,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
           <ExportButton
             data={invoices}
             columns={invoiceExportColumns}
-            filename={`invoices-${new Date().toISOString().split("T")[0]}.xlsx`}
+            filename={`invoices-${now.toISOString().split("T")[0]}.xlsx`}
             sheetName="Invoices"
           />
         </div>
@@ -389,73 +396,73 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
                     {t("common.invoiceNumber") ?? "Invoice #"}
-                  </th>
-                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
                     Customer
-                  </th>
-                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
                     Vehicle
-                  </th>
-                  <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
                     Status
-                  </th>
-                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
                     Total
-                  </th>
-                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
                     Date
-                  </th>
-                  <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
                     Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={7} className="px-5 py-16">
+                  <TableRow>
+                    <TableCell colSpan={7} className="px-5 py-16">
                       <Skeleton className="h-8 w-full" />
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : filtered.length === 0 ? (
-                  <tr>
-                    <td
+                  <TableRow>
+                    <TableCell
                       colSpan={7}
                       className="px-5 py-16 text-center text-muted-foreground"
                     >
                       No invoices found
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   filtered.map((inv) => (
-                    <tr
+                    <TableRow
                       key={inv.id}
                       className="border-b border-border transition-colors hover:bg-muted/30"
                     >
-                      <td className="px-5 py-3.5 font-mono text-xs font-medium">
+                      <TableCell className="px-5 py-3.5 font-mono text-xs font-medium">
                         {inv.invoice_number}
-                      </td>
-                      <td className="px-5 py-3.5">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5">
                         {inv.customer_name ?? "\u2014"}
-                      </td>
-                      <td className="px-5 py-3.5 text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 text-muted-foreground">
                         {inv.vehicle_plate ?? "\u2014"}
-                      </td>
-                      <td className="px-5 py-3.5">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5">
                         <InvoiceStatusBadge status={inv.status} />
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-medium tabular-nums">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 text-right font-medium tabular-nums">
                         {formatCurrency(inv.total)}
-                      </td>
-                      <td className="px-5 py-3.5 text-right text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 text-right text-muted-foreground">
                         {formatDate(inv.issued_at)}
-                      </td>
-                      <td className="px-5 py-3.5 text-right">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           {inv.email_sent_at && (
                             <span
@@ -498,12 +505,12 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
                             </Button>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
@@ -523,7 +530,7 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           label="Total Expenses"
           value={loading ? "\u2014" : String(stats?.totalExpenses ?? 0)}
@@ -585,24 +592,24 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">Date</th>
-                    <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">Description</th>
-                    <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">Category</th>
-                    <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">Amount</th>
-                    <th className="px-5 py-3.5 text-center font-medium text-muted-foreground">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">Date</TableHead>
+                    <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">Description</TableHead>
+                    <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">Category</TableHead>
+                    <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">Amount</TableHead>
+                    <TableHead className="px-5 py-3.5 text-center font-medium text-muted-foreground">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {recentExpenses.map((exp) => (
-                    <tr key={exp.id} className="border-b border-border transition-colors hover:bg-muted/30">
-                      <td className="px-5 py-3.5 text-muted-foreground">
+                    <TableRow key={exp.id} className="border-b border-border transition-colors hover:bg-muted/30">
+                      <TableCell className="px-5 py-3.5 text-muted-foreground">
                         {new Date(exp.expense_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                      </td>
-                      <td className="px-5 py-3.5 font-medium">{exp.description}</td>
-                      <td className="px-5 py-3.5">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 font-medium">{exp.description}</TableCell>
+                      <TableCell className="px-5 py-3.5">
                         {exp.category ? (
                           <span
                             className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
@@ -614,11 +621,11 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
                         ) : (
                           <span className="text-muted-foreground">&mdash;</span>
                         )}
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-medium tabular-nums">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 text-right font-medium tabular-nums">
                         {formatMNT(exp.amount)}
-                      </td>
-                      <td className="px-5 py-3.5 text-center">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 text-center">
                         {exp.paid_at ? (
                           <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
                             Paid
@@ -628,11 +635,11 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
                             Unpaid
                           </span>
                         )}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>
@@ -671,6 +678,7 @@ function financeDataReducer(
 
 export default function FinancePage() {
   const t = useTranslations();
+  const now = useClientNow();
   const [financeData, dispatchFinance] = useReducer(financeDataReducer, {
     loading: false,
     error: null,
@@ -723,7 +731,10 @@ export default function FinancePage() {
     const rev = summary.totalRevenue;
     const wo = summary.activeWorkOrders;
     const avg = summary.avgRepairOrderValue;
-    return `${formatCurrency(rev)} revenue · ${summary.completedToday} completed today · ${wo} active · avg ${formatCurrency(avg)}/WO`;
+    const profit = summary.grossProfit;
+    const margin = summary.marginPercent;
+    const profitPart = profit >= 0 ? `${formatCurrency(profit)} profit` : `-${formatCurrency(Math.abs(profit))} loss`;
+    return `${formatCurrency(rev)} revenue · ${profitPart} (${margin.toFixed(1)}%) · ${summary.completedToday} completed · ${wo} active · avg ${formatCurrency(avg)}/WO`;
   }, [summary, loading, hasRevenue]);
 
   const filteredWorkOrders = useMemo(() => {
@@ -745,17 +756,17 @@ export default function FinancePage() {
 
   if (loading && !data) {
     return (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Skeleton className="h-9 w-40" />
-            <Skeleton className="mt-1.5 h-5 w-56" />
+            <Skeleton className="mt-1.5 size-56" />
           </div>
           <Skeleton className="h-9 w-72 rounded-lg" />
         </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
+            <Card key={`skeleton-${i}`}>
               <CardHeader className="pb-2">
                 <Skeleton className="h-4 w-28" />
               </CardHeader>
@@ -772,7 +783,7 @@ export default function FinancePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex items-center gap-4">
+              <div key={`skeleton-${i}`} className="flex items-center gap-4">
                 <Skeleton className="h-5 w-full" />
                 <Skeleton className="h-5 w-24 shrink-0" />
               </div>
@@ -787,7 +798,7 @@ export default function FinancePage() {
     return (
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {t("nav.finance")}
           </h1>
           <p className="mt-1 text-muted-foreground">{t("finance.subtitle")}</p>
@@ -803,10 +814,10 @@ export default function FinancePage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {t("nav.finance")}
           </h1>
           <p className="mt-1 text-muted-foreground">{t("finance.subtitle")}</p>

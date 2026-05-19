@@ -7,7 +7,6 @@ import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import type { ExportColumn } from "@/lib/export";
-import { Breadcrumb } from "@/components/breadcrumb";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -120,7 +119,7 @@ export default function VehicleDetailPage() {
   const t = useTranslations("vehicles");
   const commonT = useTranslations("common");
   const params = useParams();
-  const router = useRouter();
+  const { push } = useRouter();
   const vehicleId = params.id as string;
 
   const orgQuery = useCurrentOrg();
@@ -245,7 +244,7 @@ export default function VehicleDetailPage() {
         return;
       }
       toast.success(t("deleted"));
-      router.push("/dashboard/vehicles");
+      push("/dashboard/vehicles");
     } catch {
       toast.error(t("failedToSave"));
     }
@@ -294,13 +293,6 @@ export default function VehicleDetailPage() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      <Breadcrumb
-        items={[
-          { label: t("title"), href: "/dashboard/vehicles" },
-          { label: vehicle.plate_number },
-        ]}
-      />
-
       <div className="flex items-center gap-4">
         <Button
           render={<Link href="/dashboard/vehicles" />}
@@ -311,7 +303,7 @@ export default function VehicleDetailPage() {
           <ArrowLeft className="size-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {vehicle.plate_number}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -384,7 +376,7 @@ export default function VehicleDetailPage() {
             <button
               type="button"
               onClick={() =>
-                router.push(`/dashboard/customers/${primaryOwner.customer_id}`)
+                push(`/dashboard/customers/${primaryOwner.customer_id}`)
               }
               className="flex w-full items-center justify-between rounded-lg bg-muted/50 p-3 text-left transition-colors hover:bg-muted"
             >
@@ -484,7 +476,7 @@ export default function VehicleDetailPage() {
                   key={workOrder.id}
                   type="button"
                   onClick={() =>
-                    router.push(`/dashboard/work-orders/${workOrder.id}`)
+                    push(`/dashboard/work-orders/${workOrder.id}`)
                   }
                   className="rounded-lg bg-muted/50 p-4 text-left transition-colors hover:bg-muted"
                 >
@@ -504,10 +496,7 @@ export default function VehicleDetailPage() {
                       {workOrder.work_order_services.length > 0 && (
                         <p className="text-xs text-muted-foreground">
                           {workOrder.work_order_services
-                            .map(
-                              (service) => service.service_name || service.name,
-                            )
-                            .filter(Boolean)
+                            .flatMap((service) => { const name = service.service_name || service.name; return name ? [name] : []; })
                             .join(", ")}
                         </p>
                       )}

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { ExportButton } from "@/components/export-button";
@@ -25,6 +26,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
 
 type ReportType = "daily" | "weekly" | "monthly" | "eod";
@@ -49,6 +59,13 @@ interface ReportData {
   parts_used: number;
   total_revenue: number;
   total_discounts: number;
+  gross_profit?: number;
+  margin_percent?: number;
+  service_revenue?: number;
+  service_cost?: number;
+  parts_revenue?: number;
+  parts_cost?: number;
+  total_cost?: number;
   [key: string]: unknown;
 }
 
@@ -63,9 +80,11 @@ interface EodReport {
     parts_used: number;
     total_revenue: number;
     total_discounts?: number;
+    total_commission?: number;
   }>;
   total_work_orders: number;
   total_revenue: number;
+  total_commission?: number;
 }
 
 // ── Report Period Title Helper ─────────────────────────────
@@ -119,16 +138,18 @@ function ReportKpiCard({
   icon: Icon,
   subtitle,
   loading,
+  valueClassName,
 }: {
   label: string;
   value: string;
   icon: LucideIcon;
   subtitle?: string;
   loading?: boolean;
+  valueClassName?: string;
 }) {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className="flex flex-row items-center justify-between gap-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {label}
         </CardTitle>
@@ -139,7 +160,7 @@ function ReportKpiCard({
           <Skeleton className="h-8 w-24" />
         ) : (
           <>
-            <div className="text-2xl font-bold tabular-nums">{value}</div>
+            <div className={`text-2xl font-semibold tabular-nums${valueClassName ? ` ${valueClassName}` : ""}`}>{value}</div>
             {subtitle && (
               <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
             )}
@@ -268,11 +289,11 @@ function SectionHeader({
 
 export default function ReportsPage() {
   const t = useTranslations();
-  const [orgId, setOrgId] = useState<string | null>(null);
+  const now = useClientNow();
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [selectedMechanic, setSelectedMechanic] = useState<string>("");
   const [reportType, setReportType] = useState<ReportType>("daily");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [weekStart, setWeekStart] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - d.getDay() + 1);
@@ -286,17 +307,7 @@ export default function ReportsPage() {
   const [expenses, setExpenses] = useState<{ totalAmount: number; thisMonth: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then((d) => {
-        const oid = d?.organizationId ?? d?.data?.organizationId;
-        if (oid) setOrgId(oid);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  const orgIdRef = useRef<string | null>(null);
 
   const fetchMechanics = useCallback(async (oid: string) => {
     try {
@@ -318,11 +329,9 @@ export default function ReportsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    if (orgId) fetchMechanics(orgId);
-  }, [orgId, fetchMechanics]);
-
+  // biome-ignore lint/correctness/useExhaustiveDependencies: orgIdRef is stable, .current read at call time
   const fetchReport = useCallback(async () => {
+    const orgId = orgIdRef.current;
     if (!orgId) return;
     setLoading(true);
     setError(null);
@@ -335,12 +344,10 @@ export default function ReportsPage() {
       if (reportType === "monthly") dateParam = month;
       if (dateParam) params.set("date", dateParam);
 
-      const [reportRes, expenseRes] = await Promise.all([
-        fetch(`/api/organizations/${orgId}/reports?${params}`),
-        fetch(`/api/organizations/${orgId}/expenses?type=stats`),
+      const [reportJson, expenseJson] = await Promise.all([
+        fetch(`/api/organizations/${orgId}/reports?${params}`).then((r) => r.json()),
+        fetch(`/api/organizations/${orgId}/expenses?type=stats`).then((r) => r.json()),
       ]);
-      const reportJson = await reportRes.json();
-      const expenseJson = await expenseRes.json();
 
       if (reportJson.error) {
         toast.error(reportJson.error.message);
@@ -361,11 +368,33 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
-  }, [orgId, reportType, selectedMechanic, date, weekStart, month]);
+  }, [reportType, selectedMechanic, date, weekStart, month]);
 
+  // Init: fetch org ID then trigger initial data loads
+  // biome-ignore lint/correctness/useExhaustiveDependencies: orgIdRef is a ref, read at call time
   useEffect(() => {
-    if (orgId) fetchReport();
-  }, [orgId, fetchReport]);
+    const abort = new AbortController();
+    fetch("/api/profile", { signal: abort.signal })
+      .then((r) => r.json())
+      .then((d) => {
+        const oid = d?.organizationId ?? d?.data?.organizationId;
+        if (oid) {
+          orgIdRef.current = oid;
+          fetchMechanics(oid);
+          fetchReport();
+        }
+      })
+      .catch((err) => {
+        if (!abort.signal.aborted) console.error(err);
+      })
+      .finally(() => setLoading(false));
+    return () => abort.abort();
+  }, [fetchMechanics, fetchReport]);
+
+  // Re-fetch report when filters change
+  useEffect(() => {
+    fetchReport();
+  }, [fetchReport]);
 
   // ── Derived data ──────────────────────────────────────
 
@@ -414,7 +443,7 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Reports</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Reports</h1>
           <p className="text-sm text-muted-foreground">
             {reportPeriodTitle(reportType, reportType === "monthly" ? month + "-01" : reportType === "weekly" ? weekStart : date)}
           </p>
@@ -522,7 +551,7 @@ export default function ReportsPage() {
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i}>
+              <Card key={`skeleton-${i}`}>
                 <CardHeader className="pb-2">
                   <Skeleton className="h-4 w-28" />
                 </CardHeader>
@@ -568,6 +597,12 @@ export default function ReportsPage() {
               value={String(eodReport.mechanics.length)}
               icon={Users}
             />
+            <ReportKpiCard
+              label="Total Commission"
+              value={formatCurrency(eodReport.total_commission ?? 0)}
+              icon={Wallet}
+              valueClassName="text-emerald-600 dark:text-emerald-400"
+            />
           </div>
 
           {/* EOD Mechanic Breakdown Table */}
@@ -589,6 +624,7 @@ export default function ReportsPage() {
                   { key: "services_performed", label: "Services" },
                   { key: "parts_used", label: "Parts" },
                   { key: "total_revenue", label: "Revenue", format: "currency" },
+                  { key: "total_commission", label: "Commission", format: "currency" },
                   { key: "avg_per_wo", label: "Avg/WO", format: "currency" },
                 ]}
                 filename={`eod-breakdown-${date}.xlsx`}
@@ -596,76 +632,89 @@ export default function ReportsPage() {
               />
             </CardHeader>
             <CardContent className="overflow-x-auto p-0">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Mechanic</th>
-                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">Jobs</th>
-                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">Services</th>
-                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">Parts</th>
-                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">Revenue</th>
-                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">Avg/WO</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">Mechanic</TableHead>
+                    <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">Jobs</TableHead>
+                    <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">Services</TableHead>
+                    <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">Parts</TableHead>
+                    <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">Revenue</TableHead>
+                    <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">Commission</TableHead>
+                    <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">Avg/WO</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {eodReport.mechanics.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                    <TableRow>
+                      <TableCell colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                         No mechanics completed work today
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ) : (
                     eodReport.mechanics.map((m, i) => {
                       const avg = m.work_orders_completed > 0
                         ? Math.round(m.total_revenue / m.work_orders_completed)
                         : 0;
                       return (
-                        <tr
+                        <TableRow
                           key={m.mechanic_id}
                           className={`border-b border-border transition-colors hover:bg-muted/30 ${i === 0 ? "bg-muted/10" : ""}`}
                         >
-                          <td className="px-4 py-3 font-medium">{m.mechanic_name}</td>
-                          <td className="px-4 py-3 text-right tabular-nums">
+                          <TableCell className="px-4 py-3 font-medium">{m.mechanic_name}</TableCell>
+                          <TableCell className="px-4 py-3 text-right tabular-nums">
                             {m.work_orders_completed}
-                          </td>
-                          <td className="px-4 py-3 text-right tabular-nums">
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-right tabular-nums">
                             {m.services_performed ?? 0}
-                          </td>
-                          <td className="px-4 py-3 text-right tabular-nums">
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-right tabular-nums">
                             {m.parts_used ?? 0}
-                          </td>
-                          <td className="px-4 py-3 text-right font-medium tabular-nums">
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-right font-medium tabular-nums">
                             {formatCurrency(m.total_revenue)}
-                          </td>
-                          <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-right tabular-nums">
+                            {m.total_commission != null ? (
+                              <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                                {formatCurrency(m.total_commission)}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">&mdash;</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                             {formatCurrency(avg)}
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
                     })
                   )}
-                </tbody>
+                </TableBody>
                 {eodReport.mechanics.length > 0 && (
-                  <tfoot>
-                    <tr className="bg-muted/30 font-semibold">
-                      <td className="px-4 py-3">Total</td>
-                      <td className="px-4 py-3 text-right tabular-nums">
+                  <TableFooter>
+                    <TableRow className="bg-muted/30 font-semibold">
+                      <TableCell className="px-4 py-3">Total</TableCell>
+                      <TableCell className="px-4 py-3 text-right tabular-nums">
                         {eodReport.mechanics.reduce((s, m) => s + (m.work_orders_completed ?? 0), 0)}
-                      </td>
-                      <td className="px-4 py-3 text-right tabular-nums">
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right tabular-nums">
                         {eodReport.mechanics.reduce((s, m) => s + (m.services_performed ?? 0), 0)}
-                      </td>
-                      <td className="px-4 py-3 text-right tabular-nums">
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right tabular-nums">
                         {eodReport.mechanics.reduce((s, m) => s + (m.parts_used ?? 0), 0)}
-                      </td>
-                      <td className="px-4 py-3 text-right tabular-nums">
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right tabular-nums">
                         {formatCurrency(eodReport.total_revenue)}
-                      </td>
-                      <td className="px-4 py-3 text-right tabular-nums" />
-                    </tr>
-                  </tfoot>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right tabular-nums text-emerald-600 dark:text-emerald-400">
+                        {formatCurrency(eodReport.total_commission ?? 0)}
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right tabular-nums" />
+                    </TableRow>
+                  </TableFooter>
                 )}
-              </table>
+              </Table>
             </CardContent>
           </Card>
         </div>
@@ -741,6 +790,32 @@ export default function ReportsPage() {
                 />
               </div>
 
+              {/* Profit KPIs */}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <ReportKpiCard
+                  label="Gross Profit"
+                  value={formatCurrency(r?.gross_profit ?? 0)}
+                  icon={TrendingUp}
+                  valueClassName={(r?.gross_profit ?? 0) >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500"}
+                />
+                <ReportKpiCard
+                  label="Margin %"
+                  value={`${(r?.margin_percent ?? 0).toFixed(1)}%`}
+                  icon={Percent}
+                  valueClassName={(r?.margin_percent ?? 0) >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500"}
+                />
+                <ReportKpiCard
+                  label="Services Cost"
+                  value={formatCurrency(r?.service_cost ?? 0)}
+                  icon={Wrench}
+                />
+                <ReportKpiCard
+                  label="Parts Cost"
+                  value={formatCurrency(r?.parts_cost ?? 0)}
+                  icon={BarChart3}
+                />
+              </div>
+
               {/* Net Profit */}
               {r && expenses && (
                 <Card>
@@ -748,7 +823,7 @@ export default function ReportsPage() {
                     <p className="text-xs font-medium text-muted-foreground">Net Profit</p>
                   </CardHeader>
                   <CardContent>
-                    <p className={`text-2xl font-bold tabular-nums ${r.total_revenue - expenses.thisMonth < 0 ? "text-red-500" : "text-green-600 dark:text-green-400"}`}>
+                    <p className={`text-2xl font-semibold tabular-nums ${r.total_revenue - expenses.thisMonth < 0 ? "text-red-500" : "text-green-600 dark:text-green-400"}`}>
                       {formatCurrency(r.total_revenue - expenses.thisMonth)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -770,6 +845,42 @@ export default function ReportsPage() {
                       service={r.total_revenue - (r.total_discounts ?? 0)}
                       parts={r.total_discounts ?? 0}
                     />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Profit Breakdown */}
+              {r && (r.service_revenue !== undefined || r.total_cost !== undefined) && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-semibold">Profit Breakdown</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Service vs Parts Revenue</p>
+                      <RevenueMiniBar
+                        total={r.total_revenue}
+                        service={r.service_revenue ?? 0}
+                        parts={r.parts_revenue ?? 0}
+                      />
+                    </div>
+                    {(r.total_cost ?? 0) > 0 && (
+                      <div className="space-y-1.5 border-t border-border pt-3">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Cost Breakdown</p>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Service Cost</span>
+                          <span className="font-medium tabular-nums">{formatCurrency(r.service_cost ?? 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Parts Cost</span>
+                          <span className="font-medium tabular-nums">{formatCurrency(r.parts_cost ?? 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-medium border-t border-border pt-1.5 mt-1.5">
+                          <span>Total Cost</span>
+                          <span className="tabular-nums">{formatCurrency(r.total_cost ?? 0)}</span>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}

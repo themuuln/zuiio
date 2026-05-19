@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
@@ -131,11 +132,11 @@ export default function OrganizationPage() {
       <div className="flex flex-col gap-6">
         <div>
           <Skeleton className="h-8 w-40" />
-          <Skeleton className="mt-2 h-5 w-56" />
+          <Skeleton className="mt-2 size-56" />
         </div>
         <div className="grid gap-4 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Card key={i}>
+            <Card key={`skeleton-${i}`}>
               <CardHeader>
                 <Skeleton className="h-5 w-28" />
                 <Skeleton className="h-4 w-32" />
@@ -154,7 +155,7 @@ export default function OrganizationPage() {
     return (
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {t("nav.organization")}
           </h1>
           <p className="text-muted-foreground">Manage your organization</p>
@@ -179,7 +180,7 @@ export default function OrganizationPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight">
           {t("nav.organization")}
         </h1>
         <p className="text-muted-foreground">Manage your organization</p>
@@ -210,7 +211,7 @@ export default function OrganizationPage() {
                   <p className="text-sm text-muted-foreground">Name</p>
                   <Input
                     value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="Organization name"
                   />
                 </div>
@@ -222,18 +223,20 @@ export default function OrganizationPage() {
                   <p className="text-sm text-muted-foreground">Logo URL</p>
                   <Input
                     value={form.logoUrl}
-                    onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
+                    onChange={(e) => setForm(prev => ({ ...prev, logoUrl: e.target.value }))}
                     placeholder="https://example.com/logo.png"
                   />
                   {form.logoUrl && (
                     <div className="mt-2 rounded border p-1">
-                      {/* biome-ignore lint/performance/noImgElement: user-provided external URL, Next Image requires known domains */}
-                      <img
+                      <Image
                         src={form.logoUrl}
                         alt="Logo preview"
+                        width={200}
+                        height={80}
                         className="max-h-20 rounded"
+                        unoptimized
                         onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
                         }}
                       />
                     </div>

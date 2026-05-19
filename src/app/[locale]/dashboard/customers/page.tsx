@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { CustomerDetailDrawer } from "@/components/customer-detail-drawer";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -66,7 +67,7 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
       </TableHeader>
       <TableBody>
         {Array.from({ length: rows }).map((_, i) => (
-          <TableRow key={i}>
+          <TableRow key={`row-${i}`}>
             <TableCell>
               <div className="space-y-1.5">
                 <Skeleton className="h-5 w-32" />
@@ -98,11 +99,12 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
 function formatDate(
   dateString: string | null,
   t: (key: string, params?: Record<string, string | number | Date>) => string,
+  now?: Date,
 ) {
   if (!dateString) return null;
   const date = new Date(dateString);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
+  const reference = now ?? new Date();
+  const diff = reference.getTime() - date.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
   if (days === 0) return t("today");
@@ -114,6 +116,7 @@ function formatDate(
 
 export default function CustomersPage() {
   const t = useTranslations("customers");
+  const now = useClientNow();
   const [search, setSearch] = useState("");
   const [detailCustomerId, setDetailCustomerId] = useState<string | null>(null);
 
@@ -154,7 +157,7 @@ export default function CustomersPage() {
 
   if (showLoadingScreen) {
     return (
-      <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
+      <div className="tablet-touch flex flex-col gap-6 tablet:gap-6 tablet:px-2">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-36" />
@@ -171,7 +174,7 @@ export default function CustomersPage() {
 
   if (isError || orgError) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="tablet-touch flex flex-col gap-6">
         <p className="text-destructive">
           {error?.message ?? t("noOrganization")}
         </p>
@@ -183,10 +186,10 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
+    <div className="tablet-touch flex flex-col gap-6 tablet:gap-6 tablet:px-2">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground">
             {(customers ?? []).length}{" "}
             {t("name").toLowerCase()}
@@ -217,7 +220,7 @@ export default function CustomersPage() {
           <ExportButton
             data={customers ?? []}
             columns={exportColumns}
-            filename={`customers-${new Date().toISOString().split("T")[0]}.xlsx`}
+            filename={`customers-${now.toISOString().split("T")[0]}.xlsx`}
             sheetName="Customers"
           />
         }
@@ -227,7 +230,7 @@ export default function CustomersPage() {
         <CardContent className="p-0">
           {(customers ?? []).length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 px-4">
-              <Users className="size-12 text-muted-foreground/40" />
+              <Users className="size-10 text-muted-foreground/40" />
               <p className="text-muted-foreground">{t("noCustomers")}</p>
               <Button
                 render={<Link href="/dashboard/customers/new" />}
@@ -254,7 +257,7 @@ export default function CustomersPage() {
               </TableHeader>
               <TableBody>
                 {customers?.map((customer) => {
-                  const lastVisit = formatDate(customer.last_visit_at, t);
+                  const lastVisit = formatDate(customer.last_visit_at, t, now);
                   return (
                     <TableRow
                       key={customer.id}

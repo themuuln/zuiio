@@ -21,7 +21,7 @@ const BayViewClient = dynamic(
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-44 rounded-xl" />
+            <Skeleton key={`skeleton-${i}`} className="h-44 rounded-xl" />
           ))}
         </div>
       </div>

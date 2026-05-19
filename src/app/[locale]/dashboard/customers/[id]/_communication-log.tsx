@@ -42,13 +42,12 @@ import {
   useDeleteCustomerCommunication,
 } from "@/lib/queries/use-communications";
 
-const COMM_TYPES = ["call", "sms", "email", "in_person", "note"] as const;
+const COMM_TYPES = ["call", "email", "in_person", "note"] as const;
 
 const COMM_DIRECTIONS = ["inbound", "outbound"] as const;
 
 const typeIcons: Record<string, React.ReactNode> = {
   call: <Phone className="size-3.5" />,
-  sms: <MessageSquare className="size-3.5" />,
   email: <Mail className="size-3.5" />,
   in_person: <UserCheck className="size-3.5" />,
   note: <FileText className="size-3.5" />,
@@ -56,8 +55,7 @@ const typeIcons: Record<string, React.ReactNode> = {
 
 const typeColors: Record<string, string> = {
   call: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  sms: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  email:
+  email: 
     "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   in_person:
     "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
@@ -95,7 +93,7 @@ export function CommunicationLog({ orgId, customerId }: CommunicationLogProps) {
   const t = useTranslations("customers");
   const commonT = useTranslations("common");
 
-  const [type, setType] = useState<"email" | "call" | "sms" | "in_person" | "note">("call");
+  const [type, setType] = useState<"email" | "call" | "in_person" | "note">("call");
   const [direction, setDirection] = useState<"inbound" | "outbound">("inbound");
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
@@ -211,7 +209,7 @@ export function CommunicationLog({ orgId, customerId }: CommunicationLogProps) {
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div
-                key={i}
+                key={`skeleton-${i}`}
                 className="flex items-start gap-3 rounded-lg bg-muted/50 p-3"
               >
                 <div className="flex-1 space-y-2">

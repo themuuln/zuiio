@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Breadcrumb } from "@/components/breadcrumb";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -96,7 +95,7 @@ export default function CustomerDetailPage() {
   const t = useTranslations("customers");
   const commonT = useTranslations("common");
   const params = useParams();
-  const router = useRouter();
+  const { push } = useRouter();
   const customerId = params.id as string;
 
   const orgQuery = useCurrentOrg();
@@ -195,7 +194,7 @@ export default function CustomerDetailPage() {
         return;
       }
       toast.success(t("deleted"));
-      router.push("/dashboard/customers");
+      push("/dashboard/customers");
     } catch {
       toast.error(t("failedToSave"));
     }
@@ -241,12 +240,6 @@ export default function CustomerDetailPage() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      <Breadcrumb
-        items={[
-          { label: t("title"), href: "/dashboard/customers" },
-          { label: customerName },
-        ]}
-      />
       <div className="flex items-center gap-4">
         <Button
           render={<Link href="/dashboard/customers" />}
@@ -257,7 +250,7 @@ export default function CustomerDetailPage() {
           <ArrowLeft className="size-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">{customerName}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{customerName}</h1>
           <p className="text-sm text-muted-foreground">
             Added {new Date(customer.created_at).toLocaleDateString()}
           </p>

@@ -20,7 +20,7 @@ export function KpiCard({
 }: KpiCardProps) {
   return (
     <Card className="transition-shadow hover:shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className="flex flex-row items-center justify-between gap-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {label}
         </CardTitle>
@@ -31,7 +31,7 @@ export function KpiCard({
           <Skeleton className="h-9 w-28" />
         ) : (
           <>
-            <div className="text-3xl font-bold tracking-tight tabular-nums">
+            <div className="text-3xl font-semibold tracking-tight tabular-nums">
               {value}
             </div>
             {subtitle && (

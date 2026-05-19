@@ -3,6 +3,7 @@
 import { Plus, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -42,6 +43,7 @@ const STATUS_FILTERS = [
 
 export default function PurchaseOrdersPage() {
   const t = useTranslations("inventory");
+  const now = useClientNow();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const { data: purchaseOrders = [], isLoading } = usePurchaseOrders(orgId);
@@ -94,7 +96,7 @@ export default function PurchaseOrdersPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight">
           {t("purchaseOrdersTitle")}
         </h1>
         <p className="text-muted-foreground">{t("purchaseOrdersSubtitle")}</p>
@@ -117,7 +119,7 @@ export default function PurchaseOrdersPage() {
             <ExportButton
               data={filtered}
               columns={exportColumns}
-              filename={`purchase-orders-${new Date().toISOString().split("T")[0]}.xlsx`}
+              filename={`purchase-orders-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Purchase Orders"
             />
             <Link href="/dashboard/inventory/purchase-orders/new">
@@ -134,7 +136,7 @@ export default function PurchaseOrdersPage() {
           {isLoading ? (
             <div className="divide-y divide-border">
               {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-4 px-4 py-4">
+                <div key={n} className="flex items-center gap-4 p-4">
                   <Skeleton className="h-5 w-24" />
                   <Skeleton className="h-5 w-32" />
                   <Skeleton className="h-5 w-20" />
@@ -144,7 +146,7 @@ export default function PurchaseOrdersPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-12">
-              <Truck className="size-12 text-muted-foreground/40" />
+              <Truck className="size-10 text-muted-foreground/40" />
               <p className="text-muted-foreground">{t("noPurchaseOrders")}</p>
               <Link href="/dashboard/inventory/purchase-orders/new">
                 <Button>{t("createFirstPO")}</Button>
@@ -156,7 +158,7 @@ export default function PurchaseOrdersPage() {
                 <Link
                   key={po.id}
                   href={`/dashboard/inventory/purchase-orders/${po.id}`}
-                  className="flex items-center gap-4 px-4 py-4 transition-colors hover:bg-muted/50 cursor-pointer min-h-[64px]"
+                  className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/50 cursor-pointer min-h-[64px]"
                 >
                   <span className="font-medium text-sm w-28 shrink-0">
                     {po.order_number}

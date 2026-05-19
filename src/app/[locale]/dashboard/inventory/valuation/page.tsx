@@ -3,17 +3,27 @@
 import { TrendingUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { ExportColumn } from "@/lib/export";
 import { useInventoryBalances } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import type { InventoryBalance } from "@/lib/types";
+import type { InventoryBalanceWithAvgCost } from "@/lib/types";
 
 export default function ValuationPage() {
   const t = useTranslations("inventory");
+  const now = useClientNow();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const { data: balances = [], isLoading } = useInventoryBalances(orgId);
@@ -43,8 +53,8 @@ export default function ValuationPage() {
     }
     return list.map((b) => ({
       ...b,
-      avgUnitCost: b.default_price ?? 0,
-      totalValue: (b.default_price ?? 0) * (b.quantity_on_hand ?? 0),
+      avgUnitCost: b.avg_unit_cost,
+      totalValue: b.avg_unit_cost * (b.quantity_on_hand ?? 0),
     }));
   }, [balances, categoryFilter, search]);
 
@@ -54,7 +64,7 @@ export default function ValuationPage() {
   );
 
   const exportColumns: ExportColumn<
-    InventoryBalance & { avgUnitCost: number; totalValue: number }
+    InventoryBalanceWithAvgCost & { avgUnitCost: number; totalValue: number }
   >[] = [
     { key: "part_name", label: t("partName") },
     { key: "category", label: t("category") },
@@ -66,7 +76,7 @@ export default function ValuationPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight">
           {t("valuationTitle")}
         </h1>
         <p className="text-muted-foreground">{t("valuationSubtitle")}</p>
@@ -79,7 +89,7 @@ export default function ValuationPage() {
             <p className="text-sm text-muted-foreground">
               {t("totalInventoryValue")}
             </p>
-            <p className="text-2xl font-bold tabular-nums">
+            <p className="text-2xl font-semibold tabular-nums">
               {totalValue.toLocaleString("mn-MN")} ₮
             </p>
           </div>
@@ -101,7 +111,7 @@ export default function ValuationPage() {
           <ExportButton
             data={filtered}
             columns={exportColumns}
-            filename={`inventory-valuation-${new Date().toISOString().split("T")[0]}.xlsx`}
+            filename={`inventory-valuation-${now.toISOString().split("T")[0]}.xlsx`}
             sheetName="Valuation"
           />
         }
@@ -111,7 +121,8 @@ export default function ValuationPage() {
         <button
           type="button"
           onClick={() => setCategoryFilter("")}
-          className={`rounded-full border px-4 py-2.5 text-sm font-medium transition-colors min-h-[44px] ${
+          data-slot="touch-target"
+          className={`rounded-full border px-4 py-2.5 text-sm font-medium transition-colors ${
             categoryFilter === ""
               ? "bg-primary text-primary-foreground border-primary"
               : "bg-background border-border text-muted-foreground hover:bg-muted"
@@ -123,8 +134,9 @@ export default function ValuationPage() {
           <button
             key={cat}
             type="button"
+            data-slot="touch-target"
             onClick={() => setCategoryFilter(cat)}
-            className={`rounded-full border px-4 py-2.5 text-sm font-medium transition-colors min-h-[44px] ${
+            className={`rounded-full border px-4 py-2.5 text-sm font-medium transition-colors ${
               categoryFilter === cat
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-background border-border text-muted-foreground hover:bg-muted"
@@ -140,7 +152,7 @@ export default function ValuationPage() {
           {isLoading ? (
             <div className="divide-y divide-border">
               {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-4 px-4 py-4">
+                <div key={n} className="flex items-center gap-4 p-4">
                   <Skeleton className="h-5 w-32" />
                   <Skeleton className="h-5 w-20" />
                   <Skeleton className="h-5 w-16" />
@@ -150,60 +162,60 @@ export default function ValuationPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-12">
-              <TrendingUp className="size-12 text-muted-foreground/40" />
+              <TrendingUp className="size-10 text-muted-foreground/40" />
               <p className="text-muted-foreground">{t("noValuationData")}</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                     {t("partName")}
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                     {t("category")}
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
                     {t("onHand")}
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
                     {t("avgUnitCost")}
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
                     {t("totalValue")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border">
                 {filtered.map((b) => (
-                  <tr
+                  <TableRow
                     key={b.part_id}
                     className="transition-colors hover:bg-muted/30"
                   >
-                    <td className="px-4 py-3 font-medium">
+                    <TableCell className="px-4 py-3 font-medium">
                       <div>
                         <p>{b.part_name}</p>
                         <p className="text-xs text-muted-foreground">
                           {b.part_number ?? "—"}
                         </p>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-muted-foreground">
                       {b.category ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right tabular-nums">
                       {b.quantity_on_hand} {b.unit}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right tabular-nums">
                       {b.avgUnitCost.toLocaleString("mn-MN")} ₮
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold tabular-nums">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right font-semibold tabular-nums">
                       {b.totalValue.toLocaleString("mn-MN")} ₮
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

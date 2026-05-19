@@ -25,7 +25,7 @@ interface LineItem {
 
 export default function NewPurchaseOrderPage() {
   const t = useTranslations("inventory");
-  const router = useRouter();
+  const { push, back } = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const { data: suppliers = [] } = useSuppliers(orgId);
@@ -91,7 +91,7 @@ export default function NewPurchaseOrderPage() {
         })),
       });
       toast.success(t("poCreated"));
-      router.push("/dashboard/inventory/purchase-orders");
+      push("/dashboard/inventory/purchase-orders");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("failedToCreate"));
     }
@@ -103,12 +103,12 @@ export default function NewPurchaseOrderPage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => router.back()}
+          onClick={() => back()}
           aria-label={t("back")}
         >
           <ArrowLeft className="size-5" />
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight">
           {t("newPurchaseOrder")}
         </h1>
       </div>
@@ -137,13 +137,15 @@ export default function NewPurchaseOrderPage() {
                   className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
                 >
                   <option value="">{t("noSupplier")}</option>
-                  {suppliers
-                    .filter((s) => s.is_active)
-                    .map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
+                  {suppliers.flatMap((s) =>
+                    s.is_active
+                      ? [
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>,
+                        ]
+                      : [],
+                  )}
                 </select>
               </div>
             </div>
@@ -256,7 +258,7 @@ export default function NewPurchaseOrderPage() {
               </div>
             )}
 
-            <div className="flex justify-end text-lg font-bold pt-2">
+            <div className="flex justify-end text-lg font-semibold pt-2">
               <span>
                 {t("totalAmount")}: {totalAmount.toLocaleString("mn-MN")} ₮
               </span>
@@ -265,7 +267,7 @@ export default function NewPurchaseOrderPage() {
         </Card>
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+          <Button type="button" variant="outline" onClick={() => back()}>
             {t("cancel")}
           </Button>
           <Button type="submit" disabled={createPO.isPending}>

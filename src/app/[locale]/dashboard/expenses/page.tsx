@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +59,7 @@ function KpiCard({
           {loading ? (
             <Skeleton className="h-8 w-24" />
           ) : (
-            <p className="text-2xl font-bold tabular-nums">{value}</p>
+            <p className="text-2xl font-semibold tabular-nums">{value}</p>
           )}
           <Icon className="ml-auto size-5 text-muted-foreground/40" />
         </div>
@@ -102,13 +103,13 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
       </TableHeader>
       <TableBody>
         {Array.from({ length: rows }).map((_, i) => (
-          <TableRow key={i}>
+          <TableRow key={`row-${i}`}>
             <TableCell>
               <Skeleton className="h-4 w-24" />
             </TableCell>
             <TableCell>
               <div className="space-y-1">
-                <Skeleton className="h-4 w-40" />
+                <Skeleton className="size-40" />
                 <Skeleton className="h-3 w-24" />
               </div>
             </TableCell>
@@ -146,7 +147,8 @@ const PAID_FILTER_OPTIONS: { key: PaidFilter; label: string }[] = [
 
 export default function ExpensesPage() {
   const t = useTranslations();
-  const router = useRouter();
+  const now = useClientNow();
+  const { push } = useRouter();
 
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -222,7 +224,7 @@ export default function ExpensesPage() {
 
   if (showLoadingScreen) {
     return (
-      <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
+      <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-40" />
           <Skeleton className="h-10 w-36" />
@@ -230,7 +232,7 @@ export default function ExpensesPage() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
+            <Card key={`skeleton-${i}`}>
               <CardHeader className="pb-2">
                 <Skeleton className="h-4 w-28" />
               </CardHeader>
@@ -256,7 +258,7 @@ export default function ExpensesPage() {
     return (
       <div className="flex flex-col gap-6 tablet:px-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {t("nav.expenses")}
           </h1>
         </div>
@@ -273,11 +275,11 @@ export default function ExpensesPage() {
   // ── Render: Normal ──
 
   return (
-    <div className="flex flex-col gap-6 tablet:gap-8 tablet:px-2">
+    <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
       {/* ── Header ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {t("nav.expenses")}
           </h1>
           <p className="text-muted-foreground">
@@ -385,7 +387,7 @@ export default function ExpensesPage() {
           <ExportButton
             data={expenses ?? []}
             columns={exportColumns}
-            filename={`expenses-${new Date().toISOString().split("T")[0]}.xlsx`}
+            filename={`expenses-${now.toISOString().split("T")[0]}.xlsx`}
             sheetName="Expenses"
           />
         }
@@ -402,7 +404,7 @@ export default function ExpensesPage() {
         <CardContent className="p-0">
           {!expenses || expenses.length === 0 ? (
             <div className="flex flex-col items-center gap-3 px-4 py-16">
-              <Wallet className="size-12 text-muted-foreground/40" />
+              <Wallet className="size-10 text-muted-foreground/40" />
               <p className="text-muted-foreground">No expenses found</p>
               <Button
                 render={<Link href="/dashboard/expenses/new" />}
@@ -432,7 +434,7 @@ export default function ExpensesPage() {
                     key={expense.id}
                     className="h-16 cursor-pointer"
                     onClick={() =>
-                      router.push(`/dashboard/expenses/${expense.id}`)
+                      push(`/dashboard/expenses/${expense.id}`)
                     }
                   >
                     <TableCell>

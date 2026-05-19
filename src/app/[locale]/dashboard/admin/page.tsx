@@ -35,9 +35,11 @@ export default function AdminPage() {
   const [savingOrgId, setSavingOrgId] = useState<string | null>(null);
 
   useEffect(() => {
+    const abort = new AbortController();
+    const signal = abort.signal;
     Promise.all([
-      fetch("/api/admin/me").then((r) => r.json()),
-      fetch("/api/admin/organizations").then((r) => r.json()),
+      fetch("/api/admin/me", { signal }).then((r) => r.json()),
+      fetch("/api/admin/organizations", { signal }).then((r) => r.json()),
     ])
       .then(([meJson, orgsJson]) => {
         setIsSuperAdmin(meJson.data?.isSuperAdmin ?? false);
@@ -45,6 +47,7 @@ export default function AdminPage() {
       })
       .catch(() => setIsSuperAdmin(false))
       .finally(() => setLoading(false));
+    return () => abort.abort();
   }, []);
 
   async function handlePlanChange(orgId: string, planType: string) {
@@ -84,7 +87,7 @@ export default function AdminPage() {
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-20 w-full" />
+            <Skeleton key={`skeleton-${i}`} className="h-20 w-full" />
           ))}
         </div>
       </div>
@@ -94,7 +97,7 @@ export default function AdminPage() {
   if (!isSuperAdmin) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <ShieldAlert className="size-12 text-destructive" />
+        <ShieldAlert className="size-10 text-destructive" />
         <h2 className="text-xl font-semibold">Access Denied</h2>
         <p className="text-muted-foreground text-center max-w-md">
           You need super admin privileges to access this dashboard.
@@ -107,7 +110,7 @@ export default function AdminPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
             <Shield className="size-6" />
             Admin Dashboard
           </h1>
@@ -180,7 +183,7 @@ export default function AdminPage() {
                         {org.subscription.status}
                       </Badge>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className="text-xs text-muted-foreground">–</span>
                     )}
                   </div>
 
@@ -220,7 +223,7 @@ export default function AdminPage() {
 
       <p className="text-xs text-muted-foreground">
         Changes take effect immediately. The subscription plan limits are not
-        enforced yet — this only updates the plan type in the database.
+        enforced yet; this only updates the plan type in the database.
       </p>
     </div>
   );

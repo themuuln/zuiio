@@ -24,7 +24,7 @@ export function InviteForm({
 }: InviteFormProps) {
   return (
     <Card className="border-primary/50">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+      <CardHeader className="flex flex-row items-center justify-between gap-y-0 pb-3">
         <CardTitle className="text-base">{t("inviteNew")}</CardTitle>
         <Button
           variant="ghost"

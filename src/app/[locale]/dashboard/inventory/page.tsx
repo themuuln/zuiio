@@ -16,7 +16,8 @@ import {
   X,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import type { ExportColumn } from "@/lib/export";
@@ -26,6 +27,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatMNT } from "@/lib/utils";
 
@@ -172,7 +181,7 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
       <CardContent className="p-0">
         {Array.from({ length: rows }).map((_, i) => (
           <div
-            key={i}
+            key={`row-${i}`}
             className="flex items-center gap-4 border-b border-border p-4"
           >
             <Skeleton className="h-5 w-full" />
@@ -260,6 +269,7 @@ function SortKeyHeader({
 export default function InventoryPage() {
   const locale = useLocale();
   const t = useTranslations("inventory");
+  const now = useClientNow();
   const { data: org, isLoading: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId ?? null;
   const [tab, setTab] = useState<Tab>("parts");
@@ -269,7 +279,7 @@ export default function InventoryPage() {
 
   // Parts data
   const [parts, setParts] = useState<Part[]>([]);
-  const [balances, setBalances] = useState<Balance[]>([]);
+  const balancesRef = useRef<Balance[]>([]);
   const [showAddPart, setShowAddPart] = useState(false);
   const [showAddMovement, setShowAddMovement] = useState(false);
 
@@ -334,7 +344,7 @@ export default function InventoryPage() {
         thresholdsRes.json(),
       ]);
       if (!partsJson.error) setParts(partsJson.data ?? []);
-      if (!balancesJson.error) setBalances(balancesJson.data ?? []);
+      if (!balancesJson.error) balancesRef.current = balancesJson.data ?? [];
       if (!thresholdsJson.error) {
         const map: Record<string, number> = {};
         for (const t of thresholdsJson.data ?? []) {
@@ -737,7 +747,7 @@ export default function InventoryPage() {
 
   // ── Build balance map ──────────────────────────────────────
   const balanceMap = new Map<string, Balance>();
-  for (const b of balances) {
+  for (const b of balancesRef.current) {
     balanceMap.set(b.part_id, b);
   }
 
@@ -756,7 +766,7 @@ export default function InventoryPage() {
       );
     }
 
-    const sorted = [...filtered].sort((a, b) => {
+    const sorted = filtered.toSorted((a, b) => {
       let cmp = 0;
       const aMn = locale === "mn" && a.name_mn ? a.name_mn : a.name;
       const bMn = locale === "mn" && b.name_mn ? b.name_mn : b.name;
@@ -800,7 +810,7 @@ export default function InventoryPage() {
   // ── Render ─────────────────────────────────────────────────
   if (loading && !orgId) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="tablet-touch flex flex-col gap-6">
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-10 w-full" />
         <TableSkeleton />
@@ -810,8 +820,8 @@ export default function InventoryPage() {
 
   if (error && !orgId) {
     return (
-      <div className="flex flex-col gap-6">
-        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+      <div className="tablet-touch flex flex-col gap-6">
+        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <p className="text-muted-foreground">{error}</p>
@@ -823,9 +833,9 @@ export default function InventoryPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="tablet-touch flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground">
           {t("subtitleParts")}
         </p>
@@ -874,7 +884,7 @@ export default function InventoryPage() {
                     return { ...p, quantity_on_hand: qty, stock_status: status };
                   })}
                   columns={partExportColumns}
-                  filename={`inventory-parts-${new Date().toISOString().split("T")[0]}.xlsx`}
+                  filename={`inventory-parts-${now.toISOString().split("T")[0]}.xlsx`}
                   sheetName="Parts"
                 />
                 <Button size="lg" onClick={() => setShowAddMovement(true)}>
@@ -894,7 +904,7 @@ export default function InventoryPage() {
           ) : parts.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center gap-3 py-16">
-                <Package className="size-12 text-muted-foreground/40" />
+                <Package className="size-10 text-muted-foreground/40" />
                 <p className="text-muted-foreground">{t("noParts")}</p>
                 <Button variant="outline" onClick={() => setShowAddPart(true)}>
                   {t("addFirstPart")}
@@ -904,10 +914,10 @@ export default function InventoryPage() {
           ) : (
             <Card>
               <CardContent className="overflow-x-auto p-0">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/50">
-                      <th className="px-4 py-3 text-left">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="px-4 py-3 text-left">
                         <SortKeyHeader
                           label="Name"
                           sortKey="name"
@@ -915,8 +925,8 @@ export default function InventoryPage() {
                           sortDir={sortDir}
                           onSort={handleSort}
                         />
-                      </th>
-                      <th className="px-4 py-3 text-left">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-left">
                         <SortKeyHeader
                           label="Popularity"
                           sortKey="popularity"
@@ -925,8 +935,8 @@ export default function InventoryPage() {
                           onSort={handleSort}
                           icon={Star}
                         />
-                      </th>
-                      <th className="px-4 py-3 text-left">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-left">
                         <SortKeyHeader
                           label="Category"
                           sortKey="category"
@@ -934,8 +944,8 @@ export default function InventoryPage() {
                           sortDir={sortDir}
                           onSort={handleSort}
                         />
-                      </th>
-                      <th className="px-4 py-3 text-right">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-right">
                         <SortKeyHeader
                           label="Default Price"
                           sortKey="price"
@@ -943,8 +953,8 @@ export default function InventoryPage() {
                           sortDir={sortDir}
                           onSort={handleSort}
                         />
-                      </th>
-                      <th className="px-4 py-3 text-right">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-right">
                         <SortKeyHeader
                           label="On Hand"
                           sortKey="stock"
@@ -952,19 +962,19 @@ export default function InventoryPage() {
                           sortDir={sortDir}
                           onSort={handleSort}
                         />
-                      </th>
-                      <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-center font-medium text-muted-foreground">
                         Status
-                      </th>
-                      <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-center font-medium text-muted-foreground">
                         Min
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Part #
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {sortedParts.map((part) => {
                       const bal = balanceMap.get(part.id);
                       const qty = bal?.quantity_on_hand ?? 0;
@@ -972,16 +982,16 @@ export default function InventoryPage() {
                       const status =
                         qty <= 0 ? "out" : qty < min ? "low" : "ok";
                       return (
-                        <tr
+                        <TableRow
                           key={part.id}
                           className="border-b border-border transition-colors hover:bg-muted/30"
                         >
-                          <td className="px-4 py-3 font-medium">
+                          <TableCell className="px-4 py-3 font-medium">
                             {locale === "mn" && part.name_mn
                               ? part.name_mn
                               : part.name}
-                          </td>
-                          <td className="px-4 py-3">
+                          </TableCell>
+                          <TableCell className="px-4 py-3">
                             {part.popularity_score != null && (
                               <span
                                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -996,19 +1006,19 @@ export default function InventoryPage() {
                                 {part.popularity_score}
                               </span>
                             )}
-                          </td>
-                          <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-muted-foreground font-mono text-xs">
                             {part.part_number ?? "—"}
-                          </td>
-                          <td className="px-4 py-3 text-muted-foreground">
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-muted-foreground">
                             {part.category ?? "—"}
-                          </td>
-                          <td className="px-4 py-3 text-right tabular-nums">
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-right tabular-nums">
                             {part.default_price
                               ? formatMNT(part.default_price)
                               : "—"}
-                          </td>
-                          <td
+                          </TableCell>
+                          <TableCell
                             className={`px-4 py-3 text-right font-semibold tabular-nums ${
                               status === "out"
                                 ? "text-red-600"
@@ -1018,8 +1028,8 @@ export default function InventoryPage() {
                             }`}
                           >
                             {qty} {part.unit}
-                          </td>
-                          <td className="px-4 py-3 text-center">
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-center">
                             <span
                               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
                                 status === "out"
@@ -1038,8 +1048,8 @@ export default function InventoryPage() {
                                   ? t("lowStock")
                                   : t("inStock")}
                             </span>
-                          </td>
-                          <td className="px-4 py-3 text-center">
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-center">
                             {editingThreshold === part.id ? (
                               <div className="flex items-center justify-center gap-1">
                                 <Input
@@ -1073,12 +1083,12 @@ export default function InventoryPage() {
                                 {thresholds[part.id] ?? 5}
                               </button>
                             )}
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           )}
@@ -1100,7 +1110,7 @@ export default function InventoryPage() {
               <ExportButton
                 data={movements}
                 columns={movementExportColumns}
-                filename={`inventory-movements-${new Date().toISOString().split("T")[0]}.xlsx`}
+                filename={`inventory-movements-${now.toISOString().split("T")[0]}.xlsx`}
                 sheetName="Movements"
               />
             }
@@ -1111,72 +1121,72 @@ export default function InventoryPage() {
           ) : movements.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center gap-3 py-16">
-                <ClipboardList className="size-12 text-muted-foreground/40" />
+                <ClipboardList className="size-10 text-muted-foreground/40" />
                 <p className="text-muted-foreground">{t("noMovements")}</p>
               </CardContent>
             </Card>
           ) : (
             <Card>
               <CardContent className="overflow-x-auto p-0">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/50">
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Date
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Type
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Part
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Qty
-                      </th>
-                      <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
                         Unit Cost
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Ref
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Notes
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {movements.map((m) => (
-                      <tr key={m.id} className="border-b border-border">
-                        <td className="px-4 py-3 text-muted-foreground text-xs">
+                      <TableRow key={m.id} className="border-b border-border">
+                        <TableCell className="px-4 py-3 text-muted-foreground text-xs">
                           {formatDate(m.created_at)}
-                        </td>
-                        <td className="px-4 py-3">
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
                           <span
                             className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${MOVEMENT_COLORS[m.movement_type] ?? ""}`}
                           >
                             {MOVEMENT_LABELS[m.movement_type] ??
                               m.movement_type}
                           </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm font-medium">
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-sm font-medium">
                           {m.part_name}
-                        </td>
-                        <td className="px-4 py-3 font-semibold tabular-nums">
+                        </TableCell>
+                        <TableCell className="px-4 py-3 font-semibold tabular-nums">
                           {m.quantity}
-                        </td>
-                        <td className="px-4 py-3 text-right tabular-nums">
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-right tabular-nums">
                           {m.unit_cost ? formatMNT(m.unit_cost) : "—"}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground text-xs">
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-muted-foreground text-xs">
                           {m.reference_type ?? "—"}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground text-xs max-w-[200px] truncate">
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-muted-foreground text-xs max-w-[200px] truncate">
                           {m.notes ?? "—"}
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           )}
@@ -1198,7 +1208,7 @@ export default function InventoryPage() {
                 <ExportButton
                   data={suppliers.filter((s) => s.is_active)}
                   columns={supplierExportColumns}
-                  filename={`inventory-suppliers-${new Date().toISOString().split("T")[0]}.xlsx`}
+                  filename={`inventory-suppliers-${now.toISOString().split("T")[0]}.xlsx`}
                   sheetName="Suppliers"
                 />
                 <Button
@@ -1220,7 +1230,7 @@ export default function InventoryPage() {
           ) : suppliers.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center gap-3 py-16">
-                <Building2 className="size-12 text-muted-foreground/40" />
+                <Building2 className="size-10 text-muted-foreground/40" />
                 <p className="text-muted-foreground">{t("noSuppliers")}</p>
                 <Button
                   variant="outline"
@@ -1236,41 +1246,41 @@ export default function InventoryPage() {
           ) : (
             <Card>
               <CardContent className="overflow-x-auto p-0">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/50">
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Name
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Contact
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Phone
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                         Email
-                      </th>
-                      <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-center font-medium text-muted-foreground">
                         Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {filteredSuppliers.map((s) => (
-                      <tr
+                      <TableRow
                         key={s.id}
                         className="border-b border-border transition-colors hover:bg-muted/30"
                       >
-                        <td className="px-4 py-3 font-medium">{s.name}</td>
-                        <td className="px-4 py-3 text-muted-foreground">
+                        <TableCell className="px-4 py-3 font-medium">{s.name}</TableCell>
+                        <TableCell className="px-4 py-3 text-muted-foreground">
                           {s.contact_person ?? "—"}
-                        </td>
-                        <td className="px-4 py-3">{s.phone ?? "—"}</td>
-                        <td className="px-4 py-3 text-muted-foreground">
+                        </TableCell>
+                        <TableCell className="px-4 py-3">{s.phone ?? "—"}</TableCell>
+                        <TableCell className="px-4 py-3 text-muted-foreground">
                           {s.email ?? "—"}
-                        </td>
-                        <td className="px-4 py-3 text-center">
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
                             <button
                               type="button"
@@ -1292,11 +1302,11 @@ export default function InventoryPage() {
                               <Trash2 className="size-4" />
                             </button>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           )}
@@ -1318,7 +1328,7 @@ export default function InventoryPage() {
                 <ExportButton
                   data={purchaseOrders}
                   columns={poExportColumns}
-                  filename={`inventory-pos-${new Date().toISOString().split("T")[0]}.xlsx`}
+                  filename={`inventory-pos-${now.toISOString().split("T")[0]}.xlsx`}
                   sheetName="Purchase Orders"
                 />
                 <Button size="lg" onClick={() => setShowAddPO(true)}>
@@ -1334,7 +1344,7 @@ export default function InventoryPage() {
           ) : purchaseOrders.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center gap-3 py-16">
-                <Truck className="size-12 text-muted-foreground/40" />
+                <Truck className="size-10 text-muted-foreground/40" />
                 <p className="text-muted-foreground">{t("noPurchaseOrders")}</p>
                 <Button variant="outline" onClick={() => setShowAddPO(true)}>
                   Create your first PO
@@ -1380,45 +1390,45 @@ export default function InventoryPage() {
                               No items
                             </p>
                           ) : (
-                            <table className="w-full text-sm">
-                              <thead>
-                                <tr className="border-b border-border">
-                                  <th className="py-2 pr-4 text-left font-medium text-muted-foreground">
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="border-b border-border">
+                                  <TableHead className="py-2 pr-4 text-left font-medium text-muted-foreground">
                                     Part
-                                  </th>
-                                  <th className="py-2 pr-4 text-right font-medium text-muted-foreground">
+                                  </TableHead>
+                                  <TableHead className="py-2 pr-4 text-right font-medium text-muted-foreground">
                                     Ordered
-                                  </th>
-                                  <th className="py-2 pr-4 text-right font-medium text-muted-foreground">
+                                  </TableHead>
+                                  <TableHead className="py-2 pr-4 text-right font-medium text-muted-foreground">
                                     Received
-                                  </th>
-                                  <th className="py-2 text-right font-medium text-muted-foreground">
+                                  </TableHead>
+                                  <TableHead className="py-2 text-right font-medium text-muted-foreground">
                                     Unit Cost
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
+                                  </TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
                                 {(poItems[po.id] ?? []).map((item) => (
-                                  <tr
+                                  <TableRow
                                     key={item.id}
                                     className="border-b border-border/50"
                                   >
-                                    <td className="py-2 pr-4">
+                                    <TableCell className="py-2 pr-4">
                                       {item.part_name}
-                                    </td>
-                                    <td className="py-2 pr-4 text-right tabular-nums">
+                                    </TableCell>
+                                    <TableCell className="py-2 pr-4 text-right tabular-nums">
                                       {item.quantity_ordered}
-                                    </td>
-                                    <td className="py-2 pr-4 text-right tabular-nums">
+                                    </TableCell>
+                                    <TableCell className="py-2 pr-4 text-right tabular-nums">
                                       {item.quantity_received}
-                                    </td>
-                                    <td className="py-2 text-right tabular-nums">
+                                    </TableCell>
+                                    <TableCell className="py-2 text-right tabular-nums">
                                       {formatMNT(item.unit_cost)}
-                                    </td>
-                                  </tr>
+                                    </TableCell>
+                                  </TableRow>
                                 ))}
-                              </tbody>
-                            </table>
+                              </TableBody>
+                            </Table>
                           )}
                           {po.status !== "received" &&
                             po.status !== "cancelled" && (
@@ -1450,8 +1460,9 @@ export default function InventoryPage() {
         <Modal title={t("addPart")} onClose={() => setShowAddPart(false)}>
           <form onSubmit={handleAddPart} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Name *</label>
+              <label htmlFor="part-name" className="text-sm font-medium">Name *</label>
               <Input
+                id="part-name"
                 name="name"
                 required
                 placeholder="Oil filter"
@@ -1459,8 +1470,9 @@ export default function InventoryPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Монгол нэр</label>
+              <label htmlFor="part-name-mn" className="text-sm font-medium">Монгол нэр</label>
               <Input
+                id="part-name-mn"
                 name="name_mn"
                 placeholder="Тосны шүүлтүүр"
                 className="h-11"
@@ -1468,21 +1480,23 @@ export default function InventoryPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Part Number</label>
+                <label htmlFor="part-number" className="text-sm font-medium">Part Number</label>
                 <Input
+                  id="part-number"
                   name="part_number"
                   placeholder="OF-101"
                   className="h-11"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Category</label>
-                <Input name="category" placeholder="Filters" className="h-11" />
+                <label htmlFor="part-category" className="text-sm font-medium">Category</label>
+                <Input id="part-category" name="category" placeholder="Filters" className="h-11" />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Description</label>
+              <label htmlFor="part-description" className="text-sm font-medium">Description</label>
               <Input
+                id="part-description"
                 name="description"
                 placeholder="Optional description"
                 className="h-11"
@@ -1490,12 +1504,13 @@ export default function InventoryPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Unit</label>
-                <Input name="unit" defaultValue="piece" className="h-11" />
+                <label htmlFor="part-unit" className="text-sm font-medium">Unit</label>
+                <Input id="part-unit" name="unit" defaultValue="piece" className="h-11" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Default Price (₮)</label>
+                <label htmlFor="part-default-price" className="text-sm font-medium">Default Price (₮)</label>
                 <Input
+                  id="part-default-price"
                   name="default_price"
                   type="number"
                   min="0"
@@ -1525,8 +1540,9 @@ export default function InventoryPage() {
         >
           <form onSubmit={handleAddMovement} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Part *</label>
+              <label htmlFor="inv-part-select" className="text-sm font-medium">Part *</label>
               <select
+                id="inv-part-select"
                 name="part_id"
                 required
                 className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
@@ -1541,8 +1557,9 @@ export default function InventoryPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Movement Type *</label>
+              <label htmlFor="inv-movement-type" className="text-sm font-medium">Movement Type *</label>
               <select
+                id="inv-movement-type"
                 name="movement_type"
                 required
                 className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
@@ -1557,8 +1574,9 @@ export default function InventoryPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Quantity *</label>
+                <label htmlFor="inv-quantity" className="text-sm font-medium">Quantity *</label>
                 <Input
+                  id="inv-quantity"
                   name="quantity"
                   type="number"
                   required
@@ -1567,8 +1585,9 @@ export default function InventoryPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Unit Cost (₮)</label>
+                <label htmlFor="inv-unit-cost" className="text-sm font-medium">Unit Cost (₮)</label>
                 <Input
+                  id="inv-unit-cost"
                   name="unit_cost"
                   type="number"
                   min="0"
@@ -1577,8 +1596,9 @@ export default function InventoryPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Notes</label>
+              <label htmlFor="inv-movement-notes" className="text-sm font-medium">Notes</label>
               <Input
+                id="inv-movement-notes"
                 name="notes"
                 placeholder="Optional notes"
                 className="h-11"
@@ -1609,8 +1629,9 @@ export default function InventoryPage() {
         >
           <form onSubmit={handleSaveSupplier} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Name *</label>
+              <label htmlFor="inv-supplier-name" className="text-sm font-medium">Name *</label>
               <Input
+                id="inv-supplier-name"
                 name="name"
                 required
                 defaultValue={editingSupplier?.name ?? ""}
@@ -1620,16 +1641,18 @@ export default function InventoryPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Contact Person</label>
+                <label htmlFor="inv-supplier-contact" className="text-sm font-medium">Contact Person</label>
                 <Input
+                  id="inv-supplier-contact"
                   name="contact_person"
                   defaultValue={editingSupplier?.contact_person ?? ""}
                   className="h-11"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Phone</label>
+                <label htmlFor="inv-supplier-phone" className="text-sm font-medium">Phone</label>
                 <Input
+                  id="inv-supplier-phone"
                   name="phone"
                   defaultValue={editingSupplier?.phone ?? ""}
                   className="h-11"
@@ -1637,8 +1660,9 @@ export default function InventoryPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Email</label>
+              <label htmlFor="inv-supplier-email" className="text-sm font-medium">Email</label>
               <Input
+                id="inv-supplier-email"
                 name="email"
                 type="email"
                 defaultValue={editingSupplier?.email ?? ""}
@@ -1646,8 +1670,9 @@ export default function InventoryPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Address</label>
+              <label htmlFor="inv-supplier-address" className="text-sm font-medium">Address</label>
               <Input
+                id="inv-supplier-address"
                 name="address"
                 defaultValue={editingSupplier?.address ?? ""}
                 className="h-11"
@@ -1655,20 +1680,90 @@ export default function InventoryPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Tax ID</label>
+                <label htmlFor="inv-supplier-tax-id" className="text-sm font-medium">Tax ID</label>
                 <Input
+                  id="inv-supplier-tax-id"
                   name="tax_id"
                   defaultValue={editingSupplier?.tax_id ?? ""}
                   className="h-11"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Notes</label>
+                <label htmlFor="inv-supplier-notes" className="text-sm font-medium">Notes</label>
                 <Input
+                  id="inv-supplier-notes"
                   name="notes"
                   defaultValue={editingSupplier?.notes ?? ""}
                   className="h-11"
                 />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label htmlFor="supplier-contact-person" className="text-sm font-medium">Contact Person</label>
+                <Input
+                  id="supplier-contact-person"
+                  name="contact_person"
+                  defaultValue={editingSupplier?.contact_person ?? ""}
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="supplier-phone" className="text-sm font-medium">Phone</label>
+                <Input
+                  id="supplier-phone"
+                  name="phone"
+                  defaultValue={editingSupplier?.phone ?? ""}
+                  className="h-11"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="supplier-email" className="text-sm font-medium">Email</label>
+              <Input
+                id="supplier-email"
+                name="email"
+                type="email"
+                defaultValue={editingSupplier?.email ?? ""}
+                className="h-11"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="supplier-address" className="text-sm font-medium">Address</label>
+              <Input
+                id="supplier-address"
+                name="address"
+                defaultValue={editingSupplier?.address ?? ""}
+                className="h-11"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label htmlFor="supplier-tax-id" className="text-sm font-medium">Tax ID</label>
+                <Input
+                  id="supplier-tax-id"
+                  name="tax_id"
+                  defaultValue={editingSupplier?.tax_id ?? ""}
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="supplier-notes" className="text-sm font-medium">Notes</label>
+                <Input
+                  id="supplier-notes"
+                  name="notes"
+                  defaultValue={editingSupplier?.notes ?? ""}
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2">
+              <label htmlFor="movement-notes" className="text-sm font-medium">Notes</label>
+              <Input
+                id="movement-notes"
+                name="notes"
+                placeholder="Optional notes"
+                className="h-11"
+              />
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-2">
@@ -1699,8 +1794,9 @@ export default function InventoryPage() {
           <form onSubmit={handleCreatePO} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Order Number *</label>
+                <label htmlFor="inv-po-order-number" className="text-sm font-medium">Order Number *</label>
                 <Input
+                  id="inv-po-order-number"
                   name="order_number"
                   required
                   placeholder="PO-001"
@@ -1708,25 +1804,107 @@ export default function InventoryPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Supplier</label>
+                <label htmlFor="inv-po-supplier" className="text-sm font-medium">Supplier</label>
                 <select
+                  id="inv-po-supplier"
                   name="supplier_id"
                   className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
                 >
                   <option value="">No supplier</option>
-                  {suppliers
-                    .filter((s) => s.is_active)
-                    .map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
+                  {suppliers.flatMap((s) =>
+                    s.is_active
+                      ? [
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>,
+                        ]
+                      : [],
+                  )}
                 </select>
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Notes</label>
+              <label htmlFor="inv-po-notes" className="text-sm font-medium">Notes</label>
               <Input
+                id="inv-po-notes"
+                name="notes"
+                placeholder="Optional notes"
+                className="h-11"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="inv-name-mn" className="text-sm font-medium">Монгол нэр</label>
+              <Input
+                id="inv-name-mn"
+                name="name_mn"
+                placeholder="Тосны шүүлтүүр"
+                className="h-11"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label htmlFor="inv-part-number" className="text-sm font-medium">Part Number</label>
+                <Input
+                  id="inv-part-number"
+                  name="part_number"
+                  placeholder="OF-101"
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="inv-category" className="text-sm font-medium">Category</label>
+                <Input id="inv-category" name="category" placeholder="Filters" className="h-11" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="inv-description" className="text-sm font-medium">Description</label>
+              <Input
+                id="inv-description"
+                name="description"
+                placeholder="Optional description"
+                className="h-11"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label htmlFor="inv-unit" className="text-sm font-medium">Unit</label>
+                <Input id="inv-unit" name="unit" defaultValue="piece" className="h-11" />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="inv-default-price" className="text-sm font-medium">Default Price (₮)</label>
+                <Input
+                  id="inv-default-price"
+                  name="default_price"
+                  type="number"
+                  min="0"
+                  className="h-11"
+                />
+              </div>
+            </div>
+              <div className="space-y-2">
+                <label htmlFor="po-supplier" className="text-sm font-medium">Supplier</label>
+                <select
+                  id="po-supplier"
+                  name="supplier_id"
+                  className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">No supplier</option>
+                  {suppliers.flatMap((s) =>
+                    s.is_active
+                      ? [
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>,
+                        ]
+                      : [],
+                  )}
+                </select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="po-notes" className="text-sm font-medium">Notes</label>
+              <Input
+                id="po-notes"
                 name="notes"
                 placeholder="Optional notes"
                 className="h-11"
@@ -1765,7 +1943,7 @@ function POItemEditor({ parts, locale }: { parts: Part[]; locale: string }) {
       <input type="hidden" name="item_count" value={count} />
       {Array.from({ length: count }).map((_, i) => (
         <div
-          key={i}
+          key={`item-${i}`}
           className="flex items-end gap-2 border-b border-border pb-2"
         >
           <div className="flex-1 space-y-1">
@@ -1776,13 +1954,15 @@ function POItemEditor({ parts, locale }: { parts: Part[]; locale: string }) {
               className="h-9 w-full rounded border border-input bg-background px-2 text-sm"
             >
               <option value="">Select</option>
-              {parts
-                .filter((p) => p.is_active)
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {locale === "mn" && p.name_mn ? p.name_mn : p.name}
-                  </option>
-                ))}
+              {parts.flatMap((p) =>
+                p.is_active
+                  ? [
+                      <option key={p.id} value={p.id}>
+                        {locale === "mn" && p.name_mn ? p.name_mn : p.name}
+                      </option>,
+                    ]
+                  : [],
+              )}
             </select>
           </div>
           <div className="w-20 space-y-1">

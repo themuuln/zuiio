@@ -28,14 +28,15 @@ export default function AlertsPage() {
       thresholdMap.set(th.part_id, th.minimum_quantity);
     }
 
-    return balances
-      .map((b) => {
-        const min = thresholdMap.get(b.part_id ?? "") ?? 0;
-        const shortage = Math.max(0, min - (b.quantity_on_hand ?? 0));
-        return { ...b, min, shortage };
-      })
-      .filter((b) => b.shortage > 0)
-      .sort((a, b) => b.shortage - a.shortage);
+    const result: Array<{ min: number; shortage: number } & (typeof balances)[number]> = [];
+    for (const b of balances) {
+      const min = thresholdMap.get(b.part_id ?? "") ?? 0;
+      const shortage = Math.max(0, min - (b.quantity_on_hand ?? 0));
+      if (shortage > 0) {
+        result.push({ ...b, min, shortage });
+      }
+    }
+    return result.sort((a, b) => b.shortage - a.shortage);
   }, [balances, thresholds]);
 
   const isLoading = balancesLoading || thresholdsLoading;
@@ -43,7 +44,7 @@ export default function AlertsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight">
           {t("alertsTitle")}
         </h1>
         <p className="text-muted-foreground">{t("alertsSubtitle")}</p>
@@ -54,7 +55,7 @@ export default function AlertsPage() {
           {isLoading ? (
             <div className="divide-y divide-border">
               {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-4 px-4 py-4">
+                <div key={n} className="flex items-center gap-4 p-4">
                   <Skeleton className="h-5 w-32" />
                   <Skeleton className="h-5 w-16" />
                   <Skeleton className="h-5 w-16" />
@@ -64,7 +65,7 @@ export default function AlertsPage() {
             </div>
           ) : alerts.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-12">
-              <AlertTriangle className="size-12 text-muted-foreground/40" />
+              <AlertTriangle className="size-10 text-muted-foreground/40" />
               <p className="text-muted-foreground">{t("noAlerts")}</p>
             </div>
           ) : (
@@ -72,7 +73,7 @@ export default function AlertsPage() {
               {alerts.map((a) => (
                 <div
                   key={a.part_id}
-                  className="flex items-center gap-4 px-4 py-4 min-h-[64px]"
+                  className="flex items-center gap-4 p-4 min-h-[64px]"
                 >
                   <AlertTriangle className="size-5 text-red-500 shrink-0" />
                   <div className="flex-1 min-w-0">

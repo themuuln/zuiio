@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
@@ -52,6 +53,7 @@ import {
   useWorkOrders,
   type WorkOrderListItem,
 } from "@/lib/queries/use-work-orders";
+import { formatMNT } from "@/lib/utils";
 
 // ── Sort ──────────────────────────────────────────────────────
 
@@ -61,7 +63,8 @@ type SortKey =
   | "status"
   | "created_at"
   | "grand_total"
-  | "mechanic";
+  | "mechanic"
+  | "profit";
 type SortDir = "asc" | "desc";
 interface SortConfig {
   key: SortKey;
@@ -126,9 +129,8 @@ function getVehicleDisplay(wo: WorkOrderListItem): string {
   return parts.join(" ");
 }
 
-function getDaysSince(dateStr: string): number {
+function getDaysSince(dateStr: string, now: Date): number {
   const created = new Date(dateStr);
-  const now = new Date();
   return Math.floor(
     (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24),
   );
@@ -157,6 +159,8 @@ function getSortValue(wo: WorkOrderListItem, key: SortKey): string | number {
       return wo.grand_total ?? 0;
     case "mechanic":
       return wo.mechanic?.full_name?.toLowerCase() ?? "";
+    case "profit":
+      return wo.gross_profit ?? 0;
   }
 }
 
@@ -211,13 +215,37 @@ const exportColumns: ExportColumn<WorkOrderListItem>[] = [
   { key: "status", label: "Status" },
   { key: "created_at", label: "Date", format: "date" },
   { key: "grand_total", label: "Grand Total", format: "currency" },
+  {
+    key: "services_cost",
+    label: "Services Cost",
+    format: "currency",
+  },
+  {
+    key: "parts_cost",
+    label: "Parts Cost",
+    format: "currency",
+  },
+  {
+    key: "gross_profit",
+    label: "Gross Profit",
+    format: "currency",
+  },
+  {
+    key: "margin_percent",
+    label: "Margin %",
+    value: (wo) =>
+      wo.margin_percent !== undefined
+        ? `${wo.margin_percent.toFixed(1)}%`
+        : "—",
+  },
 ];
 
 // ── Page ──────────────────────────────────────────────────────
 
 export default function WorkOrdersPage() {
   const t = useTranslations();
-  const router = useRouter();
+  const { push } = useRouter();
+  const now = useClientNow();
   const queryClient = useQueryClient();
   const [statusIdx, setStatusIdx] = useState(0);
   const [search, setSearch] = useState("");
@@ -265,7 +293,7 @@ export default function WorkOrdersPage() {
 
   const list = useMemo(() => {
     const raw = orders ?? [];
-    const sorted = [...raw].sort((a, b) => {
+    const sorted = raw.toSorted((a, b) => {
       const va = getSortValue(a, sort.key);
       const vb = getSortValue(b, sort.key);
       const cmp =
@@ -308,9 +336,9 @@ export default function WorkOrdersPage() {
 
   if (isLoading && !orders) {
     return (
-      <div className="flex flex-col gap-3 tablet:gap-4 tablet:px-1">
+      <div className="tablet-touch flex flex-col gap-3 tablet:gap-4 tablet:px-1">
         <div className="flex flex-col gap-0.5">
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {t("workOrders.title")}
           </h1>
           <p className="text-muted-foreground">{t("workOrders.subtitle")}</p>
@@ -334,7 +362,7 @@ export default function WorkOrdersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-3 tablet:gap-4 tablet:px-1">
+    <div className="tablet-touch flex flex-col gap-3 tablet:gap-4 tablet:px-1">
       {/* ── AlertDialog for cancel confirmation ──────────────── */}
       <AlertDialog
         open={!!cancelTarget}
@@ -368,7 +396,7 @@ export default function WorkOrdersPage() {
 
       {/* ── Header ───────────────────────────────────────────── */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight">
           {t("workOrders.title")}
         </h1>
         <p className="text-muted-foreground">{t("workOrders.subtitle")}</p>
@@ -398,7 +426,7 @@ export default function WorkOrdersPage() {
             <ExportButton
               data={list}
               columns={exportColumns}
-              filename={`work-orders-${new Date().toISOString().split("T")[0]}.xlsx`}
+              filename={`work-orders-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Work Orders"
             />
             <Link href="/dashboard/work-orders/new">
@@ -490,18 +518,35 @@ export default function WorkOrdersPage() {
                       onSort={handleSort}
                     />
                   </TableHead>
+                  <TableHead className="hidden xl:table-cell w-28 text-right text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                    {t("workOrders.servicesCost")}
+                  </TableHead>
+                  <TableHead className="hidden xl:table-cell w-28 text-right text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                    {t("workOrders.partsCost")}
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell w-28 text-right">
+                    <SortHeader
+                      label={t("workOrders.grossProfit")}
+                      sortKey="profit"
+                      current={sort}
+                      onSort={handleSort}
+                    />
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell w-24 text-right text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                    {t("workOrders.margin")}
+                  </TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {list.map((wo) => {
-                  const days = getDaysSince(wo.created_at);
+                  const days = getDaysSince(wo.created_at, now);
                   return (
                     <TableRow
                       key={wo.id}
                       className="cursor-pointer"
                       onClick={() =>
-                        router.push(`/dashboard/work-orders/${wo.id}`)
+                        push(`/dashboard/work-orders/${wo.id}`)
                       }
                     >
                       {/* WO# */}
@@ -549,17 +594,19 @@ export default function WorkOrdersPage() {
                             align="start"
                             className="min-w-[160px]"
                           >
-                            {STATUS_OPTIONS.filter(
-                              (s) => s !== wo.status && s !== "Cancelled",
-                            ).map((s) => (
-                              <DropdownMenuItem
-                                key={s}
-                                onClick={() => handleStatusChange(wo.id, s)}
-                                disabled={updateStatus.isPending}
-                              >
-                                {translateStatus(t, s)}
-                              </DropdownMenuItem>
-                            ))}
+                            {STATUS_OPTIONS.flatMap((s) =>
+                              s !== wo.status && s !== "Cancelled"
+                                ? [
+                                    <DropdownMenuItem
+                                      key={s}
+                                      onClick={() => handleStatusChange(wo.id, s)}
+                                      disabled={updateStatus.isPending}
+                                    >
+                                      {translateStatus(t, s)}
+                                    </DropdownMenuItem>,
+                                  ]
+                                : [],
+                            )}
                             {wo.status !== "Cancelled" && (
                               <>
                                 <DropdownMenuSeparator />
@@ -588,6 +635,58 @@ export default function WorkOrdersPage() {
                           : "—"}
                       </TableCell>
 
+                      {/* Services Cost */}
+                      <TableCell className="hidden xl:table-cell text-right text-sm tabular-nums text-muted-foreground">
+                        {wo.services_cost !== undefined
+                          ? formatMNT(wo.services_cost)
+                          : "—"}
+                      </TableCell>
+
+                      {/* Parts Cost */}
+                      <TableCell className="hidden xl:table-cell text-right text-sm tabular-nums text-muted-foreground">
+                        {wo.parts_cost !== undefined
+                          ? formatMNT(wo.parts_cost)
+                          : "—"}
+                      </TableCell>
+
+                      {/* Gross Profit */}
+                      <TableCell className="hidden lg:table-cell text-right text-sm font-medium tabular-nums">
+                        {wo.gross_profit !== undefined ? (
+                          <span
+                            className={
+                              wo.gross_profit > 0
+                                ? "text-green-600 dark:text-green-400"
+                                : wo.gross_profit < 0
+                                  ? "text-red-600 dark:text-red-400"
+                                  : ""
+                            }
+                          >
+                            {formatMNT(wo.gross_profit)}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+
+                      {/* Margin % */}
+                      <TableCell className="hidden lg:table-cell text-right text-sm tabular-nums">
+                        {wo.margin_percent !== undefined ? (
+                          <span
+                            className={
+                              wo.margin_percent > 0
+                                ? "text-green-600 dark:text-green-400"
+                                : wo.margin_percent < 0
+                                  ? "text-red-600 dark:text-red-400"
+                                  : "text-muted-foreground"
+                            }
+                          >
+                            {wo.margin_percent.toFixed(1)}%
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">–</span>
+                        )}
+                      </TableCell>
+
                       {/* Actions button */}
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
@@ -606,7 +705,7 @@ export default function WorkOrdersPage() {
                           >
                             <DropdownMenuItem
                               onClick={() =>
-                                router.push(`/dashboard/work-orders/${wo.id}`)
+                                push(`/dashboard/work-orders/${wo.id}`)
                               }
                             >
                               {t("workOrders.viewDetails")}
@@ -663,12 +762,24 @@ function TableSkeleton() {
           <TableHead className="text-right">
             <Skeleton className="h-4 w-16 ml-auto" />
           </TableHead>
+          <TableHead className="hidden xl:table-cell text-right">
+            <Skeleton className="h-4 w-14 ml-auto" />
+          </TableHead>
+          <TableHead className="hidden xl:table-cell text-right">
+            <Skeleton className="h-4 w-14 ml-auto" />
+          </TableHead>
+          <TableHead className="hidden lg:table-cell text-right">
+            <Skeleton className="h-4 w-14 ml-auto" />
+          </TableHead>
+          <TableHead className="hidden lg:table-cell text-right">
+            <Skeleton className="h-4 w-12 ml-auto" />
+          </TableHead>
           <TableHead className="w-10" />
         </TableRow>
       </TableHeader>
       <TableBody>
         {Array.from({ length: 5 }).map((_, i) => (
-          <TableRow key={i}>
+          <TableRow key={`row-${i}`}>
             <TableCell>
               <Skeleton className="h-4 w-16" />
             </TableCell>
@@ -692,6 +803,18 @@ function TableSkeleton() {
             </TableCell>
             <TableCell className="text-right">
               <Skeleton className="h-4 w-16 ml-auto" />
+            </TableCell>
+            <TableCell className="hidden xl:table-cell text-right">
+              <Skeleton className="h-4 w-14 ml-auto" />
+            </TableCell>
+            <TableCell className="hidden xl:table-cell text-right">
+              <Skeleton className="h-4 w-14 ml-auto" />
+            </TableCell>
+            <TableCell className="hidden lg:table-cell text-right">
+              <Skeleton className="h-4 w-14 ml-auto" />
+            </TableCell>
+            <TableCell className="hidden lg:table-cell text-right">
+              <Skeleton className="h-4 w-12 ml-auto" />
             </TableCell>
             <TableCell />
           </TableRow>

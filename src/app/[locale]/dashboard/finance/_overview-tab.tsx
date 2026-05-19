@@ -10,6 +10,14 @@ import {
   Wrench,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
 import { EmptyFinanceState } from "./_empty-finance-state";
 import { KpiCard } from "./_kpi-card";
@@ -31,6 +39,8 @@ interface Summary {
   partsRevenue: number;
   totalVehicles: number;
   completedToday: number;
+  grossProfit: number;
+  marginPercent: number;
 }
 
 interface OverviewTabProps {
@@ -63,13 +73,15 @@ export function OverviewTab({
     partsRevenue: 0,
     totalVehicles: 0,
     completedToday: 0,
+    grossProfit: 0,
+    marginPercent: 0,
   };
 
   if (!hasRevenue) {
     return (
       <>
         <NoRevenueBanner activeWorkOrders={safeSummary.activeWorkOrders} />
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
           <KpiCard
             label="Active Work Orders"
             value={String(safeSummary.activeWorkOrders)}
@@ -84,7 +96,7 @@ export function OverviewTab({
             loading={loading}
           />
         </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
           <KpiCard
             label="Total Vehicles"
             value={String(safeSummary.totalVehicles)}
@@ -114,7 +126,7 @@ export function OverviewTab({
         </Card>
       )}
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           label="Total Revenue"
           value={formatCurrency(safeSummary.totalRevenue)}
@@ -142,7 +154,18 @@ export function OverviewTab({
           loading={loading}
         />
       </div>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          label="Gross Profit"
+          value={formatCurrency(safeSummary.grossProfit)}
+          icon={TrendingUp}
+          subtitle={
+            safeSummary.marginPercent > 0
+              ? `${safeSummary.marginPercent.toFixed(1)}% margin`
+              : undefined
+          }
+          loading={loading}
+        />
         <KpiCard
           label="Service Revenue"
           value={formatCurrency(safeSummary.serviceRevenue)}
@@ -188,37 +211,37 @@ export function OverviewTab({
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
                       Service
-                    </th>
-                    <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                    </TableHead>
+                    <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
                       Count
-                    </th>
-                    <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                    </TableHead>
+                    <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
                       Revenue
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {topServices.slice(0, 8).map((svc) => (
-                    <tr
+                    <TableRow
                       key={svc.name}
                       className="border-b border-border transition-colors hover:bg-muted/30"
                     >
-                      <td className="px-5 py-3.5">{svc.name}</td>
-                      <td className="px-5 py-3.5 text-right tabular-nums">
+                      <TableCell className="px-5 py-3.5">{svc.name}</TableCell>
+                      <TableCell className="px-5 py-3.5 text-right tabular-nums">
                         {svc.count}
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-medium tabular-nums">
+                      </TableCell>
+                      <TableCell className="px-5 py-3.5 text-right font-medium tabular-nums">
                         {formatCurrency(svc.revenue)}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>

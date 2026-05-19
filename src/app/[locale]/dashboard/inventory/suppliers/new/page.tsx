@@ -14,7 +14,7 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 export default function NewSupplierPage() {
   const t = useTranslations("inventory");
-  const router = useRouter();
+  const { push, back } = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const createSupplier = useCreateSupplier(orgId);
@@ -46,7 +46,7 @@ export default function NewSupplierPage() {
         notes: notes || undefined,
       });
       toast.success(t("supplierCreated"));
-      router.push("/dashboard/inventory/suppliers");
+      push("/dashboard/inventory/suppliers");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("failedToCreate"));
     }
@@ -58,12 +58,12 @@ export default function NewSupplierPage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => router.back()}
+          onClick={() => back()}
           aria-label={t("back")}
         >
           <ArrowLeft className="size-5" />
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight">
           {t("newSupplier")}
         </h1>
       </div>
@@ -161,7 +161,7 @@ export default function NewSupplierPage() {
         </Card>
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+          <Button type="button" variant="outline" onClick={() => back()}>
             {t("cancel")}
           </Button>
           <Button type="submit" disabled={createSupplier.isPending}>

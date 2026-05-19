@@ -10,6 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -20,7 +21,13 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
-import { cn, formatMNT } from "@/lib/utils";
+import { cn, formatCurrency, formatMNT } from "@/lib/utils";
+import dynamic from "next/dynamic";
+
+const MechanicTrendChart = dynamic(
+  () => import("../_charts").then((m) => m.MechanicTrendChart),
+  { ssr: false },
+);
 
 // ── Types ──────────────────────────────────────────
 
@@ -188,7 +195,7 @@ function KpiCard({
         {loading ? (
           <Skeleton className="mt-1.5 h-7 w-20" />
         ) : (
-          <p className="mt-0.5 text-2xl font-bold tabular-nums tracking-tight [font-feature-settings:'tnum']">
+          <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight [font-feature-settings:'tnum']">
             {value}
           </p>
         )}
@@ -291,36 +298,55 @@ function MechanicDashboard({
   isAdminView: boolean;
 }) {
   const t = useTranslations();
-  const router = useRouter();
+  const { push } = useRouter();
   const [eod, setEod] = useState<MechanicEodSummary | null>(null);
   const [assignedWos, setAssignedWos] = useState<WorkOrderRow[]>([]);
+  const [trend, setTrend] = useState<{
+    avgJobValue: number;
+    jobsPerDay: number;
+    weeklyTrend: { week: string; orders: number; revenue: number }[];
+  } | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
+    const abort = new AbortController();
 
     setDataLoading(true);
     const eodUrl = `/api/organizations/${orgId}/reports?type=eod&date=${today}&mechanic=${userId}`;
     const woUrl = `/api/organizations/${orgId}/work-orders?mechanic=${userId}&status=In Progress&status=Diagnosing&status=New&status=Ready for Pickup`;
+    const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000)
+      .toISOString().split("T")[0];
+    const trendUrl = `/api/organizations/${orgId}/reports?type=mechanic-trend&mechanic=${userId}&period=weekly&startDate=${eightWeeksAgo}&endDate=${today}`;
+
+    const signal = abort.signal;
 
     Promise.all([
-      fetch(eodUrl)
+      fetch(eodUrl, { signal })
         .then((r) => r.json())
         .catch(() => ({ data: null })),
-      fetch(woUrl)
+      fetch(woUrl, { signal })
         .then((r) => r.json())
         .catch(() => ({ data: [] })),
+      fetch(trendUrl, { signal })
+        .then((r) => r.json())
+        .catch(() => ({ data: null })),
     ])
-      .then(([eodJson, woJson]) => {
+      .then(([eodJson, woJson, trendJson]) => {
         if (eodJson.data?.mechanics?.length > 0) {
           setEod(eodJson.data.mechanics[0]);
         }
         if (Array.isArray(woJson.data)) {
           setAssignedWos(woJson.data);
         }
+        if (trendJson.data) {
+          setTrend(trendJson.data);
+        }
       })
       .catch(() => {})
       .finally(() => setDataLoading(false));
+
+    return () => abort.abort();
   }, [userId, orgId]);
 
   // Sort: active/pickup first, then new, then rest
@@ -331,20 +357,20 @@ function MechanicDashboard({
       New: 2,
       Diagnosing: 3,
     };
-    return [...assignedWos].sort(
+    return assignedWos.toSorted(
       (a, b) =>
         (priority[a.status] ?? 99) - (priority[b.status] ?? 99),
     );
   }, [assignedWos]);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="tablet-touch flex flex-col gap-6">
       {/* ── Header (non-admin only — admin page renders its own) ── */}
       {!isAdminView && (
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-xl font-bold tracking-tight">
+              <h1 className="text-xl font-semibold tracking-tight">
                 {mechanicName ?? t("nav.mechanic")}
               </h1>
               <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-50/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
@@ -353,7 +379,7 @@ function MechanicDashboard({
               </span>
             </div>
             <p className="mt-0.5 text-xs text-muted-foreground/60">
-              {new Date().toLocaleDateString("mn-MN", {
+              {now.toLocaleDateString("mn-MN", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -398,6 +424,31 @@ function MechanicDashboard({
         />
       </div>
 
+      {/* ── Efficiency KPIs ── */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <KpiCard
+          icon={Coins}
+          label="Avg Job Value"
+          value={trend ? formatMNT(trend.avgJobValue) : "—"}
+          subtext="Revenue per completed order"
+          accent="blue"
+          loading={dataLoading}
+        />
+        <KpiCard
+          icon={CheckCircle2}
+          label="Jobs Per Day"
+          value={trend ? String(trend.jobsPerDay) : "—"}
+          subtext="Average over selected period"
+          accent="green"
+          loading={dataLoading}
+        />
+      </div>
+
+      {/* ── Trend Chart ── */}
+      {trend?.weeklyTrend && trend.weeklyTrend.length > 0 && (
+        <MechanicTrendChart data={trend.weeklyTrend} />
+      )}
+
       {/* ── Work Orders ── */}
       <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm shadow-black/5">
         <div className="flex items-center gap-2 border-b border-border/40 px-4 py-3">
@@ -416,15 +467,15 @@ function MechanicDashboard({
           <div className="space-y-0">
             {[1, 2, 3].map((i) => (
               <Skeleton
-                key={i}
+                key={`skeleton-${i}`}
                 className="h-16 w-full rounded-none border-b border-border/30 last:border-b-0"
               />
             ))}
           </div>
         ) : sortedWos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground/60">
-            <div className="flex size-12 items-center justify-center rounded-full bg-muted/50">
-              <ClipboardList className="size-6" />
+            <div className="flex size-20 items-center justify-center rounded-full bg-muted/50">
+              <ClipboardList className="size-10" />
             </div>
             <p className="text-sm font-medium text-muted-foreground/80">
               {t("mechanic.noActiveWorkOrders")}
@@ -437,7 +488,7 @@ function MechanicDashboard({
                 key={wo.id}
                 wo={wo}
                 onClick={() =>
-                  router.push(`/dashboard/work-orders/${wo.id}`)
+                  push(`/dashboard/work-orders/${wo.id}`)
                 }
               />
             ))}
@@ -452,6 +503,7 @@ function MechanicDashboard({
 
 export default function MechanicPage() {
   const t = useTranslations();
+  const now = useClientNow();
   const {
     profile,
     loading: roleLoading,
@@ -466,13 +518,17 @@ export default function MechanicPage() {
 
   useEffect(() => {
     if (!profile?.organizationId) return;
+    const abort = new AbortController();
+
     if (!isAdmin) {
       setMechanicsLoading(false);
       return;
     }
 
     const orgId = profile.organizationId;
-    fetch(`/api/organizations/${orgId}/reports?type=mechanics`)
+    fetch(`/api/organizations/${orgId}/reports?type=mechanics`, {
+      signal: abort.signal,
+    })
       .then((r) => r.json())
       .then((json) => {
         const list: MechanicItem[] = json.data ?? [];
@@ -483,22 +539,24 @@ export default function MechanicPage() {
       })
       .catch(() => {})
       .finally(() => setMechanicsLoading(false));
+
+    return () => abort.abort();
   }, [profile?.organizationId, isAdmin]);
 
   if (roleLoading) {
     return (
-      <div className="flex flex-col gap-5">
+      <div className="tablet-touch flex flex-col gap-6">
         <div>
           <Skeleton className="h-7 w-44" />
           <Skeleton className="mt-1.5 h-4 w-56" />
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-xl border border-border/60 bg-card p-4">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="mt-2 h-7 w-16" />
-              <Skeleton className="mt-1 h-3 w-20" />
-            </div>
+                <div key={`skeleton-${i}`} className="rounded-xl border border-border/60 bg-card p-4">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="mt-2 h-7 w-16" />
+                  <Skeleton className="mt-1 h-3 w-20" />
+                </div>
           ))}
         </div>
       </div>
@@ -507,7 +565,7 @@ export default function MechanicPage() {
 
   if (!isMechanic && !isAdmin && !roleLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <div className="tablet-touch flex flex-col items-center justify-center py-20 gap-4">
         <div className="flex size-14 items-center justify-center rounded-2xl bg-muted/50">
           <Wrench className="size-7 text-muted-foreground" />
         </div>
@@ -523,69 +581,26 @@ export default function MechanicPage() {
   }
 
   if (isAdmin) {
-    const selectedMechanic = mechanics.find(
-      (m) => m.id === selectedMechanicId,
-    );
-
     return (
-      <div className="flex flex-col gap-5">
-        {/* Admin header with selector */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-xl font-bold tracking-tight">
-                {selectedMechanic?.full_name ?? t("nav.mechanic")}
-              </h1>
-              <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-50/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
-                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px] shadow-emerald-500/60" />
-                Live
-              </span>
-            </div>
-            <p className="mt-0.5 text-xs text-muted-foreground/60">
-              {new Date().toLocaleDateString("mn-MN", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Users className="size-4 text-muted-foreground/50 shrink-0" />
-            <Select
-              value={selectedMechanicId ?? undefined}
-              onValueChange={(val) => setSelectedMechanicId(val)}
-              disabled={mechanics.length === 0}
-            >
-              <SelectTrigger className="w-[200px] h-9 text-xs">
-                <SelectValue>
-                  {selectedMechanic?.full_name ??
-                    t("mechanic.selectMechanic")}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {mechanics.map((m) => (
-                  <SelectItem key={m.id} value={m.id} className="text-xs">
-                    {m.full_name ?? "Unknown"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
+      <>
         {mechanicsLoading ? (
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-xl border border-border/60 bg-card p-4">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="mt-2 h-7 w-16" />
-                <Skeleton className="mt-1 h-3 w-20" />
-              </div>
-            ))}
+          <div className="tablet-touch flex flex-col gap-6">
+            <div>
+              <Skeleton className="h-7 w-44" />
+              <Skeleton className="mt-1.5 h-4 w-56" />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+            <div key={`skeleton-${i}`} className="rounded-xl border border-border/60 bg-card p-4">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="mt-2 h-7 w-16" />
+                  <Skeleton className="mt-1 h-3 w-20" />
+                </div>
+              ))}
+            </div>
           </div>
         ) : mechanics.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="tablet-touch flex flex-col items-center justify-center py-20 gap-4">
             <div className="flex size-14 items-center justify-center rounded-2xl bg-muted/50">
               <Users className="size-7 text-muted-foreground" />
             </div>
@@ -597,14 +612,60 @@ export default function MechanicPage() {
             </p>
           </div>
         ) : selectedMechanicId ? (
-          <MechanicDashboard
-            userId={selectedMechanicId}
-            orgId={profile?.organizationId!}
-            mechanicName={selectedMechanic?.full_name}
-            isAdminView
-          />
+          <div className="tablet-touch flex flex-col gap-6">
+            {/* Admin header with selector */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h1 className="text-xl font-semibold tracking-tight">
+                    {mechanics.find((m) => m.id === selectedMechanicId)?.full_name ?? t("nav.mechanic")}
+                  </h1>
+                  <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-50/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
+                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px] shadow-emerald-500/60" />
+                    Live
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-muted-foreground/60">
+                  {now.toLocaleDateString("mn-MN", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Users className="size-4 text-muted-foreground/50 shrink-0" />
+                <Select
+                  value={selectedMechanicId}
+                  onValueChange={(val) => setSelectedMechanicId(val)}
+                >
+                  <SelectTrigger className="w-[200px] h-9 text-xs">
+                    <SelectValue>
+                      {mechanics.find((m) => m.id === selectedMechanicId)?.full_name ??
+                        t("mechanic.selectMechanic")}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mechanics.map((m) => (
+                      <SelectItem key={m.id} value={m.id} className="text-xs">
+                        {m.full_name ?? "Unknown"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <MechanicDashboard
+              userId={selectedMechanicId}
+              orgId={profile?.organizationId!}
+              mechanicName={mechanics.find((m) => m.id === selectedMechanicId)?.full_name}
+              isAdminView
+            />
+          </div>
         ) : null}
-      </div>
+      </>
     );
   }
 

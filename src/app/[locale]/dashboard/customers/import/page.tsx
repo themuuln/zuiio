@@ -160,7 +160,7 @@ function PreviewCard({
               </TableHeader>
               <TableBody>
                 {preview.rows.map((row, i) => (
-                  <TableRow key={i}>
+                  <TableRow key={`item-${i}`}>
                     {preview.headers.map((header) => (
                       <TableCell key={header} className="max-w-48 truncate">
                         {row[header] ?? ""}
@@ -370,7 +370,7 @@ export default function ImportCustomersPage() {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Import Customers</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Import Customers</h1>
           <p className="text-sm text-muted-foreground">
             Upload a CSV file to create customers in bulk
           </p>
@@ -385,6 +385,7 @@ export default function ImportCustomersPage() {
             </CardHeader>
             <CardContent>
               <label
+                htmlFor="csv-file-input"
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -405,6 +406,7 @@ export default function ImportCustomersPage() {
                 </div>
               </label>
               <input
+                id="csv-file-input"
                 ref={fileInputRef}
                 type="file"
                 accept=".csv"
@@ -475,7 +477,7 @@ export default function ImportCustomersPage() {
                       </TableHeader>
                       <TableBody>
                         {state.errors.map((err, i) => (
-                          <TableRow key={i}>
+                          <TableRow key={`item-${i}`}>
                             <TableCell className="font-mono text-xs">
                               {err.row}
                             </TableCell>

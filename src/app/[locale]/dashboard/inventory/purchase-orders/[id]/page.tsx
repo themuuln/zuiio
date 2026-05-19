@@ -8,6 +8,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useRouter } from "@/lib/i18n/navigation";
 import {
   usePurchaseOrderItems,
@@ -37,7 +45,7 @@ const PO_STATUS_KEYS: Record<string, string> = {
 export default function PurchaseOrderDetailPage() {
   const t = useTranslations("inventory");
   const params = useParams();
-  const router = useRouter();
+  const { push, back } = useRouter();
   const poId = params.id as string;
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
@@ -101,7 +109,7 @@ export default function PurchaseOrderDetailPage() {
   if (!po) {
     return (
       <div className="flex flex-col gap-6 max-w-3xl">
-        <Button variant="ghost" onClick={() => router.back()} className="w-fit">
+        <Button variant="ghost" onClick={() => back()} className="w-fit">
           <ArrowLeft className="size-4" /> {t("back")}
         </Button>
         <Card>
@@ -109,7 +117,7 @@ export default function PurchaseOrderDetailPage() {
             <p className="text-muted-foreground">{t("poNotFound")}</p>
             <Button
               onClick={() =>
-                router.push("/dashboard/inventory/purchase-orders")
+                push("/dashboard/inventory/purchase-orders")
               }
             >
               {t("backToList")}
@@ -130,14 +138,14 @@ export default function PurchaseOrderDetailPage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => router.back()}
+          onClick={() => back()}
           aria-label={t("back")}
         >
           <ArrowLeft className="size-5" />
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-2xl font-semibold tracking-tight">
               {po.order_number}
             </h1>
             <span
@@ -218,56 +226,56 @@ export default function PurchaseOrderDetailPage() {
               {t("noItems")}
             </p>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
                     {t("part")}
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
                     {t("quantityOrdered")}
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
                     {t("quantityReceived")}
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
                     {t("unitCost")}
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
                     {t("lineTotal")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border">
                 {items.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-4 py-3 font-medium">{item.part_name}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                  <TableRow key={item.id}>
+                    <TableCell className="px-4 py-3 font-medium">{item.part_name}</TableCell>
+                    <TableCell className="px-4 py-3 text-right tabular-nums">
                       {item.quantity_ordered}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right tabular-nums">
                       {item.quantity_received}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right tabular-nums">
                       {item.unit_cost.toLocaleString("mn-MN")} ₮
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium tabular-nums">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right font-medium tabular-nums">
                       {(item.quantity_ordered * item.unit_cost).toLocaleString(
                         "mn-MN",
                       )}{" "}
                       ₮
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="p-6">
-          <div className="flex justify-between text-lg font-bold">
+          <div className="flex justify-between text-lg font-semibold">
             <span>{t("totalAmount")}</span>
             <span className="tabular-nums">
               {po.total_amount.toLocaleString("mn-MN")} ₮

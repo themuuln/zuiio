@@ -1,11 +1,11 @@
 "use client";
 
 import { ArrowLeft, CarFront, Loader2, User } from "lucide-react";
+// TODO: wrap component using useSearchParams in <Suspense>
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Breadcrumb } from "@/components/breadcrumb";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,9 +70,9 @@ function getCustomerLabel(customer: Customer, t?: (key: string) => string) {
 
 export default function NewVehiclePage() {
   const t = useTranslations("vehicles");
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const preselectedCustomerId = searchParams.get("customerId");
+  const { replace } = useRouter();
+  const { get } = useSearchParams();
+  const preselectedCustomerId = get("customerId");
 
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
@@ -161,7 +161,7 @@ export default function NewVehiclePage() {
       }
 
       toast.success(t("vehicleCreated"));
-      router.replace(`/dashboard/vehicles/${json.data.id}`);
+      replace(`/dashboard/vehicles/${json.data.id}`);
     } catch {
       toast.error(t("failedToCreate"));
       setError(t("failedToCreate"));
@@ -181,12 +181,6 @@ export default function NewVehiclePage() {
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
-      <Breadcrumb
-        items={[
-          { label: t("title"), href: "/dashboard/vehicles" },
-          { label: "New Vehicle" },
-        ]}
-      />
       <div className="flex items-center gap-3">
         <Button
           render={<Link href="/dashboard/vehicles" />}
@@ -197,7 +191,7 @@ export default function NewVehiclePage() {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">New Vehicle</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">New Vehicle</h1>
           <p className="text-sm text-muted-foreground">
             Register a vehicle and link it to its current owner.
           </p>
@@ -618,7 +612,7 @@ export default function NewVehiclePage() {
             type="button"
             variant="outline"
           >
-            Cancel
+            {t("cancel")}
           </Button>
           <Button type="submit" size="lg" disabled={saving}>
             {saving ? (
@@ -626,7 +620,7 @@ export default function NewVehiclePage() {
             ) : (
               <CarFront className="size-4" />
             )}
-            {saving ? t("saving") : "Create vehicle"}
+            {saving ? t("saving") : t("createVehicle")}
           </Button>
         </div>
       </form>

@@ -15,7 +15,6 @@ import {
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Breadcrumb } from "@/components/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -262,13 +261,9 @@ export default function ServiceRemindersPage() {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <Breadcrumb
-        items={[{ label: t("nav.serviceReminders") }]}
-      />
-
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {t("serviceReminders.title")}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -361,9 +356,6 @@ export default function ServiceRemindersPage() {
                     <SelectContent>
                       <SelectItem value="in_app">
                         {t("serviceReminders.channelInApp")}
-                      </SelectItem>
-                      <SelectItem value="sms">
-                        {t("serviceReminders.channelSms")}
                       </SelectItem>
                       <SelectItem value="email">
                         {t("serviceReminders.channelEmail")}
@@ -538,7 +530,7 @@ export default function ServiceRemindersPage() {
               {isLoading ? (
                 <div className="space-y-2 p-4">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} className="h-10 w-full" />
+                    <Skeleton key={`skel-${i}`} className="h-10 w-full" />
                   ))}
                 </div>
               ) : listError ? (
@@ -615,7 +607,7 @@ function ReminderLogsTab({ orgId }: { orgId: string | undefined }) {
       <Card>
         <CardContent className="space-y-2 p-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+            <Skeleton key={`skel-${i}`} className="h-10 w-full" />
           ))}
         </CardContent>
       </Card>
@@ -728,7 +720,6 @@ function StatusBadge({ status }: { status: string }) {
 function ChannelBadge({ channel }: { channel: string }) {
   const t = useTranslations();
   const labels: Record<string, string> = {
-    sms: t("serviceReminders.channelSms"),
     email: t("serviceReminders.channelEmail"),
     both: t("serviceReminders.channelBoth"),
     in_app: t("serviceReminders.channelInApp"),

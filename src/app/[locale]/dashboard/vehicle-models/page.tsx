@@ -3,6 +3,7 @@
 import { ChevronDown, ChevronRight, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import type { ExportColumn } from "@/lib/export";
@@ -91,6 +92,7 @@ const bodyTypeOptions = [
 
 export default function VehicleModelsPage() {
   const t = useTranslations("vehicleModels");
+  const now = useClientNow();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 
@@ -319,7 +321,7 @@ export default function VehicleModelsPage() {
     <div className="flex flex-col gap-6">
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground">
           {t("subtitle")}
         </p>
@@ -341,7 +343,7 @@ export default function VehicleModelsPage() {
             <ExportButton
               data={models}
               columns={exportColumns}
-              filename={`vehicle-models-${new Date().toISOString().split("T")[0]}.xlsx`}
+              filename={`vehicle-models-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Vehicle Models"
             />
             <Button
@@ -354,7 +356,7 @@ export default function VehicleModelsPage() {
               }}
             >
               <Plus className="size-5" />{" "}
-              {showAdd ? "Cancel" : t("addModel")}
+              {showAdd ? t("cancel") : t("addModel")}
             </Button>
           </div>
         }
@@ -379,7 +381,7 @@ export default function VehicleModelsPage() {
                   placeholder={t("makePlaceholder")}
                   value={editForm.make}
                   onChange={(e) =>
-                    setEditForm({ ...editForm, make: e.target.value })
+                    setEditForm(prev => ({ ...prev, $$$ }))
                   }
                   className="h-11"
                   data-1p-ignore
@@ -395,7 +397,7 @@ export default function VehicleModelsPage() {
                   placeholder={t("modelPlaceholder")}
                   value={editForm.model}
                   onChange={(e) =>
-                    setEditForm({ ...editForm, model: e.target.value })
+                    setEditForm(prev => ({ ...prev, $$$ }))
                   }
                   className="h-11"
                   data-1p-ignore
@@ -427,7 +429,7 @@ export default function VehicleModelsPage() {
                     placeholder={t("generationPlaceholder")}
                     value={editForm.generation}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, generation: e.target.value })
+                      setEditForm(prev => ({ ...prev, $$$ }))
                     }
                     className="h-11"
                   />
@@ -441,7 +443,7 @@ export default function VehicleModelsPage() {
                     placeholder="2014"
                     value={editForm.year_start}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, year_start: e.target.value })
+                      setEditForm(prev => ({ ...prev, $$$ }))
                     }
                     className="h-11"
                   />
@@ -455,7 +457,7 @@ export default function VehicleModelsPage() {
                     placeholder="2020"
                     value={editForm.year_end}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, year_end: e.target.value })
+                      setEditForm(prev => ({ ...prev, $$$ }))
                     }
                     className="h-11"
                   />
@@ -466,7 +468,7 @@ export default function VehicleModelsPage() {
                     placeholder={t("enginePlaceholder")}
                     value={editForm.engine}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, engine: e.target.value })
+                      setEditForm(prev => ({ ...prev, $$$ }))
                     }
                     className="h-11"
                   />
@@ -476,7 +478,7 @@ export default function VehicleModelsPage() {
                   <select
                     value={editForm.body_type}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, body_type: e.target.value })
+                      setEditForm(prev => ({ ...prev, $$$ }))
                     }
                     className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
@@ -527,7 +529,7 @@ export default function VehicleModelsPage() {
           {orgQuery.isLoading || loading ? (
             <div className="divide-y divide-border">
               {[1, 2, 3].map((n) => (
-                <div key={n} className="flex items-center gap-3 px-4 py-4">
+                <div key={n} className="flex items-center gap-3 p-4">
                   <Skeleton className="size-4 rounded" />
                   <Skeleton className="h-5 w-32" />
                   <Skeleton className="h-4 w-12" />
@@ -661,7 +663,7 @@ export default function VehicleModelsPage() {
                                           variant="ghost"
                                           size="icon"
                                           onClick={() => handleDelete(v.id)}
-                                          className="h-8 w-8"
+                                          className="size-8"
                                           aria-label={t("deleteVariant")}
                                         >
                                           <X className="size-3.5" />

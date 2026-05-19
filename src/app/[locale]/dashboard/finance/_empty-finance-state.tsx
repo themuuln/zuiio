@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export function EmptyFinanceState() {
   return (
     <Card className="py-16">
-      <CardContent className="flex flex-col items-center gap-5">
+      <CardContent className="flex flex-col items-center gap-6">
         <div className="flex size-16 items-center justify-center rounded-full bg-muted">
           <DollarSign className="size-8 text-muted-foreground" />
         </div>

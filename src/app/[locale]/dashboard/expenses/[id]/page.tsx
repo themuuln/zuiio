@@ -4,7 +4,6 @@ import { ArrowLeft, Pencil, Save, Trash2, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
-import { Breadcrumb } from "@/components/breadcrumb";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,7 +53,7 @@ const emptyForm: ExpenseFormState = {
   categoryId: "",
   vendorName: "",
   taxAmount: "0",
-  paymentMethod: "",
+  paymentMethod: "cash",
   referenceNumber: "",
   paid: false,
   notes: "",
@@ -63,17 +62,15 @@ const emptyForm: ExpenseFormState = {
 const PAYMENT_METHODS = [
   "cash",
   "card",
-  "bankTransfer",
-  "check",
-  "mobilePayment",
-  "other",
+  "bank_transfer",
+  "manual",
 ] as const;
 
 export default function ExpenseDetailPage() {
   const t = useTranslations("expenses");
   const commonT = useTranslations("common");
   const params = useParams();
-  const router = useRouter();
+  const { push } = useRouter();
   const expenseId = params.id as string;
 
   const orgQuery = useCurrentOrg();
@@ -141,7 +138,7 @@ export default function ExpenseDetailPage() {
   const handleDelete = () => {
     if (!orgId || !expenseId) return;
     deleteExpense.mutate(expenseId, {
-      onSuccess: () => router.push("/dashboard/expenses"),
+      onSuccess: () => push("/dashboard/expenses"),
     });
   };
 
@@ -186,12 +183,6 @@ export default function ExpenseDetailPage() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      <Breadcrumb
-        items={[
-          { label: t("title"), href: "/dashboard/expenses" },
-          { label: expenseTitle },
-        ]}
-      />
       <div className="flex items-center gap-4">
         <Button
           render={<Link href="/dashboard/expenses" />}
@@ -202,7 +193,7 @@ export default function ExpenseDetailPage() {
           <ArrowLeft className="size-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">{expenseTitle}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{expenseTitle}</h1>
           {expense.created_at && (
             <p className="text-sm text-muted-foreground">
               {t("created")} {new Date(expense.created_at).toLocaleDateString()}
@@ -542,7 +533,7 @@ export default function ExpenseDetailPage() {
                   <p className="mb-1 text-xs text-muted-foreground">
                     {commonT("total")}
                   </p>
-                  <p className="text-lg font-bold">{formatMNT(totalAmount)}</p>
+                  <p className="text-lg font-semibold">{formatMNT(totalAmount)}</p>
                 </div>
               </div>
             </CardContent>
@@ -565,7 +556,7 @@ export default function ExpenseDetailPage() {
                     </span>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">—</p>
+                  <p className="text-sm text-muted-foreground">–</p>
                 )}
               </CardContent>
             </Card>

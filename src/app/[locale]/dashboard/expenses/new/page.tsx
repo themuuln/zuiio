@@ -3,7 +3,6 @@
 import { ArrowLeft, Loader2, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Breadcrumb } from "@/components/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,7 +36,7 @@ const initialForm: ExpenseFormState = {
   categoryId: "",
   vendorName: "",
   taxAmount: "0",
-  paymentMethod: "",
+  paymentMethod: "cash",
   referenceNumber: "",
   paid: false,
   notes: "",
@@ -46,14 +45,12 @@ const initialForm: ExpenseFormState = {
 const PAYMENT_METHODS = [
   "cash",
   "card",
-  "bankTransfer",
-  "check",
-  "mobilePayment",
-  "other",
+  "bank_transfer",
+  "manual",
 ] as const;
 
 export default function NewExpensePage() {
-  const router = useRouter();
+  const { push } = useRouter();
   const t = useTranslations("expenses");
   const commonT = useTranslations("common");
   const orgQuery = useCurrentOrg();
@@ -91,7 +88,7 @@ export default function NewExpensePage() {
       },
       {
         onSuccess: () => {
-          router.push("/dashboard/expenses");
+          push("/dashboard/expenses");
         },
       },
     );
@@ -109,12 +106,6 @@ export default function NewExpensePage() {
   if (orgQuery.error) {
     return (
       <div className="flex max-w-3xl flex-col gap-6">
-        <Breadcrumb
-          items={[
-            { label: t("title"), href: "/dashboard/expenses" },
-            { label: t("addExpense") },
-          ]}
-        />
         <div className="flex items-center gap-3">
           <Button
             render={<Link href="/dashboard/expenses" />}
@@ -125,7 +116,7 @@ export default function NewExpensePage() {
             <ArrowLeft className="size-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-2xl font-semibold tracking-tight">
               {t("addExpense")}
             </h1>
             <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
@@ -142,12 +133,6 @@ export default function NewExpensePage() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      <Breadcrumb
-        items={[
-          { label: t("title"), href: "/dashboard/expenses" },
-          { label: t("addExpense") },
-        ]}
-      />
       <div className="flex items-center gap-3">
         <Button
           render={<Link href="/dashboard/expenses" />}
@@ -158,7 +143,7 @@ export default function NewExpensePage() {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {t("addExpense")}
           </h1>
           <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
