@@ -1,7 +1,3 @@
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
-
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -29,10 +25,10 @@ Deno.serve(async () => {
       vehicle:vehicles!inner(
         plate_number,
         customer_id,
-        customer:customers!left(phone, email)
+        customer:customers!left(email)
       ),
       organization:organizations!inner(
-        settings:organization_settings!left(sms_enabled, settings)
+        settings:organization_settings!left(settings)
       )
     `,
     )
@@ -90,36 +86,14 @@ Deno.serve(async () => {
     const vehicle = schedule.vehicle as unknown as {
       plate_number: string;
       customer_id: string | null;
-      customer: { phone: string | null; email: string | null } | null;
-    };
-    const org = schedule.organization as unknown as {
-      settings: { sms_enabled: boolean; settings: Record<string, unknown> } | null;
+      customer: { email: string | null } | null;
     };
 
     const customer = vehicle?.customer;
-    const orgRow = org?.settings;
-    const orgJsonSettings = orgRow?.settings as Record<string, unknown> | null;
-    const defaultChannel = orgJsonSettings?.reminder_default_channel as string | null;
-
-    const hasPhone = !!customer?.phone;
     const hasEmail = !!customer?.email;
-    const smsAllowed = orgRow?.sms_enabled === true;
 
-    // Determine channel from user's default setting, then fallback
-    let channel: "sms" | "email" | "both" | "in_app";
-    if (defaultChannel === "both" && hasPhone && hasEmail) {
-      channel = "both";
-    } else if (defaultChannel === "sms" && hasPhone && smsAllowed) {
-      channel = "sms";
-    } else if (defaultChannel === "email" && hasEmail) {
-      channel = "email";
-    } else if (smsAllowed && hasPhone) {
-      channel = "sms";
-    } else if (hasEmail) {
-      channel = "email";
-    } else {
-      channel = "in_app";
-    }
+    // Email-only channel — route to email if possible, otherwise in_app
+    const channel: "email" | "in_app" = hasEmail ? "email" : "in_app";
 
     return {
       organization_id: schedule.organization_id,
