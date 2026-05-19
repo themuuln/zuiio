@@ -1,8 +1,9 @@
 import { cacheTags, cacheDurations } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
+import type { WorkOrderDetail } from "@/lib/types";
 import type {
   Customer,
-  WorkOrderDetail,
+  DiagnosisLabel,
   WorkOrderPart,
   WorkOrderService,
   WorkOrderStatusHistory,
@@ -43,6 +44,7 @@ export async function getWorkOrderDetail(
         { data: customerData },
         { data: vehicleData },
         { data: mechanicData },
+        { data: labelData },
       ] = await Promise.all([
         supabase
           .from("work_order_services")
@@ -72,6 +74,13 @@ export async function getWorkOrderDetail(
               .eq("id", wo.mechanic_id)
               .single()
           : { data: null },
+        wo.diagnosis_label_id
+          ? supabase
+              .from("diagnosis_labels")
+              .select("*")
+              .eq("id", wo.diagnosis_label_id)
+              .single()
+          : { data: null },
       ]);
 
       return {
@@ -82,6 +91,7 @@ export async function getWorkOrderDetail(
         services: (services ?? []) as WorkOrderService[],
         parts: (parts ?? []) as WorkOrderPart[],
         status_history: (statusHistory ?? []) as WorkOrderStatusHistory[],
+        diagnosis_label: labelData as DiagnosisLabel | null,
       };
     },
     {

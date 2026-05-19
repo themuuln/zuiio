@@ -5,7 +5,6 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
-
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -99,6 +98,63 @@ export type Database = {
           },
         ]
       }
+      branch_user_permissions: {
+        Row: {
+          branch_id: string
+          can_approve_transfers: boolean
+          can_manage_users: boolean
+          can_override_discounts: boolean
+          can_view: boolean
+          can_view_other_branches: boolean
+          created_at: string
+          id: string
+          organization_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          branch_id: string
+          can_approve_transfers?: boolean
+          can_manage_users?: boolean
+          can_override_discounts?: boolean
+          can_view?: boolean
+          can_view_other_branches?: boolean
+          created_at?: string
+          id?: string
+          organization_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          branch_id?: string
+          can_approve_transfers?: boolean
+          can_manage_users?: boolean
+          can_override_discounts?: boolean
+          can_view?: boolean
+          can_view_other_branches?: boolean
+          created_at?: string
+          id?: string
+          organization_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_user_permissions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_user_permissions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branches: {
         Row: {
           address: string | null
@@ -107,6 +163,7 @@ export type Database = {
           deleted_at: string | null
           email: string | null
           id: string
+          is_active: boolean
           is_main: boolean
           name: string
           organization_id: string
@@ -123,6 +180,7 @@ export type Database = {
           deleted_at?: string | null
           email?: string | null
           id?: string
+          is_active?: boolean
           is_main?: boolean
           name: string
           organization_id: string
@@ -139,6 +197,7 @@ export type Database = {
           deleted_at?: string | null
           email?: string | null
           id?: string
+          is_active?: boolean
           is_main?: boolean
           name?: string
           organization_id?: string
@@ -271,6 +330,7 @@ export type Database = {
           contact_person: string | null
           created_at: string
           created_by: string | null
+          customer_user_id: string | null
           deleted_at: string | null
           email: string | null
           first_name: string | null
@@ -281,6 +341,7 @@ export type Database = {
           notes: string | null
           organization_id: string
           phone: string | null
+          portal_token: string | null
           source: string | null
           tags: string[] | null
           total_visits: number
@@ -295,6 +356,7 @@ export type Database = {
           contact_person?: string | null
           created_at?: string
           created_by?: string | null
+          customer_user_id?: string | null
           deleted_at?: string | null
           email?: string | null
           first_name?: string | null
@@ -305,6 +367,7 @@ export type Database = {
           notes?: string | null
           organization_id: string
           phone?: string | null
+          portal_token?: string | null
           source?: string | null
           tags?: string[] | null
           total_visits?: number
@@ -319,6 +382,7 @@ export type Database = {
           contact_person?: string | null
           created_at?: string
           created_by?: string | null
+          customer_user_id?: string | null
           deleted_at?: string | null
           email?: string | null
           first_name?: string | null
@@ -329,6 +393,7 @@ export type Database = {
           notes?: string | null
           organization_id?: string
           phone?: string | null
+          portal_token?: string | null
           source?: string | null
           tags?: string[] | null
           total_visits?: number
@@ -346,6 +411,63 @@ export type Database = {
           },
           {
             foreignKeyName: "customers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnosis_labels: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          id: string
+          is_active: boolean
+          name: string
+          name_mn: string | null
+          organization_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          name_mn?: string | null
+          organization_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_mn?: string | null
+          organization_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnosis_labels_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnosis_labels_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -871,9 +993,9 @@ export type Database = {
           default_tax_rate: number | null
           invoice_prefix: string | null
           organization_id: string
-          qpay_enabled: boolean
+          invoice_prefix: string | null
+          organization_id: string
           settings: Json | null
-          sms_enabled: boolean
           timezone: string | null
           updated_at: string
         }
@@ -884,9 +1006,7 @@ export type Database = {
           default_tax_rate?: number | null
           invoice_prefix?: string | null
           organization_id: string
-          qpay_enabled?: boolean
           settings?: Json | null
-          sms_enabled?: boolean
           timezone?: string | null
           updated_at?: string
         }
@@ -897,9 +1017,7 @@ export type Database = {
           default_tax_rate?: number | null
           invoice_prefix?: string | null
           organization_id?: string
-          qpay_enabled?: boolean
           settings?: Json | null
-          sms_enabled?: boolean
           timezone?: string | null
           updated_at?: string
         }
@@ -967,6 +1085,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          branch_limit: number
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -980,6 +1099,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          branch_limit?: number
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -993,6 +1113,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          branch_limit?: number
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -1864,6 +1985,83 @@ export type Database = {
           },
         ]
       }
+      service_completion_data: {
+        Row: {
+          branch_id: string | null
+          collected_at: string
+          created_at: string
+          created_by: string | null
+          customer_feedback: string | null
+          customer_preferences: Json
+          customer_satisfaction: number | null
+          id: string
+          next_appointment_date: string | null
+          odometer_reading: number | null
+          organization_id: string
+          vehicle_id: string
+          work_order_id: string
+        }
+        Insert: {
+          branch_id?: string | null
+          collected_at?: string
+          created_at?: string
+          created_by?: string | null
+          customer_feedback?: string | null
+          customer_preferences?: Json
+          customer_satisfaction?: number | null
+          id?: string
+          next_appointment_date?: string | null
+          odometer_reading?: number | null
+          organization_id: string
+          vehicle_id: string
+          work_order_id: string
+        }
+        Update: {
+          branch_id?: string | null
+          collected_at?: string
+          created_at?: string
+          created_by?: string | null
+          customer_feedback?: string | null
+          customer_preferences?: Json
+          customer_satisfaction?: number | null
+          id?: string
+          next_appointment_date?: string | null
+          odometer_reading?: number | null
+          organization_id?: string
+          vehicle_id?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_completion_data_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_completion_data_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_completion_data_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_completion_data_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_price_history: {
         Row: {
           created_at: string
@@ -1960,6 +2158,105 @@ export type Database = {
           },
         ]
       }
+      service_recommendations: {
+        Row: {
+          branch_id: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          id: string
+          next_due_date: string | null
+          next_due_km: number | null
+          notes: string | null
+          organization_id: string
+          priority: string
+          recommended_interval_km: number | null
+          recommended_interval_months: number | null
+          service_catalog_id: string | null
+          service_name: string
+          updated_at: string
+          updated_by: string | null
+          work_order_id: string
+          work_order_service_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          next_due_date?: string | null
+          next_due_km?: number | null
+          notes?: string | null
+          organization_id: string
+          priority?: string
+          recommended_interval_km?: number | null
+          recommended_interval_months?: number | null
+          service_catalog_id?: string | null
+          service_name: string
+          updated_at?: string
+          updated_by?: string | null
+          work_order_id: string
+          work_order_service_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          next_due_date?: string | null
+          next_due_km?: number | null
+          notes?: string | null
+          organization_id?: string
+          priority?: string
+          recommended_interval_km?: number | null
+          recommended_interval_months?: number | null
+          service_catalog_id?: string | null
+          service_name?: string
+          updated_at?: string
+          updated_by?: string | null
+          work_order_id?: string
+          work_order_service_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_recommendations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_recommendations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_recommendations_service_catalog_id_fkey"
+            columns: ["service_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "service_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_recommendations_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_recommendations_work_order_service_id_fkey"
+            columns: ["work_order_service_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_thresholds: {
         Row: {
           branch_id: string | null
@@ -2020,6 +2317,115 @@ export type Database = {
             columns: ["part_id"]
             isOneToOne: false
             referencedRelation: "parts_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_transfer_items: {
+        Row: {
+          created_at: string
+          id: string
+          part_id: string
+          quantity: number
+          transfer_id: string
+          unit_cost: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          part_id: string
+          quantity: number
+          transfer_id: string
+          unit_cost?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          part_id?: string
+          quantity?: number
+          transfer_id?: string
+          unit_cost?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfer_items_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfer_items_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "stock_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_transfers: {
+        Row: {
+          approved_by: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          from_branch_id: string | null
+          id: string
+          notes: string | null
+          organization_id: string
+          received_by: string | null
+          status: string
+          to_branch_id: string
+        }
+        Insert: {
+          approved_by?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          from_branch_id?: string | null
+          id?: string
+          notes?: string | null
+          organization_id: string
+          received_by?: string | null
+          status?: string
+          to_branch_id: string
+        }
+        Update: {
+          approved_by?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          from_branch_id?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          received_by?: string | null
+          status?: string
+          to_branch_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfers_from_branch_id_fkey"
+            columns: ["from_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfers_to_branch_id_fkey"
+            columns: ["to_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
             referencedColumns: ["id"]
           },
         ]
@@ -2470,6 +2876,7 @@ export type Database = {
           fuel_type: string | null
           id: string
           inspection_notes: string | null
+          last_service_branch_id: string | null
           last_visit_at: string | null
           last_visit_date: string | null
           license_expiry: string | null
@@ -2506,6 +2913,7 @@ export type Database = {
           fuel_type?: string | null
           id?: string
           inspection_notes?: string | null
+          last_service_branch_id?: string | null
           last_visit_at?: string | null
           last_visit_date?: string | null
           license_expiry?: string | null
@@ -2542,6 +2950,7 @@ export type Database = {
           fuel_type?: string | null
           id?: string
           inspection_notes?: string | null
+          last_service_branch_id?: string | null
           last_visit_at?: string | null
           last_visit_date?: string | null
           license_expiry?: string | null
@@ -2577,6 +2986,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_last_service_branch_id_fkey"
+            columns: ["last_service_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
             referencedColumns: ["id"]
           },
           {
@@ -2645,6 +3061,7 @@ export type Database = {
           part_name: string
           part_number: string | null
           quantity: number
+          unit_cost: number
           unit_price: number
           work_order_id: string
         }
@@ -2662,6 +3079,7 @@ export type Database = {
           part_name: string
           part_number?: string | null
           quantity?: number
+          unit_cost?: number
           unit_price?: number
           work_order_id: string
         }
@@ -2679,6 +3097,7 @@ export type Database = {
           part_name?: string
           part_number?: string | null
           quantity?: number
+          unit_cost?: number
           unit_price?: number
           work_order_id?: string
         }
@@ -2722,6 +3141,7 @@ export type Database = {
           quantity: number
           service_catalog_id: string | null
           service_name: string
+          unit_cost: number
           unit_price: number
           work_order_id: string
         }
@@ -2740,6 +3160,7 @@ export type Database = {
           quantity?: number
           service_catalog_id?: string | null
           service_name: string
+          unit_cost?: number
           unit_price?: number
           work_order_id: string
         }
@@ -2758,6 +3179,7 @@ export type Database = {
           quantity?: number
           service_catalog_id?: string | null
           service_name?: string
+          unit_cost?: number
           unit_price?: number
           work_order_id?: string
         }
@@ -2845,6 +3267,7 @@ export type Database = {
           deleted_at: string | null
           description: string | null
           diagnosis: string | null
+          diagnosis_label_id: string | null
           discount_amount: number
           discount_percentage: number
           discount_total: number
@@ -2852,6 +3275,7 @@ export type Database = {
           mechanic_id: string | null
           mechanic_notes: string | null
           notes: string | null
+          odometer_at_service: number | null
           organization_id: string
           queue_order: number
           started_at: string | null
@@ -2873,6 +3297,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           diagnosis?: string | null
+          diagnosis_label_id?: string | null
           discount_amount?: number
           discount_percentage?: number
           discount_total?: number
@@ -2880,6 +3305,7 @@ export type Database = {
           mechanic_id?: string | null
           mechanic_notes?: string | null
           notes?: string | null
+          odometer_at_service?: number | null
           organization_id: string
           queue_order?: number
           started_at?: string | null
@@ -2901,6 +3327,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           diagnosis?: string | null
+          diagnosis_label_id?: string | null
           discount_amount?: number
           discount_percentage?: number
           discount_total?: number
@@ -2908,6 +3335,7 @@ export type Database = {
           mechanic_id?: string | null
           mechanic_notes?: string | null
           notes?: string | null
+          odometer_at_service?: number | null
           organization_id?: string
           queue_order?: number
           started_at?: string | null
@@ -2931,6 +3359,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_diagnosis_label_id_fkey"
+            columns: ["diagnosis_label_id"]
+            isOneToOne: false
+            referencedRelation: "diagnosis_labels"
             referencedColumns: ["id"]
           },
           {
@@ -3091,11 +3526,8 @@ export type Database = {
     }
   }
 }
-
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
@@ -3124,7 +3556,6 @@ export type Tables<
       ? R
       : never
     : never
-
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
@@ -3149,7 +3580,6 @@ export type TablesInsert<
       ? I
       : never
     : never
-
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
@@ -3174,7 +3604,6 @@ export type TablesUpdate<
       ? U
       : never
     : never
-
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
@@ -3191,7 +3620,6 @@ export type Enums<
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
-
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
@@ -3208,7 +3636,6 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-
 export const Constants = {
   graphql_public: {
     Enums: {},
@@ -3252,3 +3679,6 @@ export const Constants = {
     },
   },
 } as const
+Initialising login role...
+A new version of Supabase CLI is available: v2.100.0 (currently installed v2.98.2)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

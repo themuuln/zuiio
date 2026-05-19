@@ -147,6 +147,16 @@ export const serviceReminderKeys = {
     [...serviceReminderKeys.all(orgId), "logs", vehicleId ?? ""] as const,
 };
 
+export const commissionKeys = {
+  all: (orgId: string) => ["commission-rules", orgId] as const,
+  list: (orgId: string) => [...commissionKeys.all(orgId), "list"] as const,
+};
+
+export const diagnosisLabelKeys = {
+  all: (orgId: string) => ["diagnosis-labels", orgId] as const,
+  list: (orgId: string) => [...diagnosisLabelKeys.all(orgId), "list"] as const,
+};
+
 export const expenseKeys = {
   all: (orgId: string) => ["organizations", orgId, "expenses"] as const,
   list: (orgId: string, filters?: Record<string, string>) =>

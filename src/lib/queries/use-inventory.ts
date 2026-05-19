@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
-  InventoryBalance,
+  InventoryBalanceWithAvgCost,
   InventoryMovement,
   PartsCatalogItem,
   PartsCars,
@@ -35,7 +35,7 @@ export function useInventoryBalances(orgId: string | undefined) {
       if (!res.ok) throw new Error("Failed to load balances");
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as InventoryBalance[];
+      return (json.data ?? []) as InventoryBalanceWithAvgCost[];
     },
     enabled: !!orgId,
     staleTime: 30_000,
@@ -522,6 +522,45 @@ export function useRemovePartsCarPart(orgId: string | undefined) {
       qc.invalidateQueries({
         queryKey: inventoryKeys.partsCarParts(orgId ?? "", variables.carId),
       });
+    },
+  });
+}
+
+export function useUpdatePartsCar(orgId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }: { id: string } & Record<string, unknown>) => {
+      const res = await fetch(`/api/organizations/${orgId}/inventory/parts-cars/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error?.message ?? "Failed to update parts car");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: inventoryKeys.partsCars(orgId ?? "") });
+    },
+  });
+}
+
+export function useDeletePartsCar(orgId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/organizations/${orgId}/inventory/parts-cars/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error?.message ?? "Failed to delete parts car");
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: inventoryKeys.partsCars(orgId ?? "") });
     },
   });
 }

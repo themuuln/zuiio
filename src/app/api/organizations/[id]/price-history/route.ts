@@ -2,7 +2,16 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 
 interface PriceHistoryResponse {
-  services: Record<string, { last_price: number; last_make?: string; last_model?: string }>;
+  services: Record<
+    string,
+    {
+      last_price: number;
+      unit_price: number;
+      created_at: string;
+      last_make?: string;
+      last_model?: string;
+    }
+  >;
   parts: Record<string, number>;
 }
 
@@ -23,6 +32,8 @@ export const GET = createRouteHandler(async ({ supabase, orgId }) => {
     seenServices.add(sid);
     serviceMap[sid] = {
       last_price: Number(row.unit_price),
+      unit_price: Number(row.unit_price),
+      created_at: row.created_at,
       last_make: row.vehicle_make ?? undefined,
       last_model: row.vehicle_model ?? undefined,
     };

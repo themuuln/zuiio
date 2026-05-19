@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
+import { mutationRateLimiter } from "@/lib/rate-limit";
 
 interface ExportColumnDef {
   key: string;
@@ -49,6 +50,14 @@ function autoWidth(label: string, data: Record<string, unknown>[], key: string, 
 }
 
 export const POST = createSimpleRouteHandler(async ({ request }) => {
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  const rateCheck = mutationRateLimiter.check(ip);
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+    );
+  }
   const body: ExportRequestBody = await request.json();
   const { columns, data, sheetName = "Sheet1", title } = body;
 

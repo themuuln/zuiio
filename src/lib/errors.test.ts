@@ -28,9 +28,9 @@ describe("NotFoundError", () => {
 });
 
 describe("ValidationError", () => {
-  it("defaults statusCode to 422", () => {
+  it("defaults statusCode to 400", () => {
     const err = new ValidationError("Name is required");
-    expect(err.statusCode).toBe(422);
+    expect(err.statusCode).toBe(400);
     expect(err.code).toBe("VALIDATION_ERROR");
   });
 });

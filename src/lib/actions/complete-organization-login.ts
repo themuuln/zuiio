@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { AppError } from "@/lib/errors";
+import { AppError, UnauthorizedError } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
 import { activateOrganizationAccess } from "@/lib/services/organization-access-service";
 
 export interface CompleteOrganizationLoginState {
@@ -12,6 +13,12 @@ export async function completeOrganizationLogin(
   _prevState: CompleteOrganizationLoginState,
   formData: FormData,
 ): Promise<CompleteOrganizationLoginState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new UnauthorizedError();
+
   try {
     await activateOrganizationAccess({
       organizationId: String(formData.get("organizationId") ?? ""),

@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
 import { mechanicKeys, serviceKeys, workOrderKeys } from "./keys";
 
@@ -10,23 +9,20 @@ export async function fetchServicePriceHistory(
   vehicleMake?: string,
   vehicleModel?: string,
 ): Promise<number[]> {
-  const supabase = createClient();
-  let query = supabase
-    .from("service_price_history")
-    .select("unit_price")
-    .eq("organization_id", orgId)
-    .eq("service_catalog_id", serviceCatalogId)
-    .order("created_at", { ascending: false })
-    .limit(3);
+  const params = new URLSearchParams({ service_catalog_id: serviceCatalogId });
+  if (vehicleMake) params.set("vehicle_make", vehicleMake);
+  if (vehicleModel) params.set("vehicle_model", vehicleModel);
 
-  if (vehicleMake) query = query.eq("vehicle_make", vehicleMake);
-  if (vehicleModel) query = query.eq("vehicle_model", vehicleModel);
+  const res = await fetch(
+    `/api/organizations/${orgId}/price-history/service?${params.toString()}`,
+  );
+  const json = await res.json();
+  if (!res.ok) throw new Error("Failed to load service price history");
+  if (json.error) throw new Error(json.error.message);
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
+  const data = json.data as { unit_price: number | string | null }[] | null;
   return (data ?? [])
-    .map((row) => Number(row.unit_price ?? 0))
-    .filter(Boolean);
+    .flatMap((row) => { const price = Number(row.unit_price ?? 0); return price ? [price] : []; });
 }
 
 export async function fetchPartPriceHistory(
@@ -34,22 +30,19 @@ export async function fetchPartPriceHistory(
   partName: string,
   vehicleMake?: string,
 ): Promise<number[]> {
-  const supabase = createClient();
-  let query = supabase
-    .from("part_price_history")
-    .select("unit_price")
-    .eq("organization_id", orgId)
-    .ilike("part_name", partName)
-    .order("created_at", { ascending: false })
-    .limit(3);
+  const params = new URLSearchParams({ part_name: partName });
+  if (vehicleMake) params.set("vehicle_make", vehicleMake);
 
-  if (vehicleMake) query = query.eq("vehicle_make", vehicleMake);
+  const res = await fetch(
+    `/api/organizations/${orgId}/price-history/part?${params.toString()}`,
+  );
+  const json = await res.json();
+  if (!res.ok) throw new Error("Failed to load part price history");
+  if (json.error) throw new Error(json.error.message);
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
+  const data = json.data as { unit_price: number | string | null }[] | null;
   return (data ?? [])
-    .map((row) => Number(row.unit_price ?? 0))
-    .filter(Boolean);
+    .flatMap((row) => { const price = Number(row.unit_price ?? 0); return price ? [price] : []; });
 }
 
 export function useWorkOrderDetail(orgId: string | undefined, woId: string) {
@@ -404,6 +397,56 @@ export function useCreateInvoice(orgId: string | undefined) {
       });
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.all(orgId ?? ""),
+      });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+  });
+}
+
+export function useInvoicePayments(orgId: string | undefined, invoiceId: string | null) {
+  return useQuery({
+    queryKey: ["invoice-payments", orgId, invoiceId],
+    queryFn: async () => {
+      if (!invoiceId) return { payments: [], total_paid: 0, balance_due: 0, status: "" };
+      const res = await fetch(`/api/organizations/${orgId}/invoices/${invoiceId}`);
+      if (!res.ok) throw new Error("Failed to load invoice");
+      const json = await res.json();
+      return json.data ?? { payments: [], total_paid: 0, balance_due: 0, status: "" };
+    },
+    enabled: !!orgId && !!invoiceId,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useRecordPayment(orgId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      invoiceId,
+      ...body
+    }: {
+      invoiceId: string;
+      amount: number;
+      method: string;
+      reference?: string;
+      notes?: string;
+    }) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/invoices/${invoiceId}/payments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+      if (!res.ok) throw new Error("Failed to record payment");
+      return res.json();
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({
+        queryKey: ["invoice-payments", orgId, variables.invoiceId],
       });
     },
     onError: (err: Error) => {

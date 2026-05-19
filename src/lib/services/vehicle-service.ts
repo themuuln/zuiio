@@ -20,6 +20,7 @@ export async function getVehicles(
   options?: {
     search?: string;
     customerId?: string;
+    limit?: number;
   },
 ): Promise<VehicleWithOwner[]> {
   const supabase = await createClient();
@@ -46,7 +47,7 @@ export async function getVehicles(
         query = query.eq("vehicle_owners.customer_id", options.customerId);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.limit((options?.limit ?? 50) + 1);
 
       if (error) throw new Error(error.message);
 
@@ -94,23 +95,23 @@ export async function getVehicle(
         throw new NotFoundError("Vehicle not found");
       }
 
-      // Get owners
-      const { data: owners } = await supabase
-        .from("vehicle_owners")
-        .select("customer_id, is_primary, customers(first_name, last_name, phone)")
-        .eq("vehicle_id", id)
-        .eq("organization_id", orgId)
-        .is("owned_until", null);
-
-      // Get recent work orders
-      const { data: workOrders } = await supabase
-        .from("work_orders")
-        .select("id, status, complaint, total, created_at")
-        .eq("vehicle_id", id)
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .limit(10);
+      // Get owners and recent work orders in parallel
+      const [{ data: owners }, { data: workOrders }] = await Promise.all([
+        supabase
+          .from("vehicle_owners")
+          .select("customer_id, is_primary, customers(first_name, last_name, phone)")
+          .eq("vehicle_id", id)
+          .eq("organization_id", orgId)
+          .is("owned_until", null),
+        supabase
+          .from("work_orders")
+          .select("id, status, complaint, total, created_at")
+          .eq("vehicle_id", id)
+          .eq("organization_id", orgId)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+          .limit(10),
+      ]);
 
       return {
         ...vehicle,
@@ -150,7 +151,6 @@ export async function createVehicle(
   params: CreateVehicleParams,
   userId: string,
 ): Promise<Vehicle> {
-  const supabase = await createClient();
 
   if (!params.plateNumber?.trim()) {
     throw new ValidationError("Plate number is required");
@@ -161,6 +161,8 @@ export async function createVehicle(
   if (!params.model?.trim()) {
     throw new ValidationError("Model is required");
   }
+
+  const supabase = await createClient();
 
   // Check for duplicate plate
   const { data: existing } = await supabase

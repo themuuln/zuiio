@@ -10,6 +10,12 @@ export interface WorkOrderListItem {
   customer: { first_name: string; last_name: string | null } | null;
   vehicle: { plate_number: string; make: string | null; model: string | null } | null;
   grand_total?: number;
+  services_cost?: number;
+  parts_cost?: number;
+  services_revenue?: number;
+  parts_revenue?: number;
+  gross_profit?: number;
+  margin_percent?: number;
 }
 
 export function useWorkOrders(

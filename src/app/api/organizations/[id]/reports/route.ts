@@ -6,6 +6,7 @@ import {
   getDailyTimeline,
   getDashboardData,
   getEndOfDaySummary,
+  getMechanicPerformanceTrend,
   getMechanicsList,
   getMonthlyReport,
   getWeeklyReport,
@@ -53,9 +54,19 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
       const timeline = await getDailyTimeline(orgId);
       return NextResponse.json({ data: timeline });
     }
+    case "mechanic-trend": {
+      if (!mid) {
+        throw new ValidationError("mechanic parameter is required for mechanic-trend");
+      }
+      const period = (searchParams.get("period") as "weekly" | "monthly") ?? "weekly";
+      const startDate = searchParams.get("startDate") ?? date;
+      const endDate = searchParams.get("endDate") ?? date;
+      const trend = await getMechanicPerformanceTrend(orgId, mid, period, startDate, endDate);
+      return NextResponse.json({ data: trend });
+    }
     default:
       throw new ValidationError(
-        "Invalid report type. Use: daily, weekly, monthly, eod, dashboard, mechanics",
+        "Invalid report type. Use: daily, weekly, monthly, eod, dashboard, mechanics, mechanic-trend",
       );
   }
 });

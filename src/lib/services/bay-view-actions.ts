@@ -10,6 +10,11 @@ import { createVehicle, updateVehicle } from "./vehicle-service";
 
 async function getOrgId(): Promise<string> {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
   const { data, error } = await supabase.rpc("get_user_organization_id");
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No organization selected");
@@ -19,6 +24,8 @@ async function getOrgId(): Promise<string> {
 // ── Find or Create Customer ─────────────────────────────────────
 
 export async function findCustomerByPhone(phone: string) {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new Error("Not authenticated");
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { data } = await supabase
@@ -33,6 +40,8 @@ export async function findCustomerByPhone(phone: string) {
 }
 
 export async function findCustomerByPlate(plate: string) {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new Error("Not authenticated");
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { data } = await supabase
@@ -86,6 +95,8 @@ export interface VehicleLookupResult {
 }
 
 export async function lookupVehicleByPlate(plate: string): Promise<VehicleLookupResult> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new Error("Not authenticated");
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Find vehicle
@@ -137,7 +148,7 @@ export async function lookupVehicleByPlate(plate: string): Promise<VehicleLookup
     .limit(20);
 
   // Fetch mechanic names and services for each WO (parallel)
-  const mechanicIds = [...new Set((workOrders ?? []).map(wo => wo.mechanic_id).filter(Boolean))] as string[];
+  const mechanicIds = [...new Set((workOrders ?? []).flatMap(wo => wo.mechanic_id ? [wo.mechanic_id] : []))] as string[];
   const woIds = (workOrders ?? []).map(wo => wo.id);
   const [{ data: profiles }, { data: allServices }] = await Promise.all([
     supabase.from("profiles").select("id, full_name").in("id", mechanicIds),
@@ -199,13 +210,14 @@ export async function quickRegisterVehicle(params: {
   customerLastName?: string;
   customerPhone?: string;
 }) {
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-  if (!userId) throw new Error("Not authenticated");
-
   if (!params.plateNumber?.trim()) throw new ValidationError("Plate number is required");
   if (!params.make?.trim()) throw new ValidationError("Make is required");
   if (!params.model?.trim()) throw new ValidationError("Model is required");
+
+  const { data: { user: authUser } } = await (await createClient()).auth.getUser();
+  if (!authUser) throw new Error("Not authenticated");
+
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Find or create customer
   let customerId: string | null = null;
@@ -222,7 +234,7 @@ export async function quickRegisterVehicle(params: {
           lastName: params.customerLastName?.trim() || undefined,
           phone: params.customerPhone.trim(),
         },
-        userId,
+        authUser.id,
       );
       customerId = newCust.id;
     }
@@ -255,7 +267,7 @@ export async function quickRegisterVehicle(params: {
         odometer: params.odometer ?? null,
         customerId: customerId ?? undefined,
       },
-      userId,
+      authUser.id,
     );
   } else {
     // CREATE new vehicle
@@ -272,7 +284,7 @@ export async function quickRegisterVehicle(params: {
         odometer: params.odometer,
         customerId: customerId ?? undefined,
       },
-      userId,
+      authUser.id,
     );
   }
 
@@ -282,6 +294,8 @@ export async function quickRegisterVehicle(params: {
 // ── Search mechanics (for registration) ─────────────────────────
 
 export async function searchMechanics(search?: string) {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new Error("Not authenticated");
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   let query = supabase
@@ -305,30 +319,33 @@ export async function registerMechanic(params: {
   fullName: string;
   phone?: string;
 }) {
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
   if (!params.email?.trim()) throw new ValidationError("Email is required");
   if (!params.fullName?.trim()) throw new ValidationError("Name is required");
 
-  // Check if user exists
-  const { data: existingUser } = await supabase
-    .from("profiles")
-    .select("id, is_active")
-    .eq("id", params.email.trim()) // profiles.id = auth.users.id
-    .maybeSingle();
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new Error("Not authenticated");
 
-  // For now, create a profile entry (this assumes the auth user exists or will be invited)
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .upsert({
-      id: params.email.trim(),
-      organization_id: orgId,
-      full_name: params.fullName.trim(),
-      phone: params.phone?.trim() ?? null,
-      is_active: true,
-    })
-    .select("id, full_name, phone, is_active")
-    .single();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+
+  // Check if user exists and create profile entry in parallel
+  const [{ data: existingUser }, { data: profile, error }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, is_active")
+      .eq("id", params.email.trim()) // profiles.id = auth.users.id
+      .maybeSingle(),
+    supabase
+      .from("profiles")
+      .upsert({
+        id: params.email.trim(),
+        organization_id: orgId,
+        full_name: params.fullName.trim(),
+        phone: params.phone?.trim() ?? null,
+        is_active: true,
+      })
+      .select("id, full_name, phone, is_active")
+      .single(),
+  ]);
 
   if (error) throw new Error(error.message ?? "Failed to register mechanic");
 
@@ -340,6 +357,8 @@ export async function registerMechanic(params: {
 export async function getVehicleServiceTimeline(
   vehicleId: string,
 ): Promise<VehicleLookupResult["serviceHistory"]> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new Error("Not authenticated");
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { data: workOrders } = await supabase
@@ -351,7 +370,7 @@ export async function getVehicleServiceTimeline(
     .order("created_at", { ascending: false })
     .limit(50);
 
-  const mechanicIds = [...new Set((workOrders ?? []).map(wo => wo.mechanic_id).filter(Boolean))] as string[];
+  const mechanicIds = [...new Set((workOrders ?? []).flatMap(wo => wo.mechanic_id ? [wo.mechanic_id] : []))] as string[];
   const woIds = (workOrders ?? []).map(wo => wo.id);
   const [{ data: profiles }, { data: allServices }] = await Promise.all([
     supabase.from("profiles").select("id, full_name").in("id", mechanicIds),

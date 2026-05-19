@@ -1,4 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { createRouteHandler } from "@/lib/api-handler";
 
 /**
  * Backward-compat redirect for old `?type=` inventory API.
@@ -14,18 +15,10 @@ import { type NextRequest, NextResponse } from "next/server";
  *
  * This file can be removed once all consumers migrate off ?type=.
  */
-export const GET = redirectHandler;
-export const POST = redirectHandler;
-export const PATCH = redirectHandler;
-export const DELETE = redirectHandler;
-
-async function redirectHandler(request: NextRequest, context: { params: Promise<Record<string, string>> }) {
-  const params = await context.params;
-  const orgId = params.id;
-  const { searchParams, pathname } = new URL(request.url);
+const inventoryRedirect = createRouteHandler(async ({ request, orgId }) => {
+  const { searchParams } = new URL(request.url);
   const type = searchParams.get("type") ?? "parts";
   const method = request.method;
-  const base = pathname;  // /api/organizations/{orgId}/inventory
 
   const urlMap: Record<string, Record<string, string>> = {
     GET: {
@@ -98,4 +91,9 @@ async function redirectHandler(request: NextRequest, context: { params: Promise<
 
   // Redirect with the same body
   return NextResponse.redirect(newUrl, { status: 308 });
-}
+});
+
+export const GET = inventoryRedirect;
+export const POST = inventoryRedirect;
+export const PATCH = inventoryRedirect;
+export const DELETE = inventoryRedirect;

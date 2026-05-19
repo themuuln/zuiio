@@ -15,6 +15,7 @@ import type {
   TechnicianPerformance,
   TopService,
   WeeklyReport,
+  WorkOrderProfit,
   WorkOrderStatusDistribution,
 } from "@/lib/types";
 
@@ -93,7 +94,7 @@ export async function getDailyReport(
         woIds.length > 0
           ? supabase
               .from("work_order_services")
-              .select("final_price, discount_amount, name, work_order_id")
+              .select("final_price, discount_amount, service_name, work_order_id")
               .in("work_order_id", woIds)
           : { data: [] as any[] },
         woIds.length > 0
@@ -187,12 +188,15 @@ export async function getWeeklyReport(
   let totalRevenue = 0;
   let totalDiscounts = 0;
 
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStartDate);
-    d.setDate(d.getDate() + i);
-    const dateStr = d.toISOString().split("T")[0];
-
-    const daily = await getDailyReport(orgId, mechanicId, dateStr);
+  const dailyResults = await Promise.all(
+    Array.from({ length: 7 }, async (_, i) => {
+      const d = new Date(weekStartDate);
+      d.setDate(d.getDate() + i);
+      const dateStr = d.toISOString().split("T")[0];
+      return getDailyReport(orgId, mechanicId, dateStr);
+    }),
+  );
+  for (const daily of dailyResults) {
     dailyBreakdown.push(daily);
     totalWos += daily.work_orders_completed;
     totalServices += daily.services_count;
@@ -328,7 +332,7 @@ export async function getEndOfDaySummary(
     .is("deleted_at", null);
 
   if (!workOrders?.length) {
-    return { date, mechanics: [], total_work_orders: 0, total_revenue: 0 };
+    return { date, mechanics: [], total_work_orders: 0, total_revenue: 0, total_commission: 0 };
   }
 
   const mechanicMap = new Map<
@@ -340,14 +344,14 @@ export async function getEndOfDaySummary(
       services_count: number;
       parts_count: number;
       total_revenue: number;
+      total_commission: number;
     }
   >();
 
   const mechanicIds = [
     ...new Set(
       workOrders
-        .map((w) => w.mechanic_id)
-        .filter(Boolean) as string[],
+        .flatMap((w) => w.mechanic_id ? [w.mechanic_id] : []) as string[],
     ),
   ];
 
@@ -365,7 +369,7 @@ export async function getEndOfDaySummary(
   }
 
   const woIds = workOrders.map((w) => w.id);
-  const [servicesData, partsData] = await Promise.all([
+  const [servicesData, partsData, commissionsData] = await Promise.all([
     woIds.length > 0
       ? supabase
           .from("work_order_services")
@@ -376,6 +380,12 @@ export async function getEndOfDaySummary(
       ? supabase
           .from("work_order_parts")
           .select("final_price, work_order_id")
+          .in("work_order_id", woIds)
+      : { data: [] as any[] },
+    woIds.length > 0
+      ? supabase
+          .from("work_order_commissions")
+          .select("mechanic_id, commission_amount")
           .in("work_order_id", woIds)
       : { data: [] as any[] },
   ]);
@@ -392,6 +402,14 @@ export async function getEndOfDaySummary(
     woDataMap.set(p.work_order_id, entry);
   }
 
+  // Aggregate commissions per mechanic
+  const commissionMap = new Map<string, number>();
+  for (const c of commissionsData.data ?? []) {
+    const mid = c.mechanic_id;
+    const current = commissionMap.get(mid) ?? 0;
+    commissionMap.set(mid, current + Number(c.commission_amount));
+  }
+
   for (const wo of workOrders) {
     const mid = wo.mechanic_id;
     if (!mid) continue;
@@ -404,6 +422,7 @@ export async function getEndOfDaySummary(
         services_count: 0,
         parts_count: 0,
         total_revenue: 0,
+        total_commission: 0,
       });
     }
 
@@ -423,19 +442,149 @@ export async function getEndOfDaySummary(
     for (const p of data.parts) entry.total_revenue += Number(p.final_price);
   }
 
+  // Add commission totals to mechanic entries
+  for (const [mid, amount] of commissionMap) {
+    const entry = mechanicMap.get(mid);
+    if (entry) {
+      entry.total_commission = amount;
+    }
+  }
+
   const mechanics = Array.from(mechanicMap.values());
   const totalWorkOrders = mechanics.reduce(
     (sum, m) => sum + m.work_orders_completed,
     0,
   );
   const totalRevenue = mechanics.reduce((sum, m) => sum + m.total_revenue, 0);
+  const totalCommission = mechanics.reduce((sum, m) => sum + (m.total_commission ?? 0), 0);
 
   return {
     date,
     mechanics,
     total_work_orders: totalWorkOrders,
     total_revenue: totalRevenue,
+    total_commission: totalCommission,
   };
+}
+
+// ── Mechanic Performance Trend ─────────────────────────────
+
+function getWeekKey(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(
+    ((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+  );
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+export async function getMechanicPerformanceTrend(
+  orgId: string,
+  mechanicId: string,
+  period: "weekly" | "monthly" = "weekly",
+  startDate: string,
+  endDate: string,
+): Promise<TechnicianPerformance> {
+  const supabase = await createClient();
+
+  return withCache(
+    ["getMechanicPerformanceTrend", orgId, mechanicId, period, startDate, endDate],
+    async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", mechanicId)
+        .single();
+      const mechanicName = profile?.full_name ?? "Unknown";
+
+      const { data: workOrders } = await supabase
+        .from("work_orders")
+        .select("id, created_at")
+        .eq("organization_id", orgId)
+        .eq("mechanic_id", mechanicId)
+        .eq("status", "Completed")
+        .gte("created_at", `${startDate}T00:00:00`)
+        .lte("created_at", `${endDate}T23:59:59`)
+        .is("deleted_at", null);
+
+      const woIds = (workOrders ?? []).map((w) => w.id);
+
+      const [svcs, prts] = await Promise.all([
+        woIds.length > 0
+          ? supabase
+              .from("work_order_services")
+              .select("final_price, work_order_id")
+              .in("work_order_id", woIds)
+          : { data: [] as any[] },
+        woIds.length > 0
+          ? supabase
+              .from("work_order_parts")
+              .select("final_price, work_order_id")
+              .in("work_order_id", woIds)
+          : { data: [] as any[] },
+      ]);
+
+      const woRevenue = new Map<string, number>();
+      for (const s of svcs.data ?? []) {
+        woRevenue.set(
+          s.work_order_id,
+          (woRevenue.get(s.work_order_id) ?? 0) + Number(s.final_price),
+        );
+      }
+      for (const p of prts.data ?? []) {
+        woRevenue.set(
+          p.work_order_id,
+          (woRevenue.get(p.work_order_id) ?? 0) + Number(p.final_price),
+        );
+      }
+
+      const trendMap = new Map<string, { orders: number; revenue: number }>();
+      for (const wo of workOrders ?? []) {
+        const dateStr = (wo.created_at ?? "").slice(0, 10);
+        const key = period === "monthly" ? dateStr.slice(0, 7) : getWeekKey(dateStr);
+        const entry = trendMap.get(key) ?? { orders: 0, revenue: 0 };
+        entry.orders++;
+        entry.revenue += woRevenue.get(wo.id) ?? 0;
+        trendMap.set(key, entry);
+      }
+
+      const totalOrders = (workOrders ?? []).length;
+      const totalRevenue = Array.from(trendMap.values()).reduce(
+        (sum, e) => sum + e.revenue,
+        0,
+      );
+
+      const sortedKeys = Array.from(trendMap.keys()).sort();
+      const weeklyTrend = sortedKeys.map((week) => ({
+        week,
+        orders: trendMap.get(week)!.orders,
+        revenue: Math.round(trendMap.get(week)!.revenue * 100) / 100,
+      }));
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const daysDiff = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000));
+
+      return {
+        id: mechanicId,
+        name: mechanicName,
+        completedOrders: totalOrders,
+        revenue: Math.round(totalRevenue * 100) / 100,
+        avgJobValue:
+          totalOrders > 0
+            ? Math.round((totalRevenue / totalOrders) * 100) / 100
+            : 0,
+        jobsPerDay: Math.round((totalOrders / daysDiff) * 100) / 100,
+        weeklyTrend,
+      };
+    },
+    {
+      tags: [cacheTags.reports(orgId)],
+      revalidate: cacheDurations.reports,
+    },
+  );
 }
 
 // ── Dashboard (optimized: ~10 queries instead of ~236) ──────
@@ -546,16 +695,16 @@ export async function getDashboardData(
     completedWoIds.length > 0
       ? supabase
           .from("work_order_services")
-          .select("final_price, discount_amount, name, work_order_id")
-          .in("work_order_id", completedWoIds)
-      : { data: [] as any[] },
+      .select("final_price, discount_amount, service_name, work_order_id, unit_cost, quantity")
+      .in("work_order_id", completedWoIds)
+  : { data: [] as any[] },
 
     completedWoIds.length > 0
       ? supabase
           .from("work_order_parts")
-          .select("final_price, discount_amount, part_name, work_order_id")
+          .select("final_price, discount_amount, part_name, work_order_id, unit_cost, quantity")
           .in("work_order_id", completedWoIds)
-      : { data: [] as any[] },
+  : { data: [] as any[] },
   ]);
 
   const allServices = servicesData.data ?? [];
@@ -565,11 +714,22 @@ export async function getDashboardData(
     (sum: number, s: { final_price: number }) => sum + Number(s.final_price),
     0,
   );
+  const serviceCost = allServices.reduce(
+    (sum: number, s: { unit_cost?: number; quantity: number }) => sum + Number(s.unit_cost ?? 0) * s.quantity,
+    0,
+  );
   const partsRevenue = allParts.reduce(
     (sum: number, p: { final_price: number }) => sum + Number(p.final_price),
     0,
   );
+  const partsCost = allParts.reduce(
+    (sum: number, p: { unit_cost?: number; quantity: number }) => sum + Number(p.unit_cost ?? 0) * p.quantity,
+    0,
+  );
   const totalRevenue = serviceRevenue + partsRevenue;
+  const totalCost = serviceCost + partsCost;
+  const grossProfit = totalRevenue - totalCost;
+  const marginPercent = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
 
   // ── Summary ───────────────────────────────────────────
   const summary = {
@@ -584,6 +744,8 @@ export async function getDashboardData(
         : 0,
     partsRevenue,
     serviceRevenue,
+    grossProfit,
+    marginPercent,
     totalCustomers: summaryCust.count ?? 0,
     totalVehicles: summaryVehicles.count ?? 0,
   };
@@ -651,6 +813,96 @@ export async function getDashboardData(
   );
 }
 
+// ── Profit Functions ─────────────────────────────────────────
+
+export async function getWorkOrderProfit(
+  workOrderId: string,
+  orgId: string,
+): Promise<WorkOrderProfit> {
+  const supabase = await createClient();
+
+  const [servicesResult, partsResult] = await Promise.all([
+    supabase
+      .from("work_order_services")
+      .select("final_price, unit_cost, quantity")
+      .eq("work_order_id", workOrderId),
+    supabase
+      .from("work_order_parts")
+      .select("final_price, unit_cost, quantity")
+      .eq("work_order_id", workOrderId),
+  ]);
+
+  const serviceRevenue = (servicesResult.data ?? []).reduce(
+    (sum, s) => sum + Number(s.final_price), 0);
+  const serviceCost = (servicesResult.data ?? []).reduce(
+    (sum, s) => sum + Number(s.unit_cost ?? 0) * s.quantity, 0);
+  const partsRevenue = (partsResult.data ?? []).reduce(
+    (sum, p) => sum + Number(p.final_price), 0);
+  const partsCost = (partsResult.data ?? []).reduce(
+    (sum, p) => sum + Number(p.unit_cost ?? 0) * p.quantity, 0);
+
+  const totalRevenue = serviceRevenue + partsRevenue;
+  const totalCost = serviceCost + partsCost;
+  const grossProfit = totalRevenue - totalCost;
+  const marginPercent = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
+
+  return {
+    totalRevenue,
+    totalCost,
+    grossProfit,
+    marginPercent,
+    serviceRevenue,
+    serviceCost,
+    partsRevenue,
+    partsCost,
+  };
+}
+
+export async function getDashboardProfitSummary(
+  orgId: string,
+): Promise<{ todayProfit: WorkOrderProfit; weekProfit: WorkOrderProfit; monthProfit: WorkOrderProfit }> {
+  const supabase = await createClient();
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  async function getProfitForRange(startDate: string): Promise<WorkOrderProfit> {
+    const { data: wos } = await supabase
+      .from("work_orders")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("status", "Completed")
+      .gte("updated_at", startDate)
+      .is("deleted_at", null);
+
+    const woIds = (wos ?? []).map(w => w.id);
+    if (woIds.length === 0) return { totalRevenue: 0, totalCost: 0, grossProfit: 0, marginPercent: 0, serviceRevenue: 0, serviceCost: 0, partsRevenue: 0, partsCost: 0 };
+
+    const [svcs, parts] = await Promise.all([
+      supabase.from("work_order_services").select("final_price, unit_cost, quantity").in("work_order_id", woIds),
+      supabase.from("work_order_parts").select("final_price, unit_cost, quantity").in("work_order_id", woIds),
+    ]);
+
+    const serviceRevenue = (svcs.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
+    const serviceCost = (svcs.data ?? []).reduce((s, r) => s + Number(r.unit_cost ?? 0) * r.quantity, 0);
+    const partsRevenue = (parts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
+    const partsCost = (parts.data ?? []).reduce((s, r) => s + Number(r.unit_cost ?? 0) * r.quantity, 0);
+    const totalRevenue = serviceRevenue + partsRevenue;
+    const totalCost = serviceCost + partsCost;
+    const grossProfit = totalRevenue - totalCost;
+    return { totalRevenue, totalCost, grossProfit, marginPercent: totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0, serviceRevenue, serviceCost, partsRevenue, partsCost };
+  }
+
+  const [todayProfit, weekProfit, monthProfit] = await Promise.all([
+    getProfitForRange(todayStart),
+    getProfitForRange(weekStart),
+    getProfitForRange(monthStart),
+  ]);
+
+  return { todayProfit, weekProfit, monthProfit };
+}
+
 // ── Previous Period Comparison ──────────────────────────────
 
 /**
@@ -661,7 +913,7 @@ async function getPreviousPeriodSummary(
   supabase: Awaited<ReturnType<typeof createClient>>,
   orgId: string,
   period: "today" | "week" | "month" | "all",
-): Promise<Omit<DashboardSummary, "activeWorkOrders" | "totalCustomers" | "totalVehicles"> | null> {
+): Promise<Omit<DashboardSummary, "activeWorkOrders" | "totalCustomers" | "totalVehicles" | "grossProfit" | "marginPercent"> | null> {
   if (period === "all") return null; // no previous period for "all time"
 
   const now = new Date();
@@ -903,15 +1155,15 @@ async function getTopServicesBatched(
 
   const { data: svcs } = await supabase
     .from("work_order_services")
-    .select("name, final_price")
+    .select("service_name, final_price")
     .in("work_order_id", completedWoIds);
 
   const map = new Map<string, { revenue: number; count: number }>();
   for (const s of svcs ?? []) {
-    const e = map.get(s.name) ?? { revenue: 0, count: 0 };
+    const e = map.get(s.service_name) ?? { revenue: 0, count: 0 };
     e.revenue += Number(s.final_price);
     e.count++;
-    map.set(s.name, e);
+    map.set(s.service_name, e);
   }
 
   return Array.from(map.entries())
@@ -929,7 +1181,7 @@ async function getTechnicianPerformanceBatched(
   // 1 query: get mechanics
   const { data: mechanics } = await supabase
     .from("organization_users")
-    .select("user_id")
+    .select("user_id, roles!inner(name)")
     .eq("organization_id", orgId)
     .eq("roles.name", "mechanic");
 
@@ -1047,15 +1299,13 @@ async function getRecentWorkOrdersBatched(
   const customerIds = [
     ...new Set(
       (wos.data ?? [])
-        .map((w: { customer_id: string | null }) => w.customer_id)
-        .filter(Boolean),
+        .flatMap((w: { customer_id: string | null }) => w.customer_id ? [w.customer_id] : []),
     ),
   ] as string[];
   const vehicleIds = [
     ...new Set(
       (wos.data ?? [])
-        .map((w: { vehicle_id: string | null }) => w.vehicle_id)
-        .filter(Boolean),
+        .flatMap((w: { vehicle_id: string | null }) => w.vehicle_id ? [w.vehicle_id] : []),
     ),
   ] as string[];
 
@@ -1096,8 +1346,7 @@ async function getRecentWorkOrdersBatched(
   const mechanicIds = [
     ...new Set(
       (wos.data ?? [])
-        .map((w: { mechanic_id: string | null }) => w.mechanic_id)
-        .filter(Boolean),
+        .flatMap((w: { mechanic_id: string | null }) => w.mechanic_id ? [w.mechanic_id] : []),
     ),
   ] as string[];
 
@@ -1255,7 +1504,7 @@ export async function getDailyTimeline(orgId: string): Promise<TimelineEvent[]> 
     .select("id, full_name")
     .in(
       "id",
-      history.map((h) => h.changed_by).filter(Boolean) as string[],
+      history.flatMap((h) => h.changed_by ? [h.changed_by] : []) as string[],
     );
 
   const profileMap = new Map<string, string>();

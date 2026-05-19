@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
   deleteCustomer,
   getCustomer,
@@ -20,14 +21,30 @@ export const GET = createRouteHandler(async ({ orgId, params }) => {
 
 export const PATCH = createRouteHandler(async ({ request, orgId, params, user }) => {
   await requireActiveSubscription(orgId);
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  const rateCheck = mutationRateLimiter.check(ip);
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+    );
+  }
   const { customerId } = params;
   const body = await request.json();
   const customer = await updateCustomer(customerId, orgId, body, user.id);
   return NextResponse.json({ data: customer });
 });
 
-export const DELETE = createRouteHandler(async ({ orgId, params, user }) => {
+export const DELETE = createRouteHandler(async ({ request, orgId, params, user }) => {
   await requireActiveSubscription(orgId);
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  const rateCheck = mutationRateLimiter.check(ip);
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+    );
+  }
   const { customerId } = params;
   await deleteCustomer(customerId, orgId, user.id);
   return NextResponse.json({ data: null });

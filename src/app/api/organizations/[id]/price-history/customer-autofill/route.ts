@@ -6,16 +6,31 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
   const customerId = url.searchParams.get("customer_id");
   if (!customerId) return NextResponse.json({ data: null });
 
-  const { data: vehicles, error: vError } = await supabase
-    .from("vehicles")
-    .select("id, plate_number, make, model, year")
+  const { data: ownedVehicles, error: oError } = await supabase
+    .from("vehicle_owners")
+    .select("vehicle_id")
     .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("last_visit_at", { ascending: false, nullsFirst: false });
+    .eq("customer_id", customerId)
+    .is("owned_until", null);
 
-  if (vError) throw new Error(vError.message);
+  if (oError) throw new Error(oError.message);
 
-  const customerVehicles = (vehicles ?? []).filter((v) => true);
+  const vehicleIds = (ownedVehicles ?? []).map((o) => o.vehicle_id);
+
+  let customerVehicles: { id: string; plate_number: string; make: string; model: string; year: number | null }[] = [];
+
+  if (vehicleIds.length > 0) {
+    const { data: vehicles, error: vError } = await supabase
+      .from("vehicles")
+      .select("id, plate_number, make, model, year")
+      .eq("organization_id", orgId)
+      .in("id", vehicleIds)
+      .is("deleted_at", null)
+      .order("last_visit_at", { ascending: false, nullsFirst: false });
+
+    if (vError) throw new Error(vError.message);
+    customerVehicles = vehicles ?? [];
+  }
 
   const { data: lastVehicle } = await supabase
     .from("work_orders")
@@ -30,7 +45,9 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
   return NextResponse.json({
     data: {
       vehicles: customerVehicles,
-      lastVehicleId: lastVehicle?.vehicle_id ?? null,
+      lastVehicleId: vehicleIds.includes(lastVehicle?.vehicle_id ?? "")
+        ? lastVehicle?.vehicle_id ?? null
+        : customerVehicles[0]?.id ?? null,
     },
   });
 });

@@ -1,11 +1,10 @@
 import {
+  type UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  type UseQueryResult,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
 import type { Customer, ServiceCatalog, Vehicle } from "@/lib/types";
 import {
   customerKeys,
@@ -56,6 +55,79 @@ export interface PriceHistoryData {
   parts: Record<string, number>;
 }
 
+// ── Vehicle-Contextualized Price Types ─────────────────────────
+
+export interface VehicleServicePriceEntry {
+  unit_price: number;
+  final_price: number;
+  vehicle_make: string | null;
+  vehicle_model: string | null;
+  created_at: string;
+}
+
+export interface VehiclePartPriceEntry {
+  unit_price: number;
+  final_price: number;
+  part_number: string | null;
+  vehicle_make: string | null;
+  vehicle_model: string | null;
+  created_at: string;
+}
+
+/**
+ * Fetch the most recent service price for a specific vehicle make/model.
+ * Used inside callbacks where hooks can't be called.
+ */
+export async function fetchVehicleServicePrice(
+  orgId: string,
+  serviceCatalogId: string,
+  vehicleMake: string,
+  vehicleModel?: string,
+): Promise<number | null> {
+  try {
+    const params = new URLSearchParams();
+    params.set("service_catalog_id", serviceCatalogId);
+    params.set("vehicle_make", vehicleMake);
+    if (vehicleModel) params.set("vehicle_model", vehicleModel);
+    const res = await fetch(
+      `/api/organizations/${orgId}/price-history/service?${params}`,
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    const data = (json.data ?? []) as VehicleServicePriceEntry[];
+    if (data.length === 0) return null;
+    return data[0].unit_price ?? data[0].final_price ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch the most recent part price for a specific vehicle make.
+ * Used inside callbacks where hooks can't be called.
+ */
+export async function fetchVehiclePartPrice(
+  orgId: string,
+  partName: string,
+  vehicleMake: string,
+): Promise<number | null> {
+  try {
+    const params = new URLSearchParams();
+    params.set("part_name", partName);
+    params.set("vehicle_make", vehicleMake);
+    const res = await fetch(
+      `/api/organizations/${orgId}/price-history/part?${params}`,
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    const data = (json.data ?? []) as VehiclePartPriceEntry[];
+    if (data.length === 0) return null;
+    return data[0].unit_price ?? data[0].final_price ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Queries ────────────────────────────────────────────────────
 
 /**
@@ -88,13 +160,13 @@ export function useMechanicsWithJobCount(
   return useQuery({
     queryKey: mechanicKeys.list(orgId ?? ""),
     queryFn: async () => {
-      const [mechRes, woRes] = await Promise.all([
+      const [mechRes, woRes, mechJson, woJson] = await Promise.all([
         fetch(`/api/organizations/${orgId}/reports?type=mechanics`),
         fetch(`/api/organizations/${orgId}/work-orders`),
-      ]);
-      if (!mechRes.ok) throw new Error("Failed to load mechanics");
-      const mechJson = await mechRes.json();
-      const woJson = await woRes.json();
+      ]).then(async ([mr, wr]) => {
+        if (!mr.ok) throw new Error("Failed to load mechanics");
+        return [mr, wr, await mr.json(), await wr.json()] as const;
+      });
 
       const mechanicsList = mechJson.data ?? [];
       const activeStatuses = [
@@ -149,8 +221,7 @@ export function useCustomerSearch(
 }
 
 /**
- * Search customers by vehicle plate number via direct Supabase query.
- * Kept as a browser query because there is no API route for customer-by-plate.
+ * Search customers by vehicle plate number via the API.
  */
 export function useCustomersByPlate(
   orgId: string | undefined,
@@ -159,30 +230,12 @@ export function useCustomersByPlate(
   return useQuery({
     queryKey: wizardKeys.customersByPlate(orgId ?? "", plateQuery),
     queryFn: async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("vehicles")
-        .select("vehicle_owners!inner(customers(*))")
-        .eq("organization_id", orgId)
-        .ilike("plate_number", `%${plateQuery}%`)
-        .is("deleted_at", null)
-        .is("vehicle_owners.owned_until", null)
-        .limit(5);
-
-      if (error) throw new Error(error.message);
-
-      const customerMap = new Map<string, Customer>();
-      for (const row of data ?? []) {
-        const owners = row.vehicle_owners as unknown as {
-          customers?: Customer | Customer[];
-        }[];
-        const ownerCustomer = owners?.[0]?.customers;
-        const customer = Array.isArray(ownerCustomer)
-          ? ownerCustomer[0]
-          : ownerCustomer;
-        if (customer) customerMap.set(customer.id, customer);
-      }
-      return Array.from(customerMap.values());
+      const url = `/api/organizations/${orgId}/customers/by-plate?plate=${encodeURIComponent(plateQuery)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to search customers by plate");
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return (json.data ?? []) as Customer[];
     },
     enabled: !!orgId && plateQuery.length > 0,
     staleTime: 30_000,
@@ -206,7 +259,9 @@ export function useVehicleSearch(
     queryFn: async () => {
       const params = new URLSearchParams();
       if (customerId) params.set("customer", customerId);
-      if (plateQuery) params.set("plate", plateQuery);
+      // Normalize plate: strip dashes/spaces, uppercase for consistent matching
+      const normalPlate = plateQuery.replace(/[\s-]/g, "").toUpperCase();
+      if (normalPlate) params.set("plate", normalPlate);
       const url = `/api/organizations/${orgId}/vehicles?${params.toString()}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to search vehicles");
@@ -232,69 +287,38 @@ export function useVehicleLastVisit(
   return useQuery({
     queryKey: priceMemoryKeys.lastVisit(orgId ?? "", vehicleId ?? ""),
     queryFn: async () => {
-      const supabase = createClient();
+      const res = await fetch(
+        `/api/organizations/${orgId}/price-history/last-visit?vehicle_id=${vehicleId}`,
+      );
+      if (!res.ok) throw new Error("Failed to load vehicle last visit");
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
 
-      // Look up current owner
-      const { data: ownerData } = await supabase
-        .from("vehicle_owners")
-        .select("customers(*)")
-        .eq("organization_id", orgId)
-        .eq("vehicle_id", vehicleId)
-        .is("owned_until", null)
-        .limit(1)
-        .maybeSingle();
+      const data = json.data as
+        | (LastVisitInfo & { owner: Customer | null })
+        | null
+        | undefined;
 
-      const owner = (ownerData?.customers as Customer | null | undefined) ?? null;
-
-      // Get last work order
-      const { data: workOrders, error: woError } = await supabase
-        .from("work_orders")
-        .select("id, mechanic_id, notes")
-        .eq("organization_id", orgId)
-        .eq("vehicle_id", vehicleId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (woError) throw new Error(woError.message);
-      const workOrder = workOrders?.[0];
-      if (!workOrder) {
-        return { owner, lastVisit: null };
-      }
-
-      // Get services and parts for the last work order
-      const [servicesResult, partsResult] = await Promise.all([
-        supabase
-          .from("work_order_services")
-          .select("service_catalog_id, service_name, unit_price, quantity")
-          .eq("work_order_id", workOrder.id),
-        supabase
-          .from("work_order_parts")
-          .select("part_name, part_number, unit_price, quantity")
-          .eq("work_order_id", workOrder.id),
-      ]);
-
-      if (servicesResult.error) throw new Error(servicesResult.error.message);
-      if (partsResult.error) throw new Error(partsResult.error.message);
+      if (!data) return { owner: null, lastVisit: null };
 
       const lastVisit: LastVisitInfo = {
-        services: (servicesResult.data ?? []).map((service) => ({
+        services: (data.services ?? []).map((service) => ({
           service_catalog_id: service.service_catalog_id,
           service_name: service.service_name,
           unit_price: Number(service.unit_price),
           quantity: Number(service.quantity),
         })),
-        parts: (partsResult.data ?? []).map((part) => ({
+        parts: (data.parts ?? []).map((part) => ({
           part_name: part.part_name,
           part_number: part.part_number,
           unit_price: Number(part.unit_price),
           quantity: Number(part.quantity),
         })),
-        mechanic_id: workOrder.mechanic_id,
-        notes: workOrder.notes ?? null,
+        mechanic_id: data.mechanic_id,
+        notes: data.notes,
       };
 
-      return { owner, lastVisit };
+      return { owner: data.owner, lastVisit };
     },
     enabled: !!orgId && !!vehicleId,
     staleTime: 60_000,
@@ -321,6 +345,62 @@ export function usePriceHistory(
       } as PriceHistoryData;
     },
     enabled: !!orgId,
+    staleTime: 60_000,
+    retry: 1,
+  });
+}
+
+/**
+ * Fetch last 3 service prices for a specific vehicle make/model.
+ * Standalone hook for use outside the wizard context.
+ */
+export function useVehicleServicePrices(
+  orgId: string | undefined,
+  serviceCatalogId: string | undefined,
+  vehicleMake: string | undefined,
+  vehicleModel: string | undefined,
+): UseQueryResult<VehicleServicePriceEntry[], Error> {
+  return useQuery({
+    queryKey: priceMemoryKeys.servicePrices(orgId ?? '', serviceCatalogId ?? '', vehicleMake, vehicleModel),
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (serviceCatalogId) params.set('service_catalog_id', serviceCatalogId);
+      if (vehicleMake) params.set('vehicle_make', vehicleMake);
+      if (vehicleModel) params.set('vehicle_model', vehicleModel);
+      const res = await fetch(`/api/organizations/${orgId}/price-history/service?${params}`);
+      if (!res.ok) throw new Error('Failed to load vehicle service prices');
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return (json.data ?? []) as VehicleServicePriceEntry[];
+    },
+    enabled: !!orgId && !!serviceCatalogId && !!vehicleMake,
+    staleTime: 60_000,
+    retry: 1,
+  });
+}
+
+/**
+ * Fetch last 3 part prices for a specific vehicle make.
+ * Standalone hook for use outside the wizard context.
+ */
+export function useVehiclePartPrices(
+  orgId: string | undefined,
+  partName: string | undefined,
+  vehicleMake: string | undefined,
+): UseQueryResult<VehiclePartPriceEntry[], Error> {
+  return useQuery({
+    queryKey: priceMemoryKeys.partPrices(orgId ?? '', partName ?? '', vehicleMake),
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (partName) params.set('part_name', partName);
+      if (vehicleMake) params.set('vehicle_make', vehicleMake);
+      const res = await fetch(`/api/organizations/${orgId}/price-history/part?${params}`);
+      if (!res.ok) throw new Error('Failed to load vehicle part prices');
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return (json.data ?? []) as VehiclePartPriceEntry[];
+    },
+    enabled: !!orgId && !!partName && !!vehicleMake,
     staleTime: 60_000,
     retry: 1,
   });
@@ -410,6 +490,8 @@ export function useCreateWorkOrder(orgId: string | undefined) {
       vehicle_id: string;
       mechanic_id?: string | null;
       notes?: string;
+      complaint?: string;
+      diagnosis_label_id?: string | null;
       services: {
         service_catalog_id: string | null;
         service_name: string;

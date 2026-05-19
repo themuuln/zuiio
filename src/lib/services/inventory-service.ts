@@ -24,7 +24,7 @@ import type {
 
 // ── Parts Catalog ─────────────────────────────────────────────
 
-export async function getPartsCatalog(orgId: string): Promise<PartsCatalogItem[]> {
+export async function getPartsCatalog(orgId: string, limit = 50): Promise<PartsCatalogItem[]> {
   const supabase = await createClient();
 
   return withCache(
@@ -34,7 +34,8 @@ export async function getPartsCatalog(orgId: string): Promise<PartsCatalogItem[]
         .from("parts_catalog")
         .select("*")
         .eq("organization_id", orgId)
-        .is("deleted_at", null);
+        .is("deleted_at", null)
+        .limit(limit + 1);
       if (error) throw new Error(error.message);
 
       const { data: assignments } = await supabase
@@ -186,6 +187,38 @@ export async function getInventoryBalances(
   );
 }
 
+// ── Weighted Average Cost ─────────────────────────────────────
+
+export async function getWeightedAverageCosts(
+  orgId: string,
+): Promise<Record<string, number>> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("inventory_movements")
+    .select("part_id, quantity, unit_cost")
+    .eq("organization_id", orgId)
+    .eq("movement_type", "purchase")
+    .not("unit_cost", "is", null);
+
+  if (error) throw new Error(error.message);
+
+  // Compute weighted avg: SUM(quantity * unit_cost) / SUM(quantity)
+  const acc: Record<string, { totalQty: number; totalCost: number }> = {};
+  for (const m of data ?? []) {
+    const pid = m.part_id;
+    if (!acc[pid]) acc[pid] = { totalQty: 0, totalCost: 0 };
+    acc[pid].totalQty += m.quantity;
+    acc[pid].totalCost += m.quantity * (m.unit_cost ?? 0);
+  }
+
+  const result: Record<string, number> = {};
+  for (const [pid, a] of Object.entries(acc)) {
+    result[pid] = a.totalQty > 0 ? a.totalCost / a.totalQty : 0;
+  }
+  return result;
+}
+
 // ── Inventory Movements ───────────────────────────────────────
 
 export async function getInventoryMovements(
@@ -288,7 +321,7 @@ export async function getSupplier(id: string, orgId: string): Promise<Supplier> 
   );
 }
 
-export async function getSuppliers(orgId: string): Promise<Supplier[]> {
+export async function getSuppliers(orgId: string, limit = 50): Promise<Supplier[]> {
   const supabase = await createClient();
 
   return withCache(
@@ -299,7 +332,8 @@ export async function getSuppliers(orgId: string): Promise<Supplier[]> {
         .select("*")
         .eq("organization_id", orgId)
         .is("deleted_at", null)
-        .order("name");
+        .order("name")
+        .limit(limit + 1);
       if (error) throw new Error(error.message);
       return data ?? [];
     },
@@ -383,7 +417,7 @@ export async function deleteSupplier(id: string, orgId: string): Promise<void> {
 
 // ── Purchase Orders ───────────────────────────────────────────
 
-export async function getPurchaseOrders(orgId: string): Promise<PurchaseOrder[]> {
+export async function getPurchaseOrders(orgId: string, limit = 50): Promise<PurchaseOrder[]> {
   const supabase = await createClient();
 
   return withCache(
@@ -394,7 +428,8 @@ export async function getPurchaseOrders(orgId: string): Promise<PurchaseOrder[]>
         .select("*, supplier:suppliers(name)")
         .eq("organization_id", orgId)
         .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(limit + 1);
       if (error) throw new Error(error.message);
       return (data ?? []) as unknown as PurchaseOrder[];
     },
@@ -525,42 +560,46 @@ export async function receivePurchaseOrder(
 
   if (!items?.length) throw new ValidationError("No items to receive");
 
-  // Record movements for each item + update part purchase price
-  for (const item of items) {
-    const qtyToReceive = item.quantity_ordered - item.quantity_received;
-    if (qtyToReceive > 0) {
-      const { error: mvError } = await supabase
-        .from("inventory_movements")
-        .insert({
-          organization_id: orgId,
-          part_id: item.part_id,
-          movement_type: "purchase",
-          quantity: qtyToReceive,
-          unit_cost: item.unit_cost,
-          reference_type: "purchase_order",
-          reference_id: id,
-          created_by: userId,
-        });
-      if (mvError) throw new Error(mvError.message);
+  const itemsToReceive = items.filter(
+    (item) => item.quantity_ordered - item.quantity_received > 0,
+  );
 
-      // Update received qty
-      await supabase
-        .from("purchase_order_items")
-        .update({
-          quantity_received: item.quantity_ordered,
-          updated_by: userId,
-        })
-        .eq("id", item.id);
+  if (itemsToReceive.length > 0) {
+    const movements = itemsToReceive.map((item) => ({
+      organization_id: orgId,
+      part_id: item.part_id,
+      movement_type: "purchase" as const,
+      quantity: item.quantity_ordered - item.quantity_received,
+      unit_cost: item.unit_cost,
+      reference_type: "purchase_order" as const,
+      reference_id: id,
+      created_by: userId,
+    }));
 
-      // Update part's last_purchase_price from this PO's unit_cost
-      await supabase
-        .from("parts_catalog")
-        .update({
-          last_purchase_price: item.unit_cost,
-          updated_by: userId,
-        })
-        .eq("id", item.part_id);
-    }
+    const { error: mvError } = await supabase
+      .from("inventory_movements")
+      .insert(movements);
+    if (mvError) throw new Error(mvError.message);
+
+    await Promise.all(
+      itemsToReceive.map(async (item) => {
+        await supabase
+          .from("purchase_order_items")
+          .update({
+            quantity_received: item.quantity_ordered,
+            updated_by: userId,
+          })
+          .eq("id", item.id);
+
+        await supabase
+          .from("parts_catalog")
+          .update({
+            last_purchase_price: item.unit_cost,
+            updated_by: userId,
+          })
+          .eq("id", item.part_id);
+      }),
+    );
   }
 
   // Determine new status

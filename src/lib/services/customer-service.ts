@@ -17,16 +17,21 @@ import type {
  */
 export async function getCustomers(
   orgId: string,
-  search?: string,
-): Promise<CustomerWithVehicleCount[]> {
+  options?: { search?: string; page?: number; pageSize?: number },
+): Promise<PaginatedResponse<CustomerWithVehicleCount>> {
   const supabase = await createClient();
 
+  const search = options?.search;
+  const page = Math.max(1, options?.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, options?.pageSize ?? 50));
+  const offset = (page - 1) * pageSize;
+
   return withCache(
-    ["getCustomers", orgId, search ?? ""],
+    ["getCustomers", orgId, search ?? "", `p${page}s${pageSize}`],
     async () => {
       let query = supabase
         .from("customers")
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("organization_id", orgId)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
@@ -38,7 +43,8 @@ export async function getCustomers(
         );
       }
 
-      const { data: customers, error } = await query;
+      const { data: customers, count: total, error } = await query
+        .range(offset, offset + pageSize - 1);
 
       if (error) throw new Error(error.message);
 
@@ -53,7 +59,6 @@ export async function getCustomers(
           .in("customer_id", customerIds)
           .is("owned_until", null);
 
-        // Calculate count per customer_id from the batched results
         if (counts) {
           const countMap = new Map<string, number>();
           for (const row of counts) {
@@ -64,10 +69,18 @@ export async function getCustomers(
         }
       }
 
-      return (customers ?? []).map((customer) => ({
+      const data = (customers ?? []).map((customer) => ({
         ...customer,
         vehicle_count: vehicleCounts.get(customer.id) ?? 0,
       }));
+
+      return {
+        data,
+        total: total ?? 0,
+        page,
+        pageSize,
+        totalPages: Math.ceil((total ?? 0) / pageSize),
+      };
     },
     {
       tags: [cacheTags.customers(orgId)],
@@ -117,7 +130,6 @@ export async function createCustomer(
   params: CreateCustomerParams,
   userId: string,
 ): Promise<Customer> {
-  const supabase = await createClient();
 
   if (
     !params.phone?.trim() &&
@@ -128,6 +140,8 @@ export async function createCustomer(
   ) {
     throw new ValidationError("At least one identifying field is required");
   }
+
+  const supabase = await createClient();
 
   // Check for duplicate phone if provided
   if (params.phone?.trim()) {
@@ -142,6 +156,23 @@ export async function createCustomer(
     if (existing) {
       throw new ConflictError(
         "A customer with this phone number already exists",
+      );
+    }
+  }
+
+  // Check for duplicate email if provided
+  if (params.email?.trim()) {
+    const { data: existing } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("email", params.email.trim())
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (existing) {
+      throw new ConflictError(
+        "A customer with this email already exists",
       );
     }
   }
@@ -310,6 +341,7 @@ export async function deleteCustomer(
 export async function searchCustomers(
   orgId: string,
   query: string,
-): Promise<CustomerWithVehicleCount[]> {
-  return getCustomers(orgId, query);
+  options?: { page?: number; pageSize?: number },
+): Promise<PaginatedResponse<CustomerWithVehicleCount>> {
+  return getCustomers(orgId, { search: query, ...options });
 }

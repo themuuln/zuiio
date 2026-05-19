@@ -10,7 +10,6 @@ import type {
   WorkOrderDetail,
   WorkOrderPart,
   WorkOrderService,
-  WorkOrderStatusHistory,
 } from "@/lib/database.types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -59,12 +58,19 @@ interface WorkOrderWithRefs extends WorkOrder {
   customer: Pick<Customer, "first_name" | "last_name" | "phone"> | null;
   vehicle: Pick<Vehicle, "plate_number" | "make" | "model"> | null;
   mechanic: { full_name: string | null } | null;
+  services_cost?: number;
+  parts_cost?: number;
+  services_revenue?: number;
+  parts_revenue?: number;
+  gross_profit?: number;
+  margin_percent?: number;
 }
 
 // ── Get Work Orders ──────────────────────────────────────────
 export async function getWorkOrders(
   orgId: string,
   filters?: WorkOrderFilters,
+  limit = 50,
 ): Promise<WorkOrderWithRefs[]> {
   const supabase = await createClient();
 
@@ -91,7 +97,7 @@ export async function getWorkOrders(
         query = query.gte("created_at", dayStart).lte("created_at", dayEnd);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.limit(limit + 1);
 
       if (error) throw new Error(error.message ?? "Failed to fetch work orders");
 
@@ -100,7 +106,7 @@ export async function getWorkOrders(
         WorkOrderWithRefs & { mechanic_id: string | null }
       >;
       const mechanicIds = [
-        ...new Set(rows.map((r) => r.mechanic_id).filter(Boolean)),
+        ...new Set(rows.flatMap((r) => r.mechanic_id ? [r.mechanic_id] : [])),
       ] as string[];
       const mechanicMap = new Map<string, string | null>();
       if (mechanicIds.length > 0) {
@@ -112,12 +118,85 @@ export async function getWorkOrders(
           mechanicMap.set(p.id, p.full_name);
         }
       }
-      return rows.map((r) => ({
-        ...r,
-        mechanic: r.mechanic_id
-          ? { full_name: mechanicMap.get(r.mechanic_id) ?? null }
-          : null,
-      })) as WorkOrderWithRefs[];
+
+      // ── Calculate profit/cost for each work order ──────
+      const workOrderIds = rows.map((r) => r.id);
+      const costMap = new Map<
+        string,
+        {
+          services_cost: number;
+          parts_cost: number;
+          services_revenue: number;
+          parts_revenue: number;
+        }
+      >();
+
+      if (workOrderIds.length > 0) {
+        // Batch query services
+        const { data: servicesData } = await supabase
+          .from("work_order_services")
+          .select("work_order_id, unit_cost, quantity, final_price")
+          .in("work_order_id", workOrderIds);
+
+        // Batch query parts
+        const { data: partsData } = await supabase
+          .from("work_order_parts")
+          .select("work_order_id, unit_cost, quantity, final_price")
+          .in("work_order_id", workOrderIds);
+
+        // Initialize defaults for all work orders
+        for (const id of workOrderIds) {
+          costMap.set(id, {
+            services_cost: 0,
+            parts_cost: 0,
+            services_revenue: 0,
+            parts_revenue: 0,
+          });
+        }
+
+        // Aggregate services
+        for (const s of servicesData ?? []) {
+          const entry = costMap.get(s.work_order_id);
+          if (entry) {
+            entry.services_cost += Number(s.unit_cost) * s.quantity;
+            entry.services_revenue += Number(s.final_price);
+          }
+        }
+
+        // Aggregate parts
+        for (const p of partsData ?? []) {
+          const entry = costMap.get(p.work_order_id);
+          if (entry) {
+            entry.parts_cost += Number(p.unit_cost) * p.quantity;
+            entry.parts_revenue += Number(p.final_price);
+          }
+        }
+      }
+
+      return rows.map((r) => {
+        const costs = costMap.get(r.id);
+        const services_revenue = costs?.services_revenue ?? 0;
+        const parts_revenue = costs?.parts_revenue ?? 0;
+        const total_revenue = services_revenue + parts_revenue;
+        const total_cost =
+          (costs?.services_cost ?? 0) + (costs?.parts_cost ?? 0);
+        const gross_profit = total_revenue - total_cost;
+        const margin_percent =
+          total_revenue > 0 ? (gross_profit / total_revenue) * 100 : 0;
+
+        return {
+          ...r,
+          services_cost: costs?.services_cost ?? 0,
+          parts_cost: costs?.parts_cost ?? 0,
+          services_revenue,
+          parts_revenue,
+          gross_profit,
+          margin_percent: Math.round(margin_percent * 100) / 100,
+          mechanic: r.mechanic_id
+            ? { full_name: mechanicMap.get(r.mechanic_id) ?? null }
+            : null,
+        };
+      }) as WorkOrderWithRefs[];
     },
     {
       tags: [cacheTags.workOrders(orgId)],
@@ -162,6 +241,8 @@ export async function createWorkOrder(
       status: "New",
       mechanic_id: params.mechanic_id ?? null,
       notes: params.notes?.trim() ?? null,
+      complaint: params.complaint?.trim() ?? null,
+      diagnosis_label_id: params.diagnosis_label_id ?? null,
       discount_amount: params.discount_amount ?? 0,
       discount_percentage: params.discount_percentage ?? 0,
       created_by: userId,
@@ -188,16 +269,16 @@ export async function createWorkOrder(
 
   // Add services
   if (params.services?.length) {
-    for (const svc of params.services) {
-      await addServiceToWorkOrder(wo.id, orgId, svc);
-    }
+    await Promise.all(
+      params.services.map((svc) => addServiceToWorkOrder(wo.id, orgId, svc)),
+    );
   }
 
   // Add parts
   if (params.parts?.length) {
-    for (const part of params.parts) {
-      await addPartToWorkOrder(wo.id, orgId, part);
-    }
+    await Promise.all(
+      params.parts.map((part) => addPartToWorkOrder(wo.id, orgId, part)),
+    );
   }
 
   // Invalidate list caches
@@ -339,6 +420,7 @@ export async function addServiceToWorkOrder(
       final_price: finalPrice,
       notes: serviceData.notes ?? null,
       created_by: user?.id ?? null,
+      unit_cost: 0,
     })
     .select("*")
     .single();
@@ -408,6 +490,17 @@ export async function addPartToWorkOrder(
   }
   if (finalPrice < 0) finalPrice = 0;
 
+  // Look up unit cost from parts catalog if linked
+  let partUnitCost = 0;
+  if (partData.part_id) {
+    const { data: catalogPart } = await supabase
+      .from("parts_catalog")
+      .select("purchase_price")
+      .eq("id", partData.part_id)
+      .single();
+    partUnitCost = Number(catalogPart?.purchase_price ?? 0);
+  }
+
   const { data, error } = await supabase
     .from("work_order_parts")
     .insert({
@@ -418,6 +511,7 @@ export async function addPartToWorkOrder(
       part_number: partData.part_number ?? null,
       quantity,
       unit_price: unitPrice,
+      unit_cost: partUnitCost,
       discount_amount: partData.discount_amount ?? 0,
       discount_percentage: partData.discount_percentage ?? 0,
       final_price: finalPrice,
@@ -529,9 +623,10 @@ export async function removePartFromWorkOrder(
 
 // ── Get Work Order Totals ──────────────────────────────────────
 export async function getWorkOrderTotals(workOrderId: string) {
-  const _supabase = await createClient();
-
-  const wo = await getWorkOrder(workOrderId);
+  const [, wo] = await Promise.all([
+    createClient(),
+    getWorkOrder(workOrderId),
+  ]);
 
   const servicesTotal = (wo.services ?? []).reduce(
     (sum, s) => sum + Number(s.unit_price) * s.quantity,

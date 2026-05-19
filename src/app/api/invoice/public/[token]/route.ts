@@ -1,34 +1,26 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { handleApiError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
-
-type RouteContext = { params: Promise<{ token: string }> };
+import { NextResponse } from "next/server";
+import { createSimpleRouteHandler } from "@/lib/api-handler";
 
 /**
- * Public invoice endpoint — no auth required.
+ * Public invoice endpoint — requires auth.
  * Returns invoice data by public_token.
  */
-export async function GET(_request: NextRequest, context: RouteContext) {
-  try {
-    const { token } = await context.params;
-    const supabase = await createClient();
-    const { data: invoice, error } = await supabase.rpc(
-      "get_public_invoice_by_token",
-      { p_token: token },
+export const GET = createSimpleRouteHandler(async ({ request, supabase }) => {
+  const token = request.nextUrl.pathname.split("/").pop() ?? "";
+  const { data: invoice, error } = await supabase.rpc(
+    "get_public_invoice_by_token",
+    { p_token: token },
+  );
+
+  if (error) throw error;
+  if (!invoice) {
+    return NextResponse.json(
+      { error: { message: "Invoice not found" } },
+      { status: 404 },
     );
-
-    if (error) throw error;
-    if (!invoice) {
-      return NextResponse.json(
-        { error: { message: "Invoice not found" } },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({
-      data: invoice,
-    });
-  } catch (error) {
-    return handleApiError(error);
   }
-}
+
+  return NextResponse.json({
+    data: invoice,
+  });
+});

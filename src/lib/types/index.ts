@@ -2,16 +2,61 @@
 import type {
   Customer,
   CustomerNoteType,
+  DiagnosisLabel,
   InventoryMovementType,
   InvoiceStatus,
   Vehicle,
-  WorkOrderDetail,
   WorkOrderStatus,
+} from "@/lib/database.types";
+import type {
+  MechanicAssignment,
+  WorkOrderPart,
+  WorkOrderService,
+  WorkOrderStatusHistory,
 } from "@/lib/database.types";
 
 // ── Re-exports from database.types.ts ────────────────────────────
 // Domain types are defined in @/lib/database.types.ts.
 // This file adds API-level and convenience types used across routes and services.
+
+/** Work order with related entities — used by detail queries */
+export interface WorkOrderDetail extends Record<string, unknown> {
+  id: string;
+  organization_id: string;
+  branch_id: string | null;
+  customer_id: string | null;
+  vehicle_id: string | null;
+  mechanic_id: string | null;
+  status: string;
+  complaint: string | null;
+  diagnosis: string | null;
+  description: string | null;
+  notes: string | null;
+  mechanic_notes: string | null;
+  diagnosis_label_id: string | null;
+  bay_number: number | null;
+  queue_order: number;
+  odometer_at_service: number | null;
+  discount_amount: number;
+  discount_percentage: number;
+  discount_total: number;
+  subtotal: number;
+  total: number;
+  completed_at: string | null;
+  started_at: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+  deleted_at: string | null;
+  customer: Customer | null;
+  vehicle: Vehicle | null;
+  mechanic: { id: string; full_name: string | null } | null;
+  services: WorkOrderService[];
+  parts: WorkOrderPart[];
+  status_history: WorkOrderStatusHistory[];
+  diagnosis_label?: DiagnosisLabel | null;
+}
 
 export type {
   AuditLog,
@@ -20,6 +65,7 @@ export type {
   CustomerNote,
   CustomerNoteType,
   CustomerType,
+  DiagnosisLabel,
   FeatureFlag,
   FuelType,
   InviteStatus,
@@ -46,7 +92,6 @@ export type {
   VehicleModelPart,
   VehicleOwner,
   WorkOrder,
-  WorkOrderDetail,
   WorkOrderPart,
   WorkOrderRow,
   WorkOrderService,
@@ -79,6 +124,9 @@ export type {
   PartsCarPartsInsert,
   PartsCarPartsUpdate,
 } from "@/lib/database.types";
+export type InventoryBalanceWithAvgCost = InventoryBalance & {
+  avg_unit_cost: number;
+};
 export type PartsCarStatus = "arrived" | "disassembling" | "completed" | "cancelled";
 export type PartsCarLocationGroup =
   | "engine" | "transmission" | "suspension" | "brake"
@@ -193,6 +241,8 @@ export interface CreateWorkOrderParams {
   branch_id?: string;
   mechanic_id?: string;
   notes?: string;
+  complaint?: string;
+  diagnosis_label_id?: string | null;
   services?: AddServiceParams[];
   parts?: AddPartParams[];
   discount_amount?: number;
@@ -265,6 +315,37 @@ export interface MonthlyReport {
   weekly_breakdown: WeeklyReport[];
 }
 
+export interface MechanicCommissionRule {
+  id: string;
+  organization_id: string;
+  mechanic_id: string | null;
+  name: string;
+  commission_type: 'percentage_of_labor' | 'percentage_of_parts' | 'percentage_of_revenue' | 'fixed_per_work_order';
+  commission_value: number;
+  min_commission: number | null;
+  max_commission: number | null;
+  is_active: boolean;
+  priority: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  deleted_at: string | null;
+}
+
+export interface WorkOrderCommission {
+  id: string;
+  work_order_id: string;
+  mechanic_id: string;
+  commission_rule_id: string | null;
+  commission_type: string;
+  commission_rate: number;
+  commission_amount: number;
+  labor_amount: number;
+  parts_amount: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface EndOfDaySummary {
   date: string;
   mechanics: {
@@ -274,9 +355,11 @@ export interface EndOfDaySummary {
     services_count: number;
     parts_count: number;
     total_revenue: number;
+    total_commission: number;
   }[];
   total_work_orders: number;
   total_revenue: number;
+  total_commission: number;
 }
 
 // ── Dashboard Types ─────────────────────────────────────────────
@@ -289,6 +372,8 @@ export interface DashboardSummary {
   avgRepairOrderValue: number;
   partsRevenue: number;
   serviceRevenue: number;
+  grossProfit: number;
+  marginPercent: number;
   totalCustomers: number;
   totalVehicles: number;
 }
@@ -315,6 +400,9 @@ export interface TechnicianPerformance {
   name: string;
   completedOrders: number;
   revenue: number;
+  avgJobValue?: number;
+  jobsPerDay?: number;
+  weeklyTrend?: { week: string; orders: number; revenue: number }[];
 }
 
 export interface ServiceCategoryBreakdown {
@@ -341,6 +429,17 @@ export interface DashboardData {
   recentWorkOrders: WorkOrderDetail[];
   serviceCategoryBreakdown: ServiceCategoryBreakdown[];
   customerAcquisitionTrend: CustomerAcquisitionPoint[];
+}
+
+export interface WorkOrderProfit {
+  totalRevenue: number;
+  totalCost: number;
+  grossProfit: number;
+  marginPercent: number;
+  serviceRevenue: number;
+  serviceCost: number;
+  partsRevenue: number;
+  partsCost: number;
 }
 
 // ── Phase 1 CRM Convenience Types ────────────────────────────
@@ -407,7 +506,7 @@ export interface CreateCustomerNoteParams {
 }
 
 export interface CreateCustomerCommunicationParams {
-  type: "call" | "sms" | "email" | "in_person" | "note";
+  type: "call" | "email" | "in_person" | "note";
   direction: "inbound" | "outbound";
   subject?: string;
   content: string;
@@ -562,6 +661,8 @@ export interface ExpenseStats {
 }
 
 // ── Inventory Types ────────────────────────────────────────────
+
+export type PaymentMethod = 'cash' | 'card' | 'bank_transfer' | 'manual';
 
 export type PurchaseOrderStatus =
   | "draft"

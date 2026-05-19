@@ -69,8 +69,9 @@ function parseCsv(
   const headers = parseCsvLine(lines[0]);
   const rows = lines
     .slice(1)
-    .filter((line) => line.trim().length > 0)
-    .map((line) => parseCsvLine(line));
+    .flatMap((line) =>
+      line.trim().length > 0 ? [parseCsvLine(line)] : [],
+    );
 
   return { headers, rows };
 }
@@ -170,8 +171,7 @@ export async function importCustomers(
   }
 
   const phonesToCheck = validRows
-    .map((r) => r.phone?.trim())
-    .filter(Boolean) as string[];
+    .flatMap((r) => { const phone = r.phone?.trim(); return phone ? [phone] : []; }) as string[];
 
   const existingPhones = new Set<string>();
 
@@ -191,10 +191,11 @@ export async function importCustomers(
   }
 
   const toInsert: ParsedRow[] = [];
+  const validRowIndex = new Map<ParsedRow, number>(validRows.map((r, idx) => [r, idx]));
   for (const row of validRows) {
     if (row.phone && existingPhones.has(row.phone)) {
       errors.push({
-        row: validRows.indexOf(row) + 2,
+        row: (validRowIndex.get(row) ?? 0) + 2,
         message: `Duplicate phone number: ${row.phone}`,
       });
     } else {
@@ -205,59 +206,77 @@ export async function importCustomers(
   const BATCH_SIZE = 50;
   let imported = 0;
 
-  for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
-    const batch = toInsert.slice(i, i + BATCH_SIZE);
+  const batchResults = await Promise.all(
+    Array.from(
+      { length: Math.ceil(toInsert.length / BATCH_SIZE) },
+      async (_, batchIdx) => {
+        const start = batchIdx * BATCH_SIZE;
+        const batch = toInsert.slice(start, start + BATCH_SIZE);
 
-    const dbRows = batch.map((row) => ({
-      organization_id: orgId,
-      type: row.type === "company" ? "company" : "individual",
-      first_name: row.firstName?.trim() || null,
-      last_name: row.lastName?.trim() || null,
-      phone: row.phone?.trim() || null,
-      email: row.email?.trim() || null,
-      address: row.address?.trim() || null,
-      notes: row.notes?.trim() || null,
-      source: row.source?.trim() || null,
-      created_by: userId,
-      updated_by: userId,
-    }));
+        const dbRows = batch.map((row) => ({
+          organization_id: orgId,
+          type: row.type === "company" ? "company" : "individual",
+          first_name: row.firstName?.trim() || null,
+          last_name: row.lastName?.trim() || null,
+          phone: row.phone?.trim() || null,
+          email: row.email?.trim() || null,
+          address: row.address?.trim() || null,
+          notes: row.notes?.trim() || null,
+          source: row.source?.trim() || null,
+          created_by: userId,
+          updated_by: userId,
+        }));
 
-    const { data, error } = await supabase
-      .from("customers")
-      .insert(dbRows)
-      .select("id");
-
-    if (error) {
-      for (let j = 0; j < batch.length; j++) {
-        const row = dbRows[j];
-        const { error: singleError } = await supabase
+        const { data, error } = await supabase
           .from("customers")
-          .insert(row);
+          .insert(dbRows)
+          .select("id");
 
-        if (singleError) {
-          const csvRowNumber = validRows.indexOf(batch[j]) + 2;
-          if (
-            singleError.code === "23505" ||
-            singleError.message?.toLowerCase().includes("duplicate") ||
-            singleError.message?.toLowerCase().includes("unique")
-          ) {
-            errors.push({
-              row: csvRowNumber,
-              message: `Duplicate phone number: ${row.phone}`,
-            });
-          } else {
-            errors.push({
-              row: csvRowNumber,
-              message: singleError.message,
-            });
+        if (error) {
+          const results = await Promise.all(
+            dbRows.map(async (row) => {
+              const { error: singleError } = await supabase
+                .from("customers")
+                .insert(row);
+              return { row, error: singleError };
+            }),
+          );
+
+          let batchImported = 0;
+          const batchErrors: typeof errors = [];
+          for (const { row, error: singleError } of results) {
+            if (singleError) {
+              const csvRowNumber = (validRowIndex.get(batch[dbRows.indexOf(row)]) ?? 0) + 2;
+              if (
+                singleError.code === "23505" ||
+                singleError.message?.toLowerCase().includes("duplicate") ||
+                singleError.message?.toLowerCase().includes("unique")
+              ) {
+                batchErrors.push({
+                  row: csvRowNumber,
+                  message: `Duplicate phone number: ${row.phone}`,
+                });
+              } else {
+                batchErrors.push({
+                  row: csvRowNumber,
+                  message: singleError.message,
+                });
+              }
+            } else {
+              batchImported++;
+            }
           }
+          return { imported: batchImported, errors: batchErrors };
         } else {
-          imported++;
+          return { imported: data?.length ?? 0, errors: [] as typeof errors };
         }
-      }
-    } else {
-      imported += data?.length ?? 0;
-    }
+      },
+    ),
+  );
+
+  for (const br of batchResults) {
+    imported += br.imported;
+    errors.push(...br.errors);
   }
 
   revalidateTag(cacheTags.customers(orgId), "max");

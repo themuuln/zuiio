@@ -96,6 +96,7 @@ export async function updateSubscription(
     throw new NotFoundError("No subscription found for this organization");
   }
 
+  // Sequential: update depends on currentPlan.id
   const { data, error } = await supabase
     .from("subscription_plans")
     .update({

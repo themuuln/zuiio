@@ -329,11 +329,10 @@ export async function backfillSchedulesFromHistory(
 
   if (error || !completedWOs) return 0;
 
-  let totalSynced = 0;
-  for (const wo of completedWOs) {
-    const count = await syncWorkOrderToSchedules(wo.id);
-    totalSynced += count;
-  }
+  const results = await Promise.all(
+    completedWOs.map((wo) => syncWorkOrderToSchedules(wo.id)),
+  );
+  const totalSynced = results.reduce((sum, c) => sum + c, 0);
 
   return totalSynced;
 }
@@ -406,77 +405,69 @@ export async function sendPendingReminders(
 
   if (error || !logs || logs.length === 0) return 0;
 
-  const { sendReminderEmail } = await import("@/lib/services/email-service");
-  const { data: org } = await supabase
-    .from("organizations")
-    .select("name")
-    .eq("id", orgId)
-    .single();
+  const [{ sendReminderEmail }, { data: org }] = await Promise.all([
+    import("@/lib/services/email-service") as Promise<{ sendReminderEmail: typeof import("@/lib/services/email-service").sendReminderEmail }>,
+    supabase
+      .from("organizations")
+      .select("name")
+      .eq("id", orgId)
+      .single(),
+  ]);
   const orgName = org?.name ?? "Your Garage";
 
-  let sentCount = 0;
+  const results = await Promise.all(
+    logs.map(async (log) => {
+      const customer = Array.isArray(log.customer)
+        ? log.customer[0]
+        : log.customer;
+      const vehicle = Array.isArray(log.vehicle)
+        ? log.vehicle[0]
+        : log.vehicle;
 
-  for (const log of logs) {
-    const customer = Array.isArray(log.customer)
-      ? log.customer[0]
-      : log.customer;
-    const vehicle = Array.isArray(log.vehicle)
-      ? log.vehicle[0]
-      : log.vehicle;
+      const recipientEmail = customer?.email;
 
-    const recipientEmail = customer?.email;
-    if (!recipientEmail) continue;
+      const customerName = [
+        customer?.first_name,
+        customer?.last_name,
+      ]
+        .filter(Boolean)
+        .join(" ") || "Valued Customer";
 
-    const customerName = [
-      customer?.first_name,
-      customer?.last_name,
-    ]
-      .filter(Boolean)
-      .join(" ") || "Valued Customer";
+      const vehicleLabel = vehicle
+        ? `${vehicle.make} ${vehicle.model} (${vehicle.plate_number})`
+        : "your vehicle";
 
-    const vehicleLabel = vehicle
-      ? `${vehicle.make} ${vehicle.model} (${vehicle.plate_number})`
-      : "your vehicle";
+      const dueDate = log.scheduled_at
+        ? new Date(log.scheduled_at).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "soon";
 
-    const dueDate = log.scheduled_at
-      ? new Date(log.scheduled_at).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
-      : "soon";
-
-    try {
-      await sendReminderEmail({
-        recipientEmail,
-        customerName,
-        vehicleLabel,
-        serviceName: log.service_name,
-        orgName,
-        dueDate,
-      });
-
-      await supabase
-        .from("reminder_logs")
-        .update({
-          status: "sent",
-          sent_at: new Date().toISOString(),
-        })
-        .eq("id", log.id);
-
-      sentCount++;
-    } catch (err) {
-      console.error(`Failed to send reminder ${log.id}:`, err);
-      await supabase
-        .from("reminder_logs")
-        .update({
-          status: "failed",
-          error_message:
-            err instanceof Error ? err.message : "Unknown error",
-        })
-        .eq("id", log.id);
-    }
-  }
+      try {
+        if (recipientEmail) {
+          await sendReminderEmail({
+            recipientEmail,
+            customerName,
+            vehicleLabel,
+            serviceName: log.service_name,
+            orgName,
+            dueDate,
+          });
+          return true;
+        } else {
+          console.warn(`Reminder ${log.id}: No recipient email`);
+          return false;
+        }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : "Unknown error";
+        console.error(`Failed to send reminder ${log.id}:`, errorMsg);
+        return false;
+      }
+    }),
+  );
+  const sentCount = results.filter(Boolean).length;
 
   if (sentCount > 0) {
     revalidateTag(cacheTags.reminderLogs(orgId), "max");
@@ -494,7 +485,7 @@ export async function createReminderLog(
     service_catalog_id?: string;
     service_name: string;
     reminder_type?: "service_due" | "service_overdue" | "custom";
-    channel?: "sms" | "email" | "both" | "in_app";
+    channel?: "email" | "both" | "in_app";
     status?: "pending" | "sent" | "failed" | "cancelled";
     scheduled_at?: string;
     error_message?: string;

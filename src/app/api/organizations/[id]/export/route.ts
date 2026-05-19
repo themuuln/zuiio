@@ -100,15 +100,19 @@ export const GET = createRouteHandler(async ({ orgId, supabase }) => {
     work_order_notes: "work_order_notes",
   };
 
-  const { data: users } = await supabase
-    .from("organization_users")
-    .select("*, profiles(full_name, email)")
-    .eq("organization_id", orgId);
-
-  const results: Record<string, unknown[]> = {};
-  for (const [key, table] of Object.entries(tables)) {
-    results[key] = await fetchAll(supabase, table, orgId);
-  }
+  const [{ data: users }, tableEntries] = await Promise.all([
+    supabase
+      .from("organization_users")
+      .select("*, profiles(full_name, email)")
+      .eq("organization_id", orgId),
+    Promise.all(
+      Object.entries(tables).map(async ([key, table]) => {
+        const data = await fetchAll(supabase, table, orgId);
+        return [key, data] as const;
+      }),
+    ),
+  ]);
+  const results: Record<string, unknown[]> = Object.fromEntries(tableEntries);
 
   const exportData: OrgExport = {
     exported_at: new Date().toISOString(),

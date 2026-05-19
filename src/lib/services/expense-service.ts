@@ -236,7 +236,6 @@ export async function createExpense(
   params: CreateExpenseParams,
   userId: string,
 ): Promise<Expense> {
-  const supabase = await createClient();
 
   if (!params.description?.trim()) {
     throw new ValidationError("Description is required");
@@ -245,6 +244,8 @@ export async function createExpense(
   if (!params.amount || params.amount <= 0) {
     throw new ValidationError("Amount must be greater than 0");
   }
+
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("expenses")
@@ -432,11 +433,12 @@ export async function createExpenseCategory(
   params: CreateExpenseCategoryParams,
   userId: string,
 ): Promise<ExpenseCategory> {
-  const supabase = await createClient();
 
   if (!params.name?.trim()) {
     throw new ValidationError("Category name is required");
   }
+
+  const supabase = await createClient();
 
   // Check for duplicate
   const { data: existing } = await supabase

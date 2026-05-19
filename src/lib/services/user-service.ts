@@ -273,28 +273,28 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   const user = authData.user;
   const meta = user.user_metadata as Record<string, unknown>;
 
-  // Get the user's profile from public.profiles
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  // Get organization membership
-  const { data: membership } = await supabase
-    .from("organization_users")
-    .select(`
-      organization_id,
-      role_id,
-      branch_id,
-      roles (
-        id,
-        name
-      )
-    `)
-    .eq("user_id", user.id)
-    .eq("is_primary", true)
-    .maybeSingle();
+  // Get profile and membership in parallel
+  const [{ data: profile }, { data: membership }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("organization_users")
+      .select(`
+        organization_id,
+        role_id,
+        branch_id,
+        roles (
+          id,
+          name
+        )
+      `)
+      .eq("user_id", user.id)
+      .eq("is_primary", true)
+      .maybeSingle(),
+  ]);
 
   let orgName: string | null = null;
   if (membership) {

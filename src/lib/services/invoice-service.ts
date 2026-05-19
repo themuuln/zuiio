@@ -219,18 +219,19 @@ export async function createInvoiceFromWorkOrder(
     return getInvoice(existing.id);
   }
 
-  // Fetch customer and vehicle data
-  const [{ data: customer }, { data: vehicle }] = await Promise.all([
+  // Fetch customer, vehicle, services, and parts in parallel
+  const [
+    { data: customer },
+    { data: vehicle },
+    { data: services },
+    { data: parts },
+  ] = await Promise.all([
     wo.customer_id
       ? supabase.from("customers").select("*").eq("id", wo.customer_id).single()
       : { data: null },
     wo.vehicle_id
       ? supabase.from("vehicles").select("*").eq("id", wo.vehicle_id).single()
       : { data: null },
-  ]);
-
-  // Fetch services and parts
-  const [{ data: services }, { data: parts }] = await Promise.all([
     supabase
       .from("work_order_services")
       .select("*")
@@ -360,6 +361,138 @@ export async function createInvoiceFromWorkOrder(
   return getInvoice(invoice.id);
 }
 
+// ── Standalone invoice (no work order) ──────────────
+
+interface StandaloneInvoiceItem {
+  description: string;
+  item_type: string;
+  quantity?: number;
+  unit_price?: number;
+  discount_amount?: number;
+}
+
+interface CreateStandaloneInvoiceParams {
+  customer_id?: string | null;
+  vehicle_id?: string | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  customer_email?: string | null;
+  customer_address?: string | null;
+  vehicle_plate?: string | null;
+  vehicle_details?: string | null;
+  items: StandaloneInvoiceItem[];
+  notes?: string | null;
+  terms?: string;
+  dueDays?: number;
+  tax_rate?: number;
+  tax_total?: number;
+}
+
+/**
+ * Creates an invoice without a work order — for ad-hoc/manual billing.
+ */
+export async function createStandaloneInvoice(
+  orgId: string,
+  params: CreateStandaloneInvoiceParams,
+  userId?: string,
+): Promise<InvoiceWithItems> {
+
+  if (!params.items || params.items.length === 0) {
+    throw new ValidationError("At least one invoice item is required");
+  }
+
+  const supabase = await createClient();
+
+  // Calculate totals from items
+  let subtotal = 0;
+  let totalDiscount = 0;
+  const invoiceItems = params.items.map((item, i) => {
+    const qty = item.quantity ?? 1;
+    const unitPrice = item.unit_price ?? 0;
+    const discount = item.discount_amount ?? 0;
+    const totalPrice = qty * unitPrice - discount;
+    subtotal += totalPrice;
+    totalDiscount += discount;
+
+    return {
+      item_type: item.item_type || "service",
+      description: item.description,
+      quantity: qty,
+      unit_price: unitPrice,
+      discount_amount: discount,
+      total_price: Math.max(0, totalPrice),
+      sort_order: i,
+    };
+  });
+
+  // Compute tax
+  let computedTaxTotal: number;
+  if (params.tax_total !== undefined) {
+    computedTaxTotal = params.tax_total;
+  } else if (params.tax_rate !== undefined) {
+    computedTaxTotal = Math.round(subtotal * params.tax_rate * 100) / 100;
+  } else {
+    computedTaxTotal = 0;
+  }
+
+  const total = subtotal + computedTaxTotal;
+  const invoiceNumber = await generateInvoiceNumber(orgId);
+
+  const dueDays = params.dueDays ?? 7;
+  const dueAt = new Date();
+  dueAt.setDate(dueAt.getDate() + dueDays);
+
+  // Create invoice
+  const { data: invoice, error } = await supabase
+    .from("invoices")
+    .insert({
+      organization_id: orgId,
+      invoice_number: invoiceNumber,
+      status: "draft",
+      customer_id: params.customer_id || null,
+      vehicle_id: params.vehicle_id || null,
+      subtotal,
+      discount_total: totalDiscount,
+      tax_total: computedTaxTotal,
+      total,
+      amount_paid: 0,
+      balance_due: total,
+      issued_at: new Date().toISOString(),
+      due_at: dueAt.toISOString(),
+      customer_name: params.customer_name || null,
+      customer_phone: params.customer_phone || null,
+      customer_email: params.customer_email || null,
+      customer_address: params.customer_address || null,
+      vehicle_plate: params.vehicle_plate || null,
+      vehicle_details: params.vehicle_details || null,
+      notes: params.notes || null,
+      terms: params.terms || "Payment due upon receipt.",
+      created_by: userId,
+      updated_by: userId,
+    })
+    .select("*")
+    .single();
+
+  if (error || !invoice) {
+    throw new Error(error?.message ?? "Failed to create invoice");
+  }
+
+  // Insert line items
+  const itemsWithInvoiceId = invoiceItems.map((item) => ({
+    ...item,
+    invoice_id: invoice.id,
+  }));
+
+  const { error: itemsError } = await supabase
+    .from("invoice_items")
+    .insert(itemsWithInvoiceId);
+
+  if (itemsError) throw new Error(itemsError.message);
+
+  revalidateTag(cacheTags.invoices(orgId), "max");
+  return getInvoice(invoice.id);
+}
+
 // ── Update invoice status ─────────────────────────
 export async function updateInvoiceStatus(
   id: string,
@@ -389,6 +522,11 @@ export async function updateInvoiceStatus(
 
   if (status === "sent") {
     updateData.issued_at = new Date().toISOString();
+  }
+
+  if (status === "cancelled") {
+    updateData.amount_paid = 0;
+    updateData.balance_due = 0;
   }
 
   const { data, error } = await supabase
@@ -446,18 +584,19 @@ export async function sendInvoiceAndMarkEmailed(
     );
   }
 
-  const { data: org } = await supabase
-    .from("organizations")
-    .select("name")
-    .eq("id", orgId)
-    .single();
-
-  const { data: branch } = await supabase
-    .from("branches")
-    .select("email")
-    .eq("organization_id", orgId)
-    .eq("is_main", true)
-    .maybeSingle();
+  const [{ data: org }, { data: branch }] = await Promise.all([
+    supabase
+      .from("organizations")
+      .select("name")
+      .eq("id", orgId)
+      .single(),
+    supabase
+      .from("branches")
+      .select("email")
+      .eq("organization_id", orgId)
+      .eq("is_main", true)
+      .maybeSingle(),
+  ]);
 
   const orgName = org?.name ?? "Your Mechanic Shop";
   const bccEmail = branch?.email ?? undefined;
@@ -598,6 +737,206 @@ export async function getInvoiceStats(
       revalidate: cacheDurations.invoices,
     },
   );
+}
+
+// ── Invoice Item CRUD ─────────────────────────────
+
+interface AddInvoiceItemParams {
+  description: string;
+  item_type: string;
+  quantity?: number;
+  unit_price?: number;
+  discount_amount?: number;
+  sort_order?: number;
+}
+
+/**
+ * Adds a new line item to an existing invoice.
+ * Recalculates invoice totals after adding.
+ */
+export async function addInvoiceItem(
+  invoiceId: string,
+  orgId: string,
+  params: AddInvoiceItemParams,
+): Promise<InvoiceItem> {
+
+  if (!params.description?.trim()) {
+    throw new ValidationError("Item description is required");
+  }
+
+  const supabase = await createClient();
+
+  const quantity = params.quantity ?? 1;
+  const unitPrice = params.unit_price ?? 0;
+  const discount = params.discount_amount ?? 0;
+  const totalPrice = quantity * unitPrice - discount;
+
+  const { data, error } = await supabase
+    .from("invoice_items")
+    .insert({
+      invoice_id: invoiceId,
+      description: params.description.trim(),
+      item_type: params.item_type || "service",
+      quantity,
+      unit_price: unitPrice,
+      discount_amount: discount,
+      total_price: Math.max(0, totalPrice),
+      sort_order: params.sort_order ?? 0,
+    })
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to add invoice item");
+  }
+
+  // Recalculate invoice totals
+  await recalculateInvoiceTotals(invoiceId, orgId);
+
+  revalidateTag(cacheTags.invoice(invoiceId), "max");
+  revalidateTag(cacheTags.invoices(orgId), "max");
+
+  return data as InvoiceItem;
+}
+
+/**
+ * Updates an existing invoice line item.
+ * Recalculates invoice totals after updating.
+ */
+export async function updateInvoiceItem(
+  itemId: string,
+  invoiceId: string,
+  orgId: string,
+  params: Partial<AddInvoiceItemParams>,
+): Promise<InvoiceItem> {
+  const supabase = await createClient();
+
+  const updates: Record<string, unknown> = {};
+
+  if (params.description !== undefined) {
+    if (!params.description.trim()) {
+      throw new ValidationError("Item description cannot be empty");
+    }
+    updates.description = params.description.trim();
+  }
+  if (params.item_type !== undefined) updates.item_type = params.item_type;
+  if (params.quantity !== undefined) updates.quantity = params.quantity;
+  if (params.unit_price !== undefined) updates.unit_price = params.unit_price;
+  if (params.discount_amount !== undefined) updates.discount_amount = params.discount_amount;
+  if (params.sort_order !== undefined) updates.sort_order = params.sort_order;
+
+  if (Object.keys(updates).length === 0) {
+    throw new ValidationError("No fields to update");
+  }
+
+  // If quantity, unit_price, or discount changed, recalculate total_price
+  if (params.quantity !== undefined || params.unit_price !== undefined || params.discount_amount !== undefined) {
+    const { data: current } = await supabase
+      .from("invoice_items")
+      .select("*")
+      .eq("id", itemId)
+      .single();
+
+    if (!current) throw new NotFoundError("Invoice item not found");
+
+    const qty = params.quantity ?? current.quantity;
+    const unitPrice = params.unit_price ?? current.unit_price;
+    const discount = params.discount_amount ?? current.discount_amount;
+    updates.total_price = Math.max(0, qty * unitPrice - discount);
+  }
+
+  const { data, error } = await supabase
+    .from("invoice_items")
+    .update(updates)
+    .eq("id", itemId)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Failed to update invoice item");
+  }
+
+  // Recalculate invoice totals
+  await recalculateInvoiceTotals(invoiceId, orgId);
+
+  revalidateTag(cacheTags.invoice(invoiceId), "max");
+
+  return data as InvoiceItem;
+}
+
+/**
+ * Removes a line item from an invoice.
+ * Hard-deletes the item record and recalculates totals.
+ */
+export async function removeInvoiceItem(
+  itemId: string,
+  invoiceId: string,
+  orgId: string,
+): Promise<void> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("invoice_items")
+    .delete()
+    .eq("id", itemId);
+
+  if (error) throw new NotFoundError("Invoice item not found");
+
+  // Recalculate invoice totals
+  await recalculateInvoiceTotals(invoiceId, orgId);
+
+  revalidateTag(cacheTags.invoice(invoiceId), "max");
+  revalidateTag(cacheTags.invoices(orgId), "max");
+}
+
+/**
+ * Recalculates subtotal, tax_total, and total on an invoice
+ * by summing its line items and re-applying discount/tax.
+ */
+async function recalculateInvoiceTotals(
+  invoiceId: string,
+  orgId: string,
+): Promise<void> {
+  const supabase = await createClient();
+
+  const { data: items } = await supabase
+    .from("invoice_items")
+    .select("total_price, discount_amount")
+    .eq("invoice_id", invoiceId);
+
+  const subtotal = (items ?? []).reduce(
+    (sum, item) => sum + item.total_price,
+    0,
+  );
+
+  const totalDiscount = (items ?? []).reduce(
+    (sum, item) => sum + (item.discount_amount ?? 0),
+    0,
+  );
+
+  // Read current invoice for existing tax/discount values
+  const { data: invoice } = await supabase
+    .from("invoices")
+    .select("discount_total, tax_total")
+    .eq("id", invoiceId)
+    .single();
+
+  const taxTotal = invoice?.tax_total ?? 0;
+  const total = subtotal + taxTotal;
+
+  const { error } = await supabase
+    .from("invoices")
+    .update({
+      subtotal,
+      discount_total: totalDiscount,
+      total,
+    })
+    .eq("id", invoiceId)
+    .eq("organization_id", orgId);
+
+  if (error) {
+    console.error("Failed to recalculate invoice totals:", error.message);
+  }
 }
 
 // ── Delete (soft) an invoice ──────────────────────

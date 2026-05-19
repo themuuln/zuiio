@@ -42,6 +42,11 @@ export interface BayViewData {
 
 async function getOrgId(): Promise<string> {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new UnauthorizedError();
+
   const { data, error } = await supabase.rpc("get_user_organization_id");
 
   if (error) {
@@ -90,9 +95,9 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
   // Batch-fetch mechanic profiles for all assigned mechanics
   const mechanicIds = [
     ...new Set(
-      workOrders
-        .filter((wo) => wo.mechanic_id)
-        .map((wo) => wo.mechanic_id as string),
+      workOrders.flatMap((wo) =>
+        wo.mechanic_id ? [wo.mechanic_id as string] : [],
+      ),
     ),
   ];
 
@@ -160,6 +165,8 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
  * Cache is invalidated by revalidateTag calls in mutation functions.
  */
 export async function getBayViewData(): Promise<BayViewData> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   const orgId = await getOrgId();
 
   return withCache(
@@ -177,6 +184,8 @@ export async function getBayViewData(): Promise<BayViewData> {
  * the UI sees the committed database state immediately.
  */
 export async function getBayViewDataFresh(): Promise<BayViewData> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   const orgId = await getOrgId();
   return fetchBayViewData(orgId);
 }
@@ -187,6 +196,8 @@ export async function assignVehicleToBay(
   workOrderId: string,
   bayNumber: number,
 ): Promise<void> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Validate bay is free
@@ -238,6 +249,8 @@ export async function assignVehicleToBay(
 // ── Remove Vehicle from Bay ───────────────────────────────────
 
 export async function removeVehicleFromBay(workOrderId: string): Promise<void> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { error } = await supabase
@@ -262,6 +275,8 @@ export async function assignMechanicToWorkOrder(
   workOrderId: string,
   mechanicId: string,
 ): Promise<void> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { error } = await supabase
@@ -284,6 +299,8 @@ export async function assignMechanicToWorkOrder(
 export async function unassignMechanicFromWorkOrder(
   workOrderId: string,
 ): Promise<void> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { error } = await supabase
@@ -325,6 +342,8 @@ export async function updateWorkOrderStatus(
     | "Cancelled",
   notes?: string,
 ): Promise<void> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const updates: Record<string, unknown> = {
@@ -363,6 +382,8 @@ export async function updateWorkOrderStatus(
 // ── Update Bay Count ───────────────────────────────────────────
 
 export async function updateBayCount(count: number): Promise<number> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   if (count < 1 || count > 50)
     throw new ValidationError("Bay count must be between 1 and 50");
 
@@ -411,124 +432,12 @@ export async function updateBayCount(count: number): Promise<number> {
 
 // ── Seed Waiting Queue ─────────────────────────────────────────
 
-const SEED_VEHICLES = [
-  {
-    make: "Toyota",
-    model: "Prius",
-    plate: "01-01-УБО",
-    year: 2020,
-    owner: "Bat Erdene",
-    phone: "99110001",
-  },
-  {
-    make: "Toyota",
-    model: "Land Cruiser 200",
-    plate: "01-02-УБН",
-    year: 2022,
-    owner: "Sukhbold",
-    phone: "99110002",
-  },
-  {
-    make: "Honda",
-    model: "Fit",
-    plate: "01-03-УБЦ",
-    year: 2019,
-    owner: "Tsetseg Baatar",
-    phone: "99110003",
-  },
-  {
-    make: "Hyundai",
-    model: "Santa Fe",
-    plate: "01-04-УБӨ",
-    year: 2021,
-    owner: "Gan Zorig",
-    phone: "99110004",
-  },
-  {
-    make: "Lexus",
-    model: "RX 350",
-    plate: "01-05-УБХ",
-    year: 2023,
-    owner: "Enkh Tuvshin",
-    phone: "99110005",
-  },
-  {
-    make: "Kia",
-    model: "Sorento",
-    plate: "01-06-УБЯ",
-    year: 2022,
-    owner: "Dash Purev",
-    phone: "99110006",
-  },
-  {
-    make: "Mercedes",
-    model: "GLC 300",
-    plate: "01-07-УБЭ",
-    year: 2021,
-    owner: "Odkoo Dorj",
-    phone: "99110007",
-  },
-  {
-    make: "BMW",
-    model: "X5",
-    plate: "01-08-УБШ",
-    year: 2023,
-    owner: "Naraa Batzorig",
-    phone: "99110008",
-  },
-  {
-    make: "Nissan",
-    model: "Navara",
-    plate: "01-09-УБЧ",
-    year: 2020,
-    owner: "Bayarsaikhan",
-    phone: "99110009",
-  },
-  {
-    make: "Mazda",
-    model: "CX-5",
-    plate: "01-10-УБЗ",
-    year: 2022,
-    owner: "Tuya Chimed",
-    phone: "99110010",
-  },
-  {
-    make: "Land",
-    model: "Range Rover Sport",
-    plate: "01-11-УБҮ",
-    year: 2023,
-    owner: "Zolboo Davaa",
-    phone: "99110011",
-  },
-  {
-    make: "Toyota",
-    model: "Hiace",
-    plate: "01-12-УБФ",
-    year: 2021,
-    owner: "Amar Ganbold",
-    phone: "99110012",
-  },
-];
-
-const SERVICES = [
-  "Oil change & filter",
-  "Brake pad replacement",
-  "Tire rotation & balance",
-  "Engine diagnostic",
-  "Transmission fluid change",
-  "AC recharge & service",
-  "Timing belt replacement",
-  "Suspension check",
-  "Wheel alignment",
-  "Battery replacement",
-  "Coolant flush",
-  "Spark plug replacement",
-];
-
 export async function seedWaitingQueue(): Promise<{
   created: number;
   errors: string[];
 }> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { data: branch } = await supabase
@@ -539,10 +448,35 @@ export async function seedWaitingQueue(): Promise<{
     .maybeSingle();
   if (!branch) throw new Error("Branch not found");
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  const SEED_VEHICLES = [
+    { make: "Toyota", model: "Prius", plate: "01-01-УБО", year: 2020, owner: "Bat Erdene", phone: "99110001" },
+    { make: "Toyota", model: "Land Cruiser 200", plate: "01-02-УБН", year: 2022, owner: "Sukhbold", phone: "99110002" },
+    { make: "Honda", model: "Fit", plate: "01-03-УБЦ", year: 2019, owner: "Tsetseg Baatar", phone: "99110003" },
+    { make: "Hyundai", model: "Santa Fe", plate: "01-04-УБӨ", year: 2021, owner: "Gan Zorig", phone: "99110004" },
+    { make: "Lexus", model: "RX 350", plate: "01-05-УБХ", year: 2023, owner: "Enkh Tuvshin", phone: "99110005" },
+    { make: "Kia", model: "Sorento", plate: "01-06-УБЯ", year: 2022, owner: "Dash Purev", phone: "99110006" },
+    { make: "Mercedes", model: "GLC 300", plate: "01-07-УБЭ", year: 2021, owner: "Odkoo Dorj", phone: "99110007" },
+    { make: "BMW", model: "X5", plate: "01-08-УБШ", year: 2023, owner: "Naraa Batzorig", phone: "99110008" },
+    { make: "Nissan", model: "Navara", plate: "01-09-УБЧ", year: 2020, owner: "Bayarsaikhan", phone: "99110009" },
+    { make: "Mazda", model: "CX-5", plate: "01-10-УБЗ", year: 2022, owner: "Tuya Chimed", phone: "99110010" },
+    { make: "Land", model: "Range Rover Sport", plate: "01-11-УБҮ", year: 2023, owner: "Zolboo Davaa", phone: "99110011" },
+    { make: "Toyota", model: "Hiace", plate: "01-12-УБФ", year: 2021, owner: "Amar Ganbold", phone: "99110012" },
+  ];
+
+  const SERVICES = [
+    "Oil change & filter",
+    "Brake pad replacement",
+    "Tire rotation & balance",
+    "Engine diagnostic",
+    "Transmission fluid change",
+    "AC recharge & service",
+    "Timing belt replacement",
+    "Suspension check",
+    "Wheel alignment",
+    "Battery replacement",
+    "Coolant flush",
+    "Spark plug replacement",
+  ];
 
   let created = 0;
   const errors: string[] = [];
@@ -640,6 +574,8 @@ export async function seedWaitingQueue(): Promise<{
 export async function assignToFirstAvailableBay(
   workOrderId: string,
 ): Promise<number> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Get current bay count
@@ -698,22 +634,26 @@ export async function assignToFirstAvailableBay(
 export async function reorderQueue(
   updates: { id: string; queue_order: number }[],
 ): Promise<void> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
-  for (const u of updates) {
-    const { error } = await supabase
-      .from("work_orders")
-      .update({
-        queue_order: u.queue_order,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", u.id)
-      .eq("organization_id", orgId);
+  await Promise.all(
+    updates.map(async (u) => {
+      const { error } = await supabase
+        .from("work_orders")
+        .update({
+          queue_order: u.queue_order,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", u.id)
+        .eq("organization_id", orgId);
 
-    if (error) {
-      throw new Error(error.message ?? "Failed to reorder queue");
-    }
-  }
+      if (error) {
+        throw new Error(error.message ?? "Failed to reorder queue");
+      }
+    }),
+  );
 
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 }
@@ -730,6 +670,8 @@ export interface ShiftReport {
 }
 
 export async function getShiftReport(): Promise<ShiftReport> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Get bay count
@@ -813,6 +755,8 @@ export async function updateBayViewPin(
   newPin: string,
   confirmPin: string,
 ): Promise<void> {
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
   if (!/^[0-9]{4,6}$/.test(newPin)) {
     throw new ValidationError("PIN must be 4 to 6 digits");
   }

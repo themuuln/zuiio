@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function getServices(
   orgId: string,
   category?: string,
+  limit = 50,
 ): Promise<ServiceCatalog[]> {
   const supabase = await createClient();
 
@@ -25,7 +26,7 @@ export async function getServices(
         query = query.eq("category", category);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.limit(limit + 1);
 
       if (error) throw new Error(error.message ?? "Failed to fetch services");
       return data ?? [];

@@ -186,16 +186,17 @@ export async function completeDisassembly(
 ): Promise<PartsCars> {
   const supabase = await createClient();
 
-  const car = await getPartsCar(orgId, carId);
+  const [car, { data: parts }] = await Promise.all([
+    getPartsCar(orgId, carId),
+    supabase
+      .from("parts_car_parts")
+      .select("*")
+      .eq("parts_car_id", carId)
+      .eq("organization_id", orgId),
+  ]);
   if (car.status === "completed") {
     throw new ValidationError("Disassembly already completed");
   }
-
-  const { data: parts } = await supabase
-    .from("parts_car_parts")
-    .select("*")
-    .eq("parts_car_id", carId)
-    .eq("organization_id", orgId);
 
   const totalParts = parts?.length ?? 0;
   const totalValue =
