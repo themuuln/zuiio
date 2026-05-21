@@ -271,13 +271,13 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   }
 
   const user = authData.user;
-  const meta = user.user_metadata as Record<string, unknown>;
+  const meta = user.user_metadata as unknown as Record<string, unknown>;
 
   // Get profile and membership in parallel
   const [{ data: profile }, { data: membership }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("*")
+      .select("id, organization_id, branch_id, full_name, phone, avatar_url, is_active, created_at, updated_at")
       .eq("id", user.id)
       .maybeSingle(),
     supabase

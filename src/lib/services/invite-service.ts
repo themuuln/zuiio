@@ -51,7 +51,7 @@ export async function createInvite(
         Date.now() + 7 * 24 * 60 * 60 * 1000,
       ).toISOString(),
     })
-    .select("*")
+    .select("id, organization_id, email, role_id, token, status, invited_by, message, expires_at, created_at, updated_at")
     .single();
 
   if (error || !data) {
@@ -66,7 +66,7 @@ export async function getOrgInvites(orgId: string): Promise<OrgInvite[]> {
 
   const { data, error } = await supabase
     .from("org_invites")
-    .select("*")
+    .select("id, organization_id, email, role_id, token, status, invited_by, message, expires_at, created_at, updated_at")
     .eq("organization_id", orgId)
     .order("created_at", { ascending: false });
 

@@ -7,10 +7,10 @@ import type {
   MechanicAssignment,
   Vehicle,
   WorkOrder,
-  WorkOrderDetail,
   WorkOrderPart,
   WorkOrderService,
 } from "@/lib/database.types";
+import type { WorkOrderDetail } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkOrderDetail as _getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
@@ -70,20 +70,30 @@ interface WorkOrderWithRefs extends WorkOrder {
 export async function getWorkOrders(
   orgId: string,
   filters?: WorkOrderFilters,
+  page?: number,
+  pageSize?: number,
   limit = 50,
 ): Promise<WorkOrderWithRefs[]> {
   const supabase = await createClient();
 
+  const usePagination = typeof page === "number" && page > 0;
+  const effectivePage = usePagination ? page : 1;
+  const effectivePageSize = usePagination ? (pageSize ?? 50) : limit;
+
   return withCache(
-    ["getWorkOrders", orgId, JSON.stringify(filters ?? {})],
+    ["getWorkOrders", orgId, JSON.stringify(filters ?? {}), usePagination ? `p${effectivePage}s${effectivePageSize}` : `l${limit}`],
     async () => {
       let query = supabase
         .from("work_orders")
         .select(`
-        *,
+        id, organization_id, branch_id, customer_id, vehicle_id, status,
+        complaint, description, bay_number, created_at, updated_at,
+        mechanic_id, total, subtotal, discount_total, discount_amount,
+        discount_percentage, odometer_at_service, queue_order, notes,
+        completed_at, started_at,
         customer:customers(first_name, last_name, phone),
         vehicle:vehicles(plate_number, make, model)
-      `)
+      `, usePagination ? { count: "exact" } : undefined)
         .eq("organization_id", orgId)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
@@ -97,12 +107,20 @@ export async function getWorkOrders(
         query = query.gte("created_at", dayStart).lte("created_at", dayEnd);
       }
 
-      const { data, error } = await query.limit(limit + 1);
+      if (usePagination) {
+        const from = (effectivePage - 1) * effectivePageSize;
+        const to = from + effectivePageSize - 1;
+        query = query.range(from, to);
+      } else {
+        query = query.limit(limit + 1);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw new Error(error.message ?? "Failed to fetch work orders");
 
       // ── Enrich with mechanic names ─────────────────────────
-      const rows = (data ?? []) as Array<
+      const rows = (data ?? []) as unknown as Array<
         WorkOrderWithRefs & { mechanic_id: string | null }
       >;
       const mechanicIds = [
@@ -196,7 +214,7 @@ export async function getWorkOrders(
             ? { full_name: mechanicMap.get(r.mechanic_id) ?? null }
             : null,
         };
-      }) as WorkOrderWithRefs[];
+      }) as unknown as unknown as WorkOrderWithRefs[];
     },
     {
       tags: [cacheTags.workOrders(orgId)],
@@ -248,7 +266,7 @@ export async function createWorkOrder(
       created_by: userId,
       updated_by: userId,
     })
-    .select("*")
+    .select("id")
     .single();
 
   if (woError || !wo)
@@ -307,7 +325,7 @@ export async function updateWorkOrderStatus(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("*")
+    .select("id, organization_id, status, mechanic_id, customer_id, vehicle_id, complaint, description, bay_number, notes, odometer_at_service, discount_amount, discount_percentage, discount_total, subtotal, total, queue_order, completed_at, started_at, created_at, updated_at, created_by, updated_by, branch_id, diagnosis_label_id")
     .single();
 
   if (error || !data) throw new NotFoundError("Work order not found");
@@ -334,7 +352,7 @@ export async function updateWorkOrderStatus(
     "max",
   );
 
-  return data;
+  return data as unknown as WorkOrder;
 }
 
 // ── Assign Mechanic ────────────────────────────────────────────
@@ -362,7 +380,7 @@ export async function assignMechanic(
       mechanic_id: mechanicId,
       assigned_by: userId,
     })
-    .select("*")
+    .select("id, work_order_id, organization_id, mechanic_id, assigned_by, assigned_at")
     .single();
 
   if (error || !data)
@@ -379,7 +397,7 @@ export async function assignMechanic(
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
 
-  return data;
+  return data as unknown as MechanicAssignment;
 }
 
 // ── Add Service to Work Order ──────────────────────────────────
@@ -422,7 +440,7 @@ export async function addServiceToWorkOrder(
       created_by: user?.id ?? null,
       unit_cost: 0,
     })
-    .select("*")
+    .select("id, work_order_id, organization_id, service_catalog_id, service_name, quantity, unit_price, unit_cost, discount_amount, discount_percentage, final_price, notes, created_by, created_at")
     .single();
 
   if (error || !data)
@@ -467,7 +485,7 @@ export async function addServiceToWorkOrder(
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
 
-  return data;
+  return data as unknown as WorkOrderService;
 }
 
 // ── Add Part to Work Order ─────────────────────────────────────
@@ -517,7 +535,7 @@ export async function addPartToWorkOrder(
       final_price: finalPrice,
       notes: partData.notes ?? null,
     })
-    .select("*")
+    .select("id, work_order_id, organization_id, part_id, part_name, part_number, quantity, unit_price, unit_cost, discount_amount, discount_percentage, final_price, notes, created_at")
     .single();
 
   if (error || !data) throw new Error(error?.message ?? "Failed to add part");
@@ -578,7 +596,7 @@ export async function addPartToWorkOrder(
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
 
-  return data;
+  return data as unknown as WorkOrderPart;
 }
 
 // ── Remove Service ─────────────────────────────────────────────
@@ -629,11 +647,11 @@ export async function getWorkOrderTotals(workOrderId: string) {
   ]);
 
   const servicesTotal = (wo.services ?? []).reduce(
-    (sum, s) => sum + Number(s.unit_price) * s.quantity,
+    (sum: number, s) => sum + Number(s.unit_price) * s.quantity,
     0,
   );
   const servicesDiscount = (wo.services ?? []).reduce(
-    (sum, s) =>
+    (sum: number, s) =>
       sum +
       Number(s.discount_amount ?? 0) +
       (Number(s.discount_percentage ?? 0) / 100) *
@@ -642,11 +660,11 @@ export async function getWorkOrderTotals(workOrderId: string) {
     0,
   );
   const partsTotal = (wo.parts ?? []).reduce(
-    (sum, p) => sum + Number(p.unit_price) * p.quantity,
+    (sum: number, p) => sum + Number(p.unit_price) * p.quantity,
     0,
   );
   const partsDiscount = (wo.parts ?? []).reduce(
-    (sum, p) =>
+    (sum: number, p) =>
       sum +
       Number(p.discount_amount ?? 0) +
       (Number(p.discount_percentage ?? 0) / 100) *
@@ -684,7 +702,7 @@ export async function getDailyWorkOrders(
     async () => {
       const { data, error } = await supabase
         .from("work_orders")
-        .select("*")
+        .select("id, organization_id, branch_id, customer_id, vehicle_id, status, complaint, description, bay_number, created_at, updated_at, mechanic_id, total, subtotal, discount_total, discount_amount, discount_percentage, odometer_at_service, queue_order, notes, completed_at, started_at")
         .eq("organization_id", orgId)
         .is("deleted_at", null)
         .gte("created_at", `${targetDate}T00:00:00`)
@@ -693,7 +711,7 @@ export async function getDailyWorkOrders(
 
       if (error)
         throw new Error(error.message ?? "Failed to fetch daily work orders");
-      return data ?? [];
+      return (data ?? []) as unknown as WorkOrder[];
     },
     {
       tags: [cacheTags.dailyWorkOrders(orgId, targetDate)],

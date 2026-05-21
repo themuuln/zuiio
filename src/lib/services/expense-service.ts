@@ -81,7 +81,7 @@ export async function getExpenses(
     async () => {
       let query = supabase
         .from("expenses")
-        .select("*, expense_categories(*)")
+        .select("id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_at, updated_at, deleted_at, category:expense_categories(id, name, color, icon)")
         .eq("organization_id", orgId)
         .is("deleted_at", null)
         .order("expense_date", { ascending: false });
@@ -117,17 +117,21 @@ export async function getExpenses(
         query = query.limit(options.limit);
       }
 
+      if (options?.offset !== undefined && options?.limit) {
+        query = query.range(options.offset, options.offset + options.limit - 1);
+      }
+
       const { data, error } = await query;
 
       if (error) throw new Error(error.message ?? "Failed to fetch expenses");
 
       return (data ?? []).map((row: Record<string, unknown>) => {
-        const cat = row.expense_categories as Record<string, unknown> | null;
+        const cat = row.expense_categories as unknown as Record<string, unknown> | null;
         const { expense_categories: _, ...expense } = row;
         return {
           ...expense,
           category: cat ?? null,
-        } as ExpenseWithCategory;
+        } as unknown as ExpenseWithCategory;
       });
     },
     {
@@ -157,9 +161,9 @@ export async function getExpense(
 
       if (error || !data) throw new NotFoundError("Expense not found");
 
-      const cat = data.expense_categories as Record<string, unknown> | null;
+      const cat = data.expense_categories as unknown as Record<string, unknown> | null;
       const { expense_categories: _, ...expense } = data;
-      return { ...expense, category: cat ?? null } as ExpenseWithCategory;
+      return { ...expense, category: cat ?? null } as unknown as ExpenseWithCategory;
     },
     {
       tags: [cacheTags.expense(id)],
@@ -178,7 +182,7 @@ export async function getExpenseStats(orgId: string): Promise<ExpenseStats> {
     .eq("organization_id", orgId)
     .is("deleted_at", null);
 
-  const expenses = (allExpenses ?? []) as Array<Record<string, unknown>>;
+  const expenses = (allExpenses ?? []) as unknown as Array<Record<string, unknown>>;
   const now = new Date();
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -269,7 +273,7 @@ export async function createExpense(
       created_by: userId,
       updated_by: userId,
     })
-    .select("*")
+    .select("id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data) {
@@ -302,7 +306,7 @@ export async function updateExpense(
 
   const { data: existing, error: fetchError } = await supabase
     .from("expenses")
-    .select("*")
+    .select("id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_by, updated_by, created_at, updated_at")
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
@@ -339,7 +343,7 @@ export async function updateExpense(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("*")
+    .select("id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data) {
@@ -412,13 +416,13 @@ export async function getExpenseCategories(
     async () => {
       const { data, error } = await supabase
         .from("expense_categories")
-        .select("*")
+        .select("id, organization_id, name, description, color, icon, sort_order, is_active, created_at, updated_at, deleted_at")
         .eq("organization_id", orgId)
         .is("deleted_at", null)
         .order("sort_order", { ascending: true });
 
       if (error) throw new Error(error.message);
-      return (data ?? []) as ExpenseCategory[];
+      return (data ?? []) as unknown as ExpenseCategory[];
     },
     {
       tags: [cacheTags.expenseCategories(orgId)],
@@ -465,7 +469,7 @@ export async function createExpenseCategory(
       created_by: userId,
       updated_by: userId,
     })
-    .select("*")
+    .select("id, organization_id, name, description, color, icon, sort_order, is_active, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data) {
@@ -505,7 +509,7 @@ export async function updateExpenseCategory(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("*")
+    .select("id, organization_id, name, description, color, icon, sort_order, is_active, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data) {

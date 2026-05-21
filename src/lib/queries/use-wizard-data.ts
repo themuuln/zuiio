@@ -212,7 +212,8 @@ export function useCustomerSearch(
       if (!res.ok) throw new Error("Failed to search customers");
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as Customer[];
+      // API returns { data: PaginatedResponse<Customer> }, unwrap .data.data
+      return (json.data?.data ?? json.data ?? []) as Customer[];
     },
     enabled: !!orgId && query.length > 0,
     staleTime: 30_000,
@@ -428,7 +429,14 @@ export function useCreateCustomer(orgId: string | undefined) {
       });
       const json = await res.json();
       if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? "Failed to create customer");
+        const err = new Error(
+          json.error?.message ?? "Failed to create customer",
+        );
+        if (json.error?.code) {
+          (err as { code?: string }).code = json.error.code;
+          (err as { details?: unknown }).details = json.error.details;
+        }
+        throw err;
       }
       return json.data as Customer;
     },

@@ -450,9 +450,9 @@ function ServiceCard({
               </label>
               <Select
                 value={entry.priority}
-                onValueChange={(val: "standard" | "important" | "urgent") =>
-                  onChange({ priority: val })
-                }
+                onValueChange={(val) => {
+                  if (val) onChange({ priority: val as "standard" | "important" | "urgent" });
+                }}
               >
                 <SelectTrigger id={`post-service-priority-${entry.workOrderServiceId}`} className="h-8 text-xs">
                   <SelectValue />

@@ -32,7 +32,7 @@ export async function createBranch(
       created_by: userId,
       updated_by: userId,
     })
-    .select("*")
+    .select("id, organization_id, name, address, phone, email, is_main, settings, is_active, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data) {
@@ -41,7 +41,7 @@ export async function createBranch(
 
   revalidateTag(cacheTags.branches(orgId), "max");
 
-  return data;
+  return data as unknown as Branch;
 }
 
 /**
@@ -55,7 +55,7 @@ export async function getBranches(orgId: string): Promise<Branch[]> {
     async () => {
       const { data, error } = await supabase
         .from("branches")
-        .select("*")
+        .select("id, organization_id, name, address, phone, email, is_main, settings, is_active, created_at, updated_at, deleted_at")
         .eq("organization_id", orgId)
         .is("deleted_at", null)
         .order("created_at", { ascending: true });
@@ -64,7 +64,7 @@ export async function getBranches(orgId: string): Promise<Branch[]> {
         throw new Error(error.message ?? "Failed to fetch branches");
       }
 
-      return data ?? [];
+      return (data ?? []) as unknown as Branch[];
     },
     {
       tags: [cacheTags.branches(orgId)],
@@ -103,7 +103,7 @@ export async function updateBranch(
     .eq("id", branchId)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("*")
+    .select("id, organization_id, name, address, phone, email, is_main, settings, is_active, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data) {
@@ -112,7 +112,7 @@ export async function updateBranch(
 
   revalidateTag(cacheTags.branches(orgId), "max");
 
-  return data;
+  return data as unknown as Branch;
 }
 
 /**

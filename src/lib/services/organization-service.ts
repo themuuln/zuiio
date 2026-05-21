@@ -41,7 +41,7 @@ export async function createOrganization(
       created_by: userId,
       updated_by: userId,
     })
-    .select("*")
+    .select("id, name, slug, logo_url, settings, is_active, branch_limit, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (orgError || !org) {
@@ -135,7 +135,7 @@ export async function createOrganization(
     console.error("Failed to create default subscription:", subError);
   }
 
-  return org;
+  return org as unknown as Organization;
 }
 
 export async function getOrganization(orgId: string): Promise<Organization> {
@@ -146,7 +146,7 @@ export async function getOrganization(orgId: string): Promise<Organization> {
     async () => {
       const { data, error } = await supabase
         .from("organizations")
-        .select("*")
+        .select("id, name, slug, logo_url, settings, is_active, branch_limit, created_by, updated_by, created_at, updated_at, deleted_at")
         .eq("id", orgId)
         .is("deleted_at", null)
         .single();
@@ -155,7 +155,7 @@ export async function getOrganization(orgId: string): Promise<Organization> {
         throw new NotFoundError("Organization not found");
       }
 
-      return data;
+      return data as unknown as Organization;
     },
     {
       tags: [cacheTags.branches(orgId)],
@@ -182,12 +182,12 @@ export async function getUserOrganization(
 
       const { data: org } = await supabase
         .from("organizations")
-        .select("*")
+        .select("id, name, slug, logo_url, settings, is_active, branch_limit, created_at")
         .eq("id", membership.organization_id)
         .is("deleted_at", null)
         .single();
 
-      return org ?? null;
+      return (org ?? null) as unknown as Organization | null;
     },
     {
       tags: [cacheTags.organizationUsers(userId)],
@@ -218,7 +218,7 @@ export async function updateOrganization(
     .update(updates)
     .eq("id", orgId)
     .is("deleted_at", null)
-    .select("*")
+    .select("id, name, slug, logo_url, settings, is_active, branch_limit, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data) {
@@ -227,5 +227,5 @@ export async function updateOrganization(
 
   revalidateTag(cacheTags.branches(orgId), "max");
 
-  return data;
+  return data as unknown as Organization;
 }

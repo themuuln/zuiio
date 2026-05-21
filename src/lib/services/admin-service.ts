@@ -34,7 +34,7 @@ export async function listOrganizations(): Promise<AdminOrg[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_list_organizations");
   if (error) throw new Error(error.message);
-  return (data ?? []) as AdminOrg[];
+  return (data ?? []) as unknown as AdminOrg[];
 }
 
 export async function updateOrgSubscription(

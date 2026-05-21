@@ -22,7 +22,8 @@ export function useCustomers(
       if (!res.ok) throw new Error("Failed to load customers");
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as CustomerWithVehicleCount[];
+      // API returns { data: PaginatedResponse<Customer> }, unwrap .data.data
+      return (json.data?.data ?? json.data ?? []) as CustomerWithVehicleCount[];
     },
     enabled: !!orgId,
     staleTime: 30_000,

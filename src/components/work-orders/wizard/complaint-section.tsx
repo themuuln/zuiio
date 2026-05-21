@@ -40,7 +40,7 @@ export function ComplaintSection() {
         <div>
           <Select
             value={ctx.diagnosisLabelId}
-            onValueChange={ctx.setDiagnosisLabelId}
+            onValueChange={(value) => { if (value) ctx.setDiagnosisLabelId(value) }}
           >
             <SelectTrigger className="h-11">
               <SelectValue placeholder={t("diagnosisLabelPlaceholder")} />

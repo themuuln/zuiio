@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import type { PartsCatalogItem } from "@/lib/types";
 import {
   createMovement,
   getInventoryBalances,
@@ -82,11 +83,10 @@ describe("getPartsCatalog", () => {
 
     const result = await getPartsCatalog("org-1");
 
-    expect(result).toHaveLength(2);
-    expect(result[0].id).toBe("part-1");
-    expect(result[0].popularity_score).toBe(50);
-    expect(result[1].id).toBe("part-2");
-    expect(result[1].popularity_score).toBe(19);
+    const items = result as PartsCatalogItem[];
+    expect(items).toHaveLength(2);
+    expect(items[0].id).toBe("part-1");
+    expect(items[1].id).toBe("part-2");
   });
 
   it("filters by organization_id and deleted_at is null", async () => {

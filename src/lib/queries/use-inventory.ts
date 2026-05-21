@@ -100,7 +100,8 @@ export function useSuppliers(orgId: string | undefined) {
       if (!res.ok) throw new Error("Failed to load suppliers");
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as Supplier[];
+      // API returns { data: PaginatedResponse<Supplier> }, unwrap .data.data
+      return (json.data?.data ?? json.data ?? []) as Supplier[];
     },
     enabled: !!orgId,
   });
@@ -196,7 +197,8 @@ export function usePurchaseOrders(orgId: string | undefined) {
       if (!res.ok) throw new Error("Failed to load purchase orders");
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as PurchaseOrderWithSupplier[];
+      // API returns { data: PaginatedResponse<PurchaseOrder> }, unwrap .data.data
+      return (json.data?.data ?? json.data ?? []) as PurchaseOrderWithSupplier[];
     },
     enabled: !!orgId,
     staleTime: 30_000,
@@ -456,6 +458,31 @@ export function useCompleteDisassembly(orgId: string | undefined) {
     onSuccess: (_data, carId) => {
       qc.invalidateQueries({ queryKey: inventoryKeys.partsCars(orgId ?? "") });
       qc.invalidateQueries({ queryKey: inventoryKeys.partsCar(orgId ?? "", carId) });
+    },
+  });
+}
+
+export function usePublishPartsCarToCatalog(orgId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (carId: string) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts-cars/${carId}/publish`,
+        { method: "POST" },
+      );
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error?.message ?? "Failed to publish parts to catalog");
+      }
+      const json = await res.json();
+      return json.data as { publishedCount: number; catalogIds: string[] };
+    },
+    onSuccess: (_data, carId) => {
+      qc.invalidateQueries({ queryKey: inventoryKeys.partsCars(orgId ?? "") });
+      qc.invalidateQueries({ queryKey: inventoryKeys.partsCar(orgId ?? "", carId) });
+      qc.invalidateQueries({ queryKey: inventoryKeys.partsCarParts(orgId ?? "", carId) });
+      qc.invalidateQueries({ queryKey: inventoryKeys.parts(orgId ?? "") });
+      qc.invalidateQueries({ queryKey: inventoryKeys.balances(orgId ?? "") });
     },
   });
 }

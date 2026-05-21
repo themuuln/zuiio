@@ -368,7 +368,7 @@ export async function getRecommendations(workOrderId: string) {
 
   const { data, error } = await supabase
     .from("service_recommendations")
-    .select("*")
+    .select("id, organization_id, branch_id, work_order_id, work_order_service_id, service_name, service_catalog_id, recommended_interval_months, recommended_interval_km, next_due_date, next_due_km, priority, notes, created_at, updated_at, deleted_at")
     .eq("work_order_id", workOrderId)
     .is("deleted_at", null)
     .order("priority", { ascending: true });
@@ -384,7 +384,7 @@ export async function getCompletionData(workOrderId: string) {
 
   const { data, error } = await supabase
     .from("service_completion_data")
-    .select("*")
+    .select("id, organization_id, branch_id, work_order_id, vehicle_id, odometer_reading, customer_satisfaction, customer_feedback, customer_preferences, next_appointment_date, collected_at, created_by, created_at")
     .eq("work_order_id", workOrderId)
     .single();
 

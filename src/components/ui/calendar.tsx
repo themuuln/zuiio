@@ -21,14 +21,29 @@ function Calendar({
   locale,
   formatters,
   components,
+  fromYear,
+  toYear,
   ...props
-}: React.ComponentProps<typeof DayPicker> & {
+}: {
+  className?: string
+  classNames?: Record<string, string>
+  showOutsideDays?: boolean
+  captionLayout?: "label" | "dropdown" | "dropdown-months" | "dropdown-years"
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
+  locale?: Locale
+  formatters?: Record<string, unknown>
+  components?: Record<string, unknown>
+  fromYear?: number
+  toYear?: number
+  [key: string]: unknown
 }) {
   const defaultClassNames = getDefaultClassNames()
+  const startMonth = fromYear ? new Date(fromYear, 0) : undefined
+  const endMonth = toYear ? new Date(toYear, 11) : undefined
 
   return (
     <DayPicker
+      {...(props as Record<string, unknown>)}
       showOutsideDays={showOutsideDays}
       className={cn(
         "group/calendar bg-background p-2 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(7)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
@@ -38,6 +53,8 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       locale={locale}
+      startMonth={startMonth}
+      endMonth={endMonth}
       formatters={{
         formatMonthDropdown: (date) =>
           date.toLocaleString(locale?.code, { month: "short" }),

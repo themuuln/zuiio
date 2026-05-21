@@ -64,7 +64,7 @@ export async function getInvoices(
     async () => {
       let query = supabase
         .from("invoices")
-        .select("*")
+        .select("id, organization_id, invoice_number, status, subtotal, total, amount_paid, balance_due, issued_at, due_at, customer_name, customer_phone, vehicle_plate, public_token, created_at, updated_at, deleted_at")
         .eq("organization_id", orgId)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
@@ -82,7 +82,7 @@ export async function getInvoices(
       const { data, error } = await query;
 
       if (error) throw new Error(error.message ?? "Failed to fetch invoices");
-      return (data ?? []) as InvoiceWithItems[];
+      return (data ?? []) as unknown as unknown as InvoiceWithItems[];
     },
     {
       tags: [cacheTags.invoices(orgId)],
@@ -102,7 +102,7 @@ export async function getInvoice(
     async () => {
       const { data: invoice, error } = await supabase
         .from("invoices")
-        .select("*")
+        .select("id, organization_id, branch_id, invoice_number, status, subtotal, discount_total, tax_total, total, amount_paid, balance_due, issued_at, due_at, customer_id, customer_name, customer_phone, customer_email, customer_address, vehicle_id, vehicle_plate, vehicle_details, work_order_id, notes, terms, footer, public_token, email_sent_at, paid_at, created_at, updated_at, created_by, updated_by, deleted_at")
         .eq("id", id)
         .is("deleted_at", null)
         .single();
@@ -112,21 +112,21 @@ export async function getInvoice(
       const [{ data: items }, { data: payments }] = await Promise.all([
         supabase
           .from("invoice_items")
-          .select("*")
+          .select("id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at")
           .eq("invoice_id", id)
           .order("sort_order", { ascending: true }),
         supabase
           .from("invoice_payments")
-          .select("*")
+          .select("id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by")
           .eq("invoice_id", id)
           .order("paid_at", { ascending: false }),
       ]);
 
       return {
         ...invoice,
-        items: (items ?? []) as InvoiceItem[],
-        payments: (payments ?? []) as InvoicePayment[],
-      } as InvoiceWithItems;
+        items: (items ?? []) as unknown as InvoiceItem[],
+        payments: (payments ?? []) as unknown as InvoicePayment[],
+      } as unknown as unknown as InvoiceWithItems;
     },
     {
       tags: [cacheTags.invoice(id)],
@@ -146,7 +146,7 @@ export async function getInvoiceByPublicToken(
     async () => {
       const { data: invoice, error } = await supabase
         .from("invoices")
-        .select("*")
+        .select("id, organization_id, branch_id, invoice_number, status, subtotal, discount_total, tax_total, total, amount_paid, balance_due, issued_at, due_at, customer_id, customer_name, customer_phone, customer_email, customer_address, vehicle_id, vehicle_plate, vehicle_details, work_order_id, notes, terms, footer, public_token, email_sent_at, paid_at, created_at, updated_at, created_by, updated_by, deleted_at")
         .eq("public_token", token)
         .is("deleted_at", null)
         .single();
@@ -156,21 +156,21 @@ export async function getInvoiceByPublicToken(
       const [{ data: items }, { data: payments }] = await Promise.all([
         supabase
           .from("invoice_items")
-          .select("*")
+          .select("id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at")
           .eq("invoice_id", invoice.id)
           .order("sort_order", { ascending: true }),
         supabase
           .from("invoice_payments")
-          .select("*")
+          .select("id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by")
           .eq("invoice_id", invoice.id)
           .order("paid_at", { ascending: false }),
       ]);
 
       return {
         ...invoice,
-        items: (items ?? []) as InvoiceItem[],
-        payments: (payments ?? []) as InvoicePayment[],
-      } as InvoiceWithItems;
+        items: (items ?? []) as unknown as InvoiceItem[],
+        payments: (payments ?? []) as unknown as InvoicePayment[],
+      } as unknown as unknown as InvoiceWithItems;
     },
     {
       tags: [cacheTags.invoice(token)],
@@ -195,7 +195,7 @@ export async function createInvoiceFromWorkOrder(
   // Fetch work order with all dependencies
   const { data: wo } = await supabase
     .from("work_orders")
-    .select("*")
+    .select("id, organization_id, status, customer_id, vehicle_id, discount_amount")
     .eq("id", workOrderId)
     .is("deleted_at", null)
     .single();
@@ -227,18 +227,18 @@ export async function createInvoiceFromWorkOrder(
     { data: parts },
   ] = await Promise.all([
     wo.customer_id
-      ? supabase.from("customers").select("*").eq("id", wo.customer_id).single()
+      ? supabase.from("customers").select("id, first_name, last_name, company_name, phone, email, address").eq("id", wo.customer_id).single()
       : { data: null },
     wo.vehicle_id
-      ? supabase.from("vehicles").select("*").eq("id", wo.vehicle_id).single()
+      ? supabase.from("vehicles").select("id, make, model, year, plate_number").eq("id", wo.vehicle_id).single()
       : { data: null },
     supabase
       .from("work_order_services")
-      .select("*")
+      .select("id, service_name, quantity, unit_price, discount_amount, final_price")
       .eq("work_order_id", workOrderId),
     supabase
       .from("work_order_parts")
-      .select("*")
+      .select("id, part_name, quantity, unit_price, discount_amount, final_price")
       .eq("work_order_id", workOrderId),
   ]);
 
@@ -312,7 +312,7 @@ export async function createInvoiceFromWorkOrder(
       created_by: userId,
       updated_by: userId,
     })
-    .select("*")
+    .select("id")
     .single();
 
   if (error || !invoice) {
@@ -470,7 +470,7 @@ export async function createStandaloneInvoice(
       created_by: userId,
       updated_by: userId,
     })
-    .select("*")
+    .select("id")
     .single();
 
   if (error || !invoice) {
@@ -535,13 +535,13 @@ export async function updateInvoiceStatus(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("*")
+    .select("id, organization_id, invoice_number, status, subtotal, total, amount_paid, balance_due, issued_at, due_at, customer_name, customer_phone, vehicle_plate, public_token, paid_at, created_at, updated_at, deleted_at")
     .single();
 
   if (error || !data) throw new NotFoundError("Invoice not found");
   revalidateTag(cacheTags.invoice(id), "max");
   revalidateTag(cacheTags.invoices(data.organization_id as string), "max");
-  return data;
+  return data as unknown as Invoice;
 }
 
 // ── Mark invoice as emailed ───────────────────────
@@ -561,13 +561,13 @@ export async function markInvoiceEmailed(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("*")
+    .select("id, organization_id, invoice_number, status, subtotal, total, amount_paid, balance_due, issued_at, due_at, customer_name, customer_phone, vehicle_plate, public_token, paid_at, email_sent_at, created_at, updated_at, deleted_at")
     .single();
 
   if (error || !data) throw new NotFoundError("Invoice not found");
   revalidateTag(cacheTags.invoice(id), "max");
   revalidateTag(cacheTags.invoices(orgId), "max");
-  return data;
+  return data as unknown as Invoice;
 }
 
 export async function sendInvoiceAndMarkEmailed(
@@ -635,7 +635,7 @@ export async function recordPayment(
   // Get current invoice
   const { data: invoice } = await supabase
     .from("invoices")
-    .select("*")
+    .select("id, total, status, amount_paid, balance_due")
     .eq("id", invoiceId)
     .eq("organization_id", orgId)
     .single();
@@ -686,11 +686,11 @@ export async function recordPayment(
   // Return updated payments
   const { data: updatedPayments } = await supabase
     .from("invoice_payments")
-    .select("*")
+    .select("id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by")
     .eq("invoice_id", invoiceId)
     .order("paid_at", { ascending: false });
 
-  return (updatedPayments ?? []) as InvoicePayment[];
+  return (updatedPayments ?? []) as unknown as unknown as InvoicePayment[];
 }
 
 // ── Get invoice count by status ───────────────────
@@ -783,7 +783,7 @@ export async function addInvoiceItem(
       total_price: Math.max(0, totalPrice),
       sort_order: params.sort_order ?? 0,
     })
-    .select("*")
+    .select("id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at")
     .single();
 
   if (error || !data) {
@@ -796,7 +796,7 @@ export async function addInvoiceItem(
   revalidateTag(cacheTags.invoice(invoiceId), "max");
   revalidateTag(cacheTags.invoices(orgId), "max");
 
-  return data as InvoiceItem;
+  return data as unknown as unknown as InvoiceItem;
 }
 
 /**
@@ -833,7 +833,7 @@ export async function updateInvoiceItem(
   if (params.quantity !== undefined || params.unit_price !== undefined || params.discount_amount !== undefined) {
     const { data: current } = await supabase
       .from("invoice_items")
-      .select("*")
+      .select("id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at")
       .eq("id", itemId)
       .single();
 
@@ -849,7 +849,7 @@ export async function updateInvoiceItem(
     .from("invoice_items")
     .update(updates)
     .eq("id", itemId)
-    .select("*")
+    .select("id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at")
     .single();
 
   if (error || !data) {
@@ -861,7 +861,7 @@ export async function updateInvoiceItem(
 
   revalidateTag(cacheTags.invoice(invoiceId), "max");
 
-  return data as InvoiceItem;
+  return data as unknown as unknown as InvoiceItem;
 }
 
 /**

@@ -1,0 +1,89 @@
+"use client";
+
+import { Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface RecentItem {
+  id: string;
+  primary: string;
+  secondary?: string | null;
+  timestamp?: string | null;
+  href?: string;
+}
+
+export function RecentList({
+  items,
+  title,
+  loading,
+  emptyMessage = "No recent items",
+}: {
+  items: RecentItem[];
+  title?: string;
+  loading?: boolean;
+  emptyMessage?: string;
+}) {
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-1.5">
+        {title && (
+          <p className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+            {title}
+          </p>
+        )}
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="h-10 animate-pulse rounded-md bg-muted/50"
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-6 text-center">
+        <Clock className="size-5 text-muted-foreground/30 mb-1" />
+        <p className="text-xs text-muted-foreground/50">{emptyMessage}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      {title && (
+        <p className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+          {title}
+        </p>
+      )}
+      {items.map((item) => (
+        <div
+          key={item.id}
+          className={cn(
+            "flex items-center justify-between rounded-md border border-border/50 bg-card px-2.5 py-1.5",
+            item.href && "cursor-pointer hover:bg-accent/50 transition-colors",
+          )}
+          onClick={() => {
+            if (item.href) window.location.href = item.href;
+          }}
+        >
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium truncate text-foreground/90">
+              {item.primary}
+            </p>
+            {item.secondary && (
+              <p className="text-[10px] text-muted-foreground/60 truncate leading-tight">
+                {item.secondary}
+              </p>
+            )}
+          </div>
+          {item.timestamp && (
+            <span className="text-[10px] text-muted-foreground/40 shrink-0 ml-2">
+              {item.timestamp}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}

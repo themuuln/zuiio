@@ -61,7 +61,7 @@ export async function getVehicles(
             [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
             null,
           owner_phone: (customer.phone as string) ?? null,
-        } as VehicleWithOwner;
+        } as unknown as VehicleWithOwner;
       });
     },
     {
@@ -459,7 +459,7 @@ export async function getCustomerVehicles(
           ...(v as unknown as Vehicle),
           owner_name: null,
           owner_phone: null,
-        } as VehicleWithOwner;
+        } as unknown as VehicleWithOwner;
       });
     },
     {

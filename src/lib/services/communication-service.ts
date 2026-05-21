@@ -73,7 +73,7 @@ export async function createCustomerCommunication(
       content: params.content.trim(),
       staff_id: userId,
     })
-    .select("*")
+    .select("id, organization_id, customer_id, type, direction, subject, content, staff_id, created_at")
     .single();
 
   if (error || !data) {
@@ -88,12 +88,12 @@ export async function createCustomerCommunication(
     record_id: data.id,
     user_id: userId,
     organization_id: orgId,
-    new_data: data as unknown as Record<string, unknown>,
+    new_data: data as unknown as unknown as Record<string, unknown>,
   });
 
   revalidateTag(cacheTags.customerCommunications(orgId, customerId), "max");
 
-  return data;
+  return data as unknown as CustomerCommunication;
 }
 
 /**

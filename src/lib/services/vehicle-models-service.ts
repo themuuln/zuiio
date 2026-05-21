@@ -16,7 +16,7 @@ export async function getVehicleModels(
     async () => {
       let query = supabase
         .from("vehicle_models")
-        .select("*")
+        .select("id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_at, updated_at, deleted_at")
         .eq("organization_id", orgId)
         .is("deleted_at", null)
         .order("make")
@@ -28,7 +28,7 @@ export async function getVehicleModels(
 
       const { data, error } = await query;
       if (error) throw new Error(error.message ?? "Failed to fetch vehicle models");
-      return data ?? [];
+      return (data ?? []) as unknown as VehicleModel[];
     },
     {
       tags: [cacheTags.vehicleModels(orgId)],
@@ -45,7 +45,7 @@ export async function getVehicleModel(id: string): Promise<VehicleModel> {
     async () => {
       const { data, error } = await supabase
         .from("vehicle_models")
-        .select("*")
+        .select("id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at, deleted_at")
         .eq("id", id)
         .is("deleted_at", null)
         .single();
@@ -118,7 +118,7 @@ export async function createVehicleModel(
       created_by: userId,
       updated_by: userId,
     })
-    .select("*")
+    .select("id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data)
@@ -126,7 +126,7 @@ export async function createVehicleModel(
 
   revalidateTag(cacheTags.vehicleModels(orgId), "max");
 
-  return data;
+  return data as unknown as VehicleModel;
 }
 
 export async function updateVehicleModel(
@@ -163,16 +163,14 @@ export async function updateVehicleModel(
     .from("vehicle_models")
     .update(updates)
     .eq("id", id)
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .select("*")
+    .select("id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data) throw new NotFoundError("Vehicle model not found");
 
   revalidateTag(cacheTags.vehicleModels(orgId), "max");
 
-  return data;
+  return data as unknown as VehicleModel;
 }
 
 export async function deleteVehicleModel(

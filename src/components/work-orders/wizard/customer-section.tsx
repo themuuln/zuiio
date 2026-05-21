@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, User } from "lucide-react";
+import { AlertTriangle, Plus, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -124,11 +124,16 @@ export function CustomerSection() {
                   onChange={(e) => ctx.setQuickPhone(e.target.value)}
                   className="h-11"
                 />
-                {ctx.customerCreateError && (
+                {ctx.customerCreateConflict ? (
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/20 dark:text-amber-300">
+                    <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+                    <span>{ctx.customerCreateError}</span>
+                  </div>
+                ) : ctx.customerCreateError ? (
                   <p className="text-sm text-destructive">
                     {ctx.customerCreateError}
                   </p>
-                )}
+                ) : null}
                 <div className="flex gap-2">
                   <Button
                     variant="outline"

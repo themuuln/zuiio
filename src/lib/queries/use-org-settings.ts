@@ -9,7 +9,6 @@ interface OrgSettings {
   default_tax_rate?: number;
   timezone?: string;
   date_format?: string;
-  qpay_enabled?: boolean;
   language?: string;
   [key: string]: unknown;
 }

@@ -39,7 +39,7 @@ function Badge({
       {
         "data-slot": "badge",
         className: cn(badgeVariants({ variant }), className),
-      },
+      } as React.HTMLAttributes<HTMLSpanElement>,
       props
     ),
     render,

@@ -8,7 +8,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Separator } from "@/components/ui/separator";
-import { IconTrendingUp } from "@tabler/icons-react";
+import { TrendingUp } from "lucide-react";
 
 const chartData = [
   { month: "January", desktop: 186, mobile: 80 },
@@ -77,7 +77,7 @@ export function DataTableChart() {
       <div className="grid gap-2">
         <div className="flex gap-2 leading-none font-medium">
           Trending up by 5.2% this month{" "}
-          <IconTrendingUp className="size-4" />
+          <TrendingUp className="size-4" />
         </div>
         <div className="text-muted-foreground">
           Showing total visitors for the last 6 months. This is just

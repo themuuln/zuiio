@@ -46,6 +46,8 @@ function mockWorkOrderDetail(overrides: Record<string, unknown> = {}) {
     mechanic_notes: null,
     bay_number: null,
     queue_order: 0,
+    odometer_at_service: null,
+    diagnosis_label_id: null,
     discount_amount: 0,
     discount_percentage: 0,
     discount_total: 0,
@@ -299,7 +301,7 @@ describe("createWorkOrder", () => {
 
 describe("updateWorkOrderStatus", () => {
   beforeEach(() => {
-    vi.mocked(syncWorkOrderToSchedules).mockResolvedValue(undefined);
+    vi.mocked(syncWorkOrderToSchedules).mockResolvedValue(0);
   });
 
   it("updates status and creates status history entry", async () => {
@@ -670,9 +672,10 @@ describe("addPartToWorkOrder", () => {
   });
 
   it("with part_data.part_id — creates inventory_movement with sale", async () => {
-    mockClient
-      .from("work_orders")
-      .single.mockResolvedValueOnce({
+    // Use mockResolvedValue (not Once) so that any number of .single() calls
+    // through the shared builder will resolve correctly.
+    mockClient.from("work_orders").single
+      .mockResolvedValue({
         data: {
           id: "wp-1",
           work_order_id: "wo-1",
@@ -681,10 +684,6 @@ describe("addPartToWorkOrder", () => {
           unit_price: 15,
           final_price: 30,
         },
-        error: null,
-      })
-      .mockResolvedValueOnce({
-        data: { vehicle_id: null, mechanic_id: null },
         error: null,
       });
 

@@ -3,7 +3,7 @@
 import { useDraggable } from "@dnd-kit/core";
 import { Car } from "lucide-react";
 import type { Vehicle } from "@/lib/database.types";
-import { cn } from "@/lib/utils";
+import { cn, formatPlateNumber } from "@/lib/utils";
 import { BrandLogo } from "./brand-logo";
 
 // ── Color map for common makes ────────────────────────────
@@ -83,7 +83,7 @@ export function VehicleCard({
       {/* Vehicle details */}
       <div className="flex-1 min-w-0 space-y-0.5">
         <div className="font-semibold text-sm truncate flex items-center gap-1.5">
-          <span className="truncate">{vehicle.plate_number}</span>
+          <span className="truncate">{formatPlateNumber(vehicle.plate_number)}</span>
           {customerName && (
             <span className="text-[10px] font-normal text-muted-foreground truncate hidden sm:inline">
               · {customerName}

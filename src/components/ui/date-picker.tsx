@@ -57,7 +57,6 @@ export function DatePicker({
           mode="single"
           selected={value}
           onSelect={onChange}
-          initialFocus
           captionLayout={captionLayout}
           fromYear={fromYear}
           toYear={toYear}

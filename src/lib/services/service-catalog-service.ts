@@ -17,7 +17,7 @@ export async function getServices(
     async () => {
       let query = supabase
         .from("service_catalog")
-        .select("*")
+        .select("id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, created_at, updated_at, deleted_at")
         .eq("organization_id", orgId)
         .is("deleted_at", null)
         .order("name");
@@ -29,7 +29,7 @@ export async function getServices(
       const { data, error } = await query.limit(limit + 1);
 
       if (error) throw new Error(error.message ?? "Failed to fetch services");
-      return data ?? [];
+      return (data ?? []) as unknown as ServiceCatalog[];
     },
     {
       tags: [cacheTags.serviceCatalog(orgId)],
@@ -46,7 +46,7 @@ export async function getService(id: string): Promise<ServiceCatalog> {
     async () => {
       const { data, error } = await supabase
         .from("service_catalog")
-        .select("*")
+        .select("id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at, deleted_at")
         .eq("id", id)
         .is("deleted_at", null)
         .single();
@@ -88,7 +88,7 @@ export async function createService(
       created_by: userId,
       updated_by: userId,
     })
-    .select("*")
+    .select("id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data)
@@ -96,7 +96,7 @@ export async function createService(
 
   revalidateTag(cacheTags.serviceCatalog(orgId), "max");
 
-  return data;
+  return data as unknown as ServiceCatalog;
 }
 
 export async function updateService(
@@ -129,14 +129,14 @@ export async function updateService(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("*")
+    .select("id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data) throw new NotFoundError("Service not found");
 
   revalidateTag(cacheTags.serviceCatalog(orgId), "max");
 
-  return data;
+  return data as unknown as ServiceCatalog;
 }
 
 export async function deleteService(id: string, orgId: string): Promise<void> {
@@ -164,7 +164,7 @@ export async function getLastSoldPrice(
 
   let query = supabase
     .from("service_price_history")
-    .select("*")
+    .select("id, organization_id, service_catalog_id, vehicle_make, vehicle_model, unit_price, discount_amount, discount_percentage, quantity, final_price, work_order_id, mechanic_id, vehicle_id, service_name, created_at")
     .eq("organization_id", orgId)
     .eq("service_catalog_id", serviceCatalogId)
     .order("created_at", { ascending: false })
@@ -180,7 +180,7 @@ export async function getLastSoldPrice(
   const { data, error } = await query.maybeSingle();
 
   if (error) return null;
-  return data;
+  return data as unknown as ServicePriceHistory | null;
 }
 
 export async function getServicePriceHistory(
@@ -191,12 +191,12 @@ export async function getServicePriceHistory(
 
   const { data, error } = await supabase
     .from("service_price_history")
-    .select("*")
+    .select("id, organization_id, service_catalog_id, vehicle_make, vehicle_model, unit_price, discount_amount, discount_percentage, quantity, final_price, work_order_id, mechanic_id, vehicle_id, service_name, created_at")
     .eq("organization_id", orgId)
     .eq("service_catalog_id", serviceCatalogId)
     .order("created_at", { ascending: false })
     .limit(50);
 
   if (error) throw new Error(error.message ?? "Failed to fetch price history");
-  return data ?? [];
+  return (data ?? []) as unknown as ServicePriceHistory[];
 }

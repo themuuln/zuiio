@@ -12,7 +12,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { Vehicle, WorkOrder } from "@/lib/database.types";
-import { cn } from "@/lib/utils";
+import { cn, formatPlateNumber } from "@/lib/utils";
 
 interface QueueAssignmentDialogProps {
   workOrder: WorkOrder & { vehicle: Vehicle | null };
@@ -120,7 +120,7 @@ export function QueueAssignmentDialog({
               <div className="min-w-0">
                 <div className="flex items-center gap-2.5">
                   <h2 className="text-xl font-semibold tracking-tight">
-                    {v?.plate_number ?? t("noVehicle")}
+                    {v ? formatPlateNumber(v.plate_number) : t("noVehicle")}
                   </h2>
                   <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
                     {waitText}
@@ -334,7 +334,7 @@ export function QueueAssignmentDialog({
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground/60">
             <Clock className="size-3.5" />
             <span>
-              {workOrder.vehicle?.plate_number ?? "Vehicle"} → Bay{" "}
+              {workOrder.vehicle ? formatPlateNumber(workOrder.vehicle.plate_number) : "Vehicle"} → Bay{" "}
               {selectedBay ?? "?"}
               {selectedMechanic && " + mechanic"}
             </span>

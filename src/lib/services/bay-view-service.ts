@@ -73,7 +73,7 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
     .maybeSingle();
 
   const bayCount =
-    ((branch?.settings as Record<string, unknown> | null)
+    ((branch?.settings as unknown as Record<string, unknown> | null)
       ?.bay_count as number) ?? 6;
 
   // Get all active (non-completed/cancelled) work orders
@@ -135,14 +135,14 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
     const wo = inBay.find((w) => w.bay_number === i) ?? null;
     bays.push({
       bayNumber: i,
-      workOrder: wo as BaySlotData["workOrder"],
+      workOrder: wo as unknown as BaySlotData["workOrder"],
     });
   }
 
   // Get mechanics (users with mechanic role)
   const { data: mechanics } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id, full_name, phone, avatar_url")
     .eq("organization_id", orgId)
     .eq("is_active", true)
     .order("full_name");
@@ -150,12 +150,12 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
   const mechList = (mechanics ?? []).map((p) => ({
     ...p,
     current_jobs: workOrders.filter((wo) => wo.mechanic_id === p.id).length,
-  }));
+  })) as unknown as (Profile & { current_jobs: number })[];
 
   return {
     bayCount,
     bays,
-    waitingQueue: waiting as BayViewData["waitingQueue"],
+    waitingQueue: waiting as unknown as BayViewData["waitingQueue"],
     mechanics: mechList,
   };
 }
@@ -257,6 +257,7 @@ export async function removeVehicleFromBay(workOrderId: string): Promise<void> {
     .from("work_orders")
     .update({
       bay_number: null,
+      mechanic_id: null,
       status: "New" as const,
       updated_at: new Date().toISOString(),
     })
@@ -399,7 +400,7 @@ export async function updateBayCount(count: number): Promise<number> {
 
   if (!branch) throw new NotFoundError("Main branch not found");
 
-  const currentSettings = (branch.settings as Record<string, unknown>) ?? {};
+  const currentSettings = (branch.settings as unknown as Record<string, unknown>) ?? {};
   const oldCount = (currentSettings.bay_count as number) ?? 6;
 
   // If reducing bay count, unassign vehicles from removed bays
@@ -587,7 +588,7 @@ export async function assignToFirstAvailableBay(
     .maybeSingle();
 
   const bayCount =
-    ((branch?.settings as Record<string, unknown> | null)
+    ((branch?.settings as unknown as Record<string, unknown> | null)
       ?.bay_count as number) ?? 6;
 
   // Find occupied bays
@@ -683,7 +684,7 @@ export async function getShiftReport(): Promise<ShiftReport> {
     .maybeSingle();
 
   const bayCount =
-    ((branch?.settings as Record<string, unknown> | null)
+    ((branch?.settings as unknown as Record<string, unknown> | null)
       ?.bay_count as number) ?? 6;
 
   // Today's completed work orders + active + in-bay (parallel)

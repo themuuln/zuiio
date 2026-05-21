@@ -12,7 +12,7 @@ export { checkSubscriptionExpired } from "./subscription-enforcement";
 function mapSubscription(plan: SubscriptionPlan): SubscriptionPlanInfo {
   const settings =
     typeof plan.settings === "object" && plan.settings !== null
-      ? (plan.settings as Record<string, unknown>)
+      ? (plan.settings as unknown as Record<string, unknown>)
       : {};
 
   return {
@@ -34,7 +34,7 @@ export async function getOrganizationSubscription(
 
   const { data, error } = await supabase
     .from("subscription_plans")
-    .select("*")
+    .select("id, organization_id, plan_type, status, started_at, expires_at, grace_period_end, settings, created_at, updated_at")
     .eq("organization_id", orgId)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -44,7 +44,7 @@ export async function getOrganizationSubscription(
     throw new Error(error.message ?? "Failed to fetch subscription");
   }
 
-  return data ? mapSubscription(data) : null;
+  return data ? mapSubscription(data as unknown as SubscriptionPlan) : null;
 }
 
 export async function checkSubscriptionStatus(
@@ -61,7 +61,7 @@ export async function checkSubscriptionStatus(
     throw new Error(error.message ?? "Failed to check subscription status");
   }
 
-  return data as unknown as SubscriptionStatus;
+  return data as unknown as unknown as unknown as SubscriptionStatus;
 }
 
 export async function createSubscription(
@@ -105,14 +105,14 @@ export async function updateSubscription(
       updated_at: new Date().toISOString(),
     })
     .eq("id", currentPlan.id)
-    .select("*")
+    .select("id, organization_id, plan_type, status, started_at, expires_at, grace_period_end, settings, created_at, updated_at")
     .single();
 
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to update subscription");
   }
 
-  return mapSubscription(data);
+  return mapSubscription(data as unknown as SubscriptionPlan);
 }
 
 export async function renewSubscription(
@@ -129,5 +129,5 @@ export async function renewSubscription(
     throw new Error(error.message ?? "Failed to renew subscription");
   }
 
-  return data as unknown as SubscriptionPlanInfo;
+  return data as unknown as unknown as unknown as SubscriptionPlanInfo;
 }

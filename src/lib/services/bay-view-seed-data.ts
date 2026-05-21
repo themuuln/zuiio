@@ -1,10 +1,3 @@
-import type {
-  BodyType,
-  DrivetrainType,
-  FuelType,
-  TransmissionType,
-} from "@/lib/database.types";
-
 export const DEMO_QUEUE_TARGET = 100;
 
 type DemoQueueBlueprint = {
@@ -14,10 +7,10 @@ type DemoQueueBlueprint = {
   baseYear: number;
   color: string;
   engine: string;
-  bodyType: BodyType;
-  fuelType: FuelType;
-  transmission: TransmissionType;
-  drivetrain: DrivetrainType;
+  bodyType: string;
+  fuelType: string;
+  transmission: string;
+  drivetrain: string;
 };
 
 const DEMO_QUEUE_BLUEPRINTS: DemoQueueBlueprint[] = [

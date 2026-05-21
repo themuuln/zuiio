@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   createContext,
   type ReactNode,
@@ -65,6 +65,7 @@ interface WizardState {
   customerSearching: boolean;
   creatingCustomer: boolean;
   customerCreateError: string | null;
+  customerCreateConflict: boolean;
 
   vehicleSearch: string;
   vehicles: Vehicle[];
@@ -170,6 +171,9 @@ export function useWizardContext() {
 
 export function WizardProvider({ children }: { children: ReactNode }) {
   const { push } = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedCustomerId = searchParams.get("customerId");
+  const preselectedVehicleId = searchParams.get("vehicleId");
 
   const [customerSearch, setCustomerSearch] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -183,6 +187,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [customerCreateError, setCustomerCreateError] = useState<string | null>(
     null,
   );
+  const [customerCreateConflict, setCustomerCreateConflict] = useState(false);
 
   const [vehicleSearch, setVehicleSearch] = useState("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -241,6 +246,46 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
 
   const orgId =
     (profile?.organizationId ?? profile?.data?.organizationId) || null;
+
+  // Auto-select customer from URL param
+  const { data: preselectedCustomer } = useQuery({
+    queryKey: ["preselected-customer", orgId, preselectedCustomerId],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/customers/${preselectedCustomerId}`,
+      );
+      const json = await res.json();
+      return json.data as Customer;
+    },
+    enabled: !!orgId && !!preselectedCustomerId,
+    staleTime: 30_000,
+  });
+
+  useEffect(() => {
+    if (preselectedCustomer && !selectedCustomer) {
+      setSelectedCustomer(preselectedCustomer);
+    }
+  }, [preselectedCustomer]);
+
+  // Auto-select vehicle from URL param
+  const { data: preselectedVehicle } = useQuery({
+    queryKey: ["preselected-vehicle", orgId, preselectedVehicleId],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/vehicles/${preselectedVehicleId}`,
+      );
+      const json = await res.json();
+      return json.data as Vehicle;
+    },
+    enabled: !!orgId && !!preselectedVehicleId,
+    staleTime: 30_000,
+  });
+
+  useEffect(() => {
+    if (preselectedVehicle && !selectedVehicle) {
+      handleSelectVehicle(preselectedVehicle);
+    }
+  }, [preselectedVehicle]);
 
   const { data: catalogData, isInitialLoading: catalogLoading } =
     useServiceCatalog(orgId);
@@ -348,6 +393,7 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
       return;
     }
     setCustomerCreateError(null);
+    setCustomerCreateConflict(false);
     try {
       const customer = await createCustomerMutation.mutateAsync({
         first_name: quickFirstName.trim(),
@@ -362,7 +408,19 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to create customer";
-      setCustomerCreateError(message);
+      const code =
+        err instanceof Error
+          ? (err as { code?: string }).code
+          : undefined;
+      if (code === "CONFLICT") {
+        setCustomerCreateConflict(true);
+        setCustomerCreateError(
+          "This phone number belongs to an existing customer. Search for them instead.",
+        );
+      } else {
+        setCustomerCreateConflict(false);
+        setCustomerCreateError(message);
+      }
     }
   };
 
@@ -671,6 +729,7 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
     customerSearching,
     creatingCustomer,
     customerCreateError,
+    customerCreateConflict,
     vehicleSearch,
     vehicles,
     selectedVehicle,
@@ -712,7 +771,13 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
         setShowLastVisitSuggestions(false);
       }
     },
-    setShowQuickCustomer,
+    setShowQuickCustomer: (v) => {
+      setShowQuickCustomer(v);
+      if (!v) {
+        setCustomerCreateError(null);
+        setCustomerCreateConflict(false);
+      }
+    },
     setQuickFirstName,
     setQuickLastName,
     setQuickPhone,

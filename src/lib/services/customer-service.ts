@@ -31,7 +31,7 @@ export async function getCustomers(
     async () => {
       let query = supabase
         .from("customers")
-        .select("*", { count: "exact" })
+        .select("id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, total_visits, last_visit_at, source, tags, created_at, updated_at", { count: "exact" })
         .eq("organization_id", orgId)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
@@ -80,7 +80,7 @@ export async function getCustomers(
         page,
         pageSize,
         totalPages: Math.ceil((total ?? 0) / pageSize),
-      };
+      } as unknown as PaginatedResponse<CustomerWithVehicleCount>;
     },
     {
       tags: [cacheTags.customers(orgId)],
@@ -103,7 +103,7 @@ export async function getCustomer(
     async () => {
       const { data, error } = await supabase
         .from("customers")
-        .select("*")
+        .select("id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, portal_token, customer_user_id, created_at, updated_at, created_by, updated_by")
         .eq("id", id)
         .eq("organization_id", orgId)
         .is("deleted_at", null)
@@ -113,7 +113,7 @@ export async function getCustomer(
         throw new NotFoundError("Customer not found");
       }
 
-      return data;
+      return data as unknown as Customer;
     },
     {
       tags: [cacheTags.customers(orgId)],
@@ -156,6 +156,7 @@ export async function createCustomer(
     if (existing) {
       throw new ConflictError(
         "A customer with this phone number already exists",
+        { existingCustomerId: existing.id },
       );
     }
   }
@@ -173,6 +174,7 @@ export async function createCustomer(
     if (existing) {
       throw new ConflictError(
         "A customer with this email already exists",
+        { existingCustomerId: existing.id },
       );
     }
   }
@@ -194,7 +196,7 @@ export async function createCustomer(
       created_by: userId,
       updated_by: userId,
     })
-    .select("*")
+    .select("id, organization_id, type, first_name, last_name, full_name, company_name, contact_person, phone, email, address, notes, source, tags, total_visits, last_visit_at, created_at, updated_at, created_by, updated_by")
     .single();
 
   if (error || !data) {
@@ -209,12 +211,12 @@ export async function createCustomer(
     record_id: data.id,
     user_id: userId,
     organization_id: orgId,
-    new_data: data as unknown as Record<string, unknown>,
+    new_data: data as unknown as unknown as Record<string, unknown>,
   });
 
   revalidateTag(cacheTags.customers(orgId), "max");
 
-  return data;
+  return data as unknown as Customer;
 }
 
 /**
@@ -231,7 +233,7 @@ export async function updateCustomer(
   // Get existing customer
   const { data: existing, error: fetchError } = await supabase
     .from("customers")
-    .select("*")
+    .select("id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, portal_token, customer_user_id, created_at, updated_at, created_by, updated_by")
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
@@ -239,6 +241,44 @@ export async function updateCustomer(
 
   if (fetchError || !existing) {
     throw new NotFoundError("Customer not found");
+  }
+
+  // Check for duplicate phone if changing
+  if (params.phone !== undefined && params.phone?.trim() !== existing.phone) {
+    const { data: phoneDup } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("phone", params.phone?.trim() ?? "")
+      .is("deleted_at", null)
+      .neq("id", id)
+      .maybeSingle();
+
+    if (phoneDup) {
+      throw new ConflictError(
+        "A customer with this phone number already exists",
+        { existingCustomerId: phoneDup.id },
+      );
+    }
+  }
+
+  // Check for duplicate email if changing
+  if (params.email !== undefined && params.email?.trim() !== existing.email) {
+    const { data: emailDup } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("email", params.email?.trim() ?? "")
+      .is("deleted_at", null)
+      .neq("id", id)
+      .maybeSingle();
+
+    if (emailDup) {
+      throw new ConflictError(
+        "A customer with this email already exists",
+        { existingCustomerId: emailDup.id },
+      );
+    }
   }
 
   const updates: Record<string, unknown> = {};
@@ -269,7 +309,7 @@ export async function updateCustomer(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("*")
+    .select("id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, portal_token, customer_user_id, created_at, updated_at, created_by, updated_by")
     .single();
 
   if (error || !data) {
@@ -284,13 +324,13 @@ export async function updateCustomer(
     record_id: id,
     user_id: userId,
     organization_id: orgId,
-    old_data: existing as unknown as Record<string, unknown>,
-    new_data: data as unknown as Record<string, unknown>,
+    old_data: existing as unknown as unknown as Record<string, unknown>,
+    new_data: data as unknown as unknown as Record<string, unknown>,
   });
 
   revalidateTag(cacheTags.customers(orgId), "max");
 
-  return data;
+  return data as unknown as Customer;
 }
 
 /**

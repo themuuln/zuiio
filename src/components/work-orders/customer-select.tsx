@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, User } from "lucide-react";
+import { AlertTriangle, Plus, User } from "lucide-react";
 import { useState } from "react";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,13 @@ export function CustomerSelect({
       });
       const json = await res.json();
       if (json.error) {
-        setCreateError(json.error.message ?? "Failed to create customer");
+        if (json.error.code === "CONFLICT") {
+          setCreateError(
+            "This phone number belongs to an existing customer. Search for them instead.",
+          );
+        } else {
+          setCreateError(json.error.message ?? "Failed to create customer");
+        }
       } else if (json.data) {
         onSelect(json.data);
         setQuickFirstName("");
@@ -189,9 +195,14 @@ export function CustomerSelect({
                   onChange={(e) => setQuickPhone(e.target.value)}
                   className="h-11"
                 />
-                {createError && (
+                {createError && createError.includes("belongs to") ? (
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/20 dark:text-amber-300">
+                    <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+                    <span>{createError}</span>
+                  </div>
+                ) : createError ? (
                   <p className="text-sm text-destructive">{createError}</p>
-                )}
+                ) : null}
                 <div className="flex gap-2">
                   <Button
                     variant="outline"

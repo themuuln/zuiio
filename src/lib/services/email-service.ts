@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import type { InvoiceWithItems } from "@/lib/database.types";
+import type { InvoiceWithItems } from "@/lib/types";
 
 // ── Resend client (lazy-init) ──────────────────────────────────
 

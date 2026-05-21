@@ -66,7 +66,7 @@ export async function finalizeSignup(
     return { status: "already_setup" };
   }
 
-  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const meta = (user.user_metadata ?? {}) as unknown as Record<string, unknown>;
   const orgName =
     (meta?.org_name as string) ||
     (meta?.organization_name as string) ||
@@ -158,7 +158,7 @@ async function bootstrapOrganization(
       created_by: userId,
       updated_by: userId,
     })
-    .select("*")
+    .select("id, name, slug, settings, is_active, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (orgError || !org) {

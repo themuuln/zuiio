@@ -475,7 +475,7 @@ export function BayViewClient() {
           baysWithWork={baysWithWork}
           activeMechanics={activeMechanics}
           waitingCount={waitingCount}
-          userIsMechanic={userIsMechanic}
+          userIsMechanic={userIsMechanic ?? false}
           myJobsOnly={myJobsOnly}
           isRefreshing={isRefreshing}
           hasPendingOps={Object.keys(pendingWoIds).length > 0}

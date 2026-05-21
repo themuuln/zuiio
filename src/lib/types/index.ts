@@ -3,6 +3,7 @@ import type {
   Customer,
   CustomerNoteType,
   DiagnosisLabel,
+  InventoryBalance,
   InventoryMovementType,
   InvoiceStatus,
   Vehicle,
@@ -117,12 +118,6 @@ export type {
   PurchaseOrderUpdate,
   PurchaseOrderItemUpdate,
   StockThresholdUpdate,
-  PartsCars,
-  PartsCarsInsert,
-  PartsCarsUpdate,
-  PartsCarParts,
-  PartsCarPartsInsert,
-  PartsCarPartsUpdate,
 } from "@/lib/database.types";
 export type InventoryBalanceWithAvgCost = InventoryBalance & {
   avg_unit_cost: number;
@@ -132,7 +127,7 @@ export type PartsCarLocationGroup =
   | "engine" | "transmission" | "suspension" | "brake"
   | "body" | "interior" | "electrical" | "cooling"
   | "exhaust" | "fuel" | "steering" | "ac" | "other";
-export type { PartsCars, PartsCarsInsert, PartsCarsUpdate, PartsCarParts, PartsCarPartsInsert, PartsCarPartsUpdate };
+export type { PartsCars, PartsCarsInsert, PartsCarsUpdate, PartsCarParts, PartsCarPartsInsert, PartsCarPartsUpdate } from "@/lib/database.types";
 
 // ── API Response Wrappers ────────────────────────────────────────
 
@@ -681,7 +676,9 @@ export interface PartsCatalogItem {
   description: string | null;
   unit: string;
   default_price: number | null;
+  purchase_price: number | null;
   is_active: boolean;
+  popularity_score?: number;
   created_at: string;
   updated_at: string;
 }

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { BayListView } from "./_bay-list-view";
 import { BaySlot } from "./bay-slot";
 import type { ColumnsMode, ViewMode } from "./bay-view-toolbar";
-import type useTranslations from "next-intl";
+import type { useTranslations } from "next-intl";
 
 interface BayViewBodyProps {
   bays: BaySlotData[];

@@ -21,7 +21,7 @@ export async function getCustomerNotes(
     async () => {
       const { data, error } = await supabase
         .from("customer_notes")
-        .select("*")
+        .select("id, organization_id, customer_id, content, type, created_by, created_at, updated_at, deleted_at")
         .eq("organization_id", orgId)
         .eq("customer_id", customerId)
         .is("deleted_at", null)
@@ -56,7 +56,7 @@ export async function createCustomerNote(
       type: params.type ?? "general",
       created_by: userId,
     })
-    .select("*")
+    .select("id, organization_id, customer_id, content, type, created_by, created_at, updated_at")
     .single();
 
   if (error || !data) {
@@ -71,12 +71,12 @@ export async function createCustomerNote(
     record_id: data.id,
     user_id: userId,
     organization_id: orgId,
-    new_data: data as unknown as Record<string, unknown>,
+    new_data: data as unknown as unknown as Record<string, unknown>,
   });
 
   revalidateTag(cacheTags.customerNotes(orgId, customerId), "max");
 
-  return data;
+  return data as unknown as CustomerNote;
 }
 
 /**

@@ -10,10 +10,11 @@ import {
   Maximize2,
   Trash2,
 } from "lucide-react";
+// biome-ignore lint/a11y/useSemanticElements: span required to prevent nested <button> inside TooltipTrigger
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
-import { cn } from "@/lib/utils";
+import { cn, formatPlateNumber } from "@/lib/utils";
 import { MechanicBadge } from "./mechanic-badge";
 import {
   Tooltip,
@@ -184,7 +185,7 @@ export function BaySlot({
               <div className="flex-1 min-w-0 space-y-0.5">
                 <div className="flex items-center gap-2">
                   <span className="truncate text-sm font-semibold text-foreground/90">
-                    {v.plate_number}
+                    {formatPlateNumber(v.plate_number)}
                   </span>
                   <span className="shrink-0 rounded bg-muted/60 px-1 py-0.5 text-[9px] font-semibold text-muted-foreground">
                     {v.make}
@@ -223,59 +224,67 @@ export function BaySlot({
                   wo.status !== "Completed" &&
                   wo.status !== "Cancelled" && (
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
+                      <TooltipTrigger>
+                        <span
                           onClick={() => onStatusChange(wo.id, "Ready for Pickup")}
-                          className="flex items-center justify-center rounded-md size-7 text-green-600 bg-green-500/10 ring-1 ring-green-500/15 transition-all hover:bg-green-500/20 active:scale-90"
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onStatusChange(wo.id, "Ready for Pickup"); }}
+                          className="flex items-center justify-center rounded-md size-7 text-green-600 bg-green-500/10 ring-1 ring-green-500/15 transition-all hover:bg-green-500/20 active:scale-90 cursor-pointer"
                           aria-label={t("markReady")}
+                          role="button"
+                          tabIndex={0}
                         >
                           <CheckCircle2 className="size-3.5" />
-                        </button>
+                        </span>
                       </TooltipTrigger>
                       <TooltipContent side="top">{t("markReady")}</TooltipContent>
                     </Tooltip>
                   )}
                 {wo.status === "Ready for Pickup" && (
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
+                    <TooltipTrigger>
+                      <span
                         onClick={() => onStatusChange(wo.id, "Completed")}
-                        className="flex items-center justify-center rounded-md size-7 text-green-600 bg-green-500/10 ring-1 ring-green-500/15 transition-all hover:bg-green-500/20 active:scale-90"
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onStatusChange(wo.id, "Completed"); }}
+                        className="flex items-center justify-center rounded-md size-7 text-green-600 bg-green-500/10 ring-1 ring-green-500/15 transition-all hover:bg-green-500/20 active:scale-90 cursor-pointer"
                         aria-label={t("complete")}
+                        role="button"
+                        tabIndex={0}
                       >
                         <CheckCircle2 className="size-3.5" />
-                      </button>
+                      </span>
                     </TooltipTrigger>
                     <TooltipContent side="top">{t("complete")}</TooltipContent>
                   </Tooltip>
                 )}
                 {wo.status !== "Completed" && wo.status !== "Cancelled" && (
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
+                    <TooltipTrigger>
+                      <span
                         onClick={() => onRemoveFromBay(wo.id)}
-                        className="flex items-center justify-center rounded-md size-7 text-destructive bg-destructive/10 ring-1 ring-destructive/15 transition-all hover:bg-destructive/20 active:scale-90"
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onRemoveFromBay(wo.id); }}
+                        className="flex items-center justify-center rounded-md size-7 text-destructive bg-destructive/10 ring-1 ring-destructive/15 transition-all hover:bg-destructive/20 active:scale-90 cursor-pointer"
                         aria-label={t("removeFromBay")}
+                        role="button"
+                        tabIndex={0}
                       >
                         <Trash2 className="size-3" />
-                      </button>
+                      </span>
                     </TooltipTrigger>
                     <TooltipContent side="top">{t("removeFromBay")}</TooltipContent>
                   </Tooltip>
                 )}
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
+                  <TooltipTrigger>
+                    <span
                       onClick={() => onOpenDetail(wo.id)}
-                      className="flex items-center justify-center rounded-md size-7 text-muted-foreground bg-muted/50 ring-1 ring-border/40 transition-all hover:bg-muted/80 hover:text-foreground active:scale-90"
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpenDetail(wo.id); }}
+                      className="flex items-center justify-center rounded-md size-7 text-muted-foreground bg-muted/50 ring-1 ring-border/40 transition-all hover:bg-muted/80 hover:text-foreground active:scale-90 cursor-pointer"
                       aria-label={t("manage")}
+                      role="button"
+                      tabIndex={0}
                     >
                       <Maximize2 className="size-3" />
-                    </button>
+                    </span>
                   </TooltipTrigger>
                   <TooltipContent side="top">{t("manage")}</TooltipContent>
                 </Tooltip>

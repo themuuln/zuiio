@@ -37,7 +37,6 @@ export default function RadialChartInner({
           <RadialBar
             key={entry.name}
             dataKey={dataKey}
-            data={[entry]}
             fill={entry.fill ?? `var(--color-${entry.name.toLowerCase()})`}
             cornerRadius={barSize / 2}
             background={{ fill: "var(--color-muted)" }}

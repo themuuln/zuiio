@@ -163,7 +163,7 @@ export function useBayActionHandlers({
     const prevCount = data.bayCount;
     const prevBays = data.bays;
 
-    setData(prev => ({ ...prev, bayCount: count, bays: Array.from({ length: count }, (_, i) => {
+    setData(prev => ({ ...prev!, bayCount: count, bays: Array.from({ length: count }, (_, i) => {
       const existing = data.bays[i];
       return existing ?? { bayNumber: i + 1, workOrder: null };
     }) }));
@@ -174,7 +174,7 @@ export function useBayActionHandlers({
       );
       await updateBayCount(count);
     } catch {
-      setData(prev => ({ ...prev, bayCount: prevCount, bays: prevBays }));
+      setData(prev => ({ ...prev!, bayCount: prevCount, bays: prevBays }));
       setToast({
         message: "Failed to update bay count — reverted",
         variant: "error",

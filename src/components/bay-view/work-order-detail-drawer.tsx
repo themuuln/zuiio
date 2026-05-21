@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "@/lib/i18n/navigation";
 import { MechanicSelect } from "@/components/mechanic-select";
@@ -599,7 +599,7 @@ export function WorkOrderDetailDrawer({
         {error && !loading && (
           <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
             <p className="text-sm text-muted-foreground">{error}</p>
-            <Button variant="outline" size="sm" onClick={fetchWo}>
+            <Button variant="outline" size="sm" onClick={() => fetchWo()}>
               Retry
             </Button>
           </div>

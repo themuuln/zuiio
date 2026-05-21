@@ -20,7 +20,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { Vehicle, WorkOrder } from "@/lib/database.types";
-import { cn } from "@/lib/utils";
+import { cn, formatPlateNumber } from "@/lib/utils";
 
 function getWaitTime(createdAt: string): { text: string; urgent: boolean } {
   const minutes = Math.floor(
@@ -98,9 +98,8 @@ export function QueuedVehicleCard({
       tabIndex={0}
       onClick={() => onItemClick?.(workOrder)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onItemClick?.(workOrder); }}
-      data-slot="touch-target"
       className={cn(
-        "relative flex items-center gap-2 overflow-hidden rounded-lg border border-border bg-card p-2 cursor-pointer active:cursor-grabbing select-none transition-all duration-200 touch-manipulation animate-[scale-in_0.25s_ease-out]",
+        "relative flex items-start gap-2.5 rounded-lg border border-border bg-card p-2.5 cursor-pointer active:cursor-grabbing select-none transition-all duration-200 touch-manipulation animate-[scale-in_0.25s_ease-out]",
         isDragging && "opacity-50 shadow-xl z-50 scale-[1.01]",
         !isDragging && "hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5",
         waitInfo.urgent &&
@@ -111,7 +110,7 @@ export function QueuedVehicleCard({
     >
       <div
         className={cn(
-          "flex items-center justify-center size-8 rounded-md shrink-0",
+          "flex items-center justify-center size-8 rounded-md shrink-0 mt-0.5",
           waitInfo.urgent ? "bg-amber-100 dark:bg-amber-900/30" : "bg-muted",
         )}
       >
@@ -122,23 +121,31 @@ export function QueuedVehicleCard({
           )}
         />
       </div>
+
       <div className="flex-1 min-w-0">
         {v ? (
           <>
-            <div className="text-xs font-semibold truncate flex items-center gap-1">
-              {v.plate_number}
+            <div className="flex items-center gap-1.5">
+              <span
+                className={cn(
+                  "text-xs font-semibold truncate",
+                  waitInfo.urgent && "text-amber-700 dark:text-amber-300",
+                )}
+              >
+                {formatPlateNumber(v.plate_number)}
+              </span>
               {waitInfo.urgent && (
-                <span className="size-1 rounded-full bg-amber-500 animate-pulse" />
+                <span className="size-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
               )}
             </div>
-            <div className="text-[10px] text-muted-foreground truncate">
+            <div className="text-[11px] text-muted-foreground/70 truncate">
               {v.make} {v.model}
               {v.year ? ` · ${v.year}` : ""}
             </div>
             {mechanicName && (
-              <div className="flex items-center gap-1 mt-0.5">
-                <span className="size-1 rounded-full bg-primary/40" />
-                <span className="text-[9px] text-primary/70 truncate font-medium">
+              <div className="flex items-center gap-1 mt-1">
+                <span className="size-1 rounded-full bg-primary/40 shrink-0" />
+                <span className="text-[10px] text-primary/70 truncate font-medium">
                   {mechanicName}
                 </span>
               </div>
@@ -149,13 +156,14 @@ export function QueuedVehicleCard({
             <p className="truncate text-xs font-medium">
               {workOrder.complaint || `WO ${workOrder.id.slice(0, 8)}`}
             </p>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-[11px] text-muted-foreground">
               {t("noVehicle")}
             </p>
           </div>
         )}
       </div>
-      <div className="flex items-center gap-1 shrink-0">
+
+      <div className="flex flex-col items-center gap-1.5 shrink-0">
         {isPending && (
           <Loader2 className="size-3.5 animate-spin text-muted-foreground/50" />
         )}
@@ -175,7 +183,7 @@ export function QueuedVehicleCard({
         )}
         <div
           className={cn(
-            "flex items-center gap-0.5 text-[10px] font-medium",
+            "flex items-center gap-0.5 text-[10px] font-medium whitespace-nowrap",
             waitInfo.urgent ? "text-amber-600" : "text-muted-foreground/50",
           )}
         >

@@ -1,6 +1,5 @@
 import { cacheTags, cacheDurations } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
-import type { WorkOrderDetail } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 import type {
@@ -15,6 +14,7 @@ import type {
   TechnicianPerformance,
   TopService,
   WeeklyReport,
+  WorkOrderDetail,
   WorkOrderProfit,
   WorkOrderStatusDistribution,
 } from "@/lib/types";
@@ -782,9 +782,11 @@ export async function getDashboardData(
   const summaryComparison: DashboardSummary | null = prevSummary
     ? {
         ...prevSummary,
-        activeWorkOrders: 0, // not comparable across periods meaningfully
+        activeWorkOrders: 0,
         totalCustomers: 0,
         totalVehicles: 0,
+        grossProfit: 0,
+        marginPercent: 0,
       }
     : null;
 
@@ -1275,22 +1277,22 @@ async function getRecentWorkOrdersBatched(
   const [wos, services, parts, statusHistory] = await Promise.all([
     supabase
       .from("work_orders")
-      .select("*")
+      .select("id, organization_id, branch_id, customer_id, vehicle_id, mechanic_id, status, complaint, diagnosis, description, notes, mechanic_notes, diagnosis_label_id, bay_number, queue_order, odometer_at_service, discount_amount, discount_percentage, discount_total, subtotal, total, completed_at, started_at, created_at, updated_at, created_by, updated_by")
       .in("id", woIds)
       .is("deleted_at", null),
     supabase
       .from("work_order_services")
-      .select("*")
+      .select("id, work_order_id, organization_id, service_catalog_id, service_name, description, quantity, unit_price, unit_cost, discount_amount, discount_percentage, final_price, notes, created_at, created_by")
       .in("work_order_id", woIds)
       .order("created_at"),
     supabase
       .from("work_order_parts")
-      .select("*")
+      .select("id, work_order_id, organization_id, part_id, part_name, part_number, quantity, unit_price, unit_cost, discount_amount, discount_percentage, final_price, notes, created_at, created_by")
       .in("work_order_id", woIds)
       .order("created_at"),
     supabase
       .from("work_order_status_history")
-      .select("*")
+      .select("id, work_order_id, organization_id, status, previous_status, notes, created_by, created_at")
       .in("work_order_id", woIds)
       .order("created_at", { ascending: false }),
   ]);
@@ -1311,10 +1313,10 @@ async function getRecentWorkOrdersBatched(
 
   const [customers, vehicles] = await Promise.all([
     customerIds.length > 0
-      ? supabase.from("customers").select("*").in("id", customerIds)
+      ? supabase.from("customers").select("id, organization_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, created_at").in("id", customerIds)
       : { data: [] as any[] },
     vehicleIds.length > 0
-      ? supabase.from("vehicles").select("*").in("id", vehicleIds)
+      ? supabase.from("vehicles").select("id, customer_id, plate_number, vin, make, model, year, color, engine, fuel_type, transmission, odometer, notes").in("id", vehicleIds)
       : { data: [] as any[] },
   ]);
 
@@ -1517,11 +1519,11 @@ export async function getDailyTimeline(orgId: string): Promise<TimelineEvent[]> 
     { customerName: string | null; vehiclePlate: string | null; bayNumber: number | null }
   >();
   for (const wo of wos) {
-    const customer = Array.isArray(wo.customer) ? wo.customer[0] : (wo.customer as Record<string, string> | null);
-    const vehicle = Array.isArray(wo.vehicle) ? wo.vehicle[0] : (wo.vehicle as Record<string, string> | null);
+    const customer = Array.isArray(wo.customer) ? wo.customer[0] : (wo.customer as unknown as unknown as Record<string, string> | null);
+    const vehicle = Array.isArray(wo.vehicle) ? wo.vehicle[0] : (wo.vehicle as unknown as unknown as Record<string, string> | null);
     woMap.set(wo.id as string, {
-      customerName: customer ? `${(customer as Record<string, string>).first_name ?? ""} ${(customer as Record<string, string>).last_name ?? ""}`.trim() || null : null,
-      vehiclePlate: vehicle ? ((vehicle as Record<string, string>).plate_number ?? null) : null,
+      customerName: customer ? `${(customer as unknown as Record<string, string>).first_name ?? ""} ${(customer as unknown as Record<string, string>).last_name ?? ""}`.trim() || null : null,
+      vehiclePlate: vehicle ? ((vehicle as unknown as Record<string, string>).plate_number ?? null) : null,
       bayNumber: wo.bay_number ?? null,
     });
   }

@@ -117,7 +117,7 @@ export async function createServiceSchedule(
       created_by: userId,
       updated_by: userId,
     })
-    .select("*")
+    .select("id, organization_id, branch_id, vehicle_id, service_catalog_id, service_name, interval_months, interval_km, last_service_date, last_service_odometer, next_due_date, next_due_km, reminder_enabled, notes, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data)
@@ -125,7 +125,7 @@ export async function createServiceSchedule(
 
   revalidateTag(cacheTags.serviceSchedules(orgId), "max");
 
-  return data;
+  return data as unknown as VehicleServiceSchedule;
 }
 
 export async function updateServiceSchedule(
@@ -176,7 +176,7 @@ export async function updateServiceSchedule(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("*")
+    .select("id, organization_id, branch_id, vehicle_id, service_catalog_id, service_name, interval_months, interval_km, last_service_date, last_service_odometer, next_due_date, next_due_km, reminder_enabled, notes, created_by, updated_by, created_at, updated_at")
     .single();
 
   if (error || !data)
@@ -185,7 +185,7 @@ export async function updateServiceSchedule(
   revalidateTag(cacheTags.serviceSchedules(orgId), "max");
   revalidateTag(cacheTags.serviceSchedule(id), "max");
 
-  return data;
+  return data as unknown as VehicleServiceSchedule;
 }
 
 export async function deleteServiceSchedule(
@@ -406,7 +406,7 @@ export async function sendPendingReminders(
   if (error || !logs || logs.length === 0) return 0;
 
   const [{ sendReminderEmail }, { data: org }] = await Promise.all([
-    import("@/lib/services/email-service") as Promise<{ sendReminderEmail: typeof import("@/lib/services/email-service").sendReminderEmail }>,
+    import("@/lib/services/email-service") as unknown as Promise<{ sendReminderEmail: typeof import("@/lib/services/email-service").sendReminderEmail }>,
     supabase
       .from("organizations")
       .select("name")
@@ -455,6 +455,10 @@ export async function sendPendingReminders(
             orgName,
             dueDate,
           });
+          await supabase
+            .from("reminder_logs")
+            .update({ status: "sent", sent_at: new Date().toISOString() })
+            .eq("id", log.id);
           return true;
         } else {
           console.warn(`Reminder ${log.id}: No recipient email`);
@@ -508,7 +512,7 @@ export async function createReminderLog(
       scheduled_at: params.scheduled_at ?? new Date().toISOString(),
       error_message: params.error_message ?? null,
     })
-    .select("*")
+    .select("id, organization_id, branch_id, vehicle_service_schedule_id, vehicle_id, customer_id, service_catalog_id, service_name, reminder_type, channel, status, scheduled_at, sent_at, error_message, created_at")
     .single();
 
   if (error)
@@ -516,5 +520,5 @@ export async function createReminderLog(
 
   revalidateTag(cacheTags.reminderLogs(orgId), "max");
 
-  return data;
+  return data as unknown as ReminderLog;
 }
