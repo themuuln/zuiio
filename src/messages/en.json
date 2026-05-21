@@ -39,9 +39,20 @@
     "grandTotal": "Grand Total",
     "actions": "Actions",
     "filter": "Filter",
-    "clearFilter": "Clear Filter"
+    "clearFilter": "Clear Filter",
+    "logout": "Logout",
+    "viewAll": "View All",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email"
   },
   "auth": {
+    "setup": {
+      "title": "Set up your organization",
+      "subtitle": "Your account has been created. Let's set up your organization.",
+      "error": "Setup failed",
+      "retry": "Retry"
+    },
     "signIn": "Sign in",
     "signUp": "Sign up",
     "signOut": "Sign out",
@@ -378,8 +389,7 @@
     "complaint": "Complaint",
     "diagnosis": "Diagnosis",
     "internalNotes": "Internal Notes",
-    "email": "Email",
-    "phone": "Phone"
+    "email": "Email"
   },
   "portal": {
     "dashboard": "Dashboard",
@@ -399,6 +409,13 @@
     "noServiceHistory": "No service history yet.",
     "invoicesDesc": "View and pay your invoices.",
     "noInvoices": "No invoices yet.",
+    "payNow": "Pay Now",
+    "payInvoice": "Pay Invoice",
+    "bankTransferInfo": "Transfer to the following bank account:",
+    "confirmPayment": "I have made the payment",
+    "paymentSuccess": "Payment recorded successfully",
+    "paymentFailed": "Failed to record payment. Please try again.",
+    "paymentNote": "After transferring, click the button below to confirm. Our team will verify the payment within 24 hours.",
     "settingsDesc": "Manage your portal account.",
     "setPassword": "Set Password",
     "setPasswordDesc": "Create a password so you can log in with email next time.",
@@ -534,7 +551,8 @@
     "lastPrices": "Last prices: {prices}",
     "complaint": "Complaint / Diagnosis",
     "complaintPlaceholder": "Describe the issue reported by the customer...",
-    "diagnosisLabelPlaceholder": "Select diagnosis label..."
+    "diagnosisLabelPlaceholder": "Select diagnosis label...",
+    "cancel": "Cancel"
   },
   "inventory": {
     "title": "Inventory",
@@ -591,6 +609,10 @@
     "searchSuppliers": "Search suppliers by name, contact, or phone...",
     "searchPOs": "Search POs by order #, supplier, or status...",
     "popularity": "Popularity",
+    "items": "Items",
+    "part": "Part",
+    "quantity": "Quantity",
+    "notesPlaceholder": "Enter notes for this PO",
     "addItem": "Add item",
     "noItems": "No items",
     "noSupplier": "No supplier",
@@ -616,6 +638,13 @@
     "totalAmount": "Total Amount",
     "orderNumberRequired": "Order number is required",
     "addAtLeastOneItem": "Add at least one item",
+    "all": "All",
+    "supplier": "Supplier",
+    "contactPerson": "Contact Person",
+    "address": "Address",
+    "suppliers": "suppliers",
+    "delete": "Delete",
+    "actions": "Actions",
     "selectPartForAllItems": "Select a part for all items",
     "failedToCreate": "Failed to create",
     "orderDate": "Order Date",
@@ -1397,6 +1426,9 @@
       "pendingDescription": "Invitations waiting for acceptance",
       "noPendingInvites": "No pending invitations",
       "pending": "Pending",
+      "roleLabel": "Role",
+      "changeRole": "Change Role",
+      "roleUpdated": "Role updated successfully",
       "copyLink": "Copy invite link",
       "cancelInvite": "Cancel invitation",
       "resendInvite": "Resend invitation"
@@ -1439,7 +1471,8 @@
     "lastSoldShort": "Last: {price}",
     "lastPrices": "Last prices: {prices}",
     "complaint": "Complaint",
-    "diagnosis": "Diagnosis"
+    "diagnosis": "Diagnosis",
+    "grandTotal": "Grand Total"
   },
   "partsCars": {
     "title": "Parts Cars",
@@ -1474,7 +1507,9 @@
       "completeDisassembly": "Complete Disassembly",
       "completing": "Completing...",
       "quickAddPart": "Quick Add Part",
-      "addPart": "Add"
+      "addPart": "Add",
+      "publishToCatalog": "Push to Catalog",
+      "publishing": "Publishing..."
     },
     "partForm": {
       "name": "Part Name",
@@ -1510,7 +1545,9 @@
       "completed": "Disassembly completed",
       "completeError": "Failed to complete",
       "addError": "Failed to add part",
-      "deleteError": "Failed to delete"
+      "deleteError": "Failed to delete",
+      "published": "{count} parts published to catalog",
+      "publishError": "Failed to publish parts"
     },
     "locations": {
       "engine": "Engine",

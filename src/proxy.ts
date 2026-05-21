@@ -8,7 +8,10 @@ const handleI18n = createMiddleware(routing);
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/guide")) {
+  if (
+    pathname.startsWith("/guide") ||
+    pathname.startsWith("/invoice/")
+  ) {
     return NextResponse.next();
   }
 
