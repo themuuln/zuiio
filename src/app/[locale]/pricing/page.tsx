@@ -22,12 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Pricing | TOLOM",
-  description: "TOLOM pricing plans",
-};
 
 type FeatureStatus = boolean | "addon";
 
@@ -249,6 +244,7 @@ export default function PricingPage() {
         </div>
       </header>
 
+      <main>
       {/* ── Hero ────────────────────────────────────────────── */}
       <section className="border-b bg-gradient-to-b from-muted/30 to-background px-4 pt-16 pb-12 text-center sm:px-6 sm:pt-24 sm:pb-16">
         <div className="mx-auto max-w-3xl">
@@ -347,7 +343,7 @@ export default function PricingPage() {
                         <FeatureIcon status={f.included} />
                         <span
                           className={
-                            f.included ? "" : "text-muted-foreground/50"
+                            f.included ? "" : "text-gray-500 dark:text-gray-400"
                           }
                         >
                           {f.text}
@@ -412,9 +408,9 @@ export default function PricingPage() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="pb-3 pr-4 font-medium text-muted-foreground" />
+                  <th className="pb-3 pr-4 font-medium text-muted-foreground" aria-label="Feature" />
                   <th className="pb-3 px-4 font-medium text-muted-foreground">
-                    {t("coreName")}
+                    {t("starterName")}
                   </th>
                   <th className="pb-3 px-4 font-semibold">{t("proName")}</th>
                   <th className="pb-3 pl-4 font-medium text-muted-foreground">
@@ -478,6 +474,7 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* ── Footer ──────────────────────────────────────────── */}
       <footer className="border-t bg-background px-4 py-8 text-center text-xs text-muted-foreground sm:px-6">
