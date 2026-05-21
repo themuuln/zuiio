@@ -88,11 +88,17 @@ export function handleApiError(error: unknown): NextResponse {
   // Log the unexpected error server-side but never expose internals
   console.error("Unhandled API error:", error);
 
+  // In development, expose the error message for debugging
+  const message =
+    process.env.NODE_ENV === "development" && error instanceof Error
+      ? error.message
+      : "An unexpected error occurred";
+
   return NextResponse.json(
     {
       error: {
         code: "INTERNAL_ERROR",
-        message: "An unexpected error occurred",
+        message,
       },
     },
     { status: 500 },

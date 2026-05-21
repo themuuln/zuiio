@@ -8,7 +8,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-Deno.serve(async () => {
+Deno.serve({ timeout: 300000 }, async () => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   // Find all subscriptions that are past expiry
@@ -17,7 +17,8 @@ Deno.serve(async () => {
     .select("id, organization_id, status")
     .in("status", ["trial", "active"])
     .lt("expires_at", new Date().toISOString())
-    .is("deleted_at", null);
+    .is("deleted_at", null)
+    .limit(1000);
 
   if (fetchError) {
     console.error("Failed to fetch expired subscriptions:", fetchError);

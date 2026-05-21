@@ -993,8 +993,6 @@ export type Database = {
           default_tax_rate: number | null
           invoice_prefix: string | null
           organization_id: string
-          invoice_prefix: string | null
-          organization_id: string
           settings: Json | null
           timezone: string | null
           updated_at: string
@@ -3636,6 +3634,94 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+export type WorkOrder = Tables<"work_orders">;
+export type WorkOrderInsert = TablesInsert<"work_orders">;
+export type WorkOrderUpdate = TablesUpdate<"work_orders">;
+export type WorkOrderService = Tables<"work_order_services">;
+export type WorkOrderServiceInsert = TablesInsert<"work_order_services">;
+export type WorkOrderPart = Tables<"work_order_parts">;
+export type WorkOrderPartInsert = TablesInsert<"work_order_parts">;
+export type WorkOrderStatus = "New" | "Diagnosing" | "In Progress" | "Ready for Pickup" | "Completed" | "Cancelled";
+export type WorkOrderStatusHistory = Tables<"work_order_status_history">;
+export type Customer = Tables<"customers">;
+export type CustomerInsert = TablesInsert<"customers">;
+export type CustomerUpdate = TablesUpdate<"customers">;
+export type CustomerNote = Tables<"customer_notes">;
+export type CustomerCommunication = Tables<"customer_communications">;
+export type Vehicle = Tables<"vehicles">;
+export type VehicleInsert = TablesInsert<"vehicles">;
+export type VehicleUpdate = TablesUpdate<"vehicles">;
+export type VehicleOwner = Tables<"vehicle_owners">;
+export type VehicleModel = Tables<"vehicle_models">;
+export type VehicleModelPart = Tables<"vehicle_model_parts">;
+export type VehicleServiceSchedule = Tables<"vehicle_service_schedules">;
+export type Organization = Tables<"organizations">;
+export type OrganizationInsert = TablesInsert<"organizations">;
+export type OrganizationUpdate = TablesUpdate<"organizations">;
+export type OrganizationUser = Tables<"organization_users">;
+export type OrganizationSettings = Tables<"organization_settings">;
+export type Branch = Tables<"branches">;
+export type Profile = Tables<"profiles">;
+export type ProfileInsert = TablesInsert<"profiles">;
+export type Role = Tables<"roles">;
+export type Permission = Tables<"permissions">;
+export type AuditLog = Tables<"audit_logs">;
+export type AuditLogInsert = TablesInsert<"audit_logs">;
+export type FeatureFlag = Tables<"feature_flags">;
+export type OrgInvite = Tables<"org_invites">;
+export type Supplier = Tables<"suppliers">;
+export type SupplierInsert = TablesInsert<"suppliers">;
+export type SupplierUpdate = TablesUpdate<"suppliers">;
+export type PurchaseOrder = Tables<"purchase_orders">;
+export type PurchaseOrderInsert = TablesInsert<"purchase_orders">;
+export type PurchaseOrderUpdate = TablesUpdate<"purchase_orders">;
+export type PurchaseOrderItem = Tables<"purchase_order_items">;
+export type PurchaseOrderItemInsert = TablesInsert<"purchase_order_items">;
+export type PurchaseOrderItemUpdate = TablesUpdate<"purchase_order_items">;
+export type InventoryMovement = Tables<"inventory_movements">;
+export type MechanicAssignment = Tables<"mechanic_assignments">;
+export type PartPriceHistory = Tables<"part_price_history">;
+export type ServicePriceHistory = Tables<"service_price_history">;
+export type ServiceCatalog = Tables<"service_catalog">;
+export type ServiceCatalogInsert = TablesInsert<"service_catalog">;
+export type ServiceCatalogUpdate = TablesUpdate<"service_catalog">;
+export type PartsCatalog = Tables<"parts_catalog">;
+export type StockThreshold = Tables<"stock_thresholds">;
+export type StockThresholdInsert = TablesInsert<"stock_thresholds">;
+export type StockThresholdUpdate = TablesUpdate<"stock_thresholds">;
+export type PartsCars = Tables<"parts_cars">;
+export type PartsCarsInsert = TablesInsert<"parts_cars">;
+export type PartsCarsUpdate = TablesUpdate<"parts_cars">;
+export type PartsCarParts = Tables<"parts_car_parts">;
+export type PartsCarPartsInsert = TablesInsert<"parts_car_parts">;
+export type PartsCarPartsUpdate = TablesUpdate<"parts_car_parts">;
+export type ReminderLog = Tables<"reminder_logs">;
+export type SubscriptionPlan = Tables<"subscription_plans">;
+export type Invoice = Tables<"invoices">;
+export type InvoiceInsert = TablesInsert<"invoices">;
+export type InvoiceUpdate = TablesUpdate<"invoices">;
+export type InvoiceItem = Tables<"invoice_items">;
+export type InvoicePayment = Tables<"invoice_payments">;
+export type DiagnosisLabel = Tables<"diagnosis_labels">;
+export type ServiceCompletionData = Tables<"service_completion_data">;
+export type InventoryBalance = Tables<"inventory_balances">;
+export type InvoiceStatus = Enums<"invoice_status">;
+export type PlanType = Enums<"plan_type">;
+export type InviteStatus = string;
+export type PermissionAction = Enums<"permission_action">;
+export type InventoryMovementType = Enums<"inventory_movement_type">;
+export type CustomerNoteType = string;
+export type CustomerType = string;
+export type BodyType = string;
+export type DrivetrainType = string;
+export type FuelType = string;
+export type TransmissionType = string;
+export type WorkOrderRow = Tables<"work_orders">;
+export type InvoiceWithItems = Invoice & {
+  items: InvoiceItem[];
+  payments: InvoicePayment[];
+};
+
 export const Constants = {
   graphql_public: {
     Enums: {},
@@ -3679,6 +3765,3 @@ export const Constants = {
     },
   },
 } as const
-Initialising login role...
-A new version of Supabase CLI is available: v2.100.0 (currently installed v2.98.2)
-We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
