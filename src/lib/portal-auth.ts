@@ -33,7 +33,7 @@ export async function authenticatePortalRequest(
     const supabase = await createClient();
     const { data } = await supabase
       .from("customers")
-      .select("*")
+      .select("id, organization_id, first_name, last_name, phone, email, portal_token, customer_user_id")
       .eq("portal_token", tokenMatch[1])
       .is("deleted_at", null)
       .maybeSingle();
@@ -47,7 +47,7 @@ export async function authenticatePortalRequest(
   if (user) {
     const { data } = await supabase
       .from("customers")
-      .select("*")
+      .select("id, organization_id, first_name, last_name, phone, email, portal_token")
       .eq("customer_user_id", user.id)
       .is("deleted_at", null)
       .maybeSingle();

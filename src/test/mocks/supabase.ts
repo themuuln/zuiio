@@ -40,7 +40,7 @@ export function createMockSupabaseClient() {
       limit: vi.fn().mockReturnThis(),
       range: vi.fn().mockReturnThis(),
       single: vi.fn(),
-      maybeSingle: vi.fn(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
       throwOnError: vi.fn().mockReturnThis(),
       setHeader: vi.fn().mockReturnThis(),
     }),
