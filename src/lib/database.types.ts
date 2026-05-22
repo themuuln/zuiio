@@ -5,6 +5,7 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -475,6 +476,159 @@ export type Database = {
           },
         ]
       }
+      expense_categories: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          description: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          branch_id: string | null
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          description: string
+          due_date: string | null
+          expense_date: string
+          id: string
+          is_recurring: boolean
+          notes: string | null
+          organization_id: string
+          paid_at: string | null
+          payment_method: string | null
+          receipt_url: string | null
+          recurrence_interval: string | null
+          reference_number: string | null
+          tax_amount: number
+          updated_at: string
+          updated_by: string | null
+          vendor_name: string | null
+        }
+        Insert: {
+          amount: number
+          branch_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          description: string
+          due_date?: string | null
+          expense_date?: string
+          id?: string
+          is_recurring?: boolean
+          notes?: string | null
+          organization_id: string
+          paid_at?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          recurrence_interval?: string | null
+          reference_number?: string | null
+          tax_amount?: number
+          updated_at?: string
+          updated_by?: string | null
+          vendor_name?: string | null
+        }
+        Update: {
+          amount?: number
+          branch_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string
+          due_date?: string | null
+          expense_date?: string
+          id?: string
+          is_recurring?: boolean
+          notes?: string | null
+          organization_id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          recurrence_interval?: string | null
+          reference_number?: string | null
+          tax_amount?: number
+          updated_at?: string
+          updated_by?: string | null
+          vendor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_flags: {
         Row: {
           created_at: string
@@ -639,6 +793,7 @@ export type Database = {
           invoice_id: string
           method: string
           notes: string | null
+          organization_id: string | null
           paid_at: string
           reference: string | null
         }
@@ -650,6 +805,7 @@ export type Database = {
           invoice_id: string
           method?: string
           notes?: string | null
+          organization_id?: string | null
           paid_at?: string
           reference?: string | null
         }
@@ -661,6 +817,7 @@ export type Database = {
           invoice_id?: string
           method?: string
           notes?: string | null
+          organization_id?: string | null
           paid_at?: string
           reference?: string | null
         }
@@ -670,6 +827,13 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -872,6 +1036,79 @@ export type Database = {
           },
         ]
       }
+      mechanic_commission_rules: {
+        Row: {
+          commission_type: string
+          commission_value: number
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          id: string
+          is_active: boolean
+          max_commission: number | null
+          mechanic_id: string | null
+          min_commission: number | null
+          name: string
+          organization_id: string
+          priority: number
+          updated_at: string
+        }
+        Insert: {
+          commission_type: string
+          commission_value?: number
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_commission?: number | null
+          mechanic_id?: string | null
+          min_commission?: number | null
+          name: string
+          organization_id: string
+          priority?: number
+          updated_at?: string
+        }
+        Update: {
+          commission_type?: string
+          commission_value?: number
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_commission?: number | null
+          mechanic_id?: string | null
+          min_commission?: number | null
+          name?: string
+          organization_id?: string
+          priority?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mechanic_commission_rules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mechanic_commission_rules_mechanic_id_fkey"
+            columns: ["mechanic_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mechanic_commission_rules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mechanic_daily_reports: {
         Row: {
           created_at: string
@@ -921,6 +1158,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "mechanic_daily_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mechanic_time_logs: {
+        Row: {
+          clock_in: string
+          clock_out: string | null
+          created_at: string
+          date: string
+          id: string
+          mechanic_id: string
+          notes: string | null
+          organization_id: string
+        }
+        Insert: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          mechanic_id: string
+          notes?: string | null
+          organization_id: string
+        }
+        Update: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          mechanic_id?: string
+          notes?: string | null
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mechanic_time_logs_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -2716,7 +2994,7 @@ export type Database = {
           created_by?: string | null
           customer_id: string
           deleted_at?: string | null
-          id: string
+          id?: string
           is_primary?: boolean
           organization_id?: string | null
           owned_from?: string
@@ -2998,6 +3276,130 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_attachments: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          file_name: string
+          file_size: number
+          file_type: string
+          id: string
+          mime_type: string
+          organization_id: string
+          public_url: string | null
+          storage_path: string
+          uploaded_by: string
+          work_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          file_name: string
+          file_size: number
+          file_type?: string
+          id?: string
+          mime_type: string
+          organization_id: string
+          public_url?: string | null
+          storage_path: string
+          uploaded_by: string
+          work_order_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          mime_type?: string
+          organization_id?: string
+          public_url?: string | null
+          storage_path?: string
+          uploaded_by?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_attachments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_attachments_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_commissions: {
+        Row: {
+          commission_amount: number
+          commission_rate: number
+          commission_rule_id: string | null
+          commission_type: string
+          created_at: string
+          id: string
+          labor_amount: number
+          mechanic_id: string
+          parts_amount: number
+          updated_at: string
+          work_order_id: string
+        }
+        Insert: {
+          commission_amount?: number
+          commission_rate: number
+          commission_rule_id?: string | null
+          commission_type: string
+          created_at?: string
+          id?: string
+          labor_amount?: number
+          mechanic_id: string
+          parts_amount?: number
+          updated_at?: string
+          work_order_id: string
+        }
+        Update: {
+          commission_amount?: number
+          commission_rate?: number
+          commission_rule_id?: string | null
+          commission_type?: string
+          created_at?: string
+          id?: string
+          labor_amount?: number
+          mechanic_id?: string
+          parts_amount?: number
+          updated_at?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_commissions_commission_rule_id_fkey"
+            columns: ["commission_rule_id"]
+            isOneToOne: false
+            referencedRelation: "mechanic_commission_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_commissions_mechanic_id_fkey"
+            columns: ["mechanic_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_commissions_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -3444,6 +3846,7 @@ export type Database = {
         Args: { target_org_id: string }
         Returns: string
       }
+      get_current_org_id: { Args: never; Returns: string }
       get_invoice_by_token: { Args: { p_token: string }; Returns: Json }
       get_public_invoice_by_token: { Args: { p_token: string }; Returns: Json }
       get_user_organization_id: { Args: never; Returns: string }
@@ -3495,6 +3898,7 @@ export type Database = {
         | "transfer_out"
         | "return"
         | "waste"
+        | "disassembly"
       invoice_status:
         | "draft"
         | "sent"
@@ -3524,8 +3928,11 @@ export type Database = {
     }
   }
 }
+
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
@@ -3554,6 +3961,7 @@ export type Tables<
       ? R
       : never
     : never
+
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
@@ -3578,6 +3986,7 @@ export type TablesInsert<
       ? I
       : never
     : never
+
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
@@ -3602,6 +4011,7 @@ export type TablesUpdate<
       ? U
       : never
     : never
+
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
@@ -3618,6 +4028,7 @@ export type Enums<
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
+
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
@@ -3634,93 +4045,6 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-export type WorkOrder = Tables<"work_orders">;
-export type WorkOrderInsert = TablesInsert<"work_orders">;
-export type WorkOrderUpdate = TablesUpdate<"work_orders">;
-export type WorkOrderService = Tables<"work_order_services">;
-export type WorkOrderServiceInsert = TablesInsert<"work_order_services">;
-export type WorkOrderPart = Tables<"work_order_parts">;
-export type WorkOrderPartInsert = TablesInsert<"work_order_parts">;
-export type WorkOrderStatus = "New" | "Diagnosing" | "In Progress" | "Ready for Pickup" | "Completed" | "Cancelled";
-export type WorkOrderStatusHistory = Tables<"work_order_status_history">;
-export type Customer = Tables<"customers">;
-export type CustomerInsert = TablesInsert<"customers">;
-export type CustomerUpdate = TablesUpdate<"customers">;
-export type CustomerNote = Tables<"customer_notes">;
-export type CustomerCommunication = Tables<"customer_communications">;
-export type Vehicle = Tables<"vehicles">;
-export type VehicleInsert = TablesInsert<"vehicles">;
-export type VehicleUpdate = TablesUpdate<"vehicles">;
-export type VehicleOwner = Tables<"vehicle_owners">;
-export type VehicleModel = Tables<"vehicle_models">;
-export type VehicleModelPart = Tables<"vehicle_model_parts">;
-export type VehicleServiceSchedule = Tables<"vehicle_service_schedules">;
-export type Organization = Tables<"organizations">;
-export type OrganizationInsert = TablesInsert<"organizations">;
-export type OrganizationUpdate = TablesUpdate<"organizations">;
-export type OrganizationUser = Tables<"organization_users">;
-export type OrganizationSettings = Tables<"organization_settings">;
-export type Branch = Tables<"branches">;
-export type Profile = Tables<"profiles">;
-export type ProfileInsert = TablesInsert<"profiles">;
-export type Role = Tables<"roles">;
-export type Permission = Tables<"permissions">;
-export type AuditLog = Tables<"audit_logs">;
-export type AuditLogInsert = TablesInsert<"audit_logs">;
-export type FeatureFlag = Tables<"feature_flags">;
-export type OrgInvite = Tables<"org_invites">;
-export type Supplier = Tables<"suppliers">;
-export type SupplierInsert = TablesInsert<"suppliers">;
-export type SupplierUpdate = TablesUpdate<"suppliers">;
-export type PurchaseOrder = Tables<"purchase_orders">;
-export type PurchaseOrderInsert = TablesInsert<"purchase_orders">;
-export type PurchaseOrderUpdate = TablesUpdate<"purchase_orders">;
-export type PurchaseOrderItem = Tables<"purchase_order_items">;
-export type PurchaseOrderItemInsert = TablesInsert<"purchase_order_items">;
-export type PurchaseOrderItemUpdate = TablesUpdate<"purchase_order_items">;
-export type InventoryMovement = Tables<"inventory_movements">;
-export type MechanicAssignment = Tables<"mechanic_assignments">;
-export type PartPriceHistory = Tables<"part_price_history">;
-export type ServicePriceHistory = Tables<"service_price_history">;
-export type ServiceCatalog = Tables<"service_catalog">;
-export type ServiceCatalogInsert = TablesInsert<"service_catalog">;
-export type ServiceCatalogUpdate = TablesUpdate<"service_catalog">;
-export type PartsCatalog = Tables<"parts_catalog">;
-export type StockThreshold = Tables<"stock_thresholds">;
-export type StockThresholdInsert = TablesInsert<"stock_thresholds">;
-export type StockThresholdUpdate = TablesUpdate<"stock_thresholds">;
-export type PartsCars = Tables<"parts_cars">;
-export type PartsCarsInsert = TablesInsert<"parts_cars">;
-export type PartsCarsUpdate = TablesUpdate<"parts_cars">;
-export type PartsCarParts = Tables<"parts_car_parts">;
-export type PartsCarPartsInsert = TablesInsert<"parts_car_parts">;
-export type PartsCarPartsUpdate = TablesUpdate<"parts_car_parts">;
-export type ReminderLog = Tables<"reminder_logs">;
-export type SubscriptionPlan = Tables<"subscription_plans">;
-export type Invoice = Tables<"invoices">;
-export type InvoiceInsert = TablesInsert<"invoices">;
-export type InvoiceUpdate = TablesUpdate<"invoices">;
-export type InvoiceItem = Tables<"invoice_items">;
-export type InvoicePayment = Tables<"invoice_payments">;
-export type DiagnosisLabel = Tables<"diagnosis_labels">;
-export type ServiceCompletionData = Tables<"service_completion_data">;
-export type InventoryBalance = Tables<"inventory_balances">;
-export type InvoiceStatus = Enums<"invoice_status">;
-export type PlanType = Enums<"plan_type">;
-export type InviteStatus = string;
-export type PermissionAction = Enums<"permission_action">;
-export type InventoryMovementType = Enums<"inventory_movement_type">;
-export type CustomerNoteType = string;
-export type CustomerType = string;
-export type BodyType = string;
-export type DrivetrainType = string;
-export type FuelType = string;
-export type TransmissionType = string;
-export type WorkOrderRow = Tables<"work_orders">;
-export type InvoiceWithItems = Invoice & {
-  items: InvoiceItem[];
-  payments: InvoicePayment[];
-};
 
 export const Constants = {
   graphql_public: {
@@ -3736,6 +4060,7 @@ export const Constants = {
         "transfer_out",
         "return",
         "waste",
+        "disassembly",
       ],
       invoice_status: [
         "draft",
