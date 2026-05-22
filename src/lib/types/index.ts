@@ -57,6 +57,22 @@ export interface WorkOrderDetail extends Record<string, unknown> {
   parts: WorkOrderPart[];
   status_history: WorkOrderStatusHistory[];
   diagnosis_label?: DiagnosisLabel | null;
+  attachments?: WorkOrderAttachment[];
+}
+
+export interface WorkOrderAttachment {
+  id: string;
+  organization_id: string;
+  work_order_id: string;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
+  storage_path: string;
+  public_url: string | null;
+  file_type: 'photo' | 'document' | 'other';
+  uploaded_by: string;
+  created_at: string;
+  deleted_at: string | null;
 }
 
 export type {
