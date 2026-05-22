@@ -3,25 +3,22 @@
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const BayViewClient = dynamic(
+const BayViewV2Client = dynamic(
   () =>
-    import("@/components/bay-view/bay-view-client").then(
-      (m) => m.BayViewClient,
+    import("@/components/bay-view-v2/bay-view-v2-client").then(
+      (m) => m.BayViewV2Client,
     ),
   {
     ssr: false,
     loading: () => (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 p-4">
         <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-40" />
-          <div className="flex gap-2">
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
-          </div>
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-8 w-48" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={`skeleton-${i}`} className="h-44 rounded-xl" />
+            <Skeleton key={i} className="h-32 rounded-xl" />
           ))}
         </div>
       </div>
@@ -30,5 +27,5 @@ const BayViewClient = dynamic(
 );
 
 export default function BayViewPage() {
-  return <BayViewClient />;
+  return <BayViewV2Client />;
 }
