@@ -1,0 +1,86 @@
+"use client";
+
+import { createContext, useContext, useState, type ReactNode } from "react";
+
+export interface SidebarTab {
+  value: string;
+  label: string;
+}
+
+interface RightSidebarState {
+  isOpen: boolean;
+  activeTab: string;
+  tabs: SidebarTab[];
+  content: Record<string, ReactNode>;
+}
+
+interface RightSidebarContextValue {
+  state: RightSidebarState;
+  setOpen: (open: boolean) => void;
+  toggle: () => void;
+  setActiveTab: (tab: string) => void;
+  registerTab: (value: string, label: string, content: ReactNode) => void;
+  unregisterTab: (value: string) => void;
+}
+
+const RightSidebarContext = createContext<RightSidebarContextValue | null>(null);
+
+export function RightSidebarProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<RightSidebarState>({
+    isOpen: false,
+    activeTab: "",
+    tabs: [],
+    content: {},
+  });
+
+  const setOpen = (open: boolean) =>
+    setState((prev) => ({ ...prev, isOpen: open }));
+
+  const toggle = () =>
+    setState((prev) => ({ ...prev, isOpen: !prev.isOpen }));
+
+  const setActiveTab = (tab: string) =>
+    setState((prev) => ({ ...prev, activeTab: tab }));
+
+  const registerTab = (value: string, label: string, content: ReactNode) =>
+    setState((prev) => {
+      const exists = prev.tabs.some((t) => t.value === value);
+      const tabs = exists
+        ? prev.tabs
+        : [...prev.tabs, { value, label }];
+      const activeTab = prev.activeTab || value;
+      return {
+        ...prev,
+        tabs,
+        activeTab,
+        content: { ...prev.content, [value]: content },
+      };
+    });
+
+  const unregisterTab = (value: string) =>
+    setState((prev) => {
+      const tabs = prev.tabs.filter((t) => t.value !== value);
+      const { [value]: _, ...content } = prev.content;
+      const activeTab =
+        prev.activeTab === value
+          ? tabs[0]?.value ?? ""
+          : prev.activeTab;
+      return { ...prev, tabs, content, activeTab, isOpen: tabs.length > 0 ? prev.isOpen : false };
+    });
+
+  return (
+    <RightSidebarContext.Provider
+      value={{ state, setOpen, toggle, setActiveTab, registerTab, unregisterTab }}
+    >
+      {children}
+    </RightSidebarContext.Provider>
+  );
+}
+
+export function useRightSidebar() {
+  const ctx = useContext(RightSidebarContext);
+  if (!ctx) {
+    throw new Error("useRightSidebar must be used within a RightSidebarProvider");
+  }
+  return ctx;
+}
