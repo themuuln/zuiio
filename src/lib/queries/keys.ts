@@ -157,6 +157,11 @@ export const diagnosisLabelKeys = {
   list: (orgId: string) => [...diagnosisLabelKeys.all(orgId), "list"] as const,
 };
 
+export const attachmentKeys = {
+  all: (orgId: string, woId: string) => ["organizations", orgId, "work-orders", woId, "attachments"] as const,
+  list: (orgId: string, woId: string) => [...attachmentKeys.all(orgId, woId), "list"] as const,
+};
+
 export const expenseKeys = {
   all: (orgId: string) => ["organizations", orgId, "expenses"] as const,
   list: (orgId: string, filters?: Record<string, string>) =>

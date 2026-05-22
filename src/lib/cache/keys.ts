@@ -47,6 +47,9 @@ export const cacheTags = {
   expense: (id: string) => `expense:${id}`,
   expenseCategories: (orgId: string) => `expense-categories:${orgId}`,
 
+  // Work Order Attachments
+  workOrderAttachments: (woId: string) => `wo-attachments:${woId}`,
+
   // Service Reminders
   serviceSchedules: (orgId: string) => `service-schedules:${orgId}`,
   serviceSchedule: (id: string) => `service-schedule:${id}`,
@@ -63,6 +66,10 @@ export const cacheTags = {
   // Parts Cars / Disassembly
   partsCars: (orgId: string) => `parts-cars:${orgId}`,
   partsCarParts: (carId: string) => `parts-car-parts:${carId}`,
+
+  // Time Tracking
+  timeTracking: (orgId: string, mechanicId: string) =>
+    `time-tracking:${orgId}:${mechanicId}`,
 } as const;
 
 // Cache duration constants (in seconds)
