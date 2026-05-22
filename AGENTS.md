@@ -39,6 +39,17 @@ npm run lint && npm run test && npm run build
 
 ## UI Components & shadcn
 
+### Hard rule: Use shadcn MCP to check before building anything
+
+**Before implementing ANY new UI element, use the shadcn MCP tools to check if a component already exists:**
+1. `shadcn_search_items_in_registries` — search available shadcn components by keyword
+2. `shadcn_get_item_examples_from_registries` — get usage examples with import paths and API
+3. Check `src/components/ui/` for already-installed components
+
+**Raw HTML elements (bare `<button>`, `<div>`, `<input>`, `<select>`, `<nav>`, `<aside>`, `<dialog>`) are FORBIDDEN when a shadcn component covers the same use case.** If a shadcn Tab, Dialog, Select, Tooltip, Input, Button, Card, etc. exists, use it — never build from primitives.
+
+### Guidelines
+
 - **Use shadcn/ui components first** — check `src/components/ui/` before building any new UI element. Most form controls, layouts, and interactive elements already have a shadcn primitive.
 - **Don't recreate what exists** — if a shadcn component covers 80% of the need, extend it rather than building from scratch. Copy from the shadcn CLI (`npx shadcn add button`) instead of writing bespoke components.
 - **Register all shadcn components** in `src/components/ui/`. Keep them minimal — no app-specific styling, no business logic.
@@ -90,64 +101,81 @@ The rule: pages use hooks, hooks call API routes, API routes call services, serv
 - **Inventory must be ledger-based** — never update a `quantity` column directly. Use `inventory_movements` with movement type, source, and audit trail.
 - Business logic lives in Next.js server-side API routes and edge functions, **never in the browser**.
 
-## Supabase Types Sync Rule
+## Supabase CLI & MCP Usage
 
-- **Regenerate TypeScript types after every migration.** After creating or modifying any migration file, update `src/lib/database.types.ts` so the frontend types match the actual schema.
-- Committing a migration without updating `database.types.ts` is a build break waiting to happen — the frontend will reference columns/types that no longer exist or miss new ones.
+### CLI vs MCP — When to Use What
 
-## Supabase MCP Preference (MANDATORY)
+| Operation | Preferred Tool | Notes |
+|-----------|---------------|-------|
+| Create migration file | **CLI** `supabase migration new <name>` | MCP has no equivalent |
+| Apply migration to remote | **MCP** `execute_sql` | Avoids migration history conflicts; but see warning below |
+| Generate TS types (Docker down) | **CLI** `supabase gen types typescript --linked > src/lib/database.types.ts` | Works without Docker; requires `supabase login` |
+| Generate TS types (Docker up) | **MCP** `supabase-tolom_generate_typescript_types()` | Writes to file automatically |
+| Execute ad-hoc SQL query | **MCP** `execute_sql` | CLI `db query` connects to **local Docker**, not remote (counter-intuitive) |
+| Deploy edge function | **MCP** `deploy_edge_function` | CLI also works: `supabase functions deploy <name>` |
+| Check security/performance | **MCP** `get_advisors` | — |
 
-**Prefer Supabase MCP tools over the Supabase CLI whenever the MCP has an equivalent operation.** The Supabase MCP is connected to the linked project and provides richer error handling, audit logging, and tighter integration with the agent workflow. Use the CLI only for operations that create or modify local files (e.g., `supabase migration new <name>`).
+### ⚠️ Critical: Don't Mix MCP `execute_sql` and CLI `db push`
 
-### MCP ↔ CLI Mapping
+**Problem**: MCP `execute_sql` applies SQL directly to the database WITHOUT recording it in the `_supabase_migrations` history table. If you later run `supabase db push`, the CLI detects these as "Remote migration versions not found in local migrations directory" and **blocks** with a repair error.
 
-| Operation | MCP Tool (preferred) | CLI (fallback only) |
-|-----------|---------------------|---------------------|
-| Apply migration | `supabase-tolom_apply_migration(name, query)` | `supabase db push --linked` |
-| Deploy edge function | `supabase-tolom_deploy_edge_function(name, entrypoint_path, files, verify_jwt)` | `supabase functions deploy <name>` |
-| Generate TS types | `supabase-tolom_generate_typescript_types()` — writes to `src/lib/database.types.ts` automatically | `supabase gen types typescript --linked > src/lib/database.types.ts` |
-| Execute SQL query | `supabase-tolom_execute_sql(query)` | `psql` / Supabase Studio |
-| Get logs | `supabase-tolom_get_logs(service)` | `supabase logs` |
-| List tables / migrations | `supabase-tolom_list_tables()`, `supabase-tolom_list_migrations()` | `supabase db dump` |
-| Create migration file | — | **CLI required**: `supabase migration new <name>` (creates local file; no MCP equivalent) |
-| Check security/performance | `supabase-tolom_get_advisors(type)` | Supabase Studio dashboard |
-| Create dev branch | `supabase-tolom_create_branch(name)` | `supabase branches create` |
-
-### Local Dev + Remote Sync Workflow (MANDATORY — never skip)
-
-Develop against local Supabase for fast iteration, then sync to remote. Never leave local migrations unapplied on remote — it causes silent runtime failures.
-
-#### Daily Dev Loop (local)
+**Fix when this happens**: The CLI prints exact repair commands:
 ```bash
-supabase start            # Boot local Supabase
-supabase migration new <name>  # Create migration file
-# ... write SQL in the generated migration file ...
-supabase db push          # Apply to local stack
-# or: restart supabase to auto-apply pending migrations
-# ... test, develop, repeat ...
+supabase migration repair --status applied <version>  # Mark remote-only as applied locally
+supabase migration repair --status reverted <version>  # Drop local-only from history
+```
+Copy-paste the repair lines from the error output.
+
+**Better: Use MCP exclusively, or CLI exclusively. Don't switch mid-stream.**
+
+### `supabase db query` is Local-Only
+
+Despite the name, `supabase db query` connects to the **local Docker Postgres** (port 54322), not the remote database. If Docker isn't running, it fails with `connection refused`. To run SQL on remote without Docker:
+- Use MCP `execute_sql`
+- Use `psql` with the connection string from Supabase dashboard
+- Use Supabase Studio SQL editor
+
+### `supabase gen types typescript --linked` Works Without Docker
+
+This is the most reliable remote operation. It connects to the linked project via the Supabase API (not Postgres directly), so it works even when Docker is down. Only requires `supabase login` to have been done previously.
+
+### Recommended Workflow
+
+```
+1. supabase migration new <name>              # CLI — creates local file
+2. # write SQL in the migration file
+3. # pick ONE apply method and stick with it:
 ```
 
-#### Deploy to Remote (MCP)
-Apply each migration file individually:
-```
-supabase-tolom_apply_migration(name="<migration-name>", query="<sql>")
-```
-
-If any edge functions changed:
-```
-supabase-tolom_deploy_edge_function(name="<function-name>", entrypoint_path="index.ts", files=[...], verify_jwt=true)
+**Option A: CLI-only** (needs Docker running)
+```bash
+supabase start
+supabase db push            # Apply pending migrations
+supabase gen types typescript --linked > src/lib/database.types.ts
+npm run build
 ```
 
-Regenerate TypeScript types from remote:
+**Option B: MCP-only** (no Docker needed)
 ```
+supabase-tolom_execute_sql(query="<migration-sql>")
 supabase-tolom_generate_typescript_types()
+# then manually create the migration .sql file for git history
 ```
-The MCP writes the updated types to `src/lib/database.types.ts` automatically.
 
-Verify end-to-end:
+**Option C: Hybrid with repair** (if you mix by accident)
+```bash
+# After MCP applied migrations:
+supabase db push  # Will fail with repair instructions — follow them
+supabase gen types typescript --linked > src/lib/database.types.ts
 ```
-npm run build   # Catches type mismatches
-```
+
+### Type Sync Rule
+
+- **Regenerate TypeScript types after every migration**, regardless of which tool applied it.
+- After MCP: call `supabase-tolom_generate_typescript_types()`.
+- After CLI: `supabase gen types typescript --linked > src/lib/database.types.ts`.
+- Committing a migration without updating `database.types.ts` is a build break — the frontend will reference columns/types that don't exist or miss new ones.
+- Always run `npm run build` after regenerating types to catch mismatches.
 
 ### Failure consequence
 Skipping the deploy step causes **"Failed to load..." errors** — API routes/Supabase queries fail because the remote database doesn't have the latest tables/functions. All development blocks until resolved.
