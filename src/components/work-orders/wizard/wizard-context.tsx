@@ -12,6 +12,9 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   type LastVisitInfo,
   type MechanicOption,
@@ -49,6 +52,20 @@ export interface PartLine {
   final_price: number;
   last_price?: number;
 }
+
+interface WizardDraft {
+  selectedCustomerId: string | null;
+  selectedVehicleId: string | null;
+  complaint: string;
+  diagnosisLabelId: string | null;
+  description: string;
+  selectedMechanicId: string | null;
+  serviceLines: ServiceLine[];
+  partLines: PartLine[];
+  savedAt: number;
+}
+
+const DRAFT_KEY = (orgId: string) => `wizard-draft-${orgId}`;
 
 interface WizardState {
   orgId: string | null;
@@ -156,6 +173,8 @@ interface WizardActions {
   addAllFromLastVisit: () => void;
 
   handleCreate: () => Promise<void>;
+  handleDiscardDraft: () => void;
+  handleRestoreDraft: () => void;
 }
 
 type WizardContextType = WizardState & WizardActions;
@@ -233,6 +252,13 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
   );
   const [showLastVisitSuggestions, setShowLastVisitSuggestions] =
     useState(false);
+
+  // ── Draft auto-save state ──────────────────────────────────────
+  const [draftData, setDraftData] = useState<WizardDraft | null>(null);
+  const [showDraftBanner, setShowDraftBanner] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const draftCheckedRef = useRef(false);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile"],
@@ -323,6 +349,17 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
   const partsTotal = partLines.reduce((s, l) => s + l.final_price, 0);
   const grandTotal = servicesTotal + partsTotal;
   const isFormValid = !!selectedCustomer && !!selectedVehicle && !saving;
+  const hasUnsavedData =
+    !!selectedCustomer ||
+    !!selectedVehicle ||
+    complaint !== "" ||
+    diagnosisLabelId !== "" ||
+    description !== "" ||
+    selectedMechanic !== "" ||
+    serviceLines.length > 0 ||
+    partLines.length > 0;
+  const hasUnsavedDataRef = useRef(hasUnsavedData);
+  hasUnsavedDataRef.current = hasUnsavedData;
 
   useEffect(() => {
     if (catalogData) setCatalog(catalogData);
@@ -378,6 +415,114 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
       }
     }
   }, [vehicleLastVisitData, selectedVehicle, selectedCustomer]);
+
+  // ── Draft auto-save effects ────────────────────────────────────
+
+  // 1. Check for existing draft on mount
+  useEffect(() => {
+    if (!orgId || draftCheckedRef.current) return;
+    draftCheckedRef.current = true;
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY(orgId));
+      if (!raw) return;
+      const draft = JSON.parse(raw) as WizardDraft;
+      if (!draft || typeof draft.savedAt !== "number") return;
+      setDraftData(draft);
+      setShowDraftBanner(true);
+    } catch {
+      // Invalid or inaccessible draft — ignore silently
+    }
+  }, [orgId]);
+
+  // 2. Debounced auto-save on critical state changes
+  useEffect(() => {
+    if (!orgId) return;
+    const draft: WizardDraft = {
+      selectedCustomerId: selectedCustomer?.id ?? null,
+      selectedVehicleId: selectedVehicle?.id ?? null,
+      complaint,
+      diagnosisLabelId,
+      description,
+      selectedMechanicId: selectedMechanic || null,
+      serviceLines,
+      partLines,
+      savedAt: Date.now(),
+    };
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY(orgId), JSON.stringify(draft));
+      } catch {
+        // localStorage full or unavailable
+      }
+    }, 2000);
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [
+    orgId,
+    selectedCustomer?.id,
+    selectedVehicle?.id,
+    complaint,
+    diagnosisLabelId,
+    description,
+    selectedMechanic,
+    serviceLines,
+    partLines,
+  ]);
+
+  // 3. beforeunload warning
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedDataRef.current) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
+
+  // 4. Fetch draft customer entity once user clicks Restore
+  const { data: draftRestoredCustomer } = useQuery({
+    queryKey: ["draft-customer", orgId, draftData?.selectedCustomerId],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/customers/${draftData!.selectedCustomerId}`,
+      );
+      const json = await res.json();
+      return json.data as Customer;
+    },
+    enabled:
+      !!orgId && !!draftData?.selectedCustomerId && draftRestored,
+    staleTime: 30_000,
+  });
+
+  useEffect(() => {
+    if (draftRestoredCustomer) {
+      setSelectedCustomer(draftRestoredCustomer);
+    }
+  }, [draftRestoredCustomer]);
+
+  // 5. Fetch draft vehicle entity once user clicks Restore
+  const { data: draftRestoredVehicle } = useQuery({
+    queryKey: ["draft-vehicle", orgId, draftData?.selectedVehicleId],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/vehicles/${draftData!.selectedVehicleId}`,
+      );
+      const json = await res.json();
+      return json.data as Vehicle;
+    },
+    enabled:
+      !!orgId && !!draftData?.selectedVehicleId && draftRestored,
+    staleTime: 30_000,
+  });
+
+  useEffect(() => {
+    if (draftRestoredVehicle) {
+      setSelectedVehicle(draftRestoredVehicle);
+    }
+  }, [draftRestoredVehicle]);
 
   const handleSelectCustomer = useCallback((customer: Customer) => {
     setSelectedCustomer(customer);
@@ -703,6 +848,11 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
       },
       {
         onSuccess: (data) => {
+          try {
+            localStorage.removeItem(DRAFT_KEY(orgId));
+          } catch {
+            /* ignore */
+          }
           toast.success("Work order created");
           push(`/dashboard/work-orders/${data.id}`);
         },
@@ -712,6 +862,30 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
       },
     );
   };
+
+  const handleDiscardDraft = useCallback(() => {
+    if (!orgId) return;
+    try {
+      localStorage.removeItem(DRAFT_KEY(orgId));
+    } catch {
+      /* ignore */
+    }
+    setDraftData(null);
+    setShowDraftBanner(false);
+    setDraftRestored(false);
+  }, [orgId]);
+
+  const handleRestoreDraft = useCallback(() => {
+    if (!draftData) return;
+    setComplaint(draftData.complaint ?? "");
+    setDiagnosisLabelId(draftData.diagnosisLabelId ?? "");
+    setDescription(draftData.description ?? "");
+    setSelectedMechanic(draftData.selectedMechanicId ?? "");
+    if (draftData.serviceLines?.length) setServiceLines(draftData.serviceLines);
+    if (draftData.partLines?.length) setPartLines(draftData.partLines);
+    setShowDraftBanner(false);
+    setDraftRestored(true);
+  }, [draftData]);
 
   const customerRef = useRef<HTMLDivElement>(null);
 
@@ -812,11 +986,38 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
     addAllFromLastVisit,
 
     handleCreate,
+    handleDiscardDraft,
+    handleRestoreDraft,
   };
 
   (value as unknown as Record<string, unknown>).customerRef = customerRef;
 
   return (
-    <WizardContext.Provider value={value}>{children}</WizardContext.Provider>
+    <>
+      {showDraftBanner && draftData && (
+        <div className="max-w-3xl mx-auto mb-4 px-1">
+          <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+            <Clock className="size-4 shrink-0 text-amber-600" />
+            <p className="flex-1 text-amber-800">
+              Unsaved draft found from{" "}
+              {format(draftData.savedAt, "MMM d, HH:mm")}.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleDiscardDraft}
+              >
+                Discard
+              </Button>
+              <Button size="sm" onClick={handleRestoreDraft}>
+                Restore
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      <WizardContext.Provider value={value}>{children}</WizardContext.Provider>
+    </>
   );
 }

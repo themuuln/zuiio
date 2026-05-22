@@ -9,7 +9,10 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { ChartConfig } from "@/components/ui/chart";
+import { AreaChart } from "@/components/charts/area-chart";
 import {
   Table,
   TableBody,
@@ -19,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
+import type { RevenueTrendPoint } from "@/lib/types";
 import { EmptyFinanceState } from "./_empty-finance-state";
 import { KpiCard } from "./_kpi-card";
 import { NoRevenueBanner } from "./_no-revenue-banner";
@@ -50,6 +54,7 @@ interface OverviewTabProps {
   insightLine: string | null;
   loading: boolean;
   topServices?: TopService[];
+  revenueTrend?: RevenueTrendPoint[];
 }
 
 export function OverviewTab({
@@ -59,7 +64,10 @@ export function OverviewTab({
   insightLine,
   loading,
   topServices,
+  revenueTrend = [],
 }: OverviewTabProps) {
+  const t = useTranslations();
+
   if (!hasAnyData) {
     return <EmptyFinanceState />;
   }
@@ -194,6 +202,36 @@ export function OverviewTab({
           loading={loading}
         />
       </div>
+
+      {/* Revenue Trend Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t('dashboard.revenueTrend')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {revenueTrend.length > 0 ? (
+            <AreaChart
+              data={revenueTrend as unknown as Record<string, unknown>[]}
+              config={{
+                revenue: { label: "Revenue", color: "#3b82f6" },
+                workOrders: { label: "Work Orders", color: "#22c55e" },
+              } satisfies ChartConfig}
+              xKey="date"
+              series={[
+                { key: "revenue", color: "#3b82f6" },
+                { key: "workOrders", color: "#22c55e" },
+              ]}
+              height={280}
+              showGrid
+              showYAxis
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              No revenue data yet
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <RevenueSplitBar
         total={safeSummary.totalRevenue}

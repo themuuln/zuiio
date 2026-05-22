@@ -381,7 +381,7 @@ export default function VehicleModelsPage() {
                   placeholder={t("makePlaceholder")}
                   value={editForm.make}
                   onChange={(e) =>
-                    setEditForm(prev => ({ ...prev, $$$ }))
+                    setEditForm(prev => ({ ...prev, make: e.target.value }))
                   }
                   className="h-11"
                   data-1p-ignore
@@ -397,7 +397,7 @@ export default function VehicleModelsPage() {
                   placeholder={t("modelPlaceholder")}
                   value={editForm.model}
                   onChange={(e) =>
-                    setEditForm(prev => ({ ...prev, $$$ }))
+                    setEditForm(prev => ({ ...prev, model: e.target.value }))
                   }
                   className="h-11"
                   data-1p-ignore
@@ -429,7 +429,7 @@ export default function VehicleModelsPage() {
                     placeholder={t("generationPlaceholder")}
                     value={editForm.generation}
                     onChange={(e) =>
-                      setEditForm(prev => ({ ...prev, $$$ }))
+                      setEditForm(prev => ({ ...prev, generation: e.target.value }))
                     }
                     className="h-11"
                   />
@@ -443,7 +443,7 @@ export default function VehicleModelsPage() {
                     placeholder="2014"
                     value={editForm.year_start}
                     onChange={(e) =>
-                      setEditForm(prev => ({ ...prev, $$$ }))
+                      setEditForm(prev => ({ ...prev, year_start: e.target.value }))
                     }
                     className="h-11"
                   />
@@ -457,7 +457,7 @@ export default function VehicleModelsPage() {
                     placeholder="2020"
                     value={editForm.year_end}
                     onChange={(e) =>
-                      setEditForm(prev => ({ ...prev, $$$ }))
+                      setEditForm(prev => ({ ...prev, year_end: e.target.value }))
                     }
                     className="h-11"
                   />
@@ -468,7 +468,7 @@ export default function VehicleModelsPage() {
                     placeholder={t("enginePlaceholder")}
                     value={editForm.engine}
                     onChange={(e) =>
-                      setEditForm(prev => ({ ...prev, $$$ }))
+                      setEditForm(prev => ({ ...prev, engine: e.target.value }))
                     }
                     className="h-11"
                   />
@@ -478,7 +478,7 @@ export default function VehicleModelsPage() {
                   <select
                     value={editForm.body_type}
                     onChange={(e) =>
-                      setEditForm(prev => ({ ...prev, $$$ }))
+                      setEditForm(prev => ({ ...prev, body_type: e.target.value }))
                     }
                     className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >

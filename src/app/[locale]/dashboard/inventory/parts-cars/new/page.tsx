@@ -112,7 +112,7 @@ export default function NewPartsCarPage() {
                 <Label htmlFor="arrival_date">Ирсэн огноо</Label>
                 <DatePicker
                   value={arrivalDate}
-                  onChange={setArrivalDate}
+                  onChange={(date) => date && setArrivalDate(date)}
                   placeholder="Огноо сонгох"
                   fromYear={2020}
                   toYear={2026}

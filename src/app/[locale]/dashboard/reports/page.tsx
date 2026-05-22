@@ -16,7 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
 import { MechanicSelect } from "@/components/mechanic-select";
@@ -36,6 +36,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 
 type ReportType = "daily" | "weekly" | "monthly" | "eod";
 
@@ -308,6 +311,7 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const orgIdRef = useRef<string | null>(null);
+  const { registerTab, setOpen } = useRightSidebar();
 
   const fetchMechanics = useCallback(async (oid: string) => {
     try {
@@ -437,6 +441,40 @@ export default function ReportsPage() {
     { label: "Monthly", value: "monthly", icon: TrendingUp },
     { label: "EOD Summary", value: "eod", icon: ClipboardList },
   ];
+
+  useEffect(() => {
+    registerTab(
+      "help",
+      "Help",
+      <div className="flex flex-col gap-1.5">
+        <p className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">Report Types</p>
+        <div className="rounded-md border border-border/50 bg-card px-2.5 py-2">
+          <p className="text-xs font-medium">Daily</p>
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Today&apos;s performance</p>
+        </div>
+        <div className="rounded-md border border-border/50 bg-card px-2.5 py-2">
+          <p className="text-xs font-medium">Weekly</p>
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">This week&apos;s breakdown</p>
+        </div>
+        <div className="rounded-md border border-border/50 bg-card px-2.5 py-2">
+          <p className="text-xs font-medium">Monthly</p>
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Monthly trends</p>
+        </div>
+        <div className="rounded-md border border-border/50 bg-card px-2.5 py-2">
+          <p className="text-xs font-medium">EOD Summary</p>
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Per-mechanic summary</p>
+        </div>
+      </div>,
+    );
+
+    registerTab(
+      "recent",
+      "Recent",
+      <RecentList items={[]} title="Recently Viewed" emptyMessage="Reports are generated on demand" />,
+    );
+
+    setOpen(true);
+  }, [registerTab, setOpen]);
 
   return (
     <div className="flex flex-col gap-6">

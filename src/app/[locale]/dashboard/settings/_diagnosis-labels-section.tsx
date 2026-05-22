@@ -67,8 +67,8 @@ const PRESET_COLORS = [
   { value: "#d97706", label: "Fuel" },
 ];
 
-function DragHandle() {
-  const { attributes, listeners } = useSortable();
+function DragHandle({ id }: { id: string }) {
+  const { attributes, listeners } = useSortable({ id });
 
   return (
     <Button
@@ -435,7 +435,7 @@ export function DiagnosisLabelsSection({
                       {items.map((label) => (
                         <DraggableRow key={label.id} label={label}>
                           <TableCell className="w-10 px-2 py-3">
-                            <DragHandle />
+                            <DragHandle id={label.id} />
                           </TableCell>
                           <TableCell className="px-4 py-3 font-medium">
                             <div className="flex items-center gap-2">

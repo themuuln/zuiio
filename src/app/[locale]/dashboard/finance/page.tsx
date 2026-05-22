@@ -38,6 +38,9 @@ import { formatCurrency, formatMNT } from "@/lib/utils";
 import { KpiCard } from "./_kpi-card";
 import { OverviewTab } from "./_overview-tab";
 import { TransactionsTab } from "./_transactions-tab";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 
 type Period = "today" | "week" | "month" | "all";
 type Tab = "overview" | "transactions" | "invoices" | "expenses";
@@ -226,6 +229,7 @@ function invoiceDataReducer(
 
 function InvoicesTab({ orgId }: { orgId: string | null }) {
   const t = useTranslations();
+  const now = useClientNow();
   const [invoiceData, dispatchInvoice] = useReducer(invoiceDataReducer, {
     loading: true,
     stats: null,
@@ -685,6 +689,7 @@ export default function FinancePage() {
     data: null,
   } satisfies FinanceDataState);
   const { data } = financeData;
+  const { registerTab, setOpen } = useRightSidebar();
   const [period, setPeriod] = useState<Period>("all");
   const [tab, setTab] = useState<Tab>("overview");
   const [search, setSearch] = useState("");
@@ -719,6 +724,47 @@ export default function FinancePage() {
   useEffect(() => {
     if (orgId) fetchData(orgId, period);
   }, [orgId, period, fetchData]);
+
+  useEffect(() => {
+    if (!data) return;
+    const s = data.summary;
+    registerTab(
+      "summary",
+      "Summary",
+      <StatusSummary
+        title="Period Summary"
+        items={[
+          { label: "Total Revenue", count: s.totalRevenue },
+          { label: "Service Revenue", count: s.serviceRevenue },
+          { label: "Parts Revenue", count: s.partsRevenue },
+          { label: "Active Orders", count: s.activeWorkOrders },
+          { label: "Completed Today", count: s.completedToday },
+          { label: "Gross Profit", count: s.grossProfit },
+        ]}
+      />,
+    );
+    registerTab(
+      "recent",
+      "Recent",
+      <RecentList
+        title="Recent Transactions"
+        items={(data.recentWorkOrders ?? []).map((wo) => ({
+          id: wo.id,
+          primary:
+            (wo.customer?.full_name ??
+              `${wo.customer?.first_name ?? ""} ${wo.customer?.last_name ?? ""}`.trim()) ||
+            "Unknown",
+          secondary: `${wo.vehicle?.plate_number ?? "—"} · ${formatCurrency(wo.total)}`,
+          timestamp: new Date(wo.created_at).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          }),
+          href: `/dashboard/work-orders/${wo.id}`,
+        }))}
+      />,
+    );
+    setOpen(true);
+  }, [data, registerTab, setOpen]);
 
   const summary = data?.summary;
   const hasRevenue = (summary?.totalRevenue ?? 0) > 0;
@@ -836,6 +882,7 @@ export default function FinancePage() {
           insightLine={insightLine}
           loading={loading}
           topServices={data?.topServices}
+          revenueTrend={data?.revenueTrend ?? []}
         />
       )}
 

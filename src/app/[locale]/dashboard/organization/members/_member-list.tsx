@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal, UserMinus, Users } from "lucide-react";
+import { MoreHorizontal, Shield, UserMinus, Users } from "lucide-react";
 import type { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,19 +14,36 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { UserProfile } from "@/lib/types";
 
+interface Role {
+  id: string;
+  name: string;
+}
+
 interface MemberListProps {
   loading: boolean;
   members: UserProfile[];
+  roles: Role[];
+  onRoleChange: (userId: string, roleId: string) => void;
   onRemove: (userId: string) => void;
   t: ReturnType<typeof useTranslations<"organization.members">>;
 }
 
-export function MemberList({ loading, members, onRemove, t }: MemberListProps) {
+export function MemberList({
+  loading,
+  members,
+  roles,
+  onRoleChange,
+  onRemove,
+  t,
+}: MemberListProps) {
   return (
     <Card>
       <CardHeader>
@@ -80,6 +97,22 @@ export function MemberList({ loading, members, onRemove, t }: MemberListProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <Shield className="mr-2 size-4" />
+                        {t("changeRole")}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        {roles.map((role) => (
+                          <DropdownMenuItem
+                            key={role.id}
+                            onClick={() => onRoleChange(member.id, role.id)}
+                          >
+                            {role.name}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
                     <DropdownMenuItem
                       className="text-destructive"
                       onClick={() => onRemove(member.id)}

@@ -10,21 +10,33 @@ import { InviteForm } from "./_invite-form";
 import { MemberList } from "./_member-list";
 import { PendingInvites } from "./_pending-invites";
 import type { InviteWithEmail } from "./types";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 
 // ── Page data state (useReducer to batch related loading/data updates) ──
+
+interface Role {
+  id: string;
+  name: string;
+}
 
 interface PageDataState {
   loadingMembers: boolean;
   loadingInvites: boolean;
+  loadingRoles: boolean;
   members: UserProfile[];
   invites: InviteWithEmail[];
+  roles: Role[];
 }
 
 type PageDataAction =
   | { type: "SET_LOADING_MEMBERS"; value: boolean }
   | { type: "SET_LOADING_INVITES"; value: boolean }
+  | { type: "SET_LOADING_ROLES"; value: boolean }
   | { type: "SET_MEMBERS"; members: UserProfile[] }
-  | { type: "SET_INVITES"; invites: InviteWithEmail[] };
+  | { type: "SET_INVITES"; invites: InviteWithEmail[] }
+  | { type: "SET_ROLES"; roles: Role[] };
 
 function pageDataReducer(
   state: PageDataState,
@@ -35,10 +47,14 @@ function pageDataReducer(
       return { ...state, loadingMembers: action.value };
     case "SET_LOADING_INVITES":
       return { ...state, loadingInvites: action.value };
+    case "SET_LOADING_ROLES":
+      return { ...state, loadingRoles: action.value };
     case "SET_MEMBERS":
       return { ...state, members: action.members };
     case "SET_INVITES":
       return { ...state, invites: action.invites };
+    case "SET_ROLES":
+      return { ...state, roles: action.roles };
   }
 }
 
@@ -47,12 +63,15 @@ export default function MembersPage() {
   const [pageData, dispatchPageData] = useReducer(pageDataReducer, {
     loadingMembers: true,
     loadingInvites: true,
+    loadingRoles: true,
     members: [],
     invites: [],
+    roles: [],
   } satisfies PageDataState);
-  const { loadingMembers, loadingInvites, members, invites } = pageData;
+  const { loadingMembers, loadingInvites, loadingRoles, members, invites, roles } = pageData;
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [selectedRoleId, setSelectedRoleId] = useState("");
   const [sending, setSending] = useState(false);
 
   const loadMembers = useCallback(async () => {
@@ -109,10 +128,36 @@ export default function MembersPage() {
     }
   }, []);
 
+  const loadRoles = useCallback(async () => {
+    dispatchPageData({ type: "SET_LOADING_ROLES", value: true });
+    try {
+      const profileRes = await fetch("/api/profile");
+      const profile = await profileRes.json();
+      const orgId = profile.organizationId ?? profile.data?.organizationId ?? "";
+      if (!orgId) {
+        dispatchPageData({ type: "SET_ROLES", roles: [] });
+        return;
+      }
+      const res = await fetch(`/api/organizations/${orgId}/roles`);
+      const body = (await res.json()) as ApiResponse<Role[]>;
+      if (body.data) {
+        dispatchPageData({ type: "SET_ROLES", roles: body.data });
+        // Default to first non-admin role, fallback to first role
+        const defaultRole = body.data.find((r) => r.name === "Mechanic") ?? body.data[0];
+        if (defaultRole) setSelectedRoleId(defaultRole.id);
+      }
+    } catch {
+      toast.error("Failed to load roles");
+    } finally {
+      dispatchPageData({ type: "SET_LOADING_ROLES", value: false });
+    }
+  }, []);
+
   useEffect(() => {
     loadMembers();
     loadInvites();
-  }, [loadMembers, loadInvites]);
+    loadRoles();
+  }, [loadMembers, loadInvites, loadRoles]);
 
   const getOrgIdFromProfile = async (): Promise<string> => {
     const profileRes = await fetch("/api/profile");
@@ -130,7 +175,7 @@ export default function MembersPage() {
       const res = await fetch(`/api/organizations/${orgId}/invites`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: inviteEmail.trim() }),
+        body: JSON.stringify({ email: inviteEmail.trim(), roleId: selectedRoleId || undefined }),
       });
 
       const body = (await res.json()) as ApiResponse<unknown>;
@@ -146,6 +191,30 @@ export default function MembersPage() {
       toast.error(err instanceof Error ? err.message : "Failed to invite user");
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleRoleChange = async (userId: string, roleId: string) => {
+    try {
+      const orgId = await getOrgIdFromProfile();
+      const res = await fetch(
+        `/api/organizations/${orgId}/users/${userId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ roleId }),
+        },
+      );
+      if (!res.ok) {
+        const body = (await res.json()) as ApiResponse<unknown>;
+        throw new Error(body.error?.message ?? "Failed to update role");
+      }
+      toast.success(t("roleUpdated"));
+      loadMembers();
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update role",
+      );
     }
   };
 
@@ -222,6 +291,49 @@ export default function MembersPage() {
 
   const pendingInvites = invites.filter((i) => i.status === "pending");
 
+  const sidebar = useRightSidebar();
+
+  useEffect(() => {
+    const roleCounts = members.reduce<Record<string, number>>((acc, m) => {
+      const role = m.roleName ?? "Unassigned";
+      acc[role] = (acc[role] ?? 0) + 1;
+      return acc;
+    }, {});
+    sidebar.registerTab(
+      "roles",
+      "Roles",
+      <StatusSummary
+        title="Members by role"
+        items={Object.entries(roleCounts).map(([label, count]) => ({
+          label,
+          count,
+        }))}
+      />,
+    );
+    sidebar.registerTab(
+      "pending",
+      "Pending",
+      <RecentList
+        title="Pending invites"
+        items={pendingInvites.map((i) => ({
+          id: i.id,
+          primary: i.email,
+          secondary: i.message ?? undefined,
+          timestamp: i.created_at
+            ? new Date(i.created_at).toLocaleDateString()
+            : undefined,
+        }))}
+        loading={loadingInvites}
+        emptyMessage="No pending invites"
+      />,
+    );
+    sidebar.setOpen(true);
+    return () => {
+      sidebar.unregisterTab("roles");
+      sidebar.unregisterTab("pending");
+    };
+  }, [sidebar, members, pendingInvites, loadingInvites]);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -242,6 +354,9 @@ export default function MembersPage() {
           sending={sending}
           onSubmit={handleInvite}
           onClose={() => setShowInviteForm(false)}
+          roles={roles}
+          selectedRoleId={selectedRoleId}
+          onRoleChange={setSelectedRoleId}
           t={t}
         />
       )}
@@ -249,6 +364,8 @@ export default function MembersPage() {
       <MemberList
         loading={loadingMembers}
         members={members}
+        roles={roles}
+        onRoleChange={handleRoleChange}
         onRemove={removeMember}
         t={t}
       />

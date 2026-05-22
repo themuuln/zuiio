@@ -1,7 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import {
   Car,
   ClipboardList,
@@ -28,7 +26,7 @@ import {
   useUpdateOrgSettings,
 } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import type { DashboardData, WorkOrderDetail } from "@/lib/types";
+import type { WorkOrderDetail } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { DailyTimeline } from "./_daily-timeline";
 import { EmptyDashboardState } from "./_empty-state";
@@ -61,7 +59,7 @@ const ChartsSection = dynamicImport(() => import("./_charts"), {
 
 export default function DashboardPage() {
   const t = useTranslations();
-  const { replace } = useRouter();
+  const router = useRouter();
   const [period, setPeriod] = useState<Period>("all");
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalInput, setGoalInput] = useState("");
@@ -89,6 +87,13 @@ export default function DashboardPage() {
   const updateSettings = useUpdateOrgSettings(orgId);
 
   const dailyGoal = settings?.daily_revenue_goal ?? 0;
+
+  // ── Redirect when org not selected ─────────────────
+  useEffect(() => {
+    if (!orgId && !orgLoading && !dashboardLoading && !dashboardError) {
+      router.replace("/auth/select-organization?returnUrl=/dashboard");
+    }
+  }, [orgId, orgLoading, dashboardLoading, dashboardError, router]);
 
   const handleSetGoal = useCallback(() => {
     const val = parseInt(goalInput, 10);
@@ -182,13 +187,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  // ── Redirect when org not selected ─────────────────
-  useEffect(() => {
-    if (!orgId && !orgLoading && !dashboardLoading && !dashboardError) {
-      replace("/auth/select-organization?returnUrl=/dashboard");
-    }
-  }, [orgId, orgLoading, dashboardLoading, dashboardError, router]);
 
   // ── Org Error State ────────────────────────────────
   if (orgError || (!orgId && !orgLoading)) {

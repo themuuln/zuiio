@@ -7,13 +7,14 @@ import {
   Calendar,
   History,
   Mail,
+  Pencil,
   Plus,
   Send,
   Settings,
   Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,8 +63,12 @@ import {
   useDeleteServiceSchedule,
   useReminderLogs,
   useServiceSchedules,
+  useUpdateServiceSchedule,
   type ServiceScheduleItem,
 } from "@/lib/queries/use-service-reminders";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("mn-MN", {
     year: "numeric",
@@ -73,9 +78,11 @@ const formatDate = (dateStr: string) =>
 
 function ScheduleRow({
   item,
+  onEdit,
   onDelete,
 }: {
   item: ServiceScheduleItem;
+  onEdit: (item: ServiceScheduleItem) => void;
   onDelete: (id: string) => void;
 }) {
   const dueDate = item.next_due_date
@@ -130,13 +137,22 @@ function ScheduleRow({
         )}
       </TableCell>
       <TableCell>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onDelete(item.id)}
-        >
-          <Trash2 className="size-4 text-destructive" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(item)}
+          >
+            <Pencil className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDelete(item.id)}
+          >
+            <Trash2 className="size-4 text-destructive" />
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   );
@@ -156,6 +172,9 @@ export default function ServiceRemindersPage() {
 
   const createSchedule = useCreateServiceSchedule(orgId);
   const deleteSchedule = useDeleteServiceSchedule(orgId);
+  const updateSchedule = useUpdateServiceSchedule(orgId);
+  const reminderLogs = useReminderLogs(orgId);
+  const { registerTab, setOpen } = useRightSidebar();
 
   const [showAdd, setShowAdd] = useState(false);
   const [newSchedule, setNewSchedule] = useState({
@@ -168,6 +187,15 @@ export default function ServiceRemindersPage() {
     last_service_odometer: "",
     next_due_date: "",
     notes: "",
+  });
+  const [showEdit, setShowEdit] = useState(false);
+  const [editItem, setEditItem] = useState<ServiceScheduleItem | null>(null);
+  const [editForm, setEditForm] = useState({
+    service_name: "",
+    interval_months: "",
+    interval_km: "",
+    notes: "",
+    reminder_enabled: true,
   });
   const [addTab, setAddTab] = useState<"schedule" | "logs">("schedule");
   const [showConfig, setShowConfig] = useState(false);
@@ -257,7 +285,98 @@ export default function ServiceRemindersPage() {
     }
   };
 
+  const handleEdit = (item: ServiceScheduleItem) => {
+    setEditItem(item);
+    setEditForm({
+      service_name: item.service_name,
+      interval_months: item.interval_months?.toString() ?? "",
+      interval_km: item.interval_km?.toString() ?? "",
+      notes: item.notes ?? "",
+      reminder_enabled: item.reminder_enabled,
+    });
+    setShowEdit(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!orgId || !editItem || !editForm.service_name.trim()) {
+      toast.error(t("common.noResults"));
+      return;
+    }
+
+    try {
+      await updateSchedule.mutateAsync({
+        id: editItem.id,
+        service_name: editForm.service_name.trim(),
+        interval_months: editForm.interval_months
+          ? parseInt(editForm.interval_months, 10)
+          : null,
+        interval_km: editForm.interval_km
+          ? parseInt(editForm.interval_km, 10)
+          : null,
+        notes: editForm.notes || null,
+        reminder_enabled: editForm.reminder_enabled,
+      });
+
+      setShowEdit(false);
+      setEditItem(null);
+      refetch();
+      toast.success(t("common.saved"));
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update schedule",
+      );
+    }
+  };
+
   const listError = error ? error.message : null;
+
+  useEffect(() => {
+    if (!schedules) return;
+    const now = new Date();
+    const overdue = schedules.filter(
+      (s) => s.next_due_date && new Date(s.next_due_date) < now,
+    ).length;
+    const dueSoon = schedules.filter(
+      (s) =>
+        s.next_due_date &&
+        new Date(s.next_due_date) >= now &&
+        new Date(s.next_due_date) < new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+    ).length;
+
+    registerTab(
+      "due-soon",
+      "Due Soon",
+      <StatusSummary
+        title="Reminder Status"
+        items={[
+          { label: "Overdue", count: overdue, color: "destructive" },
+          { label: "Due in 7 Days", count: dueSoon },
+        ]}
+      />,
+    );
+
+    const logs = reminderLogs.data ?? [];
+    const recent = logs.slice(0, 10).map((log) => ({
+      id: log.id,
+      primary: log.vehicle
+        ? `${log.vehicle.make} ${log.vehicle.model} ${log.vehicle.plate_number}`
+        : log.service_name,
+      secondary: `${log.status} · ${log.channel}`,
+      timestamp: log.scheduled_at ? formatDate(log.scheduled_at) : undefined,
+    }));
+
+    registerTab(
+      "history",
+      "History",
+      <RecentList
+        items={recent}
+        title="Recent Sends"
+        emptyMessage="No reminder history yet"
+      />,
+    );
+
+    setOpen(true);
+  }, [schedules, reminderLogs.data, registerTab, setOpen]);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -508,6 +627,121 @@ export default function ServiceRemindersPage() {
               </div>
             </DialogContent>
           </Dialog>
+
+          <Dialog open={showEdit} onOpenChange={setShowEdit}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>
+                  {t("serviceReminders.editSchedule")}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-service_name">
+                    {t("serviceReminders.serviceName")}
+                  </Label>
+                  <Input
+                    id="edit-service_name"
+                    value={editForm.service_name}
+                    onChange={(e) =>
+                      setEditForm((p) => ({
+                        ...p,
+                        service_name: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. Oil Change"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-interval_months">
+                      {t("serviceReminders.intervalMonths")}
+                    </Label>
+                    <Input
+                      id="edit-interval_months"
+                      type="number"
+                      value={editForm.interval_months}
+                      onChange={(e) =>
+                        setEditForm((p) => ({
+                          ...p,
+                          interval_months: e.target.value,
+                        }))
+                      }
+                      placeholder="6"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-interval_km">
+                      {t("serviceReminders.intervalKm")}
+                    </Label>
+                    <Input
+                      id="edit-interval_km"
+                      type="number"
+                      value={editForm.interval_km}
+                      onChange={(e) =>
+                        setEditForm((p) => ({
+                          ...p,
+                          interval_km: e.target.value,
+                        }))
+                      }
+                      placeholder="5000"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-notes">
+                    {t("common.notes")}
+                  </Label>
+                  <Input
+                    id="edit-notes"
+                    value={editForm.notes}
+                    onChange={(e) =>
+                      setEditForm((p) => ({
+                        ...p,
+                        notes: e.target.value,
+                      }))
+                    }
+                    placeholder="Optional notes"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-medium">
+                      {t("serviceReminders.reminderEnabled")}
+                    </Label>
+                  </div>
+                  <Switch
+                    checked={editForm.reminder_enabled}
+                    onCheckedChange={(checked) =>
+                      setEditForm((p) => ({
+                        ...p,
+                        reminder_enabled: checked,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowEdit(false)}
+                >
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  onClick={handleSaveEdit}
+                  disabled={updateSchedule.isPending}
+                >
+                  {updateSchedule.isPending
+                    ? t("common.saving")
+                    : t("common.save")}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -572,7 +806,7 @@ export default function ServiceRemindersPage() {
                       <TableHead>
                         {t("serviceReminders.reminderEnabled")}
                       </TableHead>
-                      <TableHead className="w-12" />
+                      <TableHead className="w-20" />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -580,6 +814,7 @@ export default function ServiceRemindersPage() {
                       <ScheduleRow
                         key={item.id}
                         item={item}
+                        onEdit={handleEdit}
                         onDelete={handleDelete}
                       />
                     ))}

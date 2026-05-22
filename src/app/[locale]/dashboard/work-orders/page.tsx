@@ -10,8 +10,11 @@ import {
   Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
@@ -265,6 +268,8 @@ export default function WorkOrdersPage() {
     refetch,
   } = useWorkOrders(org?.orgId, status, search);
 
+  const { registerTab, setOpen } = useRightSidebar();
+
   const updateStatus = useUpdateWorkOrderStatus(org?.orgId);
 
   const cancelWorkOrder = useMutation({
@@ -304,6 +309,51 @@ export default function WorkOrdersPage() {
     });
     return sorted;
   }, [orders, sort]);
+
+  const statusCounts = useMemo(() => {
+    if (!orders) return [];
+    const counts: Record<string, number> = {};
+    for (const wo of orders) {
+      counts[wo.status] = (counts[wo.status] || 0) + 1;
+    }
+    return STATUS_KEYS.filter(Boolean).map((key) => ({
+      label: key,
+      count: counts[key] ?? 0,
+      color:
+        key === "Cancelled"
+          ? ("destructive" as const)
+          : key === "Completed"
+            ? ("outline" as const)
+            : ("default" as const),
+    }));
+  }, [orders]);
+
+  const todayWOs = useMemo(() => {
+    if (!orders) return [];
+    const todayStr = now.toISOString().split("T")[0];
+    return orders
+      .filter((wo) => wo.created_at.startsWith(todayStr))
+      .map((wo) => ({
+        id: wo.id,
+        primary: `#${wo.id.slice(0, 8)} - ${getCustomerName(wo)}`,
+        secondary: wo.mechanic?.full_name ?? null,
+        timestamp: new Date(wo.created_at).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        href: `/dashboard/work-orders/${wo.id}`,
+      }));
+  }, [orders, now]);
+
+  useEffect(() => {
+    registerTab("stats", "Stats", (
+      <StatusSummary items={statusCounts} title="Work Orders" />
+    ));
+    registerTab("activity", "Activity", (
+      <RecentList items={todayWOs} title="Today" emptyMessage="No work orders today" />
+    ));
+    setOpen(true);
+  }, [registerTab, setOpen, statusCounts, todayWOs]);
 
   const handleSearch = (value: string) => {
     setSearch(value);
@@ -581,14 +631,15 @@ export default function WorkOrdersPage() {
                       {/* Status */}
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              type="button"
-                              className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full text-white ${STATUS_COLORS[wo.status] ?? "bg-gray-500"} hover:opacity-80 transition-opacity`}
+                          <DropdownMenuTrigger>
+                            <span
+                              className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full text-white cursor-pointer ${STATUS_COLORS[wo.status] ?? "bg-gray-500"} hover:opacity-80 transition-opacity`}
+                              role="button"
+                              tabIndex={0}
                             >
                               <span>{wo.status}</span>
                               <ArrowUpDown className="size-3 opacity-60" />
-                            </button>
+                            </span>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="start"
@@ -690,14 +741,14 @@ export default function WorkOrdersPage() {
                       {/* Actions button */}
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8"
+                          <DropdownMenuTrigger>
+                            <span
+                              className="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:bg-muted cursor-pointer"
+                              role="button"
+                              tabIndex={0}
                             >
                               <MoreHorizontal className="size-4" />
-                            </Button>
+                            </span>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"

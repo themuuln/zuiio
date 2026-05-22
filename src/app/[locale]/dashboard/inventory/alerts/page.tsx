@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +12,9 @@ import {
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 
 export default function AlertsPage() {
   const t = useTranslations("inventory");
@@ -40,6 +43,39 @@ export default function AlertsPage() {
   }, [balances, thresholds]);
 
   const isLoading = balancesLoading || thresholdsLoading;
+
+  const sidebar = useRightSidebar();
+
+  useEffect(() => {
+    const lowStock = alerts.filter((a) => (a.quantity_on_hand ?? 0) > 0).length;
+    const outOfStock = alerts.filter((a) => (a.quantity_on_hand ?? 0) === 0).length;
+
+    sidebar.setOpen(true);
+    sidebar.setActiveTab("summary");
+
+    sidebar.registerTab(
+      "summary",
+      "Summary",
+      <StatusSummary
+        items={[
+          { label: "Low Stock", count: lowStock, color: "default" },
+          { label: "Out of Stock", count: outOfStock, color: "destructive" },
+        ]}
+      />,
+    );
+
+    sidebar.registerTab(
+      "suppliers",
+      "Suppliers",
+      <RecentList items={[]} emptyMessage="Add supplier contacts here" />,
+    );
+
+    return () => {
+      sidebar.unregisterTab("summary");
+      sidebar.unregisterTab("suppliers");
+      sidebar.setOpen(false);
+    };
+  }, [alerts]);
 
   return (
     <div className="flex flex-col gap-6">

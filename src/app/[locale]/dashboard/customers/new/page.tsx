@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Loader2, UserPlus } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Loader2, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,10 @@ export default function NewCustomerPage() {
   const orgId = orgQuery.data?.orgId ?? null;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [conflictInfo, setConflictInfo] = useState<{
+    field: "phone" | "email";
+    existingCustomerId: string;
+  } | null>(null);
   const [form, setForm] = useState<CustomerFormState>(initialForm);
   const t = useTranslations("customers");
 
@@ -58,6 +62,7 @@ export default function NewCustomerPage() {
 
     setSaving(true);
     setError(null);
+    setConflictInfo(null);
 
     try {
       const response = await fetch(`/api/organizations/${orgId}/customers`, {
@@ -68,6 +73,18 @@ export default function NewCustomerPage() {
       const json = await response.json();
 
       if (json.error) {
+        if (json.error.code === "CONFLICT") {
+          const field = json.error.message.toLowerCase().includes("phone")
+            ? ("phone" as const)
+            : ("email" as const);
+          setConflictInfo({
+            field,
+            existingCustomerId:
+              json.error.details?.existingCustomerId ?? null,
+          });
+          toast.error(json.error.message);
+          return;
+        }
         toast.error(json.error.message);
         setError(json.error.message);
         return;
@@ -141,7 +158,32 @@ export default function NewCustomerPage() {
         </div>
       </div>
 
-      {error && (
+      {conflictInfo && (
+        <Card className="border-amber-400 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/20">
+          <CardContent className="flex items-center gap-3 p-4">
+            <AlertTriangle className="size-5 shrink-0 text-amber-600" />
+            <div className="text-sm">
+              <span className="font-medium text-amber-800 dark:text-amber-300">
+                A customer with this {conflictInfo.field === "phone" ? "phone number" : "email"} already exists.
+              </span>{" "}
+              {conflictInfo.existingCustomerId ? (
+                <Link
+                  href={`/dashboard/customers/${conflictInfo.existingCustomerId}`}
+                  className="font-medium text-amber-700 underline hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300"
+                >
+                  View existing customer
+                </Link>
+              ) : (
+                <span className="text-amber-700 dark:text-amber-400">
+                  Search for them instead.
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {error && !conflictInfo && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
             <p className="text-sm text-destructive">{error}</p>

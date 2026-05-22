@@ -28,6 +28,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization, SubscriptionPlanInfo } from "@/lib/types";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 
 export default function OrganizationPage() {
   const t = useTranslations();
@@ -126,6 +129,53 @@ export default function OrganizationPage() {
     if (!dateStr) return "\u2014";
     return new Date(dateStr).toLocaleDateString();
   };
+
+  const sidebar = useRightSidebar();
+
+  useEffect(() => {
+    sidebar.registerTab(
+      "subscription",
+      "Subscription",
+      <div className="flex flex-col gap-2">
+        {subscription ? (
+          <>
+            <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
+              <p className="text-[10px] text-muted-foreground">Plan</p>
+              <p className="text-xs font-medium">{formatPlanType(subscription.planType)}</p>
+            </div>
+            <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
+              <p className="text-[10px] text-muted-foreground">Status</p>
+              <p className="text-xs font-medium capitalize">{subscription.status}</p>
+            </div>
+            <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
+              <p className="text-[10px] text-muted-foreground">Started</p>
+              <p className="text-xs font-medium">{formatDate(subscription.startedAt)}</p>
+            </div>
+            {subscription.trial && subscription.expiresAt && (
+              <div className="rounded-md border border-amber-200/50 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/20 px-2.5 py-1.5">
+                <p className="text-[10px] text-muted-foreground">Trial ends</p>
+                <p className="text-xs font-medium">{formatDate(subscription.expiresAt)}</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground">No active subscription</p>
+        )}
+      </div>,
+    );
+    sidebar.registerTab(
+      "team",
+      "Team",
+      <p className="text-xs text-muted-foreground px-2.5 py-1.5">
+        Manage team members via the Members page
+      </p>,
+    );
+    sidebar.setOpen(true);
+    return () => {
+      sidebar.unregisterTab("subscription");
+      sidebar.unregisterTab("team");
+    };
+  }, [sidebar, subscription]);
 
   if (loading) {
     return (

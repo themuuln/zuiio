@@ -2,7 +2,7 @@
 
 import { Car, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -13,6 +13,9 @@ import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useVehicles } from "@/lib/queries/use-vehicles";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import type { Vehicle } from "@/lib/types";
 
 interface VehicleWithOwner extends Vehicle {
@@ -37,10 +40,42 @@ export default function VehiclesPage() {
   const t = useTranslations("vehicles");
   const now = useClientNow();
 
-  const { data: org } = useCurrentOrg();
-  const { data: vehicles, isLoading, isFetching } = useVehicles(org?.orgId, search);
+  const { data: org, isError: orgError } = useCurrentOrg();
+  const { data: vehicles, isLoading, isFetching, isError, error, refetch } = useVehicles(org?.orgId, search);
 
   const list: Array<Vehicle & { owner_name?: string }> = vehicles ?? [];
+
+  const { registerTab, setOpen } = useRightSidebar();
+
+  useEffect(() => {
+    if (!list.length) return;
+    const makes = [...new Set(list.map((v) => v.make).filter(Boolean))];
+    registerTab("stats", "Stats", (
+      <StatusSummary
+        title="Stats"
+        items={[
+          { label: "Total", count: list.length },
+          { label: "Makes", count: makes.length },
+        ]}
+      />
+    ));
+    registerTab("recent", "Recent", (
+      <RecentList
+        title="Recently Added"
+        items={[...list]
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 5)
+          .map((v) => ({
+            id: v.id,
+            primary: v.plate_number,
+            secondary: [v.make, v.model].filter(Boolean).join(" "),
+            timestamp: v.created_at ? new Date(v.created_at).toLocaleDateString() : undefined,
+            href: `/dashboard/vehicles/${v.id}`,
+          }))}
+      />
+    ));
+    setOpen(true);
+  }, [list, registerTab, setOpen]);
 
   if (isLoading && !vehicles) {
     return (
@@ -55,6 +90,35 @@ export default function VehiclesPage() {
             {[1, 2, 3].map((i) => (
               <VehicleRowSkeleton key={`skeleton-${i}`} />
             ))}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isError || orgError) {
+    return (
+      <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+            <p className="text-muted-foreground">{t("subtitle")}</p>
+          </div>
+          <Button render={<Link href="/dashboard/vehicles/new" />} size="lg">
+            <Plus className="size-4" />
+            {t("addVehicle")}
+          </Button>
+        </div>
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-destructive">
+                {error?.message ?? t("noOrganization")}
+              </p>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                {t("retry")}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

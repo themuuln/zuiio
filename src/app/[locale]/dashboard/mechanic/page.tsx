@@ -2,14 +2,20 @@
 
 import {
   CheckCircle2,
+  ChevronDown,
   ClipboardList,
+  Clock,
   Coins,
+  Play,
+  Square,
   Users,
   Wrench,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { useClientNow } from "@/hooks/use-client-now";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -23,6 +29,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
 import { cn, formatCurrency, formatMNT } from "@/lib/utils";
 import dynamic from "next/dynamic";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const MechanicTrendChart = dynamic(
   () => import("../_charts").then((m) => m.MechanicTrendChart),
@@ -102,6 +118,15 @@ const STATUS_CONFIG: Record<
     dot: "bg-red-400",
     bg: "hover:bg-red-50/50 dark:hover:bg-red-950/10",
   },
+};
+
+// ── Allowed status transitions ──────────────────────────
+
+const NEXT_STATUSES: Record<string, string[]> = {
+  New: ["Diagnosing"],
+  Diagnosing: ["In Progress"],
+  "In Progress": ["Ready for Pickup"],
+  "Ready for Pickup": ["Completed"],
 };
 
 function getStatusCfg(status: string) {
@@ -214,12 +239,24 @@ function KpiCard({
 function WorkOrderRow({
   wo,
   onClick,
+  onStatusChange,
 }: {
   wo: WorkOrderRow;
   onClick: () => void;
+  onStatusChange: (newStatus: string) => void;
 }) {
   const cfg = getStatusCfg(wo.status);
   const elapsed = useMemo(() => timeAgo(wo.created_at), [wo.created_at]);
+
+  const nextStatuses = useMemo(() => {
+    const transitions = NEXT_STATUSES[wo.status] ?? [];
+    if (wo.status !== "Cancelled" && wo.status !== "Completed") {
+      return [...transitions, "Cancelled"];
+    }
+    return transitions;
+  }, [wo.status]);
+
+  const canChange = nextStatuses.length > 0;
 
   return (
     <button
@@ -273,15 +310,113 @@ function WorkOrderRow({
         <span className="text-sm font-semibold tabular-nums text-foreground/80">
           {formatMNT(wo.total ?? 0)}
         </span>
-        <Badge
-          className={cn(cfg.label, "border-0 text-[10px] font-semibold px-2 py-0.5")}
-          variant="secondary"
-        >
-          {wo.status}
-        </Badge>
+        {canChange ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-0.5 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+            >
+              <Badge
+                className={cn(cfg.label, "border-0 text-[10px] font-semibold px-2 py-0.5")}
+                variant="secondary"
+              >
+                {wo.status}
+              </Badge>
+              <ChevronDown className="size-3 text-muted-foreground/50 shrink-0" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" sideOffset={4}>
+              {nextStatuses.map((status) => {
+                const sc = getStatusCfg(status);
+                return (
+                  <DropdownMenuItem
+                    key={status}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStatusChange(status);
+                    }}
+                    className="gap-2"
+                  >
+                    {status === "Cancelled" ? (
+                      <X className="size-3.5 text-destructive" />
+                    ) : (
+                      <span className={cn("size-2 shrink-0 rounded-full", sc.dot)} />
+                    )}
+                    <span className="text-xs">{status}</span>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Badge
+            className={cn(cfg.label, "border-0 text-[10px] font-semibold px-2 py-0.5")}
+            variant="secondary"
+          >
+            {wo.status}
+          </Badge>
+        )}
       </div>
     </button>
   );
+}
+
+// ── Clock In/Out Button ────────────────────────────
+
+function ClockInOutButton({
+  orgId,
+  clockedIn,
+  since,
+  onToggle,
+  loading,
+}: {
+  orgId: string;
+  clockedIn: boolean;
+  since: string | null;
+  onToggle: () => void;
+  loading: boolean;
+}) {
+  const now = useClientNow();
+  const elapsed =
+    clockedIn && since
+      ? formatElapsed(new Date(since).getTime(), now.getTime())
+      : null;
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={loading}
+      className={cn(
+        "flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200",
+        clockedIn
+          ? "border-red-300 bg-red-50 text-red-700 hover:bg-red-100 active:bg-red-200 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50"
+          : "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:bg-emerald-200 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-950/50",
+        loading && "opacity-50 cursor-not-allowed",
+      )}
+    >
+      {clockedIn ? (
+        <Square className="size-4 shrink-0" />
+      ) : (
+        <Play className="size-4 shrink-0 translate-x-0.5" />
+      )}
+      <span>
+        {clockedIn ? t("mechanic.clockOut") : t("mechanic.clockIn")}
+      </span>
+      {elapsed && (
+        <span className="tabular-nums text-xs font-mono text-muted-foreground/70">
+          {elapsed}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function formatElapsed(start: number, end: number): string {
+  const diff = Math.max(0, end - start);
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
 // ── MechanicDashboard ──────────────────────────────
@@ -298,7 +433,9 @@ function MechanicDashboard({
   isAdminView: boolean;
 }) {
   const t = useTranslations();
+  const now = useClientNow();
   const { push } = useRouter();
+  const { registerTab, unregisterTab, setOpen } = useRightSidebar();
   const [eod, setEod] = useState<MechanicEodSummary | null>(null);
   const [assignedWos, setAssignedWos] = useState<WorkOrderRow[]>([]);
   const [trend, setTrend] = useState<{
@@ -307,47 +444,57 @@ function MechanicDashboard({
     weeklyTrend: { week: string; orders: number; revenue: number }[];
   } | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [clockStatus, setClockStatus] = useState<{
+    clockedIn: boolean;
+    since: string | null;
+    todayHours: number;
+  }>({ clockedIn: false, since: null, todayHours: 0 });
+  const [clockLoading, setClockLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchData = useCallback(async (showLoader = false) => {
+    if (showLoader) setDataLoading(true);
+    setIsRefreshing(!showLoader);
     const today = new Date().toISOString().split("T")[0];
-    const abort = new AbortController();
-
-    setDataLoading(true);
     const eodUrl = `/api/organizations/${orgId}/reports?type=eod&date=${today}&mechanic=${userId}`;
     const woUrl = `/api/organizations/${orgId}/work-orders?mechanic=${userId}&status=In Progress&status=Diagnosing&status=New&status=Ready for Pickup`;
     const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000)
       .toISOString().split("T")[0];
     const trendUrl = `/api/organizations/${orgId}/reports?type=mechanic-trend&mechanic=${userId}&period=weekly&startDate=${eightWeeksAgo}&endDate=${today}`;
+    const clockUrl = `/api/organizations/${orgId}/me/time/status`;
 
-    const signal = abort.signal;
-
-    Promise.all([
-      fetch(eodUrl, { signal })
-        .then((r) => r.json())
-        .catch(() => ({ data: null })),
-      fetch(woUrl, { signal })
-        .then((r) => r.json())
-        .catch(() => ({ data: [] })),
-      fetch(trendUrl, { signal })
-        .then((r) => r.json())
-        .catch(() => ({ data: null })),
-    ])
-      .then(([eodJson, woJson, trendJson]) => {
-        if (eodJson.data?.mechanics?.length > 0) {
-          setEod(eodJson.data.mechanics[0]);
-        }
-        if (Array.isArray(woJson.data)) {
-          setAssignedWos(woJson.data);
-        }
-        if (trendJson.data) {
-          setTrend(trendJson.data);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setDataLoading(false));
-
-    return () => abort.abort();
+    try {
+      const [eodJson, woJson, trendJson, clockJson] = await Promise.all([
+        fetch(eodUrl).then((r) => r.json()).catch(() => ({ data: null })),
+        fetch(woUrl).then((r) => r.json()).catch(() => ({ data: [] })),
+        fetch(trendUrl).then((r) => r.json()).catch(() => ({ data: null })),
+        fetch(clockUrl).then((r) => r.json()).catch(() => ({ data: null })),
+      ]);
+      if (eodJson.data?.mechanics?.length > 0) {
+        setEod(eodJson.data.mechanics[0]);
+      }
+      if (Array.isArray(woJson.data)) {
+        setAssignedWos(woJson.data);
+      }
+      if (trendJson.data) {
+        setTrend(trendJson.data);
+      }
+      if (clockJson.data) {
+        setClockStatus(clockJson.data);
+      }
+    } catch {
+      // silent
+    } finally {
+      setDataLoading(false);
+      setIsRefreshing(false);
+    }
   }, [userId, orgId]);
+
+  useEffect(() => {
+    fetchData(true);
+    const interval = setInterval(() => fetchData(false), 30000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   // Sort: active/pickup first, then new, then rest
   const sortedWos = useMemo(() => {
@@ -362,6 +509,87 @@ function MechanicDashboard({
         (priority[a.status] ?? 99) - (priority[b.status] ?? 99),
     );
   }, [assignedWos]);
+
+  useEffect(() => {
+    registerTab("stats", "Stats", (
+      <StatusSummary
+        title="Today"
+        items={[
+          { label: "Completed Today", count: eod?.work_orders_completed ?? 0 },
+          { label: "Revenue Today", count: eod?.total_revenue ?? 0 },
+          { label: "Active Jobs", count: assignedWos.length, color: "secondary" },
+        ]}
+      />
+    ));
+
+    registerTab("jobs", "Jobs", (
+      <RecentList
+        title="Assigned"
+        items={sortedWos.map((wo) => ({
+          id: wo.id,
+          primary: wo.vehicle_plate ?? "—",
+          secondary: wo.status,
+          timestamp: timeAgo(wo.created_at),
+          href: `/dashboard/work-orders/${wo.id}`,
+        }))}
+        loading={dataLoading}
+        emptyMessage="No active work orders"
+      />
+    ));
+
+    setOpen(true);
+
+    return () => {
+      unregisterTab("stats");
+      unregisterTab("jobs");
+    };
+  }, [eod, assignedWos, sortedWos, dataLoading, registerTab, unregisterTab, setOpen]);
+
+  const updateStatus = useUpdateWorkOrderStatus(orgId);
+
+  const handleClockToggle = async () => {
+    setClockLoading(true);
+    const endpoint = clockStatus.clockedIn ? "clock-out" : "clock-in";
+    try {
+      const res = await fetch(
+        `/api/organizations/${orgId}/me/time/${endpoint}`,
+        { method: "POST" },
+      );
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error?.message ?? "Failed to toggle clock");
+        return;
+      }
+      const statusRes = await fetch(
+        `/api/organizations/${orgId}/me/time/status`,
+      );
+      const statusJson = await statusRes.json();
+      if (statusJson.data) {
+        setClockStatus(statusJson.data);
+      }
+      toast.success(
+        clockStatus.clockedIn
+          ? t("mechanic.clockedOut")
+          : t("mechanic.clockedIn"),
+      );
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setClockLoading(false);
+    }
+  };
+
+  const handleStatusChange = async (woId: string, newStatus: string) => {
+    setAssignedWos((prev) =>
+      prev.map((wo) => (wo.id === woId ? { ...wo, status: newStatus } : wo))
+    );
+    try {
+      await updateStatus.mutateAsync({ woId, status: newStatus });
+      toast.success(`Status updated to ${newStatus}`);
+    } catch {
+      // Error toast handled by mutation's onError — optimistic update corrected on next poll
+    }
+  };
 
   return (
     <div className="tablet-touch flex flex-col gap-6">
@@ -386,11 +614,26 @@ function MechanicDashboard({
               })}
             </p>
           </div>
+          <ClockInOutButton
+            orgId={orgId}
+            clockedIn={clockStatus.clockedIn}
+            since={clockStatus.since}
+            onToggle={handleClockToggle}
+            loading={clockLoading}
+          />
+        </div>
+      )}
+
+      {/* ── Refresh indicator ── */}
+      {isRefreshing && (
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/50 -mt-3">
+          <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Updating...
         </div>
       )}
 
       {/* ── KPI Grid ── */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-4">
         <KpiCard
           icon={CheckCircle2}
           label={t("mechanic.completedToday")}
@@ -421,6 +664,13 @@ function MechanicDashboard({
           }
           accent="amber"
           loading={dataLoading}
+        />
+        <KpiCard
+          icon={Clock}
+          label={t("mechanic.hoursToday")}
+          value={clockStatus.todayHours.toFixed(1)}
+          subtext={clockStatus.clockedIn ? t("mechanic.clockedIn") : t("mechanic.clockedOut")}
+          accent="blue"
         />
       </div>
 
@@ -490,6 +740,7 @@ function MechanicDashboard({
                 onClick={() =>
                   push(`/dashboard/work-orders/${wo.id}`)
                 }
+                onStatusChange={(newStatus) => handleStatusChange(wo.id, newStatus)}
               />
             ))}
           </div>

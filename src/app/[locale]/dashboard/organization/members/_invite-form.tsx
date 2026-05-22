@@ -5,12 +5,20 @@ import type { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+interface Role {
+  id: string;
+  name: string;
+}
+
 interface InviteFormProps {
   email: string;
   onEmailChange: (v: string) => void;
   sending: boolean;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
+  roles: Role[];
+  selectedRoleId: string;
+  onRoleChange: (roleId: string) => void;
   t: ReturnType<typeof useTranslations<"organization.members">>;
 }
 
@@ -20,6 +28,9 @@ export function InviteForm({
   sending,
   onSubmit,
   onClose,
+  roles,
+  selectedRoleId,
+  onRoleChange,
   t,
 }: InviteFormProps) {
   return (
@@ -53,6 +64,26 @@ export function InviteForm({
               required
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
+          </div>
+          <div className="flex-1 space-y-1.5">
+            <label
+              htmlFor="inviteRole"
+              className="text-sm font-medium text-foreground"
+            >
+              {t("roleLabel")}
+            </label>
+            <select
+              id="inviteRole"
+              value={selectedRoleId}
+              onChange={(e) => onRoleChange(e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
           </div>
           <Button type="submit" disabled={sending || !email.trim()}>
             {sending ? (

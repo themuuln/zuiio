@@ -29,7 +29,8 @@ export default function SuppliersPage() {
   const now = useClientNow();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
-  const { data: suppliers = [], isLoading } = useSuppliers(orgId);
+  const { data: rawSuppliers, isLoading } = useSuppliers(orgId);
+  const suppliers = Array.isArray(rawSuppliers) ? rawSuppliers : [];
   const deleteSupplier = useDeleteSupplier(orgId);
   const [search, setSearch] = useState("");
 

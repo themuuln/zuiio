@@ -4,7 +4,7 @@ import { ArrowLeft, CarFront, Loader2, User } from "lucide-react";
 // TODO: wrap component using useSearchParams in <Suspense>
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -71,8 +71,8 @@ function getCustomerLabel(customer: Customer, t?: (key: string) => string) {
 export default function NewVehiclePage() {
   const t = useTranslations("vehicles");
   const { replace } = useRouter();
-  const { get } = useSearchParams();
-  const preselectedCustomerId = get("customerId");
+  const searchParams = useSearchParams();
+  const preselectedCustomerId = searchParams.get("customerId");
 
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
@@ -101,6 +101,13 @@ export default function NewVehiclePage() {
     preselectedCustomer ?? null,
   );
 
+  // Auto-select customer when preselected data loads from URL param
+  useEffect(() => {
+    if (preselectedCustomer && !selectedCustomer) {
+      setSelectedCustomer(preselectedCustomer);
+    }
+  }, [preselectedCustomer, selectedCustomer]);
+
   const searchCustomers = useCallback(
     async (query: string) => {
       if (!orgId || !query.trim()) {
@@ -115,7 +122,7 @@ export default function NewVehiclePage() {
           `/api/organizations/${orgId}/customers?q=${encodeURIComponent(query)}`,
         );
         const json = await response.json();
-        setCustomerResults(json.data ?? []);
+        setCustomerResults(Array.isArray(json.data) ? json.data : []);
       } catch {
         setError("Failed to search customers");
       } finally {
@@ -245,7 +252,7 @@ export default function NewVehiclePage() {
                   onSearch={searchCustomers}
                   debounceMs={400}
                 />
-                {customerResults.length === 0 ? (
+                {!Array.isArray(customerResults) || customerResults.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     Search for an existing customer before adding the vehicle.
                   </p>

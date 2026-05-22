@@ -1,8 +1,8 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
+import { Pencil, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
@@ -13,6 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ExportColumn } from "@/lib/export";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { serviceKeys } from "@/lib/queries/keys";
 import { useServiceLastUsedPrices } from "@/lib/queries/use-price-memory";
 import { useQuery } from "@tanstack/react-query";
@@ -60,6 +63,14 @@ export default function ServicesPage() {
     category: "",
   });
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    description: "",
+    default_price: "",
+    category: "",
+  });
+  const [editSaving, setEditSaving] = useState(false);
 
   const lastUsedPrices = useServiceLastUsedPrices(orgId ?? undefined);
 
@@ -125,12 +136,113 @@ export default function ServicesPage() {
     }
   };
 
+  const handleStartEdit = (service: ServiceItem) => {
+    setEditingId(service.id);
+    setEditForm({
+      name: service.name,
+      description: service.description ?? "",
+      default_price: String(service.default_price),
+      category: service.category ?? "",
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditForm({
+      name: "",
+      description: "",
+      default_price: "",
+      category: "",
+    });
+  };
+
+  const handleUpdate = async () => {
+    if (!orgId || !editingId || !editForm.name.trim()) return;
+    setEditSaving(true);
+    try {
+      const r = await fetch(
+        `/api/organizations/${orgId}/services/${editingId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: editForm.name,
+            description: editForm.description || null,
+            default_price: parseFloat(editForm.default_price) || 0,
+            category: editForm.category || null,
+          }),
+        },
+      );
+      const d = await r.json();
+      if (d.data) {
+        toast.success("Service updated");
+        refetch();
+        handleCancelEdit();
+      } else {
+        toast.error(d.error?.message ?? "Failed to update service");
+      }
+    } catch (e: unknown) {
+      toast.error((e as Error).message ?? "Failed to update service");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const filtered = services.filter(
     (s) =>
       !search ||
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       (s.category ?? "").toLowerCase().includes(search.toLowerCase()),
   );
+
+  const sidebar = useRightSidebar();
+
+  useEffect(() => {
+    if (services.length === 0) return;
+
+    const catCount = new Map<string, number>();
+    for (const s of services) {
+      const cat = s.category ?? "Uncategorized";
+      catCount.set(cat, (catCount.get(cat) ?? 0) + 1);
+    }
+
+    const top5 = [...services]
+      .sort((a, b) => b.default_price - a.default_price)
+      .slice(0, 5);
+
+    sidebar.setOpen(true);
+    sidebar.setActiveTab("categories");
+
+    sidebar.registerTab(
+      "categories",
+      "Categories",
+      <StatusSummary
+        items={Array.from(catCount.entries()).map(([label, count]) => ({
+          label,
+          count,
+        }))}
+      />,
+    );
+
+    sidebar.registerTab(
+      "popular",
+      "Popular",
+      <RecentList
+        items={top5.map((s) => ({
+          id: s.id,
+          primary: s.name,
+          secondary: s.category ?? null,
+        }))}
+        emptyMessage="No services"
+      />,
+    );
+
+    return () => {
+      sidebar.unregisterTab("categories");
+      sidebar.unregisterTab("popular");
+      sidebar.setOpen(false);
+    };
+  }, [services]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -252,31 +364,98 @@ export default function ServicesPage() {
               {filtered.map((s) => (
                 <div
                   key={s.id}
-                  className="flex items-center gap-4 p-4 min-h-[64px]"
+                  className={`flex items-center gap-4 p-4 ${editingId === s.id ? "flex-col items-stretch" : "min-h-[64px]"}`}
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{s.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {s.category ?? t("services.uncategorized")}
-                    </p>
-                  </div>
-                  <span className="font-medium text-lg tabular-nums shrink-0">
-                    {formatMNT(Number(s.default_price))}
-                  </span>
-                  {lastUsedPrices.data?.[s.id] && (
-                    <span className="hidden text-xs text-amber-600 tabular-nums md:inline">
-                      {t("services.lastUsedPrice")}:{" "}
-                      {formatMNT(lastUsedPrices.data[s.id].unit_price)}
-                    </span>
+                  {editingId === s.id ? (
+                    <div className="flex-1 grid gap-3">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Input
+                          placeholder="Service Name *"
+                          value={editForm.name}
+                          onChange={(e) =>
+                            setEditForm(prev => ({ ...prev, name: e.target.value }))
+                          }
+                          className="h-11"
+                        />
+                        <Input
+                          placeholder="Category (e.g. Oil, Brakes)"
+                          value={editForm.category}
+                          onChange={(e) =>
+                            setEditForm(prev => ({ ...prev, category: e.target.value }))
+                          }
+                          className="h-11"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="Default Price (₮) *"
+                          value={editForm.default_price}
+                          onChange={(e) =>
+                            setEditForm(prev => ({ ...prev, default_price: e.target.value }))
+                          }
+                          className="h-11"
+                        />
+                        <Input
+                          placeholder="Description"
+                          value={editForm.description}
+                          onChange={(e) =>
+                            setEditForm(prev => ({ ...prev, description: e.target.value }))
+                          }
+                          className="h-11"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleUpdate}
+                          disabled={editSaving || !editForm.name.trim()}
+                          size="lg"
+                        >
+                          {editSaving ? t("services.saving") : "Save"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          onClick={handleCancelEdit}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{s.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {s.category ?? t("services.uncategorized")}
+                        </p>
+                      </div>
+                      <span className="font-medium text-lg tabular-nums shrink-0">
+                        {formatMNT(Number(s.default_price))}
+                      </span>
+                      {lastUsedPrices.data?.[s.id] && (
+                        <span className="hidden text-xs text-amber-600 tabular-nums md:inline">
+                          {t("services.lastUsedPrice")}:{" "}
+                          {formatMNT(lastUsedPrices.data[s.id].unit_price)}
+                        </span>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleStartEdit(s)}
+                        aria-label="Edit service"
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(s.id)}
+                        aria-label="Delete service"
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(s.id)}
-                    aria-label="Delete service"
-                  >
-                    <X className="size-4" />
-                  </Button>
                 </div>
               ))}
             </div>

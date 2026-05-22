@@ -1,10 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Pencil, Save, Trash2, X } from "lucide-react";
+import { ArrowLeft, Building2, Mail, MapPin, Pencil, Phone, Save, Trash2, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -31,7 +31,12 @@ import {
 } from "./_customer-edit-form";
 import type { CustomerVehicleSummary } from "./_vehicle-list-card";
 import { VehicleListCard } from "./_vehicle-list-card";
+import { CommunicationLog } from "./_communication-log";
+import { CustomerNotes } from "./_customer-notes";
 import { CustomerWorkOrderHistory } from "./_customer-work-order-history";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { ContactCard } from "@/components/sidebar-tabs/contact-card";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 
 type CustomerType = "individual" | "company";
 
@@ -95,7 +100,8 @@ export default function CustomerDetailPage() {
   const t = useTranslations("customers");
   const commonT = useTranslations("common");
   const params = useParams();
-  const { push } = useRouter();
+  const router = useRouter();
+  const { push } = router;
   const customerId = params.id as string;
 
   const orgQuery = useCurrentOrg();
@@ -120,7 +126,48 @@ export default function CustomerDetailPage() {
     staleTime: 30_000,
   });
 
+  const sidebar = useRightSidebar();
+
   const error = queryError ? queryError.message : null;
+
+  useEffect(() => {
+    if (!customer) return;
+
+    sidebar.setOpen(true);
+    sidebar.setActiveTab("contact");
+
+    sidebar.registerTab(
+      "contact",
+      "Contact",
+      <ContactCard
+        items={[
+          { label: "Phone", value: customer.phone, icon: Phone, copyable: true },
+          { label: "Email", value: customer.email, icon: Mail, copyable: true },
+          { label: "Address", value: customer.address, icon: MapPin },
+        ]}
+      />,
+    );
+
+    sidebar.registerTab(
+      "vehicles",
+      "Vehicles",
+      <RecentList
+        items={customer.vehicles.map((v) => ({
+          id: v.id,
+          primary: v.plate_number,
+          secondary: [v.year, v.make, v.model].filter(Boolean).join(" "),
+          href: `/dashboard/vehicles/${v.id}`,
+        }))}
+        emptyMessage="No vehicles"
+      />,
+    );
+
+    return () => {
+      sidebar.unregisterTab("contact");
+      sidebar.unregisterTab("vehicles");
+      sidebar.setOpen(false);
+    };
+  }, [customer]);
 
   const vehicleExportColumns: ExportColumn<CustomerVehicleSummary>[] = [
     { key: "plate_number", label: "Plate" },
@@ -397,6 +444,10 @@ export default function CustomerDetailPage() {
           router={router}
         />
       )}
+
+      <CommunicationLog orgId={orgId} customerId={customerId} />
+
+      <CustomerNotes orgId={orgId} customerId={customerId} />
     </div>
   );
 }

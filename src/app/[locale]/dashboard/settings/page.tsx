@@ -17,12 +17,16 @@ import { toast } from "sonner";
 import { applyBrandThemePreview } from "@/components/brand-theme-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization } from "@/lib/types";
 import { setCookie } from "@/lib/utils";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { QuickActions } from "@/components/sidebar-tabs/quick-actions";
 import {
   DEFAULT_FORM,
   buildFormFromOrganization,
@@ -237,6 +241,30 @@ export default function SettingsPage() {
     }
   }
 
+  const { state: pageHeader, setActiveTab: setPageTab } = usePageHeader();
+  const activeTab = pageHeader.activeTab;
+  const sidebar = useRightSidebar();
+
+  useEffect(() => {
+    sidebar.registerTab(
+      "sections",
+      "Sections",
+      <QuickActions
+        actions={[
+          { label: "General", icon: Building2, onClick: () => setPageTab("general") },
+          { label: "Appearance", icon: Palette, onClick: () => setPageTab("appearance") },
+          { label: "Commission", icon: Percent, onClick: () => setPageTab("commission") },
+          { label: "Diagnosis", icon: Stethoscope, onClick: () => setPageTab("diagnosis") },
+          { label: "Export", icon: Database, onClick: () => setPageTab("export") },
+        ]}
+      />,
+    );
+    sidebar.setOpen(true);
+    return () => {
+      sidebar.unregisterTab("sections");
+    };
+  }, [sidebar, setPageTab]);
+
   if (orgInfoQuery.isLoading || loading) {
     return <LoadingSkeleton />;
   }
@@ -251,84 +279,86 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-10">
-      <section>
-        <SectionHeading
-          icon={Building2}
-          title="General"
-          description="Basic business information and default values for new invoices."
-        />
-        <div className="mt-4 grid gap-6 lg:grid-cols-3">
-          <OrganizationCard
-            orgId={orgId ?? ""}
-            organization={organization}
-            onRefetch={refetch}
+    <div className="flex flex-col gap-6">
+      {activeTab === "general" && (
+        <section>
+          <SectionHeading
+            icon={Building2}
+            title="General"
+            description="Basic business information and default values for new invoices."
           />
-          <BusinessDefaultsForm
-            form={form}
-            setForm={setForm}
-            saving={saving}
-            error={error}
-            successMessage={successMessage}
-            currentLocale={currentLocale}
-            onSubmit={handleSubmit}
+          <div className="mt-4 grid gap-6 lg:grid-cols-3">
+            <OrganizationCard
+              orgId={orgId ?? ""}
+              organization={organization}
+              onRefetch={refetch}
+            />
+            <BusinessDefaultsForm
+              form={form}
+              setForm={setForm}
+              saving={saving}
+              error={error}
+              successMessage={successMessage}
+              currentLocale={currentLocale}
+              onSubmit={handleSubmit}
+            />
+          </div>
+        </section>
+      )}
+
+      {activeTab === "appearance" && (
+        <section>
+          <SectionHeading
+            icon={Palette}
+            title="Appearance"
+            description="Customize colors, theme, and interface density to match your brand."
           />
-        </div>
-      </section>
+          <div className="mt-4">
+            <AppearanceCustomization
+              form={form}
+              setForm={setForm}
+              theme={theme}
+              setTheme={setTheme}
+              preview={preview}
+            />
+          </div>
+        </section>
+      )}
 
-      <Separator />
-
-      <section>
-        <SectionHeading
-          icon={Palette}
-          title="Appearance"
-          description="Customize colors, theme, and interface density to match your brand."
-        />
-        <div className="mt-4">
-          <AppearanceCustomization
-            form={form}
-            setForm={setForm}
-            theme={theme}
-            setTheme={setTheme}
-            preview={preview}
+      {activeTab === "commission" && (
+        <section>
+          <SectionHeading
+            icon={Percent}
+            title="Commission Rules"
+            description="Configure how mechanics earn commissions on work orders."
           />
-        </div>
-      </section>
+          <CommissionRulesSection orgId={orgId ?? ""} />
+        </section>
+      )}
 
-      <Separator />
+      {activeTab === "diagnosis" && (
+        <section>
+          <SectionHeading
+            icon={Stethoscope}
+            title="Diagnosis Labels"
+            description="Manage reusable labels for work order complaints (e.g., engine, brake, electrical)."
+          />
+          <DiagnosisLabelsSection orgId={orgId ?? ""} />
+        </section>
+      )}
 
-      <section>
-        <SectionHeading
-          icon={Percent}
-          title="Commission Rules"
-          description="Configure how mechanics earn commissions on work orders."
-        />
-        <CommissionRulesSection orgId={orgId ?? ""} />
-      </section>
-
-      <Separator />
-
-      <section>
-        <SectionHeading
-          icon={Stethoscope}
-          title="Diagnosis Labels"
-          description="Manage reusable labels for work order complaints (e.g., engine, brake, electrical)."
-        />
-        <DiagnosisLabelsSection orgId={orgId ?? ""} />
-      </section>
-
-      <Separator />
-
-      <section>
-        <SectionHeading
-          icon={Database}
-          title="Data & Export"
-          description="Download your data or run database backups."
-        />
-        <div className="mt-4">
-          <DataExportSection orgId={orgId ?? ""} />
-        </div>
-      </section>
+      {activeTab === "export" && (
+        <section>
+          <SectionHeading
+            icon={Database}
+            title="Data & Export"
+            description="Download your data or run database backups."
+          />
+          <div className="mt-4">
+            <DataExportSection orgId={orgId ?? ""} />
+          </div>
+        </section>
+      )}
     </div>
   );
 }

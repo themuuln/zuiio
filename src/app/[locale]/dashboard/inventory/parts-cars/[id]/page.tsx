@@ -26,6 +26,7 @@ import {
   usePartsCarParts,
   useStartDisassembly,
   useCompleteDisassembly,
+  usePublishPartsCarToCatalog,
   useAddPartsCarPart,
   useRemovePartsCarPart,
 } from "@/lib/queries/use-inventory";
@@ -98,6 +99,7 @@ export default function PartsCarDetailPage() {
 
   const startDisassembly = useStartDisassembly(orgId);
   const completeDisassembly = useCompleteDisassembly(orgId);
+  const publishToCatalog = usePublishPartsCarToCatalog(orgId);
   const addPart = useAddPartsCarPart(orgId);
   const removePart = useRemovePartsCarPart(orgId);
 
@@ -504,16 +506,31 @@ export default function PartsCarDetailPage() {
       {/* Completed footer */}
       {isCompleted && (
         <Card className="border-green-200 bg-green-50/40">
-          <CardContent className="flex items-center gap-3 p-4">
-            <CheckCircle2 className="size-5 text-green-600" />
-            <div>
-              <p className="font-medium text-sm text-green-800">
-                {t('completed.title')}
-              </p>
-              <p className="text-xs text-green-600">
-                {t('completed.description', { count: car.total_parts_actual, value: formatMNT(car.total_estimated_value) })}
-              </p>
+          <CardContent className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="size-5 text-green-600" />
+              <div>
+                <p className="font-medium text-sm text-green-800">
+                  {t('completed.title')}
+                </p>
+                <p className="text-xs text-green-600">
+                  {t('completed.description', { count: car.total_parts_actual, value: formatMNT(car.total_estimated_value) })}
+                </p>
+              </div>
             </div>
+            <Button
+              onClick={async () => {
+                try {
+                  const result = await publishToCatalog.mutateAsync(carId);
+                  toast.success(t('toast.published', { count: result.publishedCount }));
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : t('toast.publishError'));
+                }
+              }}
+              disabled={publishToCatalog.isPending}
+            >
+              {publishToCatalog.isPending ? t('actions.publishing') : t('actions.publishToCatalog')}
+            </Button>
           </CardContent>
         </Card>
       )}

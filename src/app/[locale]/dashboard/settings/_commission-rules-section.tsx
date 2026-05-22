@@ -91,7 +91,7 @@ function CommissionFormDialog({
 
   const [name, setName] = useState(editingRule?.name ?? "");
   const [mechanicId, setMechanicId] = useState(editingRule?.mechanic_id ?? "");
-  const [commissionType, setCommissionType] = useState(
+  const [commissionType, setCommissionType] = useState<MechanicCommissionRule['commission_type']>(
     editingRule?.commission_type ?? "percentage_of_labor",
   );
   const [commissionValue, setCommissionValue] = useState(
@@ -128,7 +128,7 @@ function CommissionFormDialog({
       const body = {
         name: name.trim(),
         mechanic_id: mechanicId || null,
-        commission_type: commissionType,
+        commission_type: commissionType as MechanicCommissionRule['commission_type'],
         commission_value: parseFloat(commissionValue),
         min_commission: minCommission ? parseFloat(minCommission) : null,
         max_commission: maxCommission ? parseFloat(maxCommission) : null,
@@ -182,9 +182,7 @@ function CommissionFormDialog({
               <Combobox
                 items={mechanics}
                 value={selectedMechanic}
-                getItemValue={(m) => m.full_name ?? m.id}
                 onValueChange={(m) => setMechanicId(m?.id ?? "")}
-                isItemEqualToValue={(a, b) => a.id === b.id}
               >
                 <ComboboxInput
                   placeholder="All Mechanics (default rule)"
@@ -215,7 +213,7 @@ function CommissionFormDialog({
             <select
               id="commission-type"
               value={commissionType}
-              onChange={(e) => setCommissionType(e.target.value)}
+              onChange={(e) => setCommissionType(e.target.value as MechanicCommissionRule['commission_type'])}
               className="flex h-11 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {COMMISSION_TYPES.map((ct) => (

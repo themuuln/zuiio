@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowLeft, ChevronDown, ChevronRight, Pencil, Save, Trash2, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Pencil, Phone, Save, Trash2, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import type { ExportColumn } from "@/lib/export";
@@ -19,6 +19,9 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { vehicleKeys } from "@/lib/queries/keys";
 import { useQuery } from "@tanstack/react-query";
 import { formatMNT } from "@/lib/utils";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { ContactCard } from "@/components/sidebar-tabs/contact-card";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 
 interface VehicleOwnerSummary {
   customer_id: string;
@@ -290,6 +293,44 @@ export default function VehicleDetailPage() {
     vehicle.owners.find((owner) => owner.is_primary) ??
     vehicle.owners[0] ??
     null;
+
+  const { registerTab, setOpen } = useRightSidebar();
+
+  useEffect(() => {
+    if (!vehicle) return;
+    const owner = vehicle.owners.find((o) => o.is_primary) ?? vehicle.owners[0] ?? null;
+    if (owner) {
+      registerTab("owner", "Owner", (
+        <ContactCard
+          title="Owner Info"
+          items={[
+            { label: "Name", value: owner.name, copyable: true },
+            { label: "Phone", value: owner.phone, icon: Phone, copyable: true },
+          ]}
+        />
+      ));
+    }
+    const history = [...vehicle.service_history]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 3)
+      .map((wo) => ({
+        id: wo.id,
+        primary: String(wo.status),
+        secondary: formatMNT(Number(wo.total)),
+        timestamp: formatDate(wo.created_at),
+        href: `/dashboard/work-orders/${wo.id}`,
+      }));
+    if (history.length > 0) {
+      registerTab("history", "History", (
+        <RecentList
+          title="Service History"
+          items={history}
+          emptyMessage="No service history"
+        />
+      ));
+    }
+    setOpen(true);
+  }, [vehicle, registerTab, setOpen]);
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">

@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
 import { CustomerDetailDrawer } from "@/components/customer-detail-drawer";
 import { ExportButton } from "@/components/export-button";
@@ -32,6 +32,9 @@ import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
 import { useCustomers } from "@/lib/queries/use-customers";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 
 interface CustomerWithVehicleCount extends Customer {
   vehicle_count?: number;
@@ -144,13 +147,63 @@ export default function CustomersPage() {
   } = useCurrentOrg();
 
   const {
-    data: customers,
+    data: rawCustomers,
     isLoading: customersLoading,
     isFetching: customersFetching,
     isError,
     error,
     refetch,
   } = useCustomers(org?.orgId, search);
+  const customers = Array.isArray(rawCustomers) ? rawCustomers : [];
+
+  const { registerTab, setOpen } = useRightSidebar();
+
+  useEffect(() => {
+    if (!rawCustomers) return;
+
+    const now = new Date();
+    const newThisMonth = customers.filter(
+      (c) =>
+        c.created_at &&
+        new Date(c.created_at).getMonth() === now.getMonth() &&
+        new Date(c.created_at).getFullYear() === now.getFullYear(),
+    ).length;
+
+    registerTab(
+      "stats",
+      "Stats",
+      <StatusSummary
+        title="Overview"
+        items={[
+          { label: "Total Customers", count: customers.length },
+          { label: "New This Month", count: newThisMonth },
+        ]}
+      />,
+    );
+
+    const recent = [...customers]
+      .sort(
+        (a, b) =>
+          new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime(),
+      )
+      .slice(0, 5)
+      .map((c) => ({
+        id: c.id,
+        primary:
+          [c.first_name, c.last_name].filter(Boolean).join(" ") ||
+          c.phone ||
+          "Unknown",
+        secondary: c.phone,
+      }));
+
+    registerTab(
+      "recent",
+      "Recent",
+      <RecentList items={recent} title="Recent Customers" />,
+    );
+
+    setOpen(true);
+  }, [rawCustomers, customers, registerTab, setOpen]);
 
   const isFirstLoad = !customers && !search;
   const showLoadingScreen = orgLoading || (customersLoading && isFirstLoad);

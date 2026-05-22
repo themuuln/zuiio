@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowLeft, FileText, Plus, Trash2, Wallet } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Camera, FileText, Mail, Phone, Plus, Trash2, Wallet } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
@@ -35,8 +35,17 @@ import {
   useUpdateWorkOrderStatus,
   useWorkOrderDetail,
 } from "@/lib/queries/use-work-order-detail";
+import {
+  useAttachments,
+  useDeleteAttachment,
+} from "@/lib/queries/use-work-order-attachments";
+import WorkOrderPhotoUpload from "@/components/work-order-photo-upload";
+import type { WorkOrderAttachment } from "@/lib/types";
 import type { ServiceCatalog } from "@/lib/types";
 import { cn, formatMNT } from "@/lib/utils";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { ContactCard } from "@/components/sidebar-tabs/contact-card";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 
 const STATUSES = [
   "New",
@@ -49,7 +58,8 @@ const STATUSES = [
 
 export default function WorkOrderDetailPage() {
   const params = useParams();
-  const { push, back } = useRouter();
+  const router = useRouter();
+  const { push, back } = router;
   const woId = params.id as string;
   const t = useTranslations("workOrderDetail");
 
@@ -109,13 +119,19 @@ export default function WorkOrderDetailPage() {
   const { data: invoicePaymentsData } = useInvoicePayments(orgId, existingInvoiceId);
   const recordPayment = useRecordPayment(orgId);
 
+  const { data: attachments = [] } = useAttachments(orgId, woId);
+  const deleteAttachment = useDeleteAttachment(orgId, woId);
+
+  const sidebar = useRightSidebar();
+
   const saving =
     updateStatus.isPending ||
     assignMechanicMutation.isPending ||
     addService.isPending ||
     removeService.isPending ||
     addPart.isPending ||
-    removePart.isPending;
+    removePart.isPending ||
+    deleteAttachment.isPending;
 
   useEffect(() => {
     if (!orgLoading && !orgId && !orgError) {
@@ -133,6 +149,62 @@ export default function WorkOrderDetailPage() {
       setNewPart((part) => ({ ...part, unit_price: partPriceHistoryData[0] }));
     }
   }, [partPriceHistoryData, newPart.unit_price]);
+
+  useEffect(() => {
+    if (!wo) return;
+
+    sidebar.setOpen(true);
+    sidebar.setActiveTab("vehicle");
+
+    sidebar.registerTab(
+      "vehicle",
+      "Vehicle",
+      <ContactCard
+        title="Vehicle"
+        items={[
+          { label: "Plate Number", value: wo.vehicle?.plate_number, copyable: true },
+          { label: "Make / Model", value: [wo.vehicle?.make, wo.vehicle?.model].filter(Boolean).join(" ") },
+          { label: "Year", value: wo.vehicle?.year?.toString() },
+          { label: "VIN", value: wo.vehicle?.vin, copyable: true },
+        ]}
+      />,
+    );
+
+    sidebar.registerTab(
+      "customer",
+      "Customer",
+      <ContactCard
+        title="Customer"
+        items={[
+          { label: "Name", value: [wo.customer?.first_name, wo.customer?.last_name].filter(Boolean).join(" "), copyable: true },
+          { label: "Phone", value: wo.customer?.phone, icon: Phone, copyable: true },
+          { label: "Email", value: wo.customer?.email, icon: Mail, copyable: true },
+        ]}
+      />,
+    );
+
+    sidebar.registerTab(
+      "timeline",
+      "Timeline",
+      <RecentList
+        title="Status History"
+        items={(wo.status_history ?? []).map((h) => ({
+          id: h.id,
+          primary: h.status,
+          secondary: h.notes ?? undefined,
+          timestamp: new Date(h.created_at).toLocaleString(),
+        }))}
+        emptyMessage="No status changes"
+      />,
+    );
+
+    return () => {
+      sidebar.unregisterTab("vehicle");
+      sidebar.unregisterTab("customer");
+      sidebar.unregisterTab("timeline");
+      sidebar.setOpen(false);
+    };
+  }, [wo]);
 
   const serviceExportColumns: ExportColumn<WorkOrderService>[] = useMemo(
     () => [
@@ -348,7 +420,7 @@ export default function WorkOrderDetailPage() {
             <h1 className="text-2xl font-semibold tracking-tight">
               WO #{wo.id.slice(0, 8)}
             </h1>
-            <StatusBadge status={wo.status as WorkOrderStatus} />
+            <StatusBadge status={wo.status as unknown as WorkOrderStatus} />
           </div>
           <p className="text-sm text-muted-foreground">
             {new Date(wo.created_at).toLocaleDateString()}
@@ -497,7 +569,7 @@ export default function WorkOrderDetailPage() {
                   <span
                     className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
                     style={{
-                      backgroundColor: `${(wo as any).diagnosis_label.color}20` ?? undefined,
+                      backgroundColor: (wo as any).diagnosis_label?.color ? `${(wo as any).diagnosis_label.color}20` : undefined,
                       color: (wo as any).diagnosis_label.color ?? undefined,
                     }}
                   >
@@ -860,7 +932,7 @@ export default function WorkOrderDetailPage() {
                     )}
                   </div>
                   <div>
-                    <StatusBadge status={h.status as WorkOrderStatus} />
+                    <StatusBadge status={h.status as unknown as WorkOrderStatus} />
                     <span className="ml-2 text-xs text-muted-foreground">
                       {new Date(h.created_at).toLocaleString()}
                     </span>
@@ -876,6 +948,72 @@ export default function WorkOrderDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Photos & Documents */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Camera className="size-4" />
+            {t("photos")}
+          </CardTitle>
+          <WorkOrderPhotoUpload orgId={orgId} workOrderId={woId} />
+        </CardHeader>
+        <CardContent>
+          {attachments.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              {t("noPhotos")}
+            </p>
+          ) : (
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+              {attachments.map((att: WorkOrderAttachment) => (
+                <div
+                  key={att.id}
+                  className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
+                >
+                  {att.file_type === "photo" ? (
+                    <a
+                      href={att.public_url ?? "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block size-full"
+                    >
+                      <img
+                        src={att.public_url ?? ""}
+                        alt={att.file_name}
+                        className="size-full object-cover"
+                      />
+                    </a>
+                  ) : (
+                    <a
+                      href={att.public_url ?? "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex size-full flex-col items-center justify-center gap-1 p-2"
+                    >
+                      <FileText className="size-8 text-muted-foreground" />
+                      <span className="text-[10px] text-muted-foreground text-center leading-tight line-clamp-2">
+                        {att.file_name}
+                      </span>
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm("Remove this photo?")) {
+                        deleteAttachment.mutate(att.id);
+                      }
+                    }}
+                    className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-full bg-background/80 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
+                    aria-label="Remove photo"
+                  >
+                    <Trash2 className="size-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Invoice Generation */}
       {(wo.status === "Completed" || wo.status === "Ready for Pickup") && (

@@ -9,7 +9,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -33,6 +33,9 @@ import {
   useExpenses,
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import type { ExpenseWithCategory } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 
@@ -178,6 +181,45 @@ export default function ExpensesPage() {
   const { data: stats, isLoading: statsLoading } = useExpenseStats(orgId);
 
   const { data: categories } = useExpenseCategories(orgId);
+
+  const sidebar = useRightSidebar();
+
+  useEffect(() => {
+    if (!stats || !categories) return;
+
+    sidebar.setOpen(true);
+    sidebar.setActiveTab("summary");
+
+    sidebar.registerTab(
+      "summary",
+      "Summary",
+      <StatusSummary
+        title="This Month"
+        items={[
+          { label: "Total", count: stats.thisMonth },
+          { label: "Unpaid", count: stats.unpaidAmount, color: "destructive" },
+        ]}
+      />,
+    );
+
+    sidebar.registerTab(
+      "categories",
+      "Categories",
+      <RecentList
+        items={categories.map((cat) => ({
+          id: cat.id,
+          primary: cat.name,
+        }))}
+        emptyMessage="No categories"
+      />,
+    );
+
+    return () => {
+      sidebar.unregisterTab("summary");
+      sidebar.unregisterTab("categories");
+      sidebar.setOpen(false);
+    };
+  }, [stats, categories]);
 
   const isFirstLoad =
     !expenses && !search && !categoryId && paidFilter === "all";
