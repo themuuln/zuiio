@@ -6,12 +6,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/i18n/navigation";
 import { requestPasswordReset } from "./actions";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Forgot Password | TOLOM",
-  description: "Reset your password",
-};
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("auth.forgotPassword");

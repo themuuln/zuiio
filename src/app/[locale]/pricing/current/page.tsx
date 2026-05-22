@@ -22,12 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Current Plan | TOLOM",
-  description: "Your current pricing plan",
-};
 
 type FeatureStatus = boolean;
 
@@ -325,7 +320,7 @@ export default function PricingCurrentPage() {
           <p className="mt-3 text-muted-foreground">{t("comingSubtitle")}</p>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:text-left">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+            {[2, 3, 4, 5, 6].map((i) => (
               <div key={`item-${i}`} className="flex items-center gap-2 text-sm">
                 <Check className="size-4 shrink-0 text-muted-foreground/40" />
                 <span className="text-muted-foreground">

@@ -6,12 +6,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Confirm Email | TOLOM",
-  description: "Confirm your email address",
-};
 
 export default function ConfirmEmailPage() {
   const t = useTranslations("auth.confirmEmail");

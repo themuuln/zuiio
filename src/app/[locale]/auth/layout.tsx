@@ -1,5 +1,10 @@
 import { Wrench } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Auth",
+};
 
 export default async function AuthLayout({
   children,

@@ -13,12 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Link } from "@/lib/i18n/navigation";
 import { login } from "./actions";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Login | TOLOM",
-  description: "Login to your account",
-};
 
 export default function LoginPage() {
   const t = useTranslations("auth.login");

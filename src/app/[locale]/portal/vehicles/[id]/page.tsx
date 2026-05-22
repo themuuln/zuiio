@@ -90,9 +90,9 @@ export default function PortalVehicleDetailPage() {
                 {vehicle.year ? ` (${vehicle.year})` : ""}
               </p>
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground/70">
-                {vehicle.vin && <span>VIN: {vehicle.vin as string}</span>}
-                {vehicle.odometer && <span>{(vehicle.odometer as number)?.toLocaleString()} km</span>}
-                {vehicle.color && <span>{vehicle.color as string}</span>}
+                {(vehicle.vin as string) && <span>VIN: {vehicle.vin as string}</span>}
+                {(vehicle.odometer as number) && <span>{(vehicle.odometer as number)?.toLocaleString()} km</span>}
+                {(vehicle.color as string) && <span>{vehicle.color as string}</span>}
               </div>
             </div>
           </div>

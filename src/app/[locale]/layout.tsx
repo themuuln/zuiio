@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
+
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
@@ -9,18 +9,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/lib/i18n/routing";
 import "../globals.css";
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
+export const dynamic = "force-dynamic";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -63,9 +54,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <div
-      className={`${inter.variable} ${jetbrainsMono.variable} flex min-h-dvh flex-col antialiased`}
-    >
+    <div className="flex min-h-dvh flex-col antialiased">
       <TooltipProvider>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <QueryProvider>

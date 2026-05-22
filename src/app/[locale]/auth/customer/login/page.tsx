@@ -11,17 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { customerLogin } from "./actions";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Customer Login | TOLOM",
-  description: "Customer portal login",
-};
 
 export default function CustomerLoginPage() {
   const t = useTranslations();
-  const { get } = useSearchParams();
-  const redirectTo = get("redirectTo") ?? "/portal";
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") ?? "/portal";
 
   const [state, formAction, isPending] = useActionState(customerLogin, {
     error: "",

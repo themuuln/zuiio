@@ -15,17 +15,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { setCustomerPassword } from "./actions";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Set Password | TOLOM",
-  description: "Set your account password",
-};
 
 export default function CustomerSetPasswordPage() {
   const t = useTranslations();
-  const { get } = useSearchParams();
-  const token = get("token");
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
 
   const [state, formAction, isPending] = useActionState(setCustomerPassword, {
     error: "",

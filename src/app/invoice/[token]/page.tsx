@@ -23,14 +23,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { InvoiceItem, InvoicePayment, InvoiceWithItems } from "@/lib/database.types";
+import type { InvoiceItem, InvoicePayment } from "@/lib/database.types";
+import type { InvoiceWithItems } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Invoice | TOLOM",
-  description: "Invoice details",
-};
 
 // ── Invoice status badge ─────────────────────────────────
 

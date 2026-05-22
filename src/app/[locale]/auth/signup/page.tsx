@@ -13,12 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Link } from "@/lib/i18n/navigation";
 import { signup } from "./actions";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Sign Up | TOLOM",
-  description: "Create your account",
-};
 
 export default function SignupPage() {
   const t = useTranslations("auth.signup");
@@ -81,6 +76,18 @@ export default function SignupPage() {
               required
               minLength={8}
               placeholder={t("passwordPlaceholder")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="confirmPassword">{t("confirmPasswordLabel")}</FieldLabel>
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              placeholder={t("confirmPasswordPlaceholder")}
             />
           </Field>
           <Field>

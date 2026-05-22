@@ -35,7 +35,7 @@ export async function setCustomerPassword(
 
   const { data: customer, error: customerError } = await supabase
     .from("customers")
-    .select("*")
+    .select("id, organization_id, first_name, last_name, email, portal_token")
     .eq("portal_token", token)
     .is("deleted_at", null)
     .maybeSingle();

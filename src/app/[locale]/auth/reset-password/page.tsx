@@ -5,12 +5,7 @@ import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { resetPassword } from "./actions";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Reset Password | TOLOM",
-  description: "Reset your password",
-};
 
 export default function ResetPasswordPage() {
   const t = useTranslations("auth.resetPassword");

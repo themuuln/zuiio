@@ -15,12 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ApiResponse } from "@/lib/types";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Invitation | TOLOM",
-  description: "Team invitation",
-};
 
 interface InviteData {
   id: string;
