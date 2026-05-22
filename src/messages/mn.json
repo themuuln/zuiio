@@ -199,7 +199,12 @@
     "noActiveWorkOrders": "Идэвхтэй захиалга байхгүй",
     "noMechanics": "Механикч байхгүй",
     "noMechanicsDesc": "Механикчдын мэдээллийг харахын тулд Засварын булан хэсгээс механикч бүртгүүлнэ үү.",
-    "loading": "Ачаалж байна..."
+    "loading": "Ачаалж байна...",
+    "clockIn": "Эхлэх",
+    "clockOut": "Дуусгах",
+    "clockedIn": "Ажиллаж байна",
+    "clockedOut": "Амралттай",
+    "hoursToday": "Өнөөдөр ажилласан"
   },
   "bayView": {
     "title": "Засварын булан",
@@ -223,6 +228,15 @@
     "listHeaderStatus": "Төлөв",
     "listHeaderTime": "Хугацаа",
     "emptyBay": "Хоосон",
+    "kanbanView": "Канбан",
+    "listHeaderModel": "Загвар",
+    "totalBays": "Нийт булан",
+    "occupied": "Эзлэгдсэн",
+    "available": "Чөлөөтэй",
+    "clickToAssign": "Томилох",
+    "showSidebar": "Хажуугийн самбар",
+    "assignedToBay": "Буланд томилогдсон",
+    "failedToAssign": "Томилох амжилтгүй",
     "markReady": "Авахад бэлэн",
     "complete": "Гүйцэтгэсэн",
     "open": "Нээх",
@@ -1472,7 +1486,12 @@
     "lastPrices": "Сүүлийн үнэ: {prices}",
     "complaint": "Гомдол",
     "diagnosis": "Оношлогоо",
-    "grandTotal": "Нийт дүн"
+    "grandTotal": "Нийт дүн",
+    "photos": "Зураг & Баримт",
+    "noPhotos": "Зураг эсвэл баримт хавсаргаагүй байна.",
+    "addPhoto": "Зураг нэмэх",
+    "uploading": "Байршуулж байна...",
+    "removePhoto": "Устгах"
   },
   "partsCars": {
     "title": "Задаргааны машин",

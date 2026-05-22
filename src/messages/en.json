@@ -199,7 +199,12 @@
     "noActiveWorkOrders": "No active work orders assigned",
     "noMechanics": "No mechanics found",
     "noMechanicsDesc": "Register mechanics in Bay View to view their schedules here.",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "clockIn": "Clock In",
+    "clockOut": "Clock Out",
+    "clockedIn": "Clocked in",
+    "clockedOut": "Clocked out",
+    "hoursToday": "Hours Today"
   },
   "bayView": {
     "title": "Bay View",
@@ -223,6 +228,15 @@
     "listHeaderStatus": "Status",
     "listHeaderTime": "Time",
     "emptyBay": "Empty",
+    "kanbanView": "Kanban",
+    "listHeaderModel": "Model",
+    "totalBays": "Total Bays",
+    "occupied": "Occupied",
+    "available": "Available",
+    "clickToAssign": "Click to assign",
+    "showSidebar": "Show sidebar",
+    "assignedToBay": "Assigned to Bay",
+    "failedToAssign": "Failed to assign",
     "markReady": "Mark Ready",
     "complete": "Complete",
     "open": "Open",
@@ -1472,7 +1486,12 @@
     "lastPrices": "Last prices: {prices}",
     "complaint": "Complaint",
     "diagnosis": "Diagnosis",
-    "grandTotal": "Grand Total"
+    "grandTotal": "Grand Total",
+    "photos": "Photos & Documents",
+    "noPhotos": "No photos or documents attached.",
+    "addPhoto": "Add Photo",
+    "uploading": "Uploading...",
+    "removePhoto": "Remove"
   },
   "partsCars": {
     "title": "Parts Cars",
