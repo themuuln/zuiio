@@ -65,7 +65,7 @@ export const PATCH = createRouteHandler(async ({ request, supabase, params, orgI
     .eq("id", purchaseOrderId)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("*")
+    .select("id, organization_id, supplier_id, order_number, status, total_amount, order_date, expected_at, received_at, notes, created_at, updated_at")
     .single();
 
   if (error || !po) {

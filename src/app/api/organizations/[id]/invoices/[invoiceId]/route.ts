@@ -97,7 +97,7 @@ export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
       .update({ tax_total: taxTotal, total: newTotal })
       .eq("id", invoiceId)
       .eq("organization_id", orgId)
-      .select("*")
+      .select("id, organization_id, invoice_number, status, subtotal, discount_total, tax_total, total, amount_paid, balance_due, issued_at, due_at, paid_at, notes")
       .single();
 
     return NextResponse.json({ data: updated });

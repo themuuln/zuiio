@@ -8,7 +8,7 @@ import { createWorkOrder, getWorkOrders } from "@/lib/services/work-order-servic
 export const GET = createRouteHandler(async ({ request, orgId }) => {
   const { searchParams } = new URL(request.url);
   const filters = {
-    status: (searchParams.get("status") as WorkOrderStatus) ?? undefined,
+    status: (searchParams.get("status") as unknown as WorkOrderStatus) ?? undefined,
     mechanic_id: searchParams.get("mechanic") ?? undefined,
     date: searchParams.get("date") ?? undefined,
   };

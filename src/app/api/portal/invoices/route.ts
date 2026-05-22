@@ -29,7 +29,7 @@ export const GET = createPortalRouteHandler(
 
     const { data: invoices, error: invoicesError } = await supabase
       .from("invoices")
-      .select("*")
+      .select("id, organization_id, invoice_number, status, subtotal, total, amount_paid, balance_due, issued_at, due_at, paid_at, work_order_id, customer_name, vehicle_plate, public_token, created_at")
       .in("work_order_id", workOrderIds)
       .is("deleted_at", null)
       .order("issued_at", { ascending: false });
@@ -42,7 +42,7 @@ export const GET = createPortalRouteHandler(
       const invoiceIds = invoices.map((inv) => inv.id);
       const { data: items, error: itemsError } = await supabase
         .from("invoice_items")
-        .select("*")
+        .select("id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order")
         .in("invoice_id", invoiceIds);
 
       if (itemsError) throw itemsError;

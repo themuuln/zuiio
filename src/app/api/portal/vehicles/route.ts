@@ -18,7 +18,7 @@ export const GET = createPortalRouteHandler(async ({ customer, supabase }) => {
 
   const { data: vehicles, error } = await supabase
     .from("vehicles")
-    .select("*")
+    .select("id, plate_number, make, model, year, vin, color, odometer, engine, fuel_type, transmission, last_visit_at, next_service_at, created_at")
     .in("id", vehicleIds)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });

@@ -5,7 +5,7 @@ import { ValidationError } from "@/lib/errors";
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   const { data, error } = await supabase
     .from("diagnosis_labels")
-    .select("*")
+    .select("id, organization_id, name, name_mn, color, sort_order, is_active, created_at, updated_at")
     .eq("organization_id", orgId)
     .is("deleted_at", null)
     .order("sort_order", { ascending: true })
