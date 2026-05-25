@@ -26,6 +26,18 @@ function DashboardHeader() {
   );
 }
 
+function GlobalDialogs() {
+  const { isNewCustomerDialogOpen, setNewCustomerDialogOpen } =
+    usePageHeader();
+
+  return (
+    <NewCustomerDialog
+      open={isNewCustomerDialogOpen}
+      onOpenChange={setNewCustomerDialogOpen}
+    />
+  );
+}
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   useRequireAuth();
   const { data: orgInfo } = useCurrentOrg();
@@ -38,6 +50,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <AppSidebar />
             <SidebarInset className="min-h-0">
               <DashboardHeader />
+              <GlobalDialogs />
               <div className="flex min-h-0 flex-1 overflow-hidden">
                 <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-auto px-4 pt-4 md:px-6">
                   {children}

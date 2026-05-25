@@ -68,7 +68,7 @@ export function MechanicSelect({
         onValueChange={(mechanic) => {
           onChange(mechanic?.id ?? "");
         }}
-        isItemEqualToValue={(a, b) => a.id === b.id}
+        isItemEqualToValue={(a, b) => a?.id === b?.id}
         itemToStringLabel={(mechanic: Mechanic | null) =>
           mechanic ? getMechanicName(mechanic) : ""
         }

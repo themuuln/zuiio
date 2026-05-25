@@ -1675,7 +1675,32 @@
         }
       ],
       "trend": "stable"
+    },
+    "src/components/mechanic-select.tsx": {
+      "latest": {
+        "commit": "bbb8706",
+        "timestamp": "2026-05-25T07:43:25.621Z",
+        "mi": 35.6,
+        "cognitive": 10,
+        "nesting": 2,
+        "lines": 90,
+        "maxCyclomatic": 9,
+        "entropy": 5.75
+      },
+      "history": [
+        {
+          "commit": "bbb8706",
+          "timestamp": "2026-05-25T07:43:25.621Z",
+          "mi": 35.6,
+          "cognitive": 10,
+          "nesting": 2,
+          "lines": 90,
+          "maxCyclomatic": 9,
+          "entropy": 5.75
+        }
+      ],
+      "trend": "stable"
     }
   },
-  "capturedAt": "2026-05-24T18:12:21.761Z"
+  "capturedAt": "2026-05-25T07:43:30.622Z"
 }

@@ -58,16 +58,6 @@
     },
     {
       "type": "file",
-      "name": "src/lib/sidebar-transitions.ts",
-      "file": "src/lib/sidebar-transitions.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/validations.ts",
-      "file": "src/lib/validations.ts"
-    },
-    {
-      "type": "file",
       "name": "src/hooks/use-breadcrumbs.ts",
       "file": "src/hooks/use-breadcrumbs.ts"
     },
@@ -75,6 +65,16 @@
       "type": "file",
       "name": "src/hooks/use-persisted-state.ts",
       "file": "src/hooks/use-persisted-state.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/sidebar-transitions.ts",
+      "file": "src/lib/sidebar-transitions.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/validations.ts",
+      "file": "src/lib/validations.ts"
     },
     {
       "type": "file",
@@ -258,26 +258,6 @@
     },
     {
       "type": "file",
-      "name": "src/components/work-orders/customer-select.tsx",
-      "file": "src/components/work-orders/customer-select.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/components/work-orders/part-lines.tsx",
-      "file": "src/components/work-orders/part-lines.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/components/work-orders/service-lines.tsx",
-      "file": "src/components/work-orders/service-lines.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/components/work-orders/vehicle-select.tsx",
-      "file": "src/components/work-orders/vehicle-select.tsx"
-    },
-    {
-      "type": "file",
       "name": "src/components/ui/aspect-ratio.tsx",
       "file": "src/components/ui/aspect-ratio.tsx"
     },
@@ -368,6 +348,26 @@
     },
     {
       "type": "file",
+      "name": "src/components/work-orders/customer-select.tsx",
+      "file": "src/components/work-orders/customer-select.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/part-lines.tsx",
+      "file": "src/components/work-orders/part-lines.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/service-lines.tsx",
+      "file": "src/components/work-orders/service-lines.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/vehicle-select.tsx",
+      "file": "src/components/work-orders/vehicle-select.tsx"
+    },
+    {
+      "type": "file",
       "name": "src/lib/cache/server.ts",
       "file": "src/lib/cache/server.ts"
     },
@@ -393,13 +393,13 @@
     },
     {
       "type": "file",
-      "name": "src/test/mocks/handlers.ts",
-      "file": "src/test/mocks/handlers.ts"
+      "name": "supabase/functions/check-service-reminders/index.ts",
+      "file": "supabase/functions/check-service-reminders/index.ts"
     },
     {
       "type": "file",
-      "name": "supabase/functions/check-service-reminders/index.ts",
-      "file": "supabase/functions/check-service-reminders/index.ts"
+      "name": "src/test/mocks/handlers.ts",
+      "file": "src/test/mocks/handlers.ts"
     },
     {
       "type": "file",
@@ -519,39 +519,9 @@
     },
     {
       "type": "export",
-      "name": "createRateLimiter",
-      "file": "src/lib/rate-limit.ts",
-      "line": 42
-    },
-    {
-      "type": "export",
-      "name": "apiRateLimiter",
-      "file": "src/lib/rate-limit.ts",
-      "line": 77
-    },
-    {
-      "type": "export",
-      "name": "checkRateLimit",
-      "file": "src/lib/rate-limit.ts",
-      "line": 85
-    },
-    {
-      "type": "export",
-      "name": "RateLimiterResult",
-      "file": "src/lib/rate-limit.ts",
-      "line": 30
-    },
-    {
-      "type": "export",
-      "name": "inviteUser",
-      "file": "src/lib/services/user-service.ts",
-      "line": 84
-    },
-    {
-      "type": "export",
-      "name": "addUserToOrganization",
-      "file": "src/lib/services/user-service.ts",
-      "line": 130
+      "name": "TableCaption",
+      "file": "src/components/ui/table.tsx",
+      "line": 115
     },
     {
       "type": "export",
@@ -597,21 +567,75 @@
     },
     {
       "type": "export",
-      "name": "TableCaption",
-      "file": "src/components/ui/table.tsx",
-      "line": 115
+      "name": "createRateLimiter",
+      "file": "src/lib/rate-limit.ts",
+      "line": 42
     },
     {
       "type": "export",
-      "name": "authenticatePortalRequest",
-      "file": "src/lib/portal-auth.ts",
-      "line": 26
+      "name": "apiRateLimiter",
+      "file": "src/lib/rate-limit.ts",
+      "line": 77
     },
     {
       "type": "export",
-      "name": "checkSubscriptionExpired",
-      "file": "src/lib/services/subscription-enforcement.ts",
-      "line": 3
+      "name": "checkRateLimit",
+      "file": "src/lib/rate-limit.ts",
+      "line": 85
+    },
+    {
+      "type": "export",
+      "name": "RateLimiterResult",
+      "file": "src/lib/rate-limit.ts",
+      "line": 30
+    },
+    {
+      "type": "export",
+      "name": "inviteUser",
+      "file": "src/lib/services/user-service.ts",
+      "line": 84
+    },
+    {
+      "type": "export",
+      "name": "addUserToOrganization",
+      "file": "src/lib/services/user-service.ts",
+      "line": 130
+    },
+    {
+      "type": "export",
+      "name": "FieldDescription",
+      "file": "src/components/ui/field.tsx",
+      "line": 230
+    },
+    {
+      "type": "export",
+      "name": "FieldLegend",
+      "file": "src/components/ui/field.tsx",
+      "line": 233
+    },
+    {
+      "type": "export",
+      "name": "FieldSeparator",
+      "file": "src/components/ui/field.tsx",
+      "line": 234
+    },
+    {
+      "type": "export",
+      "name": "FieldSet",
+      "file": "src/components/ui/field.tsx",
+      "line": 235
+    },
+    {
+      "type": "export",
+      "name": "FieldContent",
+      "file": "src/components/ui/field.tsx",
+      "line": 236
+    },
+    {
+      "type": "export",
+      "name": "FieldTitle",
+      "file": "src/components/ui/field.tsx",
+      "line": 237
     },
     {
       "type": "export",
@@ -813,39 +837,51 @@
     },
     {
       "type": "export",
-      "name": "FieldDescription",
-      "file": "src/components/ui/field.tsx",
-      "line": 230
+      "name": "authenticatePortalRequest",
+      "file": "src/lib/portal-auth.ts",
+      "line": 26
     },
     {
       "type": "export",
-      "name": "FieldLegend",
-      "file": "src/components/ui/field.tsx",
-      "line": 233
+      "name": "checkSubscriptionExpired",
+      "file": "src/lib/services/subscription-enforcement.ts",
+      "line": 3
     },
     {
       "type": "export",
-      "name": "FieldSeparator",
-      "file": "src/components/ui/field.tsx",
-      "line": 234
+      "name": "Breadcrumbs",
+      "file": "src/components/breadcrumb.tsx",
+      "line": 45
     },
     {
       "type": "export",
-      "name": "FieldSet",
-      "file": "src/components/ui/field.tsx",
-      "line": 235
+      "name": "BreadcrumbsItem",
+      "file": "src/components/breadcrumb.tsx",
+      "line": 45
     },
     {
       "type": "export",
-      "name": "FieldContent",
-      "file": "src/components/ui/field.tsx",
-      "line": 236
+      "name": "ProgressTrack",
+      "file": "src/components/ui/progress.tsx",
+      "line": 79
     },
     {
       "type": "export",
-      "name": "FieldTitle",
-      "file": "src/components/ui/field.tsx",
-      "line": 237
+      "name": "ProgressIndicator",
+      "file": "src/components/ui/progress.tsx",
+      "line": 80
+    },
+    {
+      "type": "export",
+      "name": "ProgressLabel",
+      "file": "src/components/ui/progress.tsx",
+      "line": 81
+    },
+    {
+      "type": "export",
+      "name": "ProgressValue",
+      "file": "src/components/ui/progress.tsx",
+      "line": 82
     },
     {
       "type": "export",
@@ -909,42 +945,6 @@
     },
     {
       "type": "export",
-      "name": "Breadcrumbs",
-      "file": "src/components/breadcrumb.tsx",
-      "line": 45
-    },
-    {
-      "type": "export",
-      "name": "BreadcrumbsItem",
-      "file": "src/components/breadcrumb.tsx",
-      "line": 45
-    },
-    {
-      "type": "export",
-      "name": "ProgressTrack",
-      "file": "src/components/ui/progress.tsx",
-      "line": 79
-    },
-    {
-      "type": "export",
-      "name": "ProgressIndicator",
-      "file": "src/components/ui/progress.tsx",
-      "line": 80
-    },
-    {
-      "type": "export",
-      "name": "ProgressLabel",
-      "file": "src/components/ui/progress.tsx",
-      "line": 81
-    },
-    {
-      "type": "export",
-      "name": "ProgressValue",
-      "file": "src/components/ui/progress.tsx",
-      "line": 82
-    },
-    {
-      "type": "export",
       "name": "getTodayLog",
       "file": "src/lib/services/time-tracking-service.ts",
       "line": 93
@@ -954,6 +954,18 @@
       "name": "getTodayHours",
       "file": "src/lib/services/time-tracking-service.ts",
       "line": 117
+    },
+    {
+      "type": "export",
+      "name": "InputGroupText",
+      "file": "src/components/ui/input-group.tsx",
+      "line": 160
+    },
+    {
+      "type": "export",
+      "name": "InputGroupTextarea",
+      "file": "src/components/ui/input-group.tsx",
+      "line": 162
     },
     {
       "type": "export",
@@ -1122,18 +1134,6 @@
       "name": "AvatarBadge",
       "file": "src/components/ui/avatar.tsx",
       "line": 108
-    },
-    {
-      "type": "export",
-      "name": "InputGroupText",
-      "file": "src/components/ui/input-group.tsx",
-      "line": 160
-    },
-    {
-      "type": "export",
-      "name": "InputGroupTextarea",
-      "file": "src/components/ui/input-group.tsx",
-      "line": 162
     },
     {
       "type": "export",
@@ -1455,15 +1455,9 @@
     },
     {
       "type": "export",
-      "name": "HandlerContext",
-      "file": "src/lib/api-handler.ts",
-      "line": 13
-    },
-    {
-      "type": "export",
       "name": "PageTab",
       "file": "src/components/page-header.tsx",
-      "line": 45
+      "line": 46
     },
     {
       "type": "export",
@@ -1476,6 +1470,12 @@
       "name": "HeadingLevel",
       "file": "src/components/ui/typography.tsx",
       "line": 224
+    },
+    {
+      "type": "export",
+      "name": "HandlerContext",
+      "file": "src/lib/api-handler.ts",
+      "line": 13
     },
     {
       "type": "export",
@@ -1547,39 +1547,9 @@
     },
     {
       "type": "export",
-      "name": "createRateLimiter",
-      "file": "src/lib/rate-limit.ts",
-      "line": 42
-    },
-    {
-      "type": "export",
-      "name": "apiRateLimiter",
-      "file": "src/lib/rate-limit.ts",
-      "line": 77
-    },
-    {
-      "type": "export",
-      "name": "checkRateLimit",
-      "file": "src/lib/rate-limit.ts",
-      "line": 85
-    },
-    {
-      "type": "export",
-      "name": "RateLimiterResult",
-      "file": "src/lib/rate-limit.ts",
-      "line": 30
-    },
-    {
-      "type": "export",
-      "name": "inviteUser",
-      "file": "src/lib/services/user-service.ts",
-      "line": 84
-    },
-    {
-      "type": "export",
-      "name": "addUserToOrganization",
-      "file": "src/lib/services/user-service.ts",
-      "line": 130
+      "name": "TableCaption",
+      "file": "src/components/ui/table.tsx",
+      "line": 115
     },
     {
       "type": "export",
@@ -1625,21 +1595,75 @@
     },
     {
       "type": "export",
-      "name": "TableCaption",
-      "file": "src/components/ui/table.tsx",
-      "line": 115
+      "name": "createRateLimiter",
+      "file": "src/lib/rate-limit.ts",
+      "line": 42
     },
     {
       "type": "export",
-      "name": "authenticatePortalRequest",
-      "file": "src/lib/portal-auth.ts",
-      "line": 26
+      "name": "apiRateLimiter",
+      "file": "src/lib/rate-limit.ts",
+      "line": 77
     },
     {
       "type": "export",
-      "name": "checkSubscriptionExpired",
-      "file": "src/lib/services/subscription-enforcement.ts",
-      "line": 3
+      "name": "checkRateLimit",
+      "file": "src/lib/rate-limit.ts",
+      "line": 85
+    },
+    {
+      "type": "export",
+      "name": "RateLimiterResult",
+      "file": "src/lib/rate-limit.ts",
+      "line": 30
+    },
+    {
+      "type": "export",
+      "name": "inviteUser",
+      "file": "src/lib/services/user-service.ts",
+      "line": 84
+    },
+    {
+      "type": "export",
+      "name": "addUserToOrganization",
+      "file": "src/lib/services/user-service.ts",
+      "line": 130
+    },
+    {
+      "type": "export",
+      "name": "FieldDescription",
+      "file": "src/components/ui/field.tsx",
+      "line": 230
+    },
+    {
+      "type": "export",
+      "name": "FieldLegend",
+      "file": "src/components/ui/field.tsx",
+      "line": 233
+    },
+    {
+      "type": "export",
+      "name": "FieldSeparator",
+      "file": "src/components/ui/field.tsx",
+      "line": 234
+    },
+    {
+      "type": "export",
+      "name": "FieldSet",
+      "file": "src/components/ui/field.tsx",
+      "line": 235
+    },
+    {
+      "type": "export",
+      "name": "FieldContent",
+      "file": "src/components/ui/field.tsx",
+      "line": 236
+    },
+    {
+      "type": "export",
+      "name": "FieldTitle",
+      "file": "src/components/ui/field.tsx",
+      "line": 237
     },
     {
       "type": "export",
@@ -1841,39 +1865,51 @@
     },
     {
       "type": "export",
-      "name": "FieldDescription",
-      "file": "src/components/ui/field.tsx",
-      "line": 230
+      "name": "authenticatePortalRequest",
+      "file": "src/lib/portal-auth.ts",
+      "line": 26
     },
     {
       "type": "export",
-      "name": "FieldLegend",
-      "file": "src/components/ui/field.tsx",
-      "line": 233
+      "name": "checkSubscriptionExpired",
+      "file": "src/lib/services/subscription-enforcement.ts",
+      "line": 3
     },
     {
       "type": "export",
-      "name": "FieldSeparator",
-      "file": "src/components/ui/field.tsx",
-      "line": 234
+      "name": "Breadcrumbs",
+      "file": "src/components/breadcrumb.tsx",
+      "line": 45
     },
     {
       "type": "export",
-      "name": "FieldSet",
-      "file": "src/components/ui/field.tsx",
-      "line": 235
+      "name": "BreadcrumbsItem",
+      "file": "src/components/breadcrumb.tsx",
+      "line": 45
     },
     {
       "type": "export",
-      "name": "FieldContent",
-      "file": "src/components/ui/field.tsx",
-      "line": 236
+      "name": "ProgressTrack",
+      "file": "src/components/ui/progress.tsx",
+      "line": 79
     },
     {
       "type": "export",
-      "name": "FieldTitle",
-      "file": "src/components/ui/field.tsx",
-      "line": 237
+      "name": "ProgressIndicator",
+      "file": "src/components/ui/progress.tsx",
+      "line": 80
+    },
+    {
+      "type": "export",
+      "name": "ProgressLabel",
+      "file": "src/components/ui/progress.tsx",
+      "line": 81
+    },
+    {
+      "type": "export",
+      "name": "ProgressValue",
+      "file": "src/components/ui/progress.tsx",
+      "line": 82
     },
     {
       "type": "export",
@@ -1937,42 +1973,6 @@
     },
     {
       "type": "export",
-      "name": "Breadcrumbs",
-      "file": "src/components/breadcrumb.tsx",
-      "line": 45
-    },
-    {
-      "type": "export",
-      "name": "BreadcrumbsItem",
-      "file": "src/components/breadcrumb.tsx",
-      "line": 45
-    },
-    {
-      "type": "export",
-      "name": "ProgressTrack",
-      "file": "src/components/ui/progress.tsx",
-      "line": 79
-    },
-    {
-      "type": "export",
-      "name": "ProgressIndicator",
-      "file": "src/components/ui/progress.tsx",
-      "line": 80
-    },
-    {
-      "type": "export",
-      "name": "ProgressLabel",
-      "file": "src/components/ui/progress.tsx",
-      "line": 81
-    },
-    {
-      "type": "export",
-      "name": "ProgressValue",
-      "file": "src/components/ui/progress.tsx",
-      "line": 82
-    },
-    {
-      "type": "export",
       "name": "getTodayLog",
       "file": "src/lib/services/time-tracking-service.ts",
       "line": 93
@@ -1982,6 +1982,18 @@
       "name": "getTodayHours",
       "file": "src/lib/services/time-tracking-service.ts",
       "line": 117
+    },
+    {
+      "type": "export",
+      "name": "InputGroupText",
+      "file": "src/components/ui/input-group.tsx",
+      "line": 160
+    },
+    {
+      "type": "export",
+      "name": "InputGroupTextarea",
+      "file": "src/components/ui/input-group.tsx",
+      "line": 162
     },
     {
       "type": "export",
@@ -2150,18 +2162,6 @@
       "name": "AvatarBadge",
       "file": "src/components/ui/avatar.tsx",
       "line": 108
-    },
-    {
-      "type": "export",
-      "name": "InputGroupText",
-      "file": "src/components/ui/input-group.tsx",
-      "line": 160
-    },
-    {
-      "type": "export",
-      "name": "InputGroupTextarea",
-      "file": "src/components/ui/input-group.tsx",
-      "line": 162
     },
     {
       "type": "export",
@@ -2483,15 +2483,9 @@
     },
     {
       "type": "export",
-      "name": "HandlerContext",
-      "file": "src/lib/api-handler.ts",
-      "line": 13
-    },
-    {
-      "type": "export",
       "name": "PageTab",
       "file": "src/components/page-header.tsx",
-      "line": 45
+      "line": 46
     },
     {
       "type": "export",
@@ -2504,6 +2498,12 @@
       "name": "HeadingLevel",
       "file": "src/components/ui/typography.tsx",
       "line": 224
+    },
+    {
+      "type": "export",
+      "name": "HandlerContext",
+      "file": "src/lib/api-handler.ts",
+      "line": 13
     },
     {
       "type": "export",
@@ -2588,16 +2588,6 @@
     },
     {
       "type": "file",
-      "name": "src/lib/sidebar-transitions.ts",
-      "file": "src/lib/sidebar-transitions.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/validations.ts",
-      "file": "src/lib/validations.ts"
-    },
-    {
-      "type": "file",
       "name": "src/hooks/use-breadcrumbs.ts",
       "file": "src/hooks/use-breadcrumbs.ts"
     },
@@ -2605,6 +2595,16 @@
       "type": "file",
       "name": "src/hooks/use-persisted-state.ts",
       "file": "src/hooks/use-persisted-state.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/sidebar-transitions.ts",
+      "file": "src/lib/sidebar-transitions.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/validations.ts",
+      "file": "src/lib/validations.ts"
     },
     {
       "type": "file",
@@ -2788,26 +2788,6 @@
     },
     {
       "type": "file",
-      "name": "src/components/work-orders/customer-select.tsx",
-      "file": "src/components/work-orders/customer-select.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/components/work-orders/part-lines.tsx",
-      "file": "src/components/work-orders/part-lines.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/components/work-orders/service-lines.tsx",
-      "file": "src/components/work-orders/service-lines.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/components/work-orders/vehicle-select.tsx",
-      "file": "src/components/work-orders/vehicle-select.tsx"
-    },
-    {
-      "type": "file",
       "name": "src/components/ui/aspect-ratio.tsx",
       "file": "src/components/ui/aspect-ratio.tsx"
     },
@@ -2898,6 +2878,26 @@
     },
     {
       "type": "file",
+      "name": "src/components/work-orders/customer-select.tsx",
+      "file": "src/components/work-orders/customer-select.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/part-lines.tsx",
+      "file": "src/components/work-orders/part-lines.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/service-lines.tsx",
+      "file": "src/components/work-orders/service-lines.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/vehicle-select.tsx",
+      "file": "src/components/work-orders/vehicle-select.tsx"
+    },
+    {
+      "type": "file",
       "name": "src/lib/cache/server.ts",
       "file": "src/lib/cache/server.ts"
     },
@@ -2923,13 +2923,13 @@
     },
     {
       "type": "file",
-      "name": "src/test/mocks/handlers.ts",
-      "file": "src/test/mocks/handlers.ts"
+      "name": "supabase/functions/check-service-reminders/index.ts",
+      "file": "supabase/functions/check-service-reminders/index.ts"
     },
     {
       "type": "file",
-      "name": "supabase/functions/check-service-reminders/index.ts",
-      "file": "supabase/functions/check-service-reminders/index.ts"
+      "name": "src/test/mocks/handlers.ts",
+      "file": "src/test/mocks/handlers.ts"
     },
     {
       "type": "file",

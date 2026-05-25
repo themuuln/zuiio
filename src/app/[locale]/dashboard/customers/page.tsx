@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
 import { CustomerDetailDrawer } from "@/components/customer-detail-drawer";
 import { ExportButton } from "@/components/export-button";
@@ -37,14 +37,12 @@ import {
 } from "@/components/ui/table";
 import type { Customer } from "@/lib/types";
 import type { ExportColumn } from "@/lib/export";
-import { Link, useRouter } from "@/lib/i18n/navigation";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { useCustomers } from "@/lib/queries/use-customers";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { NewCustomerDialog } from "@/components/new-customer-dialog";
-import { useSearchParams } from "next/navigation";
 
 interface CustomerWithVehicleCount extends Customer {
   vehicle_count?: number;
@@ -132,23 +130,7 @@ export default function CustomersPage() {
   const now = useClientNow();
   const [search, setSearch] = useState("");
   const [detailCustomerId, setDetailCustomerId] = useState<string | null>(null);
-  const [newDialogOpen, setNewDialogOpen] = useState(false);
-
-  const searchParams = useSearchParams();
-  const { replace } = useRouter();
-
-  // Auto-open dialog when navigated from quick-create action
-  useEffect(() => {
-    if (searchParams.get("new") === "1") {
-      setNewDialogOpen(true);
-      // Clean URL so next click re-triggers
-      replace(window.location.pathname, { scroll: false });
-    }
-  }, [searchParams, replace]);
-
-  const handleNewDialogOpenChange = useCallback((open: boolean) => {
-    setNewDialogOpen(open);
-  }, [setNewDialogOpen]);
+  const { setNewCustomerDialogOpen } = usePageHeader();
 
   const exportColumns: ExportColumn<CustomerWithVehicleCount>[] = useMemo(
     () => [
@@ -276,7 +258,7 @@ export default function CustomersPage() {
             {(customers ?? []).length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Button onClick={() => setNewDialogOpen(true)} size="lg">
+        <Button onClick={() => setNewCustomerDialogOpen(true)} size="lg">
           <Plus className="size-4" />
           {t("addCustomer")}
         </Button>
@@ -318,7 +300,7 @@ export default function CustomersPage() {
               </EmptyHeader>
               <EmptyContent>
                 <Button
-                  onClick={() => setNewDialogOpen(true)}
+                  onClick={() => setNewCustomerDialogOpen(true)}
                   variant="outline"
                 >
                   {t("addFirstCustomer")}
@@ -425,11 +407,6 @@ export default function CustomersPage() {
         onOpenChange={(open) => {
           if (!open) setDetailCustomerId(null);
         }}
-      />
-
-      <NewCustomerDialog
-        open={newDialogOpen}
-        onOpenChange={setNewDialogOpen}
       />
     </div>
   );
