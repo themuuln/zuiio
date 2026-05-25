@@ -130,7 +130,7 @@ export default function PortalWorkOrderDetailPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Skeleton className="h-5 w-32" />
         <Skeleton className="h-32 rounded-xl" />
         <Skeleton className="h-48 rounded-xl" />
@@ -153,7 +153,7 @@ export default function PortalWorkOrderDetailPage() {
   const style = STATUS_STYLES[data.status] ?? STATUS_STYLES.Completed;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {/* Back link */}
       <Link
         href={`/portal/vehicles/${data.vehicle_id}`}
@@ -216,7 +216,7 @@ export default function PortalWorkOrderDetailPage() {
               {t("workOrders.complaintAndNotes") ?? "Complaint & Diagnosis"}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm">
+          <CardContent className="flex flex-col gap-3 text-sm">
             {data.complaint && (
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-0.5">
@@ -339,7 +339,7 @@ export default function PortalWorkOrderDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-0">
+            <div className="flex flex-col gap-0">
               {data.status_history.map((entry, idx) => {
                 const entryStyle = STATUS_STYLES[entry.status] ?? STATUS_STYLES.Completed;
                 const isLast = idx === data.status_history.length - 1;
@@ -383,7 +383,7 @@ export default function PortalWorkOrderDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               {data.invoices.map((inv) => (
                 <div
                   key={inv.id}

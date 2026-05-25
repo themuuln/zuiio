@@ -2,8 +2,9 @@
 
 import { Monitor, Moon, Palette, Sun } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -62,9 +63,9 @@ export function AppearanceCustomization({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 pt-5">
-        <div className="space-y-3">
-          <Label>Theme</Label>
+      <CardContent className="flex flex-col gap-6 pt-5">
+        <Field>
+          <FieldLabel>Theme</FieldLabel>
           <div className="flex gap-1 rounded-xl border border-border bg-card p-1 w-fit">
             {THEME_OPTIONS.map((option) => {
               const Icon = option.icon;
@@ -85,14 +86,30 @@ export function AppearanceCustomization({
               );
             })}
           </div>
-        </div>
+        </Field>
 
         <Separator />
 
-        <div className="space-y-3">
-          <Label>Brand color</Label>
+        <Field>
+          <FieldLabel>Brand color</FieldLabel>
           <div className="flex items-center gap-3">
-            <div className="relative">
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-9 rounded-full overflow-hidden p-0 border-2 relative shrink-0"
+              render={<label />}
+              style={{
+                backgroundColor:
+                  form.brandColor ||
+                  (typeof document !== "undefined"
+                    ? getComputedStyle(document.documentElement)
+                        .getPropertyValue("--primary")
+                        .trim()
+                    : "") ||
+                  "#000000",
+              }}
+              aria-label="Brand color picker"
+            >
               <input
                 type="color"
                 value={
@@ -109,10 +126,9 @@ export function AppearanceCustomization({
                   setForm((prev) => ({ ...prev, brandColor: color }));
                   preview(color);
                 }}
-                className="size-10 cursor-pointer rounded-md border border-border p-0.5"
-                aria-label="Brand color picker"
+                className="absolute inset-0 opacity-0 cursor-pointer"
               />
-            </div>
+            </Button>
             <Input
               value={form.brandColor}
               onChange={(e) => {
@@ -160,7 +176,7 @@ export function AppearanceCustomization({
               />
             ))}
           </div>
-        </div>
+        </Field>
 
       </CardContent>
     </Card>

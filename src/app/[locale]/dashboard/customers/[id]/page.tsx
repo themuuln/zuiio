@@ -24,7 +24,7 @@ import type { ExportColumn } from "@/lib/export";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { customerKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import type { WorkOrderStatus } from "@/lib/database.types";
+import type { WorkOrderStatus } from "@/lib/types";
 import {
   CustomerEditForm,
   type CustomerFormState,
@@ -367,7 +367,7 @@ export default function CustomerDetailPage() {
         <CardHeader>
           <CardTitle className="text-base">{t("details")}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="flex flex-col gap-4">
           {editing ? (
             <CustomerEditForm form={form} setForm={setForm} t={t} />
           ) : (

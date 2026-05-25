@@ -123,7 +123,7 @@ function PreviewCard({
             : `Importing... ${isImporting ? state.current : 0} of ${preview.totalRows}`}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             {preview.totalRows} row
@@ -455,7 +455,7 @@ export default function ImportCustomersPage() {
                 Import Complete
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               <p className="text-lg font-semibold">
                 Successfully imported {state.imported} customer
                 {state.imported !== 1 ? "s" : ""}
@@ -512,7 +512,7 @@ export default function ImportCustomersPage() {
               Import Failed
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-4">
             <p className="text-sm text-destructive">{state.message}</p>
             <div className="flex gap-3">
               <Button variant="outline" onClick={resetImport}>

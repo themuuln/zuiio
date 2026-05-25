@@ -1,20 +1,32 @@
 // ── Imports (needed for type references within this file) ────────
-import type {
-  Customer,
-  CustomerNoteType,
-  DiagnosisLabel,
-  InventoryBalance,
-  InventoryMovementType,
-  InvoiceStatus,
-  Vehicle,
-  WorkOrderStatus,
-} from "@/lib/database.types";
-import type {
-  MechanicAssignment,
-  WorkOrderPart,
-  WorkOrderService,
-  WorkOrderStatusHistory,
-} from "@/lib/database.types";
+import type { Database, Tables, TablesInsert } from "@/lib/database.types";
+import type { Enums } from "@/lib/database.types";
+
+// Convenience aliases — use Tables<> helper which is designed for this
+export type Customer = Tables<"customers">;
+export type Vehicle = Tables<"vehicles">;
+export type Invoice = Tables<"invoices">;
+export type InvoicePayment = Tables<"invoice_payments">;
+export type InvoiceItem = Tables<"invoice_items">;
+export type WorkOrder = Tables<"work_orders">;
+export type WorkOrderStatus =
+  | "New"
+  | "Diagnosing"
+  | "In Progress"
+  | "Ready for Pickup"
+  | "Completed"
+  | "Cancelled";
+export type DiagnosisLabel = Tables<"diagnosis_labels">;
+export type InventoryMovementType = Enums<"inventory_movement_type">;
+export type InventoryBalance = Tables<"inventory_balances">;
+export type MechanicAssignment = Tables<"mechanic_assignments">;
+export type WorkOrderPart = Tables<"work_order_parts">;
+export type WorkOrderService = Tables<"work_order_services">;
+export type WorkOrderStatusHistory = Tables<"work_order_status_history">;
+export type CustomerCommunication = Tables<"customer_communications">;
+export type VehicleServiceSchedule = Tables<"vehicle_service_schedules">;
+export type ReminderLog = Tables<"reminder_logs">;
+export type AuditLogInsert = TablesInsert<"audit_logs">;
 
 // ── Re-exports from database.types.ts ────────────────────────────
 // Domain types are defined in @/lib/database.types.ts.
@@ -69,24 +81,70 @@ export interface WorkOrderAttachment {
   mime_type: string;
   storage_path: string;
   public_url: string | null;
-  file_type: 'photo' | 'document' | 'other';
+  file_type: "photo" | "document" | "other";
   uploaded_by: string;
   created_at: string;
   deleted_at: string | null;
 }
 
+// Convenience re-exports from Database helper (Supabase v6+ CLI)
+// Instead of: import from database.types (no longer exports named types)
+
+type AuditLog = Tables<"audit_logs">;
+type Branch = Tables<"branches">;
+type FeatureFlag = Tables<"organization_settings">;
+type OrgInvite = Tables<"org_invites">;
+type Organization = Tables<"organizations">;
+type OrganizationSettings = Tables<"organization_settings">;
+type OrganizationUser = Tables<"organization_users">;
+type PartPriceHistory = Tables<"part_price_history">;
+type PartsCatalog = Tables<"parts_catalog">;
+type Permission = Tables<"permissions">;
+type PermissionAction = Enums<"permission_action">;
+type PlanType = Enums<"plan_type">;
+type Profile = Tables<"profiles">;
+type Role = Tables<"roles">;
+type ServiceCatalog = Tables<"service_catalog">;
+type ServiceCatalogInsert = Tables<"service_catalog">;
+type ServiceCatalogUpdate = Tables<"service_catalog">;
+type ServicePriceHistory = Tables<"service_price_history">;
+type SubscriptionPlan = Tables<"subscription_plans">;
+type VehicleModel = Tables<"vehicle_models">;
+type VehicleModelPart = Tables<"vehicle_model_parts">;
+type VehicleOwner = Tables<"vehicle_owners">;
+type InventoryMovement = Tables<"inventory_movements">;
+type Supplier = Tables<"suppliers">;
+type SupplierInsert = Tables<"suppliers">;
+type SupplierUpdate = Tables<"suppliers">;
+type PurchaseOrder = Tables<"purchase_orders">;
+type PurchaseOrderInsert = Tables<"purchase_orders">;
+type PurchaseOrderUpdate = Tables<"purchase_orders">;
+type PurchaseOrderItem = Tables<"purchase_order_items">;
+type PurchaseOrderItemInsert = Tables<"purchase_order_items">;
+type PurchaseOrderItemUpdate = Tables<"purchase_order_items">;
+type StockThreshold = Tables<"stock_thresholds">;
+type StockThresholdInsert = Tables<"stock_thresholds">;
+type StockThresholdUpdate = Tables<"stock_thresholds">;
+type PartsCars = Tables<"parts_cars">;
+type PartsCarsInsert = Tables<"parts_cars">;
+type PartsCarsUpdate = Tables<"parts_cars">;
+type PartsCarParts = Tables<"parts_car_parts">;
+type PartsCarPartsInsert = Tables<"parts_car_parts">;
+type PartsCarPartsUpdate = Tables<"parts_car_parts">;
+type InvoiceStatus = Enums<"invoice_status">;
+type CustomerType = Customer["type"];
+type FuelType = Vehicle["fuel_type"];
+type InviteStatus = OrgInvite["status"];
+type TransmissionType = Vehicle["transmission"];
+
+// Direct exports (avoids re-export resolution issues with Next.js Turbopack)
 export type {
   AuditLog,
   Branch,
-  Customer,
-  CustomerNote,
-  CustomerNoteType,
   CustomerType,
-  DiagnosisLabel,
   FeatureFlag,
   FuelType,
   InviteStatus,
-  MechanicAssignment,
   OrgInvite,
   Organization,
   OrganizationSettings,
@@ -104,46 +162,52 @@ export type {
   ServicePriceHistory,
   SubscriptionPlan,
   TransmissionType,
-  Vehicle,
   VehicleModel,
   VehicleModelPart,
   VehicleOwner,
-  WorkOrder,
-  WorkOrderPart,
-  WorkOrderRow,
-  WorkOrderService,
-  WorkOrderStatus,
-  WorkOrderStatusHistory,
   InventoryMovement,
-  InventoryMovementType,
-  InventoryBalance,
   Supplier,
-  PurchaseOrder,
-  PurchaseOrderItem,
-  StockThreshold,
   SupplierInsert,
-  PurchaseOrderInsert,
-  Invoice,
-  InvoiceItem,
-  InvoicePayment,
-  InvoiceWithItems,
-  InvoiceStatus,
-  PurchaseOrderItemInsert,
-  StockThresholdInsert,
   SupplierUpdate,
+  PurchaseOrder,
+  PurchaseOrderInsert,
   PurchaseOrderUpdate,
+  PurchaseOrderItem,
+  PurchaseOrderItemInsert,
   PurchaseOrderItemUpdate,
+  StockThreshold,
+  StockThresholdInsert,
   StockThresholdUpdate,
-} from "@/lib/database.types";
+  PartsCars,
+  PartsCarsInsert,
+  PartsCarsUpdate,
+  PartsCarParts,
+  PartsCarPartsInsert,
+  PartsCarPartsUpdate,
+  InvoiceStatus,
+};
 export type InventoryBalanceWithAvgCost = InventoryBalance & {
   avg_unit_cost: number;
 };
-export type PartsCarStatus = "arrived" | "disassembling" | "completed" | "cancelled";
+export type PartsCarStatus =
+  | "arrived"
+  | "disassembling"
+  | "completed"
+  | "cancelled";
 export type PartsCarLocationGroup =
-  | "engine" | "transmission" | "suspension" | "brake"
-  | "body" | "interior" | "electrical" | "cooling"
-  | "exhaust" | "fuel" | "steering" | "ac" | "other";
-export type { PartsCars, PartsCarsInsert, PartsCarsUpdate, PartsCarParts, PartsCarPartsInsert, PartsCarPartsUpdate } from "@/lib/database.types";
+  | "engine"
+  | "transmission"
+  | "suspension"
+  | "brake"
+  | "body"
+  | "interior"
+  | "electrical"
+  | "cooling"
+  | "exhaust"
+  | "fuel"
+  | "steering"
+  | "ac"
+  | "other";
 
 // ── API Response Wrappers ────────────────────────────────────────
 
@@ -286,6 +350,7 @@ export interface WorkOrderFilters {
   mechanic_id?: string;
   date?: string;
   vehicle_plate?: string;
+  search?: string;
 }
 
 export interface DailyReport {
@@ -331,7 +396,11 @@ export interface MechanicCommissionRule {
   organization_id: string;
   mechanic_id: string | null;
   name: string;
-  commission_type: 'percentage_of_labor' | 'percentage_of_parts' | 'percentage_of_revenue' | 'fixed_per_work_order';
+  commission_type:
+    | "percentage_of_labor"
+    | "percentage_of_parts"
+    | "percentage_of_revenue"
+    | "fixed_per_work_order";
   commission_value: number;
   min_commission: number | null;
   max_commission: number | null;
@@ -666,14 +735,19 @@ export interface ExpenseStats {
   totalTax: number;
   paidAmount: number;
   unpaidAmount: number;
-  byCategory: { category_id: string | null; category_name: string; total: number; count: number }[];
+  byCategory: {
+    category_id: string | null;
+    category_name: string;
+    total: number;
+    count: number;
+  }[];
   thisMonth: number;
   lastMonth: number;
 }
 
 // ── Inventory Types ────────────────────────────────────────────
 
-export type PaymentMethod = 'cash' | 'card' | 'bank_transfer' | 'manual';
+export type PaymentMethod = "cash" | "card" | "bank_transfer" | "manual";
 
 export type PurchaseOrderStatus =
   | "draft"
@@ -779,4 +853,49 @@ export interface CreateStockThresholdParams {
   part_id: string;
   minimum_quantity: number;
   notes?: string;
+}
+
+export type CustomerNoteType =
+  | "general"
+  | "follow_up"
+  | "complaint"
+  | "call"
+  | "email"
+  | "meeting"
+  | "other";
+
+export interface CustomerNote {
+  id: string;
+  organization_id: string;
+  customer_id: string;
+  content: string;
+  type: CustomerNoteType;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export type CustomerNoteInsert = Omit<
+  CustomerNote,
+  "id" | "created_at" | "updated_at" | "deleted_at"
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type CustomerNoteUpdate = Partial<
+  Omit<CustomerNote, "id" | "created_at" | "created_by">
+> & {
+  updated_at?: string;
+};
+
+export interface InvoiceWithItems extends Invoice {
+  items: InvoiceItem[];
+  payments: InvoicePayment[];
+}
+
+export interface WorkOrderRow extends WorkOrder {
+  mechanic_name: string | null;
 }

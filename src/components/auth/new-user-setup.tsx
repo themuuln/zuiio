@@ -30,7 +30,7 @@ export function NewUserSetup({ copy }: { copy: { title: string; subtitle: string
 
   if (state === "error") {
     return (
-      <div className="space-y-4 text-center">
+      <div className="flex flex-col gap-4 text-center">
         <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-destructive/10">
           <AlertCircle className="size-6 text-destructive" />
         </div>
@@ -53,7 +53,7 @@ export function NewUserSetup({ copy }: { copy: { title: string; subtitle: string
   }
 
   return (
-    <div className="space-y-4 text-center">
+    <div className="flex flex-col gap-4 text-center">
       <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10">
         <Loader2 className="size-6 animate-spin text-primary" />
       </div>

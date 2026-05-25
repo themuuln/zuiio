@@ -40,7 +40,7 @@ export default function PortalLayout({
           <Skeleton className="h-8 w-20 rounded-md" />
         </header>
         <main className="flex-1 p-4">
-          <div className="mx-auto max-w-4xl space-y-4">
+          <div className="mx-auto max-w-4xl flex flex-col gap-4">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-72" />
             <div className="grid gap-4 sm:grid-cols-3">

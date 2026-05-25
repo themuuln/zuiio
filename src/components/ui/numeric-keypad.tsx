@@ -1,10 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 interface NumericKeypadProps {
@@ -13,7 +10,11 @@ interface NumericKeypadProps {
   children: React.ReactNode;
 }
 
-export function NumericKeypad({ value, onChange, children }: NumericKeypadProps) {
+export function NumericKeypad({
+  value,
+  onChange,
+  children,
+}: NumericKeypadProps) {
   const [open, setOpen] = React.useState(false);
   const [buffer, setBuffer] = React.useState("");
   const previousRef = React.useRef(value);
@@ -87,12 +88,19 @@ export function NumericKeypad({ value, onChange, children }: NumericKeypadProps)
         </div>
 
         {/* Keypad grid */}
-        <fieldset className="grid grid-cols-4 gap-2 border-0 p-0 m-0" aria-label="Numeric keypad">
+        <fieldset
+          className="grid grid-cols-4 gap-2 border-0 p-0 m-0"
+          aria-label="Numeric keypad"
+        >
           {/* Row 1: 7 8 9 ⌫ */}
           <KeyButton onClick={() => handleKey("7")}>7</KeyButton>
           <KeyButton onClick={() => handleKey("8")}>8</KeyButton>
           <KeyButton onClick={() => handleKey("9")}>9</KeyButton>
-          <KeyButton onClick={() => handleKey("backspace")} variant="muted" aria-label="Backspace">
+          <KeyButton
+            onClick={() => handleKey("backspace")}
+            variant="muted"
+            aria-label="Backspace"
+          >
             <svg
               width="20"
               height="20"
@@ -114,7 +122,11 @@ export function NumericKeypad({ value, onChange, children }: NumericKeypadProps)
           <KeyButton onClick={() => handleKey("4")}>4</KeyButton>
           <KeyButton onClick={() => handleKey("5")}>5</KeyButton>
           <KeyButton onClick={() => handleKey("6")}>6</KeyButton>
-          <KeyButton onClick={() => handleKey("clear")} variant="muted" aria-label="Clear">
+          <KeyButton
+            onClick={() => handleKey("clear")}
+            variant="muted"
+            aria-label="Clear"
+          >
             C
           </KeyButton>
 

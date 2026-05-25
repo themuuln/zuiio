@@ -1,4 +1,11 @@
 import type { ReactNode } from "react";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -54,17 +61,16 @@ export function DataTable<T>({
 
   if (data.length === 0) {
     return (
-      <div
-        className={cn(
-          "flex flex-col items-center justify-center py-12 text-muted-foreground",
-          className,
-        )}
-      >
+      <div className={cn(className)}>
         {emptyState ?? (
-          <div className="text-center">
-            <p className="text-base font-medium">No data found</p>
-            <p className="text-sm">Try adjusting your search or filters.</p>
-          </div>
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>No data found</EmptyTitle>
+              <EmptyDescription>
+                Try adjusting your search or filters.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </div>
     );
@@ -84,17 +90,16 @@ export function DataTable<T>({
       {/* Rows */}
       <div className="flex flex-col gap-1">
         {data.map((item) => (
-          <button
+          <Button
             key={keyExtractor(item)}
-            type="button"
+            variant="ghost"
             data-slot="data-table-row"
             onClick={() => onRowClick?.(item)}
             className={cn(
               "flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-4",
               "rounded-xl border border-border bg-card px-4 py-3 text-left",
-              "transition-colors",
-              onRowClick &&
-                "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "h-auto w-full",
+              onRowClick && "hover:bg-muted/50",
             )}
           >
             {columns.map((col, _idx) => (
@@ -113,7 +118,7 @@ export function DataTable<T>({
                 <span className="truncate text-sm">{col.cell(item)}</span>
               </div>
             ))}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

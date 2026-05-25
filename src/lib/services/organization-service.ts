@@ -1,7 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags, cacheDurations } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
-import type { Organization } from "@/lib/database.types";
+import type { Organization } from "@/lib/types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import type {
@@ -36,7 +36,7 @@ export async function createOrganization(
     .insert({
       name: name.trim(),
       slug: slug.trim(),
-      settings: {},
+      settings: { language: "mn" },
       is_active: true,
       created_by: userId,
       updated_by: userId,

@@ -51,12 +51,13 @@ function StarRating({
   return (
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
-        <button
+        <Button
           key={star}
-          type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => onChange(star)}
           className={cn(
-            "p-0.5 rounded-md transition-all duration-150 hover:scale-110 active:scale-95",
+            "p-0.5 h-auto rounded-md hover:scale-110 active:scale-95",
             star <= (value ?? 0)
               ? "text-amber-400 drop-shadow-sm"
               : "text-muted-foreground/20 hover:text-muted-foreground/40",
@@ -69,7 +70,7 @@ function StarRating({
               star <= (value ?? 0) ? "fill-amber-400" : "",
             )}
           />
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -142,19 +143,19 @@ export function PickupCompleteForm({
             <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-1">
               {vehiclePlate}
             </span>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onCancel}
-              className="rounded-md p-1 hover:bg-muted transition-colors"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
         </CardHeader>
 
         <CardContent className="flex flex-col gap-5 pt-4">
           {/* Satisfaction */}
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <Star className="size-3.5" />
               {t("pickupSummarySatisfaction")}
@@ -163,7 +164,7 @@ export function PickupCompleteForm({
           </div>
 
           {/* Feedback */}
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <MessageSquare className="size-3.5" />
               {t("pickupSummaryFeedback")}
@@ -177,7 +178,7 @@ export function PickupCompleteForm({
           </div>
 
           {/* Next appointment */}
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <CalendarIcon className="size-3.5" />
               {t("pickupSummaryAppointmentDate")}

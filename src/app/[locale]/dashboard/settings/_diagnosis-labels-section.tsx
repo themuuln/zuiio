@@ -31,6 +31,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -188,23 +189,24 @@ function LabelFormDialog({
             {isEditing ? t("editTitle") : t("addTitle")}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <FieldGroup>
           {/* Mongolian name first */}
-          <div className="space-y-2">
-            <Label htmlFor="label-name-mn">{t("nameMn")}</Label>
+          <Field>
+            <FieldLabel htmlFor="label-name-mn">{t("nameMn")}</FieldLabel>
             <Input
               id="label-name-mn"
               value={nameMn}
               onChange={(e) => setNameMn(e.target.value)}
               placeholder={t("namePlaceholder")}
             />
-          </div>
+          </Field>
 
           {/* English name second */}
-          <div className="space-y-2">
-            <Label htmlFor="label-name">
+          <Field>
+            <FieldLabel htmlFor="label-name">
               {t("name")} <span className="text-destructive">*</span>
-            </Label>
+            </FieldLabel>
             <Input
               id="label-name"
               value={name}
@@ -212,20 +214,21 @@ function LabelFormDialog({
               placeholder={t("nameEnPlaceholder")}
               required
             />
-          </div>
+          </Field>
 
           {/* Color picker with presets */}
-          <div className="space-y-2">
-            <Label>{t("color")}</Label>
+          <Field>
+            <FieldLabel>{t("color")}</FieldLabel>
             <div className="flex flex-wrap gap-1.5">
               {PRESET_COLORS.map((preset) => (
-                <button
+                <Button
                   key={preset.value}
-                  type="button"
                   title={preset.label}
                   onClick={() => setColor(preset.value)}
+                  variant="outline"
+                  size="icon-sm"
                   className={cn(
-                    "size-8 rounded-full border-2 transition-all hover:scale-110",
+                    "rounded-full border-2 transition-all hover:scale-110",
                     color === preset.value
                       ? "border-foreground scale-110 ring-2 ring-offset-1 ring-ring"
                       : "border-transparent",
@@ -256,7 +259,8 @@ function LabelFormDialog({
                 </span>
               )}
             </div>
-          </div>
+          </Field>
+          </FieldGroup>
 
           <div className="flex items-center gap-3">
             <Switch checked={isActive} onCheckedChange={setIsActive} />
@@ -354,7 +358,7 @@ export function DiagnosisLabelsSection({
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={`skel-${i}`} className="h-16 w-full rounded-lg" />
         ))}
@@ -374,7 +378,7 @@ export function DiagnosisLabelsSection({
 
   return (
     <>
-      <div className="mt-4 space-y-4">
+      <div className="flex mt-4 flex-col gap-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             {t("sectionDescription")}

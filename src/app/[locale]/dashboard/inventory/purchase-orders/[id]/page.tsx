@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Printer, Truck } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -25,14 +26,6 @@ import {
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { PurchaseOrder } from "@/lib/types";
-
-const PO_STATUS_COLORS: Record<string, string> = {
-  draft: "bg-gray-100 text-gray-700",
-  ordered: "bg-blue-100 text-blue-700",
-  partial: "bg-amber-100 text-amber-700",
-  received: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
-};
 
 const PO_STATUS_KEYS: Record<string, string> = {
   draft: "poStatusDraft",
@@ -97,7 +90,7 @@ export default function PurchaseOrderDetailPage() {
       <div className="flex flex-col gap-6 max-w-3xl">
         <Skeleton className="h-8 w-48" />
         <Card>
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="p-6 flex flex-col gap-4">
             <Skeleton className="h-6 w-32" />
             <Skeleton className="h-20 w-full" />
           </CardContent>
@@ -148,11 +141,9 @@ export default function PurchaseOrderDetailPage() {
             <h1 className="text-2xl font-semibold tracking-tight">
               {po.order_number}
             </h1>
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-medium ${PO_STATUS_COLORS[po.status] ?? ""}`}
-            >
+            <Badge variant="outline">
               {t(PO_STATUS_KEYS[po.status] as string) ?? po.status}
-            </span>
+            </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
             {new Date(po.order_date).toLocaleDateString("mn-MN")}

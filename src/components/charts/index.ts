@@ -4,5 +4,4 @@ export { LineChart } from "./line-chart";
 export { PieChart } from "./pie-chart";
 export { RadarChart } from "./radar-chart";
 export { RadialChart } from "./radial-chart";
-export { ChartContainer } from "./chart-container";
 export { CHART_COLORS, STATUS_COLORS } from "./chart-colors";

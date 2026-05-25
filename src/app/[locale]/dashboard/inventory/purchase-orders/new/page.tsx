@@ -6,8 +6,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useRouter } from "@/lib/i18n/navigation";
 import {
   useCreatePurchaseOrder,
@@ -115,55 +115,38 @@ export default function NewPurchaseOrderPage() {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <Card>
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="p-6 flex flex-col gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="order_number">{t("orderNumber")} *</Label>
-                <Input
-                  id="order_number"
-                  value={orderNumber}
-                  onChange={(e) => setOrderNumber(e.target.value)}
-                  placeholder="PO-001"
-                  className="h-11"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="supplier_id">{t("supplier")}</Label>
-                <select
-                  id="supplier_id"
-                  value={supplierId}
-                  onChange={(e) => setSupplierId(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">{t("noSupplier")}</option>
-                  {suppliers.flatMap((s) =>
-                    s.is_active
-                      ? [
-                          <option key={s.id} value={s.id}>
-                            {s.name}
-                          </option>,
-                        ]
-                      : [],
-                  )}
-                </select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notes">{t("notes")}</Label>
-              <Input
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder={t("notesPlaceholder")}
+              <Field>
+                <FieldLabel htmlFor="order_number">$$$</FieldLabel>
+                <Input id="order_number"
+                value={orderNumber}
+                onChange={(e) => setOrderNumber(e.target.value)}
+                placeholder="PO-001"
                 className="h-11"
-              />
+                required />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="supplier_id">$$$</FieldLabel>
+                <select id="supplier_id"
+                value={supplierId}
+                onChange={(e) => setSupplierId(e.target.value)}
+                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm">$$$</select>
+              </Field>
             </div>
+            <Field>
+              <FieldLabel htmlFor="notes">$$$</FieldLabel>
+              <Input id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t("notesPlaceholder")}
+              className="h-11" />
+            </Field>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="p-6 flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">{t("items")}</h2>
               <Button
@@ -181,63 +164,44 @@ export default function NewPurchaseOrderPage() {
                 {t("noItems")}
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="flex flex-col gap-3">
                 {items.map((item) => (
                   <div
                     key={item.id}
                     className="flex items-end gap-2 border-b border-border pb-3"
                   >
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <Label className="text-xs text-muted-foreground">
-                        {t("part")}
-                      </Label>
-                      <select
-                        value={item.part_id}
-                        onChange={(e) =>
-                          updateItem(item.id, { part_id: e.target.value })
-                        }
-                        className="h-9 w-full rounded border border-input bg-background px-2 text-sm"
-                      >
-                        <option value="">{t("selectPart")}</option>
-                        {parts.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="w-20 space-y-1">
-                      <Label className="text-xs text-muted-foreground">
-                        {t("quantity")}
-                      </Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={item.quantity_ordered}
-                        onChange={(e) =>
-                          updateItem(item.id, {
-                            quantity_ordered: Number(e.target.value) || 1,
-                          })
-                        }
-                        className="h-9 text-center"
-                      />
-                    </div>
-                    <div className="w-28 space-y-1">
-                      <Label className="text-xs text-muted-foreground">
-                        {t("unitCost")}
-                      </Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        value={item.unit_cost}
-                        onChange={(e) =>
-                          updateItem(item.id, {
-                            unit_cost: Number(e.target.value) || 0,
-                          })
-                        }
-                        className="h-9 text-right"
-                      />
-                    </div>
+                    <Field>
+                      <FieldLabel className="text-xs text-muted-foreground">$$$</FieldLabel>
+                      <select value={item.part_id}
+                      onChange={(e) =>
+                        updateItem(item.id, { part_id: e.target.value })
+                      }
+                      className="h-9 w-full rounded border border-input bg-background px-2 text-sm">$$$</select>
+                    </Field>
+                    <Field>
+                      <FieldLabel className="text-xs text-muted-foreground">$$$</FieldLabel>
+                      <Input type="number"
+                      min={1}
+                      value={item.quantity_ordered}
+                      onChange={(e) =>
+                        updateItem(item.id, {
+                          quantity_ordered: Number(e.target.value) || 1,
+                        })
+                      }
+                      className="h-9 text-center" />
+                    </Field>
+                    <Field>
+                      <FieldLabel className="text-xs text-muted-foreground">$$$</FieldLabel>
+                      <Input type="number"
+                      min={0}
+                      value={item.unit_cost}
+                      onChange={(e) =>
+                        updateItem(item.id, {
+                          unit_cost: Number(e.target.value) || 0,
+                        })
+                      }
+                      className="h-9 text-right" />
+                    </Field>
                     <div className="w-24 text-right text-sm tabular-nums pb-2">
                       {(item.quantity_ordered * item.unit_cost).toLocaleString(
                         "mn-MN",

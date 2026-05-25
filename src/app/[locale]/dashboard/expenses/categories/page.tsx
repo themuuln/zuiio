@@ -23,6 +23,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -189,16 +196,20 @@ export default function CategoriesPage() {
 
       {/* Empty state */}
       {!categories || categories.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-16">
-            <Circle className="size-10 text-muted-foreground/40" />
-            <p className="text-muted-foreground">No categories yet</p>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Circle />
+            </EmptyMedia>
+            <EmptyTitle>No categories yet</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
             <Button onClick={openAddDialog} variant="outline">
               <Plus className="size-4" />
               Add Category
             </Button>
-          </CardContent>
-        </Card>
+          </EmptyContent>
+        </Empty>
       ) : (
         /* Category grid */
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -253,8 +264,8 @@ export default function CategoriesPage() {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="name">
                 Name <span className="text-destructive">*</span>
               </Label>
@@ -266,7 +277,7 @@ export default function CategoriesPage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
@@ -276,15 +287,16 @@ export default function CategoriesPage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label>Color</Label>
               <div className="flex flex-wrap gap-2.5">
                 {CATEGORY_COLORS.map((color) => (
-                  <button
+                  <Button
                     key={color.value}
-                    type="button"
                     onClick={() => setFormColor(color.value)}
-                    className="size-7 rounded-full transition-all focus-visible:outline-2 focus-visible:outline-ring"
+                    variant="outline"
+                    size="icon-sm"
+                    className="rounded-full"
                     style={{
                       backgroundColor: color.value,
                       outline:

@@ -1,5 +1,5 @@
 import { type UseQueryResult, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { CustomerNote, CustomerNoteType } from "@/lib/database.types";
+import type { CustomerNote, CustomerNoteType } from "@/lib/types";
 import { customerNoteKeys } from "./keys";
 
 /**

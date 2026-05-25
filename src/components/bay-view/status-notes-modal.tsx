@@ -62,14 +62,14 @@ export function StatusNotesModal({
             <MessageSquare className="size-4 text-muted-foreground" />
             {title}
           </CardTitle>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onCancel}
-            className="rounded-md p-1 hover:bg-muted transition-colors"
             aria-label={t("cancel")}
           >
             <X className="size-4" />
-          </button>
+          </Button>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <p className="text-sm text-muted-foreground">{t("addNotePrompt")}</p>

@@ -7,6 +7,7 @@ import {
   Clock,
   XCircle,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -34,9 +35,10 @@ const STATUS_ICONS: Record<string, React.ReactNode> = {
 export function StatusPill({ status }: { status: string }) {
   const isInProgress = status === "In Progress";
   return (
-    <span
+    <Badge
+      variant="outline"
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+        "gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
         STATUS_STYLES[status] ?? "bg-muted text-muted-foreground",
         isInProgress && "animate-[pulse-ring-warning_2s_ease-in-out_infinite]",
       )}
@@ -46,6 +48,6 @@ export function StatusPill({ status }: { status: string }) {
         <span className="size-1.5 rounded-full bg-current animate-pulse" />
       )}
       <span className="hidden sm:inline">{status}</span>
-    </span>
+    </Badge>
   );
 }

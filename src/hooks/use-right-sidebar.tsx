@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 export interface SidebarTab {
   value: string;
@@ -33,45 +33,60 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
     content: {},
   });
 
-  const setOpen = (open: boolean) =>
-    setState((prev) => ({ ...prev, isOpen: open }));
+  const setOpen = useCallback(
+    (open: boolean) => setState((prev) => ({ ...prev, isOpen: open })),
+    [],
+  );
 
-  const toggle = () =>
-    setState((prev) => ({ ...prev, isOpen: !prev.isOpen }));
+  const toggle = useCallback(
+    () => setState((prev) => ({ ...prev, isOpen: !prev.isOpen })),
+    [],
+  );
 
-  const setActiveTab = (tab: string) =>
-    setState((prev) => ({ ...prev, activeTab: tab }));
+  const setActiveTab = useCallback(
+    (tab: string) => setState((prev) => ({ ...prev, activeTab: tab })),
+    [],
+  );
 
-  const registerTab = (value: string, label: string, content: ReactNode) =>
-    setState((prev) => {
-      const exists = prev.tabs.some((t) => t.value === value);
-      const tabs = exists
-        ? prev.tabs
-        : [...prev.tabs, { value, label }];
-      const activeTab = prev.activeTab || value;
-      return {
-        ...prev,
-        tabs,
-        activeTab,
-        content: { ...prev.content, [value]: content },
-      };
-    });
+  const registerTab = useCallback(
+    (value: string, label: string, content: ReactNode) =>
+      setState((prev) => {
+        const exists = prev.tabs.some((t) => t.value === value);
+        const tabs = exists
+          ? prev.tabs
+          : [...prev.tabs, { value, label }];
+        const activeTab = prev.activeTab || value;
+        return {
+          ...prev,
+          tabs,
+          activeTab,
+          content: { ...prev.content, [value]: content },
+        };
+      }),
+    [],
+  );
 
-  const unregisterTab = (value: string) =>
-    setState((prev) => {
-      const tabs = prev.tabs.filter((t) => t.value !== value);
-      const { [value]: _, ...content } = prev.content;
-      const activeTab =
-        prev.activeTab === value
-          ? tabs[0]?.value ?? ""
-          : prev.activeTab;
-      return { ...prev, tabs, content, activeTab, isOpen: tabs.length > 0 ? prev.isOpen : false };
-    });
+  const unregisterTab = useCallback(
+    (value: string) =>
+      setState((prev) => {
+        const tabs = prev.tabs.filter((t) => t.value !== value);
+        const { [value]: _, ...content } = prev.content;
+        const activeTab =
+          prev.activeTab === value
+            ? tabs[0]?.value ?? ""
+            : prev.activeTab;
+        return { ...prev, tabs, content, activeTab, isOpen: tabs.length > 0 ? prev.isOpen : false };
+      }),
+    [],
+  );
+
+  const ctxValue = useMemo(
+    () => ({ state, setOpen, toggle, setActiveTab, registerTab, unregisterTab }),
+    [state, setOpen, toggle, setActiveTab, registerTab, unregisterTab],
+  );
 
   return (
-    <RightSidebarContext.Provider
-      value={{ state, setOpen, toggle, setActiveTab, registerTab, unregisterTab }}
-    >
+    <RightSidebarContext.Provider value={ctxValue}>
       {children}
     </RightSidebarContext.Provider>
   );

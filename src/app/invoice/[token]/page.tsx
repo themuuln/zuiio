@@ -12,6 +12,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
 import type { ExportColumn } from "@/lib/export";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { InvoiceItem, InvoicePayment } from "@/lib/database.types";
+import type { InvoiceItem, InvoicePayment } from "@/lib/types";
 import type { InvoiceWithItems } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
 
@@ -71,15 +72,10 @@ function InvoiceStatusBadge({ status }: { status: string }) {
   const Icon = config.icon;
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold min-h-[32px]",
-        config.className,
-      )}
-    >
+    <Badge variant="outline" className="gap-1.5 text-sm font-semibold min-h-[32px]">
       <Icon className="size-3.5" />
       {config.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -110,7 +106,7 @@ function InvoiceSkeleton() {
       <Card>
         <CardContent className="p-8">
           <div className="mb-8 flex items-start justify-between">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Skeleton className="h-8 w-64" />
               <Skeleton className="h-5 w-40" />
               <Skeleton className="h-5 w-32" />
@@ -118,17 +114,17 @@ function InvoiceSkeleton() {
             <Skeleton className="h-7 w-24" />
           </div>
           <div className="mb-8 grid gap-6 sm:grid-cols-2">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Skeleton className="h-5 w-32" />
               <Skeleton className="h-5 w-48" />
               <Skeleton className="h-5 w-36" />
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Skeleton className="h-5 w-32" />
               <Skeleton className="h-5 w-48" />
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={`skeleton-${i}`} className="h-12 w-full" />
             ))}
@@ -329,7 +325,7 @@ export default function PublicInvoicePage() {
                 <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Bill To
                 </h3>
-                <div className="space-y-0.5 text-sm">
+                <div className="flex flex-col gap-0.5 text-sm">
                   {invoice.customer_name && (
                     <p className="font-medium">{invoice.customer_name}</p>
                   )}
@@ -361,7 +357,7 @@ export default function PublicInvoicePage() {
                 <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Vehicle
                 </h3>
-                <div className="space-y-0.5 text-sm">
+                <div className="flex flex-col gap-0.5 text-sm">
                   {invoice.vehicle_plate && (
                     <p className="font-mono font-medium">
                       {invoice.vehicle_plate}
@@ -421,16 +417,9 @@ export default function PublicInvoicePage() {
                       >
                         <TableCell className="py-3 pr-4">
                           <div className="flex items-center gap-2">
-                            <span
-                              className={cn(
-                                "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider",
-                                item.item_type === "service"
-                                  ? "bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
-                                  : "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400",
-                              )}
-                            >
+                            <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
                               {item.item_type === "service" ? "SVC" : "PRT"}
-                            </span>
+                            </Badge>
                             <span className="font-medium">
                               {item.description}
                             </span>

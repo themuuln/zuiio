@@ -19,7 +19,9 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import type { Vehicle, WorkOrder } from "@/lib/database.types";
+import type { Vehicle, WorkOrder } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn, formatPlateNumber } from "@/lib/utils";
 
 function getWaitTime(createdAt: string): { text: string; urgent: boolean } {
@@ -168,18 +170,19 @@ export function QueuedVehicleCard({
           <Loader2 className="size-3.5 animate-spin text-muted-foreground/50" />
         )}
         {onQuickAssign && !isPending && (
-          <button
-            type="button"
+          <Button
+            variant="default"
+            size="icon"
             onClick={(e) => {
               e.stopPropagation();
               onQuickAssign(workOrder.id);
             }}
-            className="flex items-center justify-center size-7 rounded-md border border-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="size-7"
             aria-label={t("quickAssign")}
             title={t("assignToFirstBay")}
           >
             <CornerDownRight className="size-3.5" />
-          </button>
+          </Button>
         )}
         <div
           className={cn(
@@ -241,25 +244,18 @@ export function WaitingQueue({
 
   return (
     <div className="overflow-hidden">
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         onClick={() => setCollapsed(!collapsed)}
-        className="flex w-full items-center justify-between px-2 py-1.5 text-xs font-semibold transition-colors hover:bg-muted/30"
+        className="w-full justify-between px-2 py-1.5 h-auto text-xs font-semibold"
       >
         <span className="flex items-center gap-1.5">
           <Clock className="size-3.5 text-amber-500" />
           <span>{t("waitingQueue")}</span>
           {items.length > 0 && (
-            <span
-              className={cn(
-                "rounded-full px-1.5 py-0.5 text-[9px] font-semibold",
-                items.length > 5
-                  ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                  : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300",
-              )}
-            >
+            <Badge variant="outline">
               {items.length}
-            </span>
+            </Badge>
           )}
         </span>
         {collapsed ? (
@@ -267,7 +263,7 @@ export function WaitingQueue({
         ) : (
           <ChevronDown className="size-3.5 text-muted-foreground" />
         )}
-      </button>
+      </Button>
 
       {!collapsed && (
         <div
@@ -289,23 +285,24 @@ export function WaitingQueue({
                 className="w-full h-7 rounded-md border border-border bg-muted/30 pl-6 pr-6 text-[10px] transition-colors placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-background"
               />
               {searchQuery && (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground/50 hover:bg-muted hover:text-foreground transition-colors"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 size-5"
                 >
                   <X className="size-3" />
-                </button>
+                </Button>
               )}
             </div>
           )}
 
           {searchQuery.trim() && filtered.length > 0 && (
             <div className="mb-2 flex justify-end">
-              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+              <Badge variant="secondary">
                 <span className="hidden sm:inline">Showing </span>
                 {filtered.length}/{items.length}
-              </span>
+              </Badge>
             </div>
           )}
 
@@ -318,13 +315,13 @@ export function WaitingQueue({
             <div className="flex flex-col items-center justify-center py-4 gap-1.5 text-muted-foreground/70">
               <Search className="size-5 text-primary/60" />
               <p className="text-[11px] font-medium">{t("noMatchSearch")}</p>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
                 onClick={() => setSearchQuery("")}
-                className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/15 transition-colors"
+                className="px-2 py-0.5 text-[10px] font-medium h-auto"
               >
                 {t("clearSearch")}
-              </button>
+              </Button>
             </div>
           ) : (
             <SortableContext

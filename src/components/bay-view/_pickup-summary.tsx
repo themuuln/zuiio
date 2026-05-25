@@ -10,6 +10,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -136,16 +137,16 @@ export function PickupSummary({
             <CheckCircle2 className="size-4 text-emerald-500" />
             {t("pickupSummaryTitle")}
           </CardTitle>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onDone}
-            className="rounded-md p-1 hover:bg-muted transition-colors"
           >
             <X className="size-4" />
-          </button>
+          </Button>
         </CardHeader>
 
-        <CardContent className="pt-4 space-y-5">
+        <CardContent className="pt-4 flex flex-col gap-5">
           {/* Vehicle + Cost */}
           <div className="text-center">
             <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 px-4 py-2">
@@ -162,21 +163,17 @@ export function PickupSummary({
 
           {/* Invoice / Payment Status — only when invoice exists */}
           {invoiceId && (
-            <div className="rounded-lg border border-green-200/60 bg-green-50/30 dark:border-green-800/30 dark:bg-green-950/10 p-3 space-y-2">
+            <div className="rounded-lg border border-green-200/60 bg-green-50/30 dark:border-green-800/30 dark:bg-green-950/10 p-3 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">Invoice</span>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  _invoiceStatus === "paid" ? "bg-green-100 text-green-700" :
-                  _invoiceStatus === "partial" ? "bg-amber-100 text-amber-700" :
-                  "bg-gray-100 text-gray-600"
-                }`}>
+                <Badge variant="outline">
                   {_invoiceStatus === "paid" ? "Paid" : _invoiceStatus === "partial" ? "Partial" : "Pending"}
-                </span>
+                </Badge>
               </div>
 
               {/* Payment history */}
               {payments.length > 0 && (
-                <div className="space-y-1">
+                <div className="flex flex-col gap-1">
                   {payments.map(p => (
                     <div key={p.id} className="flex justify-between text-xs">
                       <span className="text-muted-foreground">
@@ -217,11 +214,11 @@ export function PickupSummary({
 
           {/* Recommendations */}
           {hasRecommendations && (
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 {t("pickupSummaryNextService")}
               </h3>
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
                 {recommendations.map((r) => (
                   <div
                     key={`${r.serviceName}-${r.nextDueDate ?? r.nextDueKm}`}
@@ -252,16 +249,9 @@ export function PickupSummary({
                       </p>
                     </div>
                     {r.priority !== "standard" && (
-                      <span
-                        className={cn(
-                          "text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full",
-                          r.priority === "important"
-                            ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-                        )}
-                      >
+                      <Badge variant="outline">
                         {r.priority}
-                      </span>
+                      </Badge>
                     )}
                   </div>
                 ))}
@@ -333,7 +323,7 @@ export function PickupSummary({
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm">Record Payment</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="flex flex-col gap-3">
                 <div>
                   <label htmlFor="payment-amount" className="text-xs font-medium text-muted-foreground">Amount</label>
                   <Input

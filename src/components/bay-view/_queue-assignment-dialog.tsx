@@ -10,8 +10,10 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
-import type { Vehicle, WorkOrder } from "@/lib/database.types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { Vehicle, WorkOrder } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn, formatPlateNumber } from "@/lib/utils";
 
 interface QueueAssignmentDialogProps {
@@ -48,8 +50,8 @@ export function QueueAssignmentDialog({
       ? `${waitMinutes}m`
       : `${Math.floor(waitMinutes / 60)}h ${waitMinutes % 60}m`;
 
-  const firstEmpty = bays.find((b) => !b.occupied);
-  const availableBays = bays.filter((b) => !b.occupied);
+  const firstEmpty = useMemo(() => bays.find((b) => !b.occupied), [bays]);
+  const availableBays = useMemo(() => bays.filter((b) => !b.occupied), [bays]);
 
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -122,9 +124,7 @@ export function QueueAssignmentDialog({
                   <h2 className="text-xl font-semibold tracking-tight">
                     {v ? formatPlateNumber(v.plate_number) : t("noVehicle")}
                   </h2>
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                    {waitText}
-                  </span>
+                  <Badge variant="outline">{waitText}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   {v
@@ -144,14 +144,14 @@ export function QueueAssignmentDialog({
                 )}
               </div>
             </div>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onClose}
-              className="rounded-md p-1.5 hover:bg-muted transition-colors shrink-0"
               aria-label={t("close")}
             >
               <X className="size-5" />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -191,17 +191,17 @@ export function QueueAssignmentDialog({
                     const isSelected = selectedBay === bay.bayNumber;
                     const isAvailable = !bay.occupied;
                     return (
-                      <button
+                      <Button
                         key={bay.bayNumber}
-                        type="button"
+                        variant={isSelected ? "default" : isAvailable ? "outline" : "outline"}
                         onClick={() => isAvailable && setSelectedBay(bay.bayNumber)}
                         disabled={!isAvailable}
                         className={cn(
-                          "flex flex-col items-center gap-1.5 rounded-xl border-2 p-3.5 text-center transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                          "flex flex-col items-center gap-1.5 p-3.5 h-auto",
                           isSelected
-                            ? "border-primary bg-primary/10 shadow-sm shadow-primary/20 ring-1 ring-primary/20"
+                            ? "shadow-sm shadow-primary/20"
                             : isAvailable
-                              ? "border-dashed border-muted-foreground/30 bg-muted/20 hover:border-primary/40 hover:bg-primary/5 hover:shadow-sm"
+                              ? "border-dashed border-muted-foreground/30 bg-muted/20 hover:border-primary/40 hover:bg-primary/5"
                               : "border-border/50 bg-muted/10 opacity-45 cursor-not-allowed",
                         )}
                       >
@@ -228,7 +228,7 @@ export function QueueAssignmentDialog({
                             Busy
                           </span>
                         )}
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -250,7 +250,7 @@ export function QueueAssignmentDialog({
                   </span>
                 )}
               </div>
-              <div className="space-y-1 max-h-[220px] overflow-y-auto pr-1">
+              <div className="flex flex-col gap-1 max-h-[220px] overflow-y-auto pr-1">
                 {mechanics.length === 0 ? (
                   <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 py-8 text-center">
                     <User className="size-6 text-muted-foreground/30 mb-1" />
@@ -260,14 +260,14 @@ export function QueueAssignmentDialog({
                   </div>
                 ) : (
                   <>
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
                       onClick={() => setSelectedMechanic(null)}
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                        "w-full justify-start gap-3 px-3.5 py-3 h-auto rounded-lg",
                         !selectedMechanic
                           ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20"
-                          : "border-border/60 bg-muted/15 hover:border-primary/30 hover:bg-muted/30",
+                          : "border-border/60 bg-muted/15",
                       )}
                     >
                       <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted-foreground/10 text-muted-foreground">
@@ -281,24 +281,24 @@ export function QueueAssignmentDialog({
                           Assign later
                         </span>
                       </div>
-                    </button>
+                    </Button>
                     {mechanics.map((m) => {
                       const isSelected = selectedMechanic === m.id;
                       const initials = m.full_name
                         ? m.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
                         : "?";
                       return (
-                        <button
+                        <Button
                           key={m.id}
-                          type="button"
+                          variant="ghost"
                           onClick={() =>
                             setSelectedMechanic(isSelected ? null : m.id)
                           }
                           className={cn(
-                            "flex w-full items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                            "w-full justify-start gap-3 px-3.5 py-3 h-auto rounded-lg",
                             isSelected
                               ? "border-primary/50 bg-primary/10 shadow-sm ring-1 ring-primary/20"
-                              : "border-border/60 bg-muted/20 hover:border-primary/30 hover:bg-muted/40 hover:shadow-sm",
+                              : "border-border/60 bg-muted/20",
                           )}
                         >
                           <div
@@ -319,7 +319,7 @@ export function QueueAssignmentDialog({
                               {isSelected ? "Assigned" : "Click to assign"}
                             </span>
                           </div>
-                        </button>
+                        </Button>
                       );
                     })}
                   </>
@@ -340,22 +340,19 @@ export function QueueAssignmentDialog({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <Button
+              variant="outline"
               onClick={onClose}
-              className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
             >
               {t("cancel")}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="default"
               onClick={handleConfirm}
               disabled={!selectedBay || saving}
               className={cn(
-                "flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-150 disabled:opacity-50",
-                selectedBay
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm shadow-primary/20"
-                  : "bg-muted text-muted-foreground",
+                "shadow-sm shadow-primary/20",
+                !selectedBay && "bg-muted text-muted-foreground",
               )}
             >
               {saving ? (
@@ -364,7 +361,7 @@ export function QueueAssignmentDialog({
                 <CornerDownRight className="size-4" />
               )}
               {saving ? t("assigning") : t("assignToBay")}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

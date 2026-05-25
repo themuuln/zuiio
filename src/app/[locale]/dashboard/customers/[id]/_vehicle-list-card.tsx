@@ -67,14 +67,14 @@ export function VehicleListCard({
         ) : (
           <div className="flex flex-col gap-2">
             {vehicles.map((vehicle) => (
-              <button
+              <Button
                 key={vehicle.id}
-                type="button"
                 onClick={() => router.push(`/dashboard/vehicles/${vehicle.id}`)}
-                className="flex items-center gap-3 rounded-lg bg-muted/50 p-3 text-left transition-colors hover:bg-muted"
+                variant="ghost"
+                className="w-full justify-start gap-3 rounded-lg bg-muted/50 p-3"
               >
                 <Car className="size-5 shrink-0 text-muted-foreground" />
-                <div className="flex-1">
+                <div className="flex-1 text-left">
                   <p className="font-medium">{vehicle.plate_number}</p>
                   <p className="text-xs text-muted-foreground">
                     {[vehicle.year, vehicle.make, vehicle.model]
@@ -83,7 +83,7 @@ export function VehicleListCard({
                   </p>
                 </div>
                 <ArrowLeft className="size-4 rotate-180 text-muted-foreground" />
-              </button>
+              </Button>
             ))}
           </div>
         )}

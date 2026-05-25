@@ -65,7 +65,7 @@ export default function ConfirmEmailPage() {
           </Button>
         </div>
       ) : (
-        <form onSubmit={handleResend} className="mt-6 space-y-3">
+        <form onSubmit={handleResend} className="mt-6 flex flex-col gap-3">
           <input
             type="email"
             value={email}

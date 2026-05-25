@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -118,32 +119,22 @@ export default function ValuationPage() {
       />
 
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
+        <Button
+          variant={categoryFilter === "" ? "default" : "outline"}
           onClick={() => setCategoryFilter("")}
-          data-slot="touch-target"
-          className={`rounded-full border px-4 py-2.5 text-sm font-medium transition-colors ${
-            categoryFilter === ""
-              ? "bg-primary text-primary-foreground border-primary"
-              : "bg-background border-border text-muted-foreground hover:bg-muted"
-          }`}
+          className="rounded-full"
         >
           {t("allCategories")}
-        </button>
+        </Button>
         {categories.map((cat) => (
-          <button
+          <Button
             key={cat}
-            type="button"
-            data-slot="touch-target"
+            variant={categoryFilter === cat ? "default" : "outline"}
             onClick={() => setCategoryFilter(cat)}
-            className={`rounded-full border px-4 py-2.5 text-sm font-medium transition-colors ${
-              categoryFilter === cat
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background border-border text-muted-foreground hover:bg-muted"
-            }`}
+            className="rounded-full"
           >
             {cat}
-          </button>
+          </Button>
         ))}
       </div>
 

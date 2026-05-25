@@ -3,8 +3,7 @@
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import type { BayViewData } from "@/lib/services/bay-view-service";
-import type { Vehicle } from "@/lib/database.types";
-import type { WorkOrder } from "@/lib/database.types";
+import type { Vehicle, WorkOrder } from "@/lib/types";
 import {
   assignMechanicToWorkOrder,
   assignVehicleToBay,
@@ -114,7 +113,10 @@ export function useBayDragHandlers({
             bay_number: bayNumber,
             status: "Diagnosing" as const,
             mechanic: null,
-            customer_name: (movedWO as unknown as Record<string, unknown>).customer_name as string | null ?? null,
+            customer_name:
+              ((movedWO as unknown as Record<string, unknown>).customer_name as
+                | string
+                | null) ?? null,
           };
           return {
             ...d,

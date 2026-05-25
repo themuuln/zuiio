@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import {
   AlertCircle,
   Bell,
@@ -44,6 +45,14 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import {
   useOrgSettings,
   useUpdateOrgSettings,
@@ -457,8 +466,8 @@ export default function ServiceRemindersPage() {
                   {t("serviceReminders.configDescription")}
                 </SheetDescription>
               </SheetHeader>
-              <div className="mt-6 space-y-6">
-                <div className="space-y-3">
+              <div className="flex mt-6 flex-col gap-6">
+                <div className="flex flex-col gap-3">
                   <Label htmlFor="default-channel">
                     {t("serviceReminders.defaultChannel")}
                   </Label>
@@ -487,7 +496,7 @@ export default function ServiceRemindersPage() {
                 </div>
 
                 <div className="flex items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
+                  <div className="flex flex-col gap-0.5">
                     <Label className="text-sm font-medium">
                       {t("serviceReminders.autoEnable")}
                     </Label>
@@ -708,7 +717,7 @@ export default function ServiceRemindersPage() {
                 </div>
 
                 <div className="flex items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
+                  <div className="flex flex-col gap-0.5">
                     <Label className="text-sm font-medium">
                       {t("serviceReminders.reminderEnabled")}
                     </Label>
@@ -762,7 +771,7 @@ export default function ServiceRemindersPage() {
           <Card>
             <CardContent className="p-0">
               {isLoading ? (
-                <div className="space-y-2 p-4">
+                <div className="flex flex-col gap-2 p-4">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <Skeleton key={`skel-${i}`} className="h-10 w-full" />
                   ))}
@@ -775,17 +784,23 @@ export default function ServiceRemindersPage() {
                   </Button>
                 </div>
               ) : schedules.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 p-8 text-center text-muted-foreground">
-                  <Calendar className="size-8" />
-                  <p>{t("serviceReminders.noSchedules")}</p>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAdd(true)}
-                  >
-                    <Plus className="mr-2 size-4" />
-                    {t("serviceReminders.addSchedule")}
-                  </Button>
-                </div>
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <Calendar />
+                    </EmptyMedia>
+                    <EmptyTitle>{t("serviceReminders.noSchedules")}</EmptyTitle>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAdd(true)}
+                    >
+                      <Plus className="mr-2 size-4" />
+                      {t("serviceReminders.addSchedule")}
+                    </Button>
+                  </EmptyContent>
+                </Empty>
               ) : (
                 <Table>
                   <TableHeader>
@@ -840,7 +855,7 @@ function ReminderLogsTab({ orgId }: { orgId: string | undefined }) {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="space-y-2 p-4">
+        <CardContent className="flex flex-col gap-2 p-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={`skel-${i}`} className="h-10 w-full" />
           ))}
@@ -864,12 +879,14 @@ function ReminderLogsTab({ orgId }: { orgId: string | undefined }) {
 
   if (!logs || logs.length === 0) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center gap-2 p-8 text-center text-muted-foreground">
-          <Bell className="size-8" />
-          <p>{t("serviceReminders.noLogs")}</p>
-        </CardContent>
-      </Card>
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Bell />
+          </EmptyMedia>
+          <EmptyTitle>{t("serviceReminders.noLogs")}</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
     );
   }
 
@@ -921,16 +938,6 @@ function ReminderLogsTab({ orgId }: { orgId: string | undefined }) {
 
 function StatusBadge({ status }: { status: string }) {
   const t = useTranslations();
-  const colors: Record<string, string> = {
-    pending: "bg-yellow-100 text-yellow-800",
-    sent: "bg-green-100 text-green-800",
-    failed: "bg-red-100 text-red-800",
-    cancelled: "bg-gray-100 text-gray-800",
-    service_due: "bg-blue-100 text-blue-800",
-    service_overdue: "bg-orange-100 text-orange-800",
-    custom: "bg-purple-100 text-purple-800",
-  };
-
   const labels: Record<string, string> = {
     pending: t("serviceReminders.statusPending"),
     sent: t("serviceReminders.statusSent"),
@@ -942,13 +949,9 @@ function StatusBadge({ status }: { status: string }) {
   };
 
   return (
-    <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        colors[status] ?? "bg-gray-100 text-gray-800"
-      }`}
-    >
+    <Badge variant="outline">
       {labels[status] ?? status}
-    </span>
+    </Badge>
   );
 }
 
@@ -961,8 +964,8 @@ function ChannelBadge({ channel }: { channel: string }) {
   };
 
   return (
-    <span className="inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+    <Badge variant="outline">
       {labels[channel] ?? channel}
-    </span>
+    </Badge>
   );
 }

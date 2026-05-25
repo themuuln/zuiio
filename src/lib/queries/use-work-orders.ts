@@ -38,6 +38,7 @@ export function useWorkOrders(
       return (json.data ?? []) as WorkOrderListItem[];
     },
     enabled: !!orgId,
+    placeholderData: (previousData) => previousData,
     staleTime: 15_000,
   });
 }

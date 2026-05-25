@@ -1,12 +1,19 @@
 "use client";
 
-import { useDroppable } from "@dnd-kit/core";
-import { Car, Clock, Maximize2, Plus } from "lucide-react";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { Car, Clock, Loader2, Maximize2, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn, formatPlateNumber } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { MechanicBadge } from "../bay-view/mechanic-badge";
 
 function formatDuration(ms: number): string {
   const minutes = Math.floor(ms / 60000);
@@ -26,7 +33,10 @@ const STATUS_ACCENT: Record<string, string> = {
   Cancelled: "bg-red-400/40",
 };
 
-const STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
+const STATUS_BADGE_VARIANT: Record<
+  string,
+  "default" | "secondary" | "outline" | "destructive"
+> = {
   New: "secondary",
   Diagnosing: "outline",
   "In Progress": "default",
@@ -40,7 +50,11 @@ function ElapsedTimer({ startedAt }: { startedAt: string | null | undefined }) {
   const startedRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!startedAt) { setDisplay(""); startedRef.current = null; return; }
+    if (!startedAt) {
+      setDisplay("");
+      startedRef.current = null;
+      return;
+    }
     const ms = new Date(startedAt).getTime();
     startedRef.current = ms;
     const tick = () => {
@@ -62,8 +76,48 @@ function ElapsedTimer({ startedAt }: { startedAt: string | null | undefined }) {
   );
 }
 
+function DraggableVehicleWrapper({
+  workOrderId,
+  children,
+  disabled,
+}: {
+  workOrderId: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: `vehicle-${workOrderId}`,
+      data: { type: "vehicle", workOrderId },
+      disabled,
+    });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: 50,
+      }
+    : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={style}
+      className={cn(
+        "flex flex-1 items-center gap-2 cursor-grab active:cursor-grabbing select-none touch-manipulation",
+        isDragging && "opacity-50 shadow-md bg-muted/20",
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 interface BayCardProps {
   bay: BaySlotData;
+  isPending?: boolean;
   onStatusChange: (woId: string, status: string) => void;
   onRemoveFromBay?: (woId: string) => void;
   onOpenDetail: (woId: string) => void;
@@ -72,6 +126,7 @@ interface BayCardProps {
 
 export function BayCard({
   bay,
+  isPending = false,
   onStatusChange,
   onRemoveFromBay,
   onOpenDetail,
@@ -86,157 +141,177 @@ export function BayCard({
   return (
     <div
       ref={setNodeRef}
-      className={cn("h-full", isOver && "ring-2 ring-primary/20 rounded-lg")}
+      className={cn("h-full", isOver && "ring-2 ring-primary/20")}
     >
-      <div
+      <Card
+        size="sm"
         className={cn(
-          "relative flex flex-col rounded-lg border bg-card h-full transition-all overflow-hidden",
+          "relative h-full transition-all py-0 gap-0",
           wo
-            ? "border-border/80"
+            ? "border-border/80 bg-card"
             : "border-dashed border-muted-foreground/25 bg-muted/10",
           isOver && !wo && "border-primary/40 bg-primary/5",
+          isPending && "opacity-55 pointer-events-none",
         )}
       >
         {wo && (
-          <div className={cn("absolute left-0 top-0 bottom-0 w-[3px]", STATUS_ACCENT[wo.status] ?? "bg-primary")} />
+          <div
+            className={cn(
+              "absolute left-0 top-0 bottom-0 w-[3px]",
+              STATUS_ACCENT[wo.status] ?? "bg-primary",
+            )}
+          />
         )}
 
         {wo ? (
           <>
-            <div className="flex items-center justify-between pl-2.5 pr-2 pt-1.5">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 pl-3 pr-2.5 py-1.5 w-full">
               <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-wider">
                 Bay {String(bay.bayNumber).padStart(2, "0")}
               </span>
-              <Badge
-                variant={STATUS_BADGE_VARIANT[wo.status] ?? "outline"}
-                className="text-[8px] h-4 px-1.5 font-medium"
-              >
-                {wo.status}
-              </Badge>
-            </div>
-
-            <div className="flex-1 flex items-center gap-2 pl-2.5 pr-2 py-1.5">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted/60 ring-1 ring-border/30">
-                <Car className="size-3.5 text-muted-foreground/50" />
-              </div>
-              <div className="flex-1 min-w-0 space-y-0.5">
-                {v ? (
-                  <>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold truncate leading-tight text-foreground/90">
-                        {formatPlateNumber(v.plate_number)}
-                      </span>
-                      <ElapsedTimer startedAt={wo.started_at ?? wo.created_at} />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground/60 truncate leading-tight">
-                      {v.make} {v.model}
-                      {v.year ? ` · ${v.year}` : ""}
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      {wo.mechanic ? (
-                        <div className="flex items-center gap-1 min-w-0">
-                          <Avatar className="size-3.5 shrink-0">
-                            <AvatarFallback className="text-[5px] bg-primary/8 text-primary font-medium">
-                              {wo.mechanic.full_name
-                                ?.split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                                .toUpperCase()
-                                .slice(0, 2) ?? "?"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-[9px] text-muted-foreground/70 truncate leading-tight font-medium">
-                            {wo.mechanic.full_name}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-[9px] text-muted-foreground/40 italic">Unassigned</span>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-[10px] text-muted-foreground italic">No vehicle data</p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between border-t border-border/30 px-2 py-1 mt-auto">
               <div className="flex items-center gap-1">
+                {isPending && (
+                  <Loader2 className="size-2.5 animate-spin text-muted-foreground/60 mr-0.5" />
+                )}
+                <Badge
+                  variant={STATUS_BADGE_VARIANT[wo.status] ?? "outline"}
+                  className="h-4.5 px-1 text-[8.5px] font-medium leading-none"
+                >
+                  {wo.status}
+                </Badge>
+              </div>
+            </CardHeader>
+
+            <CardContent className="flex flex-col gap-1 px-3 py-1.5">
+              <DraggableVehicleWrapper workOrderId={wo.id} disabled={isPending}>
+                <div className="flex size-6 shrink-0 items-center justify-center rounded bg-muted/60 ring-1 ring-border/30">
+                  <Car className="size-2.5 text-muted-foreground/50" />
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col gap-px text-left">
+                  {v ? (
+                    <>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-semibold truncate leading-tight text-foreground/90">
+                          {formatPlateNumber(v.plate_number)}
+                        </span>
+                        <ElapsedTimer
+                          startedAt={wo.started_at ?? wo.created_at}
+                        />
+                      </div>
+                      <p className="text-[9px] text-muted-foreground/60 truncate leading-none">
+                        {v.make} {v.model}
+                        {v.year ? ` · ${v.year}` : ""}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-[9px] text-muted-foreground italic leading-none">
+                      No vehicle data
+                    </p>
+                  )}
+                </div>
+              </DraggableVehicleWrapper>
+              
+              <div className="mt-0 flex min-h-[20px] items-center gap-1 border-t border-border/10 pt-1.5">
+                <MechanicBadge workOrderId={wo.id} mechanic={wo.mechanic} disabled={isPending} compact />
+              </div>
+            </CardContent>
+
+            <CardFooter className="mt-auto justify-between border-t border-border/30 bg-muted/20 px-3 py-1">
+              <div className="flex items-center gap-0.5">
                 {wo.status === "New" && (
-                  <button
-                    type="button"
+                  <Button
+                    size="xs"
                     onClick={() => onStatusChange(wo.id, "Diagnosing")}
-                    className="inline-flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-[9px] font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                    disabled={isPending}
                   >
                     Start Diagnose
-                  </button>
+                  </Button>
                 )}
                 {wo.status === "Diagnosing" && (
-                  <button
-                    type="button"
+                  <Button
+                    size="xs"
+                    variant="outline"
                     onClick={() => onStatusChange(wo.id, "In Progress")}
-                    className="inline-flex items-center gap-1 rounded border border-amber-400/40 bg-amber-50/50 px-2 py-0.5 text-[9px] font-medium text-amber-700 hover:bg-amber-100/50 transition-colors dark:bg-amber-950/20 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                    disabled={isPending}
                   >
                     Start Work
-                  </button>
+                  </Button>
                 )}
                 {wo.status === "In Progress" && (
-                  <button
-                    type="button"
+                  <Button
+                    size="xs"
+                    variant="secondary"
                     onClick={() => onStatusChange(wo.id, "Ready for Pickup")}
-                    className="inline-flex items-center gap-1 rounded border border-emerald-400/40 bg-emerald-50/50 px-2 py-0.5 text-[9px] font-medium text-emerald-700 hover:bg-emerald-100/50 transition-colors dark:bg-emerald-950/20 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+                    disabled={isPending}
                   >
                     Mark Ready
-                  </button>
+                  </Button>
                 )}
                 {wo.status === "Ready for Pickup" && (
-                  <button
-                    type="button"
+                  <Button
+                    size="xs"
                     onClick={() => onStatusChange(wo.id, "Completed")}
-                    className="inline-flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-[9px] font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                    disabled={isPending}
                   >
                     Complete
-                  </button>
+                  </Button>
                 )}
-                {wo.status !== "Completed" && wo.status !== "Cancelled" && onRemoveFromBay && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onRemoveFromBay(wo.id); }}
-                    className="inline-flex items-center justify-center size-4 rounded text-muted-foreground/30 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
-                    title="Remove from bay"
-                  >
-                    <svg viewBox="0 0 15 15" fill="none" className="size-2.5" stroke="currentColor" strokeWidth="1.5">
-                      <path d="M4.5 3V1.5a1 1 0 011-1h4a1 1 0 011 1V3M1.5 3h12M3 3v9.5a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5V3" />
-                    </svg>
-                  </button>
-                )}
+                {wo.status !== "Completed" &&
+                  wo.status !== "Cancelled" &&
+                  onRemoveFromBay && (
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveFromBay(wo.id);
+                      }}
+                      title="Remove from bay"
+                      disabled={isPending}
+                    >
+                      <svg
+                        viewBox="0 0 15 15"
+                        fill="none"
+                        className="size-2.5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      >
+                        <path d="M4.5 3V1.5a1 1 0 011-1h4a1 1 0 011 1V3M1.5 3h12M3 3v9.5a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5V3" />
+                      </svg>
+                    </Button>
+                  )}
               </div>
-              <button
+              <Button
                 type="button"
+                size="icon-xs"
+                variant="ghost"
                 onClick={() => onOpenDetail(wo.id)}
-                className="flex items-center justify-center size-5 rounded text-muted-foreground/30 hover:text-foreground hover:bg-muted transition-colors"
                 title="Details"
+                disabled={isPending}
               >
                 <Maximize2 className="size-2.5" />
-              </button>
-            </div>
+              </Button>
+            </CardFooter>
           </>
         ) : (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={() => onAssignClick?.(bay.bayNumber)}
-            className="flex flex-1 flex-col items-center justify-center gap-1.5 cursor-pointer hover:bg-accent/10 transition-colors rounded-lg py-3"
+            className="flex flex-1 flex-col items-center justify-center gap-1 px-3 py-3 h-auto text-center"
           >
-            <div className="flex size-7 items-center justify-center rounded-full border border-dashed border-muted-foreground/30">
-              <Plus className="size-3.5 text-muted-foreground/40" />
+            <div className="flex size-7 items-center justify-center border border-dashed border-muted-foreground/30 bg-background/80">
+              <Plus className="size-3 text-muted-foreground/40" />
             </div>
-            <span className="text-[10px] font-medium text-muted-foreground/50">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/60">
               Bay {String(bay.bayNumber).padStart(2, "0")}
             </span>
-            <span className="text-[8px] text-muted-foreground/40">Available — click to assign</span>
-          </button>
+            <span className="text-[10px] text-muted-foreground/50">
+              Available - click to assign
+            </span>
+          </Button>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

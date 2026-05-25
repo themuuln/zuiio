@@ -1,7 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags, cacheDurations } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
-import type { ServiceCatalog, ServicePriceHistory } from "@/lib/database.types";
+import type { ServiceCatalog, ServicePriceHistory } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 

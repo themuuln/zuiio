@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Plus, X } from "lucide-react";
+import { Car, ChevronDown, ChevronRight, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
@@ -10,6 +10,14 @@ import type { ExportColumn } from "@/lib/export";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -370,10 +378,10 @@ export default function VehicleModelsPage() {
               {editingId ? t("editVariant") : t("addNewModel")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-4">
             {/* Required fields */}
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
+              <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium">
                   {t("makeRequired")} <span className="text-destructive">*</span>
                 </label>
@@ -389,7 +397,7 @@ export default function VehicleModelsPage() {
                   autoComplete="off"
                 />
               </div>
-              <div className="space-y-1">
+              <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium">
                   {t("modelRequired")} <span className="text-destructive">*</span>
                 </label>
@@ -408,10 +416,11 @@ export default function VehicleModelsPage() {
             </div>
 
             {/* Toggle details */}
-            <button
-              type="button"
+            <Button
               onClick={() => setShowDetails(!showDetails)}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
             >
               {showDetails ? (
                 <ChevronDown className="size-4" />
@@ -419,11 +428,11 @@ export default function VehicleModelsPage() {
                 <ChevronRight className="size-4" />
               )}
               {showDetails ? t("hideDetails") : t("addDetails")}
-            </button>
+            </Button>
 
             {showDetails && (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                <div className="space-y-1">
+                <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium">{t("generation")}</label>
                   <Input
                     placeholder={t("generationPlaceholder")}
@@ -434,7 +443,7 @@ export default function VehicleModelsPage() {
                     className="h-11"
                   />
                 </div>
-                <div className="space-y-1">
+                <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium">{t("yearFrom")}</label>
                   <Input
                     type="number"
@@ -448,7 +457,7 @@ export default function VehicleModelsPage() {
                     className="h-11"
                   />
                 </div>
-                <div className="space-y-1">
+                <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium">{t("yearTo")}</label>
                   <Input
                     type="number"
@@ -462,7 +471,7 @@ export default function VehicleModelsPage() {
                     className="h-11"
                   />
                 </div>
-                <div className="space-y-1">
+                <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium">{t("engine")}</label>
                   <Input
                     placeholder={t("enginePlaceholder")}
@@ -473,7 +482,7 @@ export default function VehicleModelsPage() {
                     className="h-11"
                   />
                 </div>
-                <div className="space-y-1">
+                <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium">{t("bodyType")}</label>
                   <select
                     value={editForm.body_type}
@@ -542,25 +551,35 @@ export default function VehicleModelsPage() {
               <Button onClick={() => refetch()}>Retry</Button>
             </div>
           ) : tree.length === 0 ? (
-            <div className="flex flex-col items-center gap-4 py-12">
-              <p className="text-muted-foreground">
-                {search
-                  ? t("noModelsMatch")
-                  : t("noModels")}
-              </p>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Car />
+                </EmptyMedia>
+                <EmptyTitle>
+                  {search
+                    ? t("noModelsMatch")
+                    : t("noModels")}
+                </EmptyTitle>
+                <EmptyDescription>
+                  {t("noModelsDesc") || ""}
+                </EmptyDescription>
+              </EmptyHeader>
               {!search && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowAdd(true);
-                    setEditingId(null);
-                    resetForm();
-                  }}
-                >
-                  <Plus className="size-4" /> {t("addFirstModel")}
-                </Button>
+                <EmptyContent>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowAdd(true);
+                      setEditingId(null);
+                      resetForm();
+                    }}
+                  >
+                    <Plus className="size-4" /> {t("addFirstModel")}
+                  </Button>
+                </EmptyContent>
               )}
-            </div>
+            </Empty>
           ) : (
             <div className="divide-y divide-border">
               {tree.map((makeGroup) => {
@@ -573,24 +592,22 @@ export default function VehicleModelsPage() {
                 return (
                   <div key={makeGroup.make}>
                     {/* ── Make header ───────────────────────── */}
-                    <button
-                      type="button"
+                    <Button
                       onClick={() => toggleMake(makeGroup.make)}
-                      className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-muted/50 transition-colors"
+                      variant="ghost"
+                      className="w-full justify-start gap-2 px-4 py-3 font-semibold"
                     >
                       {makeOpen ? (
                         <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
                       ) : (
                         <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                       )}
-                      <span className="font-semibold">
-                        {makeGroup.make}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
+                      {makeGroup.make}
+                      <span className="text-xs font-normal text-muted-foreground">
                         {t("modelCount", { count: makeGroup.models.length })} ·{" "}
                         {t("variantCount", { count: variantCount })}
                       </span>
-                    </button>
+                    </Button>
 
                     {/* ── Model rows ────────────────────────── */}
                     {makeOpen && (
@@ -604,15 +621,15 @@ export default function VehicleModelsPage() {
                           return (
                             <div key={modelGroup.model}>
                               {/* Model header */}
-                              <button
-                                type="button"
+                              <Button
                                 onClick={() =>
                                   toggleModel(
                                     makeGroup.make,
                                     modelGroup.model,
                                   )
                                 }
-                                className="flex w-full items-center gap-2 pl-10 pr-4 py-2.5 text-left hover:bg-muted/30 transition-colors"
+                                variant="ghost"
+                                className="w-full justify-start gap-2 pl-10 pr-4 py-2.5"
                               >
                                 {modelOpen ? (
                                   <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
@@ -625,7 +642,7 @@ export default function VehicleModelsPage() {
                                 <span className="text-xs text-muted-foreground">
                                   {t("variantCount", { count: modelGroup.variants.length })}
                                 </span>
-                              </button>
+                              </Button>
 
                               {/* Variant leaf rows */}
                               {modelOpen && (

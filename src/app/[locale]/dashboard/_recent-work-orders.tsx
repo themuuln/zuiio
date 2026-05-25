@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import type { ExportColumn } from "@/lib/export";
 import type { DashboardData, WorkOrderDetail } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
@@ -54,113 +54,113 @@ export function RecentWorkOrdersTable({
 }) {
   const now = useClientNow();
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-0">
-        <div />
+    <div className="flex flex-col gap-2">
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="px-5 py-2 text-left font-medium text-muted-foreground">
+                    {t("workOrders.id")}
+                  </th>
+                  <th className="px-5 py-2 text-left font-medium text-muted-foreground">
+                    {t("workOrders.customer")}
+                  </th>
+                  <th className="px-5 py-2 text-left font-medium text-muted-foreground">
+                    {t("workOrders.vehicle")}
+                  </th>
+                  <th className="px-5 py-2 text-left font-medium text-muted-foreground">
+                    {t("workOrders.status")}
+                  </th>
+                  <th className="px-5 py-2 text-right font-medium text-muted-foreground">
+                    {t("workOrders.total")}
+                  </th>
+                  <th className="px-5 py-2 text-right font-medium text-muted-foreground">
+                    {t("workOrders.date")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {!workOrders || workOrders.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-5 py-8 text-center text-muted-foreground"
+                    >
+                      {t("dashboard.noWorkOrders")}
+                    </td>
+                  </tr>
+                ) : (
+                  workOrders.map((wo) => {
+                    const grandTotal =
+                      (wo.services ?? []).reduce(
+                        (sum: number, s: { final_price: number }) =>
+                          sum + Number(s.final_price),
+                        0,
+                      ) +
+                      (wo.parts ?? []).reduce(
+                        (sum: number, p: { final_price: number }) =>
+                          sum + Number(p.final_price),
+                        0,
+                      );
+
+                    return (
+                      <tr
+                        key={wo.id}
+                        className="border-b border-border transition-colors hover:bg-muted/30 cursor-pointer"
+                        onClick={() =>
+                          router.push(`/dashboard/work-orders/${wo.id}`)
+                        }
+                      >
+                        <td className="px-5 py-2 font-mono text-xs">
+                          {wo.id.slice(0, 8)}...
+                        </td>
+                        <td className="px-5 py-2">
+                          {wo.customer
+                            ? `${wo.customer.first_name} ${wo.customer.last_name ?? ""}`.trim()
+                            : "\u2014"}
+                        </td>
+                        <td className="px-5 py-2 text-muted-foreground">
+                          {wo.vehicle?.plate_number ?? "\u2014"}
+                        </td>
+                        <td className="px-5 py-2">
+                          <Badge variant="outline" className="gap-1.5">
+                            <span
+                              className={`size-1.5 rounded-full ${
+                                WO_STATUS_STYLES[wo.status]?.dot ?? "bg-muted-foreground"
+                              }`}
+                            />
+                            {wo.status}
+                          </Badge>
+                        </td>
+                        <td className="px-5 py-2 text-right font-medium tabular-nums">
+                          {formatCurrency(grandTotal)}
+                        </td>
+                        <td className="px-5 py-2 text-right text-muted-foreground">
+                          {formatDate(wo.created_at)}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+      <div className="flex justify-end">
         <ExportButton
           data={workOrders}
           columns={workOrdersForExport}
           filename={`dashboard-recent-${now.toISOString().split("T")[0]}.xlsx`}
           sheetName="Recent Work Orders"
           title="Recent Work Orders"
+          label={t("common.export")}
+          buttonSize="xs"
+          className="min-w-0 px-2"
         />
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                  {t("workOrders.id")}
-                </th>
-                <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                  {t("workOrders.customer")}
-                </th>
-                <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                  {t("workOrders.vehicle")}
-                </th>
-                <th className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                  {t("workOrders.status")}
-                </th>
-                <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                  {t("workOrders.total")}
-                </th>
-                <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                  {t("workOrders.date")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {workOrders.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-5 py-16 text-center text-muted-foreground"
-                  >
-                    {t("dashboard.noWorkOrders")}
-                  </td>
-                </tr>
-              ) : (
-                workOrders.map((wo) => {
-                  const grandTotal =
-                    (wo.services ?? []).reduce(
-                      (sum: number, s: { final_price: number }) =>
-                        sum + Number(s.final_price),
-                      0,
-                    ) +
-                    (wo.parts ?? []).reduce(
-                      (sum: number, p: { final_price: number }) =>
-                        sum + Number(p.final_price),
-                      0,
-                    );
-
-                  return (
-                    <tr
-                      key={wo.id}
-                      className="border-b border-border transition-colors hover:bg-muted/30 cursor-pointer"
-                      onClick={() =>
-                        router.push(`/dashboard/work-orders/${wo.id}`)
-                      }
-                    >
-                      <td className="px-5 py-3.5 font-mono text-xs">
-                        {wo.id.slice(0, 8)}...
-                      </td>
-                      <td className="px-5 py-3.5">
-                        {wo.customer
-                          ? `${wo.customer.first_name} ${wo.customer.last_name ?? ""}`.trim()
-                          : "\u2014"}
-                      </td>
-                      <td className="px-5 py-3.5 text-muted-foreground">
-                        {wo.vehicle?.plate_number ?? "\u2014"}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            WO_STATUS_STYLES[wo.status]?.bg ?? "bg-muted"
-                          } ${WO_STATUS_STYLES[wo.status]?.text ?? "text-muted-foreground"}`}
-                        >
-                          <span
-                            className={`size-1.5 rounded-full ${
-                              WO_STATUS_STYLES[wo.status]?.dot ?? "bg-muted-foreground"
-                            }`}
-                          />
-                          {wo.status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-medium tabular-nums">
-                        {formatCurrency(grandTotal)}
-                      </td>
-                      <td className="px-5 py-3.5 text-right text-muted-foreground">
-                        {formatDate(wo.created_at)}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

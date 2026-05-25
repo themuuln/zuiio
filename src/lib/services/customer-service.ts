@@ -2,7 +2,7 @@ import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags, cacheDurations } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
-import type { Customer } from "@/lib/database.types";
+import type { Customer } from "@/lib/types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import type {

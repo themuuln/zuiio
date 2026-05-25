@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import type { WorkOrderStatus } from "@/lib/database.types";
+import type { WorkOrderStatus } from "@/lib/types";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import { createWorkOrder, getWorkOrders } from "@/lib/services/work-order-service";
@@ -11,6 +11,7 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
     status: (searchParams.get("status") as unknown as WorkOrderStatus) ?? undefined,
     mechanic_id: searchParams.get("mechanic") ?? undefined,
     date: searchParams.get("date") ?? undefined,
+    search: searchParams.get("q") ?? undefined,
   };
 
   const workOrders = await getWorkOrders(orgId, filters);

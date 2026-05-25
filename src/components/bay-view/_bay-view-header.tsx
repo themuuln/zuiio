@@ -12,6 +12,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -88,15 +89,11 @@ export function BayViewHeader({
         <div className="flex items-center gap-2">
           <h1 className="text-base font-semibold tracking-tight">{t("title")}</h1>
           {userIsMechanic && (
-            <button
-              type="button"
+            <Button
+              variant={myJobsOnly ? "default" : "outline"}
+              size="sm"
               onClick={onMyJobsToggle}
-              className={cn(
-                "flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-medium transition-colors",
-                myJobsOnly
-                  ? "border-primary/40 bg-primary/10 text-primary"
-                  : "border-border/60 text-muted-foreground hover:bg-muted",
-              )}
+              className="gap-1 px-1.5 py-0.5 text-[10px] font-medium h-auto"
             >
               {myJobsOnly ? (
                 <UserCheck className="size-2.5" />
@@ -104,7 +101,7 @@ export function BayViewHeader({
                 <UserPlus className="size-2.5" />
               )}
               {myJobsOnly ? t("myJobs") : t("allJobs")}
-            </button>
+            </Button>
           )}
         </div>
 
@@ -113,10 +110,11 @@ export function BayViewHeader({
             <Tooltip>
               <TooltipTrigger
                 render={
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onShowVehicleReg}
-                    className="flex items-center justify-center size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="size-5"
                   />
                 }
               >
@@ -127,10 +125,11 @@ export function BayViewHeader({
             <Tooltip>
               <TooltipTrigger
                 render={
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onShowMechanicReg}
-                    className="flex items-center justify-center size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="size-5"
                   />
                 }
               >
@@ -141,10 +140,11 @@ export function BayViewHeader({
             <Tooltip>
               <TooltipTrigger
                 render={
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onShowServiceLookup}
-                    className="flex items-center justify-center size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="size-5"
                   />
                 }
               >
@@ -155,10 +155,11 @@ export function BayViewHeader({
             <Tooltip>
               <TooltipTrigger
                 render={
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onShowShiftReport}
-                    className="flex items-center justify-center size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="size-5"
                   />
                 }
               >
@@ -169,10 +170,11 @@ export function BayViewHeader({
             <Tooltip>
               <TooltipTrigger
                 render={
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onShowPinSettings}
-                    className="flex items-center justify-center size-5 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="size-5"
                   />
                 }
               >
@@ -255,34 +257,36 @@ export function BayViewHeader({
             <span className="text-[9px] text-muted-foreground">
               {t("addDemoVehicles")}
             </span>
-            <button
-              type="button"
+            <Button
+              variant="default"
+              size="sm"
               onClick={onConfirmSeed}
               disabled={seeding}
-              className="rounded bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="px-1.5 py-0.5 text-[9px] font-semibold h-auto"
             >
               {seeding ? t("adding") : t("confirm")}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onCancelSeed}
-              className="rounded border border-border px-1.5 py-0.5 text-[9px] font-medium hover:bg-muted"
+              className="px-1.5 py-0.5 text-[9px] font-medium h-auto"
             >
               {t("cancel")}
-            </button>
+            </Button>
           </div>
         ) : (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={onSeedQueue}
             disabled={seeding}
-            className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            className="gap-1 px-1.5 py-0.5 text-[9px] h-auto"
           >
             <CarFront className="size-3" />
             <span className="hidden sm:inline">
               {seeding ? t("adding") : t("seedQueue")}
             </span>
-          </button>
+          </Button>
         )}
       </div>
     </div>

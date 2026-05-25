@@ -1,8 +1,17 @@
 "use client";
 
-import { Command, SearchIcon } from "lucide-react";
+import {
+  Car,
+  Command,
+  PanelRightClose,
+  PanelRightOpen,
+  Plus,
+  SearchIcon,
+  UserPlus,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Fragment, useCallback, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { NavUser } from "@/components/app-sidebar/_nav-user";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -19,12 +28,20 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandShortcut,
 } from "@/components/ui/command";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
-import type { BreadcrumbItem as BreadcrumbItemType } from "@/hooks/use-breadcrumbs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useNavigation } from "@/hooks/use-navigation";
+import { usePageHeader } from "@/hooks/use-page-header";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { Link, useRouter } from "@/lib/i18n/navigation";
 
 export interface PageTab {
   value: string;
@@ -32,7 +49,6 @@ export interface PageTab {
 }
 
 interface PageHeaderProps {
-  breadcrumbs?: BreadcrumbItemType[];
   tabs?: PageTab[];
   activeTab?: string;
   onTabChange?: (value: string) => void;
@@ -40,72 +56,101 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({
-  breadcrumbs: explicitBreadcrumbs,
   tabs,
   activeTab,
   onTabChange,
   actions,
 }: PageHeaderProps) {
   const t = useTranslations();
-  const autoBreadcrumbs = useBreadcrumbs();
+  const { push } = useRouter();
+  const { searchItems } = useNavigation();
   const [searchOpen, setSearchOpen] = useState(false);
 
-  const breadcrumbs = explicitBreadcrumbs ?? autoBreadcrumbs;
-
   const openSearch = useCallback(() => setSearchOpen(true), []);
-  const closeSearch = useCallback(() => setSearchOpen(false), []);
+
+  const handleSelect = useCallback(
+    (href: string) => {
+      setSearchOpen(false);
+      push(href);
+    },
+    [push],
+  );
+
+  const commandItems = useMemo(
+    () =>
+      searchItems.map((item, index) => ({
+        ...item,
+        shortcut: `G ${index + 1}`,
+      })),
+    [searchItems],
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key.toLowerCase() !== "k" ||
+        (!event.metaKey && !event.ctrlKey)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      setSearchOpen((open) => !open);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <>
-      <header className="flex shrink-0 flex-col border-b bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-        <div className="flex h-14 items-center gap-2 px-4 lg:h-16">
-          <SidebarTrigger className="-ml-1" />
-          <Separator
-            orientation="vertical"
-            className="mr-2 data-vertical:h-4 data-vertical:self-auto"
-          />
-          <Breadcrumb>
-            <BreadcrumbList>
-              {breadcrumbs.map((item, index) => {
-                const isLast = index === breadcrumbs.length - 1;
-                return (
-                  <Fragment key={item.label + index}>
-                    <BreadcrumbItem>
-                      {!isLast ? (
-                        <BreadcrumbLink href={item.href ?? "#"}>
-                          {t(item.label)}
-                        </BreadcrumbLink>
-                      ) : (
-                        <BreadcrumbPage>{t(item.label)}</BreadcrumbPage>
-                      )}
-                    </BreadcrumbItem>
-                    {!isLast && <BreadcrumbSeparator />}
-                  </Fragment>
-                );
-              })}
-            </BreadcrumbList>
-          </Breadcrumb>
+      <header className="sticky top-0 z-20 flex shrink-0 flex-col border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="flex min-h-14 items-center gap-3 px-4">
+          <div className="flex min-w-0 items-center gap-3 self-stretch">
+            <SidebarTrigger className="-ml-1 rounded-xl" />
+            <Separator
+              orientation="vertical"
+              className="hidden self-stretch sm:block"
+            />
+            <HeaderBreadcrumbs />
+          </div>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="hidden min-w-0 flex-1 lg:flex">
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 text-muted-foreground max-md:hidden"
+              className="h-9 w-full max-w-xl justify-start gap-2 rounded-xl border-border/70 bg-muted/35 px-3 text-muted-foreground shadow-none"
               onClick={openSearch}
             >
-              <SearchIcon className="size-3.5" />
-              <span className="text-xs">{t("common.search")}</span>
-              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-muted px-1 font-mono text-[10px] font-medium text-muted-foreground/60">
-                <Command className="size-2.5" />
-                K
+              <SearchIcon className="size-4" />
+              <span className="text-sm">{t("common.search")}</span>
+              <kbd className="ml-auto inline-flex h-5 items-center gap-0.5 rounded-md border border-border/60 bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground/70">
+                <Command className="size-2.5" />K
               </kbd>
             </Button>
-            {actions}
+          </div>
+
+          <div className="ml-auto flex items-center gap-1.5">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="rounded-xl lg:hidden"
+              onClick={openSearch}
+              aria-label={t("common.search")}
+            >
+              <SearchIcon className="size-4" />
+            </Button>
+            {actions && (
+              <div className="flex items-center gap-2">{actions}</div>
+            )}
+            <QuickCreateActions />
+            <NavUser />
+            <RightSidebarToggle />
           </div>
         </div>
 
         {tabs && tabs.length > 0 && (
-          <div className="px-4 pb-0">
+          <div className="border-t border-border/60 px-4">
             <Tabs value={activeTab} onValueChange={onTabChange}>
               <TabsList variant="line">
                 {tabs.map((tab) => (
@@ -128,12 +173,133 @@ export function PageHeader({
         <CommandList>
           <CommandEmpty>{t("common.noResults")}</CommandEmpty>
           <CommandGroup heading={t("nav.dashboard")}>
-            <CommandItem onSelect={closeSearch}>Work Orders</CommandItem>
-            <CommandItem onSelect={closeSearch}>Customers</CommandItem>
-            <CommandItem onSelect={closeSearch}>Inventory</CommandItem>
+            {commandItems.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <CommandItem
+                  key={item.href}
+                  onSelect={() => handleSelect(item.href)}
+                >
+                  <Icon className="size-4" />
+                  <span>{t(item.labelKey)}</span>
+                  <CommandShortcut>{item.shortcut}</CommandShortcut>
+                </CommandItem>
+              );
+            })}
           </CommandGroup>
         </CommandList>
       </CommandDialog>
     </>
+  );
+}
+
+function HeaderBreadcrumbs() {
+  const t = useTranslations();
+  const { breadcrumbs } = useNavigation();
+
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        {breadcrumbs.map((crumb, index) => {
+          const isLast = index === breadcrumbs.length - 1;
+
+          return (
+            <Fragment key={`${crumb.labelKey}-${index}`}>
+              <BreadcrumbItem className={index === 0 ? "" : "hidden sm:block"}>
+                {isLast || !crumb.href ? (
+                  <BreadcrumbPage>{t(crumb.labelKey)}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink render={<Link href={crumb.href} />}>
+                    {t(crumb.labelKey)}
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+              {!isLast && <BreadcrumbSeparator className="hidden sm:block" />}
+            </Fragment>
+          );
+        })}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+}
+
+function QuickCreateActions() {
+  const t = useTranslations();
+  const { push } = useRouter();
+  const { setNewCustomerDialogOpen } = usePageHeader();
+
+  const items = [
+    {
+      href: "/dashboard/work-orders/new",
+      label: t("dashboard.newWorkOrder"),
+      icon: Plus,
+    },
+    {
+      label: t("dashboard.newCustomer"),
+      icon: UserPlus,
+      onClick: () => setNewCustomerDialogOpen(true),
+    },
+    {
+      href: "/dashboard/vehicles/new",
+      label: t("dashboard.newVehicle"),
+      icon: Car,
+    },
+  ];
+
+  return (
+    <div className="hidden items-center gap-2 xl:flex">
+      {items.map((item, index) => {
+        const Icon = item.icon;
+        const key =
+          "href" in item && item.href ? item.href : `action-${index}`;
+        return (
+          <Tooltip key={key}>
+            <TooltipTrigger
+              render={
+                <Button
+                  size="sm"
+                  variant={index === 0 ? "default" : "outline"}
+                  className="size-9 rounded-xl p-0"
+                  onClick={() => {
+                    if ("onClick" in item && item.onClick) {
+                      item.onClick();
+                    } else if ("href" in item && item.href) {
+                      push(item.href);
+                    }
+                  }}
+                  aria-label={item.label}
+                >
+                  <Icon className="size-4" />
+                </Button>
+              }
+            />
+            <TooltipContent>{item.label}</TooltipContent>
+          </Tooltip>
+        );
+      })}
+    </div>
+  );
+}
+
+function RightSidebarToggle() {
+  const { state, toggle } = useRightSidebar();
+
+  if (state.tabs.length === 0) return null;
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      onClick={toggle}
+      aria-label={state.isOpen ? "Collapse sidebar" : "Expand sidebar"}
+      className="size-9 rounded-xl text-muted-foreground/70 hover:text-foreground"
+    >
+      {state.isOpen ? (
+        <PanelRightClose className="size-4" />
+      ) : (
+        <PanelRightOpen className="size-4" />
+      )}
+    </Button>
   );
 }

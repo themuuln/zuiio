@@ -9,6 +9,14 @@ import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -26,7 +34,7 @@ function VehicleRowSkeleton() {
   return (
     <div className="flex items-center gap-4 border-b border-border p-4">
       <Skeleton className="size-10 rounded-lg bg-muted" />
-      <div className="flex-1 space-y-1.5">
+      <div className="flex flex-1 flex-col gap-1.5">
         <Skeleton className="h-5 w-24" />
         <Skeleton className="size-40" />
       </div>
@@ -176,20 +184,29 @@ export default function VehiclesPage() {
       <Card>
         <CardContent className="p-0">
           {list.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-16 px-4">
-              <Car className="size-10 text-muted-foreground/40" />
-              <p className="text-muted-foreground">
-                {search ? t("noMatchForPlateOrVin") : t("noVehicles")}
-              </p>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Car />
+                </EmptyMedia>
+                <EmptyTitle>
+                  {search ? t("noMatchForPlateOrVin") : t("noVehicles")}
+                </EmptyTitle>
+                <EmptyDescription>
+                  {t("noVehiclesDesc") || ""}
+                </EmptyDescription>
+              </EmptyHeader>
               {!search && (
-                <Button
-                  render={<Link href="/dashboard/vehicles/new" />}
-                  variant="outline"
-                >
-                  {t("addFirstVehicle")}
-                </Button>
+                <EmptyContent>
+                  <Button
+                    render={<Link href="/dashboard/vehicles/new" />}
+                    variant="outline"
+                  >
+                    {t("addFirstVehicle")}
+                  </Button>
+                </EmptyContent>
               )}
-            </div>
+            </Empty>
           ) : (
             <div className="divide-y divide-border">
               {list.map((vehicle) => (

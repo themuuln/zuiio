@@ -70,11 +70,11 @@ export function DailyTimeline({ orgId }: { orgId: string }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={`skeleton-${i}`} className="flex gap-3">
                 <Skeleton className="size-2.5 rounded-full mt-1 shrink-0" />
-                <div className="flex-1 space-y-1.5">
+                <div className="flex flex-1 flex-col gap-1.5">
                   <Skeleton className="size-32" />
                   <Skeleton className="h-3 w-24" />
                 </div>
@@ -99,7 +99,7 @@ export function DailyTimeline({ orgId }: { orgId: string }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative pl-4 border-l-2 border-muted space-y-0">
+        <div className="flex relative pl-4 border-l-2 border-muted flex-col gap-0">
           {events.slice(0, 15).map((event) => (
             <div key={event.id} className="relative pb-4 last:pb-0">
               <div

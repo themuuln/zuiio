@@ -135,7 +135,7 @@ export default function DashboardPage() {
   // ── Org Loading State ───────────────────────────────
   if (orgLoading) {
     return (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-8 pb-8">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Skeleton className="h-9 w-56" />
@@ -174,7 +174,7 @@ export default function DashboardPage() {
   // ── Org Error State ────────────────────────────────
   if (orgError || (!orgId && !orgLoading)) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 pb-8">
         <div>
           <Typography.H2 className="m-0">
             {t("dashboard.welcome")}
@@ -198,7 +198,7 @@ export default function DashboardPage() {
   // ── Dashboard Error State (first load only) ──────────
   if (dashboardError && !data && !hasLoadedOnce) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 pb-8">
         <div>
           <Typography.H2 className="m-0">
             {t("dashboard.welcome")}
@@ -229,7 +229,7 @@ export default function DashboardPage() {
   // Only show empty state when we have real data confirming emptiness
   if (data && !hasRevenue && !hasActiveWos) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 pb-8">
         <div>
           <Typography.H2 className="m-0">
             {t("dashboard.welcome")}
@@ -274,7 +274,7 @@ export default function DashboardPage() {
 
   // ── Shared content ─────────────────────────────────
   const mainContent = (
-    <>
+    <div className="pb-8">
       {header}
       {!hasRevenue && hasActiveWos && (
         <Card className="border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10">
@@ -396,8 +396,8 @@ export default function DashboardPage() {
         />
       </div>
       <DailyTimeline orgId={orgId ?? ""} />
-    </>
+    </div>
   );
 
-  return <div className="flex flex-col gap-8">{mainContent}</div>;
+  return mainContent;
 }

@@ -30,10 +30,11 @@ import {
   useAddPartsCarPart,
   useRemovePartsCarPart,
 } from "@/lib/queries/use-inventory";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -217,7 +218,7 @@ export default function PartsCarDetailPage() {
   const isCompleted = car.status === "completed";
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-4xl flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
@@ -229,11 +230,9 @@ export default function PartsCarDetailPage() {
               <h1 className="text-2xl font-semibold tracking-tight">
                 {car.make} {car.model}
               </h1>
-              <span
-                className={`rounded-full px-3 py-0.5 text-xs font-medium ${STATUS_BADGE_COLORS[car.status] ?? ""}`}
-              >
+              <Badge variant="outline">
                 {t('status.' + car.status)}
-              </span>
+              </Badge>
             </div>
             <p className="text-muted-foreground text-sm mt-0.5">
               {car.year && `${car.year} · `}
@@ -299,7 +298,7 @@ export default function PartsCarDetailPage() {
       {canAddParts && (
         <Card className="border-2 border-amber-200 bg-amber-50/40">
           <CardContent className="p-4">
-            <form onSubmit={handleAddPart} className="space-y-3">
+            <form onSubmit={handleAddPart} className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <Plus className="size-4 text-amber-600" />
                 <span className="font-medium text-sm">
@@ -307,87 +306,35 @@ export default function PartsCarDetailPage() {
                 </span>
               </div>
               <div className="flex flex-wrap items-end gap-3">
-                <div className="flex-1 min-w-[180px] space-y-1">
-                  <Label htmlFor="partName" className="text-xs">
-                    {t('partForm.name')}
-                  </Label>
-                  <Input
-                    ref={nameInputRef}
-                    id="partName"
-                    value={partName}
-                    onChange={(e) => setPartName(e.target.value)}
-                    placeholder={t('partForm.namePlaceholder')}
-                    
-                  />
-                </div>
-                <div className="w-[140px] space-y-1">
-                  <Label htmlFor="partLocation" className="text-xs">
-                    {t('partForm.group')}
-                  </Label>
-                  <Select
-                    value={partLocation}
-                    onValueChange={(v) =>
-                      setPartLocation(v as PartsCarLocationGroup)
-                    }
-                  >
-                    <SelectTrigger id="partLocation">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LOCATION_GROUPS.map((group) => {
-                        const GroupIcon = LOCATION_GROUP_ICONS[group] ?? Package;
-                        return (
-                          <SelectItem key={group} value={group}>
-                            <span className="flex items-center gap-2">
-                              <GroupIcon className="size-3.5 text-muted-foreground" />
-                              {t('locations.' + group)}
-                            </span>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="w-[80px] space-y-1">
-                  <Label htmlFor="partQty" className="text-xs">
-                    {t('partForm.quantity')}
-                  </Label>
-                  <div className="flex items-center gap-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setPartQty((prev) => Math.max(1, prev - 1))}
-                      className="flex size-11 items-center justify-center rounded-md border text-lg font-semibold hover:bg-muted transition-colors cursor-pointer"
-                      aria-label={t('partForm.decrementAria')}
-                    >
-                      −
-                    </button>
-                    <span className="flex size-11 items-center justify-center font-semibold tabular-nums text-sm">
-                      {partQty}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setPartQty((prev) => prev + 1)}
-                      className="flex size-11 items-center justify-center rounded-md border text-lg font-semibold hover:bg-muted transition-colors cursor-pointer"
-                      aria-label={t('partForm.incrementAria')}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                <div className="w-[120px] space-y-1">
-                  <Label htmlFor="partPrice" className="text-xs">
-                    {t('partForm.price')}
-                  </Label>
-                  <Input
-                    id="partPrice"
-                    type="number"
-                    min={0}
-                    step={1000}
-                    value={partPrice}
-                    onChange={(e) => setPartPrice(Number(e.target.value))}
-                    placeholder="0"
-                  />
-                </div>
+                <Field>
+                  <FieldLabel htmlFor="partName" className="text-xs">$$$</FieldLabel>
+                  <Input ref={nameInputRef}
+                  id="partName"
+                  value={partName}
+                  onChange={(e) => setPartName(e.target.value)}
+                  placeholder={t('partForm.namePlaceholder')} />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="partLocation" className="text-xs">$$$</FieldLabel>
+                  <Select value={partLocation}
+                  onValueChange={(v) =>
+                    setPartLocation(v as PartsCarLocationGroup)
+                  }>$$$</Select>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="partQty" className="text-xs">$$$</FieldLabel>
+                  <div className="flex items-center gap-0.5">$$$</div>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="partPrice" className="text-xs">$$$</FieldLabel>
+                  <Input id="partPrice"
+                  type="number"
+                  min={0}
+                  step={1000}
+                  value={partPrice}
+                  onChange={(e) => setPartPrice(Number(e.target.value))}
+                  placeholder="0" />
+                </Field>
                 <Button
                   type="submit"
                   disabled={!partName.trim() || adding}
@@ -407,7 +354,7 @@ export default function PartsCarDetailPage() {
       )}
 
       {/* Parts List Grouped by Location */}
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">
           {t('partsSection.title')}
           {partsCount > 0 && (

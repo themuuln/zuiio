@@ -130,10 +130,10 @@ export default function OrganizationPage() {
     return new Date(dateStr).toLocaleDateString();
   };
 
-  const sidebar = useRightSidebar();
+  const { registerTab, setOpen, unregisterTab } = useRightSidebar();
 
   useEffect(() => {
-    sidebar.registerTab(
+    registerTab(
       "subscription",
       "Subscription",
       <div className="flex flex-col gap-2">
@@ -163,19 +163,19 @@ export default function OrganizationPage() {
         )}
       </div>,
     );
-    sidebar.registerTab(
+    registerTab(
       "team",
       "Team",
       <p className="text-xs text-muted-foreground px-2.5 py-1.5">
         Manage team members via the Members page
       </p>,
     );
-    sidebar.setOpen(true);
+    setOpen(true);
     return () => {
-      sidebar.unregisterTab("subscription");
-      sidebar.unregisterTab("team");
+      unregisterTab("subscription");
+      unregisterTab("team");
     };
-  }, [sidebar, subscription]);
+  }, [registerTab, setOpen, subscription, unregisterTab]);
 
   if (loading) {
     return (
@@ -254,7 +254,7 @@ export default function OrganizationPage() {
             </CardTitle>
             <CardDescription>Workspace details</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex flex-col gap-3">
             {editing ? (
               <>
                 <div>
@@ -331,7 +331,7 @@ export default function OrganizationPage() {
             </CardTitle>
             <CardDescription>Current plan and billing</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex flex-col gap-3">
             {subscription ? (
               <>
                 <div>
@@ -379,7 +379,7 @@ export default function OrganizationPage() {
             </CardTitle>
             <CardDescription>Team management</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
               Invite team members to collaborate.
             </p>

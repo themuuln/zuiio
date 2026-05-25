@@ -4,6 +4,13 @@ import { ArrowLeft, Loader2, Mail } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Link } from "@/lib/i18n/navigation";
 import { requestPasswordReset } from "./actions";
 
@@ -45,29 +52,21 @@ export default function ForgotPasswordPage() {
         <h2 className="text-lg font-semibold text-foreground">{t("title")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
-      <form action={formAction} className="space-y-4">
+      <form action={formAction} className="flex flex-col gap-4">
         {state?.error && (
-          <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {state.error}
-          </div>
+          <FieldError>{state.error}</FieldError>
         )}
-        <div className="space-y-1.5">
-          <label
-            htmlFor="email"
-            className="text-sm font-medium text-foreground"
-          >
-            {t("emailLabel")}
-          </label>
-          <input
+        <Field>
+          <FieldLabel htmlFor="email">{t("emailLabel")}</FieldLabel>
+          <Input
             id="email"
             name="email"
             type="email"
             autoComplete="email"
             required
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             placeholder={t("emailPlaceholder")}
           />
-        </div>
+        </Field>
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? <Loader2 className="animate-spin" /> : <Mail />}
           {t("submit")}

@@ -32,7 +32,7 @@ export default function PortalDashboardPage() {
 
   if (isLoad) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         <Skeleton className="h-8 w-56" />
         <Skeleton className="h-4 w-72" />
         <div className="grid gap-4 sm:grid-cols-3">
@@ -45,7 +45,7 @@ export default function PortalDashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
           {t("portal.welcome", { name: customer?.first_name ?? "" })}
@@ -115,7 +115,7 @@ export default function PortalDashboardPage() {
               {t("portal.noVehicles")}
             </p>
           ) : (
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               {vehicles.slice(0, 5).map((v: Record<string, unknown>) => (
                 <Link
                   key={v.id as string}

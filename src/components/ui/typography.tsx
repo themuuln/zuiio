@@ -118,7 +118,10 @@ function Small({
   children,
   className,
   ...props
-}: { children: ReactNode; className?: string } & React.ComponentProps<"small">) {
+}: {
+  children: ReactNode;
+  className?: string;
+} & React.ComponentProps<"small">) {
   return (
     <small
       className={cn("text-sm font-medium leading-none", className)}
@@ -186,10 +189,16 @@ function Blockquote({
   children,
   className,
   ...props
-}: { children: ReactNode; className?: string } & React.ComponentProps<"blockquote">) {
+}: {
+  children: ReactNode;
+  className?: string;
+} & React.ComponentProps<"blockquote">) {
   return (
     <blockquote
-      className={cn("mt-4 border-l-2 border-primary pl-6 italic text-muted-foreground", className)}
+      className={cn(
+        "mt-4 border-l-2 border-primary pl-6 italic text-muted-foreground",
+        className,
+      )}
       {...props}
     >
       {children}

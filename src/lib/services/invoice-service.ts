@@ -6,7 +6,7 @@ import type {
   InvoiceWithItems,
   InvoiceItem,
   InvoicePayment,
-} from "@/lib/database.types";
+} from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import { sendInvoiceEmail } from "@/lib/services/email-service";

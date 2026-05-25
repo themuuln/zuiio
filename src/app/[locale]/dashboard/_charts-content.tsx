@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 // recharts - consider next/dynamic for code splitting
-import { Cell, Legend, ResponsiveContainer } from "recharts";
+import { Cell } from "recharts";
 import {
   Area,
   AreaChart,
@@ -23,6 +23,8 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
 } from "@/components/ui/chart";
 import type { DashboardData } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
@@ -82,12 +84,8 @@ export function MechanicTrendChart({
               cursor={false}
               content={<ChartTooltipContent />}
             />
-            <Legend
-              iconType="rect"
-              iconSize={8}
-              formatter={(value: string) => (
-                <span className="text-xs text-muted-foreground">{value}</span>
-              )}
+            <ChartLegend
+              content={<ChartLegendContent />}
             />
             <Bar
               dataKey="revenue"
@@ -229,14 +227,8 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                     />
                   ))}
                 </Pie>
-                <Legend
-                  verticalAlign="bottom"
-                  height={40}
-                  iconType="circle"
-                  iconSize={8}
-                  formatter={(value: string) => (
-                    <span className="text-xs text-muted-foreground">{value}</span>
-                  )}
+                <ChartLegend
+                  content={<ChartLegendContent />}
                 />
               </PieChart>
             </ChartContainer>
@@ -332,12 +324,8 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                     width={50}
                   />
                   <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                  <Legend
-                    iconType="rect"
-                    iconSize={10}
-                    formatter={(value: string) => (
-                      <span className="text-xs text-muted-foreground">{value}</span>
-                    )}
+                  <ChartLegend
+                    content={<ChartLegendContent />}
                   />
                   <Bar
                     dataKey="revenue"
@@ -394,14 +382,8 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                       <Cell key={item.category} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Legend
-                    verticalAlign="bottom"
-                    height={40}
-                    iconType="circle"
-                    iconSize={8}
-                    formatter={(value: string) => (
-                      <span className="text-xs text-muted-foreground">{value}</span>
-                    )}
+                  <ChartLegend
+                    content={<ChartLegendContent />}
                   />
                 </PieChart>
               </ChartContainer>

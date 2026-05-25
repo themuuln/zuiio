@@ -11,8 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { getBooleanSetting, getNumberSetting, getStringSetting } from "./_settings-utils";
 
 export interface SettingsForm {
@@ -86,10 +86,10 @@ export function BusinessDefaultsForm({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="space-y-6" onSubmit={onSubmit}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="invoicePrefix">Invoice prefix</Label>
+        <form className="flex flex-col gap-6" onSubmit={onSubmit}>
+          <FieldGroup className="grid gap-4 sm:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor="invoicePrefix">Invoice prefix</FieldLabel>
               <div className="relative">
                 <FileText className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -105,10 +105,10 @@ export function BusinessDefaultsForm({
                   maxLength={12}
                 />
               </div>
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="defaultCurrency">Default currency</Label>
+            <Field>
+              <FieldLabel htmlFor="defaultCurrency">Default currency</FieldLabel>
               <div className="relative">
                 <CreditCard className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                 <select
@@ -129,10 +129,10 @@ export function BusinessDefaultsForm({
                   <option value="EUR">EUR (Euro)</option>
                 </select>
               </div>
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="defaultTaxRate">Default tax rate (%)</Label>
+            <Field>
+              <FieldLabel htmlFor="defaultTaxRate">Default tax rate (%)</FieldLabel>
               <Input
                 id="defaultTaxRate"
                 type="number"
@@ -147,10 +147,10 @@ export function BusinessDefaultsForm({
                   }))
                 }
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="timezone">Timezone</Label>
+            <Field>
+              <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
               <Input
                 id="timezone"
                 value={form.timezone}
@@ -161,10 +161,10 @@ export function BusinessDefaultsForm({
                   }))
                 }
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="dateFormat">Date format</Label>
+            <Field>
+              <FieldLabel htmlFor="dateFormat">Date format</FieldLabel>
               <Input
                 id="dateFormat"
                 value={form.dateFormat}
@@ -175,10 +175,10 @@ export function BusinessDefaultsForm({
                   }))
                 }
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="language">Default language</Label>
+            <Field>
+              <FieldLabel htmlFor="language">Default language</FieldLabel>
               <div className="relative">
                 <Globe className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                 <select
@@ -202,8 +202,8 @@ export function BusinessDefaultsForm({
                   Language will change after save
                 </p>
               )}
-            </div>
-          </div>
+            </Field>
+          </FieldGroup>
 
           {(error || successMessage) && (
             <div

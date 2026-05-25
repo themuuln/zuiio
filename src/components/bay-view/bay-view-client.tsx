@@ -10,8 +10,9 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Vehicle, WorkOrder } from "@/lib/database.types";
+import type { Vehicle, WorkOrder } from "@/lib/types";
 import type { BayViewData } from "@/lib/services/bay-view-service";
 import {
   assignMechanicToWorkOrder,
@@ -43,9 +44,39 @@ import type { PostServiceFormData } from "./post-service-form";
 import { PickupCompleteForm } from "./pickup-complete-form";
 import type { PickupCompleteData } from "./pickup-complete-form";
 import { PickupSummary } from "./_pickup-summary";
-import { ToastMessage } from "./toast-message";
+import { toast } from "sonner";
+import { useSearchParams, useRouter } from "next/navigation";
 import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
 import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
+import { ErrorBoundary } from "@/components/error-boundary";
+
+function shouldIgnoreDragActivation(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return !!target.closest(
+    '[data-no-dnd="true"], button, a, input, textarea, select',
+  );
+}
+
+class GuardedPointerSensor extends PointerSensor {
+  static activators = [
+    {
+      eventName: "onPointerDown" as const,
+      handler: ({ nativeEvent }: React.PointerEvent) =>
+        !shouldIgnoreDragActivation(nativeEvent.target),
+    },
+  ];
+}
+
+class GuardedTouchSensor extends TouchSensor {
+  static activators = [
+    {
+      eventName: "onTouchStart" as const,
+      handler: ({ nativeEvent }: React.TouchEvent) =>
+        !shouldIgnoreDragActivation(nativeEvent.target),
+    },
+  ];
+}
 
 export function BayViewClient() {
   const t = useTranslations("bayView");
@@ -56,10 +87,20 @@ export function BayViewClient() {
     type: string;
     label: string;
   } | null>(null);
-  const [toast, setToast] = useState<{
-    message: string;
-    variant: "info" | "error";
-  } | null>(null);
+  type ToastState = { message: string; variant: "info" | "error" };
+
+  const setToast = useCallback(
+    (
+      value: ToastState | null | ((prev: ToastState | null) => ToastState | null),
+    ) => {
+      if (typeof value === "function") return;
+      if (value) {
+        if (value.variant === "error") toast.error(value.message);
+        else toast.success(value.message);
+      }
+    },
+    [],
+  );
 
   const [currentProfile, setCurrentProfile] = useState<{
     id: string;
@@ -113,8 +154,12 @@ export function BayViewClient() {
     }>;
   } | null>(null);
 
-  const [detailWoId, setDetailWoId] = useState<string | null>(null);
-  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const woIdFromUrl = searchParams.get("woId");
+
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(!!woIdFromUrl);
+  const [detailWoId, setDetailWoId] = useState<string | null>(woIdFromUrl);
 
   const [assignWo, setAssignWo] = useState<
     (WorkOrder & { vehicle: Vehicle | null }) | null
@@ -200,10 +245,10 @@ export function BayViewClient() {
     };
   }, [fetchData]);
 
-  const pointerSensor = useSensor(PointerSensor, {
+  const pointerSensor = useSensor(GuardedPointerSensor, {
     activationConstraint: { distance: 8 },
   });
-  const touchSensor = useSensor(TouchSensor, {
+  const touchSensor = useSensor(GuardedTouchSensor, {
     activationConstraint: { delay: 300, tolerance: 20 },
   });
   const sensors = useSensors(pointerSensor, touchSensor);
@@ -236,6 +281,19 @@ export function BayViewClient() {
   function handleOpenDetail(woId: string) {
     setDetailWoId(woId);
     setDetailDrawerOpen(true);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("woId", woId);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
+
+  function handleDrawerOpenChange(open: boolean) {
+    setDetailDrawerOpen(open);
+    if (!open) {
+      setDetailWoId(null);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("woId");
+      router.replace(`?${params.toString()}`, { scroll: false });
+    }
   }
 
   function handleQueueItemClick(
@@ -257,10 +315,7 @@ export function BayViewClient() {
       }
       await fetchData(false);
     } catch (err) {
-      setToast({
-        message: err instanceof Error ? err.message : "Assignment failed",
-        variant: "error",
-      });
+      toast.error(err instanceof Error ? err.message : "Assignment failed");
     } finally {
       clearPending(workOrderId);
     }
@@ -337,10 +392,7 @@ export function BayViewClient() {
       setPostServiceData(null);
       fetchData(false);
     } catch (err) {
-      setToast({
-        message: `Failed: ${err instanceof Error ? err.message : "Error"}`,
-        variant: "error",
-      });
+      toast.error(`Failed: ${err instanceof Error ? err.message : "Error"}`);
     }
   }
 
@@ -403,10 +455,7 @@ export function BayViewClient() {
         })),
       });
     } catch (err) {
-      setToast({
-        message: `Failed to complete: ${err instanceof Error ? err.message : "Error"}`,
-        variant: "error",
-      });
+      toast.error(`Failed to complete: ${err instanceof Error ? err.message : "Error"}`);
     }
   }
 
@@ -446,13 +495,13 @@ export function BayViewClient() {
     return (
       <div className="flex flex-col items-center justify-center py-8 gap-2">
         <p className="text-sm text-muted-foreground">{error ?? t("noData")}</p>
-        <button
-          type="button"
+        <Button
+          variant="link"
           onClick={() => fetchData(true)}
-          className="text-xs text-primary hover:underline"
+          className="text-xs"
         >
           {t("retry")}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -503,16 +552,14 @@ export function BayViewClient() {
                 result.errors.length > 0
                   ? `Added ${result.created}, errors: ${result.errors.slice(0, 2).join("; ")}${result.errors.length > 2 ? "..." : ""}`
                   : `Added ${result.created} vehicles to queue`;
-              setToast({
-                message: msg,
-                variant: result.errors.length > 0 ? "error" : "info",
-              });
+              if (result.errors.length > 0) {
+                toast.error(msg);
+              } else {
+                toast.success(msg);
+              }
               fetchData(true);
             } catch (err) {
-              setToast({
-                message: `Failed: ${err instanceof Error ? err.message : "error"}`,
-                variant: "error",
-              });
+              toast.error(`Failed: ${err instanceof Error ? err.message : "error"}`);
             } finally {
               setSeeding(false);
             }
@@ -597,12 +644,9 @@ export function BayViewClient() {
                 odometerReading: null,
                 nextAppointmentDate: date,
               });
-              setToast({ message: "Appointment saved", variant: "info" });
+              toast.success("Appointment saved");
             } catch (err) {
-              setToast({
-                message: `Failed to save: ${err instanceof Error ? err.message : "Error"}`,
-                variant: "error",
-              });
+              toast.error(`Failed to save: ${err instanceof Error ? err.message : "Error"}`);
             }
           }}
         />
@@ -626,27 +670,14 @@ export function BayViewClient() {
         )}
       </DragOverlay>
 
-      <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {toast?.message ?? ""}
-      </div>
-
-      {toast && (
-        <ToastMessage
-          message={toast.message}
-          variant={toast.variant}
-          onDismiss={() => setToast(null)}
+      <ErrorBoundary>
+        <WorkOrderDetailDrawer
+          workOrderId={detailWoId}
+          open={detailDrawerOpen}
+          onOpenChange={handleDrawerOpenChange}
+          onRefresh={() => fetchData(false)}
         />
-      )}
-
-      <WorkOrderDetailDrawer
-        workOrderId={detailWoId}
-        open={detailDrawerOpen}
-        onOpenChange={(open) => {
-          setDetailDrawerOpen(open);
-          if (!open) setDetailWoId(null);
-        }}
-        onRefresh={() => fetchData(false)}
-      />
+      </ErrorBoundary>
 
       {showVehicleReg && (
         <VehicleRegistrationDialog onClose={() => setShowVehicleReg(false)} />

@@ -18,6 +18,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import {
   Table,
   TableBody,
   TableCell,
@@ -111,7 +118,7 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
               <Skeleton className="h-4 w-24" />
             </TableCell>
             <TableCell>
-              <div className="space-y-1">
+              <div className="flex flex-col gap-1">
                 <Skeleton className="size-40" />
                 <Skeleton className="h-3 w-24" />
               </div>
@@ -409,18 +416,14 @@ export default function ExpensesPage() {
             {/* Paid / Unpaid toggle */}
             <div className="flex gap-1">
               {PAID_FILTER_OPTIONS.map((opt) => (
-                <button
+                <Button
                   key={opt.key}
-                  type="button"
                   onClick={() => setPaidFilter(opt.key)}
-                  className={`rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                    paidFilter === opt.key
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
+                  variant={paidFilter === opt.key ? "default" : "ghost"}
+                  size="sm"
                 >
                   {opt.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -445,16 +448,22 @@ export default function ExpensesPage() {
       <Card className="py-0">
         <CardContent className="p-0">
           {!expenses || expenses.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 px-4 py-16">
-              <Wallet className="size-10 text-muted-foreground/40" />
-              <p className="text-muted-foreground">No expenses found</p>
-              <Button
-                render={<Link href="/dashboard/expenses/new" />}
-                variant="outline"
-              >
-                Record Your First Expense
-              </Button>
-            </div>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Wallet />
+                </EmptyMedia>
+                <EmptyTitle>No expenses found</EmptyTitle>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button
+                  render={<Link href="/dashboard/expenses/new" />}
+                  variant="outline"
+                >
+                  Record Your First Expense
+                </Button>
+              </EmptyContent>
+            </Empty>
           ) : (
             <Table>
               <TableHeader>
@@ -524,17 +533,11 @@ export default function ExpensesPage() {
                     </TableCell>
                     <TableCell>
                       {expense.paid_at ? (
-                        <Badge
-                          variant="secondary"
-                          className="border-green-200 bg-green-100 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-400"
-                        >
+                        <Badge variant="outline">
                           Paid
                         </Badge>
                       ) : (
-                        <Badge
-                          variant="secondary"
-                          className="border-orange-200 bg-orange-100 text-orange-700 dark:border-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
-                        >
+                        <Badge variant="outline">
                           Unpaid
                         </Badge>
                       )}

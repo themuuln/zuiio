@@ -2,23 +2,16 @@
 
 import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
+import BrandThemeProvider from "@/components/brand-theme-provider";
+import { NewCustomerDialog } from "@/components/new-customer-dialog";
 import { PageHeader } from "@/components/page-header";
 import { RightSidebar } from "@/components/right-sidebar";
-import BrandThemeProvider from "@/components/brand-theme-provider";
 import { SubscriptionGuard } from "@/components/subscription-guard";
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { PageHeaderProvider, usePageHeader } from "@/hooks/use-page-header";
 import { useRequireAuth } from "@/hooks/use-require-auth";
+import { RightSidebarProvider } from "@/hooks/use-right-sidebar";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import {
-  PageHeaderProvider,
-  usePageHeader,
-} from "@/hooks/use-page-header";
-import {
-  RightSidebarProvider,
-} from "@/hooks/use-right-sidebar";
 
 function DashboardHeader() {
   const { state, setActiveTab } = usePageHeader();
@@ -43,10 +36,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <RightSidebarProvider>
           <SidebarProvider defaultOpen={false}>
             <AppSidebar />
-            <SidebarInset>
+            <SidebarInset className="min-h-0">
               <DashboardHeader />
-              <div className="flex flex-1 overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-3 tablet:p-4 lg:p-6">
+              <div className="flex min-h-0 flex-1 overflow-hidden">
+                <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-auto px-4 pt-4 md:px-6">
                   {children}
                 </div>
                 <RightSidebar />

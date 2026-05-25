@@ -54,7 +54,7 @@ export function DataExportSection({ orgId }: DataExportSectionProps) {
               </p>
             </div>
           </div>
-          <div className="mt-3 space-y-1.5">
+          <div className="mt-3 flex flex-col gap-1.5">
             <div className="rounded-lg bg-muted/50 px-3 py-2">
               <p className="text-xs text-muted-foreground">Local backup</p>
               <code className="mt-0.5 block text-xs font-mono text-foreground">
@@ -110,7 +110,7 @@ function ExportDataButton({ orgId }: { orgId: string }) {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       <Button
         variant="outline"
         onClick={handleExport}

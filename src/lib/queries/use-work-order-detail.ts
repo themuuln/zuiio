@@ -21,8 +21,10 @@ export async function fetchServicePriceHistory(
   if (json.error) throw new Error(json.error.message);
 
   const data = json.data as { unit_price: number | string | null }[] | null;
-  return (data ?? [])
-    .flatMap((row) => { const price = Number(row.unit_price ?? 0); return price ? [price] : []; });
+  return (data ?? []).flatMap((row) => {
+    const price = Number(row.unit_price ?? 0);
+    return price ? [price] : [];
+  });
 }
 
 export async function fetchPartPriceHistory(
@@ -41,8 +43,10 @@ export async function fetchPartPriceHistory(
   if (json.error) throw new Error(json.error.message);
 
   const data = json.data as { unit_price: number | string | null }[] | null;
-  return (data ?? [])
-    .flatMap((row) => { const price = Number(row.unit_price ?? 0); return price ? [price] : []; });
+  return (data ?? []).flatMap((row) => {
+    const price = Number(row.unit_price ?? 0);
+    return price ? [price] : [];
+  });
 }
 
 export function useWorkOrderDetail(orgId: string | undefined, woId: string) {
@@ -133,7 +137,8 @@ export function usePartPriceHistory(
       partName ?? "",
       vehicleMake ?? "",
     ],
-    queryFn: async () => fetchPartPriceHistory(orgId as string, partName as string, vehicleMake),
+    queryFn: async () =>
+      fetchPartPriceHistory(orgId as string, partName as string, vehicleMake),
     enabled: !!orgId && !!partName && partName.length >= 2,
     staleTime: 30_000,
     retry: 1,
@@ -165,6 +170,11 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
       if (json.error) throw new Error(json.error.message);
       return json.data as WorkOrderDetail;
     },
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({
+        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+      });
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
@@ -172,6 +182,7 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.all(orgId ?? ""),
       });
+      toast.success(`Status changed to ${variables.status}`);
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -202,6 +213,11 @@ export function useAssignMechanic(orgId: string | undefined) {
       if (json.error) throw new Error(json.error.message);
       return json.data as WorkOrderDetail;
     },
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({
+        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+      });
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
@@ -209,6 +225,7 @@ export function useAssignMechanic(orgId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.all(orgId ?? ""),
       });
+      toast.success("Mechanic assigned");
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -244,6 +261,12 @@ export function useAddService(orgId: string | undefined) {
       if (json.error) throw new Error(json.error.message);
       return json.data;
     },
+    onMutate: async (variables) => {
+      // Cancel outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({
+        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+      });
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
@@ -251,6 +274,7 @@ export function useAddService(orgId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.all(orgId ?? ""),
       });
+      toast.success("Service added");
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -281,6 +305,11 @@ export function useRemoveService(orgId: string | undefined) {
       if (json.error) throw new Error(json.error.message);
       return json.data;
     },
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({
+        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+      });
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
@@ -288,6 +317,7 @@ export function useRemoveService(orgId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.all(orgId ?? ""),
       });
+      toast.success("Service removed");
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -322,6 +352,12 @@ export function useAddPart(orgId: string | undefined) {
       if (json.error) throw new Error(json.error.message);
       return json.data;
     },
+    onMutate: async (variables) => {
+      // Cancel outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({
+        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+      });
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
@@ -329,6 +365,7 @@ export function useAddPart(orgId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.all(orgId ?? ""),
       });
+      toast.success("Part added");
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -340,13 +377,7 @@ export function useRemovePart(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      woId,
-      partId,
-    }: {
-      woId: string;
-      partId: string;
-    }) => {
+    mutationFn: async ({ woId, partId }: { woId: string; partId: string }) => {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${woId}/parts`,
         {
@@ -359,6 +390,11 @@ export function useRemovePart(orgId: string | undefined) {
       if (json.error) throw new Error(json.error.message);
       return json.data;
     },
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({
+        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+      });
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
@@ -366,6 +402,7 @@ export function useRemovePart(orgId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.all(orgId ?? ""),
       });
+      toast.success("Part removed");
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -405,15 +442,23 @@ export function useCreateInvoice(orgId: string | undefined) {
   });
 }
 
-export function useInvoicePayments(orgId: string | undefined, invoiceId: string | null) {
+export function useInvoicePayments(
+  orgId: string | undefined,
+  invoiceId: string | null,
+) {
   return useQuery({
     queryKey: ["invoice-payments", orgId, invoiceId],
     queryFn: async () => {
-      if (!invoiceId) return { payments: [], total_paid: 0, balance_due: 0, status: "" };
-      const res = await fetch(`/api/organizations/${orgId}/invoices/${invoiceId}`);
+      if (!invoiceId)
+        return { payments: [], total_paid: 0, balance_due: 0, status: "" };
+      const res = await fetch(
+        `/api/organizations/${orgId}/invoices/${invoiceId}`,
+      );
       if (!res.ok) throw new Error("Failed to load invoice");
       const json = await res.json();
-      return json.data ?? { payments: [], total_paid: 0, balance_due: 0, status: "" };
+      return (
+        json.data ?? { payments: [], total_paid: 0, balance_due: 0, status: "" }
+      );
     },
     enabled: !!orgId && !!invoiceId,
     refetchInterval: 30_000,

@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import {
   AlertTriangle,
   ClipboardList,
@@ -371,18 +372,12 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         {part.popularity_score != null && (
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                              part.popularity_score >= 80
-                                ? "bg-amber-50 text-amber-700"
-                                : "bg-muted text-muted-foreground"
-                            }`}
-                          >
+                          <Badge variant="outline" className="gap-1">
                             {part.popularity_score >= 80 ? (
                               <Star className="size-3" />
                             ) : null}
                             {part.popularity_score}
-                          </span>
+                          </Badge>
                         )}
                       </TableCell>
                       <TableCell className="px-4 py-3 text-muted-foreground font-mono text-xs">
@@ -408,15 +403,7 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
                         {qty} {part.unit}
                       </TableCell>
                       <TableCell className="px-4 py-3 text-center">
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                            status === "out"
-                              ? "bg-red-50 text-red-700"
-                              : status === "low"
-                                ? "bg-amber-50 text-amber-700"
-                                : "bg-green-50 text-green-700"
-                          }`}
-                        >
+                        <Badge variant="outline" className="gap-1">
                           {status === "out" && (
                             <AlertTriangle className="size-3" />
                           )}
@@ -425,7 +412,7 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
                             : status === "low"
                               ? t("lowStock")
                               : t("inStock")}
-                        </span>
+                        </Badge>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-center">
                         {editingThreshold === part.id ? (
@@ -439,8 +426,9 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
                               className="h-8 w-16 text-center"
                               min={0}
                             />
-                            <button
-                              type="button"
+                            <Button
+                              variant="default"
+                              size="sm"
                               onClick={() =>
                                 saveThreshold.mutate({
                                   partId: part.id,
@@ -448,24 +436,23 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
                                     Number(thresholdValue) || 0,
                                 })
                               }
-                              className="text-xs text-primary hover:underline"
                             >
                               Save
-                            </button>
+                            </Button>
                           </div>
                         ) : (
-                          <button
-                            type="button"
+                          <Button
+                            variant="ghost"
+                            size="xs"
                             onClick={() => {
                               setEditingThreshold(part.id);
                               setThresholdValue(
                                 String(thresholdMap[part.id] ?? 5),
                               );
                             }}
-                            className="text-xs text-muted-foreground hover:text-foreground"
                           >
                             {thresholdMap[part.id] ?? 5}
-                          </button>
+                          </Button>
                         )}
                       </TableCell>
                     </TableRow>
@@ -480,8 +467,8 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
       {/* Add Part Modal */}
       {showAddPart && (
         <Modal title={t("addPart")} onClose={() => setShowAddPart(false)}>
-          <form onSubmit={handleAddPart} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={handleAddPart} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <label htmlFor="part-name" className="text-sm font-medium">
                 Name *
               </label>
@@ -493,7 +480,7 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
                 className="h-11"
               />
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <label htmlFor="part-name-mn" className="text-sm font-medium">
                 Монгол нэр
               </label>
@@ -505,7 +492,7 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label htmlFor="part-number" className="text-sm font-medium">
                   Part Number
                 </label>
@@ -516,7 +503,7 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
                   className="h-11"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label htmlFor="part-category" className="text-sm font-medium">
                   Category
                 </label>
@@ -528,7 +515,7 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <label
                 htmlFor="part-description"
                 className="text-sm font-medium"
@@ -543,7 +530,7 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label htmlFor="part-unit" className="text-sm font-medium">
                   Unit
                 </label>
@@ -554,7 +541,7 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
                   className="h-11"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label
                   htmlFor="part-default-price"
                   className="text-sm font-medium"

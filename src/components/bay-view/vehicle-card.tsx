@@ -2,7 +2,7 @@
 
 import { useDraggable } from "@dnd-kit/core";
 import { Car } from "lucide-react";
-import type { Vehicle } from "@/lib/database.types";
+import type { Vehicle } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";
 import { BrandLogo } from "./brand-logo";
 
@@ -81,7 +81,7 @@ export function VehicleCard({
       </div>
 
       {/* Vehicle details */}
-      <div className="flex-1 min-w-0 space-y-0.5">
+      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <div className="font-semibold text-sm truncate flex items-center gap-1.5">
           <span className="truncate">{formatPlateNumber(vehicle.plate_number)}</span>
           {customerName && (

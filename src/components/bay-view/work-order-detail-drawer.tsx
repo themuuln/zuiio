@@ -1,45 +1,34 @@
 "use client";
 
-import {
-  AlertTriangle,
-  ArrowRight,
-  Car,
-  CheckCircle2,
-  FileText,
-  History,
-  Loader2,
-  Plus,
-  Trash2,
-  User,
-  Wrench,
-  X,
-} from "lucide-react";
+
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "@/lib/i18n/navigation";
-import { MechanicSelect } from "@/components/mechanic-select";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
-import { cn, formatMNT } from "@/lib/utils";
+  Drawer,
+  DrawerContent,
+} from "@/components/ui/drawer";
+import { useRouter } from "@/lib/i18n/navigation";
 import {
   getWorkOrderServicesWithIntervals,
-  savePostServiceData,
   saveCompletionData,
+  savePostServiceData,
 } from "@/lib/services/post-service-service";
-import { PostServiceForm } from "./post-service-form";
-import type { PostServiceFormData } from "./post-service-form";
-import { PickupCompleteForm } from "./pickup-complete-form";
+import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
 import type { PickupCompleteData } from "./pickup-complete-form";
-import { StatusPill } from "./status-pill";
+import { PickupCompleteForm } from "./pickup-complete-form";
+import type { PostServiceFormData } from "./post-service-form";
+import { PostServiceForm } from "./post-service-form";
+import { DrawerHeaderSection } from "./_drawer-header";
+import { DrawerLoading, DrawerSkeleton } from "./_drawer-loading";
+import { UnsavedWarning } from "./_drawer-unsaved-warning";
+import { NotesSection } from "./_notes-section";
+import { TotalsSummary } from "./_totals-summary";
+import { StatusTimeline } from "./_status-timeline";
+import { ServicesSection } from "./_services-section";
+import { PartsSection } from "./_parts-section";
+import { DrawerFooter } from "./_drawer-footer";
+import { DrawerCelebration } from "./_drawer-celebration";
 
 // ── Props ────────────────────────────────────────────────────
 
@@ -69,11 +58,32 @@ export function WorkOrderDetailDrawer({
   const [catalog, setCatalog] = useState<ServiceCatalog[]>([]);
   const [serviceSearch, setServiceSearch] = useState("");
   const [showAddService, setShowAddService] = useState(false);
+  const [addingServiceId, setAddingServiceId] = useState<string | null>(null);
+  const [pendingServicePreview, setPendingServicePreview] = useState<{
+    name: string;
+    price: number;
+  } | null>(null);
 
   // Add part state
   const [newPartName, setNewPartName] = useState("");
   const [newPartQty, setNewPartQty] = useState(1);
   const [newPartPrice, setNewPartPrice] = useState(0);
+  const [addingPart, setAddingPart] = useState(false);
+  const [pendingPartPreview, setPendingPartPreview] = useState<{
+    name: string;
+    quantity: number;
+    unitPrice: number;
+  } | null>(null);
+
+  // Inline price edit state
+  const [editingServicePriceId, setEditingServicePriceId] = useState<
+    string | null
+  >(null);
+  const [editingServicePriceVal, setEditingServicePriceVal] = useState("");
+  const [editingPartPriceId, setEditingPartPriceId] = useState<string | null>(
+    null,
+  );
+  const [editingPartPriceVal, setEditingPartPriceVal] = useState("");
 
   // Post-service form state
   const [showPostServiceForm, setShowPostServiceForm] = useState(false);
@@ -97,10 +107,48 @@ export function WorkOrderDetailDrawer({
   // Org ID — extract from WO data
   const orgIdRef = useRef<string | null>(null);
 
-  // Fetch catalog on first open
-  // biome-ignore lint/correctness/useExhaustiveDependencies: orgIdRef is a ref, read at call time
+  // Catalog refresh ref — track if catalog was fetched in current session
+  const catalogFetchedRef = useRef(false);
+
+  // Layout-preserving loading
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+
+  // Unsaved changes guard
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+
+  // Completion celebration
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Fetch work order detail
+  const fetchWo = useCallback(
+    async (silent = false, orgIdOverride?: string) => {
+      const orgId = orgIdOverride ?? orgIdRef.current;
+      if (!workOrderId || !orgId) return;
+      if (!silent) setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(
+          `/api/organizations/${orgId}/work-orders/${workOrderId}`,
+        );
+        const json = await res.json();
+        if (json.error) {
+          setError(json.error.message ?? "Failed to load work order");
+        } else {
+          setWo(json.data);
+        }
+      } catch {
+        setError("Network error");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [workOrderId],
+  );
+
+  // Fetch catalog on first open, silently refetch on reopen
   useEffect(() => {
-    if (!open || catalog.length > 0) return;
+    if (!open) return;
+    setLoading(true);
     const abort = new AbortController();
     const signal = abort.signal;
     fetch("/api/profile", { signal })
@@ -110,13 +158,15 @@ export function WorkOrderDetailDrawer({
         const id = d?.organizationId ?? d?.data?.organizationId;
         if (id) {
           orgIdRef.current = id;
+          fetchWo();
           fetch(`/api/organizations/${id}/services`, { signal })
             .then((r) => r.json())
             .then((res) => {
               if (!signal.aborted && res.data) setCatalog(res.data);
             })
             .catch((err) => {
-              if (!signal.aborted) console.error("Failed to load services:", err);
+              if (!signal.aborted)
+                console.error("Failed to load services:", err);
             });
           fetch(`/api/organizations/${id}/reports?type=mechanics`, { signal })
             .then((r) => r.json())
@@ -124,43 +174,34 @@ export function WorkOrderDetailDrawer({
               if (!signal.aborted && d.data) setMechanics(d.data);
             })
             .catch((err) => {
-              if (!signal.aborted) console.error("Failed to load mechanics:", err);
+              if (!signal.aborted)
+                console.error("Failed to load mechanics:", err);
             });
         }
       })
       .catch((err) => {
         if (!signal.aborted) console.error("Failed to fetch profile:", err);
       });
+    if (!catalogFetchedRef.current) {
+      catalogFetchedRef.current = true;
+    }
     return () => abort.abort();
-  }, [open, catalog.length]);
+  }, [open, fetchWo]);
 
-  // Fetch work order detail
-  // biome-ignore lint/correctness/useExhaustiveDependencies: orgIdRef is stable, .current read at call time
-  const fetchWo = useCallback(async (silent = false) => {
-    const orgId = orgIdRef.current;
-    if (!workOrderId || !orgId) return;
-    if (!silent) setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}`,
-      );
-      const json = await res.json();
-      if (json.error) {
-        setError(json.error.message ?? "Failed to load work order");
-      } else {
-        setWo(json.data);
-      }
-    } catch {
-      setError("Network error");
-    } finally {
+  // Track first successful load for layout-preserving loading
+  useEffect(() => {
+    if (wo) setHasLoadedOnce(true);
+  }, [wo]);
+
+  // Reset state on close for clean reopen
+  useEffect(() => {
+    if (!open) {
+      orgIdRef.current = null;
+      setWo(null);
+      setError(null);
       setLoading(false);
     }
-  }, [workOrderId]);
-
-  useEffect(() => {
-    if (open && workOrderId) fetchWo();
-  }, [open, workOrderId, fetchWo]);
+  }, [open]);
 
   // ── Status change ────────────────────────────────────────
 
@@ -243,7 +284,14 @@ export function WorkOrderDetailDrawer({
 
   async function addService(svc: ServiceCatalog) {
     const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    if (!orgId || !workOrderId || addingServiceId) return;
+    setAddingServiceId(svc.id);
+    setPendingServicePreview({
+      name: svc.name,
+      price: Number(svc.default_price ?? 0),
+    });
+    setServiceSearch("");
+    setShowAddService(false);
     try {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/services`,
@@ -263,10 +311,22 @@ export function WorkOrderDetailDrawer({
         toast.error(json.error.message ?? "Failed to add service");
         return;
       }
-      await fetchWo(true);
+      // Append new service directly to wo state — avoids stale cache from refetch
+      const newService = json.data;
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          services: [...(prev.services ?? []), newService],
+        };
+      });
+      toast.success(`Added service: ${svc.name}`);
       onRefresh();
     } catch {
       toast.error("Failed to add service");
+    } finally {
+      setAddingServiceId(null);
+      setPendingServicePreview(null);
     }
   }
 
@@ -283,7 +343,14 @@ export function WorkOrderDetailDrawer({
         toast.error(json.error.message ?? "Failed to remove service");
         return;
       }
-      await fetchWo(true);
+      // Remove service directly from wo state — avoids stale cache from refetch
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          services: (prev.services ?? []).filter((s) => s.id !== serviceId),
+        };
+      });
       onRefresh();
     } catch {
       toast.error("Failed to remove service");
@@ -294,7 +361,14 @@ export function WorkOrderDetailDrawer({
 
   async function addPartLine() {
     const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId || !newPartName.trim()) return;
+    const trimmedPartName = newPartName.trim();
+    if (!orgId || !workOrderId || !trimmedPartName || addingPart) return;
+    setAddingPart(true);
+    setPendingPartPreview({
+      name: trimmedPartName,
+      quantity: newPartQty,
+      unitPrice: newPartPrice,
+    });
     try {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/parts`,
@@ -302,7 +376,7 @@ export function WorkOrderDetailDrawer({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            part_name: newPartName.trim(),
+            part_name: trimmedPartName,
             quantity: newPartQty,
             unit_price: newPartPrice,
           }),
@@ -313,7 +387,16 @@ export function WorkOrderDetailDrawer({
         toast.error(json.error.message ?? "Failed to add part");
         return;
       }
-      await fetchWo(true);
+      // Append new part directly to wo state — avoids stale cache from refetch
+      const newPart = json.data;
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          parts: [...(prev.parts ?? []), newPart],
+        };
+      });
+      toast.success(`Added part: ${trimmedPartName}`);
       onRefresh();
       setNewPartName("");
       setNewPartQty(1);
@@ -321,6 +404,9 @@ export function WorkOrderDetailDrawer({
       setShowAddPart(false);
     } catch {
       toast.error("Failed to add part");
+    } finally {
+      setAddingPart(false);
+      setPendingPartPreview(null);
     }
   }
 
@@ -339,10 +425,99 @@ export function WorkOrderDetailDrawer({
         toast.error(json.error.message ?? "Failed to remove part");
         return;
       }
-      await fetchWo(true);
+      // Remove part directly from wo state — avoids stale cache from refetch
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          parts: (prev.parts ?? []).filter((p) => p.id !== partId),
+        };
+      });
       onRefresh();
     } catch {
       toast.error("Failed to remove part");
+    }
+  }
+
+  // ── Inline price update handlers ──────────────────────────
+
+  async function handleServicePriceSave(serviceId: string) {
+    const orgId = orgIdRef.current;
+    if (!orgId || !workOrderId) return;
+    const numVal = Number(editingServicePriceVal);
+    if (isNaN(numVal) || numVal < 0) {
+      toast.error("Invalid price");
+      return;
+    }
+    setEditingServicePriceId(null);
+    try {
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${workOrderId}/services?serviceId=${serviceId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ final_price: numVal }),
+        },
+      );
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message ?? "Failed to update price");
+        return;
+      }
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          services: (prev.services ?? []).map((service) =>
+            service.id === serviceId
+              ? { ...service, final_price: numVal }
+              : service,
+          ),
+        };
+      });
+      toast.success("Price updated");
+      onRefresh();
+    } catch {
+      toast.error("Failed to update price");
+    }
+  }
+
+  async function handlePartPriceSave(partId: string) {
+    const orgId = orgIdRef.current;
+    if (!orgId || !workOrderId) return;
+    const numVal = Number(editingPartPriceVal);
+    if (isNaN(numVal) || numVal < 0) {
+      toast.error("Invalid price");
+      return;
+    }
+    setEditingPartPriceId(null);
+    try {
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${workOrderId}/parts?partId=${partId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ final_price: numVal }),
+        },
+      );
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message ?? "Failed to update price");
+        return;
+      }
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          parts: (prev.parts ?? []).map((part) =>
+            part.id === partId ? { ...part, final_price: numVal } : part,
+          ),
+        };
+      });
+      toast.success("Price updated");
+      onRefresh();
+    } catch {
+      toast.error("Failed to update price");
     }
   }
 
@@ -474,6 +649,12 @@ export function WorkOrderDetailDrawer({
       } else {
         setWo(json.data);
         toast.success("Work order completed");
+        setShowPickupForm(false);
+        setShowCelebration(true);
+        setTimeout(() => {
+          setShowCelebration(false);
+          onOpenChange(false);
+        }, 1500);
         onRefresh();
       }
     } catch (err) {
@@ -482,741 +663,238 @@ export function WorkOrderDetailDrawer({
       );
     } finally {
       setSaving(false);
-      setShowPickupForm(false);
     }
   }
 
   // ── Available status transitions ────────────────────────
 
-  const canCancel =
-    wo?.status && !["Completed", "Cancelled"].includes(wo.status);
-  const canInvoice =
+  const canCancel: boolean =
+    !!wo?.status && !["Completed", "Cancelled"].includes(wo.status ?? "");
+  const canInvoice: boolean =
     wo?.status === "Completed" || wo?.status === "Ready for Pickup";
+
+  // ── Computed ────────────────────────────────────────────
+
+  const isDirty =
+    (showAddPart && newPartName.trim() !== "") || showAddService;
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      const hasPriceEdit =
+        editingServicePriceId !== null || editingPartPriceId !== null;
+
+      // Save any in-progress price edits silently (triggers onBlur → save)
+      if (hasPriceEdit) {
+        setEditingServicePriceId(null);
+        setEditingPartPriceId(null);
+      }
+
+      // Show unsaved warning for add-part form / add-service search
+      if (isDirty) {
+        setShowUnsavedWarning(true);
+        return;
+      }
+
+      // If price edit was the only dirty state, close after save fires
+      if (hasPriceEdit) {
+        setTimeout(() => onOpenChange(false), 100);
+        return;
+      }
+    }
+    onOpenChange(nextOpen);
+  }
+
+  function handleDiscard() {
+    setShowAddPart(false);
+    setShowAddService(false);
+    setNewPartName("");
+    setShowUnsavedWarning(false);
+    onOpenChange(false);
+  }
 
   // ── Render ──────────────────────────────────────────────
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="w-full sm:max-w-3xl lg:max-w-[60%] p-0 gap-0"
-        showCloseButton={false}
-      >
-        {/* Header — vehicle summary card */}
-        <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
-                {loading ? (
-                  <Loader2 className="size-5 animate-spin text-primary" />
-                ) : (
-                  <Car className="size-5 text-primary" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <SheetTitle className="text-base">
-                  {wo ? (
-                    <span className="truncate block">
-                      {wo.vehicle?.plate_number ?? t("workOrder")}
-                    </span>
-                  ) : (
-                    t("workOrder")
-                  )}
-                </SheetTitle>
-                {wo && (
-                  <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
-                    <span className="font-mono">WO#{wo.id.slice(0, 8)}</span>
-                    {wo.created_at && (
-                      <>
-                        <span className="text-muted-foreground/30">·</span>
-                        <span>
-                          {new Date(wo.created_at).toLocaleDateString()}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {wo?.status && <StatusPill status={wo.status} />}
-              <button
-                type="button"
-                onClick={() => onOpenChange(false)}
-                className="rounded-md p-1.5 hover:bg-muted transition-colors"
-                aria-label={t("close")}
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-          </div>
+    <Drawer open={open} onOpenChange={handleOpenChange}>
+      <DrawerContent className="flex max-h-[90vh] w-full flex-col gap-0 p-0">
+        <DrawerHeaderSection
+          wo={wo}
+          loading={loading}
+          mechanics={mechanics}
+          saving={saving}
+          onAssignMechanic={assignMechanic}
+          onClose={() => handleOpenChange(false)}
+          t={t}
+        />
 
-          {/* Vehicle / Customer / Mechanic details */}
-          {wo && (
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm bg-muted/30 rounded-xl px-3.5 py-2.5 border border-border/50">
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground/60">
-                  {wo.vehicle?.make}
-                </span>
-                <span className="font-medium">{wo.vehicle?.model}</span>
-                {wo.vehicle?.year && (
-                  <span className="text-muted-foreground/50 text-xs">
-                    · {wo.vehicle.year}
-                  </span>
-                )}
-              </div>
-              {wo.customer && (
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <User className="size-3" />
-                  <span>
-                    {wo.customer.first_name} {wo.customer.last_name ?? ""}
-                  </span>
-                  {wo.customer.phone && (
-                    <span className="text-muted-foreground/50 text-xs">
-                      {wo.customer.phone}
-                    </span>
-                  )}
-                </div>
-              )}
-              {wo.mechanic && (
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <Wrench className="size-3" />
-                  <span>{wo.mechanic.full_name ?? "Assigned"}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </SheetHeader>
+        <DrawerLoading
+          loading={loading}
+          hasLoadedOnce={hasLoadedOnce}
+          error={error}
+          onRetry={() => fetchWo()}
+        />
 
-        {/* Loading state */}
-        {loading && (
-          <div className="flex items-center justify-center py-20 text-muted-foreground">
-            <Loader2 className="size-6 animate-spin" />
-          </div>
-        )}
-
-        {/* Error state */}
-        {error && !loading && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
-            <p className="text-sm text-muted-foreground">{error}</p>
-            <Button variant="outline" size="sm" onClick={() => fetchWo()}>
-              Retry
-            </Button>
-          </div>
-        )}
-
-        {/* Content */}
-        {!loading && !error && wo && (
+        {/* Content — always rendered after first load (skeleton when refetching) */}
+        {hasLoadedOnce && (
           <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
-            {/* ── All sections stacked in card wrappers ── */}
-            <div className="flex-1 overflow-y-auto min-h-0">
-              <div className="px-3 py-2 space-y-3">
-                {/* ── Services Section ── */}
-                <section className="rounded-lg border border-border/60 bg-card/40 p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex items-center justify-center size-5 rounded-md bg-blue-500/10">
-                        <Wrench className="size-3 text-blue-500" />
-                      </div>
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        {t("services")}
-                      </span>
-                      {(wo.services?.length ?? 0) > 0 && (
-                        <span className="rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 text-[10px] font-semibold">
-                          {wo.services?.length}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+            <DrawerSkeleton
+              loading={loading}
+              error={error}
+              onRetry={() => fetchWo()}
+            >
+              {wo ? (
+                <>
+                  <div className="flex-1 overflow-y-auto min-h-0">
+                    <div className="px-3 py-2">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                        <div className="lg:col-span-2">
+                          <div className="flex flex-col gap-3">
+                            <ServicesSection
+                              services={wo.services ?? []}
+                              catalog={catalog}
+                              serviceSearch={serviceSearch}
+                              showAddService={showAddService}
+                              addingServiceId={addingServiceId}
+                              pendingServicePreview={pendingServicePreview}
+                              editingPriceId={editingServicePriceId}
+                              editingPriceVal={editingServicePriceVal}
+                              onServiceSearchChange={setServiceSearch}
+                              onToggleAddService={() => setShowAddService(!showAddService)}
+                              onAddService={addService}
+                              onRemoveService={removeService}
+                              onEditPriceStart={(id, val) => {
+                                setEditingServicePriceId(id);
+                                setEditingServicePriceVal(val);
+                              }}
+                              onEditPriceChange={setEditingServicePriceVal}
+                              onEditPriceSave={handleServicePriceSave}
+                              onEditPriceCancel={() => setEditingServicePriceId(null)}
+                              t={t}
+                            />
 
-                  {/* Service search dropdown */}
-                  {showAddService && (
-                    <div className="relative mb-2">
-                      <Input
-                        value={serviceSearch}
-                        onChange={(e) => setServiceSearch(e.target.value)}
-                        placeholder={t("searchServices")}
-                        className="h-8 text-xs"
-                        
-                      />
-                      {serviceSearch && (
-                        <div className="absolute top-full left-0 right-0 z-10 mt-1 border rounded-lg bg-background shadow-lg max-h-40 overflow-y-auto">
-                          {catalog
-                            .filter((s) =>
-                              s.name
-                                .toLowerCase()
-                                .includes(serviceSearch.toLowerCase()),
-                            )
-                            .slice(0, 8)
-                            .map((svc) => {
-                              const added = wo.services?.some(
-                                (s) => s.service_catalog_id === svc.id,
-                              );
-                              return (
-                                <button
-                                  type="button"
-                                  key={svc.id}
-                                  onClick={() => {
-                                    if (!added) {
-                                      addService(svc);
-                                      setServiceSearch("");
-                                      setShowAddService(false);
-                                    }
-                                  }}
-                                  disabled={added}
-                                  className={cn(
-                                    "flex items-center justify-between w-full px-2.5 py-2 text-left transition-colors hover:bg-muted/50 text-xs",
-                                    added && "opacity-40",
-                                  )}
-                                >
-                                  <span className="font-medium truncate mr-2">
-                                    {svc.name}
-                                  </span>
-                                  <span className="tabular-nums font-medium shrink-0">
-                                    {formatMNT(Number(svc.default_price))}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          {catalog.filter((s) =>
-                            s.name
-                              .toLowerCase()
-                              .includes(serviceSearch.toLowerCase()),
-                          ).length === 0 && (
-                            <div className="p-3 text-xs text-muted-foreground text-center">
-                              {t("noMatchService")}
-                            </div>
-                          )}
+                            <PartsSection
+                              parts={wo.parts ?? []}
+                              newPartName={newPartName}
+                              newPartQty={newPartQty}
+                              newPartPrice={newPartPrice}
+                              showAddPart={showAddPart}
+                              addingPart={addingPart}
+                              pendingPartPreview={pendingPartPreview}
+                              editingPriceId={editingPartPriceId}
+                              editingPriceVal={editingPartPriceVal}
+                              onNewPartNameChange={setNewPartName}
+                              onNewPartQtyChange={setNewPartQty}
+                              onNewPartPriceChange={setNewPartPrice}
+                              onToggleAddPart={() => setShowAddPart(!showAddPart)}
+                              onAddPart={addPartLine}
+                              onRemovePart={removePart}
+                              onEditPriceStart={(id, val) => {
+                                setEditingPartPriceId(id);
+                                setEditingPartPriceVal(val);
+                              }}
+                              onEditPriceChange={setEditingPartPriceVal}
+                              onEditPriceSave={handlePartPriceSave}
+                              onEditPriceCancel={() => setEditingPartPriceId(null)}
+                              t={t}
+                            />
+
+                            <NotesSection
+                              complaint={wo.complaint}
+                              diagnosis={wo.diagnosis}
+                              notes={wo.notes}
+                              t={t}
+                            />
+                          </div>
+
+                          <TotalsSummary
+                            servicesTotal={servicesTotal}
+                            partsTotal={partsTotal}
+                            grandTotal={Number(wo.total)}
+                            t={t}
+                          />
+
+                          <div className="h-2" />
                         </div>
-                      )}
-                    </div>
-                  )}
 
-                  {/* Service list */}
-                  {(wo.services ?? []).length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-4 text-muted-foreground/50 rounded-lg border border-dashed border-border/60">
-                      <Wrench className="size-5 mb-1.5 opacity-60" />
-                      <p className="text-[11px] font-medium">
-                        {t("noServicesYet")}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="-mx-0.5">
-                      {/* Header row */}
-                      <div className="flex items-center gap-2 px-1 mb-0.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                        <div className="flex-1">{t("service")}</div>
-                        <div className="w-14 text-right">{t("qty")}</div>
-                        <div className="w-20 text-right">{t("price")}</div>
-                        <div className="w-7" />
+                        <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start">
+                          <StatusTimeline
+                            statusHistory={wo.status_history ?? []}
+                            t={t}
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-px">
-                        {wo.services?.map((svc) => (
-                          <div
-                            key={svc.id}
-                            className="group flex items-center gap-2 rounded-md p-1.5 hover:bg-muted/40 transition-colors"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">
-                                {svc.service_name}
-                              </p>
-                            </div>
-                            <div className="w-14 text-right text-xs text-muted-foreground tabular-nums">
-                              {svc.quantity}
-                            </div>
-                            <div className="w-20 text-right text-xs font-semibold tabular-nums">
-                              {formatMNT(Number(svc.final_price))}
-                            </div>
-                            <div className="w-7 flex justify-center">
-                              <button
-                                type="button"
-                                onClick={() => removeService(svc.id)}
-                                className="p-0.5 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                                aria-label="Remove service"
-                              >
-                                <Trash2 className="size-3" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Full-width Add button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowAddService(!showAddService)}
-                    className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-muted-foreground/25 py-2 text-xs font-medium text-muted-foreground/60 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-colors"
-                  >
-                    <Plus className="size-4" />
-                    {t("addService")}
-                  </button>
-                </section>
-
-                {/* ── Parts Section ── */}
-                <section className="rounded-lg border border-border/60 bg-card/40 p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex items-center justify-center size-5 rounded-md bg-amber-500/10">
-                        <span className="text-[10px] font-semibold text-amber-600">
-                          P
-                        </span>
-                      </div>
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        {t("parts")}
-                      </span>
-                      {(wo.parts?.length ?? 0) > 0 && (
-                        <span className="rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 text-[10px] font-semibold">
-                          {wo.parts?.length}
-                        </span>
-                      )}
                     </div>
                   </div>
 
-                  {/* Add part form */}
-                  {showAddPart && (
-                    <div className="flex flex-col gap-1.5 p-2 mb-2 rounded-lg border border-border bg-muted/30">
-                      <Input
-                        value={newPartName}
-                        onChange={(e) => setNewPartName(e.target.value)}
-                        placeholder={t("partName")}
-                        className="h-8 text-xs"
-                        
-                      />
-                      <div className="flex gap-1.5">
-                        <Input
-                          type="number"
-                          value={newPartQty}
-                          onChange={(e) =>
-                            setNewPartQty(Number(e.target.value) || 1)
-                          }
-                          placeholder={t("qty")}
-                          className="h-8 w-14 text-center text-xs"
-                        />
-                        <Input
-                          type="number"
-                          value={newPartPrice || ""}
-                          onChange={(e) =>
-                            setNewPartPrice(Number(e.target.value) || 0)
-                          }
-                          placeholder={t("unitPrice")}
-                          className="h-8 flex-1 text-xs"
-                        />
-                        <Button
-                          size="sm"
-                          onClick={addPartLine}
-                          disabled={!newPartName.trim()}
-                          className="h-8 px-2 text-xs"
-                        >
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Parts list */}
-                  {(wo.parts ?? []).length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-4 text-muted-foreground/50 rounded-lg border border-dashed border-border/60">
-                      <p className="text-[11px] font-medium">
-                        {t("noPartsYet")}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="-mx-0.5">
-                      {/* Header row */}
-                      <div className="flex items-center gap-2 px-1 mb-0.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                        <div className="flex-1">{t("part")}</div>
-                        <div className="w-14 text-right">{t("qty")}</div>
-                        <div className="w-20 text-right">{t("total")}</div>
-                        <div className="w-7" />
-                      </div>
-                      <div className="space-y-px">
-                        {wo.parts?.map((part) => (
-                          <div
-                            key={part.id}
-                            className="group flex items-center gap-2 rounded-md p-1.5 hover:bg-muted/40 transition-colors"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">
-                                {part.part_name}
-                              </p>
-                              <p className="text-[10px] text-muted-foreground/60">
-                                {formatMNT(Number(part.unit_price))}
-                                {t("perUnit")}
-                              </p>
-                            </div>
-                            <div className="w-14 text-right text-xs text-muted-foreground tabular-nums">
-                              {part.quantity}
-                            </div>
-                            <div className="w-20 text-right text-xs font-semibold tabular-nums">
-                              {formatMNT(Number(part.final_price))}
-                            </div>
-                            <div className="w-7 flex justify-center">
-                              <button
-                                type="button"
-                                onClick={() => removePart(part.id)}
-                                className="p-0.5 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                                aria-label="Remove part"
-                              >
-                                <Trash2 className="size-3" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Full-width Add button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowAddPart(!showAddPart)}
-                    className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-muted-foreground/25 py-2 text-xs font-medium text-muted-foreground/60 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-colors"
-                  >
-                    <Plus className="size-4" />
-                    {t("addPart")}
-                  </button>
-                </section>
-
-                {/* ── Totals Summary (prominent) ── */}
-                <section className="rounded-lg bg-gradient-to-br from-primary/5 to-primary/[0.02] border border-primary/10 p-3">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">
-                        {t("services")}
-                      </span>
-                      <span className="font-medium tabular-nums">
-                        {formatMNT(servicesTotal)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">
-                        {t("parts")}
-                      </span>
-                      <span className="font-medium tabular-nums">
-                        {formatMNT(partsTotal)}
-                      </span>
-                    </div>
-                    <Separator className="bg-primary/10" />
-                    <div className="flex justify-between text-sm font-semibold">
-                      <span>{t("grandTotal")}</span>
-                      <span className="tabular-nums text-primary">
-                        {formatMNT(Number(wo.total))}
-                      </span>
-                    </div>
-                  </div>
-                </section>
-
-                {/* ── Status Timeline ── */}
-                <section className="rounded-lg border border-border/60 bg-card/40 p-3">
-                  <div className="flex items-center gap-1.5 mb-3">
-                    <div className="flex items-center justify-center size-5 rounded-md bg-purple-500/10">
-                      <History className="size-3 text-purple-500" />
-                    </div>
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      {t("statusTimeline")}
-                    </span>
-                  </div>
-
-                  {(wo.status_history ?? []).length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-4 text-muted-foreground/50">
-                      <History className="size-5 mb-1.5 opacity-60" />
-                      <p className="text-xs">{t("noHistoryYet")}</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-0">
-                      {wo.status_history?.map((h, idx) => {
-                        const isLast =
-                          idx === (wo.status_history?.length ?? 0) - 1;
-                        return (
-                          <div
-                            key={h.id}
-                            className="relative flex gap-2 pb-3 last:pb-0"
-                          >
-                            {!isLast && (
-                              <div className="absolute left-[10px] top-5 bottom-0 w-px bg-gradient-to-b from-border to-transparent" />
-                            )}
-                            <div className="relative z-10 mt-1 shrink-0">
-                              <div
-                                className={cn(
-                                  "size-5 rounded-full ring-2 ring-background flex items-center justify-center",
-                                  h.status === "Completed"
-                                    ? "bg-green-500"
-                                    : h.status === "Cancelled"
-                                      ? "bg-red-400"
-                                      : h.status === "In Progress" ||
-                                          h.status === "Ready for Pickup"
-                                        ? "bg-amber-500"
-                                        : "bg-blue-500",
-                                )}
-                              >
-                                {h.status === "Completed" ||
-                                h.status === "Ready for Pickup" ? (
-                                  <CheckCircle2 className="size-3 text-white" />
-                                ) : (
-                                  <div className="size-2 rounded-full bg-white/80" />
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2">
-                                <StatusPill status={h.status} />
-                                <span className="text-[10px] text-muted-foreground/60 shrink-0 font-mono">
-                                  {new Date(h.created_at).toLocaleDateString(
-                                    [],
-                                    {
-                                      month: "short",
-                                      day: "numeric",
-                                    },
-                                  )}{" "}
-                                  {new Date(h.created_at).toLocaleTimeString(
-                                    [],
-                                    {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    },
-                                  )}
-                                </span>
-                              </div>
-                              {h.notes && (
-                                <p className="text-xs text-muted-foreground mt-1 bg-muted/30 rounded-md px-2 py-1 border border-border/40">
-                                  {h.notes}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </section>
-
-                {/* ── Notes Section ── */}
-                <section className="rounded-lg border border-border/60 bg-card/40 p-3">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t("complaintAndNotes")}
-                  </span>
-                  <div className="mt-2 space-y-2">
-                    {wo.complaint && (
-                      <div>
-                        <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                          {t("complaint")}
-                        </span>
-                        <p className="text-xs mt-0.5 p-2 rounded-md bg-muted/40 border border-border/50">
-                          {wo.complaint}
-                        </p>
-                      </div>
-                    )}
-                    {wo.diagnosis && (
-                      <div>
-                        <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                          {t("diagnosis")}
-                        </span>
-                        <p className="text-xs mt-0.5 p-2 rounded-md bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-800/40">
-                          {wo.diagnosis}
-                        </p>
-                      </div>
-                    )}
-                    {wo.notes && (
-                      <div>
-                        <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                          {t("internalNotes")}
-                        </span>
-                        <p className="text-xs mt-0.5 p-2 rounded-md bg-muted/40 border border-border/50">
-                          {typeof wo.notes === "object" && wo.notes !== null ? (wo.notes as { content: string }).content : wo.notes}
-                        </p>
-                      </div>
-                    )}
-                    {!wo.complaint && !wo.diagnosis && !wo.notes && (
-                      <p className="text-[11px] text-muted-foreground/50 italic">
-                        {t("noNotesRecorded")}
-                      </p>
-                    )}
-                  </div>
-                </section>
-
-                {/* Spacer for footer */}
-                <div className="h-2" />
-              </div>
-            </div>
-
-            {/* ── Footer: Status actions + mechanic ── */}
-            <div className="shrink-0 border-t border-border bg-background px-3 py-2 space-y-2">
-              {/* Status change confirmation */}
-              {confirmStatus && (
-                <div className="rounded-lg border border-amber-200/60 bg-amber-50/40 dark:border-amber-800/30 dark:bg-amber-950/10 p-2 space-y-1.5">
-                  <div className="flex items-start gap-1.5">
-                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
-                    <div>
-                      <p className="text-[11px] font-medium">
-                        {t("statusNotesGenericTitle", {
-                          status: confirmStatus,
-                        })}
-                        ?
-                      </p>
-                      <p className="text-[10px] text-muted-foreground/70 mt-0.5">
-                        {confirmStatus === "Completed"
-                          ? t("confirmComplete")
-                          : t("confirmCancel")}
-                      </p>
-                    </div>
-                  </div>
-                  <Input
-                    placeholder={t("addNotesOptional")}
-                    value={statusNotes}
-                    onChange={(e) => setStatusNotes(e.target.value)}
-                    className="h-8 text-xs"
+                  <DrawerFooter
+                    wo={wo}
+                    saving={saving}
+                    confirmStatus={confirmStatus}
+                    statusNotes={statusNotes}
+                    creatingInvoice={creatingInvoice}
+                    canCancel={canCancel}
+                    canInvoice={canInvoice}
+                    onChangeStatus={changeStatus}
+                    onConfirmCancel={() => {
+                      setConfirmStatus(null);
+                      setStatusNotes("");
+                    }}
+                    onStatusNotesChange={setStatusNotes}
+                    onMarkReady={handleReadyForPickup}
+                    onComplete={() => setShowPickupForm(true)}
+                    onCreateInvoice={generateInvoice}
+                    t={t}
                   />
-                  <div className="flex gap-1.5 justify-end">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setConfirmStatus(null);
-                        setStatusNotes("");
-                      }}
-                      className="h-7 text-xs"
-                    >
-                      {t("cancel")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={
-                        confirmStatus === "Cancelled"
-                          ? "destructive"
-                          : "default"
-                      }
-                      disabled={saving}
-                      onClick={() => changeStatus(confirmStatus)}
-                      className="h-7 text-xs min-w-[90px]"
-                    >
-                      {saving ? t("updating") : t("confirm")}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Primary status flow action */}
-              <div className="flex gap-1.5">
-                {wo.status === "New" && (
-                  <Button
-                    className="flex-1 h-9 text-xs font-semibold"
-                    onClick={() => changeStatus("Diagnosing")}
-                    disabled={saving}
-                  >
-                    <ArrowRight className="size-3.5" />
-                    {t("startDiagnosing")}
-                  </Button>
-                )}
-                {wo.status === "Diagnosing" && (
-                  <Button
-                    className="flex-1 h-9 text-xs font-semibold"
-                    onClick={() => changeStatus("In Progress")}
-                    disabled={saving}
-                  >
-                    <ArrowRight className="size-3.5" />
-                    {t("startWork")}
-                  </Button>
-                )}
-                {wo.status === "In Progress" && (
-                  <Button
-                    className="flex-1 h-9 text-xs font-semibold"
-                    onClick={handleReadyForPickup}
-                    disabled={saving}
-                  >
-                    <CheckCircle2 className="size-3.5" />
-                    {t("markReady")}
-                  </Button>
-                )}
-                {wo.status === "Ready for Pickup" && (
-                  <Button
-                    className="flex-1 h-9 text-xs font-semibold"
-                    onClick={() => setShowPickupForm(true)}
-                    disabled={saving}
-                  >
-                    <CheckCircle2 className="size-3.5" />
-                    {t("complete")}
-                  </Button>
-                )}
-              </div>
-
-              {/* Secondary actions */}
-              <div className="flex items-center gap-1.5">
-                {/* Cancel */}
-                {canCancel && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => changeStatus("Cancelled")}
-                    disabled={saving}
-                    className="h-7 text-[10px] text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50"
-                  >
-                    <X className="size-3" />
-                    {t("cancel")}
-                  </Button>
-                )}
-
-                {/* Invoice */}
-                {canInvoice && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-[10px]"
-                    onClick={generateInvoice}
-                    disabled={creatingInvoice}
-                  >
-                    <FileText className="size-3" />
-                    {creatingInvoice ? t("creating") : t("invoice")}
-                  </Button>
-                )}
-
-                <div className="flex-1" />
-
-                {/* Mechanic selector */}
-                <div className="flex items-center gap-1">
-                  <span className="text-[9px] text-muted-foreground/60 font-medium uppercase">
-                    {t("mech")}
-                  </span>
-                  <MechanicSelect
-                    value={wo.mechanic_id ?? ""}
-                    onChange={assignMechanic}
-                    mechanics={mechanics}
-                    disabled={saving}
-                    size="sm"
-                  />
-                </div>
-              </div>
-            </div>
+                </>
+              ) : null}
+            </DrawerSkeleton>
           </div>
         )}
-      {/* Post-service form overlay inside drawer */}
-      {showPostServiceForm && wo && (
-        <PostServiceForm
-          woId={workOrderId ?? ""}
-          vehicleId={(wo.vehicle_id as string) ?? ""}
-          vehiclePlate={(wo.vehicle as { plate_number?: string })?.plate_number ?? ""}
-          currentOdometer={(wo.vehicle as { odometer?: number | null })?.odometer ?? null}
-          services={postFormServices}
-          newStatus="Ready for Pickup"
-          onConfirm={handlePostServiceFormSubmit}
-          onCancel={() => {
-            setShowPostServiceForm(false);
-            setPostFormServices([]);
-          }}
-        />
-      )}
+        {/* Post-service form overlay inside drawer */}
+        {showPostServiceForm && wo && (
+          <PostServiceForm
+            woId={workOrderId ?? ""}
+            vehicleId={(wo.vehicle_id as string) ?? ""}
+            vehiclePlate={
+              (wo.vehicle as { plate_number?: string })?.plate_number ?? ""
+            }
+            currentOdometer={
+              (wo.vehicle as { odometer?: number | null })?.odometer ?? null
+            }
+            services={postFormServices}
+            newStatus="Ready for Pickup"
+            onConfirm={handlePostServiceFormSubmit}
+            onCancel={() => {
+              setShowPostServiceForm(false);
+              setPostFormServices([]);
+            }}
+          />
+        )}
 
-      {/* Pickup complete form overlay inside drawer */}
-      {showPickupForm && wo && (
-        <PickupCompleteForm
-          woId={workOrderId ?? ""}
-          vehiclePlate={(wo.vehicle as { plate_number?: string })?.plate_number ?? ""}
-          totalCost={Number(wo.total ?? 0)}
-          onConfirm={handlePickupSubmit}
-          onCancel={() => setShowPickupForm(false)}
+        {/* Pickup complete form overlay inside drawer */}
+        {showPickupForm && wo && (
+          <PickupCompleteForm
+            woId={workOrderId ?? ""}
+            vehiclePlate={
+              (wo.vehicle as { plate_number?: string })?.plate_number ?? ""
+            }
+            totalCost={Number(wo.total ?? 0)}
+            onConfirm={handlePickupSubmit}
+            onCancel={() => setShowPickupForm(false)}
+          />
+        )}
+
+        <UnsavedWarning
+          show={showUnsavedWarning}
+          onDiscard={handleDiscard}
+          onKeepEditing={() => setShowUnsavedWarning(false)}
         />
-      )}
-      </SheetContent>
-    </Sheet>
+
+        <DrawerCelebration
+          show={showCelebration}
+          message="Completed!"
+        />
+      </DrawerContent>
+    </Drawer>
   );
 }

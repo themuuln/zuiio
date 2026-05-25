@@ -21,7 +21,7 @@ export default function PortalSettingsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Skeleton className="h-8 w-32" />
         <Skeleton className="h-4 w-48" />
         <Skeleton className="h-32 rounded-xl" />
@@ -30,7 +30,7 @@ export default function PortalSettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
           {t("portal.settings")}
@@ -48,7 +48,7 @@ export default function PortalSettingsPage() {
             Contact Info
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
+        <CardContent className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t("common.name")}</span>
             <span className="font-medium">{customer?.full_name ?? customer?.first_name ?? "—"}</span>
@@ -83,7 +83,7 @@ export default function PortalSettingsPage() {
               Password already set. You can log in with your email.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               <p className="text-sm text-muted-foreground">
                 {t("portal.setPasswordDesc")}
               </p>

@@ -6,6 +6,12 @@ import { useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Link } from "@/lib/i18n/navigation";
 import {
   useInventoryBalances,
@@ -100,10 +106,14 @@ export default function AlertsPage() {
               ))}
             </div>
           ) : alerts.length === 0 ? (
-            <div className="flex flex-col items-center gap-4 py-12">
-              <AlertTriangle className="size-10 text-muted-foreground/40" />
-              <p className="text-muted-foreground">{t("noAlerts")}</p>
-            </div>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <AlertTriangle />
+                </EmptyMedia>
+                <EmptyTitle>{t("noAlerts")}</EmptyTitle>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <div className="divide-y divide-border">
               {alerts.map((a) => (

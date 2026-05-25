@@ -6,8 +6,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useRouter } from "@/lib/i18n/navigation";
 import { useCreateSupplier } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -70,93 +70,77 @@ export default function NewSupplierPage() {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <Card>
-          <CardContent className="p-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">{t("name")} *</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t("namePlaceholder")}
-                className="h-11"
-                required
-              />
-            </div>
+          <CardContent className="p-6 flex flex-col gap-4">
+            <Field>
+              <FieldLabel htmlFor="name">$$$</FieldLabel>
+              <Input id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t("namePlaceholder")}
+              className="h-11"
+              required />
+            </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="contact_person">{t("contactPerson")}</Label>
-                <Input
-                  id="contact_person"
-                  value={contactPerson}
-                  onChange={(e) => setContactPerson(e.target.value)}
-                  placeholder={t("contactPersonPlaceholder")}
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">{t("phone")}</Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder={t("phonePlaceholder")}
-                  className="h-11"
-                />
-              </div>
+              <Field>
+                <FieldLabel htmlFor="contact_person">$$$</FieldLabel>
+                <Input id="contact_person"
+                value={contactPerson}
+                onChange={(e) => setContactPerson(e.target.value)}
+                placeholder={t("contactPersonPlaceholder")}
+                className="h-11" />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="phone">$$$</FieldLabel>
+                <Input id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder={t("phonePlaceholder")}
+                className="h-11" />
+              </Field>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">{t("email")}</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("emailPlaceholder")}
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">{t("address")}</Label>
-              <Input
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder={t("addressPlaceholder")}
-                className="h-11"
-              />
-            </div>
+            <Field>
+              <FieldLabel htmlFor="email">$$$</FieldLabel>
+              <Input id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={t("emailPlaceholder")}
+              className="h-11" />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="address">$$$</FieldLabel>
+              <Input id="address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder={t("addressPlaceholder")}
+              className="h-11" />
+            </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="tax_id">{t("taxId")}</Label>
-                <Input
-                  id="tax_id"
-                  value={taxId}
-                  onChange={(e) => setTaxId(e.target.value)}
-                  placeholder={t("taxIdPlaceholder")}
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="payment_terms">{t("paymentTerms")}</Label>
-                <Input
-                  id="payment_terms"
-                  value={paymentTerms}
-                  onChange={(e) => setPaymentTerms(e.target.value)}
-                  placeholder={t("paymentTermsPlaceholder")}
-                  className="h-11"
-                />
-              </div>
+              <Field>
+                <FieldLabel htmlFor="tax_id">$$$</FieldLabel>
+                <Input id="tax_id"
+                value={taxId}
+                onChange={(e) => setTaxId(e.target.value)}
+                placeholder={t("taxIdPlaceholder")}
+                className="h-11" />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="payment_terms">$$$</FieldLabel>
+                <Input id="payment_terms"
+                value={paymentTerms}
+                onChange={(e) => setPaymentTerms(e.target.value)}
+                placeholder={t("paymentTermsPlaceholder")}
+                className="h-11" />
+              </Field>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="notes">{t("notes")}</Label>
-              <Input
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder={t("notesPlaceholder")}
-                className="h-11"
-              />
-            </div>
+            <Field>
+              <FieldLabel htmlFor="notes">$$$</FieldLabel>
+              <Input id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t("notesPlaceholder")}
+              className="h-11" />
+            </Field>
           </CardContent>
         </Card>
 

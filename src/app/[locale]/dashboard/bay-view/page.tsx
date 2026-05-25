@@ -11,14 +11,14 @@ const BayViewV2Client = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-7 w-40" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-32 rounded-xl" />
+            <Skeleton key={i} className="h-28 rounded-lg" />
           ))}
         </div>
       </div>
@@ -27,5 +27,9 @@ const BayViewV2Client = dynamic(
 );
 
 export default function BayViewPage() {
-  return <BayViewV2Client />;
+  return (
+    <div className="-mx-3 -mb-5 -mt-3 flex h-full flex-col overflow-hidden tablet:-mx-4 tablet:-mb-6 tablet:-mt-4 lg:-mx-6 lg:-mb-8 lg:-mt-5">
+      <BayViewV2Client />
+    </div>
+  );
 }

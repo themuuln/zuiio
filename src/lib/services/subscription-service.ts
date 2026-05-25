@@ -1,6 +1,6 @@
 import { NotFoundError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import type { SubscriptionPlan } from "@/lib/database.types";
+import type { SubscriptionPlan } from "@/lib/types";
 import type {
   SubscriptionPlanInfo,
   UpdateSubscriptionParams,

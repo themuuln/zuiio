@@ -182,7 +182,7 @@ export function BaySlot({
               <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground/60 ring-1 ring-border/40">
                 <Car className="size-4" />
               </div>
-              <div className="flex-1 min-w-0 space-y-0.5">
+              <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                 <div className="flex items-center gap-2">
                   <span className="truncate text-sm font-semibold text-foreground/90">
                     {formatPlateNumber(v.plate_number)}
@@ -226,12 +226,16 @@ export function BaySlot({
                     <Tooltip>
                       <TooltipTrigger>
                         <span
-                          onClick={() => onStatusChange(wo.id, "Ready for Pickup")}
-                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onStatusChange(wo.id, "Ready for Pickup"); }}
-                          className="flex items-center justify-center rounded-md size-7 text-green-600 bg-green-500/10 ring-1 ring-green-500/15 transition-all hover:bg-green-500/20 active:scale-90 cursor-pointer"
+                          onClick={() => { if (!isPending) onStatusChange(wo.id, "Ready for Pickup"); }}
+                          onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !isPending) onStatusChange(wo.id, "Ready for Pickup"); }}
+                          className={cn(
+                            "flex items-center justify-center rounded-md size-7 text-green-600 bg-green-500/10 ring-1 ring-green-500/15 transition-all hover:bg-green-500/20 active:scale-90 cursor-pointer",
+                            isPending && "opacity-40 pointer-events-none",
+                          )}
                           aria-label={t("markReady")}
+                          aria-disabled={isPending || undefined}
                           role="button"
-                          tabIndex={0}
+                          tabIndex={isPending ? -1 : 0}
                         >
                           <CheckCircle2 className="size-3.5" />
                         </span>
@@ -243,12 +247,16 @@ export function BaySlot({
                   <Tooltip>
                     <TooltipTrigger>
                       <span
-                        onClick={() => onStatusChange(wo.id, "Completed")}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onStatusChange(wo.id, "Completed"); }}
-                        className="flex items-center justify-center rounded-md size-7 text-green-600 bg-green-500/10 ring-1 ring-green-500/15 transition-all hover:bg-green-500/20 active:scale-90 cursor-pointer"
+                        onClick={() => { if (!isPending) onStatusChange(wo.id, "Completed"); }}
+                        onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !isPending) onStatusChange(wo.id, "Completed"); }}
+                        className={cn(
+                          "flex items-center justify-center rounded-md size-7 text-green-600 bg-green-500/10 ring-1 ring-green-500/15 transition-all hover:bg-green-500/20 active:scale-90 cursor-pointer",
+                          isPending && "opacity-40 pointer-events-none",
+                        )}
                         aria-label={t("complete")}
+                        aria-disabled={isPending || undefined}
                         role="button"
-                        tabIndex={0}
+                        tabIndex={isPending ? -1 : 0}
                       >
                         <CheckCircle2 className="size-3.5" />
                       </span>
@@ -260,12 +268,16 @@ export function BaySlot({
                   <Tooltip>
                     <TooltipTrigger>
                       <span
-                        onClick={() => onRemoveFromBay(wo.id)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onRemoveFromBay(wo.id); }}
-                        className="flex items-center justify-center rounded-md size-7 text-destructive bg-destructive/10 ring-1 ring-destructive/15 transition-all hover:bg-destructive/20 active:scale-90 cursor-pointer"
+                        onClick={() => { if (!isPending) onRemoveFromBay(wo.id); }}
+                        onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !isPending) onRemoveFromBay(wo.id); }}
+                        className={cn(
+                          "flex items-center justify-center rounded-md size-7 text-destructive bg-destructive/10 ring-1 ring-destructive/15 transition-all hover:bg-destructive/20 active:scale-90 cursor-pointer",
+                          isPending && "opacity-40 pointer-events-none",
+                        )}
                         aria-label={t("removeFromBay")}
+                        aria-disabled={isPending || undefined}
                         role="button"
-                        tabIndex={0}
+                        tabIndex={isPending ? -1 : 0}
                       >
                         <Trash2 className="size-3" />
                       </span>
@@ -276,12 +288,16 @@ export function BaySlot({
                 <Tooltip>
                   <TooltipTrigger>
                     <span
-                      onClick={() => onOpenDetail(wo.id)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpenDetail(wo.id); }}
-                      className="flex items-center justify-center rounded-md size-7 text-muted-foreground bg-muted/50 ring-1 ring-border/40 transition-all hover:bg-muted/80 hover:text-foreground active:scale-90 cursor-pointer"
+                      onClick={() => { if (!isPending) onOpenDetail(wo.id); }}
+                      onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && !isPending) onOpenDetail(wo.id); }}
+                      className={cn(
+                        "flex items-center justify-center rounded-md size-7 text-muted-foreground bg-muted/50 ring-1 ring-border/40 transition-all hover:bg-muted/80 hover:text-foreground active:scale-90 cursor-pointer",
+                        isPending && "opacity-40 pointer-events-none",
+                      )}
                       aria-label={t("manage")}
+                      aria-disabled={isPending || undefined}
                       role="button"
-                      tabIndex={0}
+                      tabIndex={isPending ? -1 : 0}
                     >
                       <Maximize2 className="size-3" />
                     </span>

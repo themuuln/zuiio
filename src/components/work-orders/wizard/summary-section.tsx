@@ -4,6 +4,7 @@ import { Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Link } from "@/lib/i18n/navigation";
 import { formatCurrency } from "@/lib/utils";
 import { useWizardContext } from "./wizard-context";
@@ -32,7 +33,7 @@ export function SummarySection() {
                 {formatCurrency(ctx.partsTotal)}
               </span>
             </div>
-            <hr className="border-border" />
+            <Separator />
             <div className="flex justify-between text-xl font-semibold">
               <span>{t("grandTotal")}</span>
               <span className="tabular-nums">

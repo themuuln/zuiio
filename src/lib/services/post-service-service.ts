@@ -72,6 +72,30 @@ export async function savePostServiceData(
   if (!workOrderId) throw new ValidationError("Work order ID is required");
   if (!recommendations.length) throw new ValidationError("At least one service recommendation is required");
 
+  // Delete existing recommendations for this work order to prevent duplicates on retry
+  const { error: deleteError } = await supabase
+    .from("service_recommendations")
+    .delete()
+    .eq("work_order_id", workOrderId)
+    .eq("organization_id", orgId);
+
+  if (deleteError) {
+    throw new Error(`Failed to clear old recommendations: ${deleteError.message}`);
+  }
+
+  // Delete existing pending reminder logs for this vehicle and the service names we are recommending
+  const serviceNames = recommendations.map((r) => r.serviceName);
+  if (serviceNames.length > 0) {
+    await supabase
+      .from("reminder_logs")
+      .delete()
+      .eq("organization_id", orgId)
+      .eq("vehicle_id", vehicleId)
+      .eq("reminder_type", "service_due")
+      .eq("status", "pending")
+      .in("service_name", serviceNames);
+  }
+
   // 2. Insert service_recommendations
   const recommendationRows: ServiceRecommendationInsert[] = recommendations.map((r) => {
     let nextDueDate: string | null = null;
@@ -252,7 +276,14 @@ export async function saveCompletionData(
     nextAppointmentDate,
   } = input;
 
-  // 1. Insert service_completion_data
+  // 1. Check if completion data already exists for this work order to make the operation idempotent
+  const { data: existing } = await supabase
+    .from("service_completion_data")
+    .select("id")
+    .eq("work_order_id", workOrderId)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+
   const row: ServiceCompletionDatumInsert = {
     organization_id: orgId,
     work_order_id: workOrderId,
@@ -265,8 +296,21 @@ export async function saveCompletionData(
     created_by: user.id,
   };
 
-  const { error } = await supabase.from("service_completion_data").insert(row);
-  if (error) throw new Error(`Failed to save completion data: ${error.message}`);
+  if (existing) {
+    const { error } = await supabase
+      .from("service_completion_data")
+      .update({
+        odometer_reading: odometerReading ?? null,
+        customer_satisfaction: customerSatisfaction ?? null,
+        customer_feedback: customerFeedback?.trim() ?? null,
+        next_appointment_date: nextAppointmentDate ?? null,
+      })
+      .eq("id", existing.id);
+    if (error) throw new Error(`Failed to update completion data: ${error.message}`);
+  } else {
+    const { error } = await supabase.from("service_completion_data").insert(row);
+    if (error) throw new Error(`Failed to save completion data: ${error.message}`);
+  }
 
   // 2. Update vehicle last_visit_at
   await supabase
@@ -282,23 +326,35 @@ export async function saveCompletionData(
     .single();
 
   if (wo?.customer_id) {
-    const { data: customer } = await supabase
-      .from("customers")
-      .select("total_visits")
-      .eq("id", wo.customer_id)
-      .single();
+    if (!existing) {
+      // Only increment visits count on the initial completion
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("total_visits")
+        .eq("id", wo.customer_id)
+        .single();
 
-    await supabase
-      .from("customers")
-      .update({
-        last_visit_at: new Date().toISOString(),
-        total_visits: (customer?.total_visits ?? 0) + 1,
-      })
-      .eq("id", wo.customer_id);
+      await supabase
+        .from("customers")
+        .update({
+          last_visit_at: new Date().toISOString(),
+          total_visits: (customer?.total_visits ?? 0) + 1,
+        })
+        .eq("id", wo.customer_id);
+    } else {
+      // Just update last_visit_at without double-counting visits
+      await supabase
+        .from("customers")
+        .update({
+          last_visit_at: new Date().toISOString(),
+        })
+        .eq("id", wo.customer_id);
+    }
   }
 
   // 4. Create customer communication record
-  if (wo?.customer_id) {
+  if (wo?.customer_id && !existing) {
+    // Only log the communication record on initial completion
     await supabase.from("customer_communications").insert({
       organization_id: orgId,
       customer_id: wo.customer_id,

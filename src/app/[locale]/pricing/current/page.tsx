@@ -176,30 +176,18 @@ export default function PricingCurrentPage() {
 
           {/* Billing toggle */}
           <div className="mt-8 flex items-center justify-center gap-2">
-            <button
-              type="button"
+            <Button
+              variant={!annual ? "default" : "outline"}
               onClick={() => setAnnual(false)}
-              className={cn(
-                "rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                !annual
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
             >
               {t("monthly")}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant={annual ? "default" : "outline"}
               onClick={() => setAnnual(true)}
-              className={cn(
-                "rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                annual
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
             >
               {t("annual")}
-            </button>
+            </Button>
             <Badge variant="outline" className="text-xs">
               {t("savePercent")}
             </Badge>
@@ -253,7 +241,7 @@ export default function PricingCurrentPage() {
                 </CardHeader>
 
                 <CardContent className="flex-1">
-                  <ul className="space-y-2.5">
+                  <ul className="flex flex-col gap-2.5">
                     {plan.features.map((f, i) => (
                       <li key={`feature-${i}`} className="flex items-start gap-2 text-sm">
                         <FeatureIcon status={f.included} />

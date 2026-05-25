@@ -55,7 +55,7 @@ export function MemberList({
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {[1, 2, 3].map((i) => (
               <div key={`skeleton-${i}`} className="flex items-center gap-3">
                 <Skeleton className="size-9 rounded-full" />

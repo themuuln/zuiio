@@ -1,4 +1,4 @@
-import type { OrgInvite } from "@/lib/database.types";
+import type { OrgInvite } from "@/lib/types";
 
 export interface InviteWithEmail extends OrgInvite {
   organization_name?: string;

@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import {
   Table,
   TableBody,
   TableCell,
@@ -115,13 +122,19 @@ export default function SuppliersPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-4 py-12">
-              <Building2 className="size-10 text-muted-foreground/40" />
-              <p className="text-muted-foreground">{t("noSuppliers")}</p>
-              <Link href="/dashboard/inventory/suppliers/new">
-                <Button>{t("addFirstSupplier")}</Button>
-              </Link>
-            </div>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Building2 />
+                </EmptyMedia>
+                <EmptyTitle>{t("noSuppliers")}</EmptyTitle>
+              </EmptyHeader>
+              <EmptyContent>
+                <Link href="/dashboard/inventory/suppliers/new">
+                  <Button>{t("addFirstSupplier")}</Button>
+                </Link>
+              </EmptyContent>
+            </Empty>
           ) : (
             <Table>
               <TableHeader>

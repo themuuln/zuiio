@@ -3872,6 +3872,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      normalize_plate: { Args: { p: string }; Returns: string }
       renew_organization_subscription: {
         Args: { target_org_id: string }
         Returns: Json

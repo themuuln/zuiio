@@ -565,7 +565,7 @@ export default function ExpenseDetailPage() {
               <CardHeader>
                 <CardTitle className="text-base">{t("vendorInfo")}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="flex flex-col gap-3">
                 <div>
                   <p className="mb-1 text-xs text-muted-foreground">
                     {t("vendor")}

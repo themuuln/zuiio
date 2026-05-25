@@ -48,7 +48,7 @@ export function InviteForm({
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="flex items-end gap-3">
-          <div className="flex-1 space-y-1.5">
+          <div className="flex flex-1 flex-col gap-1.5">
             <label
               htmlFor="inviteEmail"
               className="text-sm font-medium text-foreground"
@@ -65,7 +65,7 @@ export function InviteForm({
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
-          <div className="flex-1 space-y-1.5">
+          <div className="flex flex-1 flex-col gap-1.5">
             <label
               htmlFor="inviteRole"
               className="text-sm font-medium text-foreground"

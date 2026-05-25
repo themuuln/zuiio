@@ -12,8 +12,13 @@ import { useTranslations } from "next-intl";
 import { Suspense, useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { setCustomerPassword } from "./actions";
 
 
@@ -67,11 +72,11 @@ export default function CustomerSetPasswordPage() {
               </p>
             </div>
           ) : (
-            <form action={formAction} className="space-y-4">
+            <form action={formAction} className="flex flex-col gap-4">
               <input type="hidden" name="token" value={token} />
 
-              <div className="space-y-1.5">
-                <Label htmlFor="email">{t("portal.email")}</Label>
+              <Field>
+                <FieldLabel htmlFor="email">{t("portal.email")}</FieldLabel>
                 <Input
                   id="email"
                   name="email"
@@ -79,10 +84,10 @@ export default function CustomerSetPasswordPage() {
                   placeholder="email@example.com"
                   required
                 />
-              </div>
+              </Field>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="password">{t("portal.password")}</Label>
+              <Field>
+                <FieldLabel htmlFor="password">{t("portal.password")}</FieldLabel>
                 <Input
                   id="password"
                   name="password"
@@ -91,12 +96,12 @@ export default function CustomerSetPasswordPage() {
                   required
                   minLength={6}
                 />
-              </div>
+              </Field>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword">
+              <Field>
+                <FieldLabel htmlFor="confirmPassword">
                   {t("portal.confirmPassword")}
-                </Label>
+                </FieldLabel>
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -104,13 +109,13 @@ export default function CustomerSetPasswordPage() {
                   placeholder="••••••••"
                   required
                 />
-              </div>
+              </Field>
 
               {state?.error && (
-                <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3 text-xs text-red-700 dark:text-red-400">
+                <FieldError className="flex items-start gap-2">
                   <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
                   {state.error}
-                </div>
+                </FieldError>
               )}
 
               <Button type="submit" className="w-full" disabled={isPending}>

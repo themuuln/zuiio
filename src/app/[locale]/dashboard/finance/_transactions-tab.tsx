@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -220,26 +221,9 @@ export function TransactionsTab({
                         {wo.vehicle?.plate_number ?? "\u2014"}
                       </TableCell>
                       <TableCell className="px-5 py-3.5">
-                        <span
-                          className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                          style={{
-                            backgroundColor: `${wo.status === "Completed" ? "#22c55e" : wo.status === "Cancelled" ? "#ef4444" : wo.status === "In Progress" ? "#f97316" : wo.status === "Diagnosing" ? "#eab308" : wo.status === "New" ? "#3b82f6" : "#6b7280"}20`,
-                            color:
-                              wo.status === "Completed"
-                                ? "#22c55e"
-                                : wo.status === "Cancelled"
-                                  ? "#ef4444"
-                                  : wo.status === "In Progress"
-                                    ? "#f97316"
-                                    : wo.status === "Diagnosing"
-                                      ? "#eab308"
-                                      : wo.status === "New"
-                                        ? "#3b82f6"
-                                        : "#6b7280",
-                          }}
-                        >
+                        <Badge variant="outline">
                           {wo.status}
-                        </span>
+                        </Badge>
                       </TableCell>
                       <TableCell className="px-5 py-3.5 text-right tabular-nums">
                         {formatCurrency(svcTotal)}

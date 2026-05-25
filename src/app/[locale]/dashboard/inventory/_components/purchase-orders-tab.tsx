@@ -4,6 +4,7 @@ import { Plus, Truck, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
@@ -188,9 +189,9 @@ export function PurchaseOrdersTab({ orgId, search, onSearchChange }: PurchaseOrd
           title="Create Purchase Order"
           onClose={() => setShowAddPO(false)}
         >
-          <form onSubmit={handleCreatePO} className="space-y-4">
+          <form onSubmit={handleCreatePO} className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label
                   htmlFor="inv-po-order-number"
                   className="text-sm font-medium"
@@ -205,7 +206,7 @@ export function PurchaseOrdersTab({ orgId, search, onSearchChange }: PurchaseOrd
                   className="h-11"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label
                   htmlFor="inv-po-supplier"
                   className="text-sm font-medium"
@@ -228,7 +229,7 @@ export function PurchaseOrdersTab({ orgId, search, onSearchChange }: PurchaseOrd
                 </select>
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <label htmlFor="inv-po-notes" className="text-sm font-medium">
                 Notes
               </label>
@@ -239,7 +240,7 @@ export function PurchaseOrdersTab({ orgId, search, onSearchChange }: PurchaseOrd
                 className="h-11"
               />
             </div>
-            <div className="space-y-3 rounded-lg border border-border p-4">
+            <div className="flex flex-col gap-3 rounded-lg border border-border p-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">Items</p>
               </div>
@@ -284,29 +285,28 @@ function POListItem({
 
   return (
     <Card>
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        className="w-full justify-start gap-4 px-6 py-4"
         onClick={() => onToggle(po.id)}
-        className="flex w-full items-center gap-4 px-6 py-4 text-left transition-colors hover:bg-muted/30"
       >
-        <div className="flex-1 min-w-0">
-          <p className="font-medium">{po.order_number}</p>
-          <p className="text-sm text-muted-foreground">
+        <span className="flex min-w-0 flex-1 flex-col items-start">
+          <span className="font-medium">{po.order_number}</span>
+          <span className="text-sm text-muted-foreground">
             {po.supplier?.name ?? "No supplier"}
-          </p>
-        </div>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-medium ${PO_STATUS_COLORS[po.status] ?? ""}`}
-        >
-          {PO_STATUS_LABELS[po.status] ?? po.status}
+          </span>
         </span>
+        <Badge variant="outline">
+          {PO_STATUS_LABELS[po.status] ?? po.status}
+        </Badge>
         <span className="text-sm font-semibold tabular-nums">
           {formatMNT(po.total_amount)}
         </span>
         <span className="text-xs text-muted-foreground">
           {formatDate(po.created_at)}
         </span>
-      </button>
+      </Button>
 
       {itemsLoading ? (
         <div className="border-t border-border px-6 py-4">
@@ -314,7 +314,7 @@ function POListItem({
         </div>
       ) : items.length > 0 ? (
         <div className="border-t border-border px-6 py-4">
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-border">
@@ -379,14 +379,14 @@ function POItemEditor({
   const [count, setCount] = useState(0);
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
       <input type="hidden" name="item_count" value={count} />
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={`item-${i}`}
           className="flex items-end gap-2 border-b border-border pb-2"
         >
-          <div className="flex-1 space-y-1">
+          <div className="flex-1 flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Part</span>
             <select
               name={`item_${i}_part_id`}
@@ -401,7 +401,7 @@ function POItemEditor({
               ))}
             </select>
           </div>
-          <div className="w-20 space-y-1">
+          <div className="w-20 flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Qty</span>
             <input
               type="number"
@@ -411,7 +411,7 @@ function POItemEditor({
               className="h-9 w-full rounded border border-input bg-background px-2 text-sm text-center"
             />
           </div>
-          <div className="w-24 space-y-1">
+          <div className="w-24 flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Cost</span>
             <input
               type="number"
@@ -421,23 +421,25 @@ function POItemEditor({
               className="h-9 w-full rounded border border-input bg-background px-2 text-sm text-right"
             />
           </div>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setCount((c) => c - 1)}
-            className="mb-0.5 p-1 text-destructive/70 hover:text-destructive"
+            className="text-destructive/70 hover:text-destructive"
           >
             <X className="size-4" />
-          </button>
+          </Button>
         </div>
       ))}
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => setCount((c) => c + 1)}
-        className="flex items-center gap-1 text-sm text-primary hover:underline"
+        className="gap-1 text-primary"
       >
         <Plus className="size-3" />
         Add item
-      </button>
+      </Button>
     </div>
   );
 }

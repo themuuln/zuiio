@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Plus, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -10,6 +11,13 @@ import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
 import { usePurchaseOrders } from "@/lib/queries/use-inventory";
@@ -145,13 +153,19 @@ export default function PurchaseOrdersPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-4 py-12">
-              <Truck className="size-10 text-muted-foreground/40" />
-              <p className="text-muted-foreground">{t("noPurchaseOrders")}</p>
-              <Link href="/dashboard/inventory/purchase-orders/new">
-                <Button>{t("createFirstPO")}</Button>
-              </Link>
-            </div>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Truck />
+                </EmptyMedia>
+                <EmptyTitle>{t("noPurchaseOrders")}</EmptyTitle>
+              </EmptyHeader>
+              <EmptyContent>
+                <Link href="/dashboard/inventory/purchase-orders/new">
+                  <Button>{t("createFirstPO")}</Button>
+                </Link>
+              </EmptyContent>
+            </Empty>
           ) : (
             <div className="divide-y divide-border">
               {filtered.map((po) => (
@@ -166,11 +180,9 @@ export default function PurchaseOrdersPage() {
                   <span className="text-sm text-muted-foreground flex-1 min-w-0 truncate">
                     {po.supplier?.name ?? t("noSupplier")}
                   </span>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium shrink-0 ${PO_STATUS_COLORS[po.status] ?? ""}`}
-                  >
+                  <Badge variant="outline" className="shrink-0">
                     {t(PO_STATUS_KEYS[po.status] as string) ?? po.status}
-                  </span>
+                  </Badge>
                   <span className="text-sm font-medium tabular-nums shrink-0">
                     {po.total_amount.toLocaleString()} ₮
                   </span>

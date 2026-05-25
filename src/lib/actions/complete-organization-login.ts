@@ -33,5 +33,6 @@ export async function completeOrganizationLogin(
     return { error: "Unable to verify organization access" };
   }
 
-  redirect("/dashboard/bay-view");
+  const redirectToUrl = formData.get("redirectTo") as string | null;
+  redirect(redirectToUrl || "/dashboard/bay-view");
 }

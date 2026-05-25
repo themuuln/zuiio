@@ -68,11 +68,11 @@ export function CustomerSection() {
             {ctx.customerSearch && ctx.customers.length > 0 && (
               <div className="flex flex-col gap-1 border rounded-lg overflow-hidden">
                 {ctx.customers.map((c) => (
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
                     key={c.id}
                     onClick={() => ctx.handleSelectCustomer(c)}
-                    className="flex items-center gap-3 p-3 text-left transition-colors hover:bg-muted/50 min-h-[52px]"
+                    className="w-full justify-start gap-3 p-3 min-h-[52px] h-auto"
                   >
                     <User className="size-5 shrink-0 text-muted-foreground" />
                     <div>
@@ -87,19 +87,19 @@ export function CustomerSection() {
                         </span>
                       )}
                     </div>
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
             {!ctx.showQuickCustomer && (
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 onClick={() => ctx.setShowQuickCustomer(true)}
-                className="flex items-center gap-2 rounded-lg border border-dashed p-3 text-muted-foreground hover:bg-muted/30 min-h-[48px]"
+                className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
               >
                 <Plus className="size-4" />
                 {t("quickCreateCustomer")}
-              </button>
+              </Button>
             )}
             {ctx.showQuickCustomer && (
               <div className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/20">

@@ -11,7 +11,8 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -127,6 +128,12 @@ export function PostServiceForm({
   const [allExpanded, setAllExpanded] = useState(true);
 
   // Build form entries from services
+  const odometerRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    odometerRef.current?.focus();
+  }, []);
+
   const [entries, setEntries] = useState<ServiceFormEntry[]>(() =>
     services.map((svc) => ({
       workOrderServiceId: svc.id,
@@ -198,18 +205,17 @@ export function PostServiceForm({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm py-4"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm py-4 animate-in fade-in duration-200"
       onClick={onCancel}
-      onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
-      role="dialog"
-      aria-modal="true"
-      aria-label={isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
-      tabIndex={-1}
+      role="presentation"
     >
       <Card
-        className="mx-4 w-full max-w-lg shadow-2xl my-auto"
+        className="mx-4 w-full max-w-lg shadow-2xl my-auto animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
-        role="presentation"
+        role="dialog"
+        aria-modal="true"
+        aria-label={isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
+        tabIndex={-1}
       >
         {/* Header */}
         <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
@@ -223,25 +229,26 @@ export function PostServiceForm({
             <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-1">
               {vehiclePlate}
             </span>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onCancel}
-              className="rounded-md p-1 hover:bg-muted transition-colors"
               aria-label={t("cancel")}
             >
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
         </CardHeader>
 
         <CardContent className="flex flex-col gap-4 pt-4 max-h-[70vh] overflow-y-auto">
           {/* Odometer */}
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <label htmlFor="post-service-odometer" className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <Gauge className="size-3.5" />
               {t("postServiceOdometer")}
             </label>
             <Input
+              ref={odometerRef}
               id="post-service-odometer"
               type="number"
               value={odometer}
@@ -249,23 +256,30 @@ export function PostServiceForm({
               placeholder={t("postServiceOdometerPlaceholder")}
               className="h-10"
               min={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
             />
           </div>
 
           {/* Services */}
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
                 <MessageSquare className="size-3.5" />
                 {t("postServiceServicesTitle")}
-                <span className="rounded-full bg-muted text-muted-foreground px-1.5 py-0.5 text-[10px] font-semibold">
+                <Badge variant="secondary">
                   {entries.length}
-                </span>
+                </Badge>
               </span>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setAllExpanded(!allExpanded)}
-                className="text-[10px] text-muted-foreground/60 hover:text-foreground flex items-center gap-0.5"
+                className="gap-0.5 text-[10px] h-auto"
               >
                 {allExpanded ? (
                   <ChevronUp className="size-3" />
@@ -273,7 +287,7 @@ export function PostServiceForm({
                   <ChevronDown className="size-3" />
                 )}
                 {allExpanded ? "Collapse" : "Expand"}
-              </button>
+              </Button>
             </div>
 
             {!hasEntries && (
@@ -282,7 +296,7 @@ export function PostServiceForm({
               </p>
             )}
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               {entries.map((entry, idx) => (
                 <ServiceCard
                   key={entry.workOrderServiceId}
@@ -295,7 +309,7 @@ export function PostServiceForm({
           </div>
 
           {/* Mechanic notes */}
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <label htmlFor="mechanic-notes" className="text-xs font-semibold text-muted-foreground">
               Mechanic Notes
             </label>
@@ -349,19 +363,24 @@ function ServiceCard({
   const nextDate = computeNextDueDate(entry.intervalMonths);
   const nextKm = computeNextDueKm(entry.intervalKm, odometer);
 
-  const priorityColors: Record<string, string> = {
-    standard: "bg-blue-500/10 text-blue-600 border-blue-200/50",
-    important: "bg-amber-500/10 text-amber-600 border-amber-200/50",
-    urgent: "bg-red-500/10 text-red-600 border-red-200/50",
+  const priorityBorderColors: Record<string, string> = {
+    standard: "border-l-blue-400/50",
+    important: "border-l-amber-400/60",
+    urgent: "border-l-red-400/60",
   };
 
   return (
-    <div className="rounded-lg border border-border/60 bg-card/50 overflow-hidden transition-all duration-200">
+    <div
+      className={cn(
+        "rounded-lg border border-border/60 bg-card/50 overflow-hidden transition-all duration-200 border-l-2",
+        priorityBorderColors[entry.priority],
+      )}
+    >
       {/* Header — always visible */}
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         onClick={() => onChange({ expanded: !entry.expanded })}
-        className="flex w-full items-center justify-between px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
+        className="w-full justify-between px-3 py-2.5 h-auto"
       >
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-sm font-medium truncate">
@@ -369,14 +388,9 @@ function ServiceCard({
           </span>
           {/* Priority badge */}
           {entry.priority !== "standard" && (
-            <span
-              className={cn(
-                "text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full border",
-                priorityColors[entry.priority],
-              )}
-            >
+            <Badge variant="outline">
               {entry.priority}
-            </span>
+            </Badge>
           )}
         </div>
         {entry.expanded ? (
@@ -384,13 +398,13 @@ function ServiceCard({
         ) : (
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground/50" />
         )}
-      </button>
+      </Button>
 
       {entry.expanded && (
-        <div className="px-3 pb-3 space-y-2.5 border-t border-border/40 pt-2.5">
+        <div className="px-3 pb-3 flex flex-col gap-2.5 border-t border-border/40 pt-2.5">
           {/* Intervals row */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <label htmlFor={`post-service-interval-months-${entry.workOrderServiceId}`} className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
                 {t("postServiceIntervalMonths")}
               </label>
@@ -410,7 +424,7 @@ function ServiceCard({
                 placeholder="—"
               />
             </div>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <label htmlFor={`post-service-interval-km-${entry.workOrderServiceId}`} className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
                 {t("postServiceIntervalKm")}
               </label>
@@ -444,7 +458,7 @@ function ServiceCard({
 
           {/* Priority + Notes row */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <label htmlFor={`post-service-priority-${entry.workOrderServiceId}`} className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
                 {t("postServicePriority")}
               </label>
@@ -470,12 +484,12 @@ function ServiceCard({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
-              <label htmlFor="entry-notes" className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
+            <div className="flex flex-col gap-1">
+              <label htmlFor={`entry-notes-${entry.workOrderServiceId}`} className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
                 Notes
               </label>
               <Input
-                id="entry-notes"
+                id={`entry-notes-${entry.workOrderServiceId}`}
                 value={entry.notes}
                 onChange={(e) => onChange({ notes: e.target.value })}
                 className="h-8 text-xs"

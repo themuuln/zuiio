@@ -500,19 +500,16 @@ export default function ReportsPage() {
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
-              <button
+              <Button
                 key={tab.value}
-                type="button"
                 onClick={() => setReportType(tab.value)}
-                className={`inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                  reportType === tab.value
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-muted"
-                }`}
+                variant={reportType === tab.value ? "default" : "ghost"}
+                size="sm"
+                className="rounded-md"
               >
                 <Icon className="size-3.5" />
                 {tab.label}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -586,7 +583,7 @@ export default function ReportsPage() {
 
       {/* Loading */}
       {loading && (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
               <Card key={`skeleton-${i}`}>
@@ -607,7 +604,7 @@ export default function ReportsPage() {
 
       {/* ── EOD Report ────────────────────────────────────── */}
       {!loading && isEod && eodReport && (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           {/* EOD Summary KPI row */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <ReportKpiCard
@@ -760,7 +757,7 @@ export default function ReportsPage() {
 
       {/* ── Daily / Weekly / Monthly (non-EOD) ─────────────── */}
       {!loading && !isEod && report && (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           {/* Insight line */}
           {insightLine && (
             <Card className="border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10">
@@ -893,7 +890,7 @@ export default function ReportsPage() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-semibold">Profit Breakdown</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="flex flex-col gap-4">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground mb-2">Service vs Parts Revenue</p>
                       <RevenueMiniBar
@@ -903,7 +900,7 @@ export default function ReportsPage() {
                       />
                     </div>
                     {(r.total_cost ?? 0) > 0 && (
-                      <div className="space-y-1.5 border-t border-border pt-3">
+                      <div className="flex flex-col gap-1.5 border-t border-border pt-3">
                         <p className="text-xs font-medium text-muted-foreground mb-2">Cost Breakdown</p>
                         <div className="flex justify-between text-xs">
                           <span className="text-muted-foreground">Service Cost</span>

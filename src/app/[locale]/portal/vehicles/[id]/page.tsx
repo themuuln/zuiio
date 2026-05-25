@@ -47,7 +47,7 @@ export default function PortalVehicleDetailPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Skeleton className="h-5 w-32" />
         <Skeleton className="h-28 rounded-xl" />
         <Skeleton className="h-48 rounded-xl" />
@@ -66,7 +66,7 @@ export default function PortalVehicleDetailPage() {
   const { vehicle, workOrders, upcomingServices } = data;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {/* Back link */}
       <Link
         href="/portal/vehicles"
@@ -109,7 +109,7 @@ export default function PortalVehicleDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               {upcomingServices.map((s, i) => (
                 <div
                   key={s.id as string}
@@ -150,7 +150,7 @@ export default function PortalVehicleDetailPage() {
               {t("portal.noServiceHistory")}
             </p>
           ) : (
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               {workOrders.map((wo) => {
                 const style = STATUS_STYLES[wo.status as string] ?? STATUS_STYLES.Completed;
                 return (

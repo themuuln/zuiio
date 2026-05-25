@@ -1,6 +1,6 @@
 "use server";
 
-import type { WorkOrder, WorkOrderService } from "@/lib/database.types";
+import type { WorkOrder, WorkOrderService } from "@/lib/types";
 import { ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import { createCustomer } from "./customer-service";

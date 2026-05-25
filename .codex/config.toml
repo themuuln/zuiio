@@ -1,0 +1,19 @@
+[mcp_servers.next-devtools]
+args = [
+    "-y",
+    "next-devtools-mcp@latest",
+]
+command = "npx"
+
+[mcp_servers.shadcn]
+args = [
+    "shadcn@latest",
+    "mcp",
+]
+command = "npx"
+
+[mcp_servers.supabase]
+url = "https://mcp.supabase.com/mcp?project_ref=fhzuolncswccxkcqzclg&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cbranching%2Cfunctions%2Cstorage"
+
+[mcp_servers.supabase-tolom]
+url = "https://mcp.supabase.com/mcp?project_ref=fhzuolncswccxkcqzclg&features=docs%2Caccount%2Cdatabase%2Cdevelopment%2Cdebugging%2Cfunctions%2Cbranching%2Cstorage"

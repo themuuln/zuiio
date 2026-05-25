@@ -4,7 +4,7 @@
  */
 export function redirectToLogin(): void {
   const loginUrl = new URL("/auth/login", window.location.origin);
-  loginUrl.searchParams.set("redirectTo", window.location.pathname);
+  loginUrl.searchParams.set("redirectTo", window.location.href);
   window.location.href = loginUrl.toString();
 }
 

@@ -39,22 +39,135 @@ npm run lint && npm run test && npm run build
 
 ## UI Components & shadcn
 
-### Hard rule: Use shadcn MCP to check before building anything
+### Hard rule: Check before building anything
 
-**Before implementing ANY new UI element, use the shadcn MCP tools to check if a component already exists:**
-1. `shadcn_search_items_in_registries` — search available shadcn components by keyword
-2. `shadcn_get_item_examples_from_registries` — get usage examples with import paths and API
-3. Check `src/components/ui/` for already-installed components
+**Before implementing ANY new UI element:**
+1. Run `npx shadcn@latest search @shadcn -q "<component>"` — search available shadcn components by keyword
+2. Check `src/components/ui/` for already-installed components
+3. Run `npx shadcn@latest docs <component>` to get usage docs
 
-**Raw HTML elements (bare `<button>`, `<div>`, `<input>`, `<select>`, `<nav>`, `<aside>`, `<dialog>`) are FORBIDDEN when a shadcn component covers the same use case.** If a shadcn Tab, Dialog, Select, Tooltip, Input, Button, Card, etc. exists, use it — never build from primitives.
+**Raw HTML elements are FORBIDDEN when a shadcn component covers the same use case.** If Component exists in `src/components/ui/`, use it — never build from primitives.
 
-### Guidelines
+### Component Mapping (Installed Components)
 
-- **Use shadcn/ui components first** — check `src/components/ui/` before building any new UI element. Most form controls, layouts, and interactive elements already have a shadcn primitive.
-- **Don't recreate what exists** — if a shadcn component covers 80% of the need, extend it rather than building from scratch. Copy from the shadcn CLI (`npx shadcn add button`) instead of writing bespoke components.
-- **Register all shadcn components** in `src/components/ui/`. Keep them minimal — no app-specific styling, no business logic.
-- **Use the existing components** (Button, Input, Card, DropdownMenu, Avatar, Skeleton, Tooltip, Typography) before reaching for a custom solution.
-- **Before adding a new dependency**, check if shadcn already provides what's needed (dialog, popover, select, table, form, etc.).
+Use these shadcn components instead of raw HTML:
+
+| Need | Use | Instead Of |
+|------|-----|------------|
+| Action/click | `<Button>` | `<button>`, `<div onClick>` |
+| Input field | `<Input>` | `<input>` |
+| Textarea | `<Textarea>` | `<textarea>` |
+| Select (few options) | `<Select>` + `<SelectItem>` | `<select>`, `<NativeSelect>` |
+| Select (many options / search) | `<Combobox>` + `<ComboboxInput>` | `<Select>` with 10+ items |
+| Status/badge label | `<Badge variant="outline\|secondary\|destructive">` | `<span className="rounded-full ...">` |
+| Empty state | `<Empty>` + `<EmptyTitle>` + `<EmptyMedia>` | Custom `<div>` with "No data" |
+| Alert/callout | `<Alert variant="destructive\|default">` | `<div className="bg-red-50 border-red-200 ...">` |
+| Horizontal divider | `<Separator />` | `<hr>`, `<div className="border-t" />` |
+| Skeleton loading | `<Skeleton className="...">` | `<div className="animate-pulse ...">` |
+| Toggle 2-7 options | `<ToggleGroup>` + `<ToggleGroupItem>` | Multiple `<button>` with manual active state |
+| Dialog/modal | `<Dialog>` | Raw `<div role="dialog">` |
+| Side panel | `<Sheet>` | Custom slide-out overlay |
+| Bottom sheet | `<Drawer>` | Custom swipeable panel |
+| Tooltip | `<Tooltip>` + `<TooltipContent>` | `title` attribute, custom hover popup |
+| Form field layout | `<Field>` + `<FieldGroup>` + `<FieldLabel>` | `<div className="space-y-2"><Label>...</div>` |
+| Form input with addon | `<InputGroup>` + `<InputGroupAddon>` | `<div className="flex"><Input /><button>...</div>` |
+| Navigation | `<NavigationMenu>`, `<Breadcrumb>`, `<Sidebar>` | Custom nav lists |
+| Separator menu item | `<DropdownMenuSeparator>` | `<div className="border-t">` in dropdown |
+| Chart | `<ChartContainer>` + `<Chart>` | Raw Recharts components |
+| Accordion | `<Accordion>` + `<AccordionItem>` | Custom expand/collapse |
+| Tabs | `<Tabs>` + `<TabsList>` + `<TabsTrigger>` | Button-based tab switchers |
+
+### Style Rules
+
+These rules apply to ALL components, not just new ones.
+
+#### Spacing
+- **Use `gap-*` with `flex`/`flex-col`, NOT `space-y-*` or `space-x-*`**
+  ```tsx
+  // ✅ CORRECT
+  <div className="flex flex-col gap-4">
+  // ❌ WRONG
+  <div className="space-y-4">
+  ```
+- **Use `size-*` when width equals height**, NOT `w-* h-*`
+  ```tsx
+  // ✅ CORRECT
+  <Avatar className="size-10" />
+  // ❌ WRONG
+  <Avatar className="w-10 h-10" />
+  ```
+
+#### Colors
+- **Use semantic tokens only:** `bg-background`, `text-foreground`, `bg-muted`, `text-muted-foreground`, `bg-primary`, `text-primary-foreground`, `bg-destructive`, `text-destructive`, `bg-accent`, `text-accent-foreground`, `bg-card`, `text-card-foreground`, `bg-popover`, `text-popover-foreground`, `border-border`, `border-input`, `border-ring`
+- **Never use raw color values:** `bg-blue-500`, `text-green-700`, `border-gray-200`, `bg-red-50`
+- **Dark mode is automatic via CSS variables** — never add `dark:` overrides manually
+
+#### Truncation
+- **Use `truncate` shorthand** — not `overflow-hidden text-ellipsis whitespace-nowrap`
+
+### Common Anti-Patterns (Must Fix)
+
+#### 1. Custom Badge Spans → `<Badge>`
+❌ `<span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-700">`
+✅ `<Badge variant="outline">Active</Badge>`
+
+The `Badge` component supports these variants: `default`, `secondary`, `destructive`, `outline`, `ghost`, `link`. Use `variant="outline"` for status badges (paid, pending, completed, etc.) and `variant="secondary"` for count badges.
+
+#### 2. Custom Alert/Callout Divs → `<Alert>`
+❌ `<div className="rounded-lg border border-red-200 bg-red-50 p-3"><AlertTriangle />Error</div>`
+✅ `<Alert variant="destructive"><AlertTriangle /><AlertTitle>Error</AlertTitle><AlertDescription>Details</AlertDescription></Alert>`
+
+#### 3. Custom Empty States → `<Empty>`
+❌ `<div className="flex flex-col items-center py-12"><p>No data found</p></div>`
+✅ `<Empty><EmptyHeader><EmptyMedia variant="icon"><Icon /></EmptyMedia><EmptyTitle>No data</EmptyTitle></EmptyHeader></Empty>`
+
+#### 4. Raw `<hr>` / `border-t` Divs → `<Separator>`
+❌ `<hr className="border-border" />`
+❌ `<div className="border-t" />`
+✅ `<Separator />`
+
+Only replace standalone visual dividers — NOT structural container borders on Cards, Dialogs, or Sheet headers.
+
+#### 5. `animate-pulse` Divs → `<Skeleton>`
+❌ `<div className="h-4 w-20 animate-pulse rounded bg-muted-foreground/20" />`
+✅ `<Skeleton className="h-4 w-20" />`
+
+#### 6. Raw `<button>` → `<Button>`
+❌ `<button onClick={...} className="px-4 py-2 bg-primary text-white rounded-md">`
+✅ `<Button onClick={...}>Submit</Button>`
+
+#### 7. Segmented Controls → `<ToggleGroup>`
+❌ Multiple `<button>` elements with manual `bg-primary` active state
+✅ `<ToggleGroup><ToggleGroupItem value="day">Day</ToggleGroupItem>...</ToggleGroup>`
+
+### Component Selection Guide
+
+| If you have... | Use... |
+|---|---|
+| 2-7 mutually exclusive options | `<ToggleGroup>` |
+| 3-20 options, one choice | `<Select>` |
+| 10+ options or user should search | `<Combobox>` |
+| A yes/no toggle | `<Switch>` |
+| Multiple independent choices | `<Checkbox>` |
+| One choice from 2-5 | `<RadioGroup>` |
+| A range value | `<Slider>` |
+| A date selection | `<DatePicker>` |
+| An OTP/code input | `<InputOTP>` |
+
+### Installed shadcn Components
+
+All components in `src/components/ui/` are available for use. Current inventory (58 components):
+
+`Accordion`, `AlertDialog`, `Alert`, `Avatar`, `Badge`, `Breadcrumb`, `Button`, `ButtonGroup`, `Calendar`, `Card`, `Carousel`, `Chart`, `Checkbox`, `Collapsible`, `Combobox`, `Command`, `ContextMenu`, `DatePicker`, `Dialog`, `Drawer`, `DropdownMenu`, `Empty`, `Field`, `HoverCard`, `Input`, `InputGroup`, `InputOTP`, `Kbd`, `Label`, `Menubar`, `NativeSelect`, `NavigationMenu`, `Pagination`, `Popover`, `Progress`, `RadioGroup`, `Resizable`, `ScrollArea`, `Select`, `Separator`, `Sheet`, `Sidebar`, `Skeleton`, `Slider`, `Sonner`, `Spinner`, `Switch`, `Table`, `Tabs`, `Textarea`, `Toggle`, `ToggleGroup`, `Tooltip`, `Typography`
+
+### Adding New Components
+
+```bash
+npx shadcn@latest add <component-name>
+# e.g., npx shadcn@latest add tabs sheet tooltip
+```
+
+After adding, verify against the rules above. Third-party registries (e.g., `@magicui`, `@bundui`) may use hardcoded import paths — fix these to match the project's `@/components/ui/` alias.
 
 ## i18n Message Parity
 
@@ -69,6 +182,7 @@ npm run lint && npm run test && npm run build
 - **Components**: PascalCase (`WorkOrderForm`), **hooks**: `use` prefix (`useCustomerData`).
 - **Database tables/columns**: snake_case (`work_orders`, `organization_id`).
 - **API routes**: RESTful — `GET /api/organizations/[id]/work-orders`.
+- **Database type imports**: Always import from `@/lib/types`, never from `@/lib/database.types`. The latter is auto-generated and its export shape changes between Supabase CLI versions — importing from it directly causes silent build breaks on regeneration.
 
 ## API Route Consistency
 
@@ -108,65 +222,36 @@ The rule: pages use hooks, hooks call API routes, API routes call services, serv
 | Operation | Preferred Tool | Notes |
 |-----------|---------------|-------|
 | Create migration file | **CLI** `supabase migration new <name>` | MCP has no equivalent |
-| Apply migration to remote | **MCP** `execute_sql` | Avoids migration history conflicts; but see warning below |
-| Generate TS types (Docker down) | **CLI** `supabase gen types typescript --linked > src/lib/database.types.ts` | Works without Docker; requires `supabase login` |
-| Generate TS types (Docker up) | **MCP** `supabase-tolom_generate_typescript_types()` | Writes to file automatically |
-| Execute ad-hoc SQL query | **MCP** `execute_sql` | CLI `db query` connects to **local Docker**, not remote (counter-intuitive) |
-| Deploy edge function | **MCP** `deploy_edge_function` | CLI also works: `supabase functions deploy <name>` |
-| Check security/performance | **MCP** `get_advisors` | — |
+| Apply migration to remote | **CLI** `supabase db push --linked` | Pushes directly to linked Supabase project. No Docker needed. |
+| Apply ad-hoc SQL | **CLI** `supabase db push --linked --db-url <url>` or Management API | For running SQL without migration tracking |
+| Generate TS types | **CLI** `supabase gen types typescript --linked` | Use `2>/dev/null > src/lib/database.types.ts` to strip CLI status output |
+| Execute ad-hoc SQL query | **Management API** `POST /v1/projects/{ref}/database/query` | CLI `db query` requires local Postgres — use Management API or Supabase Studio instead |
+| Deploy edge function | **CLI** `supabase functions deploy <name>` | Works remotely via Supabase API |
+| Check security/performance | **CLI** `supabase db advisors --linked` | Runs against linked project |
 
-### ⚠️ Critical: Don't Mix MCP `execute_sql` and CLI `db push`
+### Applying Migrations
 
-**Problem**: MCP `execute_sql` applies SQL directly to the database WITHOUT recording it in the `_supabase_migrations` history table. If you later run `supabase db push`, the CLI detects these as "Remote migration versions not found in local migrations directory" and **blocks** with a repair error.
+**The only workflow: `supabase db push --linked`**
 
-**Fix when this happens**: The CLI prints exact repair commands:
 ```bash
-supabase migration repair --status applied <version>  # Mark remote-only as applied locally
-supabase migration repair --status reverted <version>  # Drop local-only from history
-```
-Copy-paste the repair lines from the error output.
-
-**Better: Use MCP exclusively, or CLI exclusively. Don't switch mid-stream.**
-
-### `supabase db query` is Local-Only
-
-Despite the name, `supabase db query` connects to the **local Docker Postgres** (port 54322), not the remote database. If Docker isn't running, it fails with `connection refused`. To run SQL on remote without Docker:
-- Use MCP `execute_sql`
-- Use `psql` with the connection string from Supabase dashboard
-- Use Supabase Studio SQL editor
-
-### `supabase gen types typescript --linked` Works Without Docker
-
-This is the most reliable remote operation. It connects to the linked project via the Supabase API (not Postgres directly), so it works even when Docker is down. Only requires `supabase login` to have been done previously.
-
-### Recommended Workflow
-
-```
-1. supabase migration new <name>              # CLI — creates local file
-2. # write SQL in the migration file
-3. # pick ONE apply method and stick with it:
+supabase migration new <name>                          # Create migration file
+# write SQL in the migration file
+supabase db push --linked                              # Push directly to remote
+supabase gen types typescript --linked 2>/dev/null > src/lib/database.types.ts   # Regenerate types
+npm run build                                          # Verify
 ```
 
-**Option A: CLI-only** (needs Docker running)
+**Caveat**: If the remote's `schema_migrations` history is out of sync with local (e.g., SQL was applied via Management API or Supabase Studio), you may get version conflicts. Fix:
 ```bash
-supabase start
-supabase db push            # Apply pending migrations
-supabase gen types typescript --linked > src/lib/database.types.ts
-npm run build
+# Mark remote-only migrations as applied in local
+supabase migration repair --status applied --linked <version>
 ```
 
-**Option B: MCP-only** (no Docker needed)
-```
-supabase-tolom_execute_sql(query="<migration-sql>")
-supabase-tolom_generate_typescript_types()
-# then manually create the migration .sql file for git history
-```
+### Regenerating TypeScript Types
 
-**Option C: Hybrid with repair** (if you mix by accident)
+Always use `2>/dev/null` to strip CLI status output from the generated file:
 ```bash
-# After MCP applied migrations:
-supabase db push  # Will fail with repair instructions — follow them
-supabase gen types typescript --linked > src/lib/database.types.ts
+supabase gen types typescript --linked 2>/dev/null > src/lib/database.types.ts
 ```
 
 ### Type Sync Rule
@@ -179,6 +264,62 @@ supabase gen types typescript --linked > src/lib/database.types.ts
 
 ### Failure consequence
 Skipping the deploy step causes **"Failed to load..." errors** — API routes/Supabase queries fail because the remote database doesn't have the latest tables/functions. All development blocks until resolved.
+
+### Database Type Safety — Import Convention
+
+**`src/lib/database.types.ts` is raw generated output — never manually edit it.**
+Running `supabase gen types typescript` (or the MCP equivalent) **overwrites the entire file**.
+The Supabase v6+ generator outputs helpers (`Tables<>`, `Enums<>`) but **no explicit type exports**.
+
+**Rule: Never import from `@/lib/database.types` directly.** Always use `@/lib/types` instead:
+
+```ts
+// ❌ WRONG — breaks when database.types.ts is regenerated
+export type { Customer } from "@/lib/database.types";
+
+// ✅ RIGHT — stable, survives regeneration
+export type { Customer } from "@/lib/types";
+```
+
+The convenience type aliases live in `src/lib/types/index.ts` and reference the raw `Database` type from `database.types.ts` using the helpers:
+
+```ts
+// src/lib/types/index.ts (conceptual — only modify, don't replicate)
+import type { Database } from "@/lib/database.types";
+type Pub = Database["public"];
+
+export type Customer = Pub["Tables"]["customers"]["Row"];
+export type WorkOrderStatus = "New" | "Diagnosing" | /* ... */;
+```
+
+**To prevent regressions**, the lint config (`biome.json`) must enforce this:
+
+```json
+// biome.json
+{
+  "linter": {
+    "rules": {
+      "correctness": {
+        "noRestrictedImports": {
+          "options": {
+            "paths": {
+              "@/lib/database.types": {
+                "message": "Import from @/lib/types instead — database.types.ts is regenerated and may not export this type."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Migration checklist after type regeneration:**
+1. Run `supabase gen types typescript --linked > src/lib/database.types.ts`
+2. Run `npm run build` — if it passes, you're done
+3. If it fails, check whether `src/lib/types/index.ts` needs a new/updated alias for the changed type
+4. Fix only in `src/lib/types/index.ts` — never touch `database.types.ts`
 
 ## Testing Guidelines
 
@@ -198,6 +339,12 @@ This repo follows the global guidelines in `~/.factory/AGENTS.md`:
 - **Commit order**: utilities/types → models/schemas → services/logic → API/controllers → config/infra.
 - PRs should reference the relevant phase from `MASTER_PLAN.md` and include screenshots for UI changes.
 - **Branch naming**: `feat/<phase>/<module>-<description>` — e.g., `feat/phase1/inventory-ledger`, `feat/phase2/services-catalog`. This links every branch to the development phase in MASTER_PLAN.md and makes it easy to track progress.
+
+## Test Credentials
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | Mtuya1355@gmail.com | TolomAdmin2025! |
 
 ## Architecture Notes
 
@@ -219,7 +366,51 @@ The following skills are installed globally (`~/.agents/skills/`) and MUST be lo
 
 **Usage**: When a task matches any trigger keyword above, call `skill(name="<skill-name>")` before proceeding.
 
-## Гарын авлага (VitePress Documentation) Sync Rule
+## UI Loading Patterns
+
+### Layout-Preserving Loading (Preserve Chrome on Refetch)
+
+**Problem**: When changing tabs/filters/periods, React Query's `isPending` goes `true` and `data` becomes `undefined` (new query key, no cache hit). If the page early-returns a full skeleton, it hides the tab bar, buttons, and other static UI — making the page feel broken.
+
+**Rule**: Once the initial page layout has rendered (user has seen the real UI), never replace the page chrome with skeletons. Always preserve the static layout (tabs, headers, buttons) and only skeleton-load the data-dependent content areas.
+
+**Implementation pattern:**
+
+```tsx
+// ❌ BAD — hides period bar / tab buttons on period change
+const { isPending, data } = useQuery(...);
+if (isPending && !data) return <FullPageSkeleton />;
+
+// ✅ GOOD — always keep layout visible after first load
+const { isPending, isFetching, data } = useQuery(...);
+const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+useEffect(() => { if (data) setHasLoadedOnce(true); }, [data]);
+
+// Only full skeleton on absolute FIRST load (never seen data)
+if (isPending && !hasLoadedOnce) return <FullPageSkeleton />;
+
+// After first load: always render layout, skeleton only data areas
+return (
+  <div>
+    <TabsOrFilters />  {/* always visible */}
+    <KpiCards loading={!data || isFetching} />  {/* skeleton values */}
+    <ChartSection />  {/* dynamic import handles its own loading */}
+  </div>
+);
+```
+
+**Key React Query exports:**
+- `isPending` — `true` when no data exists for current key
+- `isFetching` — `true` during ANY fetch (including refetches when data exists)
+- `isRefetching` — `true` during fetch but data already exists (`isFetching && !isPending`)
+
+Use `hasLoadedOnce` ref to distinguish "never loaded" from "period transition."
+
+**In KPI cards / value displays**, pass `loading={!data || isFetching}` to show skeletons on data values while preserving the card layout, labels, and icons.
+
+**In dynamic imports**, let the dynamic `loading` callback handle its own skeleton. Don't wrap it in an early return.
+
+### Гарын авлага (VitePress Documentation) Sync Rule
 
 - **Always update docs after code changes.** After implementing, modifying, or removing any user-facing feature, page, API, or UI element, check whether the corresponding page in `docs/*.md` (VitePress source) needs updating.
 - If a new page/feature is added → create a new `docs/*.md` file and add it to `docs/.vitepress/config.mjs` sidebar.

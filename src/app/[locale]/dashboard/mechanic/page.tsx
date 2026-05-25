@@ -18,14 +18,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useClientNow } from "@/hooks/use-client-now";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { MechanicSelect } from "@/components/mechanic-select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
 import { cn, formatCurrency, formatMNT } from "@/lib/utils";
 import dynamic from "next/dynamic";
@@ -39,6 +40,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 const MechanicTrendChart = dynamic(
   () => import("../_charts").then((m) => m.MechanicTrendChart),
@@ -259,11 +261,19 @@ function WorkOrderRow({
   const canChange = nextStatuses.length > 0;
 
   return (
-    <button
-      type="button"
+    <div
+      aria-label={`Open work order for ${wo.customer_name ?? "customer"}`}
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
       className={cn(
-        "group relative flex w-full items-center gap-3 border-b border-border/40 px-4 py-3 text-left transition-all duration-150 last:border-b-0",
+        "group relative flex w-full items-center gap-3 border-b border-border/40 px-4 py-3 text-left transition-all duration-150 last:border-b-0 h-auto rounded-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
         cfg.bg,
         "hover:pl-5",
       )}
@@ -356,7 +366,7 @@ function WorkOrderRow({
           </Badge>
         )}
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -375,6 +385,7 @@ function ClockInOutButton({
   onToggle: () => void;
   loading: boolean;
 }) {
+  const t = useTranslations();
   const now = useClientNow();
   const elapsed =
     clockedIn && since
@@ -382,15 +393,14 @@ function ClockInOutButton({
       : null;
 
   return (
-    <button
-      type="button"
+    <Button
+      variant={clockedIn ? "destructive" : "default"}
       onClick={onToggle}
       disabled={loading}
       className={cn(
-        "flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200",
-        clockedIn
-          ? "border-red-300 bg-red-50 text-red-700 hover:bg-red-100 active:bg-red-200 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50"
-          : "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:bg-emerald-200 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-950/50",
+        "gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm",
+        !clockedIn && "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-300 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-950/50",
+        clockedIn && "border-red-300 dark:border-red-800",
         loading && "opacity-50 cursor-not-allowed",
       )}
     >
@@ -407,7 +417,7 @@ function ClockInOutButton({
           {elapsed}
         </span>
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -510,6 +520,19 @@ function MechanicDashboard({
     );
   }, [assignedWos]);
 
+  // ── Mount: register tabs + open sidebar (once) ────────
+  useEffect(() => {
+    registerTab("stats", "Stats", null);
+    registerTab("jobs", "Jobs", null);
+    setOpen(true);
+    return () => {
+      unregisterTab("stats");
+      unregisterTab("jobs");
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Data: update tab content without reopening ─────────
   useEffect(() => {
     registerTab("stats", "Stats", (
       <StatusSummary
@@ -536,14 +559,7 @@ function MechanicDashboard({
         emptyMessage="No active work orders"
       />
     ));
-
-    setOpen(true);
-
-    return () => {
-      unregisterTab("stats");
-      unregisterTab("jobs");
-    };
-  }, [eod, assignedWos, sortedWos, dataLoading, registerTab, unregisterTab, setOpen]);
+  }, [eod, assignedWos, sortedWos, dataLoading, registerTab]);
 
   const updateStatus = useUpdateWorkOrderStatus(orgId);
 
@@ -714,7 +730,7 @@ function MechanicDashboard({
         </div>
 
         {dataLoading ? (
-          <div className="space-y-0">
+          <div className="flex flex-col gap-0">
             {[1, 2, 3].map((i) => (
               <Skeleton
                 key={`skeleton-${i}`}
@@ -723,14 +739,14 @@ function MechanicDashboard({
             ))}
           </div>
         ) : sortedWos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground/60">
-            <div className="flex size-20 items-center justify-center rounded-full bg-muted/50">
-              <ClipboardList className="size-10" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground/80">
-              {t("mechanic.noActiveWorkOrders")}
-            </p>
-          </div>
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <ClipboardList />
+              </EmptyMedia>
+              <EmptyTitle>{t("mechanic.noActiveWorkOrders")}</EmptyTitle>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="divide-y-0">
             {sortedWos.map((wo) => (
@@ -851,17 +867,17 @@ export default function MechanicPage() {
             </div>
           </div>
         ) : mechanics.length === 0 ? (
-          <div className="tablet-touch flex flex-col items-center justify-center py-20 gap-4">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted/50">
-              <Users className="size-7 text-muted-foreground" />
-            </div>
-            <h2 className="text-lg font-semibold">
-              {t("mechanic.noMechanics")}
-            </h2>
-            <p className="text-sm text-muted-foreground text-center max-w-md">
-              {t("mechanic.noMechanicsDesc")}
-            </p>
-          </div>
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Users />
+              </EmptyMedia>
+              <EmptyTitle>{t("mechanic.noMechanics")}</EmptyTitle>
+              <EmptyDescription>
+                {t("mechanic.noMechanicsDesc")}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : selectedMechanicId ? (
           <div className="tablet-touch flex flex-col gap-6">
             {/* Admin header with selector */}
@@ -887,24 +903,14 @@ export default function MechanicPage() {
 
               <div className="flex items-center gap-2">
                 <Users className="size-4 text-muted-foreground/50 shrink-0" />
-                <Select
-                  value={selectedMechanicId}
-                  onValueChange={(val) => setSelectedMechanicId(val)}
-                >
-                  <SelectTrigger className="w-[200px] h-9 text-xs">
-                    <SelectValue>
-                      {mechanics.find((m) => m.id === selectedMechanicId)?.full_name ??
-                        t("mechanic.selectMechanic")}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mechanics.map((m) => (
-                      <SelectItem key={m.id} value={m.id} className="text-xs">
-                        {m.full_name ?? "Unknown"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <MechanicSelect
+                  value={selectedMechanicId ?? ""}
+                  onChange={setSelectedMechanicId}
+                  mechanics={mechanics}
+                  placeholder={t("mechanic.selectMechanic")}
+                  size="sm"
+                  className="w-[200px]"
+                />
               </div>
             </div>
 

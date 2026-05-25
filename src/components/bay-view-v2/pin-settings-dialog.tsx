@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -79,11 +80,14 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
             <KeyRound className="size-4 text-rose-500" />
             {t("bayPinSettings")}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {t("bayPinSettings")}
+          </DialogDescription>
         </DialogHeader>
 
         {success ? (
           <div className="flex flex-col items-center gap-3 py-6">
-            <div className="flex items-center justify-center size-12 rounded-full bg-green-100 dark:bg-green-900/30">
+            <div className="flex items-center justify-center size-12  bg-green-100 dark:bg-green-900/30">
               <CheckCircle2 className="size-6 text-green-600" />
             </div>
             <p className="text-sm font-medium text-center">{t("pinUpdated")}</p>
@@ -92,14 +96,14 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
             </Button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {error && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2.5 text-xs text-red-600 dark:text-red-400">
+              <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2.5 text-xs text-red-600 dark:text-red-400">
                 {error}
               </div>
             )}
 
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-1.5">
               <Label className="text-xs font-medium text-muted-foreground">
                 {t("currentPin")}
               </Label>
@@ -117,7 +121,7 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-1.5">
               <Label className="text-xs font-medium text-muted-foreground">
                 {t("newPin")}
               </Label>
@@ -134,7 +138,7 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-1.5">
               <Label className="text-xs font-medium text-muted-foreground">
                 {t("confirmNewPin")}
               </Label>

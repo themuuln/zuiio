@@ -2,7 +2,7 @@
 
 import { UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { ApiResponse, UserProfile } from "@/lib/types";
@@ -289,9 +289,12 @@ export default function MembersPage() {
     }
   };
 
-  const pendingInvites = invites.filter((i) => i.status === "pending");
+  const pendingInvites = useMemo(
+    () => invites.filter((i) => i.status === "pending"),
+    [invites],
+  );
 
-  const sidebar = useRightSidebar();
+  const { registerTab, setOpen, unregisterTab } = useRightSidebar();
 
   useEffect(() => {
     const roleCounts = members.reduce<Record<string, number>>((acc, m) => {
@@ -299,7 +302,7 @@ export default function MembersPage() {
       acc[role] = (acc[role] ?? 0) + 1;
       return acc;
     }, {});
-    sidebar.registerTab(
+    registerTab(
       "roles",
       "Roles",
       <StatusSummary
@@ -310,7 +313,7 @@ export default function MembersPage() {
         }))}
       />,
     );
-    sidebar.registerTab(
+    registerTab(
       "pending",
       "Pending",
       <RecentList
@@ -327,12 +330,12 @@ export default function MembersPage() {
         emptyMessage="No pending invites"
       />,
     );
-    sidebar.setOpen(true);
+    setOpen(true);
     return () => {
-      sidebar.unregisterTab("roles");
-      sidebar.unregisterTab("pending");
+      unregisterTab("roles");
+      unregisterTab("pending");
     };
-  }, [sidebar, members, pendingInvites, loadingInvites]);
+  }, [loadingInvites, members, pendingInvites, registerTab, setOpen, unregisterTab]);
 
   return (
     <div className="flex flex-col gap-6">

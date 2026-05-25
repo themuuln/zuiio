@@ -1,0 +1,136 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { Wrench } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
+import { mechanicKeys } from "@/lib/queries/keys";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { getInitials } from "@/lib/utils";
+
+const MECHANIC_STORAGE_KEY = "tolom_active_mechanic";
+
+export function MechanicSwitcher() {
+  const { isMobile } = useSidebar();
+  const { data: orgInfo } = useCurrentOrg();
+  const orgId = orgInfo?.orgId;
+
+  const [activeMechanicId, setActiveMechanicId] = useState<string | null>(null);
+  const [profile, setProfile] = useState<{
+    id?: string;
+    full_name?: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(MECHANIC_STORAGE_KEY);
+    if (stored) {
+      setActiveMechanicId(stored);
+      return;
+    }
+    fetch("/api/profile")
+      .then((r) => r.json())
+      .then((d) => {
+        const p = d?.profile ?? d?.data ?? d;
+        if (p?.id) {
+          setProfile(p);
+          setActiveMechanicId(p.id);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const { data: mechanics = [] } = useQuery({
+    queryKey: mechanicKeys.list(orgId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/reports?type=mechanics`,
+      );
+      const json = await res.json();
+      return (json.data ?? []) as { id: string; full_name: string }[];
+    },
+    enabled: !!orgId,
+    staleTime: 60_000,
+  });
+
+  const activeMechanic =
+    mechanics.find((m) => m.id === activeMechanicId) ?? null;
+  const displayName =
+    activeMechanic?.full_name ?? profile?.full_name ?? "Mechanic";
+
+  const handleSwitch = useCallback(
+    (mechanicId: string | null) => {
+      const id = mechanicId ?? profile?.id ?? "";
+      setActiveMechanicId(id);
+      localStorage.setItem(MECHANIC_STORAGE_KEY, id);
+    },
+    [profile],
+  );
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <SidebarMenuButton
+            size="sm"
+            className="h-7 px-1 aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground"
+          />
+        }
+      >
+        <Avatar className="size-4.5 shrink-0">
+          <AvatarFallback className="text-[8px] font-medium bg-sidebar-accent text-sidebar-accent-foreground">
+            <Wrench className="size-2.5" />
+          </AvatarFallback>
+        </Avatar>
+        <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+          <span className="truncate text-xs font-medium">{displayName}</span>
+          <span className="truncate text-[9px] text-sidebar-foreground/50">
+            {mechanics.length > 0
+              ? `${mechanics.length} mechanics`
+              : "No mechanics"}
+          </span>
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="min-w-48 rounded-lg"
+        side={isMobile ? "bottom" : "right"}
+        align="end"
+        sideOffset={4}
+      >
+        <div className="px-2 py-1.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+          Switch Mechanic
+        </div>
+        {mechanics.length === 0 && (
+          <div className="px-2 py-3 text-xs text-muted-foreground/50 text-center">
+            No mechanics found
+          </div>
+        )}
+        {mechanics.map((m) => (
+          <DropdownMenuItem
+            key={m.id}
+            onClick={() => handleSwitch(m.id)}
+            className="gap-2"
+          >
+            <Avatar className="size-5">
+              <AvatarFallback className="text-[8px] font-medium">
+                {getInitials(m.full_name)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="flex-1 text-xs">{m.full_name ?? "Unknown"}</span>
+            {m.id === activeMechanicId && (
+              <span className="text-[10px] text-primary font-medium">
+                Active
+              </span>
+            )}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

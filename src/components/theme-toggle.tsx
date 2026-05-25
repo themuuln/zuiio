@@ -3,6 +3,7 @@
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function ThemeToggle({
@@ -31,13 +32,13 @@ export default function ThemeToggle({
   const isDark = theme === "dark";
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors w-full",
+        "w-full justify-start gap-3 px-3 py-2 text-sm font-medium",
         "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+        "focus-visible:ring-sidebar-ring",
         collapsed && "lg:justify-center lg:px-0",
       )}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
@@ -48,6 +49,6 @@ export default function ThemeToggle({
         <Moon className="size-5 shrink-0" aria-hidden="true" />
       )}
       {!collapsed && <span>{isDark ? "Light" : "Dark"}</span>}
-    </button>
+    </Button>
   );
 }

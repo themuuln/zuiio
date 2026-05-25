@@ -12,18 +12,26 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "auth.selectOrganization" });
+  const t = await getTranslations({
+    locale,
+    namespace: "auth.selectOrganization",
+  });
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
   };
 }
 
-export default async function SelectOrganizationPage() {
+export default async function SelectOrganizationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirectTo?: string }>;
+}) {
   const [t, setupT] = await Promise.all([
     getTranslations("auth.selectOrganization"),
     getTranslations("auth.setup"),
   ]);
+  const { redirectTo } = await searchParams;
 
   try {
     const organizations = await listUserOrganizations();
@@ -45,6 +53,7 @@ export default async function SelectOrganizationPage() {
       <OrganizationSelectionForm
         organizations={organizations}
         action={completeOrganizationLogin}
+        redirectTo={redirectTo}
         copy={{
           title: t("title"),
           subtitle: t("subtitle"),

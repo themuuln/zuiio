@@ -1,6 +1,13 @@
 "use client";
 
 import { Clock } from "lucide-react";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
 
 interface RecentItem {
@@ -42,10 +49,14 @@ export function RecentList({
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-6 text-center">
-        <Clock className="size-5 text-muted-foreground/30 mb-1" />
-        <p className="text-xs text-muted-foreground/50">{emptyMessage}</p>
-      </div>
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Clock />
+          </EmptyMedia>
+          <EmptyTitle>{emptyMessage}</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

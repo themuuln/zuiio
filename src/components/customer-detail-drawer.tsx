@@ -9,14 +9,15 @@ import {
   MapPin,
   Phone,
   User,
-  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -137,10 +138,14 @@ export function CustomerDetailDrawer({
       <SheetContent
         side="right"
         className="w-full sm:max-w-lg p-0 gap-0"
-        showCloseButton={false}
       >
         {/* Header */}
         <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
+          {customer && (
+            <SheetDescription className="sr-only">
+              Customer details for {getDisplayName(customer)}
+            </SheetDescription>
+          )}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
@@ -175,14 +180,6 @@ export function CustomerDetailDrawer({
                 )}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="rounded-md p-1.5 hover:bg-muted transition-colors shrink-0"
-              aria-label="Close"
-            >
-              <X className="size-4" />
-            </button>
           </div>
         </SheetHeader>
 
@@ -209,9 +206,9 @@ export function CustomerDetailDrawer({
 
         {/* Content — scrollable body */}
         {!loading && !error && customer && (
-          <div className="flex-1 overflow-y-auto min-h-0 p-3 space-y-3">
+          <div className="flex-1 overflow-y-auto min-h-0 p-3 flex flex-col gap-3">
             {/* Contact section */}
-            <section className="rounded-lg border border-border/60 bg-card/40 p-3 space-y-2.5">
+            <section className="rounded-lg border border-border/60 bg-card/40 p-3 flex flex-col gap-2.5">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Contact
               </span>
@@ -288,9 +285,9 @@ export function CustomerDetailDrawer({
                   Vehicles
                 </span>
                 {customer.vehicles.length > 0 && (
-                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                  <Badge variant="secondary">
                     {customer.vehicles.length}
-                  </span>
+                  </Badge>
                 )}
               </div>
               {customer.vehicles.length === 0 ? (
@@ -298,7 +295,7 @@ export function CustomerDetailDrawer({
                   No vehicles registered
                 </p>
               ) : (
-                <div className="space-y-1.5">
+                <div className="flex flex-col gap-1.5">
                   {customer.vehicles.map((vehicle) => (
                     <div
                       key={vehicle.id}

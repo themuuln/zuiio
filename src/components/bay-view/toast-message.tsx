@@ -2,6 +2,7 @@
 
 import { AlertCircle, Info } from "lucide-react";
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ToastMessageProps {
@@ -39,13 +40,14 @@ export function ToastMessage({
       )}
       <span>{message}</span>
       {onDismiss && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={onDismiss}
-          className="ml-2 rounded-md px-1 py-0.5 text-xs transition-colors hover:bg-muted/70"
+          className="ml-2 h-auto px-1 py-0.5 text-xs"
         >
           ✕
-        </button>
+        </Button>
       )}
     </div>
   );

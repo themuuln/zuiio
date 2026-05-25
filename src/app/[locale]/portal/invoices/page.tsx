@@ -76,10 +76,10 @@ export default function PortalInvoicesPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Skeleton className="h-8 w-32" />
         <Skeleton className="h-4 w-48" />
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {[1, 2].map((i) => (
             <Skeleton key={`skeleton-${i}`} className="h-20 rounded-xl" />
           ))}
@@ -89,7 +89,7 @@ export default function PortalInvoicesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
           {t("portal.invoices")}
@@ -109,7 +109,7 @@ export default function PortalInvoicesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {invoices.map((inv: Record<string, unknown>) => (
             <Card key={inv.id as string}>
               <CardContent className="flex items-center justify-between py-3.5">
@@ -174,10 +174,10 @@ export default function PortalInvoicesPage() {
               {t("portal.payInvoice")} &mdash; #{payingInvoice?.invoice_number as string}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="rounded-lg bg-muted p-4 space-y-2">
+          <div className="flex flex-col gap-4">
+            <div className="rounded-lg bg-muted p-4 flex flex-col gap-2">
               <p className="text-sm font-medium">{t("portal.bankTransferInfo")}</p>
-              <div className="text-xs text-muted-foreground space-y-1">
+              <div className="text-xs text-muted-foreground flex flex-col gap-1">
                 <p className="font-medium text-foreground text-sm">
                   {t("portal.payInvoice")}: {formatMNT(Number(payingInvoice?.total ?? 0))}
                 </p>

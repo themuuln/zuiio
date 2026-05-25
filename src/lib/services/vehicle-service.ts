@@ -3,7 +3,7 @@ import { createAuditLog } from "@/lib/audit";
 import { cacheTags, cacheDurations } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
-import type { Vehicle, WorkOrder } from "@/lib/database.types";
+import type { Vehicle, WorkOrder } from "@/lib/types";
 import { createClient } from "@/lib/supabase/server";
 import type {
   CreateVehicleParams,
@@ -11,6 +11,7 @@ import type {
   VehicleDetail,
   VehicleWithOwner,
 } from "@/lib/types";
+import { normalizePlate } from "@/lib/utils";
 
 /**
  * Lists all vehicles for an organization with optional filtering.
@@ -152,7 +153,9 @@ export async function createVehicle(
   userId: string,
 ): Promise<Vehicle> {
 
-  if (!params.plateNumber?.trim()) {
+  const plate = normalizePlate(params.plateNumber?.trim() ?? "");
+
+  if (!plate) {
     throw new ValidationError("Plate number is required");
   }
   if (!params.make?.trim()) {
@@ -169,13 +172,13 @@ export async function createVehicle(
     .from("vehicles")
     .select("id, plate_number")
     .eq("organization_id", orgId)
-    .eq("plate_number", params.plateNumber.trim())
+    .eq("plate_number", plate)
     .is("deleted_at", null)
     .maybeSingle();
 
   if (existing) {
     throw new ConflictError(
-      `A vehicle with plate number "${params.plateNumber.trim()}" already exists`,
+      `A vehicle with plate number "${plate}" already exists`,
     );
   }
 
@@ -184,7 +187,7 @@ export async function createVehicle(
     .from("vehicles")
     .insert({
       organization_id: orgId,
-      plate_number: params.plateNumber.trim(),
+      plate_number: plate,
       vin: params.vin?.trim() || null,
       chassis_number: params.chassisNumber?.trim() || null,
       make: params.make.trim(),
@@ -268,7 +271,7 @@ export async function updateVehicle(
 
   const updates: Record<string, unknown> = {};
   if (params.plateNumber !== undefined)
-    updates.plate_number = params.plateNumber?.trim() || null;
+    updates.plate_number = normalizePlate(params.plateNumber?.trim() ?? "") || null;
   if (params.vin !== undefined) updates.vin = params.vin?.trim() || null;
   if (params.chassisNumber !== undefined)
     updates.chassis_number = params.chassisNumber?.trim() || null;

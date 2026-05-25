@@ -1,10 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { cacheDurations, cacheTags } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
-import type {
-  VehicleServiceSchedule,
-  ReminderLog,
-} from "@/lib/database.types";
+import type { VehicleServiceSchedule, ReminderLog } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 
@@ -64,8 +61,7 @@ export async function getServiceSchedule(
         .is("deleted_at", null)
         .single();
 
-      if (error || !data)
-        throw new NotFoundError("Service schedule not found");
+      if (error || !data) throw new NotFoundError("Service schedule not found");
       return data;
     },
     {
@@ -117,7 +113,9 @@ export async function createServiceSchedule(
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, organization_id, branch_id, vehicle_id, service_catalog_id, service_name, interval_months, interval_km, last_service_date, last_service_odometer, next_due_date, next_due_km, reminder_enabled, notes, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, branch_id, vehicle_id, service_catalog_id, service_name, interval_months, interval_km, last_service_date, last_service_odometer, next_due_date, next_due_km, reminder_enabled, notes, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data)
@@ -158,14 +156,16 @@ export async function updateServiceSchedule(
     updates.service_catalog_id = params.service_catalog_id?.trim() ?? null;
   if (params.interval_months !== undefined)
     updates.interval_months = params.interval_months;
-  if (params.interval_km !== undefined) updates.interval_km = params.interval_km;
+  if (params.interval_km !== undefined)
+    updates.interval_km = params.interval_km;
   if (params.last_service_date !== undefined)
     updates.last_service_date = params.last_service_date;
   if (params.last_service_odometer !== undefined)
     updates.last_service_odometer = params.last_service_odometer;
   if (params.next_due_date !== undefined)
     updates.next_due_date = params.next_due_date;
-  if (params.next_due_km !== undefined) updates.next_due_km = params.next_due_km;
+  if (params.next_due_km !== undefined)
+    updates.next_due_km = params.next_due_km;
   if (params.reminder_enabled !== undefined)
     updates.reminder_enabled = params.reminder_enabled;
   if (params.notes !== undefined) updates.notes = params.notes?.trim() ?? null;
@@ -176,11 +176,12 @@ export async function updateServiceSchedule(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("id, organization_id, branch_id, vehicle_id, service_catalog_id, service_name, interval_months, interval_km, last_service_date, last_service_odometer, next_due_date, next_due_km, reminder_enabled, notes, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, branch_id, vehicle_id, service_catalog_id, service_name, interval_months, interval_km, last_service_date, last_service_odometer, next_due_date, next_due_km, reminder_enabled, notes, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
-  if (error || !data)
-    throw new NotFoundError("Service schedule not found");
+  if (error || !data) throw new NotFoundError("Service schedule not found");
 
   revalidateTag(cacheTags.serviceSchedules(orgId), "max");
   revalidateTag(cacheTags.serviceSchedule(id), "max");
@@ -248,8 +249,14 @@ export async function syncWorkOrderToSchedules(
 
   for (const svc of services) {
     const catalog = Array.isArray(svc.service_catalog)
-      ? (svc.service_catalog[0] as { interval_months: number | null; interval_km: number | null } | null)
-      : (svc.service_catalog as unknown as { interval_months: number | null; interval_km: number | null } | null);
+      ? (svc.service_catalog[0] as {
+          interval_months: number | null;
+          interval_km: number | null;
+        } | null)
+      : (svc.service_catalog as unknown as {
+          interval_months: number | null;
+          interval_km: number | null;
+        } | null);
 
     const intervalMonths = catalog?.interval_months ?? null;
     const intervalKm = catalog?.interval_km ?? null;
@@ -385,9 +392,7 @@ export async function getReminderLogs(
  * and updates their status to "sent".
  * Returns the number of reminders sent.
  */
-export async function sendPendingReminders(
-  orgId: string,
-): Promise<number> {
+export async function sendPendingReminders(orgId: string): Promise<number> {
   const supabase = await createClient();
 
   const { data: logs, error } = await supabase
@@ -406,12 +411,10 @@ export async function sendPendingReminders(
   if (error || !logs || logs.length === 0) return 0;
 
   const [{ sendReminderEmail }, { data: org }] = await Promise.all([
-    import("@/lib/services/email-service") as unknown as Promise<{ sendReminderEmail: typeof import("@/lib/services/email-service").sendReminderEmail }>,
-    supabase
-      .from("organizations")
-      .select("name")
-      .eq("id", orgId)
-      .single(),
+    import("@/lib/services/email-service") as unknown as Promise<{
+      sendReminderEmail: typeof import("@/lib/services/email-service").sendReminderEmail;
+    }>,
+    supabase.from("organizations").select("name").eq("id", orgId).single(),
   ]);
   const orgName = org?.name ?? "Your Garage";
 
@@ -420,18 +423,13 @@ export async function sendPendingReminders(
       const customer = Array.isArray(log.customer)
         ? log.customer[0]
         : log.customer;
-      const vehicle = Array.isArray(log.vehicle)
-        ? log.vehicle[0]
-        : log.vehicle;
+      const vehicle = Array.isArray(log.vehicle) ? log.vehicle[0] : log.vehicle;
 
       const recipientEmail = customer?.email;
 
-      const customerName = [
-        customer?.first_name,
-        customer?.last_name,
-      ]
-        .filter(Boolean)
-        .join(" ") || "Valued Customer";
+      const customerName =
+        [customer?.first_name, customer?.last_name].filter(Boolean).join(" ") ||
+        "Valued Customer";
 
       const vehicleLabel = vehicle
         ? `${vehicle.make} ${vehicle.model} (${vehicle.plate_number})`
@@ -512,11 +510,12 @@ export async function createReminderLog(
       scheduled_at: params.scheduled_at ?? new Date().toISOString(),
       error_message: params.error_message ?? null,
     })
-    .select("id, organization_id, branch_id, vehicle_service_schedule_id, vehicle_id, customer_id, service_catalog_id, service_name, reminder_type, channel, status, scheduled_at, sent_at, error_message, created_at")
+    .select(
+      "id, organization_id, branch_id, vehicle_service_schedule_id, vehicle_id, customer_id, service_catalog_id, service_name, reminder_type, channel, status, scheduled_at, sent_at, error_message, created_at",
+    )
     .single();
 
-  if (error)
-    throw new Error(error?.message ?? "Failed to create reminder log");
+  if (error) throw new Error(error?.message ?? "Failed to create reminder log");
 
   revalidateTag(cacheTags.reminderLogs(orgId), "max");
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function Modal({
   title,
@@ -16,13 +17,13 @@ export function Modal({
       <div className="w-full max-w-lg rounded-xl border border-border bg-card shadow-lg">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h3 className="text-lg font-semibold">{title}</h3>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="p-1 text-muted-foreground hover:text-foreground"
           >
             <X className="size-5" />
-          </button>
+          </Button>
         </div>
         <div className="px-6 py-4">{children}</div>
       </div>

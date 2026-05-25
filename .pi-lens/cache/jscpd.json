@@ -1,0 +1,4912 @@
+{
+  "success": true,
+  "clones": [
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/purchase-orders/[purchaseOrderId]/receive/route.ts",
+      "startA": 7,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/parts/[partId]/route.ts",
+      "startB": 7,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/publish/route.ts",
+      "startA": 7,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/parts/[partId]/route.ts",
+      "startB": 7,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/parts/route.ts",
+      "startA": 13,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/publish/route.ts",
+      "startB": 5,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/complete/route.ts",
+      "startA": 5,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/publish/route.ts",
+      "startB": 5,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/customers/[customerId]/notes/[noteId]/route.ts",
+      "startA": 7,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/parts/[partId]/route.ts",
+      "startB": 7,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/customers/[customerId]/communications/[commId]/route.ts",
+      "startA": 5,
+      "fileB": "src/app/api/organizations/[id]/customers/[customerId]/notes/[noteId]/route.ts",
+      "startB": 5,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/work-orders/[workOrderId]/services/route.ts",
+      "startA": 9,
+      "fileB": "src/app/api/organizations/[id]/inventory/purchase-orders/[purchaseOrderId]/receive/route.ts",
+      "startB": 5,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/work-orders/[workOrderId]/services/route.ts",
+      "startA": 27,
+      "fileB": "src/app/api/organizations/[id]/inventory/purchase-orders/[purchaseOrderId]/receive/route.ts",
+      "startB": 7,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/work-orders/[workOrderId]/services/route.ts",
+      "startA": 63,
+      "fileB": "src/app/api/organizations/[id]/inventory/purchase-orders/[purchaseOrderId]/receive/route.ts",
+      "startB": 7,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/work-orders/[workOrderId]/parts/route.ts",
+      "startA": 7,
+      "fileB": "src/app/api/organizations/[id]/work-orders/[workOrderId]/services/route.ts",
+      "startB": 7,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/work-orders/[workOrderId]/parts/route.ts",
+      "startA": 24,
+      "fileB": "src/app/api/organizations/[id]/work-orders/[workOrderId]/services/route.ts",
+      "startB": 24,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/work-orders/[workOrderId]/parts/route.ts",
+      "startA": 55,
+      "fileB": "src/app/api/organizations/[id]/work-orders/[workOrderId]/services/route.ts",
+      "startB": 55,
+      "lines": 23,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/work-orders/[workOrderId]/attachments/route.ts",
+      "startA": 15,
+      "fileB": "src/app/api/organizations/[id]/inventory/purchase-orders/[purchaseOrderId]/receive/route.ts",
+      "startB": 5,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/work-orders/[workOrderId]/attachments/route.ts",
+      "startA": 30,
+      "fileB": "src/app/api/organizations/[id]/work-orders/[workOrderId]/services/route.ts",
+      "startB": 60,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/me/time/clock-out/route.ts",
+      "startA": 7,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/parts/[partId]/route.ts",
+      "startB": 9,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/me/time/clock-in/route.ts",
+      "startA": 4,
+      "fileB": "src/app/api/organizations/[id]/me/time/clock-out/route.ts",
+      "startB": 4,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/invoices/[invoiceId]/payments/route.ts",
+      "startA": 8,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/parts/[partId]/route.ts",
+      "startB": 7,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startA": 16,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/parts/[partId]/route.ts",
+      "startB": 7,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startA": 29,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/parts/[partId]/route.ts",
+      "startB": 5,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/parts/[partId]/route.ts",
+      "startA": 14,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startB": 13,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/parts/[partId]/route.ts",
+      "startA": 30,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startB": 28,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/customers/[customerId]/notes/route.ts",
+      "startA": 16,
+      "fileB": "src/app/api/organizations/[id]/customers/[customerId]/notes/[noteId]/route.ts",
+      "startB": 7,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/customers/[customerId]/communications/route.ts",
+      "startA": 13,
+      "fileB": "src/app/api/organizations/[id]/customers/[customerId]/notes/route.ts",
+      "startB": 13,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/work-orders/[workOrderId]/route.ts",
+      "startA": 15,
+      "fileB": "src/app/api/organizations/[id]/work-orders/[workOrderId]/services/route.ts",
+      "startB": 24,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/work-orders/[workOrderId]/route.ts",
+      "startA": 55,
+      "fileB": "src/app/api/organizations/[id]/work-orders/[workOrderId]/services/route.ts",
+      "startB": 60,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/vehicles/[vehicleId]/route.ts",
+      "startA": 21,
+      "fileB": "src/app/api/organizations/[id]/customers/[customerId]/notes/[noteId]/route.ts",
+      "startB": 7,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/vehicles/[vehicleId]/route.ts",
+      "startA": 35,
+      "fileB": "src/app/api/organizations/[id]/customers/[customerId]/notes/[noteId]/route.ts",
+      "startB": 5,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/vehicle-models/[modelId]/route.ts",
+      "startA": 8,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startB": 14,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/vehicle-models/[modelId]/route.ts",
+      "startA": 23,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startB": 28,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/users/[userId]/route.ts",
+      "startA": 5,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startB": 14,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/suppliers/[supplierId]/route.ts",
+      "startA": 14,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startB": 13,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/suppliers/[supplierId]/route.ts",
+      "startA": 30,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startB": 28,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/services/[serviceId]/route.ts",
+      "startA": 14,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startB": 13,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/services/[serviceId]/route.ts",
+      "startA": 30,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startB": 28,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/service-reminders/sync-history/route.ts",
+      "startA": 7,
+      "fileB": "src/app/api/organizations/[id]/inventory/purchase-orders/[purchaseOrderId]/receive/route.ts",
+      "startB": 7,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/service-reminders/send-pending/route.ts",
+      "startA": 5,
+      "fileB": "src/app/api/organizations/[id]/service-reminders/sync-history/route.ts",
+      "startB": 5,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/service-reminders/[reminderId]/route.ts",
+      "startA": 14,
+      "fileB": "src/app/api/organizations/[id]/vehicles/[vehicleId]/route.ts",
+      "startB": 18,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/service-reminders/[reminderId]/route.ts",
+      "startA": 30,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startB": 28,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/purchase-orders/[purchaseOrderId]/route.ts",
+      "startA": 38,
+      "fileB": "src/app/api/organizations/[id]/customers/[customerId]/notes/[noteId]/route.ts",
+      "startB": 7,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/purchase-orders/[purchaseOrderId]/route.ts",
+      "startA": 68,
+      "fileB": "src/app/api/organizations/[id]/purchase-orders/[purchaseOrderId]/route.ts",
+      "startB": 25,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/purchase-orders/[purchaseOrderId]/route.ts",
+      "startA": 78,
+      "fileB": "src/app/api/organizations/[id]/work-orders/[workOrderId]/attachments/route.ts",
+      "startB": 14,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/invoices/[invoiceId]/route.ts",
+      "startA": 22,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startB": 13,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/invoices/[invoiceId]/route.ts",
+      "startA": 109,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/route.ts",
+      "startB": 28,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/thresholds/route.ts",
+      "startA": 13,
+      "fileB": "src/app/api/organizations/[id]/service-reminders/sync-history/route.ts",
+      "startB": 5,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startA": 17,
+      "fileB": "src/app/api/organizations/[id]/purchase-orders/[purchaseOrderId]/route.ts",
+      "startB": 38,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startA": 32,
+      "fileB": "src/app/api/organizations/[id]/service-reminders/sync-history/route.ts",
+      "startB": 7,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startA": 56,
+      "fileB": "src/app/api/organizations/[id]/service-reminders/sync-history/route.ts",
+      "startB": 7,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/purchase-orders/route.ts",
+      "startA": 13,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 14,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/purchase-orders/route.ts",
+      "startA": 28,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 29,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/parts-cars/route.ts",
+      "startA": 12,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 14,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/parts/route.ts",
+      "startA": 13,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 14,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/parts/route.ts",
+      "startA": 28,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 29,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/inventory/movements/route.ts",
+      "startA": 15,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 14,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/expenses/[expenseId]/route.ts",
+      "startA": 10,
+      "fileB": "src/app/api/organizations/[id]/vehicles/[vehicleId]/route.ts",
+      "startB": 18,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/expenses/[expenseId]/route.ts",
+      "startA": 26,
+      "fileB": "src/app/api/organizations/[id]/vehicles/[vehicleId]/route.ts",
+      "startB": 34,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/expense-categories/[categoryId]/route.ts",
+      "startA": 6,
+      "fileB": "src/app/api/organizations/[id]/me/time/clock-out/route.ts",
+      "startB": 6,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/expense-categories/[categoryId]/route.ts",
+      "startA": 21,
+      "fileB": "src/app/api/organizations/[id]/expense-categories/[categoryId]/route.ts",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/customers/import/route.ts",
+      "startA": 5,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 15,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/customers/by-plate/route.ts",
+      "startA": 1,
+      "fileB": "src/app/api/organizations/[id]/price-history/last-visit/route.ts",
+      "startB": 1,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/customers/[customerId]/route.ts",
+      "startA": 19,
+      "fileB": "src/app/api/organizations/[id]/vehicles/[vehicleId]/route.ts",
+      "startB": 18,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/customers/[customerId]/route.ts",
+      "startA": 35,
+      "fileB": "src/app/api/organizations/[id]/vehicles/[vehicleId]/route.ts",
+      "startB": 34,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/admin/organizations/[id]/subscription/route.ts",
+      "startA": 10,
+      "fileB": "src/app/api/organizations/[id]/me/time/clock-out/route.ts",
+      "startB": 6,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/suppliers/[id]/page.tsx",
+      "startA": 119,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/page.tsx",
+      "startB": 61,
+      "lines": 107,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/suppliers/[id]/page.tsx",
+      "startA": 27,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/page.tsx",
+      "startB": 20,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/suppliers/[id]/page.tsx",
+      "startA": 60,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/page.tsx",
+      "startB": 38,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/suppliers/[id]/page.tsx",
+      "startA": 113,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/page.tsx",
+      "startB": 55,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/suppliers/[id]/page.tsx",
+      "startA": 125,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/page.tsx",
+      "startB": 67,
+      "lines": 102,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/suppliers/[id]/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/purchase-orders/new/page.tsx",
+      "startA": 3,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/page.tsx",
+      "startB": 3,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/purchase-orders/new/page.tsx",
+      "startA": 101,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/page.tsx",
+      "startB": 56,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/purchase-orders/new/page.tsx",
+      "startA": 150,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/page.tsx",
+      "startB": 148,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/purchase-orders/new/page.tsx",
+      "startA": 265,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/page.tsx",
+      "startB": 159,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/purchase-orders/new/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/purchase-orders/[id]/page.tsx",
+      "startA": 104,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/[id]/page.tsx",
+      "startB": 95,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/purchase-orders/[id]/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/parts-cars/new/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/parts-cars/[id]/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/portal/vehicles/[id]/route.ts",
+      "startA": 7,
+      "fileB": "src/app/api/portal/work-orders/[id]/route.ts",
+      "startB": 16,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/work-orders/route.ts",
+      "startA": 18,
+      "fileB": "src/app/api/organizations/[id]/inventory/thresholds/route.ts",
+      "startB": 12,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/vehicles/route.ts",
+      "startA": 19,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 14,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/vehicle-models/route.ts",
+      "startA": 9,
+      "fileB": "src/app/api/organizations/[id]/inventory/thresholds/route.ts",
+      "startB": 12,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/users/route.ts",
+      "startA": 11,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 14,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/users/route.ts",
+      "startA": 26,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 53,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/suppliers/route.ts",
+      "startA": 5,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 10,
+      "lines": 21,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/subscription/route.ts",
+      "startA": 14,
+      "fileB": "src/app/api/admin/organizations/[id]/subscription/route.ts",
+      "startB": 8,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/services/route.ts",
+      "startA": 11,
+      "fileB": "src/app/api/organizations/[id]/inventory/thresholds/route.ts",
+      "startB": 12,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/service-reminders/route.ts",
+      "startA": 14,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 14,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/purchase-orders/route.ts",
+      "startA": 9,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 14,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/invoices/route.ts",
+      "startA": 13,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 14,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/invites/route.ts",
+      "startA": 14,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 14,
+      "lines": 18,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/invites/route.ts",
+      "startA": 34,
+      "fileB": "src/app/api/organizations/[id]/me/time/clock-out/route.ts",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/invites/route.ts",
+      "startA": 50,
+      "fileB": "src/app/api/organizations/[id]/invites/route.ts",
+      "startB": 34,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/expenses/route.ts",
+      "startA": 23,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 14,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/expense-categories/route.ts",
+      "startA": 10,
+      "fileB": "src/app/api/organizations/[id]/me/time/clock-out/route.ts",
+      "startB": 4,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/customers/route.ts",
+      "startA": 16,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 14,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/branches/route.ts",
+      "startA": 9,
+      "fileB": "src/app/api/organizations/[id]/inventory/thresholds/route.ts",
+      "startB": 12,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/invites/[token]/redeem/route.ts",
+      "startA": 8,
+      "fileB": "src/app/api/organizations/[id]/inventory/parts-cars/[carId]/parts/[partId]/route.ts",
+      "startB": 10,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/portal/work-orders/[id]/page.tsx",
+      "startA": 300,
+      "fileB": "src/app/[locale]/portal/work-orders/[id]/page.tsx",
+      "startB": 256,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/portal/vehicles/[id]/page.tsx",
+      "startA": 3,
+      "fileB": "src/app/[locale]/portal/work-orders/[id]/page.tsx",
+      "startB": 3,
+      "lines": 22,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/portal/vehicles/[id]/page.tsx",
+      "startA": 27,
+      "fileB": "src/app/[locale]/portal/work-orders/[id]/page.tsx",
+      "startB": 109,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/work-orders/new/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/work-orders/[id]/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/vehicles/new/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startA": 77,
+      "fileB": "src/app/[locale]/dashboard/vehicles/new/page.tsx",
+      "startB": 20,
+      "lines": 21,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startA": 97,
+      "fileB": "src/app/[locale]/dashboard/vehicles/new/page.tsx",
+      "startB": 40,
+      "lines": 21,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startA": 616,
+      "fileB": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startB": 592,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startA": 696,
+      "fileB": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startB": 598,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/vehicles/[id]/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/organization/members/page.tsx",
+      "startA": 132,
+      "fileB": "src/app/[locale]/dashboard/organization/members/page.tsx",
+      "startB": 105,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/organization/members/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/valuation/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/suppliers/page.tsx",
+      "startA": 111,
+      "fileB": "src/app/[locale]/dashboard/inventory/valuation/page.tsx",
+      "startB": 150,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/suppliers/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/purchase-orders/page.tsx",
+      "startA": 143,
+      "fileB": "src/app/[locale]/dashboard/inventory/valuation/page.tsx",
+      "startB": 151,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/purchase-orders/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/parts-cars/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/movements/page.tsx",
+      "startA": 176,
+      "fileB": "src/app/[locale]/dashboard/inventory/purchase-orders/page.tsx",
+      "startB": 137,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/movements/page.tsx",
+      "startA": 324,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/page.tsx",
+      "startB": 144,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/movements/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/alerts/page.tsx",
+      "startA": 95,
+      "fileB": "src/app/[locale]/dashboard/inventory/purchase-orders/page.tsx",
+      "startB": 142,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/alerts/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/_components/suppliers-tab.tsx",
+      "startA": 49,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/page.tsx",
+      "startB": 44,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/_components/suppliers-tab.tsx",
+      "startA": 193,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/page.tsx",
+      "startB": 172,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/_components/parts-tab.tsx",
+      "startA": 13,
+      "fileB": "src/app/[locale]/dashboard/inventory/_components/suppliers-tab.tsx",
+      "startB": 5,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/_components/parts-tab.tsx",
+      "startA": 128,
+      "fileB": "src/app/[locale]/dashboard/inventory/_components/parts-tab.tsx",
+      "startB": 95,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/_components/parts-tab.tsx",
+      "startA": 555,
+      "fileB": "src/app/[locale]/dashboard/inventory/_components/suppliers-tab.tsx",
+      "startB": 342,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/_components/movements-tab.tsx",
+      "startA": 6,
+      "fileB": "src/app/[locale]/dashboard/inventory/movements/page.tsx",
+      "startB": 7,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/_components/movements-tab.tsx",
+      "startA": 9,
+      "fileB": "src/app/[locale]/dashboard/inventory/_components/suppliers-tab.tsx",
+      "startB": 7,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/_components/movements-tab.tsx",
+      "startA": 93,
+      "fileB": "src/app/[locale]/dashboard/inventory/movements/page.tsx",
+      "startB": 123,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/new/page.tsx",
+      "startA": 135,
+      "fileB": "src/app/[locale]/dashboard/vehicles/new/page.tsx",
+      "startB": 190,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/new/page.tsx",
+      "startA": 142,
+      "fileB": "src/app/[locale]/dashboard/expenses/new/page.tsx",
+      "startB": 115,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/new/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/categories/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startA": 254,
+      "fileB": "src/app/[locale]/dashboard/expenses/new/page.tsx",
+      "startB": 153,
+      "lines": 299,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startA": 18,
+      "fileB": "src/app/[locale]/dashboard/expenses/new/page.tsx",
+      "startB": 5,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startA": 52,
+      "fileB": "src/app/[locale]/dashboard/expenses/new/page.tsx",
+      "startB": 35,
+      "lines": 18,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startA": 154,
+      "fileB": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startB": 265,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startA": 182,
+      "fileB": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startB": 333,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startA": 223,
+      "fileB": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startB": 363,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startA": 247,
+      "fileB": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startB": 387,
+      "lines": 25,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startA": 308,
+      "fileB": "src/app/[locale]/dashboard/expenses/new/page.tsx",
+      "startB": 190,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startA": 351,
+      "fileB": "src/app/[locale]/dashboard/expenses/new/page.tsx",
+      "startB": 233,
+      "lines": 23,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startA": 421,
+      "fileB": "src/app/[locale]/dashboard/expenses/new/page.tsx",
+      "startB": 303,
+      "lines": 23,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/[id]/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/new/page.tsx",
+      "startA": 5,
+      "fileB": "src/app/[locale]/dashboard/vehicles/new/page.tsx",
+      "startB": 9,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/new/page.tsx",
+      "startA": 101,
+      "fileB": "src/app/[locale]/dashboard/expenses/new/page.tsx",
+      "startB": 95,
+      "lines": 25,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/new/page.tsx",
+      "startA": 128,
+      "fileB": "src/app/[locale]/dashboard/expenses/new/page.tsx",
+      "startB": 122,
+      "lines": 27,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/new/page.tsx",
+      "startA": 150,
+      "fileB": "src/app/[locale]/dashboard/customers/new/page.tsx",
+      "startB": 121,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/new/page.tsx",
+      "startA": 194,
+      "fileB": "src/app/[locale]/dashboard/expenses/new/page.tsx",
+      "startB": 153,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/new/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/import/page.tsx",
+      "startA": 363,
+      "fileB": "src/app/[locale]/dashboard/vehicles/new/page.tsx",
+      "startB": 191,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/import/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/[id]/page.tsx",
+      "startA": 211,
+      "fileB": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startB": 217,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/[id]/page.tsx",
+      "startA": 235,
+      "fileB": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startB": 241,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/[id]/page.tsx",
+      "startA": 248,
+      "fileB": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startB": 143,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/[id]/page.tsx",
+      "startA": 259,
+      "fileB": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startB": 265,
+      "lines": 24,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/[id]/page.tsx",
+      "startA": 286,
+      "fileB": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startB": 333,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/[id]/page.tsx",
+      "startA": 304,
+      "fileB": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startB": 202,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/[id]/page.tsx",
+      "startA": 313,
+      "fileB": "src/app/[locale]/dashboard/vehicles/[id]/page.tsx",
+      "startB": 358,
+      "lines": 30,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/[id]/page.tsx",
+      "startA": 342,
+      "fileB": "src/app/[locale]/dashboard/expenses/[id]/page.tsx",
+      "startB": 247,
+      "lines": 25,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/[id]/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/[id]/_customer-work-order-history.tsx",
+      "startA": 8,
+      "fileB": "src/app/[locale]/dashboard/customers/[id]/page.tsx",
+      "startB": 41,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/[id]/_customer-edit-form.tsx",
+      "startA": 44,
+      "fileB": "src/app/[locale]/dashboard/customers/new/page.tsx",
+      "startB": 219,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/customer/login/page.tsx",
+      "startA": 64,
+      "fileB": "src/app/[locale]/auth/customer/set-password/page.tsx",
+      "startB": 106,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/customer/login/layout.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/auth/customer/set-password/layout.tsx",
+      "startB": 1,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/portal/set-password/route.ts",
+      "startA": 12,
+      "fileB": "src/app/[locale]/auth/customer/set-password/actions.ts",
+      "startB": 31,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/portal/set-password/route.ts",
+      "startA": 32,
+      "fileB": "src/app/[locale]/auth/customer/set-password/actions.ts",
+      "startB": 51,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/portal/invoices/route.ts",
+      "startA": 6,
+      "fileB": "src/app/api/portal/work-orders/[id]/route.ts",
+      "startB": 18,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/[id]/route.ts",
+      "startA": 23,
+      "fileB": "src/app/api/organizations/[id]/inventory/suppliers/route.ts",
+      "startB": 32,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/auth/finalize-signup/route.ts",
+      "startA": 6,
+      "fileB": "src/app/api/invites/[token]/redeem/route.ts",
+      "startB": 6,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/current/layout.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/auth/customer/set-password/layout.tsx",
+      "startB": 1,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/portal/invoices/page.tsx",
+      "startA": 83,
+      "fileB": "src/app/[locale]/portal/vehicles/page.tsx",
+      "startB": 35,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/invite/[token]/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/work-orders/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/vehicles/page.tsx",
+      "startA": 145,
+      "fileB": "src/app/[locale]/dashboard/vehicles/page.tsx",
+      "startB": 108,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/vehicles/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/vehicle-models/page.tsx",
+      "startA": 208,
+      "fileB": "src/app/[locale]/dashboard/vehicle-models/page.tsx",
+      "startB": 170,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/vehicle-models/page.tsx",
+      "startA": 402,
+      "fileB": "src/app/[locale]/dashboard/vehicle-models/page.tsx",
+      "startB": 386,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/vehicle-models/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/settings/loading.tsx",
+      "startA": 7,
+      "fileB": "src/app/[locale]/dashboard/settings/page.tsx",
+      "startB": 66,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/settings/error.tsx",
+      "startA": 17,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 14,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/settings/_commission-rules-section.tsx",
+      "startA": 20,
+      "fileB": "src/app/[locale]/dashboard/settings/_diagnosis-labels-section.tsx",
+      "startB": 26,
+      "lines": 23,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/settings/_commission-rules-section.tsx",
+      "startA": 293,
+      "fileB": "src/app/[locale]/dashboard/settings/_diagnosis-labels-section.tsx",
+      "startB": 263,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/settings/_commission-rules-section.tsx",
+      "startA": 362,
+      "fileB": "src/app/[locale]/dashboard/settings/_diagnosis-labels-section.tsx",
+      "startB": 351,
+      "lines": 19,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/services/page.tsx",
+      "startA": 354,
+      "fileB": "src/app/[locale]/dashboard/vehicle-models/page.tsx",
+      "startB": 544,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/services/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/service-reminders/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/reports/page.tsx",
+      "startA": 933,
+      "fileB": "src/app/[locale]/dashboard/reports/page.tsx",
+      "startB": 772,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/reports/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/organization/page.tsx",
+      "startA": 44,
+      "fileB": "src/app/[locale]/dashboard/settings/page.tsx",
+      "startB": 144,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/organization/page.tsx",
+      "startA": 230,
+      "fileB": "src/app/[locale]/dashboard/organization/page.tsx",
+      "startB": 205,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/organization/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/mechanic/page.tsx",
+      "startA": 845,
+      "fileB": "src/app/[locale]/dashboard/mechanic/page.tsx",
+      "startB": 806,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/mechanic/page.tsx",
+      "startA": 880,
+      "fileB": "src/app/[locale]/dashboard/mechanic/page.tsx",
+      "startB": 610,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/mechanic/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/page.tsx",
+      "startA": 46,
+      "fileB": "src/app/[locale]/dashboard/inventory/_components/parts-tab.tsx",
+      "startB": 72,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/inventory/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/guide/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/finance/page.tsx",
+      "startA": 809,
+      "fileB": "src/app/[locale]/dashboard/reports/page.tsx",
+      "startB": 586,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/finance/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
+      "startA": 143,
+      "fileB": "src/app/[locale]/dashboard/finance/page.tsx",
+      "startB": 402,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/finance/_kpi-card.tsx",
+      "startA": 22,
+      "fileB": "src/app/[locale]/dashboard/reports/page.tsx",
+      "startB": 154,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/page.tsx",
+      "startA": 18,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/page.tsx",
+      "startB": 11,
+      "lines": 19,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/page.tsx",
+      "startA": 279,
+      "fileB": "src/app/[locale]/dashboard/finance/page.tsx",
+      "startB": 808,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/page.tsx",
+      "startA": 346,
+      "fileB": "src/app/[locale]/dashboard/finance/page.tsx",
+      "startB": 528,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/page.tsx",
+      "startA": 471,
+      "fileB": "src/app/[locale]/dashboard/expenses/page.tsx",
+      "startB": 101,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/expenses/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/page.tsx",
+      "startA": 19,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/page.tsx",
+      "startB": 9,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/page.tsx",
+      "startA": 75,
+      "fileB": "src/app/[locale]/dashboard/expenses/page.tsx",
+      "startB": 110,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/page.tsx",
+      "startA": 309,
+      "fileB": "src/app/[locale]/dashboard/customers/page.tsx",
+      "startB": 67,
+      "lines": 18,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/customers/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/bay-view/page.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/bay-view-v2/page.tsx",
+      "startB": 1,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/bay-view/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/admin/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/signup/layout.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/auth/customer/set-password/layout.tsx",
+      "startB": 1,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/signup/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/select-organization/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/reset-password/layout.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/auth/customer/set-password/layout.tsx",
+      "startB": 1,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/reset-password/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/reset-password/actions.ts",
+      "startA": 13,
+      "fileB": "src/app/[locale]/auth/signup/actions.ts",
+      "startB": 16,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/login/layout.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/auth/customer/set-password/layout.tsx",
+      "startB": 1,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/login/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/forgot-password/page.tsx",
+      "startA": 42,
+      "fileB": "src/app/[locale]/auth/reset-password/page.tsx",
+      "startB": 16,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/forgot-password/layout.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/auth/customer/set-password/layout.tsx",
+      "startB": 1,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/forgot-password/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/confirm-email/layout.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/auth/customer/set-password/layout.tsx",
+      "startB": 1,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/auth/confirm-email/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/work-orders/wizard/services-section.tsx",
+      "startA": 162,
+      "fileB": "src/components/work-orders/wizard/services-section.tsx",
+      "startB": 107,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/work-orders/wizard/parts-section.tsx",
+      "startA": 3,
+      "fileB": "src/components/work-orders/wizard/services-section.tsx",
+      "startB": 3,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/work-orders/wizard/parts-section.tsx",
+      "startA": 44,
+      "fileB": "src/components/work-orders/wizard/services-section.tsx",
+      "startB": 33,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/work-orders/wizard/customer-section.tsx",
+      "startA": 3,
+      "fileB": "src/components/work-orders/wizard/vehicle-section.tsx",
+      "startB": 3,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/work-orders/wizard/customer-section.tsx",
+      "startA": 50,
+      "fileB": "src/components/work-orders/wizard/vehicle-section.tsx",
+      "startB": 48,
+      "lines": 19,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/work-orders/wizard/customer-section.tsx",
+      "startA": 136,
+      "fileB": "src/components/work-orders/wizard/vehicle-section.tsx",
+      "startB": 132,
+      "lines": 22,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/invoice/[token]/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/organizations/route.ts",
+      "startA": 11,
+      "fileB": "src/app/api/organizations/[id]/me/time/clock-out/route.ts",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/export/route.ts",
+      "startA": 52,
+      "fileB": "src/app/api/organizations/[id]/invites/route.ts",
+      "startB": 34,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 229,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 144,
+      "lines": 68,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 1,
+      "lines": 27,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 27,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 27,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 46,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 46,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 73,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 74,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 82,
+      "fileB": "src/app/[locale]/pricing/page.tsx",
+      "startB": 55,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 109,
+      "fileB": "src/app/[locale]/pricing/page.tsx",
+      "startB": 55,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 177,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 99,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 205,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 120,
+      "lines": 27,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 231,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 146,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 250,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 169,
+      "lines": 32,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 287,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 205,
+      "lines": 43,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 329,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 245,
+      "lines": 22,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 350,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 266,
+      "lines": 18,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 372,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 285,
+      "lines": 18,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 421,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 329,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 433,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 341,
+      "lines": 33,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/page.tsx",
+      "startA": 465,
+      "fileB": "src/app/[locale]/pricing/current/page.tsx",
+      "startB": 372,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/pricing/layout.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/auth/customer/set-password/layout.tsx",
+      "startB": 1,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/portal/page.tsx",
+      "startA": 13,
+      "fileB": "src/app/[locale]/portal/vehicles/page.tsx",
+      "startB": 11,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/portal/page.tsx",
+      "startA": 21,
+      "fileB": "src/app/[locale]/portal/vehicles/page.tsx",
+      "startB": 19,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/portal/layout.tsx",
+      "startA": 44,
+      "fileB": "src/app/[locale]/portal/page.tsx",
+      "startB": 36,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/page.tsx",
+      "startA": 158,
+      "fileB": "src/app/[locale]/dashboard/page.tsx",
+      "startB": 37,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/page.tsx",
+      "startA": 199,
+      "fileB": "src/app/[locale]/dashboard/page.tsx",
+      "startB": 175,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/page.tsx",
+      "startA": 230,
+      "fileB": "src/app/[locale]/dashboard/page.tsx",
+      "startB": 175,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/error.tsx",
+      "startA": 1,
+      "fileB": "src/app/[locale]/dashboard/inventory/suppliers/new/error.tsx",
+      "startB": 1,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/_recent-work-orders-table.tsx",
+      "startA": 102,
+      "fileB": "src/app/[locale]/dashboard/_recent-work-orders.tsx",
+      "startB": 93,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/_recent-work-orders-table.tsx",
+      "startA": 123,
+      "fileB": "src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
+      "startB": 210,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/_daily-timeline.tsx",
+      "startA": 93,
+      "fileB": "src/app/[locale]/dashboard/_daily-timeline.tsx",
+      "startB": 64,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/_charts-content.tsx",
+      "startA": 310,
+      "fileB": "src/app/[locale]/dashboard/_charts-content.tsx",
+      "startB": 176,
+      "lines": 19,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/[locale]/dashboard/_charts-content.tsx",
+      "startA": 399,
+      "fileB": "src/app/[locale]/dashboard/_charts-content.tsx",
+      "startB": 300,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/functions/check-service-reminders/index.ts",
+      "startA": 1,
+      "fileB": "supabase/functions/expire-subscriptions/index.ts",
+      "startB": 5,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/types/index.ts",
+      "startA": 565,
+      "fileB": "src/lib/types/index.ts",
+      "startB": 552,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/supabase/server.ts",
+      "startA": 13,
+      "fileB": "src/lib/supabase/service-role.ts",
+      "startB": 21,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/work-order-service.ts",
+      "startA": 144,
+      "fileB": "src/app/api/organizations/[id]/commission-rules/route.ts",
+      "startB": 19,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/work-order-service.ts",
+      "startA": 618,
+      "fileB": "src/lib/services/work-order-service.ts",
+      "startB": 521,
+      "lines": 22,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/work-order-service.ts",
+      "startA": 714,
+      "fileB": "src/lib/services/work-order-service.ts",
+      "startB": 693,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/work-order-service.ts",
+      "startA": 760,
+      "fileB": "src/lib/services/work-order-service.ts",
+      "startB": 739,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/work-order-service.ts",
+      "startA": 881,
+      "fileB": "src/lib/services/work-order-service.ts",
+      "startB": 355,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/time-tracking-service.ts",
+      "startA": 100,
+      "fileB": "src/lib/services/time-tracking-service.ts",
+      "startB": 58,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/service-catalog-service.ts",
+      "startA": 112,
+      "fileB": "src/lib/services/vehicle-models-service.ts",
+      "startB": 145,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/post-service-service.ts",
+      "startA": 264,
+      "fileB": "src/lib/services/post-service-service.ts",
+      "startB": 63,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/organization-service.ts",
+      "startA": 53,
+      "fileB": "src/lib/services/signup-service.ts",
+      "startB": 169,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/organization-service.ts",
+      "startA": 85,
+      "fileB": "src/lib/services/signup-service.ts",
+      "startB": 199,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/organization-service.ts",
+      "startA": 103,
+      "fileB": "src/lib/services/signup-service.ts",
+      "startB": 216,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/invoice-service.ts",
+      "startA": 150,
+      "fileB": "src/lib/services/invoice-service.ts",
+      "startB": 106,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/invoice-service.ts",
+      "startA": 165,
+      "fileB": "src/lib/services/invoice-service.ts",
+      "startB": 121,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/invoice-service.ts",
+      "startA": 246,
+      "fileB": "src/lib/services/work-order-service.ts",
+      "startB": 446,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/invoice-service.ts",
+      "startA": 441,
+      "fileB": "src/lib/services/invoice-service.ts",
+      "startB": 282,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/invoice-service.ts",
+      "startA": 943,
+      "fileB": "src/lib/services/work-order-service.ts",
+      "startB": 853,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/inventory-service.ts",
+      "startA": 49,
+      "fileB": "src/lib/services/work-order-service.ts",
+      "startB": 124,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/inventory-service.ts",
+      "startA": 158,
+      "fileB": "src/lib/services/vehicle-models-service.ts",
+      "startB": 145,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/inventory-service.ts",
+      "startA": 449,
+      "fileB": "src/lib/services/vehicle-models-service.ts",
+      "startB": 145,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/inventory-service.ts",
+      "startA": 493,
+      "fileB": "src/lib/services/inventory-service.ts",
+      "startB": 383,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/inventory-service.ts",
+      "startA": 698,
+      "fileB": "src/lib/services/inventory-service.ts",
+      "startB": 621,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/expense-service.ts",
+      "startA": 389,
+      "fileB": "src/lib/services/vehicle-service.ts",
+      "startB": 376,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/customer-service.ts",
+      "startA": 359,
+      "fileB": "src/lib/services/vehicle-service.ts",
+      "startB": 376,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-service.ts",
+      "startA": 181,
+      "fileB": "src/lib/services/bay-view-service.ts",
+      "startB": 164,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-service.ts",
+      "startA": 252,
+      "fileB": "src/lib/services/bay-view-service.ts",
+      "startB": 195,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-service.ts",
+      "startA": 282,
+      "fileB": "src/lib/services/bay-view-service.ts",
+      "startB": 194,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-service.ts",
+      "startA": 310,
+      "fileB": "src/lib/services/bay-view-service.ts",
+      "startB": 282,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-service.ts",
+      "startA": 357,
+      "fileB": "src/lib/services/bay-view-service.ts",
+      "startB": 282,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-service.ts",
+      "startA": 459,
+      "fileB": "src/lib/services/bay-view-service.ts",
+      "startB": 195,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-service.ts",
+      "startA": 683,
+      "fileB": "src/lib/services/bay-view-service.ts",
+      "startB": 195,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-service.ts",
+      "startA": 691,
+      "fileB": "src/lib/services/bay-view-service.ts",
+      "startB": 68,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-service.ts",
+      "startA": 746,
+      "fileB": "src/lib/services/bay-view-service.ts",
+      "startB": 194,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-service.ts",
+      "startA": 785,
+      "fileB": "src/lib/services/bay-view-service.ts",
+      "startB": 195,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-service.ts",
+      "startA": 793,
+      "fileB": "src/lib/services/bay-view-service.ts",
+      "startB": 68,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-actions.ts",
+      "startA": 42,
+      "fileB": "src/lib/services/bay-view-actions.ts",
+      "startB": 26,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-actions.ts",
+      "startA": 97,
+      "fileB": "src/lib/services/bay-view-actions.ts",
+      "startB": 26,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-actions.ts",
+      "startA": 296,
+      "fileB": "src/lib/services/bay-view-actions.ts",
+      "startB": 26,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-actions.ts",
+      "startA": 325,
+      "fileB": "src/lib/services/bay-view-actions.ts",
+      "startB": 27,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-actions.ts",
+      "startA": 359,
+      "fileB": "src/lib/services/bay-view-actions.ts",
+      "startB": 97,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-actions.ts",
+      "startA": 373,
+      "fileB": "src/lib/services/bay-view-actions.ts",
+      "startB": 151,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/services/bay-view-actions.ts",
+      "startA": 388,
+      "fileB": "src/lib/services/bay-view-actions.ts",
+      "startB": 166,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-work-order-detail.ts",
+      "startA": 42,
+      "fileB": "src/lib/queries/use-work-order-detail.ts",
+      "startB": 20,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-work-order-detail.ts",
+      "startA": 209,
+      "fileB": "src/lib/queries/use-work-order-detail.ts",
+      "startB": 166,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-work-order-detail.ts",
+      "startA": 266,
+      "fileB": "src/lib/queries/use-work-order-detail.ts",
+      "startB": 174,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-work-order-detail.ts",
+      "startA": 306,
+      "fileB": "src/lib/queries/use-work-order-detail.ts",
+      "startB": 171,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-work-order-detail.ts",
+      "startA": 344,
+      "fileB": "src/lib/queries/use-work-order-detail.ts",
+      "startB": 253,
+      "lines": 25,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-work-order-detail.ts",
+      "startA": 386,
+      "fileB": "src/lib/queries/use-work-order-detail.ts",
+      "startB": 301,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-work-order-detail.ts",
+      "startA": 429,
+      "fileB": "src/lib/queries/use-work-order-detail.ts",
+      "startB": 176,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-work-order-attachments.ts",
+      "startA": 36,
+      "fileB": "src/lib/queries/use-work-order-detail.ts",
+      "startB": 253,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-wizard-data.ts",
+      "startA": 138,
+      "fileB": "src/lib/queries/use-work-order-detail.ts",
+      "startB": 69,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-wizard-data.ts",
+      "startA": 521,
+      "fileB": "src/lib/queries/use-wizard-data.ts",
+      "startB": 468,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-vehicles.ts",
+      "startA": 14,
+      "fileB": "src/lib/queries/use-wizard-data.ts",
+      "startB": 268,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-service-reminders.ts",
+      "startA": 94,
+      "fileB": "src/lib/queries/use-service-reminders.ts",
+      "startB": 52,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-service-reminders.ts",
+      "startA": 115,
+      "fileB": "src/lib/services/service-reminder-service.ts",
+      "startB": 77,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-service-reminders.ts",
+      "startA": 154,
+      "fileB": "src/lib/services/service-reminder-service.ts",
+      "startB": 134,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-price-memory.ts",
+      "startA": 24,
+      "fileB": "src/lib/queries/use-wizard-data.ts",
+      "startB": 21,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-inventory.ts",
+      "startA": 123,
+      "fileB": "src/lib/queries/use-inventory.ts",
+      "startB": 78,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-inventory.ts",
+      "startA": 151,
+      "fileB": "src/lib/queries/use-work-order-detail.ts",
+      "startB": 255,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-inventory.ts",
+      "startA": 155,
+      "fileB": "src/lib/queries/use-inventory.ts",
+      "startB": 127,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-inventory.ts",
+      "startA": 240,
+      "fileB": "src/lib/queries/use-work-order-detail.ts",
+      "startB": 253,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-inventory.ts",
+      "startA": 270,
+      "fileB": "src/lib/queries/use-inventory.ts",
+      "startB": 149,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-inventory.ts",
+      "startA": 297,
+      "fileB": "src/lib/queries/use-inventory.ts",
+      "startB": 244,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-inventory.ts",
+      "startA": 432,
+      "fileB": "src/lib/queries/use-inventory.ts",
+      "startB": 407,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-inventory.ts",
+      "startA": 478,
+      "fileB": "src/lib/queries/use-inventory.ts",
+      "startB": 456,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-inventory.ts",
+      "startA": 507,
+      "fileB": "src/lib/queries/use-inventory.ts",
+      "startB": 398,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-expenses.ts",
+      "startA": 121,
+      "fileB": "src/lib/queries/use-expenses.ts",
+      "startB": 93,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-expenses.ts",
+      "startA": 171,
+      "fileB": "src/lib/queries/use-expenses.ts",
+      "startB": 92,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-expenses.ts",
+      "startA": 196,
+      "fileB": "src/lib/queries/use-expenses.ts",
+      "startB": 120,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-expenses.ts",
+      "startA": 221,
+      "fileB": "src/lib/queries/use-expenses.ts",
+      "startB": 149,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/queries/use-communications.ts",
+      "startA": 41,
+      "fileB": "src/lib/queries/use-customer-notes.ts",
+      "startB": 44,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/work-orders/vehicle-select.tsx",
+      "startA": 144,
+      "fileB": "src/components/work-orders/wizard/vehicle-section.tsx",
+      "startB": 73,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/work-orders/service-lines.tsx",
+      "startA": 102,
+      "fileB": "src/components/work-orders/wizard/services-section.tsx",
+      "startB": 145,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/work-orders/part-lines.tsx",
+      "startA": 92,
+      "fileB": "src/components/work-orders/service-lines.tsx",
+      "startB": 159,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/work-orders/customer-select.tsx",
+      "startA": 177,
+      "fileB": "src/components/work-orders/wizard/customer-section.tsx",
+      "startB": 106,
+      "lines": 22,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/work-orders/customer-select.tsx",
+      "startA": 205,
+      "fileB": "src/components/work-orders/vehicle-select.tsx",
+      "startB": 201,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/ui/typography.tsx",
+      "startA": 135,
+      "fileB": "src/components/ui/typography.tsx",
+      "startB": 93,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/charts/_area-chart-inner.tsx",
+      "startA": 26,
+      "fileB": "src/components/charts/_line-chart-inner.tsx",
+      "startB": 22,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/charts/_area-chart-inner.tsx",
+      "startA": 45,
+      "fileB": "src/app/[locale]/dashboard/_charts-content.tsx",
+      "startB": 168,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view-v2/pin-settings-dialog.tsx",
+      "startA": 128,
+      "fileB": "src/components/bay-view-v2/pin-settings-dialog.tsx",
+      "startB": 111,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view-v2/pickup-complete-dialog.tsx",
+      "startA": 173,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 300,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view-v2/mechanic-registration-dialog.tsx",
+      "startA": 10,
+      "fileB": "src/components/bay-view-v2/pin-settings-dialog.tsx",
+      "startB": 3,
+      "lines": 21,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view-v2/assign-dialog.tsx",
+      "startA": 200,
+      "fileB": "src/components/bay-view-v2/assign-dialog.tsx",
+      "startB": 169,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/work-order-detail-drawer.tsx",
+      "startA": 496,
+      "fileB": "src/components/bay-view/work-order-detail-drawer.tsx",
+      "startB": 455,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/work-order-detail-drawer.tsx",
+      "startA": 600,
+      "fileB": "src/components/bay-view/work-order-detail-drawer.tsx",
+      "startB": 230,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/waiting-queue.tsx",
+      "startA": 27,
+      "fileB": "src/components/bay-view-v2/queue-panel.tsx",
+      "startB": 38,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/waiting-queue.tsx",
+      "startA": 37,
+      "fileB": "src/components/bay-view-v2/queue-panel.tsx",
+      "startB": 29,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/waiting-queue.tsx",
+      "startA": 53,
+      "fileB": "src/components/bay-view-v2/queue-panel.tsx",
+      "startB": 56,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/waiting-queue.tsx",
+      "startA": 80,
+      "fileB": "src/components/bay-view-v2/queue-panel.tsx",
+      "startB": 82,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/waiting-queue.tsx",
+      "startA": 203,
+      "fileB": "src/components/bay-view-v2/queue-panel.tsx",
+      "startB": 185,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 387,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 385,
+      "lines": 85,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 416,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 456,
+      "lines": 153,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 21,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 31,
+      "lines": 46,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 68,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 76,
+      "lines": 27,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 96,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 102,
+      "lines": 25,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 139,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 142,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 164,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 167,
+      "lines": 27,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 193,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 195,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 205,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 206,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 230,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 252,
+      "lines": 81,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 313,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 335,
+      "lines": 24,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 417,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 414,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 537,
+      "fileB": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startB": 506,
+      "lines": 18,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 566,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 541,
+      "lines": 23,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 608,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 580,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 624,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 596,
+      "lines": 25,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startA": 652,
+      "fileB": "src/components/bay-view-v2/vehicle-registration-dialog.tsx",
+      "startB": 621,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/shift-report-modal.tsx",
+      "startA": 17,
+      "fileB": "src/components/bay-view-v2/shift-report-dialog.tsx",
+      "startB": 24,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/shift-report-modal.tsx",
+      "startA": 24,
+      "fileB": "src/components/bay-view-v2/shift-report-dialog.tsx",
+      "startB": 32,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/shift-report-modal.tsx",
+      "startA": 67,
+      "fileB": "src/components/bay-view-v2/shift-report-dialog.tsx",
+      "startB": 61,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/shift-report-modal.tsx",
+      "startA": 88,
+      "fileB": "src/components/bay-view-v2/shift-report-dialog.tsx",
+      "startB": 87,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/shift-report-modal.tsx",
+      "startA": 99,
+      "fileB": "src/components/bay-view-v2/shift-report-dialog.tsx",
+      "startB": 98,
+      "lines": 52,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 236,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 230,
+      "lines": 102,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 412,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 347,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 432,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 385,
+      "lines": 31,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 54,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 35,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 81,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 72,
+      "lines": 29,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 120,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 110,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 138,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 146,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 152,
+      "fileB": "src/components/bay-view/status-notes-modal.tsx",
+      "startB": 31,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 157,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 157,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 168,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 165,
+      "lines": 40,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 266,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 232,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 293,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 265,
+      "lines": 21,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 337,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 310,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 347,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 324,
+      "lines": 20,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 390,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 354,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 451,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 411,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/post-service-form.tsx",
+      "startA": 471,
+      "fileB": "src/components/bay-view-v2/post-service-dialog.tsx",
+      "startB": 430,
+      "lines": 18,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pin-settings-dialog.tsx",
+      "startA": 91,
+      "fileB": "src/components/bay-view-v2/pin-settings-dialog.tsx",
+      "startB": 94,
+      "lines": 71,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pin-settings-dialog.tsx",
+      "startA": 13,
+      "fileB": "src/components/bay-view-v2/pin-settings-dialog.tsx",
+      "startB": 23,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pin-settings-dialog.tsx",
+      "startA": 26,
+      "fileB": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startB": 224,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pin-settings-dialog.tsx",
+      "startA": 32,
+      "fileB": "src/components/bay-view-v2/pin-settings-dialog.tsx",
+      "startB": 50,
+      "lines": 27,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pin-settings-dialog.tsx",
+      "startA": 85,
+      "fileB": "src/components/bay-view-v2/pin-settings-dialog.tsx",
+      "startB": 90,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pin-settings-dialog.tsx",
+      "startA": 126,
+      "fileB": "src/components/bay-view/pin-settings-dialog.tsx",
+      "startB": 108,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pin-settings-dialog.tsx",
+      "startA": 163,
+      "fileB": "src/components/bay-view-v2/pin-settings-dialog.tsx",
+      "startB": 163,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pickup-complete-form.tsx",
+      "startA": 60,
+      "fileB": "src/components/bay-view-v2/pickup-complete-dialog.tsx",
+      "startB": 56,
+      "lines": 65,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pickup-complete-form.tsx",
+      "startA": 149,
+      "fileB": "src/components/bay-view-v2/pickup-complete-dialog.tsx",
+      "startB": 120,
+      "lines": 56,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pickup-complete-form.tsx",
+      "startA": 44,
+      "fileB": "src/components/bay-view-v2/pickup-complete-dialog.tsx",
+      "startB": 40,
+      "lines": 36,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pickup-complete-form.tsx",
+      "startA": 87,
+      "fileB": "src/components/bay-view-v2/pickup-complete-dialog.tsx",
+      "startB": 82,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pickup-complete-form.tsx",
+      "startA": 96,
+      "fileB": "src/components/bay-view/post-service-form.tsx",
+      "startB": 151,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pickup-complete-form.tsx",
+      "startA": 102,
+      "fileB": "src/components/bay-view-v2/pickup-complete-dialog.tsx",
+      "startB": 100,
+      "lines": 21,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pickup-complete-form.tsx",
+      "startA": 156,
+      "fileB": "src/components/bay-view-v2/pickup-complete-dialog.tsx",
+      "startB": 132,
+      "lines": 21,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pickup-complete-form.tsx",
+      "startA": 176,
+      "fileB": "src/components/bay-view-v2/pickup-complete-dialog.tsx",
+      "startB": 151,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pickup-complete-form.tsx",
+      "startA": 199,
+      "fileB": "src/components/bay-view/post-service-form.tsx",
+      "startB": 332,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/pickup-complete-form.tsx",
+      "startA": 204,
+      "fileB": "src/components/bay-view-v2/pickup-complete-dialog.tsx",
+      "startB": 183,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/mechanic-registration-dialog.tsx",
+      "startA": 96,
+      "fileB": "src/components/bay-view-v2/mechanic-registration-dialog.tsx",
+      "startB": 87,
+      "lines": 96,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/mechanic-registration-dialog.tsx",
+      "startA": 20,
+      "fileB": "src/components/bay-view-v2/mechanic-registration-dialog.tsx",
+      "startB": 30,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/mechanic-registration-dialog.tsx",
+      "startA": 33,
+      "fileB": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "startB": 224,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/mechanic-registration-dialog.tsx",
+      "startA": 39,
+      "fileB": "src/components/bay-view-v2/mechanic-registration-dialog.tsx",
+      "startB": 57,
+      "lines": 31,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/mechanic-registration-dialog.tsx",
+      "startA": 166,
+      "fileB": "src/components/bay-view-v2/mechanic-registration-dialog.tsx",
+      "startB": 162,
+      "lines": 24,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/mechanic-chip.tsx",
+      "startA": 13,
+      "fileB": "src/components/bay-view-v2/mechanic-panel.tsx",
+      "startB": 26,
+      "lines": 25,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/bay-view-client.tsx",
+      "startA": 678,
+      "fileB": "src/components/bay-view/quick-actions.tsx",
+      "startB": 127,
+      "lines": 21,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/bay-view-client.tsx",
+      "startA": 168,
+      "fileB": "src/components/bay-view/quick-actions.tsx",
+      "startB": 24,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/bay-view-client.tsx",
+      "startA": 680,
+      "fileB": "src/components/bay-view/quick-actions.tsx",
+      "startB": 143,
+      "lines": 22,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/bay-slot.tsx",
+      "startA": 60,
+      "fileB": "src/components/bay-view-v2/bay-card.tsx",
+      "startB": 16,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/bay-slot.tsx",
+      "startA": 75,
+      "fileB": "src/components/bay-view-v2/bay-card.tsx",
+      "startB": 48,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/_pickup-summary.tsx",
+      "startA": 85,
+      "fileB": "src/components/bay-view/pickup-complete-form.tsx",
+      "startB": 92,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/_parts-section.tsx",
+      "startA": 30,
+      "fileB": "src/components/bay-view/_services-section.tsx",
+      "startB": 29,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/_parts-section.tsx",
+      "startA": 118,
+      "fileB": "src/components/bay-view/_services-section.tsx",
+      "startB": 110,
+      "lines": 29,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/_drawer-loading.tsx",
+      "startA": 63,
+      "fileB": "src/components/bay-view/_drawer-loading.tsx",
+      "startB": 22,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/_bay-drag-handlers.ts",
+      "startA": 310,
+      "fileB": "src/components/bay-view/_bay-drag-handlers.ts",
+      "startB": 204,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/_bay-drag-handlers.ts",
+      "startA": 317,
+      "fileB": "src/components/bay-view/_bay-drag-handlers.ts",
+      "startB": 211,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/_bay-action-handlers.ts",
+      "startA": 19,
+      "fileB": "src/components/bay-view/_bay-drag-handlers.ts",
+      "startB": 24,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/bay-view/_bay-action-handlers.ts",
+      "startA": 47,
+      "fileB": "src/components/bay-view/_bay-drag-handlers.ts",
+      "startB": 62,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/page-layer-analysis.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 79,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/page-layer-analysis.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/page-layer-analysis.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/middleware-auth-analysis.html",
+      "startA": 24,
+      "fileB": "public/guide/architecture/page-layer-analysis.html",
+      "startB": 73,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/middleware-auth-analysis.html",
+      "startA": 59,
+      "fileB": "public/guide/architecture/page-layer-analysis.html",
+      "startB": 70,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/middleware-auth-analysis.html",
+      "startA": 60,
+      "fileB": "public/guide/architecture/middleware-auth-analysis.html",
+      "startB": 46,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/middleware-auth-analysis.html",
+      "startA": 63,
+      "fileB": "public/guide/architecture/page-layer-analysis.html",
+      "startB": 57,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/middleware-auth-analysis.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 63,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/middleware-auth-analysis.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/middleware-auth-analysis.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/lib-layer-analysis.html",
+      "startA": 24,
+      "fileB": "public/guide/architecture/page-layer-analysis.html",
+      "startB": 57,
+      "lines": 18,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/lib-layer-analysis.html",
+      "startA": 47,
+      "fileB": "public/guide/architecture/page-layer-analysis.html",
+      "startB": 57,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/lib-layer-analysis.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 71,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/lib-layer-analysis.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/page-layer-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/lib-layer-analysis.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-wo-wizard-decomposition.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 21,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-wo-wizard-decomposition.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-wo-wizard-decomposition.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-summary.html",
+      "startA": 24,
+      "fileB": "public/guide/architecture/lib-layer-analysis.html",
+      "startB": 40,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-summary.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 23,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-summary.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-summary.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-route-handler-factory.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-route-handler-factory.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-route-handler-factory.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-god-routes.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 26,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-god-routes.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-god-routes.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-dashboard-react-query.html",
+      "startA": 33,
+      "fileB": "public/guide/architecture/page-layer-analysis.html",
+      "startB": 56,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-dashboard-react-query.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 35,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-dashboard-react-query.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-dashboard-react-query.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-circular-dependency.html",
+      "startA": 25,
+      "fileB": "public/guide/architecture/page-layer-analysis.html",
+      "startB": 62,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-circular-dependency.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 27,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-circular-dependency.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-circular-dependency.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-auth-duplicate-tree.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-auth-duplicate-tree.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/fix-auth-duplicate-tree.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/database-schema-analysis.html",
+      "startA": 24,
+      "fileB": "public/guide/architecture/page-layer-analysis.html",
+      "startB": 56,
+      "lines": 31,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/database-schema-analysis.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 44,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/database-schema-analysis.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/database-schema-analysis.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/database-layer-analysis.html",
+      "startA": 49,
+      "fileB": "public/guide/architecture/database-layer-analysis.html",
+      "startB": 43,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/database-layer-analysis.html",
+      "startA": 69,
+      "fileB": "public/guide/architecture/lib-layer-analysis.html",
+      "startB": 43,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/database-layer-analysis.html",
+      "startA": 84,
+      "fileB": "public/guide/architecture/lib-layer-analysis.html",
+      "startB": 60,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/database-layer-analysis.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 83,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/database-layer-analysis.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/database-layer-analysis.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/component-layer-analysis.html",
+      "startA": 68,
+      "fileB": "public/guide/architecture/component-layer-analysis.html",
+      "startB": 67,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/component-layer-analysis.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 72,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/component-layer-analysis.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/component-layer-analysis.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/architecture-candidates.html",
+      "startA": 27,
+      "fileB": "public/guide/architecture/page-layer-analysis.html",
+      "startB": 73,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/architecture-candidates.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 27,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/architecture-candidates.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/architecture-candidates.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/api-layer-analysis.html",
+      "startA": 31,
+      "fileB": "public/guide/architecture/page-layer-analysis.html",
+      "startB": 57,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/api-layer-analysis.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 40,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/api-layer-analysis.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/component-layer-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/api-layer-analysis.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/00-synthesis.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/00-synthesis.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/architecture/00-synthesis.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/20260516151116_parts_cars_disassembly.sql",
+      "startA": 48,
+      "fileB": "supabase/migrations/20260518000001_post_service_data.sql",
+      "startB": 27,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/20260516151116_parts_cars_disassembly.sql",
+      "startA": 78,
+      "fileB": "supabase/migrations/20260516151116_parts_cars_disassembly.sql",
+      "startB": 48,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/20260516101311_service_reminders.sql",
+      "startA": 23,
+      "fileB": "supabase/migrations/20260518000001_post_service_data.sql",
+      "startB": 27,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/20260514033823_schedule_subscription_expiry_cron.sql",
+      "startA": 8,
+      "fileB": "supabase/migrations/20260516101828_schedule_service_reminders_cron.sql",
+      "startB": 5,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/20260513075558_fix_all_schema_drifts.sql",
+      "startA": 20,
+      "fileB": "supabase/migrations/20260520000001_invoices_schema_clean.sql",
+      "startB": 8,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/20260513075558_fix_all_schema_drifts.sql",
+      "startA": 29,
+      "fileB": "supabase/migrations/20260520000001_invoices_schema_clean.sql",
+      "startB": 16,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/20260513075558_fix_all_schema_drifts.sql",
+      "startA": 49,
+      "fileB": "supabase/migrations/20260518000001_post_service_data.sql",
+      "startB": 28,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/20260513075558_fix_all_schema_drifts.sql",
+      "startA": 60,
+      "fileB": "supabase/migrations/20260520000001_invoices_schema_clean.sql",
+      "startB": 44,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00014_public_invoice_rpc.sql",
+      "startA": 5,
+      "fileB": "supabase/migrations/20260513075558_fix_all_schema_drifts.sql",
+      "startB": 152,
+      "lines": 23,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00014_public_invoice_rpc.sql",
+      "startA": 34,
+      "fileB": "supabase/migrations/20260513075558_fix_all_schema_drifts.sql",
+      "startB": 181,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00009_seed_showcase_data.sql",
+      "startA": 207,
+      "fileB": "supabase/migrations/00009_seed_showcase_data.sql",
+      "startB": 187,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00009_seed_showcase_data.sql",
+      "startA": 217,
+      "fileB": "supabase/migrations/00009_seed_showcase_data.sql",
+      "startB": 187,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00008_inventory_control.sql",
+      "startA": 52,
+      "fileB": "supabase/migrations/20260518000001_post_service_data.sql",
+      "startB": 28,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00008_inventory_control.sql",
+      "startA": 73,
+      "fileB": "supabase/migrations/20260518000001_post_service_data.sql",
+      "startB": 28,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00008_inventory_control.sql",
+      "startA": 116,
+      "fileB": "supabase/migrations/20260514100000_materialize_inventory_balances.sql",
+      "startB": 5,
+      "lines": 19,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00003_phase2_parts_catalog.sql",
+      "startA": 19,
+      "fileB": "supabase/migrations/00008_inventory_control.sql",
+      "startB": 51,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00003_phase2_parts_catalog.sql",
+      "startA": 37,
+      "fileB": "supabase/migrations/00008_inventory_control.sql",
+      "startB": 51,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00003_phase2_parts_catalog.sql",
+      "startA": 52,
+      "fileB": "supabase/migrations/00008_inventory_control.sql",
+      "startB": 104,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00002_phase1_startup_crm.sql",
+      "startA": 18,
+      "fileB": "supabase/migrations/20260518000001_post_service_data.sql",
+      "startB": 27,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00002_phase1_startup_crm.sql",
+      "startA": 51,
+      "fileB": "supabase/migrations/20260518000001_post_service_data.sql",
+      "startB": 28,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00002_phase1_startup_crm.sql",
+      "startA": 74,
+      "fileB": "supabase/migrations/00008_inventory_control.sql",
+      "startB": 51,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00002_phase1_startup_crm.sql",
+      "startA": 97,
+      "fileB": "supabase/migrations/20260518000001_post_service_data.sql",
+      "startB": 28,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00002_phase1_startup_crm.sql",
+      "startA": 175,
+      "fileB": "supabase/migrations/00002_phase1_startup_crm.sql",
+      "startB": 158,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00001_phase0_foundation.sql",
+      "startA": 26,
+      "fileB": "supabase/migrations/00008_inventory_control.sql",
+      "startB": 51,
+      "lines": 10,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00001_phase0_foundation.sql",
+      "startA": 44,
+      "fileB": "supabase/migrations/20260518000001_post_service_data.sql",
+      "startB": 28,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00001_phase0_foundation.sql",
+      "startA": 71,
+      "fileB": "supabase/migrations/20260518000001_post_service_data.sql",
+      "startB": 28,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "supabase/migrations/00001_phase0_foundation.sql",
+      "startA": 86,
+      "fileB": "supabase/migrations/20260518000001_post_service_data.sql",
+      "startB": 28,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/lib/validations.ts",
+      "startA": 105,
+      "fileB": "src/lib/validations.ts",
+      "startB": 90,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/data-table-dashboard.tsx",
+      "startA": 223,
+      "fileB": "src/components/data-table-dashboard.tsx",
+      "startB": 197,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/customer-detail-drawer.tsx",
+      "startA": 36,
+      "fileB": "src/app/[locale]/dashboard/customers/[id]/page.tsx",
+      "startB": 53,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/customer-detail-drawer.tsx",
+      "startA": 58,
+      "fileB": "src/app/[locale]/dashboard/customers/[id]/page.tsx",
+      "startB": 84,
+      "lines": 15,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/components/brand-theme-provider.tsx",
+      "startA": 59,
+      "fileB": "src/app/[locale]/dashboard/settings/page.tsx",
+      "startB": 145,
+      "lines": 13,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/error.tsx",
+      "startA": 6,
+      "fileB": "src/app/[locale]/error.tsx",
+      "startB": 6,
+      "lines": 12,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/work-orders.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/work-orders.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/work-orders.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/visual-bay-view-plan.html",
+      "startA": 67,
+      "fileB": "public/guide/architecture/lib-layer-analysis.html",
+      "startB": 52,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/visual-bay-view-plan.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 101,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/visual-bay-view-plan.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/visual-bay-view-plan.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/vehicles.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/vehicles.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/vehicles.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/vehicle-models.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/vehicle-models.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/vehicle-models.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/tips.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/tips.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/tips.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/sync.html",
+      "startA": 36,
+      "fileB": "public/guide/sync.html",
+      "startB": 30,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/sync.html",
+      "startA": 43,
+      "fileB": "public/guide/sync.html",
+      "startB": 29,
+      "lines": 6,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/sync.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 39,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/sync.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/sync.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/settings.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/settings.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/settings.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/services.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/services.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/services.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/service-reminders.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/service-reminders.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/service-reminders.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/reports.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/reports.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/reports.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/pricing-overview.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 19,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/pricing-overview.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/pricing-overview.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/organization.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/organization.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/organization.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/nershil.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/nershil.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/nershil.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/inventory.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/inventory.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/inventory.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/intro.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/intro.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/intro.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/index.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/index.html",
+      "startA": 1,
+      "fileB": "public/guide/architecture/fix-god-routes.html",
+      "startB": 1,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/index.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/getting-started.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 16,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/getting-started.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/getting-started.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/finance.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/finance.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/finance.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/expenses.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/expenses.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/expenses.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/dashboard.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/dashboard.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/dashboard.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/customers.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/customers.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/customers.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/bay-view.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/bay-view.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/bay-view.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/backup.html",
+      "startA": 32,
+      "fileB": "public/guide/backup.html",
+      "startB": 28,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/backup.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 29,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/backup.html",
+      "startA": 6,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 6,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/backup.html",
+      "startA": 16,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/404.html",
+      "startA": 12,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 12,
+      "lines": 11,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/404.html",
+      "startA": 7,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 7,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "public/guide/404.html",
+      "startA": 13,
+      "fileB": "public/guide/architecture/strategic-gap-analysis.html",
+      "startB": 16,
+      "lines": 9,
+      "tokens": 0
+    },
+    {
+      "fileA": "invoice-email-preview.html",
+      "startA": 147,
+      "fileB": "invoice-email-preview.html",
+      "startB": 135,
+      "lines": 34,
+      "tokens": 0
+    },
+    {
+      "fileA": "invoice-email-preview.html",
+      "startA": 180,
+      "fileB": "invoice-email-preview.html",
+      "startB": 140,
+      "lines": 17,
+      "tokens": 0
+    },
+    {
+      "fileA": "invoice-email-preview.html",
+      "startA": 204,
+      "fileB": "invoice-email-preview.html",
+      "startB": 201,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "invoice-email-preview.html",
+      "startA": 255,
+      "fileB": "invoice-email-preview.html",
+      "startB": 250,
+      "lines": 14,
+      "tokens": 0
+    },
+    {
+      "fileA": "invoice-email-preview.html",
+      "startA": 303,
+      "fileB": "invoice-email-preview.html",
+      "startB": 300,
+      "lines": 7,
+      "tokens": 0
+    },
+    {
+      "fileA": "invoice-email-preview.html",
+      "startA": 306,
+      "fileB": "invoice-email-preview.html",
+      "startB": 296,
+      "lines": 6,
+      "tokens": 0
+    }
+  ],
+  "duplicatedLines": 9864,
+  "totalLines": 119624,
+  "percentage": 8.25
+}

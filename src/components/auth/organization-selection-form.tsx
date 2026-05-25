@@ -12,6 +12,7 @@ interface OrganizationSelectionFormProps {
     state: CompleteOrganizationLoginState,
     formData: FormData,
   ) => Promise<CompleteOrganizationLoginState>;
+  redirectTo?: string;
   copy: {
     title: string;
     subtitle: string;
@@ -31,6 +32,7 @@ interface OrganizationSelectionFormProps {
 export function OrganizationSelectionForm({
   organizations,
   action,
+  redirectTo,
   copy,
 }: OrganizationSelectionFormProps) {
   const [state, formAction, isPending] = useActionState(action, {});
@@ -51,7 +53,7 @@ export function OrganizationSelectionForm({
 
   if (organizations.length === 0) {
     return (
-      <div className="space-y-3 text-center">
+      <div className="flex flex-col gap-3 text-center">
         <h2 className="text-lg font-semibold text-foreground">{copy.title}</h2>
         <p className="text-sm text-muted-foreground">{copy.noOrganizations}</p>
       </div>
@@ -65,14 +67,26 @@ export function OrganizationSelectionForm({
         <p className="mt-1 text-sm text-muted-foreground">{copy.subtitle}</p>
       </div>
 
-      <form action={formAction} className="space-y-4">
+      <form
+        action={formAction}
+        className="flex flex-col gap-4"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            e.currentTarget.requestSubmit();
+          }
+        }}
+      >
+        {redirectTo && (
+          <input type="hidden" name="redirectTo" value={redirectTo} />
+        )}
         {state?.error && (
           <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {state.error}
           </div>
         )}
 
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-1.5">
           <label
             htmlFor="organizationId"
             className="text-sm font-medium text-foreground"
@@ -86,6 +100,7 @@ export function OrganizationSelectionForm({
               name="organizationId"
               value={organizationId}
               onChange={(event) => setOrganizationId(event.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && e.stopPropagation()}
               className="h-10 w-full rounded-md border border-input bg-background py-2 pr-3 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {organizations.map((organization) => (
@@ -103,7 +118,7 @@ export function OrganizationSelectionForm({
           </p>
         </div>
 
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-1.5">
           <label htmlFor="pin" className="text-sm font-medium text-foreground">
             {copy.pinLabel}
           </label>
@@ -130,7 +145,7 @@ export function OrganizationSelectionForm({
         </div>
 
         {!selectedOrganization?.hasBayViewPin && (
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="confirmPin"
               className="text-sm font-medium text-foreground"

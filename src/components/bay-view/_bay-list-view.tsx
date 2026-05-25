@@ -3,6 +3,7 @@
 import { CheckCircle2, Maximize2 } from "lucide-react";
 import type { useTranslations } from "next-intl";
 import { useClientNow } from "@/hooks/use-client-now";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "./status-pill";
 
@@ -41,7 +42,7 @@ export function BayListView({
 }: BayListViewProps) {
   const now = useClientNow();
   return (
-    <div className="h-full overflow-y-auto space-y-1 p-1">
+    <div className="h-full overflow-y-auto flex flex-col gap-1 p-1">
       <div className="flex items-center gap-3 px-2 py-1 text-[9px] font-semibold text-muted-foreground/60 uppercase tracking-wider border-b border-border/50">
         <span className="w-12 shrink-0">{t("listHeaderBay")}</span>
         <span className="flex-1 min-w-0">{t("listHeaderVehicle")}</span>
@@ -114,24 +115,26 @@ export function BayListView({
                 wo.status !== "Ready for Pickup" &&
                 wo.status !== "Completed" &&
                 wo.status !== "Cancelled" && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => onStatusClick(wo.id, "Ready for Pickup")}
-                    className="flex size-7 items-center justify-center rounded-md bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
+                    className="bg-green-500/10 text-green-600 hover:bg-green-500/20"
                     aria-label={t("markReady")}
                   >
                     <CheckCircle2 className="size-3.5" />
-                  </button>
+                  </Button>
                 )}
               {wo && (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => onOpenDetail(wo.id)}
-                  className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                  className="bg-primary/10 text-primary hover:bg-primary/20"
                   aria-label={t("open")}
                 >
                   <Maximize2 className="size-3.5" />
-                </button>
+                </Button>
               )}
             </div>
           </div>

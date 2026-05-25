@@ -1,0 +1,3013 @@
+{
+  "success": true,
+  "issues": [
+    {
+      "type": "file",
+      "name": "_scripts/replace-space-y.mjs",
+      "file": "_scripts/replace-space-y.mjs"
+    },
+    {
+      "type": "file",
+      "name": "docs/.vitepress/config.mjs",
+      "file": "docs/.vitepress/config.mjs"
+    },
+    {
+      "type": "file",
+      "name": "src/components/_data-table-chart.tsx",
+      "file": "src/components/_data-table-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/breadcrumbs.tsx",
+      "file": "src/components/breadcrumbs.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/chart-area-interactive.tsx",
+      "file": "src/components/chart-area-interactive.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/data-table-dashboard.tsx",
+      "file": "src/components/data-table-dashboard.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/data-table.tsx",
+      "file": "src/components/data-table.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/search-form.tsx",
+      "file": "src/components/search-form.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/section-cards.tsx",
+      "file": "src/components/section-cards.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/theme-toggle.tsx",
+      "file": "src/components/theme-toggle.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/user-menu.tsx",
+      "file": "src/components/user-menu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/sidebar-transitions.ts",
+      "file": "src/lib/sidebar-transitions.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/validations.ts",
+      "file": "src/lib/validations.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/hooks/use-breadcrumbs.ts",
+      "file": "src/hooks/use-breadcrumbs.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/hooks/use-persisted-state.ts",
+      "file": "src/hooks/use-persisted-state.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/test/factories.ts",
+      "file": "src/test/factories.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/test/test-utils.tsx",
+      "file": "src/test/test-utils.tsx"
+    },
+    {
+      "type": "file",
+      "name": "docs/.vitepress/theme/index.js",
+      "file": "docs/.vitepress/theme/index.js"
+    },
+    {
+      "type": "file",
+      "name": "docs/.vitepress/theme/style.css",
+      "file": "docs/.vitepress/theme/style.css"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/_bay-list-view.tsx",
+      "file": "src/components/bay-view/_bay-list-view.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/_bay-view-body.tsx",
+      "file": "src/components/bay-view/_bay-view-body.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/_bay-view-header.tsx",
+      "file": "src/components/bay-view/_bay-view-header.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/_bay-view-sidebar.tsx",
+      "file": "src/components/bay-view/_bay-view-sidebar.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/_pickup-summary.tsx",
+      "file": "src/components/bay-view/_pickup-summary.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/_queue-assignment-dialog.tsx",
+      "file": "src/components/bay-view/_queue-assignment-dialog.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/bay-slot.tsx",
+      "file": "src/components/bay-view/bay-slot.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/bay-view-client.tsx",
+      "file": "src/components/bay-view/bay-view-client.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/bay-view-toolbar.tsx",
+      "file": "src/components/bay-view/bay-view-toolbar.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/brand-logo.tsx",
+      "file": "src/components/bay-view/brand-logo.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/mechanic-chip.tsx",
+      "file": "src/components/bay-view/mechanic-chip.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/mechanic-registration-dialog.tsx",
+      "file": "src/components/bay-view/mechanic-registration-dialog.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/mechanic-roster.tsx",
+      "file": "src/components/bay-view/mechanic-roster.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/pin-settings-dialog.tsx",
+      "file": "src/components/bay-view/pin-settings-dialog.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/quick-actions.tsx",
+      "file": "src/components/bay-view/quick-actions.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/shift-report-modal.tsx",
+      "file": "src/components/bay-view/shift-report-modal.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/vehicle-card.tsx",
+      "file": "src/components/bay-view/vehicle-card.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "file": "src/components/bay-view/vehicle-registration-dialog.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/waiting-queue.tsx",
+      "file": "src/components/bay-view/waiting-queue.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/_area-interactive-chart.tsx",
+      "file": "src/components/charts/_area-interactive-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/_bar-chart-inner.tsx",
+      "file": "src/components/charts/_bar-chart-inner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/_line-chart-inner.tsx",
+      "file": "src/components/charts/_line-chart-inner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/_pie-chart-inner.tsx",
+      "file": "src/components/charts/_pie-chart-inner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/_radar-chart-inner.tsx",
+      "file": "src/components/charts/_radar-chart-inner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/_radial-chart-inner.tsx",
+      "file": "src/components/charts/_radial-chart-inner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/bar-chart.tsx",
+      "file": "src/components/charts/bar-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/dynamic-charts.tsx",
+      "file": "src/components/charts/dynamic-charts.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/index.ts",
+      "file": "src/components/charts/index.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/line-chart.tsx",
+      "file": "src/components/charts/line-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/pie-chart.tsx",
+      "file": "src/components/charts/pie-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/radar-chart.tsx",
+      "file": "src/components/charts/radar-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/radial-chart.tsx",
+      "file": "src/components/charts/radial-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/customer-select.tsx",
+      "file": "src/components/work-orders/customer-select.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/part-lines.tsx",
+      "file": "src/components/work-orders/part-lines.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/service-lines.tsx",
+      "file": "src/components/work-orders/service-lines.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/vehicle-select.tsx",
+      "file": "src/components/work-orders/vehicle-select.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/aspect-ratio.tsx",
+      "file": "src/components/ui/aspect-ratio.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/button-group.tsx",
+      "file": "src/components/ui/button-group.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/carousel.tsx",
+      "file": "src/components/ui/carousel.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/context-menu.tsx",
+      "file": "src/components/ui/context-menu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/data-table.tsx",
+      "file": "src/components/ui/data-table.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/direction.tsx",
+      "file": "src/components/ui/direction.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/hover-card.tsx",
+      "file": "src/components/ui/hover-card.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/input-otp.tsx",
+      "file": "src/components/ui/input-otp.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/item.tsx",
+      "file": "src/components/ui/item.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/kbd.tsx",
+      "file": "src/components/ui/kbd.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/menubar.tsx",
+      "file": "src/components/ui/menubar.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/native-select.tsx",
+      "file": "src/components/ui/native-select.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/pagination.tsx",
+      "file": "src/components/ui/pagination.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/radio-group.tsx",
+      "file": "src/components/ui/radio-group.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/resizable.tsx",
+      "file": "src/components/ui/resizable.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/slider.tsx",
+      "file": "src/components/ui/slider.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/sonner.tsx",
+      "file": "src/components/ui/sonner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/spinner.tsx",
+      "file": "src/components/ui/spinner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/cache/server.ts",
+      "file": "src/lib/cache/server.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/i18n/request.ts",
+      "file": "src/lib/i18n/request.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/services/bay-view-seed-data.ts",
+      "file": "src/lib/services/bay-view-seed-data.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/services/dashboard-service.ts",
+      "file": "src/lib/services/dashboard-service.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/utils/name.ts",
+      "file": "src/lib/utils/name.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/test/mocks/handlers.ts",
+      "file": "src/test/mocks/handlers.ts"
+    },
+    {
+      "type": "file",
+      "name": "supabase/functions/check-service-reminders/index.ts",
+      "file": "supabase/functions/check-service-reminders/index.ts"
+    },
+    {
+      "type": "file",
+      "name": "supabase/functions/expire-subscriptions/index.ts",
+      "file": "supabase/functions/expire-subscriptions/index.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/app/[locale]/dashboard/_goal-card.tsx",
+      "file": "src/app/[locale]/dashboard/_goal-card.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/app/[locale]/dashboard/_recent-work-orders-table.tsx",
+      "file": "src/app/[locale]/dashboard/_recent-work-orders-table.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/app/[locale]/dashboard/actions.ts",
+      "file": "src/app/[locale]/dashboard/actions.ts"
+    },
+    {
+      "type": "dependency",
+      "name": "@cardog-icons/react",
+      "file": "package.json",
+      "line": 21
+    },
+    {
+      "type": "dependency",
+      "name": "@phosphor-icons/react",
+      "file": "package.json",
+      "line": 26
+    },
+    {
+      "type": "dependency",
+      "name": "@tanstack/react-table",
+      "file": "package.json",
+      "line": 30
+    },
+    {
+      "type": "dependency",
+      "name": "embla-carousel-react",
+      "file": "package.json",
+      "line": 35
+    },
+    {
+      "type": "dependency",
+      "name": "input-otp",
+      "file": "package.json",
+      "line": 38
+    },
+    {
+      "type": "dependency",
+      "name": "react-resizable-panels",
+      "file": "package.json",
+      "line": 46
+    },
+    {
+      "type": "dependency",
+      "name": "zod",
+      "file": "package.json",
+      "line": 53
+    },
+    {
+      "type": "devDependency",
+      "name": "msw",
+      "file": "package.json",
+      "line": 69
+    },
+    {
+      "type": "devDependency",
+      "name": "react-grab",
+      "file": "package.json",
+      "line": 70
+    },
+    {
+      "type": "export",
+      "name": "getPathname",
+      "file": "src/lib/i18n/navigation.ts",
+      "line": 4
+    },
+    {
+      "type": "export",
+      "name": "badgeVariants",
+      "file": "src/components/ui/badge.tsx",
+      "line": 53
+    },
+    {
+      "type": "export",
+      "name": "getWorkOrderProfit",
+      "file": "src/lib/services/report-service.ts",
+      "line": 820
+    },
+    {
+      "type": "export",
+      "name": "getDashboardProfitSummary",
+      "file": "src/lib/services/report-service.ts",
+      "line": 863
+    },
+    {
+      "type": "export",
+      "name": "createReminderLog",
+      "file": "src/lib/services/service-reminder-service.ts",
+      "line": 481
+    },
+    {
+      "type": "export",
+      "name": "recalculateWorkOrderTotals",
+      "file": "src/lib/services/work-order-service.ts",
+      "line": 419
+    },
+    {
+      "type": "export",
+      "name": "getDailyWorkOrders",
+      "file": "src/lib/services/work-order-service.ts",
+      "line": 819
+    },
+    {
+      "type": "export",
+      "name": "createRateLimiter",
+      "file": "src/lib/rate-limit.ts",
+      "line": 42
+    },
+    {
+      "type": "export",
+      "name": "apiRateLimiter",
+      "file": "src/lib/rate-limit.ts",
+      "line": 77
+    },
+    {
+      "type": "export",
+      "name": "checkRateLimit",
+      "file": "src/lib/rate-limit.ts",
+      "line": 85
+    },
+    {
+      "type": "export",
+      "name": "RateLimiterResult",
+      "file": "src/lib/rate-limit.ts",
+      "line": 30
+    },
+    {
+      "type": "export",
+      "name": "inviteUser",
+      "file": "src/lib/services/user-service.ts",
+      "line": 84
+    },
+    {
+      "type": "export",
+      "name": "addUserToOrganization",
+      "file": "src/lib/services/user-service.ts",
+      "line": 130
+    },
+    {
+      "type": "export",
+      "name": "SidebarGroupAction",
+      "file": "src/components/ui/sidebar.tsx",
+      "line": 702
+    },
+    {
+      "type": "export",
+      "name": "SidebarInput",
+      "file": "src/components/ui/sidebar.tsx",
+      "line": 706
+    },
+    {
+      "type": "export",
+      "name": "SidebarMenuAction",
+      "file": "src/components/ui/sidebar.tsx",
+      "line": 709
+    },
+    {
+      "type": "export",
+      "name": "SidebarMenuBadge",
+      "file": "src/components/ui/sidebar.tsx",
+      "line": 710
+    },
+    {
+      "type": "export",
+      "name": "SidebarMenuSkeleton",
+      "file": "src/components/ui/sidebar.tsx",
+      "line": 713
+    },
+    {
+      "type": "export",
+      "name": "KPI_ACCENTS",
+      "file": "src/app/[locale]/dashboard/_kpi-cards.tsx",
+      "line": 9
+    },
+    {
+      "type": "export",
+      "name": "WO_STATUS_STYLES",
+      "file": "src/app/[locale]/dashboard/_recent-work-orders.tsx",
+      "line": 11
+    },
+    {
+      "type": "export",
+      "name": "TableCaption",
+      "file": "src/components/ui/table.tsx",
+      "line": 115
+    },
+    {
+      "type": "export",
+      "name": "authenticatePortalRequest",
+      "file": "src/lib/portal-auth.ts",
+      "line": 26
+    },
+    {
+      "type": "export",
+      "name": "checkSubscriptionExpired",
+      "file": "src/lib/services/subscription-enforcement.ts",
+      "line": 3
+    },
+    {
+      "type": "export",
+      "name": "useUpdatePartsCar",
+      "file": "src/lib/queries/use-inventory.ts",
+      "line": 556
+    },
+    {
+      "type": "export",
+      "name": "useDeletePartsCar",
+      "file": "src/lib/queries/use-inventory.ts",
+      "line": 577
+    },
+    {
+      "type": "export",
+      "name": "fetchPartPriceHistory",
+      "file": "src/lib/queries/use-work-order-detail.ts",
+      "line": 30
+    },
+    {
+      "type": "export",
+      "name": "useServicePriceHistory",
+      "file": "src/lib/queries/use-work-order-detail.ts",
+      "line": 101
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuPortal",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 257
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuGroup",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 260
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuLabel",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 261
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuCheckboxItem",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 263
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuRadioGroup",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 264
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuRadioItem",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 265
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuShortcut",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 267
+    },
+    {
+      "type": "export",
+      "name": "DialogClose",
+      "file": "src/components/ui/dialog.tsx",
+      "line": 146
+    },
+    {
+      "type": "export",
+      "name": "DialogOverlay",
+      "file": "src/components/ui/dialog.tsx",
+      "line": 151
+    },
+    {
+      "type": "export",
+      "name": "DialogPortal",
+      "file": "src/components/ui/dialog.tsx",
+      "line": 152
+    },
+    {
+      "type": "export",
+      "name": "SelectGroup",
+      "file": "src/components/ui/select.tsx",
+      "line": 193
+    },
+    {
+      "type": "export",
+      "name": "SelectLabel",
+      "file": "src/components/ui/select.tsx",
+      "line": 195
+    },
+    {
+      "type": "export",
+      "name": "SelectScrollDownButton",
+      "file": "src/components/ui/select.tsx",
+      "line": 196
+    },
+    {
+      "type": "export",
+      "name": "SelectScrollUpButton",
+      "file": "src/components/ui/select.tsx",
+      "line": 197
+    },
+    {
+      "type": "export",
+      "name": "SelectSeparator",
+      "file": "src/components/ui/select.tsx",
+      "line": 198
+    },
+    {
+      "type": "export",
+      "name": "SheetClose",
+      "file": "src/components/ui/sheet.tsx",
+      "line": 127
+    },
+    {
+      "type": "export",
+      "name": "SheetFooter",
+      "file": "src/components/ui/sheet.tsx",
+      "line": 130
+    },
+    {
+      "type": "export",
+      "name": "tabsListVariants",
+      "file": "src/components/ui/tabs.tsx",
+      "line": 86
+    },
+    {
+      "type": "export",
+      "name": "useServiceSchedule",
+      "file": "src/lib/queries/use-service-reminders.ts",
+      "line": 70
+    },
+    {
+      "type": "export",
+      "name": "useLastVisitData",
+      "file": "src/lib/queries/use-price-memory.ts",
+      "line": 75
+    },
+    {
+      "type": "export",
+      "name": "useCustomerAutoFill",
+      "file": "src/lib/queries/use-price-memory.ts",
+      "line": 118
+    },
+    {
+      "type": "export",
+      "name": "ServicePriceEntry",
+      "file": "src/lib/queries/use-price-memory.ts",
+      "line": 7
+    },
+    {
+      "type": "export",
+      "name": "PartPriceEntry",
+      "file": "src/lib/queries/use-price-memory.ts",
+      "line": 15
+    },
+    {
+      "type": "export",
+      "name": "LastVisitData",
+      "file": "src/lib/queries/use-price-memory.ts",
+      "line": 24
+    },
+    {
+      "type": "export",
+      "name": "CustomerAutoFillData",
+      "file": "src/lib/queries/use-price-memory.ts",
+      "line": 47
+    },
+    {
+      "type": "export",
+      "name": "useVehicle",
+      "file": "src/lib/queries/use-vehicles.ts",
+      "line": 24
+    },
+    {
+      "type": "export",
+      "name": "AlertDialogMedia",
+      "file": "src/components/ui/alert-dialog.tsx",
+      "line": 181
+    },
+    {
+      "type": "export",
+      "name": "AlertDialogOverlay",
+      "file": "src/components/ui/alert-dialog.tsx",
+      "line": 182
+    },
+    {
+      "type": "export",
+      "name": "AlertDialogPortal",
+      "file": "src/components/ui/alert-dialog.tsx",
+      "line": 183
+    },
+    {
+      "type": "export",
+      "name": "FieldDescription",
+      "file": "src/components/ui/field.tsx",
+      "line": 230
+    },
+    {
+      "type": "export",
+      "name": "FieldLegend",
+      "file": "src/components/ui/field.tsx",
+      "line": 233
+    },
+    {
+      "type": "export",
+      "name": "FieldSeparator",
+      "file": "src/components/ui/field.tsx",
+      "line": 234
+    },
+    {
+      "type": "export",
+      "name": "FieldSet",
+      "file": "src/components/ui/field.tsx",
+      "line": 235
+    },
+    {
+      "type": "export",
+      "name": "FieldContent",
+      "file": "src/components/ui/field.tsx",
+      "line": 236
+    },
+    {
+      "type": "export",
+      "name": "FieldTitle",
+      "file": "src/components/ui/field.tsx",
+      "line": 237
+    },
+    {
+      "type": "export",
+      "name": "Constants",
+      "file": "src/lib/database.types.ts",
+      "line": 4050
+    },
+    {
+      "type": "export",
+      "name": "TablesUpdate",
+      "file": "src/lib/database.types.ts",
+      "line": 3991
+    },
+    {
+      "type": "export",
+      "name": "CompositeTypes",
+      "file": "src/lib/database.types.ts",
+      "line": 4033
+    },
+    {
+      "type": "export",
+      "name": "generateInvoiceNumber",
+      "file": "src/lib/services/invoice-service.ts",
+      "line": 15
+    },
+    {
+      "type": "export",
+      "name": "getInvoiceByPublicToken",
+      "file": "src/lib/services/invoice-service.ts",
+      "line": 139
+    },
+    {
+      "type": "export",
+      "name": "getInvoiceStats",
+      "file": "src/lib/services/invoice-service.ts",
+      "line": 697
+    },
+    {
+      "type": "export",
+      "name": "checkSubscriptionExpired",
+      "file": "src/lib/services/subscription-service.ts",
+      "line": 10
+    },
+    {
+      "type": "export",
+      "name": "createSubscription",
+      "file": "src/lib/services/subscription-service.ts",
+      "line": 67
+    },
+    {
+      "type": "export",
+      "name": "getVehicleModel",
+      "file": "src/lib/services/vehicle-models-service.ts",
+      "line": 40
+    },
+    {
+      "type": "export",
+      "name": "getDistinctMakes",
+      "file": "src/lib/services/vehicle-models-service.ts",
+      "line": 63
+    },
+    {
+      "type": "export",
+      "name": "Breadcrumbs",
+      "file": "src/components/breadcrumb.tsx",
+      "line": 45
+    },
+    {
+      "type": "export",
+      "name": "BreadcrumbsItem",
+      "file": "src/components/breadcrumb.tsx",
+      "line": 45
+    },
+    {
+      "type": "export",
+      "name": "ProgressTrack",
+      "file": "src/components/ui/progress.tsx",
+      "line": 79
+    },
+    {
+      "type": "export",
+      "name": "ProgressIndicator",
+      "file": "src/components/ui/progress.tsx",
+      "line": 80
+    },
+    {
+      "type": "export",
+      "name": "ProgressLabel",
+      "file": "src/components/ui/progress.tsx",
+      "line": 81
+    },
+    {
+      "type": "export",
+      "name": "ProgressValue",
+      "file": "src/components/ui/progress.tsx",
+      "line": 82
+    },
+    {
+      "type": "export",
+      "name": "getTodayLog",
+      "file": "src/lib/services/time-tracking-service.ts",
+      "line": 93
+    },
+    {
+      "type": "export",
+      "name": "getTodayHours",
+      "file": "src/lib/services/time-tracking-service.ts",
+      "line": 117
+    },
+    {
+      "type": "export",
+      "name": "NavigationMenuIndicator",
+      "file": "src/components/ui/navigation-menu.tsx",
+      "line": 163
+    },
+    {
+      "type": "export",
+      "name": "NavigationMenuPositioner",
+      "file": "src/components/ui/navigation-menu.tsx",
+      "line": 169
+    },
+    {
+      "type": "export",
+      "name": "BreadcrumbEllipsis",
+      "file": "src/components/ui/breadcrumb.tsx",
+      "line": 126
+    },
+    {
+      "type": "export",
+      "name": "Command",
+      "file": "src/components/ui/command.tsx",
+      "line": 183
+    },
+    {
+      "type": "export",
+      "name": "CommandSeparator",
+      "file": "src/components/ui/command.tsx",
+      "line": 191
+    },
+    {
+      "type": "export",
+      "name": "ScrollBar",
+      "file": "src/components/ui/scroll-area.tsx",
+      "line": 55
+    },
+    {
+      "type": "export",
+      "name": "useIsTablet",
+      "file": "src/hooks/use-mobile.ts",
+      "line": 22
+    },
+    {
+      "type": "export",
+      "name": "handleAuthRedirect",
+      "file": "src/lib/auth-redirect.ts",
+      "line": 16
+    },
+    {
+      "type": "export",
+      "name": "getBayViewData",
+      "file": "src/lib/services/bay-view-service.ts",
+      "line": 164
+    },
+    {
+      "type": "export",
+      "name": "seedWaitingQueue",
+      "file": "src/lib/services/bay-view-service.ts",
+      "line": 456
+    },
+    {
+      "type": "export",
+      "name": "UpdateStatusParams",
+      "file": "src/lib/services/bay-view-service.ts",
+      "line": 336
+    },
+    {
+      "type": "export",
+      "name": "ChartStyle",
+      "file": "src/components/ui/chart.tsx",
+      "line": 390
+    },
+    {
+      "type": "export",
+      "name": "ComboboxGroup",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 288
+    },
+    {
+      "type": "export",
+      "name": "ComboboxLabel",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 289
+    },
+    {
+      "type": "export",
+      "name": "ComboboxCollection",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 290
+    },
+    {
+      "type": "export",
+      "name": "ComboboxSeparator",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 292
+    },
+    {
+      "type": "export",
+      "name": "ComboboxChips",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 293
+    },
+    {
+      "type": "export",
+      "name": "ComboboxChip",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 294
+    },
+    {
+      "type": "export",
+      "name": "ComboboxChipsInput",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 295
+    },
+    {
+      "type": "export",
+      "name": "ComboboxTrigger",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 296
+    },
+    {
+      "type": "export",
+      "name": "useComboboxAnchor",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 298
+    },
+    {
+      "type": "export",
+      "name": "CalendarDayButton",
+      "file": "src/components/ui/calendar.tsx",
+      "line": 246
+    },
+    {
+      "type": "export",
+      "name": "PopoverDescription",
+      "file": "src/components/ui/popover.tsx",
+      "line": 86
+    },
+    {
+      "type": "export",
+      "name": "PopoverHeader",
+      "file": "src/components/ui/popover.tsx",
+      "line": 87
+    },
+    {
+      "type": "export",
+      "name": "PopoverTitle",
+      "file": "src/components/ui/popover.tsx",
+      "line": 88
+    },
+    {
+      "type": "export",
+      "name": "AvatarGroup",
+      "file": "src/components/ui/avatar.tsx",
+      "line": 106
+    },
+    {
+      "type": "export",
+      "name": "AvatarGroupCount",
+      "file": "src/components/ui/avatar.tsx",
+      "line": 107
+    },
+    {
+      "type": "export",
+      "name": "AvatarBadge",
+      "file": "src/components/ui/avatar.tsx",
+      "line": 108
+    },
+    {
+      "type": "export",
+      "name": "InputGroupText",
+      "file": "src/components/ui/input-group.tsx",
+      "line": 160
+    },
+    {
+      "type": "export",
+      "name": "InputGroupTextarea",
+      "file": "src/components/ui/input-group.tsx",
+      "line": 162
+    },
+    {
+      "type": "export",
+      "name": "DrawerPortal",
+      "file": "src/components/ui/drawer.tsx",
+      "line": 125
+    },
+    {
+      "type": "export",
+      "name": "DrawerOverlay",
+      "file": "src/components/ui/drawer.tsx",
+      "line": 126
+    },
+    {
+      "type": "export",
+      "name": "DrawerTrigger",
+      "file": "src/components/ui/drawer.tsx",
+      "line": 127
+    },
+    {
+      "type": "export",
+      "name": "DrawerClose",
+      "file": "src/components/ui/drawer.tsx",
+      "line": 128
+    },
+    {
+      "type": "export",
+      "name": "DrawerFooter",
+      "file": "src/components/ui/drawer.tsx",
+      "line": 131
+    },
+    {
+      "type": "export",
+      "name": "DrawerDescription",
+      "file": "src/components/ui/drawer.tsx",
+      "line": 133
+    },
+    {
+      "type": "export",
+      "name": "Toggle",
+      "file": "src/components/ui/toggle.tsx",
+      "line": 45
+    },
+    {
+      "type": "export",
+      "name": "findCustomerByPhone",
+      "file": "src/lib/services/bay-view-actions.ts",
+      "line": 26
+    },
+    {
+      "type": "export",
+      "name": "findCustomerByPlate",
+      "file": "src/lib/services/bay-view-actions.ts",
+      "line": 42
+    },
+    {
+      "type": "export",
+      "name": "searchMechanics",
+      "file": "src/lib/services/bay-view-actions.ts",
+      "line": 296
+    },
+    {
+      "type": "export",
+      "name": "getVehicleServiceTimeline",
+      "file": "src/lib/services/bay-view-actions.ts",
+      "line": 357
+    },
+    {
+      "type": "export",
+      "name": "searchByFields",
+      "file": "src/lib/utils/search-utils.tsx",
+      "line": 115
+    },
+    {
+      "type": "export",
+      "name": "useVehicleServicePrices",
+      "file": "src/lib/queries/use-wizard-data.ts",
+      "line": 358
+    },
+    {
+      "type": "export",
+      "name": "useVehiclePartPrices",
+      "file": "src/lib/queries/use-wizard-data.ts",
+      "line": 387
+    },
+    {
+      "type": "export",
+      "name": "VehicleServicePriceEntry",
+      "file": "src/lib/queries/use-wizard-data.ts",
+      "line": 60
+    },
+    {
+      "type": "export",
+      "name": "VehiclePartPriceEntry",
+      "file": "src/lib/queries/use-wizard-data.ts",
+      "line": 68
+    },
+    {
+      "type": "export",
+      "name": "AlertAction",
+      "file": "src/components/ui/alert.tsx",
+      "line": 76
+    },
+    {
+      "type": "export",
+      "name": "InventoryMovementType",
+      "file": "src/lib/types/index.ts",
+      "line": 20
+    },
+    {
+      "type": "export",
+      "name": "AuditLog",
+      "file": "src/lib/types/index.ts",
+      "line": 142
+    },
+    {
+      "type": "export",
+      "name": "CustomerType",
+      "file": "src/lib/types/index.ts",
+      "line": 144
+    },
+    {
+      "type": "export",
+      "name": "FeatureFlag",
+      "file": "src/lib/types/index.ts",
+      "line": 145
+    },
+    {
+      "type": "export",
+      "name": "FuelType",
+      "file": "src/lib/types/index.ts",
+      "line": 146
+    },
+    {
+      "type": "export",
+      "name": "InviteStatus",
+      "file": "src/lib/types/index.ts",
+      "line": 147
+    },
+    {
+      "type": "export",
+      "name": "OrganizationSettings",
+      "file": "src/lib/types/index.ts",
+      "line": 150
+    },
+    {
+      "type": "export",
+      "name": "OrganizationUser",
+      "file": "src/lib/types/index.ts",
+      "line": 151
+    },
+    {
+      "type": "export",
+      "name": "PartPriceHistory",
+      "file": "src/lib/types/index.ts",
+      "line": 152
+    },
+    {
+      "type": "export",
+      "name": "PartsCatalog",
+      "file": "src/lib/types/index.ts",
+      "line": 153
+    },
+    {
+      "type": "export",
+      "name": "Permission",
+      "file": "src/lib/types/index.ts",
+      "line": 154
+    },
+    {
+      "type": "export",
+      "name": "PermissionAction",
+      "file": "src/lib/types/index.ts",
+      "line": 155
+    },
+    {
+      "type": "export",
+      "name": "PlanType",
+      "file": "src/lib/types/index.ts",
+      "line": 156
+    },
+    {
+      "type": "export",
+      "name": "Role",
+      "file": "src/lib/types/index.ts",
+      "line": 158
+    },
+    {
+      "type": "export",
+      "name": "ServiceCatalogInsert",
+      "file": "src/lib/types/index.ts",
+      "line": 160
+    },
+    {
+      "type": "export",
+      "name": "ServiceCatalogUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 161
+    },
+    {
+      "type": "export",
+      "name": "TransmissionType",
+      "file": "src/lib/types/index.ts",
+      "line": 164
+    },
+    {
+      "type": "export",
+      "name": "VehicleModelPart",
+      "file": "src/lib/types/index.ts",
+      "line": 166
+    },
+    {
+      "type": "export",
+      "name": "VehicleOwner",
+      "file": "src/lib/types/index.ts",
+      "line": 167
+    },
+    {
+      "type": "export",
+      "name": "SupplierInsert",
+      "file": "src/lib/types/index.ts",
+      "line": 170
+    },
+    {
+      "type": "export",
+      "name": "SupplierUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 171
+    },
+    {
+      "type": "export",
+      "name": "PurchaseOrderInsert",
+      "file": "src/lib/types/index.ts",
+      "line": 173
+    },
+    {
+      "type": "export",
+      "name": "PurchaseOrderUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 174
+    },
+    {
+      "type": "export",
+      "name": "PurchaseOrderItemInsert",
+      "file": "src/lib/types/index.ts",
+      "line": 176
+    },
+    {
+      "type": "export",
+      "name": "PurchaseOrderItemUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 177
+    },
+    {
+      "type": "export",
+      "name": "StockThresholdInsert",
+      "file": "src/lib/types/index.ts",
+      "line": 179
+    },
+    {
+      "type": "export",
+      "name": "StockThresholdUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 180
+    },
+    {
+      "type": "export",
+      "name": "PartsCarPartsUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 186
+    },
+    {
+      "type": "export",
+      "name": "PartsCarStatus",
+      "file": "src/lib/types/index.ts",
+      "line": 192
+    },
+    {
+      "type": "export",
+      "name": "UpdateUserRoleParams",
+      "file": "src/lib/types/index.ts",
+      "line": 308
+    },
+    {
+      "type": "export",
+      "name": "WorkOrderCommission",
+      "file": "src/lib/types/index.ts",
+      "line": 415
+    },
+    {
+      "type": "export",
+      "name": "PaymentMethod",
+      "file": "src/lib/types/index.ts",
+      "line": 750
+    },
+    {
+      "type": "export",
+      "name": "CustomerNoteInsert",
+      "file": "src/lib/types/index.ts",
+      "line": 879
+    },
+    {
+      "type": "export",
+      "name": "CustomerNoteUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 888
+    },
+    {
+      "type": "export",
+      "name": "WorkOrderRow",
+      "file": "src/lib/types/index.ts",
+      "line": 899
+    },
+    {
+      "type": "export",
+      "name": "RecommendationInput",
+      "file": "src/lib/services/post-service-service.ts",
+      "line": 32
+    },
+    {
+      "type": "export",
+      "name": "HandlerContext",
+      "file": "src/lib/api-handler.ts",
+      "line": 13
+    },
+    {
+      "type": "export",
+      "name": "PageTab",
+      "file": "src/components/page-header.tsx",
+      "line": 45
+    },
+    {
+      "type": "export",
+      "name": "SidebarTab",
+      "file": "src/hooks/use-right-sidebar.tsx",
+      "line": 5
+    },
+    {
+      "type": "export",
+      "name": "HeadingLevel",
+      "file": "src/components/ui/typography.tsx",
+      "line": 224
+    },
+    {
+      "type": "export",
+      "name": "ServiceRecommendation",
+      "file": "src/lib/database-extras.types.ts",
+      "line": 6
+    },
+    {
+      "type": "export",
+      "name": "ServiceCompletionDatum",
+      "file": "src/lib/database-extras.types.ts",
+      "line": 48
+    },
+    {
+      "type": "export",
+      "name": "NavItem",
+      "file": "src/hooks/use-navigation.ts",
+      "line": 26
+    },
+    {
+      "type": "export",
+      "name": "NavSection",
+      "file": "src/hooks/use-navigation.ts",
+      "line": 44
+    }
+  ],
+  "unusedExports": [
+    {
+      "type": "export",
+      "name": "getPathname",
+      "file": "src/lib/i18n/navigation.ts",
+      "line": 4
+    },
+    {
+      "type": "export",
+      "name": "badgeVariants",
+      "file": "src/components/ui/badge.tsx",
+      "line": 53
+    },
+    {
+      "type": "export",
+      "name": "getWorkOrderProfit",
+      "file": "src/lib/services/report-service.ts",
+      "line": 820
+    },
+    {
+      "type": "export",
+      "name": "getDashboardProfitSummary",
+      "file": "src/lib/services/report-service.ts",
+      "line": 863
+    },
+    {
+      "type": "export",
+      "name": "createReminderLog",
+      "file": "src/lib/services/service-reminder-service.ts",
+      "line": 481
+    },
+    {
+      "type": "export",
+      "name": "recalculateWorkOrderTotals",
+      "file": "src/lib/services/work-order-service.ts",
+      "line": 419
+    },
+    {
+      "type": "export",
+      "name": "getDailyWorkOrders",
+      "file": "src/lib/services/work-order-service.ts",
+      "line": 819
+    },
+    {
+      "type": "export",
+      "name": "createRateLimiter",
+      "file": "src/lib/rate-limit.ts",
+      "line": 42
+    },
+    {
+      "type": "export",
+      "name": "apiRateLimiter",
+      "file": "src/lib/rate-limit.ts",
+      "line": 77
+    },
+    {
+      "type": "export",
+      "name": "checkRateLimit",
+      "file": "src/lib/rate-limit.ts",
+      "line": 85
+    },
+    {
+      "type": "export",
+      "name": "RateLimiterResult",
+      "file": "src/lib/rate-limit.ts",
+      "line": 30
+    },
+    {
+      "type": "export",
+      "name": "inviteUser",
+      "file": "src/lib/services/user-service.ts",
+      "line": 84
+    },
+    {
+      "type": "export",
+      "name": "addUserToOrganization",
+      "file": "src/lib/services/user-service.ts",
+      "line": 130
+    },
+    {
+      "type": "export",
+      "name": "SidebarGroupAction",
+      "file": "src/components/ui/sidebar.tsx",
+      "line": 702
+    },
+    {
+      "type": "export",
+      "name": "SidebarInput",
+      "file": "src/components/ui/sidebar.tsx",
+      "line": 706
+    },
+    {
+      "type": "export",
+      "name": "SidebarMenuAction",
+      "file": "src/components/ui/sidebar.tsx",
+      "line": 709
+    },
+    {
+      "type": "export",
+      "name": "SidebarMenuBadge",
+      "file": "src/components/ui/sidebar.tsx",
+      "line": 710
+    },
+    {
+      "type": "export",
+      "name": "SidebarMenuSkeleton",
+      "file": "src/components/ui/sidebar.tsx",
+      "line": 713
+    },
+    {
+      "type": "export",
+      "name": "KPI_ACCENTS",
+      "file": "src/app/[locale]/dashboard/_kpi-cards.tsx",
+      "line": 9
+    },
+    {
+      "type": "export",
+      "name": "WO_STATUS_STYLES",
+      "file": "src/app/[locale]/dashboard/_recent-work-orders.tsx",
+      "line": 11
+    },
+    {
+      "type": "export",
+      "name": "TableCaption",
+      "file": "src/components/ui/table.tsx",
+      "line": 115
+    },
+    {
+      "type": "export",
+      "name": "authenticatePortalRequest",
+      "file": "src/lib/portal-auth.ts",
+      "line": 26
+    },
+    {
+      "type": "export",
+      "name": "checkSubscriptionExpired",
+      "file": "src/lib/services/subscription-enforcement.ts",
+      "line": 3
+    },
+    {
+      "type": "export",
+      "name": "useUpdatePartsCar",
+      "file": "src/lib/queries/use-inventory.ts",
+      "line": 556
+    },
+    {
+      "type": "export",
+      "name": "useDeletePartsCar",
+      "file": "src/lib/queries/use-inventory.ts",
+      "line": 577
+    },
+    {
+      "type": "export",
+      "name": "fetchPartPriceHistory",
+      "file": "src/lib/queries/use-work-order-detail.ts",
+      "line": 30
+    },
+    {
+      "type": "export",
+      "name": "useServicePriceHistory",
+      "file": "src/lib/queries/use-work-order-detail.ts",
+      "line": 101
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuPortal",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 257
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuGroup",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 260
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuLabel",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 261
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuCheckboxItem",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 263
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuRadioGroup",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 264
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuRadioItem",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 265
+    },
+    {
+      "type": "export",
+      "name": "DropdownMenuShortcut",
+      "file": "src/components/ui/dropdown-menu.tsx",
+      "line": 267
+    },
+    {
+      "type": "export",
+      "name": "DialogClose",
+      "file": "src/components/ui/dialog.tsx",
+      "line": 146
+    },
+    {
+      "type": "export",
+      "name": "DialogOverlay",
+      "file": "src/components/ui/dialog.tsx",
+      "line": 151
+    },
+    {
+      "type": "export",
+      "name": "DialogPortal",
+      "file": "src/components/ui/dialog.tsx",
+      "line": 152
+    },
+    {
+      "type": "export",
+      "name": "SelectGroup",
+      "file": "src/components/ui/select.tsx",
+      "line": 193
+    },
+    {
+      "type": "export",
+      "name": "SelectLabel",
+      "file": "src/components/ui/select.tsx",
+      "line": 195
+    },
+    {
+      "type": "export",
+      "name": "SelectScrollDownButton",
+      "file": "src/components/ui/select.tsx",
+      "line": 196
+    },
+    {
+      "type": "export",
+      "name": "SelectScrollUpButton",
+      "file": "src/components/ui/select.tsx",
+      "line": 197
+    },
+    {
+      "type": "export",
+      "name": "SelectSeparator",
+      "file": "src/components/ui/select.tsx",
+      "line": 198
+    },
+    {
+      "type": "export",
+      "name": "SheetClose",
+      "file": "src/components/ui/sheet.tsx",
+      "line": 127
+    },
+    {
+      "type": "export",
+      "name": "SheetFooter",
+      "file": "src/components/ui/sheet.tsx",
+      "line": 130
+    },
+    {
+      "type": "export",
+      "name": "tabsListVariants",
+      "file": "src/components/ui/tabs.tsx",
+      "line": 86
+    },
+    {
+      "type": "export",
+      "name": "useServiceSchedule",
+      "file": "src/lib/queries/use-service-reminders.ts",
+      "line": 70
+    },
+    {
+      "type": "export",
+      "name": "useLastVisitData",
+      "file": "src/lib/queries/use-price-memory.ts",
+      "line": 75
+    },
+    {
+      "type": "export",
+      "name": "useCustomerAutoFill",
+      "file": "src/lib/queries/use-price-memory.ts",
+      "line": 118
+    },
+    {
+      "type": "export",
+      "name": "ServicePriceEntry",
+      "file": "src/lib/queries/use-price-memory.ts",
+      "line": 7
+    },
+    {
+      "type": "export",
+      "name": "PartPriceEntry",
+      "file": "src/lib/queries/use-price-memory.ts",
+      "line": 15
+    },
+    {
+      "type": "export",
+      "name": "LastVisitData",
+      "file": "src/lib/queries/use-price-memory.ts",
+      "line": 24
+    },
+    {
+      "type": "export",
+      "name": "CustomerAutoFillData",
+      "file": "src/lib/queries/use-price-memory.ts",
+      "line": 47
+    },
+    {
+      "type": "export",
+      "name": "useVehicle",
+      "file": "src/lib/queries/use-vehicles.ts",
+      "line": 24
+    },
+    {
+      "type": "export",
+      "name": "AlertDialogMedia",
+      "file": "src/components/ui/alert-dialog.tsx",
+      "line": 181
+    },
+    {
+      "type": "export",
+      "name": "AlertDialogOverlay",
+      "file": "src/components/ui/alert-dialog.tsx",
+      "line": 182
+    },
+    {
+      "type": "export",
+      "name": "AlertDialogPortal",
+      "file": "src/components/ui/alert-dialog.tsx",
+      "line": 183
+    },
+    {
+      "type": "export",
+      "name": "FieldDescription",
+      "file": "src/components/ui/field.tsx",
+      "line": 230
+    },
+    {
+      "type": "export",
+      "name": "FieldLegend",
+      "file": "src/components/ui/field.tsx",
+      "line": 233
+    },
+    {
+      "type": "export",
+      "name": "FieldSeparator",
+      "file": "src/components/ui/field.tsx",
+      "line": 234
+    },
+    {
+      "type": "export",
+      "name": "FieldSet",
+      "file": "src/components/ui/field.tsx",
+      "line": 235
+    },
+    {
+      "type": "export",
+      "name": "FieldContent",
+      "file": "src/components/ui/field.tsx",
+      "line": 236
+    },
+    {
+      "type": "export",
+      "name": "FieldTitle",
+      "file": "src/components/ui/field.tsx",
+      "line": 237
+    },
+    {
+      "type": "export",
+      "name": "Constants",
+      "file": "src/lib/database.types.ts",
+      "line": 4050
+    },
+    {
+      "type": "export",
+      "name": "TablesUpdate",
+      "file": "src/lib/database.types.ts",
+      "line": 3991
+    },
+    {
+      "type": "export",
+      "name": "CompositeTypes",
+      "file": "src/lib/database.types.ts",
+      "line": 4033
+    },
+    {
+      "type": "export",
+      "name": "generateInvoiceNumber",
+      "file": "src/lib/services/invoice-service.ts",
+      "line": 15
+    },
+    {
+      "type": "export",
+      "name": "getInvoiceByPublicToken",
+      "file": "src/lib/services/invoice-service.ts",
+      "line": 139
+    },
+    {
+      "type": "export",
+      "name": "getInvoiceStats",
+      "file": "src/lib/services/invoice-service.ts",
+      "line": 697
+    },
+    {
+      "type": "export",
+      "name": "checkSubscriptionExpired",
+      "file": "src/lib/services/subscription-service.ts",
+      "line": 10
+    },
+    {
+      "type": "export",
+      "name": "createSubscription",
+      "file": "src/lib/services/subscription-service.ts",
+      "line": 67
+    },
+    {
+      "type": "export",
+      "name": "getVehicleModel",
+      "file": "src/lib/services/vehicle-models-service.ts",
+      "line": 40
+    },
+    {
+      "type": "export",
+      "name": "getDistinctMakes",
+      "file": "src/lib/services/vehicle-models-service.ts",
+      "line": 63
+    },
+    {
+      "type": "export",
+      "name": "Breadcrumbs",
+      "file": "src/components/breadcrumb.tsx",
+      "line": 45
+    },
+    {
+      "type": "export",
+      "name": "BreadcrumbsItem",
+      "file": "src/components/breadcrumb.tsx",
+      "line": 45
+    },
+    {
+      "type": "export",
+      "name": "ProgressTrack",
+      "file": "src/components/ui/progress.tsx",
+      "line": 79
+    },
+    {
+      "type": "export",
+      "name": "ProgressIndicator",
+      "file": "src/components/ui/progress.tsx",
+      "line": 80
+    },
+    {
+      "type": "export",
+      "name": "ProgressLabel",
+      "file": "src/components/ui/progress.tsx",
+      "line": 81
+    },
+    {
+      "type": "export",
+      "name": "ProgressValue",
+      "file": "src/components/ui/progress.tsx",
+      "line": 82
+    },
+    {
+      "type": "export",
+      "name": "getTodayLog",
+      "file": "src/lib/services/time-tracking-service.ts",
+      "line": 93
+    },
+    {
+      "type": "export",
+      "name": "getTodayHours",
+      "file": "src/lib/services/time-tracking-service.ts",
+      "line": 117
+    },
+    {
+      "type": "export",
+      "name": "NavigationMenuIndicator",
+      "file": "src/components/ui/navigation-menu.tsx",
+      "line": 163
+    },
+    {
+      "type": "export",
+      "name": "NavigationMenuPositioner",
+      "file": "src/components/ui/navigation-menu.tsx",
+      "line": 169
+    },
+    {
+      "type": "export",
+      "name": "BreadcrumbEllipsis",
+      "file": "src/components/ui/breadcrumb.tsx",
+      "line": 126
+    },
+    {
+      "type": "export",
+      "name": "Command",
+      "file": "src/components/ui/command.tsx",
+      "line": 183
+    },
+    {
+      "type": "export",
+      "name": "CommandSeparator",
+      "file": "src/components/ui/command.tsx",
+      "line": 191
+    },
+    {
+      "type": "export",
+      "name": "ScrollBar",
+      "file": "src/components/ui/scroll-area.tsx",
+      "line": 55
+    },
+    {
+      "type": "export",
+      "name": "useIsTablet",
+      "file": "src/hooks/use-mobile.ts",
+      "line": 22
+    },
+    {
+      "type": "export",
+      "name": "handleAuthRedirect",
+      "file": "src/lib/auth-redirect.ts",
+      "line": 16
+    },
+    {
+      "type": "export",
+      "name": "getBayViewData",
+      "file": "src/lib/services/bay-view-service.ts",
+      "line": 164
+    },
+    {
+      "type": "export",
+      "name": "seedWaitingQueue",
+      "file": "src/lib/services/bay-view-service.ts",
+      "line": 456
+    },
+    {
+      "type": "export",
+      "name": "UpdateStatusParams",
+      "file": "src/lib/services/bay-view-service.ts",
+      "line": 336
+    },
+    {
+      "type": "export",
+      "name": "ChartStyle",
+      "file": "src/components/ui/chart.tsx",
+      "line": 390
+    },
+    {
+      "type": "export",
+      "name": "ComboboxGroup",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 288
+    },
+    {
+      "type": "export",
+      "name": "ComboboxLabel",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 289
+    },
+    {
+      "type": "export",
+      "name": "ComboboxCollection",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 290
+    },
+    {
+      "type": "export",
+      "name": "ComboboxSeparator",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 292
+    },
+    {
+      "type": "export",
+      "name": "ComboboxChips",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 293
+    },
+    {
+      "type": "export",
+      "name": "ComboboxChip",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 294
+    },
+    {
+      "type": "export",
+      "name": "ComboboxChipsInput",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 295
+    },
+    {
+      "type": "export",
+      "name": "ComboboxTrigger",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 296
+    },
+    {
+      "type": "export",
+      "name": "useComboboxAnchor",
+      "file": "src/components/ui/combobox.tsx",
+      "line": 298
+    },
+    {
+      "type": "export",
+      "name": "CalendarDayButton",
+      "file": "src/components/ui/calendar.tsx",
+      "line": 246
+    },
+    {
+      "type": "export",
+      "name": "PopoverDescription",
+      "file": "src/components/ui/popover.tsx",
+      "line": 86
+    },
+    {
+      "type": "export",
+      "name": "PopoverHeader",
+      "file": "src/components/ui/popover.tsx",
+      "line": 87
+    },
+    {
+      "type": "export",
+      "name": "PopoverTitle",
+      "file": "src/components/ui/popover.tsx",
+      "line": 88
+    },
+    {
+      "type": "export",
+      "name": "AvatarGroup",
+      "file": "src/components/ui/avatar.tsx",
+      "line": 106
+    },
+    {
+      "type": "export",
+      "name": "AvatarGroupCount",
+      "file": "src/components/ui/avatar.tsx",
+      "line": 107
+    },
+    {
+      "type": "export",
+      "name": "AvatarBadge",
+      "file": "src/components/ui/avatar.tsx",
+      "line": 108
+    },
+    {
+      "type": "export",
+      "name": "InputGroupText",
+      "file": "src/components/ui/input-group.tsx",
+      "line": 160
+    },
+    {
+      "type": "export",
+      "name": "InputGroupTextarea",
+      "file": "src/components/ui/input-group.tsx",
+      "line": 162
+    },
+    {
+      "type": "export",
+      "name": "DrawerPortal",
+      "file": "src/components/ui/drawer.tsx",
+      "line": 125
+    },
+    {
+      "type": "export",
+      "name": "DrawerOverlay",
+      "file": "src/components/ui/drawer.tsx",
+      "line": 126
+    },
+    {
+      "type": "export",
+      "name": "DrawerTrigger",
+      "file": "src/components/ui/drawer.tsx",
+      "line": 127
+    },
+    {
+      "type": "export",
+      "name": "DrawerClose",
+      "file": "src/components/ui/drawer.tsx",
+      "line": 128
+    },
+    {
+      "type": "export",
+      "name": "DrawerFooter",
+      "file": "src/components/ui/drawer.tsx",
+      "line": 131
+    },
+    {
+      "type": "export",
+      "name": "DrawerDescription",
+      "file": "src/components/ui/drawer.tsx",
+      "line": 133
+    },
+    {
+      "type": "export",
+      "name": "Toggle",
+      "file": "src/components/ui/toggle.tsx",
+      "line": 45
+    },
+    {
+      "type": "export",
+      "name": "findCustomerByPhone",
+      "file": "src/lib/services/bay-view-actions.ts",
+      "line": 26
+    },
+    {
+      "type": "export",
+      "name": "findCustomerByPlate",
+      "file": "src/lib/services/bay-view-actions.ts",
+      "line": 42
+    },
+    {
+      "type": "export",
+      "name": "searchMechanics",
+      "file": "src/lib/services/bay-view-actions.ts",
+      "line": 296
+    },
+    {
+      "type": "export",
+      "name": "getVehicleServiceTimeline",
+      "file": "src/lib/services/bay-view-actions.ts",
+      "line": 357
+    },
+    {
+      "type": "export",
+      "name": "searchByFields",
+      "file": "src/lib/utils/search-utils.tsx",
+      "line": 115
+    },
+    {
+      "type": "export",
+      "name": "useVehicleServicePrices",
+      "file": "src/lib/queries/use-wizard-data.ts",
+      "line": 358
+    },
+    {
+      "type": "export",
+      "name": "useVehiclePartPrices",
+      "file": "src/lib/queries/use-wizard-data.ts",
+      "line": 387
+    },
+    {
+      "type": "export",
+      "name": "VehicleServicePriceEntry",
+      "file": "src/lib/queries/use-wizard-data.ts",
+      "line": 60
+    },
+    {
+      "type": "export",
+      "name": "VehiclePartPriceEntry",
+      "file": "src/lib/queries/use-wizard-data.ts",
+      "line": 68
+    },
+    {
+      "type": "export",
+      "name": "AlertAction",
+      "file": "src/components/ui/alert.tsx",
+      "line": 76
+    },
+    {
+      "type": "export",
+      "name": "InventoryMovementType",
+      "file": "src/lib/types/index.ts",
+      "line": 20
+    },
+    {
+      "type": "export",
+      "name": "AuditLog",
+      "file": "src/lib/types/index.ts",
+      "line": 142
+    },
+    {
+      "type": "export",
+      "name": "CustomerType",
+      "file": "src/lib/types/index.ts",
+      "line": 144
+    },
+    {
+      "type": "export",
+      "name": "FeatureFlag",
+      "file": "src/lib/types/index.ts",
+      "line": 145
+    },
+    {
+      "type": "export",
+      "name": "FuelType",
+      "file": "src/lib/types/index.ts",
+      "line": 146
+    },
+    {
+      "type": "export",
+      "name": "InviteStatus",
+      "file": "src/lib/types/index.ts",
+      "line": 147
+    },
+    {
+      "type": "export",
+      "name": "OrganizationSettings",
+      "file": "src/lib/types/index.ts",
+      "line": 150
+    },
+    {
+      "type": "export",
+      "name": "OrganizationUser",
+      "file": "src/lib/types/index.ts",
+      "line": 151
+    },
+    {
+      "type": "export",
+      "name": "PartPriceHistory",
+      "file": "src/lib/types/index.ts",
+      "line": 152
+    },
+    {
+      "type": "export",
+      "name": "PartsCatalog",
+      "file": "src/lib/types/index.ts",
+      "line": 153
+    },
+    {
+      "type": "export",
+      "name": "Permission",
+      "file": "src/lib/types/index.ts",
+      "line": 154
+    },
+    {
+      "type": "export",
+      "name": "PermissionAction",
+      "file": "src/lib/types/index.ts",
+      "line": 155
+    },
+    {
+      "type": "export",
+      "name": "PlanType",
+      "file": "src/lib/types/index.ts",
+      "line": 156
+    },
+    {
+      "type": "export",
+      "name": "Role",
+      "file": "src/lib/types/index.ts",
+      "line": 158
+    },
+    {
+      "type": "export",
+      "name": "ServiceCatalogInsert",
+      "file": "src/lib/types/index.ts",
+      "line": 160
+    },
+    {
+      "type": "export",
+      "name": "ServiceCatalogUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 161
+    },
+    {
+      "type": "export",
+      "name": "TransmissionType",
+      "file": "src/lib/types/index.ts",
+      "line": 164
+    },
+    {
+      "type": "export",
+      "name": "VehicleModelPart",
+      "file": "src/lib/types/index.ts",
+      "line": 166
+    },
+    {
+      "type": "export",
+      "name": "VehicleOwner",
+      "file": "src/lib/types/index.ts",
+      "line": 167
+    },
+    {
+      "type": "export",
+      "name": "SupplierInsert",
+      "file": "src/lib/types/index.ts",
+      "line": 170
+    },
+    {
+      "type": "export",
+      "name": "SupplierUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 171
+    },
+    {
+      "type": "export",
+      "name": "PurchaseOrderInsert",
+      "file": "src/lib/types/index.ts",
+      "line": 173
+    },
+    {
+      "type": "export",
+      "name": "PurchaseOrderUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 174
+    },
+    {
+      "type": "export",
+      "name": "PurchaseOrderItemInsert",
+      "file": "src/lib/types/index.ts",
+      "line": 176
+    },
+    {
+      "type": "export",
+      "name": "PurchaseOrderItemUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 177
+    },
+    {
+      "type": "export",
+      "name": "StockThresholdInsert",
+      "file": "src/lib/types/index.ts",
+      "line": 179
+    },
+    {
+      "type": "export",
+      "name": "StockThresholdUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 180
+    },
+    {
+      "type": "export",
+      "name": "PartsCarPartsUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 186
+    },
+    {
+      "type": "export",
+      "name": "PartsCarStatus",
+      "file": "src/lib/types/index.ts",
+      "line": 192
+    },
+    {
+      "type": "export",
+      "name": "UpdateUserRoleParams",
+      "file": "src/lib/types/index.ts",
+      "line": 308
+    },
+    {
+      "type": "export",
+      "name": "WorkOrderCommission",
+      "file": "src/lib/types/index.ts",
+      "line": 415
+    },
+    {
+      "type": "export",
+      "name": "PaymentMethod",
+      "file": "src/lib/types/index.ts",
+      "line": 750
+    },
+    {
+      "type": "export",
+      "name": "CustomerNoteInsert",
+      "file": "src/lib/types/index.ts",
+      "line": 879
+    },
+    {
+      "type": "export",
+      "name": "CustomerNoteUpdate",
+      "file": "src/lib/types/index.ts",
+      "line": 888
+    },
+    {
+      "type": "export",
+      "name": "WorkOrderRow",
+      "file": "src/lib/types/index.ts",
+      "line": 899
+    },
+    {
+      "type": "export",
+      "name": "RecommendationInput",
+      "file": "src/lib/services/post-service-service.ts",
+      "line": 32
+    },
+    {
+      "type": "export",
+      "name": "HandlerContext",
+      "file": "src/lib/api-handler.ts",
+      "line": 13
+    },
+    {
+      "type": "export",
+      "name": "PageTab",
+      "file": "src/components/page-header.tsx",
+      "line": 45
+    },
+    {
+      "type": "export",
+      "name": "SidebarTab",
+      "file": "src/hooks/use-right-sidebar.tsx",
+      "line": 5
+    },
+    {
+      "type": "export",
+      "name": "HeadingLevel",
+      "file": "src/components/ui/typography.tsx",
+      "line": 224
+    },
+    {
+      "type": "export",
+      "name": "ServiceRecommendation",
+      "file": "src/lib/database-extras.types.ts",
+      "line": 6
+    },
+    {
+      "type": "export",
+      "name": "ServiceCompletionDatum",
+      "file": "src/lib/database-extras.types.ts",
+      "line": 48
+    },
+    {
+      "type": "export",
+      "name": "NavItem",
+      "file": "src/hooks/use-navigation.ts",
+      "line": 26
+    },
+    {
+      "type": "export",
+      "name": "NavSection",
+      "file": "src/hooks/use-navigation.ts",
+      "line": 44
+    }
+  ],
+  "unusedFiles": [
+    {
+      "type": "file",
+      "name": "_scripts/replace-space-y.mjs",
+      "file": "_scripts/replace-space-y.mjs"
+    },
+    {
+      "type": "file",
+      "name": "docs/.vitepress/config.mjs",
+      "file": "docs/.vitepress/config.mjs"
+    },
+    {
+      "type": "file",
+      "name": "src/components/_data-table-chart.tsx",
+      "file": "src/components/_data-table-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/breadcrumbs.tsx",
+      "file": "src/components/breadcrumbs.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/chart-area-interactive.tsx",
+      "file": "src/components/chart-area-interactive.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/data-table-dashboard.tsx",
+      "file": "src/components/data-table-dashboard.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/data-table.tsx",
+      "file": "src/components/data-table.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/search-form.tsx",
+      "file": "src/components/search-form.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/section-cards.tsx",
+      "file": "src/components/section-cards.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/theme-toggle.tsx",
+      "file": "src/components/theme-toggle.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/user-menu.tsx",
+      "file": "src/components/user-menu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/sidebar-transitions.ts",
+      "file": "src/lib/sidebar-transitions.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/validations.ts",
+      "file": "src/lib/validations.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/hooks/use-breadcrumbs.ts",
+      "file": "src/hooks/use-breadcrumbs.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/hooks/use-persisted-state.ts",
+      "file": "src/hooks/use-persisted-state.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/test/factories.ts",
+      "file": "src/test/factories.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/test/test-utils.tsx",
+      "file": "src/test/test-utils.tsx"
+    },
+    {
+      "type": "file",
+      "name": "docs/.vitepress/theme/index.js",
+      "file": "docs/.vitepress/theme/index.js"
+    },
+    {
+      "type": "file",
+      "name": "docs/.vitepress/theme/style.css",
+      "file": "docs/.vitepress/theme/style.css"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/_bay-list-view.tsx",
+      "file": "src/components/bay-view/_bay-list-view.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/_bay-view-body.tsx",
+      "file": "src/components/bay-view/_bay-view-body.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/_bay-view-header.tsx",
+      "file": "src/components/bay-view/_bay-view-header.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/_bay-view-sidebar.tsx",
+      "file": "src/components/bay-view/_bay-view-sidebar.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/_pickup-summary.tsx",
+      "file": "src/components/bay-view/_pickup-summary.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/_queue-assignment-dialog.tsx",
+      "file": "src/components/bay-view/_queue-assignment-dialog.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/bay-slot.tsx",
+      "file": "src/components/bay-view/bay-slot.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/bay-view-client.tsx",
+      "file": "src/components/bay-view/bay-view-client.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/bay-view-toolbar.tsx",
+      "file": "src/components/bay-view/bay-view-toolbar.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/brand-logo.tsx",
+      "file": "src/components/bay-view/brand-logo.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/mechanic-chip.tsx",
+      "file": "src/components/bay-view/mechanic-chip.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/mechanic-registration-dialog.tsx",
+      "file": "src/components/bay-view/mechanic-registration-dialog.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/mechanic-roster.tsx",
+      "file": "src/components/bay-view/mechanic-roster.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/pin-settings-dialog.tsx",
+      "file": "src/components/bay-view/pin-settings-dialog.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/quick-actions.tsx",
+      "file": "src/components/bay-view/quick-actions.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/shift-report-modal.tsx",
+      "file": "src/components/bay-view/shift-report-modal.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/vehicle-card.tsx",
+      "file": "src/components/bay-view/vehicle-card.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "file": "src/components/bay-view/vehicle-registration-dialog.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/bay-view/waiting-queue.tsx",
+      "file": "src/components/bay-view/waiting-queue.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/_area-interactive-chart.tsx",
+      "file": "src/components/charts/_area-interactive-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/_bar-chart-inner.tsx",
+      "file": "src/components/charts/_bar-chart-inner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/_line-chart-inner.tsx",
+      "file": "src/components/charts/_line-chart-inner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/_pie-chart-inner.tsx",
+      "file": "src/components/charts/_pie-chart-inner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/_radar-chart-inner.tsx",
+      "file": "src/components/charts/_radar-chart-inner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/_radial-chart-inner.tsx",
+      "file": "src/components/charts/_radial-chart-inner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/bar-chart.tsx",
+      "file": "src/components/charts/bar-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/dynamic-charts.tsx",
+      "file": "src/components/charts/dynamic-charts.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/index.ts",
+      "file": "src/components/charts/index.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/line-chart.tsx",
+      "file": "src/components/charts/line-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/pie-chart.tsx",
+      "file": "src/components/charts/pie-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/radar-chart.tsx",
+      "file": "src/components/charts/radar-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/charts/radial-chart.tsx",
+      "file": "src/components/charts/radial-chart.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/customer-select.tsx",
+      "file": "src/components/work-orders/customer-select.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/part-lines.tsx",
+      "file": "src/components/work-orders/part-lines.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/service-lines.tsx",
+      "file": "src/components/work-orders/service-lines.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/vehicle-select.tsx",
+      "file": "src/components/work-orders/vehicle-select.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/aspect-ratio.tsx",
+      "file": "src/components/ui/aspect-ratio.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/button-group.tsx",
+      "file": "src/components/ui/button-group.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/carousel.tsx",
+      "file": "src/components/ui/carousel.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/context-menu.tsx",
+      "file": "src/components/ui/context-menu.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/data-table.tsx",
+      "file": "src/components/ui/data-table.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/direction.tsx",
+      "file": "src/components/ui/direction.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/hover-card.tsx",
+      "file": "src/components/ui/hover-card.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/input-otp.tsx",
+      "file": "src/components/ui/input-otp.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/item.tsx",
+      "file": "src/components/ui/item.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/kbd.tsx",
+      "file": "src/components/ui/kbd.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/menubar.tsx",
+      "file": "src/components/ui/menubar.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/native-select.tsx",
+      "file": "src/components/ui/native-select.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/pagination.tsx",
+      "file": "src/components/ui/pagination.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/radio-group.tsx",
+      "file": "src/components/ui/radio-group.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/resizable.tsx",
+      "file": "src/components/ui/resizable.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/slider.tsx",
+      "file": "src/components/ui/slider.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/sonner.tsx",
+      "file": "src/components/ui/sonner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/ui/spinner.tsx",
+      "file": "src/components/ui/spinner.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/cache/server.ts",
+      "file": "src/lib/cache/server.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/i18n/request.ts",
+      "file": "src/lib/i18n/request.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/services/bay-view-seed-data.ts",
+      "file": "src/lib/services/bay-view-seed-data.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/services/dashboard-service.ts",
+      "file": "src/lib/services/dashboard-service.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/utils/name.ts",
+      "file": "src/lib/utils/name.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/test/mocks/handlers.ts",
+      "file": "src/test/mocks/handlers.ts"
+    },
+    {
+      "type": "file",
+      "name": "supabase/functions/check-service-reminders/index.ts",
+      "file": "supabase/functions/check-service-reminders/index.ts"
+    },
+    {
+      "type": "file",
+      "name": "supabase/functions/expire-subscriptions/index.ts",
+      "file": "supabase/functions/expire-subscriptions/index.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/app/[locale]/dashboard/_goal-card.tsx",
+      "file": "src/app/[locale]/dashboard/_goal-card.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/app/[locale]/dashboard/_recent-work-orders-table.tsx",
+      "file": "src/app/[locale]/dashboard/_recent-work-orders-table.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/app/[locale]/dashboard/actions.ts",
+      "file": "src/app/[locale]/dashboard/actions.ts"
+    }
+  ],
+  "unusedDeps": [
+    {
+      "type": "dependency",
+      "name": "@cardog-icons/react",
+      "file": "package.json",
+      "line": 21
+    },
+    {
+      "type": "dependency",
+      "name": "@phosphor-icons/react",
+      "file": "package.json",
+      "line": 26
+    },
+    {
+      "type": "dependency",
+      "name": "@tanstack/react-table",
+      "file": "package.json",
+      "line": 30
+    },
+    {
+      "type": "dependency",
+      "name": "embla-carousel-react",
+      "file": "package.json",
+      "line": 35
+    },
+    {
+      "type": "dependency",
+      "name": "input-otp",
+      "file": "package.json",
+      "line": 38
+    },
+    {
+      "type": "dependency",
+      "name": "react-resizable-panels",
+      "file": "package.json",
+      "line": 46
+    },
+    {
+      "type": "dependency",
+      "name": "zod",
+      "file": "package.json",
+      "line": 53
+    },
+    {
+      "type": "devDependency",
+      "name": "msw",
+      "file": "package.json",
+      "line": 69
+    },
+    {
+      "type": "devDependency",
+      "name": "react-grab",
+      "file": "package.json",
+      "line": 70
+    }
+  ],
+  "unlistedDeps": [],
+  "summary": "Found 264 issues"
+}

@@ -2,7 +2,21 @@
 
 import { useDraggable } from "@dnd-kit/core";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import type { Profile } from "@/lib/database.types";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface MechanicItemProps {
@@ -42,7 +56,7 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
       {...attributes}
       style={style}
       className={cn(
-        "flex items-center gap-2 rounded-md border border-border/60 bg-card px-2 py-1.5 cursor-grab select-none transition-colors touch-manipulation",
+        "flex items-center gap-2 border border-border/60 bg-card px-3 py-2 cursor-grab select-none transition-colors touch-manipulation",
         isDragging && "opacity-50 shadow-xl z-50",
         !isDragging && "hover:border-border hover:bg-muted/20",
       )}
@@ -59,7 +73,7 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
           </p>
           <span
             className={cn(
-              "size-1.5 rounded-full shrink-0",
+              "size-1.5  shrink-0",
               isAvailable ? "bg-emerald-500" : "bg-amber-400",
             )}
           />
@@ -81,46 +95,68 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
   const availableMechanics = mechanics.filter((m) => m.current_jobs === 0);
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between px-0.5">
-        <span className="text-xs font-semibold text-foreground/80">Mechanic Roster</span>
-        {mechanics.length > 0 && (
-          <span className="text-[9px] text-muted-foreground/50">{mechanics.length} total</span>
-        )}
-      </div>
+    <Card size="sm" className="bg-card/90">
+      <CardHeader className="gap-2 border-b border-border/40">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-sm">Mechanic Roster</CardTitle>
+          {mechanics.length > 0 && (
+            <Badge variant="outline">{mechanics.length}</Badge>
+          )}
+        </div>
+        <CardDescription className="text-[11px]">
+          Drag a mechanic onto a bay to assign work.
+        </CardDescription>
+      </CardHeader>
 
-      {mechanics.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-4 text-center text-muted-foreground/60 rounded-lg border border-dashed">
-          <p className="text-[10px]">No mechanics available</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-1.5">
-          {activeMechanics.length > 0 && (
-            <div>
-              <p className="text-[9px] font-medium text-muted-foreground/40 uppercase tracking-wider mb-1 px-0.5">
-                Working — {activeMechanics.length}
-              </p>
-              <div className="flex flex-col gap-1">
-                {activeMechanics.map((m) => (
-                  <MechanicItem key={m.id} mechanic={m} />
-                ))}
+      <CardContent className="px-3 py-3">
+        {mechanics.length === 0 ? (
+          <Empty className="border border-dashed border-border/60 py-8">
+            <EmptyHeader>
+              <EmptyTitle>No mechanics available</EmptyTitle>
+              <EmptyDescription>
+                Add or register mechanics to start assigning work from Bay View.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {activeMechanics.length > 0 && (
+              <div>
+                <div className="mb-1 flex items-center gap-2 px-0.5">
+                  <p className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                    Working
+                  </p>
+                  <Badge variant="secondary" className="h-5 px-1.5 text-[9px]">
+                    {activeMechanics.length}
+                  </Badge>
+                </div>
+                <div className="flex flex-col gap-1">
+                  {activeMechanics.map((m) => (
+                    <MechanicItem key={m.id} mechanic={m} />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          {availableMechanics.length > 0 && (
-            <div>
-              <p className="text-[9px] font-medium text-muted-foreground/40 uppercase tracking-wider mb-1 px-0.5">
-                Free — {availableMechanics.length}
-              </p>
-              <div className="flex flex-col gap-1">
-                {availableMechanics.map((m) => (
-                  <MechanicItem key={m.id} mechanic={m} />
-                ))}
+            )}
+            {availableMechanics.length > 0 && (
+              <div>
+                <div className="mb-1 flex items-center gap-2 px-0.5">
+                  <p className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                    Free
+                  </p>
+                  <Badge variant="outline" className="h-5 px-1.5 text-[9px]">
+                    {availableMechanics.length}
+                  </Badge>
+                </div>
+                <div className="flex flex-col gap-1">
+                  {availableMechanics.map((m) => (
+                    <MechanicItem key={m.id} mechanic={m} />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

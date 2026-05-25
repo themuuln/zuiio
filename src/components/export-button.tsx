@@ -1,10 +1,12 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useExcelExport } from "@/hooks/use-excel-export";
 import type { ExportColumn } from "@/lib/export";
+import { cn } from "@/lib/utils";
 
 interface ExportButtonProps<T> {
   data: T[];
@@ -14,6 +16,8 @@ interface ExportButtonProps<T> {
   title?: string;
   label?: string;
   disabled?: boolean;
+  buttonSize?: ComponentProps<typeof Button>["size"];
+  className?: string;
 }
 
 export function ExportButton<T>({
@@ -24,6 +28,8 @@ export function ExportButton<T>({
   title,
   label = "Export Excel",
   disabled,
+  buttonSize = "sm",
+  className,
 }: ExportButtonProps<T>) {
   const { exportToExcel, isExporting } = useExcelExport();
 
@@ -45,10 +51,10 @@ export function ExportButton<T>({
   return (
     <Button
       variant="outline"
-      size="lg"
+      size={buttonSize}
+      className={cn(className)}
       onClick={handleClick}
-      disabled={disabled || isExporting || data.length === 0}
-      className="h-12"
+      disabled={disabled || isExporting || !data?.length}
     >
       {isExporting ? (
         <Loader2 className="size-3.5 animate-spin" />

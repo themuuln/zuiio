@@ -73,4 +73,22 @@ describe("SearchInput", () => {
     rerender(<SearchInput value="updated" />);
     expect(input).toHaveValue("updated");
   });
+
+  it("shows shortcut badge by default when input is empty", () => {
+    render(<SearchInput />);
+    const badge = screen.queryByText("Cmd+K");
+    expect(badge).toBeDefined();
+  });
+
+  it("hides shortcut badge when value is non-empty", () => {
+    render(<SearchInput value="something" />);
+    const badge = screen.queryByText("Cmd+K");
+    expect(badge).toBeNull();
+  });
+
+  it("hides shortcut badge when focusShortcut is disabled", () => {
+    render(<SearchInput focusShortcut={false} />);
+    const badge = screen.queryByText("Cmd+K");
+    expect(badge).toBeNull();
+  });
 });

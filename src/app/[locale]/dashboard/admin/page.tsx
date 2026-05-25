@@ -85,7 +85,7 @@ export default function AdminPage() {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="mt-2 h-5 w-64" />
         </div>
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {[1, 2, 3].map((i) => (
             <Skeleton key={`skeleton-${i}`} className="h-20 w-full" />
           ))}

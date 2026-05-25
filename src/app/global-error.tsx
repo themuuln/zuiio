@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function GlobalError({
   error,
@@ -16,17 +17,14 @@ export default function GlobalError({
   return (
     <html lang="en">
       <body className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4 p-8">
+        <div className="text-center flex flex-col gap-4 p-8">
           <h1 className="text-4xl font-semibold text-destructive">Something went wrong!</h1>
           <p className="text-muted-foreground">
             A critical error occurred. Please try refreshing the page.
           </p>
-          <button
-            onClick={() => reset()}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          >
+          <Button onClick={() => reset()} variant="default">
             Try Again
-          </button>
+          </Button>
         </div>
       </body>
     </html>

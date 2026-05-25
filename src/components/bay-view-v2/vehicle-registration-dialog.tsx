@@ -116,7 +116,7 @@ function ServiceTimeline({
   }
 
   return (
-    <div className="space-y-0">
+    <div className="flex flex-col gap-0">
       {history.map((entry, idx) => {
         const dotColor = STATUS_COLORS[entry.status] ?? "bg-slate-400";
         const isLast = idx === history.length - 1;
@@ -129,12 +129,12 @@ function ServiceTimeline({
 
             <div className="relative z-10 mt-1 shrink-0">
               <div
-                className={`size-5 rounded-full ${dotColor} ring-2 ring-background flex items-center justify-center`}
+                className={`size-5  ${dotColor} ring-2 ring-background flex items-center justify-center`}
               >
                 {entry.status === "Completed" ? (
                   <CheckCircle2 className="size-3 text-white" />
                 ) : (
-                  <div className="size-2 rounded-full bg-white" />
+                  <div className="size-2  bg-white" />
                 )}
               </div>
             </div>
@@ -160,7 +160,7 @@ function ServiceTimeline({
                   {entry.services.map((s) => (
                     <span
                       key={`${s.name}-${s.price}`}
-                      className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400"
+                      className="inline-flex items-center gap-1  bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400"
                     >
                       <Wrench className="size-2.5" />
                       {s.name}
@@ -392,7 +392,7 @@ export function VehicleRegistrationDialog({
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left: Registration Form */}
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 flex flex-col gap-4">
             {/* Plate lookup */}
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -423,19 +423,19 @@ export function VehicleRegistrationDialog({
             </div>
 
             {lookupError && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
+              <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
                 {lookupError}
               </div>
             )}
 
             {saveError && (
-              <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
+              <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
                 {saveError}
               </div>
             )}
 
             {saveSuccess && (
-              <div className="rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 px-4 py-2 text-xs text-green-600 dark:text-green-400 flex items-center gap-2">
+              <div className=" bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 px-4 py-2 text-xs text-green-600 dark:text-green-400 flex items-center gap-2">
                 <CheckCircle2 className="size-4" />
                 {saveMode === "updated"
                   ? t("vehicleUpdated")
@@ -444,7 +444,7 @@ export function VehicleRegistrationDialog({
             )}
 
             {lookupDone && !lookupResult.exists && (
-              <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-4 py-2 text-xs text-amber-600 dark:text-amber-400">
+              <div className=" bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-4 py-2 text-xs text-amber-600 dark:text-amber-400">
                 {t("vehicleNotFound")}
               </div>
             )}
@@ -454,9 +454,9 @@ export function VehicleRegistrationDialog({
                 e.preventDefault();
                 handleSave();
               }}
-              className="space-y-4"
+              className="flex flex-col gap-4"
             >
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">
                   {t("vehicleInfo")}
                 </Label>
@@ -487,7 +487,7 @@ export function VehicleRegistrationDialog({
                 </div>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">
                   {t("additionalDetails")}
                 </Label>
@@ -511,7 +511,7 @@ export function VehicleRegistrationDialog({
                 </div>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">
                   {t("ownerInfo")}{" "}
                   <span className="text-muted-foreground/60">(optional)</span>
@@ -561,14 +561,14 @@ export function VehicleRegistrationDialog({
           {/* Right: Timeline */}
           <div className="w-full lg:w-[360px] shrink-0">
             <div className="flex items-center gap-2 mb-4">
-              <div className="flex items-center justify-center size-7 rounded-lg bg-amber-500/10">
+              <div className="flex items-center justify-center size-7  bg-amber-500/10">
                 <HistoryIcon className="size-3.5 text-amber-500" />
               </div>
               <span className="text-sm font-semibold">
                 {t("serviceTimeline")}
               </span>
               {lookupResult.serviceHistory.length > 0 && (
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                <span className=" bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
                   {lookupResult.serviceHistory.length}
                 </span>
               )}
@@ -577,7 +577,7 @@ export function VehicleRegistrationDialog({
             {lookupDone ? (
               <ScrollArea className="max-h-[420px] pr-1">
                 {lookupResult.vehicle && (
-                  <div className="mb-4 rounded-lg bg-muted/30 border border-border/60 p-3">
+                  <div className="mb-4  bg-muted/30 border border-border/60 p-3">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-semibold text-sm">
@@ -593,7 +593,7 @@ export function VehicleRegistrationDialog({
                       </div>
                       {lookupResult.vehicle.color && (
                         <div
-                          className="size-5 rounded-full border border-border"
+                          className="size-5  border border-border"
                           style={{
                             backgroundColor:
                               lookupResult.vehicle.color.toLowerCase(),

@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { NotFoundError, ValidationError, ConflictError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import type { OrgInvite } from "@/lib/database.types";
+import type { OrgInvite } from "@/lib/types";
 import type { InviteUserParams } from "@/lib/types";
 
 function generateToken(): string {

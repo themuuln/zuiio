@@ -3,6 +3,7 @@
 import { Loader2, LogIn } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -20,6 +21,8 @@ export default function LoginPage() {
   const authT = useTranslations("auth");
   const locale = useLocale();
   const [state, formAction, isPending] = useActionState(login, { error: "" });
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams?.get("redirectTo") ?? "";
 
   const handleLanguageSwitch = (newLocale: "mn" | "en") => {
     if (newLocale === locale) return;
@@ -42,32 +45,27 @@ export default function LoginPage() {
 
         {/* Language Switcher */}
         <div className="flex border border-border p-0.5 bg-muted/30">
-          <button
-            type="button"
+          <Button
+            variant={locale === "mn" ? "default" : "ghost"}
+            size="xs"
             onClick={() => handleLanguageSwitch("mn")}
-            className={`px-1.5 py-0.5 text-[9px] font-mono font-bold transition-all cursor-pointer ${
-              locale === "mn"
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
           >
             MN
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant={locale === "en" ? "default" : "ghost"}
+            size="xs"
             onClick={() => handleLanguageSwitch("en")}
-            className={`px-1.5 py-0.5 text-[9px] font-mono font-bold transition-all cursor-pointer ${
-              locale === "en"
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
           >
             EN
-          </button>
+          </Button>
         </div>
       </div>
 
       <form action={formAction}>
+        {redirectTo && (
+          <input type="hidden" name="redirectTo" value={redirectTo} />
+        )}
         <FieldGroup className="gap-3.5">
           {state?.error && (
             <FieldError className="border border-destructive/20 bg-destructive/5 px-2.5 py-1.5 text-[10px] font-mono">

@@ -40,7 +40,7 @@ export async function clockIn(
 
   if (error) throw error;
 
-  revalidateTag(cacheTags.timeTracking(orgId, mechanicId));
+  revalidateTag(cacheTags.timeTracking(orgId, mechanicId), "default");
   return data;
 }
 
@@ -83,7 +83,7 @@ export async function clockOut(
 
   await upsertDailyHours(supabase, orgId, mechanicId, today);
 
-  revalidateTag(cacheTags.timeTracking(orgId, mechanicId));
+  revalidateTag(cacheTags.timeTracking(orgId, mechanicId), "default");
   return data;
 }
 

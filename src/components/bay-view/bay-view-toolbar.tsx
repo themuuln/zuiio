@@ -57,51 +57,36 @@ export function BayViewToolbar({
     <div className="flex items-center gap-1.5">
       {/* View mode toggle */}
       <div className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5 ring-1 ring-border/30">
-        <button
-          type="button"
+        <Button
+          variant={viewMode === "grid" ? "default" : "ghost"}
+          size="icon"
           onClick={() => onViewModeChange("grid")}
-          className={cn(
-            "rounded-md p-1.5 transition-all duration-150",
-            viewMode === "grid"
-              ? "bg-background text-primary shadow-sm ring-1 ring-border/60"
-              : "text-muted-foreground hover:bg-background/60 hover:text-foreground active:scale-95",
-          )}
           aria-label={t("gridView")}
         >
           <LayoutGrid className="size-3.5" />
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant={viewMode === "list" ? "default" : "ghost"}
+          size="icon"
           onClick={() => onViewModeChange("list")}
-          className={cn(
-            "rounded-md p-1.5 transition-all duration-150",
-            viewMode === "list"
-              ? "bg-background text-primary shadow-sm ring-1 ring-border/60"
-              : "text-muted-foreground hover:bg-background/60 hover:text-foreground active:scale-95",
-          )}
           aria-label={t("listView")}
         >
           <List className="size-3.5" />
-        </button>
+        </Button>
       </div>
 
       {viewMode === "grid" && (
         <div className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5 ring-1 ring-border/30">
           {COLUMNS_OPTIONS.map((opt) => (
-            <button
+            <Button
               key={opt.value}
-              type="button"
+              variant={columns === opt.value ? "default" : "ghost"}
+              size="sm"
               onClick={() => onColumnsChange(opt.value)}
-              className={cn(
-                "rounded-md px-1.5 py-1 text-[10px] font-semibold transition-all duration-150",
-                columns === opt.value
-                  ? "bg-background text-primary shadow-sm ring-1 ring-border/60"
-                  : "text-muted-foreground hover:bg-background/60 hover:text-foreground active:scale-95",
-              )}
               aria-label={`${opt.label} columns`}
             >
               {opt.label}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -110,27 +95,29 @@ export function BayViewToolbar({
 
       {/* Bay count control */}
       <div className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5 ring-1 ring-border/30">
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="icon"
           onClick={() => handleChangeCount(-1)}
           disabled={loading || bayCount <= 1}
-          className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 hover:bg-background/60 hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+          className="size-6"
           aria-label={t("decreaseBayCount")}
         >
           <Minus className="size-3" />
-        </button>
+        </Button>
         <span className="flex h-6 min-w-7 items-center justify-center rounded-md bg-background px-1 text-[11px] font-semibold tabular-nums tracking-tight text-foreground shadow-sm ring-1 ring-border/50">
           {bayCount}
         </span>
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="icon"
           onClick={() => handleChangeCount(1)}
           disabled={loading || bayCount >= 50}
-          className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-all duration-150 hover:bg-background/60 hover:text-foreground active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+          className="size-6"
           aria-label={t("increaseBayCount")}
         >
           <Plus className="size-3" />
-        </button>
+        </Button>
       </div>
 
       <Button

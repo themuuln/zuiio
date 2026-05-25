@@ -8,8 +8,13 @@ import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { customerLogin } from "./actions";
 
 
@@ -37,11 +42,11 @@ export default function CustomerLoginPage() {
           </p>
         </CardHeader>
         <CardContent>
-          <form action={formAction} className="space-y-4">
+          <form action={formAction} className="flex flex-col gap-4">
             <input type="hidden" name="redirectTo" value={redirectTo} />
 
-            <div className="space-y-1.5">
-              <Label htmlFor="email">{t("portal.email")}</Label>
+            <Field>
+              <FieldLabel htmlFor="email">{t("portal.email")}</FieldLabel>
               <Input
                 id="email"
                 name="email"
@@ -50,10 +55,10 @@ export default function CustomerLoginPage() {
                 required
                 autoComplete="email"
               />
-            </div>
+            </Field>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password">{t("portal.password")}</Label>
+            <Field>
+              <FieldLabel htmlFor="password">{t("portal.password")}</FieldLabel>
               <Input
                 id="password"
                 name="password"
@@ -62,13 +67,13 @@ export default function CustomerLoginPage() {
                 required
                 autoComplete="current-password"
               />
-            </div>
+            </Field>
 
             {state?.error && (
-              <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3 text-xs text-red-700 dark:text-red-400">
+              <FieldError className="flex items-start gap-2">
                 <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
                 {state.error}
-              </div>
+              </FieldError>
             )}
 
             <Button type="submit" className="w-full" disabled={isPending}>

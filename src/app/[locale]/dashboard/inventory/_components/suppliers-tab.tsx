@@ -200,25 +200,26 @@ export function SuppliersTab({ orgId, search, onSearchChange }: SuppliersTabProp
                     </TableCell>
                     <TableCell className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <button
-                          type="button"
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => {
                             setEditingSupplier(s);
                             setShowAddSupplier(true);
                           }}
-                          className="p-1 text-muted-foreground hover:text-foreground"
                           title="Edit"
                         >
                           <Pencil className="size-4" />
-                        </button>
-                        <button
-                          type="button"
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleDeleteSupplier(s.id)}
-                          className="p-1 text-destructive/70 hover:text-destructive"
+                          className="text-destructive/70 hover:text-destructive"
                           title="Delete"
                         >
                           <Trash2 className="size-4" />
-                        </button>
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -238,8 +239,8 @@ export function SuppliersTab({ orgId, search, onSearchChange }: SuppliersTabProp
             setEditingSupplier(null);
           }}
         >
-          <form onSubmit={handleSaveSupplier} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={handleSaveSupplier} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <label
                 htmlFor="inv-supplier-name"
                 className="text-sm font-medium"
@@ -256,7 +257,7 @@ export function SuppliersTab({ orgId, search, onSearchChange }: SuppliersTabProp
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label
                   htmlFor="inv-supplier-contact"
                   className="text-sm font-medium"
@@ -270,7 +271,7 @@ export function SuppliersTab({ orgId, search, onSearchChange }: SuppliersTabProp
                   className="h-11"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label
                   htmlFor="inv-supplier-phone"
                   className="text-sm font-medium"
@@ -285,7 +286,7 @@ export function SuppliersTab({ orgId, search, onSearchChange }: SuppliersTabProp
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <label
                 htmlFor="inv-supplier-email"
                 className="text-sm font-medium"
@@ -300,7 +301,7 @@ export function SuppliersTab({ orgId, search, onSearchChange }: SuppliersTabProp
                 className="h-11"
               />
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <label
                 htmlFor="inv-supplier-address"
                 className="text-sm font-medium"
@@ -315,7 +316,7 @@ export function SuppliersTab({ orgId, search, onSearchChange }: SuppliersTabProp
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label
                   htmlFor="inv-supplier-tax-id"
                   className="text-sm font-medium"
@@ -329,7 +330,7 @@ export function SuppliersTab({ orgId, search, onSearchChange }: SuppliersTabProp
                   className="h-11"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label
                   htmlFor="inv-supplier-notes"
                   className="text-sm font-medium"

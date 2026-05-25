@@ -23,10 +23,6 @@ import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization } from "@/lib/types";
 import { setCookie } from "@/lib/utils";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { QuickActions } from "@/components/sidebar-tabs/quick-actions";
 import {
   DEFAULT_FORM,
   buildFormFromOrganization,
@@ -64,7 +60,7 @@ function SectionHeading({
 function LoadingSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Skeleton className="h-6 w-24" />
         <Skeleton className="h-4 w-72" />
         <div className="grid gap-6 lg:grid-cols-3">
@@ -243,27 +239,6 @@ export default function SettingsPage() {
 
   const { state: pageHeader, setActiveTab: setPageTab } = usePageHeader();
   const activeTab = pageHeader.activeTab;
-  const sidebar = useRightSidebar();
-
-  useEffect(() => {
-    sidebar.registerTab(
-      "sections",
-      "Sections",
-      <QuickActions
-        actions={[
-          { label: "General", icon: Building2, onClick: () => setPageTab("general") },
-          { label: "Appearance", icon: Palette, onClick: () => setPageTab("appearance") },
-          { label: "Commission", icon: Percent, onClick: () => setPageTab("commission") },
-          { label: "Diagnosis", icon: Stethoscope, onClick: () => setPageTab("diagnosis") },
-          { label: "Export", icon: Database, onClick: () => setPageTab("export") },
-        ]}
-      />,
-    );
-    sidebar.setOpen(true);
-    return () => {
-      sidebar.unregisterTab("sections");
-    };
-  }, [sidebar, setPageTab]);
 
   if (orgInfoQuery.isLoading || loading) {
     return <LoadingSkeleton />;

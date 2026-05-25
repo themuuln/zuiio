@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import type { BayViewData, BaySlotData } from "@/lib/services/bay-view-service";
 import type { EnrichedServiceItem } from "@/lib/services/post-service-service";
 
@@ -209,15 +209,15 @@ export function PostServiceDialog({
             {isComplete
               ? t("postServiceCompleteTitle")
               : t("postServiceTitle")}
-            <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-0.5 ml-1">
+            <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50  px-2 py-0.5 ml-1">
               {vehiclePlate}
             </span>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {/* Odometer */}
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <Gauge className="size-3.5" />
               {t("postServiceOdometer")}
@@ -232,19 +232,20 @@ export function PostServiceDialog({
           </div>
 
           {/* Services */}
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
                 <MessageSquare className="size-3.5" />
                 {t("postServiceServicesTitle")}
-                <span className="rounded-full bg-muted text-muted-foreground px-1.5 py-0.5 text-[10px] font-semibold">
+                <Badge variant="secondary">
                   {entries.length}
-                </span>
+                </Badge>
               </span>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setAllExpanded(!allExpanded)}
-                className="text-[10px] text-muted-foreground/60 hover:text-foreground flex items-center gap-0.5"
+                className="gap-0.5 text-[10px] h-auto"
               >
                 {allExpanded ? (
                   <ChevronUp className="size-3" />
@@ -252,7 +253,7 @@ export function PostServiceDialog({
                   <ChevronDown className="size-3" />
                 )}
                 {allExpanded ? "Collapse" : "Expand"}
-              </button>
+              </Button>
             </div>
 
             {servicesLoading && (
@@ -267,7 +268,7 @@ export function PostServiceDialog({
               </p>
             )}
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               {entries.map((entry, idx) => (
                 <ServiceCard
                   key={entry.workOrderServiceId}
@@ -280,7 +281,7 @@ export function PostServiceDialog({
           </div>
 
           {/* Mechanic notes */}
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-semibold text-muted-foreground">
               Mechanic Notes
             </Label>
@@ -293,7 +294,7 @@ export function PostServiceDialog({
 
           {/* Error */}
           {error && (
-            <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
+            <div className="flex items-start gap-2  bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
               <AlertTriangle className="mt-0.5 size-4 shrink-0 text-red-500" />
               <p className="text-xs text-red-700 dark:text-red-400">{error}</p>
             </div>
@@ -339,32 +340,21 @@ function ServiceCard({
   const nextDate = computeNextDueDate(entry.intervalMonths);
   const nextKm = computeNextDueKm(entry.intervalKm, odometer);
 
-  const priorityColors: Record<string, string> = {
-    standard: "bg-blue-500/10 text-blue-600 border-blue-200/50",
-    important: "bg-amber-500/10 text-amber-600 border-amber-200/50",
-    urgent: "bg-red-500/10 text-red-600 border-red-200/50",
-  };
-
   return (
-    <div className="rounded-lg border border-border/60 bg-card/50 overflow-hidden transition-all duration-200">
-      <button
-        type="button"
+    <div className=" border border-border/60 bg-card/50 overflow-hidden transition-all duration-200">
+      <Button
+        variant="ghost"
         onClick={() => onChange({ expanded: !entry.expanded })}
-        className="flex w-full items-center justify-between px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
+        className="w-full justify-between px-3 py-2.5 h-auto"
       >
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-sm font-medium truncate">
             {entry.serviceName}
           </span>
           {entry.priority !== "standard" && (
-            <span
-              className={cn(
-                "text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full border",
-                priorityColors[entry.priority],
-              )}
-            >
+            <Badge variant="outline">
               {entry.priority}
-            </span>
+            </Badge>
           )}
         </div>
         {entry.expanded ? (
@@ -372,12 +362,12 @@ function ServiceCard({
         ) : (
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground/50" />
         )}
-      </button>
+      </Button>
 
       {entry.expanded && (
-        <div className="px-3 pb-3 space-y-2.5 border-t border-border/40 pt-2.5">
+        <div className="px-3 pb-3 flex flex-col gap-2.5 border-t border-border/40 pt-2.5">
           <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <Label className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
                 {t("postServiceIntervalMonths")}
               </Label>
@@ -396,7 +386,7 @@ function ServiceCard({
                 placeholder="—"
               />
             </div>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <Label className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
                 {t("postServiceIntervalKm")}
               </Label>
@@ -418,7 +408,7 @@ function ServiceCard({
           </div>
 
           {(nextDate || nextKm) && (
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/30 rounded-md px-2 py-1.5">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/30  px-2 py-1.5">
               <span className="font-medium">{t("postServiceNextDue")}:</span>
               {nextDate && <span>{formatDate(nextDate)}</span>}
               {nextDate && nextKm && <span>·</span>}
@@ -427,7 +417,7 @@ function ServiceCard({
           )}
 
           <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <Label className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
                 {t("postServicePriority")}
               </Label>
@@ -453,7 +443,7 @@ function ServiceCard({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <Label className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
                 Notes
               </Label>

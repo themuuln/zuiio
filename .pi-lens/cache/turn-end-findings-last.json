@@ -1,0 +1,4 @@
+{
+  "signature": "src/lib/types/index.ts::ℹ️ Advisory — no action required this turn:\n⚠️ Newly unused exports in modified files — check if callers need updating (Knip):\n  src/lib/types/index.ts:145 — FeatureFlag\n  src/lib/types/index.ts:146 — FuelType\n  src/lib/types/index.ts:147 — InviteStatus\n  src/lib/types/index.ts:150 — OrganizationSettings\n  src/lib/types/index.ts:151 — OrganizationUser\n",
+  "sessionId": "lens-mpk3a8d3-e84ae8dd"
+}

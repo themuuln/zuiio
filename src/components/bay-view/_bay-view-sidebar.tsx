@@ -1,6 +1,7 @@
 "use client";
 
-import type { Profile, Vehicle, WorkOrder } from "@/lib/database.types";
+import type { Profile, Vehicle, WorkOrder } from "@/lib/types";
+import { Separator } from "@/components/ui/separator";
 import { MechanicRoster } from "./mechanic-roster";
 import { WaitingQueue } from "./waiting-queue";
 
@@ -29,7 +30,7 @@ export function BayViewSidebar({
           mechanics={mechanics}
           onItemClick={onItemClick}
         />
-        <div className="border-t border-border/50 mx-2" />
+        <Separator className="mx-2" />
         <MechanicRoster mechanics={mechanics} />
       </div>
     </div>

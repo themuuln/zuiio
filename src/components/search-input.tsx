@@ -1,7 +1,20 @@
 "use client";
 
 import { Loader2, Search, X } from "lucide-react";
-import { type ComponentProps, useCallback, useEffect, useRef, useState } from "react";
+import {
+  type ComponentProps,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
+import { Button } from "@/components/ui/button";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
 
 interface SearchInputProps extends Omit<ComponentProps<"input">, "onChange"> {
@@ -11,6 +24,8 @@ interface SearchInputProps extends Omit<ComponentProps<"input">, "onChange"> {
   debounceMs?: number;
   className?: string;
   value?: string;
+  /** Shortcut key to focus this input, e.g. "k" for Cmd+K. Set to false to disable. */
+  focusShortcut?: string | false;
 }
 
 export function SearchInput({
@@ -20,16 +35,37 @@ export function SearchInput({
   debounceMs,
   className,
   value: externalValue,
+  focusShortcut = "k",
   ...inputProps
 }: SearchInputProps) {
   const [value, setValue] = useState(externalValue ?? "");
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const shortcutLabel = focusShortcut ? `Cmd+${focusShortcut.toUpperCase()}` : undefined;
+  const id = useId();
 
   useEffect(() => {
     if (externalValue !== undefined) {
       setValue(externalValue);
     }
   }, [externalValue]);
+
+  // Keyboard shortcut to focus
+  useEffect(() => {
+    if (!focusShortcut) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.key.toLowerCase() === focusShortcut &&
+        !isEditingActive()
+      ) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [focusShortcut]);
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,46 +95,72 @@ export function SearchInput({
   const handleClear = useCallback(() => {
     setValue("");
     onSearch("");
+    inputRef.current?.focus();
   }, [onSearch]);
 
   return (
-    <div className={cn("relative", className)}>
-      <Search
-        className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground"
-        aria-hidden="true"
-      />
-      <input
+    <InputGroup className={cn("h-11 rounded-xl bg-background", className)}>
+      <InputGroupAddon align="inline-start">
+        <Search className="size-5" aria-hidden="true" />
+      </InputGroupAddon>
+      <InputGroupInput
+        ref={inputRef}
         type="text"
         data-slot="search-input"
         value={value}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className={cn(
-          "flex h-11 w-full rounded-xl border border-input bg-background",
-          "pl-11 pr-10 text-base placeholder:text-muted-foreground",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          "disabled:cursor-not-allowed disabled:opacity-50",
-        )}
+        aria-label={placeholder}
+        className="h-11 text-base"
         {...inputProps}
       />
+      {shortcutLabel && !value && !loading && (
+        <InputGroupAddon align="inline-end">
+          <kbd className="hidden items-center gap-0.5 sm:flex">
+            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded border bg-muted px-1 text-[10px] font-medium text-muted-foreground/60">
+              {shortcutLabel}
+            </span>
+          </kbd>
+        </InputGroupAddon>
+      )}
       {loading && (
-        <Loader2
-          className="absolute right-4 top-1/2 -translate-y-1/2 size-5 animate-spin text-muted-foreground"
-          aria-label="Searching..."
-        />
+        <InputGroupAddon align="inline-end">
+          <Loader2
+            className="size-5 animate-spin"
+            aria-label="Searching..."
+          />
+        </InputGroupAddon>
       )}
       {!loading && value && (
-        <button
-          type="button"
-          onClick={handleClear}
-          data-slot="touch-target"
-          className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center min-w-[44px] rounded-md hover:bg-muted"
-          aria-label="Clear search"
-        >
-          <X className="size-4 text-muted-foreground" />
-        </button>
+        <InputGroupAddon align="inline-end">
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={handleClear}
+            data-slot="touch-target"
+            aria-label="Clear search"
+          >
+            <X className="size-4" />
+          </Button>
+        </InputGroupAddon>
       )}
-    </div>
+    </InputGroup>
   );
+}
+
+/**
+ * Returns true if the user is currently editing a text-like element,
+ * so keyboard shortcuts don't hijack normal typing.
+ */
+function isEditingActive(): boolean {
+  const el = document.activeElement;
+  if (!el) return false;
+  const tag = el.tagName;
+  if (tag === "TEXTAREA" || tag === "SELECT") return true;
+  if (tag === "INPUT") {
+    const type = (el as HTMLInputElement).type;
+    return ["text", "search", "email", "number", "password", "tel", "url"].includes(type);
+  }
+  return el.getAttribute("role") === "textbox" || (el as HTMLElement).isContentEditable;
 }

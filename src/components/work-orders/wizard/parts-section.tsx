@@ -2,6 +2,7 @@
 
 import { Check, Clock, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,17 @@ import { useWizardContext } from "./wizard-context";
 export function PartsSection() {
   const ctx = useWizardContext();
   const t = useTranslations("workOrderWizard");
+
+  const filteredParts = ctx.partSearch
+    ? ctx.partsCatalog.filter(
+        (p) =>
+          p.name.toLowerCase().includes(ctx.partSearch.toLowerCase()) ||
+          (p.part_number &&
+            p.part_number.toLowerCase().includes(ctx.partSearch.toLowerCase())) ||
+          (p.category &&
+            p.category.toLowerCase().includes(ctx.partSearch.toLowerCase())),
+      )
+    : [];
 
   return (
     <Card>
@@ -48,9 +60,9 @@ export function PartsSection() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {ctx.lastVisitData?.parts.map((part, i) => (
-                  <button
+                  <Button
                     key={part.part_name ?? `lvpart-${i}`}
-                    type="button"
+                    variant="outline"
                     onClick={() => {
                       ctx.setPartLines((prev) => [
                         ...prev,
@@ -65,17 +77,77 @@ export function PartsSection() {
                       ]);
                     }}
                     data-slot="touch-target"
-                    className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm transition-colors hover:bg-amber-50 dark:border-amber-700 dark:bg-amber-950/20 dark:hover:bg-amber-900/30"
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm border-amber-200 hover:bg-amber-50 dark:border-amber-700 dark:bg-amber-950/20 dark:hover:bg-amber-900/30"
                   >
                     <span className="font-medium">{part.part_name}</span>
                     <span className="text-muted-foreground">
                       {formatCurrency(part.unit_price)}
                     </span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
           )}
+
+        {/* Parts catalog search */}
+        <div className="relative">
+          <SearchInput
+            placeholder={t("searchPartsToAdd")}
+            loading={false}
+            onSearch={ctx.setPartSearch}
+            debounceMs={300}
+          />
+          {ctx.partSearch && (
+            <div className="absolute top-full left-0 right-0 z-10 mt-1 border rounded-lg bg-background shadow-lg max-h-60 overflow-y-auto">
+              {filteredParts.slice(0, 12).map((part) => {
+                const isAdded = ctx.partLines.some(
+                  (p) =>
+                    p.part_name.toLowerCase() === part.name.toLowerCase() &&
+                    part.name,
+                );
+                return (
+                  <Button
+                    variant="ghost"
+                    key={part.id}
+                    onClick={() => {
+                      if (!isAdded) {
+                        ctx.addPartFromCatalog(part);
+                      }
+                    }}
+                    disabled={isAdded}
+                    className={`w-full justify-between p-3 min-h-[48px] h-auto ${
+                      isAdded ? "opacity-40" : ""
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm font-medium">{part.name}</span>
+                      {part.part_number && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          #{part.part_number}
+                        </span>
+                      )}
+                      {part.category && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {part.category}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0 ml-2">
+                      <span className="text-sm font-semibold tabular-nums">
+                        {formatCurrency(part.default_price ?? 0)}
+                      </span>
+                    </div>
+                  </Button>
+                );
+              })}
+              {filteredParts.length === 0 && (
+                <div className="p-4 text-sm text-muted-foreground text-center">
+                  {t("noPartsMatch")}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {ctx.partLines.length === 0 && !ctx.showLastVisitSuggestions ? (
           <p className="text-sm text-muted-foreground text-center py-3">
@@ -92,7 +164,7 @@ export function PartsSection() {
                   : undefined;
                 return (
                   <div
-                    key={part.part_number ?? `wpart-${idx}`}
+                    key={part.part_number || part.part_name || `wpart-${idx}`}
                     className="flex flex-wrap items-center gap-2 p-3 hover:bg-muted/20"
                   >
                     <div className="flex-1 min-w-[140px]">
@@ -140,21 +212,23 @@ export function PartsSection() {
                       <Input
                         value={part.unit_price || ""}
                         className="w-28 h-11 cursor-pointer"
+                        placeholder={t("unitPrice")}
                         aria-label="Unit price"
                       />
                     </NumericKeypad>
                     <span className="w-24 text-right text-sm font-semibold tabular-nums shrink-0">
                       {formatCurrency(part.final_price)}
                     </span>
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => ctx.removePart(idx)}
-                    data-slot="touch-target"
-                    className="p-2.5 text-destructive hover:bg-destructive/10 rounded-lg shrink-0 min-w-[44px] flex items-center justify-center"
-                    aria-label="Remove part"
+                      data-slot="touch-target"
+                      className="min-w-[44px]"
+                      aria-label="Remove part"
                     >
-                      <Trash2 className="size-5" />
-                    </button>
+                      <Trash2 className="size-5 text-destructive" />
+                    </Button>
                   </div>
                 );
               })}

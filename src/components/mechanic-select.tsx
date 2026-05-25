@@ -8,7 +8,6 @@ import {
   ComboboxList,
   ComboboxItem,
   ComboboxEmpty,
-  ComboboxValue,
 } from "@/components/ui/combobox";
 
 interface Mechanic {
@@ -70,6 +69,9 @@ export function MechanicSelect({
           onChange(mechanic?.id ?? "");
         }}
         isItemEqualToValue={(a, b) => a.id === b.id}
+        itemToStringLabel={(mechanic: Mechanic | null) =>
+          mechanic ? getMechanicName(mechanic) : ""
+        }
         disabled={disabled}
       >
         <ComboboxInput
@@ -78,9 +80,7 @@ export function MechanicSelect({
           showTrigger
           showClear={!!value}
           className={SIZE_CLASSES[size]}
-        >
-          <ComboboxValue>{selectedMechanic ? getMechanicName(selectedMechanic) : placeholder}</ComboboxValue>
-        </ComboboxInput>
+        />
         <ComboboxContent>
           <ComboboxList>
             {(mechanic: Mechanic) => (

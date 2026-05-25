@@ -28,10 +28,10 @@ export default function PortalVehiclesPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-4 w-56" />
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {[1, 2, 3].map((i) => (
             <Skeleton key={`skeleton-${i}`} className="h-20 rounded-xl" />
           ))}
@@ -41,7 +41,7 @@ export default function PortalVehiclesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
           {t("portal.myVehicles")}
@@ -61,7 +61,7 @@ export default function PortalVehiclesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {vehicles.map((v: Record<string, unknown>) => (
             <Link
               key={v.id as string}

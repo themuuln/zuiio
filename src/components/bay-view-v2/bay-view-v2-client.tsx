@@ -12,7 +12,6 @@ import {
   Car,
   Columns3,
   GripVertical,
-  History,
   KeyRound,
   LayoutDashboard,
   LayoutGrid,
@@ -23,6 +22,7 @@ import {
   RefreshCw,
   Wrench,
 } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useBayActionHandlers } from "@/components/bay-view/_bay-action-handlers";
@@ -30,9 +30,10 @@ import { useBayDragHandlers } from "@/components/bay-view/_bay-drag-handlers";
 import { StatusNotesModal } from "@/components/bay-view/status-notes-modal";
 import { ToastMessage } from "@/components/bay-view/toast-message";
 import { WorkOrderDetailDrawer } from "@/components/bay-view/work-order-detail-drawer";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -49,7 +50,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import type { Vehicle, WorkOrder } from "@/lib/database.types";
+import type { Vehicle, WorkOrder } from "@/lib/types";
 import type { BayViewData } from "@/lib/services/bay-view-service";
 import {
   assignVehicleToBay,
@@ -70,6 +71,34 @@ import { ShiftReportDialog } from "./shift-report-dialog";
 import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
 
 type ViewMode = "grid" | "kanban" | "list";
+
+function shouldIgnoreDragActivation(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return !!target.closest(
+    '[data-no-dnd="true"], button, a, input, textarea, select',
+  );
+}
+
+class GuardedPointerSensor extends PointerSensor {
+  static activators = [
+    {
+      eventName: "onPointerDown" as const,
+      handler: ({ nativeEvent }: React.PointerEvent) =>
+        !shouldIgnoreDragActivation(nativeEvent.target),
+    },
+  ];
+}
+
+class GuardedTouchSensor extends TouchSensor {
+  static activators = [
+    {
+      eventName: "onTouchStart" as const,
+      handler: ({ nativeEvent }: React.TouchEvent) =>
+        !shouldIgnoreDragActivation(nativeEvent.target),
+    },
+  ];
+}
 
 const VIEW_OPTIONS: {
   mode: ViewMode;
@@ -96,7 +125,7 @@ function StatChip({
   dotClassName: string;
 }) {
   return (
-    <div className="inline-flex items-center gap-2 border border-border/60 bg-card px-3 py-1.5 text-xs">
+    <div className="inline-flex h-8 items-center gap-2 border border-border/60 bg-card px-3 text-xs">
       <span className={cn("size-2 shrink-0", dotClassName)} />
       <span className="text-muted-foreground">
         <span className="font-semibold text-foreground">{value}</span> {label}
@@ -115,8 +144,11 @@ export function BayViewV2Client() {
     label: string;
   } | null>(null);
   const [pendingWoIds, setPendingWoIds] = useState<Record<string, boolean>>({});
-  const [detailWoId, setDetailWoId] = useState<string | null>(null);
-  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const woIdFromUrl = searchParams.get("woId");
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(!!woIdFromUrl);
+  const [detailWoId, setDetailWoId] = useState<string | null>(woIdFromUrl);
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     woId: string;
     status: string;
@@ -210,10 +242,10 @@ export function BayViewV2Client() {
     };
   }, [fetchData]);
 
-  const pointerSensor = useSensor(PointerSensor, {
+  const pointerSensor = useSensor(GuardedPointerSensor, {
     activationConstraint: { distance: 8 },
   });
-  const touchSensor = useSensor(TouchSensor, {
+  const touchSensor = useSensor(GuardedTouchSensor, {
     activationConstraint: { delay: 300, tolerance: 20 },
   });
   const sensors = useSensors(pointerSensor, touchSensor);
@@ -230,8 +262,9 @@ export function BayViewV2Client() {
 
   function onDragStart(event: Parameters<typeof handleDragStart>[0]) {
     handleDragStart(event);
-    const id = event.active.data.current?.workOrderId as string | undefined;
-    if (id) {
+    const activeData = event.active.data.current;
+    if (activeData?.type === "vehicle" && activeData.workOrderId) {
+      const id = activeData.workOrderId;
       const wo =
         data?.waitingQueue.find((w) => w.id === id) ??
         data?.bays.find((b) => b.workOrder?.id === id)?.workOrder;
@@ -240,6 +273,18 @@ export function BayViewV2Client() {
         setActiveDrag({
           type: "vehicle",
           label: formatPlateNumber(plate),
+        });
+      }
+    } else if (
+      (activeData?.type === "mechanic" && activeData.mechanicId) ||
+      (activeData?.type === "mechanic-assigned" && activeData.mechanicId)
+    ) {
+      const mechId = activeData.mechanicId;
+      const mech = data?.mechanics.find((m) => m.id === mechId);
+      if (mech?.full_name) {
+        setActiveDrag({
+          type: "mechanic",
+          label: mech.full_name,
         });
       }
     }
@@ -354,12 +399,19 @@ export function BayViewV2Client() {
   function handleOpenDetail(woId: string) {
     setDetailWoId(woId);
     setDetailDrawerOpen(true);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("woId", woId);
+    router.replace(`?${params.toString()}`, { scroll: false });
   }
 
   const handleQueueItemClick = useCallback(
     (wo: WorkOrder & { vehicle: Vehicle | null }) => {
-      setDetailWoId(wo.id);
+      const id = wo.id;
+      setDetailWoId(id);
       setDetailDrawerOpen(true);
+      const params = new URLSearchParams(window.location.search);
+      params.set("woId", id);
+      window.history.replaceState(null, "", `?${params.toString()}`);
     },
     [],
   );
@@ -471,14 +523,14 @@ export function BayViewV2Client() {
 
   if (loading && !data) {
     return (
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-7 w-40" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-36 " />
+            <Skeleton key={i} className="h-28 rounded-lg" />
           ))}
         </div>
       </div>
@@ -487,7 +539,7 @@ export function BayViewV2Client() {
 
   if (error || !data) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 gap-2">
+      <div className="flex flex-col items-center justify-center py-6 gap-2">
         <p className="text-sm text-muted-foreground">{error ?? t("noData")}</p>
         <Button variant="outline" size="sm" onClick={() => fetchData(true)}>
           {t("retry")}
@@ -506,8 +558,8 @@ export function BayViewV2Client() {
       onDragEnd={onDragEnd}
     >
       <div className="flex h-full flex-col bg-muted/20">
-        <div className="border-b border-border/50 bg-background/95 px-4 py-4 backdrop-blur">
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="border-b border-border/50 bg-background/95 p-4 backdrop-blur">
+          <div className="flex flex-wrap items-center gap-1.5">
             <StatChip
               label={t("totalBays")}
               value={data.bayCount}
@@ -524,7 +576,7 @@ export function BayViewV2Client() {
               dotClassName="bg-blue-500"
             />
 
-            <div className="flex items-center gap-1 border border-border/60 bg-card p-1">
+            <div className="flex h-8 items-center gap-1 border border-border/60 bg-card p-1">
               <Tooltip>
                 <TooltipTrigger
                   render={
@@ -599,7 +651,7 @@ export function BayViewV2Client() {
               {userIsMechanic && (
                 <Button
                   type="button"
-                  size="sm"
+                  size="default"
                   variant={myJobsOnly ? "default" : "outline"}
                   onClick={() => setMyJobsOnly(!myJobsOnly)}
                 >
@@ -633,8 +685,8 @@ export function BayViewV2Client() {
                   if (value.length > 0) setViewMode(value[0] as ViewMode);
                 }}
                 variant="outline"
-                size="sm"
-                className="border border-border/60 bg-card p-1"
+                size="default"
+                className="overflow-hidden rounded-lg bg-card p-0 [&>[data-slot=toggle-group-item]]:size-9 [&>[data-slot=toggle-group-item]]:aspect-square [&>[data-slot=toggle-group-item]]:min-w-0 [&>[data-slot=toggle-group-item]]:px-0"
               >
                 {VIEW_OPTIONS.map((opt) => {
                   const Icon = opt.icon;
@@ -645,7 +697,7 @@ export function BayViewV2Client() {
                           <ToggleGroupItem
                             value={opt.mode}
                             aria-label={t(opt.labelKey)}
-                            className="size-7 min-w-0 px-0"
+                            className="size-9 aspect-square min-w-0 px-0"
                           />
                         }
                       >
@@ -659,7 +711,7 @@ export function BayViewV2Client() {
                 })}
               </ToggleGroup>
 
-              <div className="flex items-center gap-1 border border-border/60 bg-card px-2 py-1">
+              <div className="flex h-9 items-center gap-1 border border-border/60 bg-card px-2">
                 <Button
                   type="button"
                   size="icon-xs"
@@ -695,11 +747,12 @@ export function BayViewV2Client() {
         <div className="flex flex-1 overflow-hidden">
           <div className="flex-1 overflow-y-auto">
             {viewMode === "grid" && (
-              <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2 xl:grid-cols-3">
                 {filteredBays.map((bay) => (
                   <BayCard
                     key={bay.bayNumber}
                     bay={bay}
+                    isPending={bay.workOrder ? !!pendingWoIds[bay.workOrder.id] : false}
                     onStatusChange={handleStatusClick}
                     onRemoveFromBay={handleRemoveFromBay}
                     onOpenDetail={handleOpenDetail}
@@ -710,20 +763,21 @@ export function BayViewV2Client() {
             )}
 
             {viewMode === "kanban" && (
-              <div className="flex h-full gap-3 overflow-x-auto p-4">
+              <div className="flex h-full gap-2 overflow-x-auto p-2">
                 {["New", "Diagnosing", "In Progress", "Ready for Pickup"].map(
                   (status) => {
                     const baysWithStatus = filteredBays.filter(
                       (b) => b.workOrder?.status === status,
                     );
                     return (
-                      <Card
+                      <div
                         key={status}
-                        size="sm"
-                        className="min-w-[240px] max-w-[280px] flex-shrink-0 border border-border/70 bg-card/90"
+                        className="flex min-w-[240px] max-w-[280px] flex-shrink-0 flex-col gap-3 bg-card/90 py-3 ring-1 ring-foreground/10"
                       >
-                        <CardHeader className="flex-row items-center justify-between gap-2 border-b border-border/40">
-                          <CardTitle className="text-sm">{status}</CardTitle>
+                        <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-3 pb-3">
+                          <div className="font-heading text-sm leading-snug font-medium">
+                            {status}
+                          </div>
                           <Badge
                             variant={
                               status === "In Progress" ? "default" : "secondary"
@@ -731,12 +785,13 @@ export function BayViewV2Client() {
                           >
                             {baysWithStatus.length}
                           </Badge>
-                        </CardHeader>
-                        <CardContent className="flex flex-1 flex-col gap-2 px-3 py-3">
+                        </div>
+                        <div className="flex flex-1 flex-col gap-2 px-3">
                           {baysWithStatus.map((bay) => (
                             <BayCard
                               key={bay.bayNumber}
                               bay={bay}
+                              isPending={bay.workOrder ? !!pendingWoIds[bay.workOrder.id] : false}
                               onStatusChange={handleStatusClick}
                               onRemoveFromBay={handleRemoveFromBay}
                               onOpenDetail={handleOpenDetail}
@@ -747,42 +802,42 @@ export function BayViewV2Client() {
                               {t("emptyBay")}
                             </div>
                           )}
-                        </CardContent>
-                      </Card>
+                        </div>
+                      </div>
                     );
                   },
                 )}
-                <Card
-                  size="sm"
-                  className="min-w-[240px] max-w-[280px] flex-shrink-0 border border-border/70 bg-card/90"
-                >
-                  <CardHeader className="flex-row items-center justify-between gap-2 border-b border-border/40">
-                    <CardTitle className="text-sm">{t("available")}</CardTitle>
+                <div className="flex min-w-[240px] max-w-[280px] flex-shrink-0 flex-col gap-3 bg-card/90 py-3 ring-1 ring-foreground/10">
+                  <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-3 pb-3">
+                    <div className="font-heading text-sm leading-snug font-medium">
+                      {t("available")}
+                    </div>
                     <Badge variant="outline">
                       {filteredBays.filter((b) => !b.workOrder).length}
                     </Badge>
-                  </CardHeader>
-                  <CardContent className="flex flex-1 flex-col gap-2 px-3 py-3">
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2 px-3">
                     {filteredBays
                       .filter((b) => !b.workOrder)
                       .map((bay) => (
                         <BayCard
                           key={bay.bayNumber}
                           bay={bay}
+                          isPending={false}
                           onStatusChange={handleStatusClick}
                           onRemoveFromBay={handleRemoveFromBay}
                           onOpenDetail={handleOpenDetail}
                           onAssignClick={(n) => setAssignBay(n)}
                         />
                       ))}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </div>
             )}
 
             {viewMode === "list" && (
-              <div className="p-4">
-                <Card className="border border-border/70 bg-card/90">
+              <div className="p-2">
+                <Card className="bg-card/90">
                   <Table className="text-xs">
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
@@ -945,15 +1000,22 @@ export function BayViewV2Client() {
         )}
       </DragOverlay>
 
-      <WorkOrderDetailDrawer
-        workOrderId={detailWoId}
-        open={detailDrawerOpen}
-        onOpenChange={(open) => {
-          setDetailDrawerOpen(open);
-          if (!open) setDetailWoId(null);
-        }}
-        onRefresh={() => fetchData(false)}
-      />
+      <ErrorBoundary>
+        <WorkOrderDetailDrawer
+          workOrderId={detailWoId}
+          open={detailDrawerOpen}
+          onOpenChange={(open) => {
+            setDetailDrawerOpen(open);
+            if (!open) {
+              setDetailWoId(null);
+              const params = new URLSearchParams(searchParams.toString());
+              params.delete("woId");
+              router.replace(`?${params.toString()}`, { scroll: false });
+            }
+          }}
+          onRefresh={() => fetchData(false)}
+        />
+      </ErrorBoundary>
 
       {/* Admin dialogs */}
       <ShiftReportDialog

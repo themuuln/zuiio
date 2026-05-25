@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import type { ExportColumn } from "@/lib/export";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
@@ -287,7 +294,7 @@ export default function ServicesPage() {
           <CardHeader>
             <CardTitle>Add New Service</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex flex-col gap-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <Input
                 placeholder="Service Name *"
@@ -354,11 +361,17 @@ export default function ServicesPage() {
               <Button onClick={() => refetch()}>Retry</Button>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-4 py-12">
-              <p className="text-muted-foreground">
-                {t("services.noServices")}
-              </p>
-            </div>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Pencil />
+                </EmptyMedia>
+                <EmptyTitle>{t("services.noServices")}</EmptyTitle>
+                <EmptyDescription>
+                  {t("services.noServices")}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <div className="divide-y divide-border">
               {filtered.map((s) => (

@@ -63,9 +63,9 @@ export function ServicesSection() {
                       svc.service_catalog_id,
                   );
                   return (
-                    <button
+                    <Button
                       key={svc.service_catalog_id ?? svc.service_name}
-                      type="button"
+                      variant={isAdded ? "default" : "outline"}
                       disabled={isAdded}
                       onClick={() => {
                         const catItem = ctx.catalog.find(
@@ -76,10 +76,10 @@ export function ServicesSection() {
                         }
                       }}
                       data-slot="touch-target"
-                      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                      className={`inline-flex items-center gap-2 px-3 py-2 text-sm ${
                         isAdded
                           ? "border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950/20 dark:text-green-400"
-                          : "border-amber-200 bg-white hover:bg-amber-50 dark:border-amber-700 dark:bg-amber-950/20 dark:hover:bg-amber-900/30"
+                          : "border-amber-200 hover:bg-amber-50 dark:border-amber-700 dark:bg-amber-950/20 dark:hover:bg-amber-900/30"
                       }`}
                     >
                       {isAdded && <Check className="size-3.5" />}
@@ -87,7 +87,7 @@ export function ServicesSection() {
                       <span className="text-muted-foreground">
                         {formatCurrency(svc.unit_price)}
                       </span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -123,8 +123,8 @@ export function ServicesSection() {
                     (s) => s.service_catalog_id === svc.id,
                   );
                   return (
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
                       key={svc.id}
                       onClick={() => {
                         if (!isAdded) {
@@ -133,7 +133,7 @@ export function ServicesSection() {
                         }
                       }}
                       disabled={isAdded}
-                      className={`flex items-center justify-between w-full p-3 text-left transition-colors hover:bg-muted/50 min-h-[48px] ${
+                      className={`w-full justify-between p-3 min-h-[48px] h-auto ${
                         isAdded ? "opacity-40" : ""
                       }`}
                     >
@@ -155,9 +155,9 @@ export function ServicesSection() {
                             {t("lastSold", { price: formatCurrency(last) })}
                           </span>
                         )}
-                      </div>
-                    </button>
-                  );
+                    </div>
+                  </Button>
+                );
                 })}
               {ctx.catalog.filter(
                 (s) =>
@@ -247,15 +247,16 @@ export function ServicesSection() {
                   <span className="w-24 text-right text-sm font-semibold tabular-nums shrink-0">
                     {formatCurrency(svc.final_price)}
                   </span>
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => ctx.removeService(idx)}
                     data-slot="touch-target"
-                    className="p-2.5 text-destructive hover:bg-destructive/10 rounded-lg shrink-0 min-w-[44px] flex items-center justify-center"
+                    className="min-w-[44px]"
                     aria-label="Remove service"
                   >
-                    <Trash2 className="size-5" />
-                  </button>
+                    <Trash2 className="size-5 text-destructive" />
+                  </Button>
                 </div>
               ))}
             </div>

@@ -3,9 +3,10 @@
 import { useTranslations } from "next-intl";
 import type { useRouter } from "@/lib/i18n/navigation";
 import { StatusBadge } from "@/components/status-badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatMNT } from "@/lib/utils";
-import type { WorkOrderStatus } from "@/lib/database.types";
+import type { WorkOrderStatus } from "@/lib/types";
 
 interface WorkOrderSummary {
   id: string;
@@ -44,16 +45,16 @@ export function CustomerWorkOrderHistory({ workOrders, router }: Props) {
         ) : (
           <div className="flex flex-col gap-3">
             {workOrders.map((workOrder) => (
-              <button
+              <Button
                 key={workOrder.id}
-                type="button"
                 onClick={() =>
                   router.push(`/dashboard/work-orders/${workOrder.id}`)
                 }
-                className="rounded-lg bg-muted/50 p-4 text-left transition-colors hover:bg-muted"
+                variant="ghost"
+                className="w-full justify-start rounded-lg bg-muted/50 p-4"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-2">
+                <div className="flex items-start justify-between gap-4 w-full">
+                  <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-3">
                       <StatusBadge status={workOrder.status} />
                       <span className="text-sm text-muted-foreground">
@@ -80,7 +81,7 @@ export function CustomerWorkOrderHistory({ workOrders, router }: Props) {
                     </span>
                   </div>
                 </div>
-              </button>
+              </Button>
             ))}
           </div>
         )}

@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import type { WorkOrderStatus } from "@/lib/database.types";
+import type { WorkOrderStatus } from "@/lib/types";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { vehicleKeys } from "@/lib/queries/keys";
@@ -414,12 +414,12 @@ export default function VehicleDetailPage() {
             <CardTitle className="text-base">{t("owner")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <button
-              type="button"
+            <Button
               onClick={() =>
                 push(`/dashboard/customers/${primaryOwner.customer_id}`)
               }
-              className="flex w-full items-center justify-between rounded-lg bg-muted/50 p-3 text-left transition-colors hover:bg-muted"
+              variant="ghost"
+              className="w-full justify-between rounded-lg bg-muted/50 px-3 py-3"
             >
               <div>
                 <p className="text-sm font-medium">{primaryOwner.name}</p>
@@ -428,7 +428,7 @@ export default function VehicleDetailPage() {
                 </p>
               </div>
               <ArrowLeft className="size-4 rotate-180 text-muted-foreground" />
-            </button>
+            </Button>
           </CardContent>
         </Card>
       )}
@@ -513,16 +513,16 @@ export default function VehicleDetailPage() {
           ) : (
             <div className="flex flex-col gap-3">
               {vehicle.service_history.map((workOrder) => (
-                <button
+                <Button
                   key={workOrder.id}
-                  type="button"
                   onClick={() =>
                     push(`/dashboard/work-orders/${workOrder.id}`)
                   }
-                  className="rounded-lg bg-muted/50 p-4 text-left transition-colors hover:bg-muted"
+                  variant="ghost"
+                  className="w-full justify-start rounded-lg bg-muted/50 px-4 py-4"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-4 w-full">
+                    <div className="flex flex-col gap-2">
                       <div className="flex items-center gap-3">
                         <StatusBadge status={workOrder.status} />
                         <span className="text-sm text-muted-foreground">
@@ -549,7 +549,7 @@ export default function VehicleDetailPage() {
                       <ArrowLeft className="size-4 rotate-180 text-muted-foreground" />
                     </div>
                   </div>
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -597,10 +597,11 @@ function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
         ))}
       </div>
 
-      <button
-        type="button"
+      <Button
         onClick={() => setShowMore(!showMore)}
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground"
       >
         {showMore ? (
           <ChevronDown className="size-4" />
@@ -608,7 +609,7 @@ function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
           <ChevronRight className="size-4" />
         )}
         {showMore ? t("showLess") : t("showMoreDetails", { count: detailFields.filter(([, v]) => v).length })}
-      </button>
+      </Button>
 
       {showMore && (
         <div className="grid gap-3 sm:grid-cols-2 animate-in fade-in slide-in-from-top-1 duration-200">
@@ -694,18 +695,19 @@ function VehicleEditForm({
         <FormField label={t("odometer")} field="odometer" form={form} onFieldChange={setField} type="number" />
       </div>
 
-      <button
-        type="button"
+      <Button
         onClick={() => setShowMore(!showMore)}
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground"
       >
         {showMore ? (
           <ChevronDown className="size-4" />
         ) : (
           <ChevronRight className="size-4" />
         )}
-        {showMore ? t("showLess") : t("showMoreDetails", { count: "" })}
-      </button>
+        {showMore ? t("showLess") : t("showMore")}
+      </Button>
 
       {showMore && (
         <div className="grid gap-4 sm:grid-cols-2 animate-in fade-in slide-in-from-top-1 duration-200">

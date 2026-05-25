@@ -10,15 +10,23 @@ import {
   Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
 import { CustomerDetailDrawer } from "@/components/customer-detail-drawer";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { SearchInput } from "@/components/search-input";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import {
   Table,
   TableBody,
@@ -27,14 +35,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Customer } from "@/lib/database.types";
+import type { Customer } from "@/lib/types";
 import type { ExportColumn } from "@/lib/export";
-import { Link } from "@/lib/i18n/navigation";
+import { Link, useRouter } from "@/lib/i18n/navigation";
 import { useCustomers } from "@/lib/queries/use-customers";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { NewCustomerDialog } from "@/components/new-customer-dialog";
+import { useSearchParams } from "next/navigation";
 
 interface CustomerWithVehicleCount extends Customer {
   vehicle_count?: number;
@@ -72,7 +82,7 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
         {Array.from({ length: rows }).map((_, i) => (
           <TableRow key={`row-${i}`}>
             <TableCell>
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
                 <Skeleton className="h-5 w-32" />
                 <Skeleton className="h-3.5 w-16" />
               </div>
@@ -122,6 +132,23 @@ export default function CustomersPage() {
   const now = useClientNow();
   const [search, setSearch] = useState("");
   const [detailCustomerId, setDetailCustomerId] = useState<string | null>(null);
+  const [newDialogOpen, setNewDialogOpen] = useState(false);
+
+  const searchParams = useSearchParams();
+  const { replace } = useRouter();
+
+  // Auto-open dialog when navigated from quick-create action
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setNewDialogOpen(true);
+      // Clean URL so next click re-triggers
+      replace(window.location.pathname, { scroll: false });
+    }
+  }, [searchParams, replace]);
+
+  const handleNewDialogOpenChange = useCallback((open: boolean) => {
+    setNewDialogOpen(open);
+  }, [setNewDialogOpen]);
 
   const exportColumns: ExportColumn<CustomerWithVehicleCount>[] = useMemo(
     () => [
@@ -249,7 +276,7 @@ export default function CustomersPage() {
             {(customers ?? []).length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Button render={<Link href="/dashboard/customers/new" />} size="lg">
+        <Button onClick={() => setNewDialogOpen(true)} size="lg">
           <Plus className="size-4" />
           {t("addCustomer")}
         </Button>
@@ -282,16 +309,22 @@ export default function CustomersPage() {
       <Card className="py-0">
         <CardContent className="p-0">
           {(customers ?? []).length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-16 px-4">
-              <Users className="size-10 text-muted-foreground/40" />
-              <p className="text-muted-foreground">{t("noCustomers")}</p>
-              <Button
-                render={<Link href="/dashboard/customers/new" />}
-                variant="outline"
-              >
-                {t("addFirstCustomer")}
-              </Button>
-            </div>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Users />
+                </EmptyMedia>
+                <EmptyTitle>{t("noCustomers")}</EmptyTitle>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button
+                  onClick={() => setNewDialogOpen(true)}
+                  variant="outline"
+                >
+                  {t("addFirstCustomer")}
+                </Button>
+              </EmptyContent>
+            </Empty>
           ) : (
             <Table>
               <TableHeader>
@@ -352,10 +385,10 @@ export default function CustomersPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="inline-flex items-center justify-center rounded-full bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums">
-                          <Car className="mr-1 size-3 text-muted-foreground/60" />
+                        <Badge variant="secondary" className="gap-1 tabular-nums">
+                          <Car className="size-3 text-muted-foreground/60" />
                           {customer.vehicle_count ?? 0}
-                        </span>
+                        </Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         <span className="text-sm tabular-nums">
@@ -392,6 +425,11 @@ export default function CustomersPage() {
         onOpenChange={(open) => {
           if (!open) setDetailCustomerId(null);
         }}
+      />
+
+      <NewCustomerDialog
+        open={newDialogOpen}
+        onOpenChange={setNewDialogOpen}
       />
     </div>
   );

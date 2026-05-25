@@ -3,10 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardHeader,
 } from "@/components/ui/card";
@@ -52,15 +54,16 @@ export default function RecentWorkOrdersTable({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-0">
-        <div />
-        <ExportButton
-          data={workOrders}
-          columns={workOrdersForExport}
-          filename={`dashboard-recent-${now.toISOString().split("T")[0]}.xlsx`}
-          sheetName="Recent Work Orders"
-          title={t("dashboard.recentWorkOrders")}
-        />
+      <CardHeader className="pb-0">
+        <CardAction>
+          <ExportButton
+            data={workOrders}
+            columns={workOrdersForExport}
+            filename={`dashboard-recent-${now.toISOString().split("T")[0]}.xlsx`}
+            sheetName="Recent Work Orders"
+            title={t("dashboard.recentWorkOrders")}
+          />
+        </CardAction>
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
@@ -131,18 +134,14 @@ export default function RecentWorkOrdersTable({
                         {wo.vehicle?.plate_number ?? "\u2014"}
                       </TableCell>
                       <TableCell className="px-5 py-3.5">
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            WO_STATUS_STYLES[wo.status]?.bg ?? "bg-muted"
-                          } ${WO_STATUS_STYLES[wo.status]?.text ?? "text-muted-foreground"}`}
-                        >
+                        <Badge variant="outline" className="gap-1.5">
                           <span
                             className={`size-1.5 rounded-full ${
                               WO_STATUS_STYLES[wo.status]?.dot ?? "bg-muted-foreground"
                             }`}
                           />
                           {wo.status}
-                        </span>
+                        </Badge>
                       </TableCell>
                       <TableCell className="px-5 py-3.5 text-right font-medium tabular-nums">
                         {formatMNT(grandTotal)}

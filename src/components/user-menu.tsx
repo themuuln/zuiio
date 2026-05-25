@@ -73,7 +73,7 @@ export default function UserMenu({ collapsed }: UserMenuProps) {
           <AvatarFallback>…</AvatarFallback>
         </Avatar>
         {!collapsed && (
-          <div className="flex-1 truncate text-left space-y-1.5">
+          <div className="flex-1 truncate text-left flex flex-col gap-1.5">
             <Skeleton className="h-3.5 w-20" />
             <Skeleton className="h-3 w-28" />
           </div>

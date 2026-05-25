@@ -18,6 +18,8 @@ interface PageHeaderContextValue {
   setTabs: (tabs: PageTab[]) => void;
   setActiveTab: (tab: string) => void;
   setActions: (actions: ReactNode) => void;
+  isNewCustomerDialogOpen: boolean;
+  setNewCustomerDialogOpen: (open: boolean) => void;
 }
 
 const PageHeaderContext = createContext<PageHeaderContextValue | null>(null);
@@ -28,6 +30,7 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
     activeTab: "",
     actions: null,
   });
+  const [isNewCustomerDialogOpen, setNewCustomerDialogOpen] = useState(false);
 
   const setTabs = (tabs: PageTab[]) =>
     setState((prev) => ({ ...prev, tabs, activeTab: tabs[0]?.value ?? "" }));
@@ -37,7 +40,16 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, actions }));
 
   return (
-    <PageHeaderContext.Provider value={{ state, setTabs, setActiveTab, setActions }}>
+    <PageHeaderContext.Provider
+      value={{
+        state,
+        setTabs,
+        setActiveTab,
+        setActions,
+        isNewCustomerDialogOpen,
+        setNewCustomerDialogOpen,
+      }}
+    >
       {children}
     </PageHeaderContext.Provider>
   );

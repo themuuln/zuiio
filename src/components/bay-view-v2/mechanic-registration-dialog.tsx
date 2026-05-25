@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -90,23 +91,26 @@ export function MechanicRegistrationDialog({ open, onOpenChange }: Props) {
             <Wrench className="size-4 text-purple-500" />
             {t("registerMechanicBtn")}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {t("registerMechanicDesc")}
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2.5 text-xs text-red-600 dark:text-red-400">
+            <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2.5 text-xs text-red-600 dark:text-red-400">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 px-4 py-2.5 text-xs text-green-600 dark:text-green-400 flex items-center gap-2">
+            <div className=" bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 px-4 py-2.5 text-xs text-green-600 dark:text-green-400 flex items-center gap-2">
               <CheckCircle2 className="size-4 shrink-0" />
               <span>{t("mechanicRegistered", { name: fullName })}</span>
             </div>
           )}
 
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-medium text-muted-foreground">
               {t("fullName")}
             </Label>
@@ -124,7 +128,7 @@ export function MechanicRegistrationDialog({ open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-medium text-muted-foreground">
               {t("email")}
             </Label>
@@ -142,7 +146,7 @@ export function MechanicRegistrationDialog({ open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-medium text-muted-foreground">
               {t("phone")}{" "}
               <span className="text-muted-foreground/60">(optional)</span>

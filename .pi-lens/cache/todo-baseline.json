@@ -1,0 +1,60 @@
+{
+  "items": [
+    {
+      "type": "TODO",
+      "message": "wrap component using useSearchParams in <Suspense>",
+      "file": "src/app/[locale]/auth/customer/login/page.tsx",
+      "line": 5,
+      "column": 3
+    },
+    {
+      "type": "TODO",
+      "message": "wrap component using useSearchParams in <Suspense>",
+      "file": "src/app/[locale]/dashboard/vehicles/new/page.tsx",
+      "line": 4,
+      "column": 3
+    },
+    {
+      "type": "TODO",
+      "message": "convert to <form action={serverAction}> for progressive enhancement",
+      "file": "src/components/bay-view/vehicle-registration-dialog.tsx",
+      "line": 457,
+      "column": 19
+    },
+    {
+      "type": "TODO",
+      "message": "convert to <form action={serverAction}> for progressive enhancement",
+      "file": "src/components/data-table-dashboard.tsx",
+      "line": 201,
+      "column": 13
+    },
+    {
+      "type": "TODO",
+      "message": "convert to <form action={serverAction}> for progressive enhancement",
+      "file": "src/components/data-table-dashboard.tsx",
+      "line": 227,
+      "column": 13
+    },
+    {
+      "type": "TODO",
+      "message": "combine filter + map into flatMap for single pass",
+      "file": "src/components/ui/chart.tsx",
+      "line": 213,
+      "column": 13
+    },
+    {
+      "type": "TODO",
+      "message": "combine filter + map into flatMap for single pass",
+      "file": "src/components/ui/chart.tsx",
+      "line": 315,
+      "column": 11
+    },
+    {
+      "type": "TODO",
+      "message": "use redirect() from next/navigation instead of router.replace() in useEffect",
+      "file": "src/hooks/use-portal-auth.ts",
+      "line": 48,
+      "column": 9
+    }
+  ]
+}

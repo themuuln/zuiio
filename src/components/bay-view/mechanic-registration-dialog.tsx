@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   onClose: () => void;
@@ -88,17 +89,17 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
               </p>
             </div>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="rounded-md p-1.5 hover:bg-muted transition-colors"
             aria-label={t("close")}
           >
             <X className="size-5" />
-          </button>
+          </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
           {error && (
             <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2.5 text-xs text-red-600 dark:text-red-400">
               {error}
@@ -168,10 +169,11 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
           </div>
 
           {!success && (
-            <button
+            <Button
               type="submit"
+              className="w-full"
               disabled={saving || !email.trim() || !fullName.trim()}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              size="lg"
             >
               {saving ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -179,18 +181,19 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
                 <User className="size-4" />
               )}
               {saving ? t("registering") : t("registerMechanicBtn")}
-            </button>
+            </Button>
           )}
 
           {success && (
-            <button
-              type="button"
+            <Button
+              variant="default"
+              className="w-full"
               onClick={onClose}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              size="lg"
             >
               <CheckCircle2 className="size-4" />
               {t("done")}
-            </button>
+            </Button>
           )}
         </form>
       </div>

@@ -3,6 +3,8 @@
 import { Trash2, Wrench } from "lucide-react";
 import { useState } from "react";
 import { SearchInput } from "@/components/search-input";
+import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import { HighlightText } from "@/lib/utils/search-utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,14 +41,11 @@ export function ServiceLines({
 }: ServiceLinesProps) {
   const [serviceSearch, setServiceSearch] = useState("");
 
-  const filteredCatalog = serviceSearch
-    ? catalog.filter(
-        (s) =>
-          s.name.toLowerCase().includes(serviceSearch.toLowerCase()) ||
-          (s.category &&
-            s.category.toLowerCase().includes(serviceSearch.toLowerCase())),
-      )
-    : [];
+  const filteredCatalog = useFuzzySearch(catalog, serviceSearch, {
+    keys: ["name", "category"],
+    threshold: 0.4,
+    minQueryLength: 1,
+  });
 
   return (
     <Card>
@@ -79,8 +78,8 @@ export function ServiceLines({
                   (s) => s.service_catalog_id === svc.id,
                 );
                 return (
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
                     key={svc.id}
                     onClick={() => {
                       if (!isAdded) {
@@ -89,15 +88,17 @@ export function ServiceLines({
                       }
                     }}
                     disabled={isAdded}
-                    className={`flex items-center justify-between w-full p-3 text-left transition-colors hover:bg-muted/50 min-h-[48px] ${
+                    className={`w-full justify-between p-3 min-h-[48px] h-auto ${
                       isAdded ? "opacity-40" : ""
                     }`}
                   >
                     <div>
-                      <span className="text-sm font-medium">{svc.name}</span>
+                      <span className="text-sm font-medium">
+                        <HighlightText text={svc.name} query={serviceSearch} />
+                      </span>
                       {svc.category && (
                         <span className="ml-2 text-xs text-muted-foreground">
-                          {svc.category}
+                          <HighlightText text={svc.category} query={serviceSearch} />
                         </span>
                       )}
                     </div>
@@ -111,7 +112,7 @@ export function ServiceLines({
                         </span>
                       )}
                     </div>
-                  </button>
+                  </Button>
                 );
               })}
               {filteredCatalog.length === 0 && (

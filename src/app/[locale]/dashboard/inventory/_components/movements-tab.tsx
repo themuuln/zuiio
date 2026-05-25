@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { ClipboardList } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -180,11 +181,9 @@ export function MovementsTab({ orgId, search, onSearchChange, parts }: Movements
                       {formatDate(m.created_at)}
                     </TableCell>
                     <TableCell className="px-4 py-3">
-                      <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${MOVEMENT_COLORS[m.movement_type] ?? ""}`}
-                      >
+                      <Badge variant="outline">
                         {MOVEMENT_LABELS[m.movement_type] ?? m.movement_type}
-                      </span>
+                      </Badge>
                     </TableCell>
                     <TableCell className="px-4 py-3 text-sm font-medium">
                       {m.part_name}
@@ -215,8 +214,8 @@ export function MovementsTab({ orgId, search, onSearchChange, parts }: Movements
           title="Record Stock Movement"
           onClose={() => setShowAddMovement(false)}
         >
-          <form onSubmit={handleAddMovement} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={handleAddMovement} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <label
                 htmlFor="inv-part-select"
                 className="text-sm font-medium"
@@ -238,7 +237,7 @@ export function MovementsTab({ orgId, search, onSearchChange, parts }: Movements
                 ))}
               </select>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <label
                 htmlFor="inv-movement-type"
                 className="text-sm font-medium"
@@ -260,7 +259,7 @@ export function MovementsTab({ orgId, search, onSearchChange, parts }: Movements
               </select>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label htmlFor="inv-quantity" className="text-sm font-medium">
                   Quantity *
                 </label>
@@ -273,7 +272,7 @@ export function MovementsTab({ orgId, search, onSearchChange, parts }: Movements
                   className="h-11"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label
                   htmlFor="inv-unit-cost"
                   className="text-sm font-medium"
@@ -289,7 +288,7 @@ export function MovementsTab({ orgId, search, onSearchChange, parts }: Movements
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <label
                 htmlFor="inv-movement-notes"
                 className="text-sm font-medium"

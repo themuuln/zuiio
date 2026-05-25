@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface Bay {
   id: number;
@@ -381,39 +382,30 @@ export function AuthShowcase() {
             </span>
           </div>
           <div className="flex gap-1">
-            <button
-              type="button"
+            <Button
+              variant={activeTab === "bays" ? "default" : "ghost"}
+              size="xs"
               onClick={() => setActiveTab("bays")}
-              className={`px-2 py-1 font-mono text-[10px] border transition-colors ${
-                activeTab === "bays"
-                  ? "bg-zinc-900 border-zinc-700 text-white font-medium"
-                  : "border-transparent text-zinc-500 hover:text-zinc-300"
-              }`}
+              className="font-mono text-[10px]"
             >
               [ {t("activeBays")} ]
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant={activeTab === "metrics" ? "default" : "ghost"}
+              size="xs"
               onClick={() => setActiveTab("metrics")}
-              className={`px-2 py-1 font-mono text-[10px] border transition-colors ${
-                activeTab === "metrics"
-                  ? "bg-zinc-900 border-zinc-700 text-white font-medium"
-                  : "border-transparent text-zinc-500 hover:text-zinc-300"
-              }`}
+              className="font-mono text-[10px]"
             >
               [ {t("liveMetrics")} ]
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant={activeTab === "ledger" ? "default" : "ghost"}
+              size="xs"
               onClick={() => setActiveTab("ledger")}
-              className={`px-2 py-1 font-mono text-[10px] border transition-colors ${
-                activeTab === "ledger"
-                  ? "bg-zinc-900 border-zinc-700 text-white font-medium"
-                  : "border-transparent text-zinc-500 hover:text-zinc-300"
-              }`}
+              className="font-mono text-[10px]"
             >
               [ {t("activityLedger")} ]
-            </button>
+            </Button>
           </div>
         </div>
 

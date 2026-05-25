@@ -3,6 +3,14 @@
 import { Percent, Pencil, Plus, Trash2, Loader2, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +25,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -162,9 +171,10 @@ function CommissionFormDialog({
             {isEditing ? "Edit Commission Rule" : "Add Commission Rule"}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="rule-name">Rule Name</Label>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="rule-name">Rule Name</FieldLabel>
             <Input
               id="rule-name"
               value={name}
@@ -172,10 +182,10 @@ function CommissionFormDialog({
               placeholder="e.g., Standard Labor Commission"
               required
             />
-          </div>
+          </Field>
 
-          <div className="space-y-2">
-            <Label>Mechanic</Label>
+          <Field>
+            <FieldLabel>Mechanic</FieldLabel>
             {mechanicsLoading ? (
               <Skeleton className="h-10 w-full" />
             ) : (
@@ -206,10 +216,10 @@ function CommissionFormDialog({
             <p className="text-xs text-muted-foreground">
               Leave empty to apply to all mechanics
             </p>
-          </div>
+          </Field>
 
-          <div className="space-y-2">
-            <Label htmlFor="commission-type">Commission Type</Label>
+          <Field>
+            <FieldLabel htmlFor="commission-type">Commission Type</FieldLabel>
             <select
               id="commission-type"
               value={commissionType}
@@ -222,14 +232,14 @@ function CommissionFormDialog({
                 </option>
               ))}
             </select>
-          </div>
+          </Field>
 
-          <div className="space-y-2">
-            <Label htmlFor="commission-value">
+          <Field>
+            <FieldLabel htmlFor="commission-value">
               {commissionType === "fixed_per_work_order"
                 ? "Fixed Amount"
                 : "Commission Percentage"}
-            </Label>
+            </FieldLabel>
             <div className="relative">
               <Input
                 id="commission-value"
@@ -248,11 +258,11 @@ function CommissionFormDialog({
                 </span>
               )}
             </div>
-          </div>
+          </Field>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="min-commission">Min Commission</Label>
+          <FieldGroup className="grid grid-cols-2 gap-4">
+            <Field>
+              <FieldLabel htmlFor="min-commission">Min Commission</FieldLabel>
               <Input
                 id="min-commission"
                 type="number"
@@ -262,9 +272,9 @@ function CommissionFormDialog({
                 onChange={(e) => setMinCommission(e.target.value)}
                 placeholder="Optional"
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="max-commission">Max Commission</Label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="max-commission">Max Commission</FieldLabel>
               <Input
                 id="max-commission"
                 type="number"
@@ -274,8 +284,9 @@ function CommissionFormDialog({
                 onChange={(e) => setMaxCommission(e.target.value)}
                 placeholder="Optional"
               />
-            </div>
-          </div>
+            </Field>
+          </FieldGroup>
+          </FieldGroup>
 
           <div className="flex items-center gap-3">
             <Switch
@@ -357,7 +368,7 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={`skel-${i}`} className="h-16 w-full rounded-lg" />
         ))}
@@ -377,7 +388,7 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
 
   return (
     <>
-      <div className="mt-4 space-y-4">
+      <div className="flex mt-4 flex-col gap-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Configure how mechanics earn commissions on completed work orders.
@@ -390,14 +401,18 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
 
         {!rules || rules.length === 0 ? (
           <Card>
-            <CardContent className="flex flex-col items-center gap-3 py-12">
-              <Percent className="size-10 text-muted-foreground/40" />
-              <div className="text-center">
-                <p className="text-sm font-medium">No commission rules yet</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Add a rule to start calculating mechanic commissions.
-                </p>
-              </div>
+            <CardContent>
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Percent />
+                  </EmptyMedia>
+                  <EmptyTitle>No commission rules yet</EmptyTitle>
+                  <EmptyDescription>
+                    Add a rule to start calculating mechanic commissions.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             </CardContent>
           </Card>
         ) : (

@@ -1,5 +1,5 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
-import type { Customer } from "@/lib/database.types";
+import type { Customer } from "@/lib/types";
 import { customerKeys } from "./keys";
 
 interface CustomerWithVehicleCount extends Customer {

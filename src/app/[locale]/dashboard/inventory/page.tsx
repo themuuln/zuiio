@@ -117,19 +117,15 @@ export default function InventoryPage() {
         {tabs.map((tabItem) => {
           const Icon = tabItem.icon;
           return (
-            <button
+            <Button
               key={tabItem.key}
-              type="button"
+              variant={tab === tabItem.key ? "default" : "ghost"}
               onClick={() => handleTabChange(tabItem.key)}
-              className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-colors min-h-[48px] ${
-                tab === tabItem.key
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background border-border text-muted-foreground hover:bg-muted"
-              }`}
+              className="gap-2"
             >
               <Icon className="size-4" />
               {tabItem.label}
-            </button>
+            </Button>
           );
         })}
       </div>

@@ -1,6 +1,16 @@
 "use client";
 
-import { AlertTriangle, ArrowLeft, Camera, FileText, Mail, Phone, Plus, Trash2, Wallet } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Camera,
+  FileText,
+  Mail,
+  Phone,
+  Plus,
+  Trash2,
+  Wallet,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
@@ -11,11 +21,18 @@ import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { WorkOrderPart, WorkOrderService, WorkOrderStatus } from "@/lib/database.types";
+import type { WorkOrderPart, WorkOrderService } from "@/lib/types";
+import type { WorkOrderStatus } from "@/lib/types";
 import type { ExportColumn } from "@/lib/export";
 import { useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -35,6 +52,7 @@ import {
   useUpdateWorkOrderStatus,
   useWorkOrderDetail,
 } from "@/lib/queries/use-work-order-detail";
+import { usePartsCatalog } from "@/lib/queries/use-inventory";
 import {
   useAttachments,
   useDeleteAttachment,
@@ -90,8 +108,11 @@ export default function WorkOrderDetailPage() {
   const [paymentReference, setPaymentReference] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
 
-  const { data: orgData, isLoading: orgLoading, error: orgError } =
-    useCurrentOrg();
+  const {
+    data: orgData,
+    isLoading: orgLoading,
+    error: orgError,
+  } = useCurrentOrg();
   const orgId = orgData?.orgId;
 
   const {
@@ -101,6 +122,7 @@ export default function WorkOrderDetailPage() {
     refetch: refetchWo,
   } = useWorkOrderDetail(orgId, woId);
   const { data: catalog = [] } = useServiceCatalog(orgId);
+  const { data: partsCatalog = [] } = usePartsCatalog(orgId);
   const { data: mechanics = [] } = useMechanicsList(orgId);
 
   const { data: partPriceHistoryData } = usePartPriceHistory(
@@ -116,7 +138,10 @@ export default function WorkOrderDetailPage() {
   const addPart = useAddPart(orgId);
   const removePart = useRemovePart(orgId);
   const createInvoice = useCreateInvoice(orgId);
-  const { data: invoicePaymentsData } = useInvoicePayments(orgId, existingInvoiceId);
+  const { data: invoicePaymentsData } = useInvoicePayments(
+    orgId,
+    existingInvoiceId,
+  );
   const recordPayment = useRecordPayment(orgId);
 
   const { data: attachments = [] } = useAttachments(orgId, woId);
@@ -135,17 +160,12 @@ export default function WorkOrderDetailPage() {
 
   useEffect(() => {
     if (!orgLoading && !orgId && !orgError) {
-      push(
-        "/auth/select-organization?returnUrl=/dashboard/work-orders",
-      );
+      push("/auth/select-organization?returnUrl=/dashboard/work-orders");
     }
   }, [orgLoading, orgId, orgError, router]);
 
   useEffect(() => {
-    if (
-      partPriceHistoryData?.[0] &&
-      newPart.unit_price === 0
-    ) {
+    if (partPriceHistoryData?.[0] && newPart.unit_price === 0) {
       setNewPart((part) => ({ ...part, unit_price: partPriceHistoryData[0] }));
     }
   }, [partPriceHistoryData, newPart.unit_price]);
@@ -162,8 +182,17 @@ export default function WorkOrderDetailPage() {
       <ContactCard
         title="Vehicle"
         items={[
-          { label: "Plate Number", value: wo.vehicle?.plate_number, copyable: true },
-          { label: "Make / Model", value: [wo.vehicle?.make, wo.vehicle?.model].filter(Boolean).join(" ") },
+          {
+            label: "Plate Number",
+            value: wo.vehicle?.plate_number,
+            copyable: true,
+          },
+          {
+            label: "Make / Model",
+            value: [wo.vehicle?.make, wo.vehicle?.model]
+              .filter(Boolean)
+              .join(" "),
+          },
           { label: "Year", value: wo.vehicle?.year?.toString() },
           { label: "VIN", value: wo.vehicle?.vin, copyable: true },
         ]}
@@ -176,9 +205,25 @@ export default function WorkOrderDetailPage() {
       <ContactCard
         title="Customer"
         items={[
-          { label: "Name", value: [wo.customer?.first_name, wo.customer?.last_name].filter(Boolean).join(" "), copyable: true },
-          { label: "Phone", value: wo.customer?.phone, icon: Phone, copyable: true },
-          { label: "Email", value: wo.customer?.email, icon: Mail, copyable: true },
+          {
+            label: "Name",
+            value: [wo.customer?.first_name, wo.customer?.last_name]
+              .filter(Boolean)
+              .join(" "),
+            copyable: true,
+          },
+          {
+            label: "Phone",
+            value: wo.customer?.phone,
+            icon: Phone,
+            copyable: true,
+          },
+          {
+            label: "Email",
+            value: wo.customer?.email,
+            icon: Mail,
+            copyable: true,
+          },
         ]}
       />,
     );
@@ -243,7 +288,6 @@ export default function WorkOrderDetailPage() {
         onSuccess: () => {
           setConfirmStatus(null);
           setStatusNotes("");
-          toast.success(`Status changed to ${newStatus}`);
         },
       },
     );
@@ -347,7 +391,7 @@ export default function WorkOrderDetailPage() {
       <div className="tablet-touch flex flex-col gap-6">
         <Skeleton className="h-8 w-32" />
         <Card>
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="flex p-6 flex-col gap-4">
             <Skeleton className="h-6 w-48" />
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-20 w-full" />
@@ -393,17 +437,22 @@ export default function WorkOrderDetailPage() {
   const invoiceStatus = invoicePaymentsData?.status ?? "";
 
   const servicesCost = (wo.services ?? []).reduce(
-    (sum, s) => sum + Number(s.unit_cost ?? 0) * s.quantity, 0);
+    (sum, s) => sum + Number(s.unit_cost ?? 0) * s.quantity,
+    0,
+  );
   const partsCost = (wo.parts ?? []).reduce(
-    (sum, p) => sum + Number(p.unit_cost ?? 0) * p.quantity, 0);
+    (sum, p) => sum + Number(p.unit_cost ?? 0) * p.quantity,
+    0,
+  );
   const totalCost = servicesCost + partsCost;
-  const grossProfit = (servicesTotal + partsTotal) - totalCost;
-  const marginPercent = (servicesTotal + partsTotal) > 0
-    ? (grossProfit / (servicesTotal + partsTotal)) * 100
-    : 0;
+  const grossProfit = servicesTotal + partsTotal - totalCost;
+  const marginPercent =
+    servicesTotal + partsTotal > 0
+      ? (grossProfit / (servicesTotal + partsTotal)) * 100
+      : 0;
 
-    return (
-      <div className="tablet-touch flex max-w-5xl flex-col gap-6 tablet:gap-6 tablet:px-4">
+  return (
+    <div className="tablet-touch flex max-w-5xl flex-col gap-6 tablet:gap-6 tablet:px-4">
       {/* Header */}
       <div className="flex items-center gap-4 tablet:gap-6">
         <Button
@@ -552,7 +601,7 @@ export default function WorkOrderDetailPage() {
 
           {/* Complaint & Diagnosis Label */}
           {(wo.complaint || (wo as any).diagnosis_label) && (
-            <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+            <div className="flex flex-col gap-2 p-3 bg-muted/30 rounded-lg">
               {wo.complaint && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-0.5">
@@ -566,10 +615,13 @@ export default function WorkOrderDetailPage() {
                   <p className="text-xs font-medium text-muted-foreground">
                     {t("diagnosis")}
                   </p>
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
+                  <Badge
+                    variant="outline"
+                    className="gap-1.5"
                     style={{
-                      backgroundColor: (wo as any).diagnosis_label?.color ? `${(wo as any).diagnosis_label.color}20` : undefined,
+                      backgroundColor: (wo as any).diagnosis_label?.color
+                        ? `${(wo as any).diagnosis_label.color}20`
+                        : undefined,
                       color: (wo as any).diagnosis_label.color ?? undefined,
                     }}
                   >
@@ -583,7 +635,7 @@ export default function WorkOrderDetailPage() {
                     )}
                     {(wo as any).diagnosis_label.name_mn ??
                       (wo as any).diagnosis_label.name}
-                  </span>
+                  </Badge>
                 </div>
               )}
             </div>
@@ -640,26 +692,25 @@ export default function WorkOrderDetailPage() {
               {serviceSearch.trim() && (
                 <div className="flex flex-col gap-1 max-h-48 overflow-y-auto border rounded-lg">
                   {catalog.flatMap((s) =>
-                    s.name
-                      .toLowerCase()
-                      .includes(serviceSearch.toLowerCase())
+                    s.name.toLowerCase().includes(serviceSearch.toLowerCase())
                       ? [
-                          <button
+                          <Button
                             key={s.id}
-                            type="button"
                             onClick={() => {
                               addServiceLine(s);
                               setShowAddService(false);
                               setServiceSearch("");
                             }}
-                            data-slot="touch-target"
-                            className="flex items-center justify-between p-3 text-left hover:bg-muted transition-colors"
+                            variant="ghost"
+                            className="w-full justify-between px-3 py-3"
                           >
-                            <span className="text-sm font-medium">{s.name}</span>
+                            <span className="text-sm font-medium">
+                              {s.name}
+                            </span>
                             <span className="text-sm tabular-nums">
                               {formatMNT(s.default_price ?? 0)}
                             </span>
-                          </button>,
+                          </Button>,
                         ]
                       : [],
                   )}
@@ -744,61 +795,121 @@ export default function WorkOrderDetailPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {showAddPart && (
-            <div className="flex items-end gap-2 mb-2 flex-wrap">
-              <div className="flex-1 min-w-[160px]">
-                <Input
-                  placeholder={t("partName")}
-                  value={newPart.part_name}
-                  onChange={(e) =>
-                    setNewPart((p) => ({ ...p, part_name: e.target.value }))
-                  }
-                  className="h-11"
-                />
+            <div className="flex flex-col mb-2">
+              <div className="flex items-end gap-2 flex-wrap">
+                <div className="flex-1 min-w-[160px] relative">
+                  <Input
+                    placeholder={t("partName")}
+                    value={newPart.part_name}
+                    onChange={(e) =>
+                      setNewPart((p) => ({ ...p, part_name: e.target.value }))
+                    }
+                    className="h-11"
+                  />
+                  {newPart.part_name.trim() && (
+                    <div className="absolute top-full left-0 right-0 z-10 mt-1 border rounded-lg bg-background shadow-lg max-h-48 overflow-y-auto">
+                      {partsCatalog
+                        .filter(
+                          (p) =>
+                            p.name
+                              .toLowerCase()
+                              .includes(newPart.part_name.toLowerCase()) ||
+                            (p.part_number &&
+                              p.part_number
+                                .toLowerCase()
+                                .includes(newPart.part_name.toLowerCase())),
+                        )
+                        .slice(0, 10)
+                        .map((part) => (
+                          <Button
+                            key={part.id}
+                            onClick={() => {
+                              setNewPart({
+                                part_name: part.name,
+                                quantity: 1,
+                                unit_price: part.default_price ?? 0,
+                              });
+                            }}
+                            variant="ghost"
+                            className="w-full justify-between px-3 py-3"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <span className="text-sm font-medium">
+                                {part.name}
+                              </span>
+                              {part.part_number && (
+                                <span className="ml-2 text-xs text-muted-foreground">
+                                  #{part.part_number}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-sm tabular-nums shrink-0 ml-2">
+                              {formatMNT(part.default_price ?? 0)}
+                            </span>
+                          </Button>
+                        ))}
+                      {partsCatalog.filter(
+                        (p) =>
+                          p.name
+                            .toLowerCase()
+                            .includes(newPart.part_name.toLowerCase()) ||
+                          (p.part_number &&
+                            p.part_number
+                              .toLowerCase()
+                              .includes(newPart.part_name.toLowerCase())),
+                      ).length === 0 && (
+                        <div className="p-3 text-sm text-muted-foreground text-center">
+                          No parts found
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="w-20">
+                  <Input
+                    type="number"
+                    placeholder={t("qty")}
+                    value={newPart.quantity}
+                    onChange={(e) =>
+                      setNewPart((p) => ({
+                        ...p,
+                        quantity: Number(e.target.value) || 1,
+                      }))
+                    }
+                    className="h-11"
+                  />
+                </div>
+                <div className="w-28">
+                  <Input
+                    type="number"
+                    placeholder={t("unitPrice")}
+                    value={newPart.unit_price || ""}
+                    onChange={(e) =>
+                      setNewPart((p) => ({
+                        ...p,
+                        unit_price: Number(e.target.value) || 0,
+                      }))
+                    }
+                    className="h-11"
+                  />
+                  {(partPriceHistoryData ?? []).length > 0 && (
+                    <p className="mt-1 text-[11px] text-amber-600">
+                      {t("lastPrices", {
+                        prices: (partPriceHistoryData ?? [])
+                          .map((price) => formatMNT(price))
+                          .join(" | "),
+                      })}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  size="lg"
+                  onClick={addPartLine}
+                  disabled={!newPart.part_name.trim()}
+                >
+                  {t("add")}
+                </Button>
               </div>
-              <div className="w-20">
-                <Input
-                  type="number"
-                  placeholder={t("qty")}
-                  value={newPart.quantity}
-                  onChange={(e) =>
-                    setNewPart((p) => ({
-                      ...p,
-                      quantity: Number(e.target.value) || 1,
-                    }))
-                  }
-                  className="h-11"
-                />
-              </div>
-              <div className="w-28">
-                <Input
-                  type="number"
-                  placeholder={t("unitPrice")}
-                  value={newPart.unit_price || ""}
-                  onChange={(e) =>
-                    setNewPart((p) => ({
-                      ...p,
-                      unit_price: Number(e.target.value) || 0,
-                    }))
-                  }
-                  className="h-11"
-                />
-                {(partPriceHistoryData ?? []).length > 0 && (
-                  <p className="mt-1 text-[11px] text-amber-600">
-                    {t("lastPrices", {
-                      prices: (partPriceHistoryData ?? [])
-                        .map((price) => formatMNT(price))
-                        .join(" | "),
-                    })}
-                  </p>
-                )}
-              </div>
-              <Button
-                size="lg"
-                onClick={addPartLine}
-                disabled={!newPart.part_name.trim()}
-              >
-                {t("add")}
-              </Button>
             </div>
           )}
           {(wo.parts ?? []).length === 0 ? (
@@ -884,7 +995,6 @@ export default function WorkOrderDetailPage() {
                         { woId, serviceId: deleteConfirm.id },
                         {
                           onSuccess: () => {
-                            toast.success("Service removed");
                             setDeleteConfirm(null);
                           },
                         },
@@ -894,7 +1004,6 @@ export default function WorkOrderDetailPage() {
                         { woId, partId: deleteConfirm.id },
                         {
                           onSuccess: () => {
-                            toast.success("Part removed");
                             setDeleteConfirm(null);
                           },
                         },
@@ -932,7 +1041,9 @@ export default function WorkOrderDetailPage() {
                     )}
                   </div>
                   <div>
-                    <StatusBadge status={h.status as unknown as WorkOrderStatus} />
+                    <StatusBadge
+                      status={h.status as unknown as WorkOrderStatus}
+                    />
                     <span className="ml-2 text-xs text-muted-foreground">
                       {new Date(h.created_at).toLocaleString()}
                     </span>
@@ -956,7 +1067,7 @@ export default function WorkOrderDetailPage() {
             <Camera className="size-4" />
             {t("photos")}
           </CardTitle>
-          <WorkOrderPhotoUpload orgId={orgId} workOrderId={woId} />
+          <WorkOrderPhotoUpload orgId={orgId!} workOrderId={woId} />
         </CardHeader>
         <CardContent>
           {attachments.length === 0 ? (
@@ -996,18 +1107,19 @@ export default function WorkOrderDetailPage() {
                       </span>
                     </a>
                   )}
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
                     onClick={() => {
                       if (confirm("Remove this photo?")) {
                         deleteAttachment.mutate(att.id);
                       }
                     }}
-                    className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-full bg-background/80 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
+                    className="absolute top-1 right-1 rounded-full bg-background/80 text-muted-foreground opacity-0 hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
                     aria-label="Remove photo"
                   >
                     <Trash2 className="size-3" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -1052,29 +1164,45 @@ export default function WorkOrderDetailPage() {
       {/* Record Payment */}
       {existingInvoiceId && (
         <Card className="border-green-200/50 bg-green-50/30 dark:border-green-800/30 dark:bg-green-950/10">
-          <CardContent className="p-4 space-y-3">
+          <CardContent className="flex p-4 flex-col gap-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Wallet className="size-5 text-green-600" />
                 <p className="font-medium text-sm">Payment Status</p>
               </div>
-              <Badge variant={invoiceStatus === "paid" ? "default" : invoiceStatus === "partial" ? "secondary" : "outline"}>
+              <Badge
+                variant={
+                  invoiceStatus === "paid"
+                    ? "default"
+                    : invoiceStatus === "partial"
+                      ? "secondary"
+                      : "outline"
+                }
+              >
                 {invoiceStatus || "pending"}
               </Badge>
             </div>
 
             {/* Payment history list */}
             {payments.length > 0 && (
-              <div className="space-y-1.5">
-                {payments.map((p: { id: string; method: string; paid_at: string; amount: number; reference?: string | null }) => (
-                  <div key={p.id} className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      {p.method} · {new Date(p.paid_at).toLocaleDateString()}
-                      {p.reference ? ` (${p.reference})` : ""}
-                    </span>
-                    <span className="font-medium">{formatMNT(p.amount)}</span>
-                  </div>
-                ))}
+              <div className="flex flex-col gap-1.5">
+                {payments.map(
+                  (p: {
+                    id: string;
+                    method: string;
+                    paid_at: string;
+                    amount: number;
+                    reference?: string | null;
+                  }) => (
+                    <div key={p.id} className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">
+                        {p.method} · {new Date(p.paid_at).toLocaleDateString()}
+                        {p.reference ? ` (${p.reference})` : ""}
+                      </span>
+                      <span className="font-medium">{formatMNT(p.amount)}</span>
+                    </div>
+                  ),
+                )}
               </div>
             )}
 
@@ -1085,7 +1213,9 @@ export default function WorkOrderDetailPage() {
             {balanceDue > 0 && (
               <div className="flex justify-between text-sm">
                 <span>Balance Due</span>
-                <span className="font-medium text-destructive">{formatMNT(balanceDue)}</span>
+                <span className="font-medium text-destructive">
+                  {formatMNT(balanceDue)}
+                </span>
               </div>
             )}
 
@@ -1111,7 +1241,7 @@ export default function WorkOrderDetailPage() {
           <CardTitle className="text-base">{t("totals")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t("services")}</span>
               <span className="font-medium tabular-nums">
@@ -1132,7 +1262,7 @@ export default function WorkOrderDetailPage() {
                 </span>
               </div>
             )}
-            <hr className="border-border" />
+            <Separator />
             <div className="flex justify-between text-lg font-semibold">
               <span>{t("grandTotal")}</span>
               <span className="tabular-nums">
@@ -1149,7 +1279,7 @@ export default function WorkOrderDetailPage() {
           <CardTitle className="text-base">Profit &amp; Cost</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Services Cost</span>
               <span className="font-medium tabular-nums">
@@ -1162,7 +1292,7 @@ export default function WorkOrderDetailPage() {
                 {formatMNT(partsCost)}
               </span>
             </div>
-            <hr className="border-border" />
+            <Separator />
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Revenue</span>
               <span className="font-medium tabular-nums">
@@ -1175,18 +1305,32 @@ export default function WorkOrderDetailPage() {
                 {formatMNT(totalCost)}
               </span>
             </div>
-            <hr className="border-border" />
+            <Separator />
             <div className="flex justify-between text-base font-semibold">
-              <span className={grossProfit >= 0 ? "text-emerald-600" : "text-destructive"}>
+              <span
+                className={
+                  grossProfit >= 0 ? "text-emerald-600" : "text-destructive"
+                }
+              >
                 {grossProfit >= 0 ? "Gross Profit" : "Loss"}
               </span>
-              <span className={cn("tabular-nums", grossProfit >= 0 ? "text-emerald-600" : "text-destructive")}>
+              <span
+                className={cn(
+                  "tabular-nums",
+                  grossProfit >= 0 ? "text-emerald-600" : "text-destructive",
+                )}
+              >
                 {formatMNT(grossProfit)}
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Margin</span>
-              <span className={cn("font-medium tabular-nums", marginPercent >= 0 ? "text-emerald-600" : "text-destructive")}>
+              <span
+                className={cn(
+                  "font-medium tabular-nums",
+                  marginPercent >= 0 ? "text-emerald-600" : "text-destructive",
+                )}
+              >
                 {marginPercent.toFixed(1)}%
               </span>
             </div>
@@ -1200,8 +1344,8 @@ export default function WorkOrderDetailPage() {
           <DialogHeader>
             <DialogTitle>Record Payment</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handlePaymentSubmit} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={handlePaymentSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="amount">Amount</Label>
               <Input
                 id="amount"
@@ -1213,7 +1357,7 @@ export default function WorkOrderDetailPage() {
                 required
               />
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="method">Payment Method</Label>
               <select
                 id="method"
@@ -1227,7 +1371,7 @@ export default function WorkOrderDetailPage() {
                 <option value="manual">Manual</option>
               </select>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="reference">Reference (optional)</Label>
               <Input
                 id="reference"
@@ -1236,7 +1380,7 @@ export default function WorkOrderDetailPage() {
                 placeholder="Transaction ID / card last 4"
               />
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="notes">Notes (optional)</Label>
               <Input
                 id="notes"

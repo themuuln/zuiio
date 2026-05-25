@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatMNT } from "@/lib/utils";
 
 interface Props {
@@ -108,7 +110,7 @@ function ServiceTimeline({
   }
 
   return (
-    <div className="space-y-0">
+    <div className="flex flex-col gap-0">
       {history.map((entry, idx) => {
         const dotColor = STATUS_COLORS[entry.status] ?? "bg-slate-400";
         const isLast = idx === history.length - 1;
@@ -153,13 +155,13 @@ function ServiceTimeline({
               {entry.services.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {entry.services.map((s) => (
-                    <span
+                    <Badge
                       key={`${s.name}-${s.price}`}
-                      className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400"
+                      variant="outline"
                     >
                       <Wrench className="size-2.5" />
                       {s.name}
-                    </span>
+                    </Badge>
                   ))}
                 </div>
               )}
@@ -362,8 +364,9 @@ export function VehicleRegistrationDialog({
           </div>
           <div className="flex items-center gap-2">
             {/* Mode toggle */}
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => {
                 setMode(mode === "register" ? "lookup" : "register");
                 setLookupResult(EMPTY_LOOKUP);
@@ -372,20 +375,19 @@ export function VehicleRegistrationDialog({
                 setSaveSuccess(false);
                 setSaveError(null);
               }}
-              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted transition-colors"
             >
               {mode === "register"
                 ? t("switchToLookup")
                 : t("switchToRegister")}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onClose}
-              className="rounded-md p-1.5 hover:bg-muted transition-colors"
               aria-label={t("close")}
             >
               <X className="size-5" />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -408,11 +410,11 @@ export function VehicleRegistrationDialog({
                   className="w-full h-11 rounded-xl border border-border bg-muted/30 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
               </div>
-              <button
-                type="button"
+              <Button
+                variant="default"
                 onClick={handleLookup}
                 disabled={lookupLoading || !plate.trim()}
-                className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0"
+                className="shrink-0"
               >
                 {lookupLoading ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -420,7 +422,7 @@ export function VehicleRegistrationDialog({
                   <Search className="size-4" />
                 )}
                 {t("lookup")}
-              </button>
+              </Button>
             </div>
 
             {lookupError && (
@@ -456,7 +458,7 @@ export function VehicleRegistrationDialog({
                 e.preventDefault();
                 handleSave();
               }}
-              className="space-y-4"
+              className="flex flex-col gap-4"
             >
               {/* Vehicle fields */}
               <div>
@@ -559,12 +561,13 @@ export function VehicleRegistrationDialog({
               </div>
 
               {/* Submit button */}
-              <button
+              <Button
                 type="submit"
+                className="w-full mt-2"
                 disabled={
                   saving || !plate.trim() || !make.trim() || !model.trim()
                 }
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 mt-2"
+                size="lg"
               >
                 {saving ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -578,7 +581,7 @@ export function VehicleRegistrationDialog({
                   : lookupResult.exists
                     ? t("updateVehicle")
                     : t("registerVehicleBtn")}
-              </button>
+              </Button>
             </form>
           </div>
 
@@ -592,9 +595,9 @@ export function VehicleRegistrationDialog({
                 {t("serviceTimeline")}
               </span>
               {lookupResult.serviceHistory.length > 0 && (
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                <Badge variant="secondary">
                   {lookupResult.serviceHistory.length}
-                </span>
+                </Badge>
               )}
             </div>
 

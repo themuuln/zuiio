@@ -1,16 +1,30 @@
 "use client";
 
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { useDroppable } from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Car, Clock, CornerDownRight, Search, X } from "lucide-react";
-import { useState, useEffect } from "react";
-import type { Vehicle, WorkOrder } from "@/lib/database.types";
-import { cn, formatPlateNumber } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { Vehicle, WorkOrder } from "@/lib/types";
+import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import { cn, formatPlateNumber } from "@/lib/utils";
+import { HighlightText } from "@/lib/utils/search-utils";
 
 interface QueueItemProps {
   workOrder: WorkOrder & { vehicle: Vehicle | null };
@@ -18,6 +32,7 @@ interface QueueItemProps {
   onQuickAssign?: (workOrderId: string) => void;
   mechanicName?: string | null;
   onItemClick?: (workOrder: WorkOrder & { vehicle: Vehicle | null }) => void;
+  searchQuery?: string;
 }
 
 function getWaitTime(createdAt: string): { text: string; urgent: boolean } {
@@ -36,6 +51,7 @@ function QueueItem({
   onQuickAssign,
   mechanicName,
   onItemClick,
+  searchQuery = "",
 }: QueueItemProps) {
   const {
     attributes,
@@ -87,10 +103,11 @@ function QueueItem({
         if (e.key === "Enter" || e.key === " ") onItemClick?.(workOrder);
       }}
       className={cn(
-        "flex items-center gap-2 rounded-md border border-border/60 bg-card px-2 py-1.5 cursor-pointer select-none transition-colors touch-manipulation",
+        "flex items-center gap-2 border border-border/60 bg-card px-3 py-2 cursor-pointer select-none transition-colors touch-manipulation",
         isDragging && "opacity-50 shadow-xl z-50",
         !isDragging && "hover:border-border hover:bg-muted/20",
-        waitInfo.urgent && "border-amber-300/60 bg-amber-50/20 dark:bg-amber-950/10",
+        waitInfo.urgent &&
+          "border-amber-300/60 bg-amber-50/20 dark:bg-amber-950/10",
       )}
     >
       <div className="flex-1 min-w-0">
@@ -98,19 +115,28 @@ function QueueItem({
           <>
             <div className="flex items-center gap-1.5">
               <span className="text-[11px] font-semibold truncate text-foreground/90">
-                {formatPlateNumber(v.plate_number)}
+                <HighlightText
+                  text={formatPlateNumber(v.plate_number)}
+                  query={searchQuery}
+                />
               </span>
               {waitInfo.urgent && (
-                <span className={cn("size-1.5 rounded-full bg-amber-500 shrink-0", waitInfo.text.includes("h+") && "animate-pulse")} />
+                <span
+                  className={cn(
+                    "size-1.5  bg-amber-500 shrink-0",
+                    waitInfo.text.includes("h+") && "animate-pulse",
+                  )}
+                />
               )}
             </div>
             <div className="text-[9px] text-muted-foreground/60 truncate leading-tight">
-              {v.make} {v.model}
+              <HighlightText text={v.make ?? ""} query={searchQuery} />{" "}
+              <HighlightText text={v.model ?? ""} query={searchQuery} />
               {v.year ? ` · ${v.year}` : ""}
             </div>
             {mechanicName && (
               <div className="flex items-center gap-1 mt-0.5">
-                <span className="size-1 rounded-full bg-primary/30 shrink-0" />
+                <span className="size-1  bg-primary/30 shrink-0" />
                 <span className="text-[9px] text-primary/60 truncate font-medium">
                   {mechanicName}
                 </span>
@@ -129,17 +155,18 @@ function QueueItem({
 
       <div className="flex flex-col items-center gap-1 shrink-0">
         {onQuickAssign && !isPending && (
-          <button
+          <Button
             type="button"
+            size="icon-xs"
+            variant="outline"
             onClick={(e) => {
               e.stopPropagation();
               onQuickAssign(workOrder.id);
             }}
-            className="flex items-center justify-center size-5 rounded border border-border/60 bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             title="Assign to first empty bay"
           >
             <CornerDownRight className="size-2.5" />
-          </button>
+          </Button>
         )}
         <span
           className={cn(
@@ -174,110 +201,146 @@ export function QueuePanel({
 }: QueuePanelProps) {
   const { setNodeRef, isOver } = useDroppable({ id: "waiting-queue" });
   const [searchQuery, setSearchQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  const mechanicMap = new Map(
-    (mechanics ?? []).map((m) => [m.id, m.full_name]),
-  );
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
 
-  const filtered = searchQuery.trim()
-    ? items.filter((wo) => {
-        const q = searchQuery.toLowerCase();
-        const v = wo.vehicle;
-        const mechName = wo.mechanic_id ? mechanicMap.get(wo.mechanic_id) : null;
-        return (
-          v?.plate_number?.toLowerCase().includes(q) ||
-          v?.make?.toLowerCase().includes(q) ||
-          v?.model?.toLowerCase().includes(q) ||
-          v?.color?.toLowerCase().includes(q) ||
-          mechName?.toLowerCase().includes(q)
-        );
-      })
-    : items;
+  type EnrichedWO = (WorkOrder & { vehicle: Vehicle | null }) & {
+    _mechanicName?: string | null;
+  };
+
+  const enrichedItems: EnrichedWO[] = useMemo(() => {
+    const mm = new Map((mechanics ?? []).map((m) => [m.id, m.full_name]));
+    return items.map((wo) => ({
+      ...wo,
+      _mechanicName: wo.mechanic_id ? (mm.get(wo.mechanic_id) ?? null) : null,
+    }));
+  }, [items, mechanics]);
+
+  const filtered = useFuzzySearch(enrichedItems, searchQuery, {
+    keys: [
+      "vehicle.plate_number",
+      "vehicle.make",
+      "vehicle.model",
+      "vehicle.color",
+      "_mechanicName",
+    ] as (keyof EnrichedWO)[],
+    threshold: 0.4,
+  });
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between px-0.5">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-foreground/80">Waiting Queue</span>
-          {items.length > 0 && (
-            <Badge variant="secondary" className="text-[9px] h-4 px-1.5 font-medium">
-              {items.length}
-            </Badge>
+    <Card size="sm" className="flex h-full min-h-0 flex-col bg-card/90">
+      <CardHeader className="gap-3 border-b border-border/40">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-sm">Waiting Queue</CardTitle>
+            {items.length > 0 && (
+              <Badge variant="secondary" className="text-[10px]">
+                {items.length}
+              </Badge>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-3 px-3">
+        {items.length > 0 && (
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/50" />
+            <Input
+              ref={searchRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search plate, make, model... (⌘K)"
+              className="h-8 pl-7 pr-7 text-xs"
+            />
+            {searchQuery && (
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-0.5 top-1/2 size-6 -translate-y-1/2 p-0 text-muted-foreground/50"
+              >
+                <X className="size-3" />
+              </Button>
+            )}
+          </div>
+        )}
+
+        <div
+          ref={setNodeRef}
+          className={cn(
+            "flex min-h-0 flex-1 flex-col transition-colors",
+            isOver && "bg-primary/5 ring-1 ring-primary/10",
+          )}
+        >
+          {items.length === 0 ? (
+            <Empty className="border border-dashed border-border/60 py-8">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Car className="size-4" />
+                </EmptyMedia>
+                <EmptyTitle>No vehicles waiting</EmptyTitle>
+                <EmptyDescription>
+                  New work orders will appear here before they are assigned to a
+                  bay.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : filtered.length === 0 ? (
+            <Empty className="border border-dashed border-border/60 py-8">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Search className="size-4" />
+                </EmptyMedia>
+                <EmptyTitle>No match</EmptyTitle>
+                <EmptyDescription>
+                  Try another plate, make, model, or clear the current search.
+                </EmptyDescription>
+              </EmptyHeader>
+              <Button
+                size="sm"
+                variant="link"
+                onClick={() => setSearchQuery("")}
+                className="h-auto text-xs"
+              >
+                Clear search
+              </Button>
+            </Empty>
+          ) : (
+            <ScrollArea className="min-h-0 flex-1">
+              <SortableContext
+                items={filtered.map((wo) => `vehicle-${wo.id}`)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="flex flex-col gap-1.5 pr-2">
+                  {filtered.map((wo) => (
+                    <QueueItem
+                      key={wo.id}
+                      workOrder={wo}
+                      isPending={!!pendingWoIds[wo.id]}
+                      onQuickAssign={onQuickAssign}
+                      mechanicName={wo._mechanicName ?? null}
+                      onItemClick={onItemClick}
+                      searchQuery={searchQuery}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </ScrollArea>
           )}
         </div>
-      </div>
-
-      {items.length > 0 && (
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/50 pointer-events-none" />
-          <Input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search plate, make, model..."
-            className="h-8 pl-7 pr-7 text-xs"
-          />
-          {searchQuery && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setSearchQuery("")}
-              className="absolute right-0.5 top-1/2 -translate-y-1/2 size-6 p-0 text-muted-foreground/50"
-            >
-              <X className="size-3" />
-            </Button>
-          )}
-        </div>
-      )}
-
-      <div
-        ref={setNodeRef}
-        className={cn(
-          "flex flex-col gap-1 rounded-lg transition-colors min-h-0",
-          isOver && "bg-primary/5 ring-1 ring-primary/10",
-        )}
-      >
-        {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-4 text-center text-muted-foreground/60">
-            <Car className="size-4 mb-0.5" />
-            <p className="text-xs">No vehicles waiting</p>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-4 text-center text-muted-foreground/60">
-            <Search className="size-5 mb-1" />
-            <p className="text-xs">No match</p>
-            <Button
-              size="sm"
-              variant="link"
-              onClick={() => setSearchQuery("")}
-              className="h-auto text-xs"
-            >
-              Clear search
-            </Button>
-          </div>
-        ) : (
-          <ScrollArea className="max-h-[260px]">
-            <SortableContext items={filtered.map((wo) => `vehicle-${wo.id}`)} strategy={verticalListSortingStrategy}>
-              <div className="flex flex-col gap-0.5 pr-2">
-                {filtered.map((wo) => (
-                  <QueueItem
-                    key={wo.id}
-                    workOrder={wo}
-                    isPending={!!pendingWoIds[wo.id]}
-                    onQuickAssign={onQuickAssign}
-                    mechanicName={
-                      wo.mechanic_id
-                        ? mechanicMap.get(wo.mechanic_id) ?? null
-                        : null
-                    }
-                    onItemClick={onItemClick}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </ScrollArea>
-        )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

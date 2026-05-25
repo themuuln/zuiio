@@ -2,6 +2,7 @@
 
 import { Copy, Mail, RefreshCw, Trash2 } from "lucide-react";
 import type { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -45,7 +46,7 @@ export function PendingInvites({
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {[1, 2].map((i) => (
               <div key={`skeleton-${i}`} className="flex items-center gap-3">
                 <Skeleton className="size-9 rounded-full" />

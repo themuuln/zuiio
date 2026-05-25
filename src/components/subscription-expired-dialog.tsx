@@ -4,6 +4,7 @@ import Image from "next/image";
 import { AlertTriangle, Building2, Copy, Landmark, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SubscriptionStatus } from "@/lib/types";
 
@@ -105,7 +107,7 @@ export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
             <Skeleton className="h-6 w-48" />
             <Skeleton className="mt-2 h-4 w-56" />
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex flex-col gap-3">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
           </CardContent>
@@ -179,7 +181,7 @@ export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-5">
+        <CardContent className="flex flex-col gap-5">
           {graceEnd && (
             <div className="rounded-lg border bg-muted/30 px-4 py-3 text-center text-sm">
               <span className="text-muted-foreground">{t("graceEnds")}</span>
@@ -193,26 +195,22 @@ export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
               {t("bankTransfer")}
             </div>
 
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                   {t("selectBank")}
                 </label>
                 <div className="flex gap-2">
                   {BANKS.map((bank) => (
-                    <button
+                    <Button
                       key={bank.id}
-                      type="button"
+                      variant={selectedBank.id === bank.id ? "destructive" : "outline"}
                       onClick={() => setSelectedBank(bank)}
-                      className={`flex items-center justify-center gap-2 flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-                        selectedBank.id === bank.id
-                          ? "border-destructive bg-destructive/10 text-destructive"
-                          : "border-input bg-background text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground"
-                      }`}
+                      className="flex-1"
                     >
                       {bank.id === "khanbank" ? <KhanbankLogo /> : <TdbLogo />}
                       {bank.label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -226,17 +224,17 @@ export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
                     <span className="font-mono text-sm font-semibold tracking-wider">
                       {currentBank.account}
                     </span>
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => handleCopy(currentBank.account)}
-                      className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       <Copy className="size-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
-                <div className="border-t" />
+                <Separator />
 
                 <div className="flex items-center justify-between gap-2 px-4 py-3">
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -247,13 +245,13 @@ export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
                       <Building2 className="size-3.5 shrink-0 text-muted-foreground" />
                       {orgName}
                     </span>
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => handleCopy(orgName)}
-                      className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       <Copy className="size-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -276,11 +274,11 @@ export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
             <p className="text-center text-xs font-medium text-destructive">{renewError}</p>
           )}
 
-          <button
-            type="button"
+          <Button
+            variant="default"
+            className="w-full"
             onClick={handleRenew}
             disabled={renewing}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
             {renewing ? (
               <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -288,7 +286,7 @@ export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
               <Landmark className="size-4" />
             )}
             {t("renewButton")}
-          </button>
+          </Button>
 
           <p className="text-balance text-center text-xs leading-relaxed text-muted-foreground">
             {t("afterPayment")}

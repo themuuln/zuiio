@@ -118,7 +118,7 @@ export default function InviteRedeemPage() {
             <Skeleton className="mx-auto h-6 w-48" />
             <Skeleton className="mx-auto mt-2 h-4 w-32" />
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex flex-col gap-3">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
@@ -191,7 +191,7 @@ export default function InviteRedeemPage() {
             {t("subtitle", { organization: invite.organization_name })}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="flex flex-col gap-3">
           <div className="rounded-lg border bg-muted/30 p-4 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">{t("organization")}</span>

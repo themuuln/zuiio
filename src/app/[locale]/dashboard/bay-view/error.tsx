@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function ErrorPage({
   error,
@@ -15,16 +16,12 @@ export default function ErrorPage({
 
   return (
     <div className="flex items-center justify-center min-h-[50vh]">
-      <div className="text-center space-y-4">
+      <div className="text-center flex flex-col gap-4">
         <h2 className="text-2xl font-semibold text-destructive">Алдаа гарлаа</h2>
         <p className="text-muted-foreground">Уучлаарай, системийн алдаа гарлаа. Дахин оролдоно уу.</p>
-        <button
-          type="button"
-  onClick={() => reset()}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-        >
+        <Button onClick={() => reset()} variant="default">
           Дахин оролдох
-        </button>
+        </Button>
       </div>
     </div>
   );

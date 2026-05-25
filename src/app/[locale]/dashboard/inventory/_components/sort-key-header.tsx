@@ -2,6 +2,7 @@
 
 import { ArrowDown, ArrowUp, ArrowUpDown, Star } from "lucide-react";
 import type { SortKey } from "./constants";
+import { Button } from "@/components/ui/button";
 
 export function SortKeyHeader({
   label,
@@ -21,10 +22,11 @@ export function SortKeyHeader({
   const isActive = currentSortKey === sortKey;
   const IconEl = icon;
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="sm"
       onClick={() => onSort(sortKey)}
-      className="flex items-center gap-1 text-left font-medium text-muted-foreground hover:text-foreground transition-colors"
+      className="w-full justify-start gap-1 font-medium"
     >
       {IconEl && <IconEl className="size-3.5" />}
       {label}
@@ -39,6 +41,6 @@ export function SortKeyHeader({
           <ArrowUpDown className="size-3.5" />
         )}
       </span>
-    </button>
+    </Button>
   );
 }

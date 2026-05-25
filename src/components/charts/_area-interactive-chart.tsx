@@ -3,9 +3,22 @@
 // recharts - consider next/dynamic for code splitting
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import {
+  ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  type ChartConfig,
 } from "@/components/ui/chart";
+
+const chartConfig = {
+  desktop: {
+    label: "Desktop",
+    color: "var(--chart-1)",
+  },
+  mobile: {
+    label: "Mobile",
+    color: "var(--chart-2)",
+  },
+} satisfies ChartConfig;
 
 interface AreaInteractiveChartProps {
   data: { date: string; desktop: number; mobile: number }[];
@@ -13,7 +26,8 @@ interface AreaInteractiveChartProps {
 
 export function AreaInteractiveChart({ data }: AreaInteractiveChartProps) {
   return (
-    <AreaChart data={data}>
+    <ChartContainer config={chartConfig} className="aspect-auto h-[280px] w-full">
+      <AreaChart data={data}>
       <defs>
         <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
           <stop offset="5%" stopColor="var(--color-desktop)" stopOpacity={1.0} />
@@ -68,5 +82,6 @@ export function AreaInteractiveChart({ data }: AreaInteractiveChartProps) {
         stackId="a"
       />
     </AreaChart>
+    </ChartContainer>
   );
 }

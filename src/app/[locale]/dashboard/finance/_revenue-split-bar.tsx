@@ -30,7 +30,7 @@ export function RevenueSplitBar({
           Revenue Breakdown
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted">
           <div
             className="bg-blue-500 transition-all"

@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { MechanicRegistrationDialog } from "./mechanic-registration-dialog";
 import { PinSettingsDialog } from "./pin-settings-dialog";
 import { ShiftReportModal } from "./shift-report-modal";
@@ -29,10 +31,10 @@ export function QuickActions() {
   return (
     <>
       <div className="overflow-hidden rounded-xl border border-border/70 bg-card/70 shadow-sm shadow-black/5 backdrop-blur-sm">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           onClick={() => setCollapsed(!collapsed)}
-          className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold transition-all duration-200 hover:bg-muted/40"
+          className="w-full justify-between px-4 py-3 h-auto"
         >
           <span className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/15">
@@ -45,16 +47,16 @@ export function QuickActions() {
           ) : (
             <ChevronDown className="size-4 text-muted-foreground" />
           )}
-        </button>
+        </Button>
 
         {!collapsed && (
-          <div className="space-y-3 px-3 pb-3">
+          <div className="flex flex-col gap-3 px-3 pb-3">
             {/* Registration actions */}
-            <div className="space-y-1.5 rounded-xl bg-muted/15 p-1.5 ring-1 ring-border/40">
-              <button
-                type="button"
+            <div className="flex flex-col gap-1.5 rounded-xl bg-muted/15 p-1.5 ring-1 ring-border/40">
+              <Button
+                variant="outline"
                 onClick={() => setShowVehicleReg(true)}
-                className="flex w-full items-center gap-3 rounded-lg border border-border/60 bg-background/60 px-3 py-2.5 text-sm font-medium shadow-sm shadow-black/[0.02] transition-all duration-200 hover:scale-[1.015] hover:border-blue-500/25 hover:bg-blue-500/[0.04] active:scale-[0.985]"
+                className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-medium"
               >
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 ring-1 ring-blue-500/15">
                   <Car className="size-4 text-blue-600 dark:text-blue-400" />
@@ -65,12 +67,12 @@ export function QuickActions() {
                     {t("registerVehicleDesc")}
                   </div>
                 </div>
-              </button>
+              </Button>
 
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 onClick={() => setShowMechanicReg(true)}
-                className="flex w-full items-center gap-3 rounded-lg border border-border/60 bg-background/60 px-3 py-2.5 text-sm font-medium shadow-sm shadow-black/[0.02] transition-all duration-200 hover:scale-[1.015] hover:border-purple-500/25 hover:bg-purple-500/[0.04] active:scale-[0.985]"
+                className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-medium"
               >
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 ring-1 ring-purple-500/15">
                   <Wrench className="size-4 text-purple-600 dark:text-purple-400" />
@@ -81,12 +83,12 @@ export function QuickActions() {
                     {t("registerMechanicDesc")}
                   </div>
                 </div>
-              </button>
+              </Button>
 
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 onClick={() => setShowServiceLookup(true)}
-                className="flex w-full items-center gap-3 rounded-lg border border-border/60 bg-background/60 px-3 py-2.5 text-sm font-medium shadow-sm shadow-black/[0.02] transition-all duration-200 hover:scale-[1.015] hover:border-amber-500/25 hover:bg-amber-500/[0.04] active:scale-[0.985]"
+                className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-medium"
               >
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 ring-1 ring-amber-500/15">
                   <History className="size-4 text-amber-600 dark:text-amber-400" />
@@ -97,17 +99,17 @@ export function QuickActions() {
                     {t("serviceHistoryDesc")}
                   </div>
                 </div>
-              </button>
+              </Button>
             </div>
 
             {/* Admin actions */}
-            <div className="mx-2 border-t border-border/80 shadow-sm" />
+            <Separator className="mx-2 shadow-sm" />
 
-            <div className="space-y-1.5 rounded-xl bg-muted/15 p-1.5 ring-1 ring-border/40">
-              <button
-                type="button"
+            <div className="flex flex-col gap-1.5 rounded-xl bg-muted/15 p-1.5 ring-1 ring-border/40">
+              <Button
+                variant="outline"
                 onClick={() => setShowShiftReport(true)}
-                className="flex w-full items-center gap-3 rounded-lg border border-border/60 bg-background/60 px-3 py-2.5 text-sm font-medium shadow-sm shadow-black/[0.02] transition-all duration-200 hover:scale-[1.015] hover:border-emerald-500/25 hover:bg-emerald-500/[0.04] active:scale-[0.985]"
+                className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-medium"
               >
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/15">
                   <LayoutDashboard className="size-4 text-emerald-600 dark:text-emerald-400" />
@@ -118,12 +120,12 @@ export function QuickActions() {
                     {t("shiftReportDesc")}
                   </div>
                 </div>
-              </button>
+              </Button>
 
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 onClick={() => setShowPinSettings(true)}
-                className="flex w-full items-center gap-3 rounded-lg border border-border/60 bg-background/60 px-3 py-2.5 text-sm font-medium shadow-sm shadow-black/[0.02] transition-all duration-200 hover:scale-[1.015] hover:border-rose-500/25 hover:bg-rose-500/[0.04] active:scale-[0.985]"
+                className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-medium"
               >
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/10 ring-1 ring-rose-500/15">
                   <KeyRound className="size-4 text-rose-600 dark:text-rose-400" />
@@ -134,7 +136,7 @@ export function QuickActions() {
                     {t("bayPinSettingsDesc")}
                   </div>
                 </div>
-              </button>
+              </Button>
             </div>
           </div>
         )}

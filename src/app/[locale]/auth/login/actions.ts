@@ -20,5 +20,9 @@ export async function login(
 
   if (error) return { error: error.message };
 
-  redirect("/auth/select-organization");
+  const redirectTo = formData.get("redirectTo") as string | null;
+  const params = redirectTo
+    ? `?redirectTo=${encodeURIComponent(redirectTo)}`
+    : "";
+  redirect(`/auth/select-organization${params}`);
 }

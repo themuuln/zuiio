@@ -1,4 +1,5 @@
 import { Calendar, Clock, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export type Period = "today" | "week" | "month" | "all";
 
@@ -28,21 +29,18 @@ export function PeriodBar({
         const Icon = opt.icon;
         const active = value === opt.key;
         return (
-          <button
+          <Button
             key={opt.key}
-            type="button"
             role="tab"
             aria-selected={active}
             onClick={() => onChange(opt.key)}
-            className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all duration-150 ${
-              active
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            variant={active ? "default" : "ghost"}
+            size="sm"
+            className="min-h-[40px] gap-1.5 rounded-lg"
           >
-            <Icon className={`size-3.5 ${active ? "text-primary" : ""}`} />
+            <Icon className="size-3.5" />
             {opt.label}
-          </button>
+          </Button>
         );
       })}
     </div>

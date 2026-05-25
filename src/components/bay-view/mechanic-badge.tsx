@@ -12,9 +12,16 @@ interface MechanicBadgeProps {
     full_name: string | null;
     avatar_url: string | null;
   } | null;
+  disabled?: boolean;
+  compact?: boolean;
 }
 
-export function MechanicBadge({ workOrderId, mechanic }: MechanicBadgeProps) {
+export function MechanicBadge({
+  workOrderId,
+  mechanic,
+  disabled,
+  compact = false,
+}: MechanicBadgeProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: `mechanic-on-wo-${workOrderId}`,
@@ -23,7 +30,7 @@ export function MechanicBadge({ workOrderId, mechanic }: MechanicBadgeProps) {
         workOrderId,
         mechanicId: mechanic?.id,
       },
-      disabled: !mechanic,
+      disabled: !mechanic || disabled,
     });
 
   const style = transform
@@ -36,8 +43,13 @@ export function MechanicBadge({ workOrderId, mechanic }: MechanicBadgeProps) {
 
   if (!mechanic) {
     return (
-      <div className="flex items-center justify-center size-8 rounded-full bg-muted/30 text-muted-foreground/40">
-        <User className="size-3.5" />
+      <div
+        className={cn(
+          "flex items-center justify-center rounded-full bg-muted/30 text-muted-foreground/40",
+          compact ? "size-6" : "size-8",
+        )}
+      >
+        <User className={cn(compact ? "size-3" : "size-3.5")} />
       </div>
     );
   }
@@ -58,20 +70,33 @@ export function MechanicBadge({ workOrderId, mechanic }: MechanicBadgeProps) {
       {...attributes}
       style={style}
       className={cn(
-        "flex items-center gap-1.5 rounded-full border border-border/60 bg-background/80 backdrop-blur-sm px-2.5 py-1 cursor-grab active:cursor-grabbing select-none transition-all touch-manipulation min-h-[32px]",
+        "flex items-center select-none transition-all touch-manipulation",
+        compact
+          ? "gap-1 rounded-full border border-border/40 bg-background/60 px-2 py-0.5 text-[10px] cursor-grab active:cursor-grabbing"
+          : "gap-1.5 rounded-full border border-border/60 bg-background/80 backdrop-blur-sm px-2.5 py-1 cursor-grab active:cursor-grabbing min-h-[32px]",
         isDragging && "opacity-50 shadow-lg",
         !isDragging && "hover:shadow-sm hover:border-primary/30",
       )}
     >
-      <Avatar className="size-6 shrink-0">
+      <Avatar className={cn(compact ? "size-5" : "size-6", "shrink-0")}>
         {mechanic.avatar_url && (
           <AvatarImage src={mechanic.avatar_url} alt="" />
         )}
-        <AvatarFallback className="text-xs bg-primary/10 text-primary">
+        <AvatarFallback
+          className={cn(
+            compact ? "text-[8px]" : "text-xs",
+            "bg-primary/10 text-primary",
+          )}
+        >
           {initials}
         </AvatarFallback>
       </Avatar>
-      <span className="text-xs font-medium truncate max-w-[110px]">
+      <span
+        className={cn(
+          compact ? "text-[10px] max-w-[80px]" : "text-xs max-w-[110px]",
+          "font-medium truncate",
+        )}
+      >
         {mechanic.full_name}
       </span>
     </div>

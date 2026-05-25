@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function RootErrorPage({
   error,
@@ -18,13 +19,9 @@ export default function RootErrorPage({
           An unexpected error occurred. Please try again.
         </p>
         <div className="mt-6 flex items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={reset}
-            className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background hover:bg-foreground/90"
-          >
+          <Button onClick={reset} variant="default">
             Try again
-          </button>
+          </Button>
           <Link
             href="/dashboard"
             className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted"

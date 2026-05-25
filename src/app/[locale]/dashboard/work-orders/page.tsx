@@ -5,6 +5,7 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
+  ClipboardList,
   MoreHorizontal,
   Plus,
   Trash2,
@@ -29,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -47,6 +49,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import type { ExportColumn } from "@/lib/export";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { workOrderKeys } from "@/lib/queries/keys";
@@ -183,16 +193,17 @@ function SortHeader({
   const active = current.key === sortKey;
   const dir = active ? current.dir : null;
   return (
-    <button
-      type="button"
+    <Button
       onClick={() => onSort(sortKey)}
-      className="inline-flex items-center gap-1 font-medium text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+      variant="ghost"
+      size="sm"
+      className="text-muted-foreground uppercase tracking-wider"
     >
       {label}
       {!active && <ArrowUpDown className="size-3 opacity-40" />}
       {active && dir === "asc" && <ArrowUp className="size-3" />}
       {active && dir === "desc" && <ArrowDown className="size-3" />}
-    </button>
+    </Button>
   );
 }
 
@@ -257,6 +268,7 @@ export default function WorkOrdersPage() {
     dir: "desc",
   });
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const { data: org } = useCurrentOrg();
   const status = statusIdx > 0 ? STATUS_KEYS[statusIdx] : "";
@@ -267,6 +279,12 @@ export default function WorkOrdersPage() {
     error,
     refetch,
   } = useWorkOrders(org?.orgId, status, search);
+
+  useEffect(() => {
+    if (orders) {
+      setHasLoadedOnce(true);
+    }
+  }, [orders]);
 
   const { registerTab, setOpen } = useRightSidebar();
 
@@ -384,7 +402,7 @@ export default function WorkOrdersPage() {
 
   // ── Loading state ──────────────────────────────────────────
 
-  if (isLoading && !orders) {
+  if (isLoading && !hasLoadedOnce && !orders) {
     return (
       <div className="tablet-touch flex flex-col gap-3 tablet:gap-4 tablet:px-1">
         <div className="flex flex-col gap-0.5">
@@ -499,17 +517,22 @@ export default function WorkOrdersPage() {
           </CardContent>
         </Card>
       ) : list.length === 0 ? (
-        /* ── Empty state ──────────────────────────────────── */
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-8">
-            <p className="text-muted-foreground">
-              {t("workOrders.noWorkOrders")}
-            </p>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <ClipboardList />
+            </EmptyMedia>
+            <EmptyTitle>{t("workOrders.noWorkOrders")}</EmptyTitle>
+            <EmptyDescription>
+              {t("workOrders.subtitle")}
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
             <Link href="/dashboard/work-orders/new">
               <Button>{t("workOrders.createFirst")}</Button>
             </Link>
-          </CardContent>
-        </Card>
+          </EmptyContent>
+        </Empty>
       ) : (
         /* ── Table ──────────────────────────────────────────── */
         <Card>
@@ -606,7 +629,7 @@ export default function WorkOrdersPage() {
 
                       {/* Customer */}
                       <TableCell>
-                        <div className="space-y-0.5">
+                        <div className="flex flex-col gap-0.5">
                           <p className="font-medium truncate max-w-[200px]">
                             {getCustomerName(wo)}
                           </p>
@@ -632,14 +655,10 @@ export default function WorkOrdersPage() {
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger>
-                            <span
-                              className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full text-white cursor-pointer ${STATUS_COLORS[wo.status] ?? "bg-gray-500"} hover:opacity-80 transition-opacity`}
-                              role="button"
-                              tabIndex={0}
-                            >
-                              <span>{wo.status}</span>
+                            <Badge variant="outline" className="gap-1.5 cursor-pointer hover:opacity-80 transition-opacity">
+                              {wo.status}
                               <ArrowUpDown className="size-3 opacity-60" />
-                            </span>
+                            </Badge>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="start"
@@ -741,14 +760,8 @@ export default function WorkOrdersPage() {
                       {/* Actions button */}
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
-                          <DropdownMenuTrigger>
-                            <span
-                              className="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:bg-muted cursor-pointer"
-                              role="button"
-                              tabIndex={0}
-                            >
-                              <MoreHorizontal className="size-4" />
-                            </span>
+                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
+                            <MoreHorizontal className="size-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"
@@ -835,7 +848,7 @@ function TableSkeleton() {
               <Skeleton className="h-4 w-16" />
             </TableCell>
             <TableCell>
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-3 w-20" />
               </div>

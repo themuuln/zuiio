@@ -13,6 +13,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -137,7 +138,7 @@ export function CommunicationLog({ orgId, customerId }: CommunicationLogProps) {
       </CardHeader>
       <CardContent>
         {/* Add new communication form */}
-        <div className="mb-6 space-y-3 rounded-lg border p-4">
+        <div className="flex mb-6 flex-col gap-3 rounded-lg border p-4">
           <div className="flex flex-wrap gap-2">
             <Select
               value={type}
@@ -206,13 +207,13 @@ export function CommunicationLog({ orgId, customerId }: CommunicationLogProps) {
 
         {/* Loading state */}
         {isLoading ? (
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {[1, 2, 3].map((i) => (
               <div
                 key={`skeleton-${i}`}
                 className="flex items-start gap-3 rounded-lg bg-muted/50 p-3"
               >
-                <div className="flex-1 space-y-2">
+                <div className="flex flex-1 flex-col gap-2">
                   <Skeleton className="h-4 w-28" />
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-3 w-40" />
@@ -237,7 +238,7 @@ export function CommunicationLog({ orgId, customerId }: CommunicationLogProps) {
           </p>
         ) : (
           /* Communications list */
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {communications.map((comm) => {
               const commData = comm as {
                 staff_name?: string | null;
@@ -248,27 +249,18 @@ export function CommunicationLog({ orgId, customerId }: CommunicationLogProps) {
                   key={comm.id}
                   className="flex items-start gap-3 rounded-lg bg-muted/50 p-3"
                 >
-                  <span
-                    className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                      typeColors[comm.type] ?? typeColors.note
-                    }`}
-                  >
+                  <Badge variant="outline" className="gap-1 shrink-0">
                     {typeIcons[comm.type] ?? typeIcons.note}
                     {t(`communicationType_${comm.type}`, {})}
-                  </span>
+                  </Badge>
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
-                          directionBadge[comm.direction] ??
-                          directionBadge.inbound
-                        }`}
-                      >
+                      <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
                         {comm.direction === "inbound"
                           ? t("inbound")
                           : t("outbound")}
-                      </span>
+                      </Badge>
                       {comm.subject && (
                         <span className="text-xs font-medium text-foreground">
                           {comm.subject}

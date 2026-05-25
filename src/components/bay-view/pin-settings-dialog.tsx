@@ -70,14 +70,14 @@ export function PinSettingsDialog({ onClose }: Props) {
             <KeyRound className="size-4 text-rose-500" />
             {t("bayPinSettings")}
           </CardTitle>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="rounded-md p-1 hover:bg-muted transition-colors"
             aria-label={t("close")}
           >
             <X className="size-4" />
-          </button>
+          </Button>
         </CardHeader>
         <CardContent>
           {success ? (
@@ -93,7 +93,7 @@ export function PinSettingsDialog({ onClose }: Props) {
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               {error && (
                 <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2.5 text-xs text-red-600 dark:text-red-400">
                   {error}

@@ -1,6 +1,6 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CustomerCommunication } from "@/lib/database.types";
+import type { CustomerCommunication } from "@/lib/types";
 import type { CreateCustomerCommunicationParams } from "@/lib/types";
 import { customerCommunicationKeys } from "./keys";
 

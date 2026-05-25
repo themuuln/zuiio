@@ -55,14 +55,14 @@ export function ShiftReportModal({ onClose }: Props) {
             <Gauge className="size-4 text-emerald-500" />
             {t("shiftReport")}
           </CardTitle>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="rounded-md p-1 hover:bg-muted transition-colors"
             aria-label={t("close")}
           >
             <X className="size-4" />
-          </button>
+          </Button>
         </CardHeader>
         <CardContent>
           {loading && (
@@ -81,7 +81,7 @@ export function ShiftReportModal({ onClose }: Props) {
           )}
 
           {report && (
-            <div className="space-y-5">
+            <div className="flex flex-col gap-5">
               {/* Key metrics */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-green-50/50 dark:bg-green-950/10 border border-green-200/50 dark:border-green-800/30 p-3 text-center">
@@ -109,7 +109,7 @@ export function ShiftReportModal({ onClose }: Props) {
               </div>
 
               {/* Detail stats */}
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-1.5 text-muted-foreground">
                     <Clock className="size-3.5" />

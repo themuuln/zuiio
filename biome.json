@@ -18,6 +18,18 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "@/lib/database.types": {
+                "message": "Import from @/lib/types instead — database.types.ts is regenerated and may not export this type."
+              }
+            }
+          }
+        }
+      },
       "suspicious": {
         "noUnknownAtRules": "off",
         "noArrayIndexKey": "off"

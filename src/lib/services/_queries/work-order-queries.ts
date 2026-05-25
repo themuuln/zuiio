@@ -8,7 +8,7 @@ import type {
   WorkOrderPart,
   WorkOrderService,
   WorkOrderStatusHistory,
-} from "@/lib/database.types";
+} from "@/lib/types";
 import { NotFoundError } from "@/lib/errors";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -30,7 +30,9 @@ export async function getWorkOrderDetail(
       // Fetch WO
       const { data: wo, error: woError } = await supabase
         .from("work_orders")
-        .select("id, organization_id, branch_id, customer_id, vehicle_id, bay_number, status, description, notes, mechanic_id, complaint, diagnosis, mechanic_notes, subtotal, discount_total, total, discount_amount, discount_percentage, odometer_at_service, queue_order, diagnosis_label_id, started_at, completed_at, created_at, updated_at, created_by, updated_by, deleted_at")
+        .select(
+          "id, organization_id, branch_id, customer_id, vehicle_id, bay_number, status, description, notes, mechanic_id, complaint, diagnosis, mechanic_notes, subtotal, discount_total, total, discount_amount, discount_percentage, odometer_at_service, queue_order, diagnosis_label_id, started_at, completed_at, created_at, updated_at, created_by, updated_by, deleted_at",
+        )
         .eq("id", id)
         .is("deleted_at", null)
         .single();
@@ -49,24 +51,42 @@ export async function getWorkOrderDetail(
       ] = await Promise.all([
         supabase
           .from("work_order_services")
-          .select("id, work_order_id, service_catalog_id, service_name, description, unit_price, discount_amount, discount_percentage, quantity, final_price, notes, mechanic_id, unit_cost, created_at")
+          .select(
+            "id, work_order_id, service_catalog_id, service_name, description, unit_price, discount_amount, discount_percentage, quantity, final_price, notes, mechanic_id, unit_cost, created_at",
+          )
           .eq("work_order_id", id)
           .order("created_at"),
         supabase
           .from("work_order_parts")
-          .select("id, work_order_id, part_name, part_number, quantity, unit_price, final_price, notes, discount_amount, discount_percentage, unit_cost, created_at")
+          .select(
+            "id, work_order_id, part_name, part_number, quantity, unit_price, final_price, notes, discount_amount, discount_percentage, unit_cost, created_at",
+          )
           .eq("work_order_id", id)
           .order("created_at"),
         supabase
           .from("work_order_status_history")
-          .select("id, work_order_id, organization_id, previous_status, status, notes, created_by, created_at")
+          .select(
+            "id, work_order_id, organization_id, previous_status, status, notes, created_by, created_at",
+          )
           .eq("work_order_id", id)
           .order("created_at", { ascending: false }),
         wo.customer_id
-          ? supabase.from("customers").select("id, organization_id, first_name, last_name, phone, email, type, company_name, contact_person, address, notes").eq("id", wo.customer_id).single()
+          ? supabase
+              .from("customers")
+              .select(
+                "id, organization_id, first_name, last_name, phone, email, type, company_name, contact_person, address, notes",
+              )
+              .eq("id", wo.customer_id)
+              .single()
           : { data: null },
         wo.vehicle_id
-          ? supabase.from("vehicles").select("id, organization_id, plate_number, make, model, year, vin, color, odometer").eq("id", wo.vehicle_id).single()
+          ? supabase
+              .from("vehicles")
+              .select(
+                "id, organization_id, plate_number, make, model, year, vin, color, odometer",
+              )
+              .eq("id", wo.vehicle_id)
+              .single()
           : { data: null },
         wo.mechanic_id
           ? supabase
@@ -88,7 +108,10 @@ export async function getWorkOrderDetail(
         ...wo,
         customer: customerData as Customer | null,
         vehicle: (vehicleData as Vehicle | null) ?? null,
-        mechanic: mechanicData as { id: string; full_name: string | null } | null,
+        mechanic: mechanicData as {
+          id: string;
+          full_name: string | null;
+        } | null,
         services: (services ?? []) as WorkOrderService[],
         parts: (parts ?? []) as WorkOrderPart[],
         status_history: (statusHistory ?? []) as WorkOrderStatusHistory[],

@@ -4,6 +4,7 @@ import { Loader2, MessageSquare, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import type { CustomerNoteType } from "@/lib/database.types";
+import type { CustomerNoteType } from "@/lib/types";
 import {
   useCreateCustomerNote,
   useCustomerNotes,
@@ -100,9 +101,9 @@ export function CustomerNotes({ orgId, customerId }: CustomerNotesProps) {
           </Button>
         )}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         {showForm && (
-          <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border p-4 bg-muted/20">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/20">
             <Textarea
               placeholder="Write a note..."
               value={content}
@@ -158,9 +159,9 @@ export function CustomerNotes({ orgId, customerId }: CustomerNotesProps) {
         )}
 
         {isLoading ? (
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {[1, 2].map((i) => (
-              <div key={i} className="space-y-1">
+              <div key={i} className="flex flex-col gap-1">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/4" />
               </div>
@@ -171,24 +172,20 @@ export function CustomerNotes({ orgId, customerId }: CustomerNotesProps) {
             {showForm ? "Add the first note above" : "No notes yet"}
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {notes.map((note) => (
               <div
                 key={note.id}
                 className="group rounded-lg border p-3 transition-colors hover:bg-muted/20"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1 space-y-1">
+                  <div className="min-w-0 flex flex-1 flex-col gap-1">
                     <p className="whitespace-pre-wrap text-sm">{note.content}</p>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${
-                          typeBadgeColor[note.type] ?? typeBadgeColor.general
-                        }`}
-                      >
+                      <Badge variant="outline">
                         {NOTE_TYPES.find((nt) => nt.value === note.type)
                           ?.label ?? note.type}
-                      </span>
+                      </Badge>
                       <span className="text-xs text-muted-foreground">
                         {new Date(note.created_at).toLocaleDateString()}
                       </span>

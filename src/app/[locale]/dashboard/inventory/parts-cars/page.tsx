@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Plus, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -7,6 +8,13 @@ import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Link } from "@/lib/i18n/navigation";
 import { usePartsCars } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -69,15 +77,19 @@ export default function PartsCarsListPage() {
       {isLoading ? (
         <Skeleton className="h-64 w-full rounded-xl" />
       ) : filtered.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-16">
-            <Truck className="size-10 text-muted-foreground/40" />
-            <p className="text-muted-foreground">{t('empty')}</p>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Truck />
+            </EmptyMedia>
+            <EmptyTitle>{t('empty')}</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
             <Button variant="outline" render={<Link href="/dashboard/inventory/parts-cars/new" />}>
               {t('emptyAction')}
             </Button>
-          </CardContent>
-        </Card>
+          </EmptyContent>
+        </Empty>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((car) => (
@@ -98,14 +110,12 @@ export default function PartsCarsListPage() {
                         </p>
                       )}
                     </div>
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[car.status] ?? ""}`}
-                    >
+                    <Badge variant="outline" className="shrink-0">
                       {t('status.' + car.status)}
-                    </span>
+                    </Badge>
                   </div>
 
-                  <div className="space-y-1.5 text-sm">
+                  <div className="flex flex-col gap-1.5 text-sm">
                     {car.vin && (
                       <p className="text-muted-foreground font-mono text-xs truncate">
                         VIN: {car.vin}

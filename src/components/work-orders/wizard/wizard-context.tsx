@@ -31,7 +31,8 @@ import {
   useVehicleLastVisit,
   useVehicleSearch,
 } from "@/lib/queries/use-wizard-data";
-import type { Customer, ServiceCatalog, Vehicle } from "@/lib/types";
+import { usePartsCatalog } from "@/lib/queries/use-inventory";
+import type { Customer, PartsCatalogItem, ServiceCatalog, Vehicle } from "@/lib/types";
 
 export interface ServiceLine {
   service_catalog_id: string | null;
@@ -107,6 +108,8 @@ interface WizardState {
   vehiclePartPrices: Record<string, number>;
   serviceSearch: string;
 
+  partsCatalog: PartsCatalogItem[];
+  partSearch: string;
   partLines: PartLine[];
   partHistory: Record<string, number>;
 
@@ -155,6 +158,8 @@ interface WizardActions {
   ) => void;
   removeService: (idx: number) => void;
 
+  setPartSearch: (v: string) => void;
+  addPartFromCatalog: (part: PartsCatalogItem) => void;
   addPart: () => void;
   updatePart: (
     idx: number,
@@ -232,6 +237,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
   const [partLines, setPartLines] = useState<PartLine[]>([]);
   const [partHistory, setPartHistory] = useState<Record<string, number>>({});
+  const [partsCatalog, setPartsCatalog] = useState<PartsCatalogItem[]>([]);
+  const [partSearch, setPartSearch] = useState("");
   const [vehicleServicePrices, setVehicleServicePrices] = useState<
     Record<string, number>
   >({});
@@ -258,7 +265,7 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
   const [showDraftBanner, setShowDraftBanner] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const draftCheckedRef = useRef(false);
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile"],
@@ -315,6 +322,8 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
 
   const { data: catalogData, isInitialLoading: catalogLoading } =
     useServiceCatalog(orgId);
+  const { data: partsCatalogData, isInitialLoading: partsCatalogLoading } =
+    usePartsCatalog(orgId);
   const { data: mechanicsData, isInitialLoading: mechanicsLoading } =
     useMechanicsWithJobCount(orgId);
   const { data: priceHistoryData, isInitialLoading: priceHistoryLoading } =
@@ -338,7 +347,7 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
   const createWorkOrderMutation = useCreateWorkOrder(orgId);
 
   const loading =
-    profileLoading || catalogLoading || mechanicsLoading || priceHistoryLoading;
+    profileLoading || catalogLoading || partsCatalogLoading || mechanicsLoading || priceHistoryLoading;
   const saving = createWorkOrderMutation.isPending;
   const customerSearching = customerSearchFetching || plateSearchFetching;
   const creatingCustomer = createCustomerMutation.isPending;
@@ -364,6 +373,10 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
   useEffect(() => {
     if (catalogData) setCatalog(catalogData);
   }, [catalogData]);
+
+  useEffect(() => {
+    if (partsCatalogData) setPartsCatalog(partsCatalogData);
+  }, [partsCatalogData]);
 
   useEffect(() => {
     if (mechanicsData) setMechanics(mechanicsData);
@@ -734,6 +747,25 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
     [],
   );
 
+  const addPartFromCatalog = useCallback(
+    (part: PartsCatalogItem) => {
+      const price = part.default_price ?? 0;
+      setPartLines((prev) => [
+        ...prev,
+        {
+          part_name: part.name,
+          part_number: part.part_number ?? "",
+          quantity: 1,
+          unit_price: price,
+          final_price: price,
+          last_price: undefined,
+        },
+      ]);
+      setPartSearch("");
+    },
+    [],
+  );
+
   const addPart = useCallback(() => {
     setPartLines((prev) => [
       ...prev,
@@ -921,6 +953,8 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
     vehicleServicePrices,
     vehiclePartPrices,
     serviceSearch,
+    partsCatalog,
+    partSearch,
     partLines,
     partHistory,
     mechanics,
@@ -973,6 +1007,8 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
     updateService,
     removeService,
 
+    setPartSearch,
+    addPartFromCatalog,
     addPart,
     updatePart,
     removePart,

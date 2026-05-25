@@ -14,8 +14,17 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import {
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { ExportButton } from "@/components/export-button";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -64,18 +73,14 @@ function PeriodBar({
   return (
     <div className="flex gap-1.5">
       {PERIOD_OPTIONS.map((opt) => (
-        <button
+        <Button
           key={opt.key}
-          type="button"
+          variant={value === opt.key ? "default" : "ghost"}
+          size="sm"
           onClick={() => onChange(opt.key)}
-          className={`rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors ${
-            value === opt.key
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted"
-          }`}
         >
           {opt.label}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -100,19 +105,15 @@ function TabBar({
       {tabs.map((tab) => {
         const Icon = tab.icon;
         return (
-          <button
+          <Button
             key={tab.key}
-            type="button"
+            variant={value === tab.key ? "default" : "ghost"}
             onClick={() => onChange(tab.key)}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
-              value === tab.key
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
+            className="gap-2"
           >
             <Icon className="size-4" />
             {tab.label}
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -158,11 +159,9 @@ const invoiceStatusConfig: Record<
 function InvoiceStatusBadge({ status }: { status: string }) {
   const cfg = invoiceStatusConfig[status] ?? invoiceStatusConfig.draft;
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.className}`}
-    >
+    <Badge variant="outline">
       {cfg.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -296,16 +295,11 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
     [orgId, fetchInvoices, filter],
   );
 
-  const filtered = useMemo(() => {
-    if (!search) return invoices;
-    const q = search.toLowerCase();
-    return invoices.filter(
-      (inv) =>
-        inv.invoice_number.toLowerCase().includes(q) ||
-        (inv.customer_name ?? "").toLowerCase().includes(q) ||
-        (inv.vehicle_plate ?? "").toLowerCase().includes(q),
-    );
-  }, [invoices, search]);
+  const filtered = useFuzzySearch(invoices, search, {
+    keys: ["invoice_number", "customer_name", "vehicle_plate"],
+    threshold: 0.4,
+    minQueryLength: 1,
+  });
 
   const handleCopyLink = (token: string) => {
     const url = `${window.location.origin}/invoice/${token}`;
@@ -372,14 +366,14 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
         <div className="flex gap-2 flex-wrap">
           {["", "draft", "sent", "paid", "overdue", "partial", "cancelled"].map(
             (s) => (
-              <button
+              <Button
                 key={s}
-                type="button"
+                variant={filter === s ? "default" : "ghost"}
+                size="sm"
                 onClick={() => setFilter(s)}
-                className={`rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors ${filter === s ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
               >
                 {s ? s.charAt(0).toUpperCase() + s.slice(1) : "All"}
-              </button>
+              </Button>
             ),
           )}
         </div>
@@ -469,16 +463,13 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
                       <TableCell className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           {inv.email_sent_at && (
-                            <span
-                              className="inline-flex items-center gap-1 rounded bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-600 dark:bg-green-950/20 dark:text-green-400"
-                              title={`Sent ${new Date(inv.email_sent_at).toLocaleDateString()}`}
-                            >
+                            <Badge variant="outline" className="gap-1 text-[11px]" title={`Sent ${new Date(inv.email_sent_at).toLocaleDateString()}`}>
                               <Mail className="size-3" />
                               Sent
-                            </span>
+                            </Badge>
                           )}
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => handleCopyLink(inv.public_token)}
                             title="Copy public link"
@@ -583,17 +574,23 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
               <Skeleton className="h-8 w-full" />
             </div>
           ) : recentExpenses.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-12">
-              <Wallet className="size-10 text-muted-foreground/40" />
-              <p className="text-sm text-muted-foreground">No expenses recorded yet</p>
-              <Button
-                render={<Link href="/dashboard/expenses/new" />}
-                variant="outline"
-                size="sm"
-              >
-                Add Expense
-              </Button>
-            </div>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Wallet />
+                </EmptyMedia>
+                <EmptyTitle>No expenses recorded yet</EmptyTitle>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button
+                  render={<Link href="/dashboard/expenses/new" />}
+                  variant="outline"
+                  size="sm"
+                >
+                  Add Expense
+                </Button>
+              </EmptyContent>
+            </Empty>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -631,13 +628,13 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
                       </TableCell>
                       <TableCell className="px-5 py-3.5 text-center">
                         {exp.paid_at ? (
-                          <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          <Badge variant="outline">
                             Paid
-                          </span>
+                          </Badge>
                         ) : (
-                          <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                          <Badge variant="outline">
                             Unpaid
-                          </span>
+                          </Badge>
                         )}
                       </TableCell>
                     </TableRow>
@@ -827,7 +824,7 @@ export default function FinancePage() {
           <CardHeader>
             <Skeleton className="h-5 w-36" />
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={`skeleton-${i}`} className="flex items-center gap-4">
                 <Skeleton className="h-5 w-full" />

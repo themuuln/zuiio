@@ -102,14 +102,14 @@ export function GoalCard({
                 </div>
               </div>
             )}
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onEdit}
-              className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
               aria-label="Set daily goal"
             >
               <Pencil className="size-3.5" />
-            </button>
+            </Button>
           </div>
         )}
       </CardContent>

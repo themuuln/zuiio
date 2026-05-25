@@ -5,9 +5,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * Normalize a plate string: strip whitespace/dashes, uppercase.
+ */
+export function normalizePlate(plate: string): string {
+  return plate.replace(/[\s\-–—._/\\]/g, "").toUpperCase()
+}
+
 export function formatPlateNumber(plate: string | null | undefined): string {
   if (!plate) return "—"
-  return plate.toUpperCase()
+  return normalizePlate(plate)
 }
 
 /**
@@ -26,12 +33,6 @@ export function setCookie(
 // Module-scoped Intl formatters (created once, not per call)
 const mntDecimal = new Intl.NumberFormat("mn-MN", {
   style: "decimal",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-});
-const mntCurrency = new Intl.NumberFormat("mn-MN", {
-  style: "currency",
-  currency: "MNT",
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
 });
@@ -55,7 +56,7 @@ const eurCurrency = new Intl.NumberFormat("de-DE", {
 });
 
 const currencyFormatters: Record<string, Intl.NumberFormat> = {
-  MNT: mntCurrency,
+  MNT: mntDecimal,
   CNY: cnyCurrency,
   USD: usdCurrency,
   EUR: eurCurrency,
@@ -65,9 +66,12 @@ const currencyFormatters: Record<string, Intl.NumberFormat> = {
  * Format a monetary amount in the given currency.
  */
 export function formatCurrency(amount: number, currency: string = "MNT"): string {
-  const fmt = currencyFormatters[currency.toUpperCase()];
-  if (fmt) return fmt.format(amount);
-  return `${currency} ${amount.toLocaleString()}`;
+  const key = currency.toUpperCase();
+  const fmt = currencyFormatters[key];
+  if (!fmt) return `${key} ${amount.toLocaleString()}`;
+  const formatted = fmt.format(amount);
+  // Always use ₮ symbol explicitly — Intl may emit "MNT" for mn-MN + currency
+  return key === "MNT" ? `₮${formatted}` : formatted;
 }
 
 /**
@@ -76,4 +80,15 @@ export function formatCurrency(amount: number, currency: string = "MNT"): string
  */
 export function formatMNT(amount: number): string {
   return `₮${mntDecimal.format(amount)}`;
+}
+
+/**
+ * Extract initials from a full name (up to 2 characters).
+ * Returns "?" for null/undefined/empty input.
+ */
+export function getInitials(name: string | null | undefined): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? "?";
+  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
 }

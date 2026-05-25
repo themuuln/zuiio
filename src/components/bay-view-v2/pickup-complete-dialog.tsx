@@ -47,12 +47,13 @@ function StarRating({
   return (
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
-        <button
+        <Button
           key={star}
-          type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => onChange(star)}
           className={cn(
-            "p-0.5 rounded-md transition-all duration-150 hover:scale-110 active:scale-95",
+            "p-0.5 h-auto transition-all duration-150 hover:scale-110 active:scale-95",
             star <= (value ?? 0)
               ? "text-amber-400 drop-shadow-sm"
               : "text-muted-foreground/20 hover:text-muted-foreground/40",
@@ -65,7 +66,7 @@ function StarRating({
               star <= (value ?? 0) ? "fill-amber-400" : "",
             )}
           />
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -122,15 +123,15 @@ export function PickupCompleteDialog({
           <DialogTitle className="flex items-center gap-2 text-base">
             <CheckCircle2 className="size-4 text-emerald-500" />
             {t("pickupCompleteTitle")}
-            <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-0.5 ml-1">
+            <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50  px-2 py-0.5 ml-1">
               {vehiclePlate}
             </span>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <div className="flex flex-col gap-5">
           {/* Satisfaction */}
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <Star className="size-3.5" />
               {t("pickupSummarySatisfaction")}
@@ -139,7 +140,7 @@ export function PickupCompleteDialog({
           </div>
 
           {/* Feedback */}
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <MessageSquare className="size-3.5" />
               {t("pickupSummaryFeedback")}
@@ -152,7 +153,7 @@ export function PickupCompleteDialog({
           </div>
 
           {/* Next appointment */}
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <CalendarIcon className="size-3.5" />
               {t("pickupSummaryAppointmentDate")}
@@ -167,7 +168,7 @@ export function PickupCompleteDialog({
 
           {/* Error */}
           {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3 text-xs text-red-700 dark:text-red-400">
+            <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3 text-xs text-red-700 dark:text-red-400">
               {error}
             </div>
           )}

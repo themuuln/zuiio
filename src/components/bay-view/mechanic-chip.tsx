@@ -3,7 +3,7 @@
 import { useDraggable } from "@dnd-kit/core";
 import { GripHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import type { Profile } from "@/lib/database.types";
+import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface MechanicChipProps {

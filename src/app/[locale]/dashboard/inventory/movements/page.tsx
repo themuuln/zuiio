@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { ClipboardList, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -10,6 +11,13 @@ import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import {
   Dialog,
   DialogContent,
@@ -184,13 +192,19 @@ export default function MovementsPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-4 py-12">
-              <ClipboardList className="size-10 text-muted-foreground/40" />
-              <p className="text-muted-foreground">{t("noMovements")}</p>
-              <Button onClick={() => setShowDialog(true)}>
-                {t("recordFirstMovement")}
-              </Button>
-            </div>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <ClipboardList />
+                </EmptyMedia>
+                <EmptyTitle>{t("noMovements")}</EmptyTitle>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button onClick={() => setShowDialog(true)}>
+                  {t("recordFirstMovement")}
+                </Button>
+              </EmptyContent>
+            </Empty>
           ) : (
             <div className="divide-y divide-border">
               {filtered.map((m) => (
@@ -201,13 +215,11 @@ export default function MovementsPage() {
                   <span className="text-xs text-muted-foreground w-24 shrink-0">
                     {new Date(m.created_at).toLocaleDateString("mn-MN")}
                   </span>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium shrink-0 ${MOVEMENT_COLORS[m.movement_type] ?? ""}`}
-                  >
+                  <Badge variant="outline" className="shrink-0">
                     {t(
                       `movement${m.movement_type.charAt(0).toUpperCase() + m.movement_type.slice(1)}` as string,
                     )}
-                  </span>
+                  </Badge>
                   <span className="text-sm font-medium flex-1 min-w-0 truncate">
                     {(m as InventoryMovement & { part_name?: string })
                       .part_name ?? "—"}
@@ -233,8 +245,8 @@ export default function MovementsPage() {
           <DialogHeader>
             <DialogTitle>{t("newMovement")}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="part_id">{t("part")} *</Label>
               <select
                 id="part_id"
@@ -250,7 +262,7 @@ export default function MovementsPage() {
                 ))}
               </select>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="movement_type">{t("movementType")} *</Label>
               <select
                 id="movement_type"
@@ -273,7 +285,7 @@ export default function MovementsPage() {
               </select>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="quantity">{t("quantity")} *</Label>
                 <Input
                   id="quantity"
@@ -284,7 +296,7 @@ export default function MovementsPage() {
                   className="h-11"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="unit_cost">{t("unitCost")}</Label>
                 <Input
                   id="unit_cost"
@@ -296,7 +308,7 @@ export default function MovementsPage() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="reference_type">{t("referenceType")}</Label>
                 <Input
                   id="reference_type"
@@ -305,7 +317,7 @@ export default function MovementsPage() {
                   className="h-11"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="reference_id">{t("referenceId")}</Label>
                 <Input
                   id="reference_id"
@@ -315,7 +327,7 @@ export default function MovementsPage() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="notes">{t("notes")}</Label>
               <Input
                 id="notes"

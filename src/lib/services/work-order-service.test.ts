@@ -1,6 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { WorkOrderPart, WorkOrderService } from "@/lib/database.types";
+import type { WorkOrderPart, WorkOrderService } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
 import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";

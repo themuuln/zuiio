@@ -163,10 +163,17 @@ export function useBayActionHandlers({
     const prevCount = data.bayCount;
     const prevBays = data.bays;
 
-    setData(prev => ({ ...prev!, bayCount: count, bays: Array.from({ length: count }, (_, i) => {
-      const existing = data.bays[i];
-      return existing ?? { bayNumber: i + 1, workOrder: null };
-    }) }));
+    setData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        bayCount: count,
+        bays: Array.from({ length: count }, (_, i) => {
+          const existing = prev.bays[i];
+          return existing ?? { bayNumber: i + 1, workOrder: null };
+        }),
+      };
+    });
 
     try {
       const { updateBayCount } = await import(
