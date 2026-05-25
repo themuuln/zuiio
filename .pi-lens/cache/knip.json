@@ -13,6 +13,26 @@
     },
     {
       "type": "file",
+      "name": "src/hooks/use-breadcrumbs.ts",
+      "file": "src/hooks/use-breadcrumbs.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/hooks/use-persisted-state.ts",
+      "file": "src/hooks/use-persisted-state.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/sidebar-transitions.ts",
+      "file": "src/lib/sidebar-transitions.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/validations.ts",
+      "file": "src/lib/validations.ts"
+    },
+    {
+      "type": "file",
       "name": "src/components/_data-table-chart.tsx",
       "file": "src/components/_data-table-chart.tsx"
     },
@@ -58,26 +78,6 @@
     },
     {
       "type": "file",
-      "name": "src/hooks/use-breadcrumbs.ts",
-      "file": "src/hooks/use-breadcrumbs.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/hooks/use-persisted-state.ts",
-      "file": "src/hooks/use-persisted-state.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/sidebar-transitions.ts",
-      "file": "src/lib/sidebar-transitions.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/validations.ts",
-      "file": "src/lib/validations.ts"
-    },
-    {
-      "type": "file",
       "name": "src/test/factories.ts",
       "file": "src/test/factories.ts"
     },
@@ -95,6 +95,31 @@
       "type": "file",
       "name": "docs/.vitepress/theme/style.css",
       "file": "docs/.vitepress/theme/style.css"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/i18n/request.ts",
+      "file": "src/lib/i18n/request.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/cache/server.ts",
+      "file": "src/lib/cache/server.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/services/bay-view-seed-data.ts",
+      "file": "src/lib/services/bay-view-seed-data.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/services/dashboard-service.ts",
+      "file": "src/lib/services/dashboard-service.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/utils/name.ts",
+      "file": "src/lib/utils/name.ts"
     },
     {
       "type": "file",
@@ -193,6 +218,26 @@
     },
     {
       "type": "file",
+      "name": "src/components/work-orders/customer-select.tsx",
+      "file": "src/components/work-orders/customer-select.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/part-lines.tsx",
+      "file": "src/components/work-orders/part-lines.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/service-lines.tsx",
+      "file": "src/components/work-orders/service-lines.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/vehicle-select.tsx",
+      "file": "src/components/work-orders/vehicle-select.tsx"
+    },
+    {
+      "type": "file",
       "name": "src/components/charts/_area-interactive-chart.tsx",
       "file": "src/components/charts/_area-interactive-chart.tsx"
     },
@@ -278,11 +323,6 @@
     },
     {
       "type": "file",
-      "name": "src/components/ui/data-table.tsx",
-      "file": "src/components/ui/data-table.tsx"
-    },
-    {
-      "type": "file",
       "name": "src/components/ui/direction.tsx",
       "file": "src/components/ui/direction.tsx"
     },
@@ -348,63 +388,18 @@
     },
     {
       "type": "file",
-      "name": "src/components/work-orders/customer-select.tsx",
-      "file": "src/components/work-orders/customer-select.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/components/work-orders/part-lines.tsx",
-      "file": "src/components/work-orders/part-lines.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/components/work-orders/service-lines.tsx",
-      "file": "src/components/work-orders/service-lines.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/components/work-orders/vehicle-select.tsx",
-      "file": "src/components/work-orders/vehicle-select.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/cache/server.ts",
-      "file": "src/lib/cache/server.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/i18n/request.ts",
-      "file": "src/lib/i18n/request.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/services/bay-view-seed-data.ts",
-      "file": "src/lib/services/bay-view-seed-data.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/services/dashboard-service.ts",
-      "file": "src/lib/services/dashboard-service.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/utils/name.ts",
-      "file": "src/lib/utils/name.ts"
-    },
-    {
-      "type": "file",
       "name": "supabase/functions/check-service-reminders/index.ts",
       "file": "supabase/functions/check-service-reminders/index.ts"
     },
     {
       "type": "file",
-      "name": "src/test/mocks/handlers.ts",
-      "file": "src/test/mocks/handlers.ts"
+      "name": "supabase/functions/expire-subscriptions/index.ts",
+      "file": "supabase/functions/expire-subscriptions/index.ts"
     },
     {
       "type": "file",
-      "name": "supabase/functions/expire-subscriptions/index.ts",
-      "file": "supabase/functions/expire-subscriptions/index.ts"
+      "name": "src/test/mocks/handlers.ts",
+      "file": "src/test/mocks/handlers.ts"
     },
     {
       "type": "file",
@@ -432,12 +427,6 @@
       "name": "@phosphor-icons/react",
       "file": "package.json",
       "line": 26
-    },
-    {
-      "type": "dependency",
-      "name": "@tanstack/react-table",
-      "file": "package.json",
-      "line": 30
     },
     {
       "type": "dependency",
@@ -519,12 +508,6 @@
     },
     {
       "type": "export",
-      "name": "TableCaption",
-      "file": "src/components/ui/table.tsx",
-      "line": 115
-    },
-    {
-      "type": "export",
       "name": "SidebarGroupAction",
       "file": "src/components/ui/sidebar.tsx",
       "line": 702
@@ -603,6 +586,12 @@
     },
     {
       "type": "export",
+      "name": "TableCaption",
+      "file": "src/components/ui/table.tsx",
+      "line": 115
+    },
+    {
+      "type": "export",
       "name": "FieldDescription",
       "file": "src/components/ui/field.tsx",
       "line": 230
@@ -639,6 +628,18 @@
     },
     {
       "type": "export",
+      "name": "DataTablePagination",
+      "file": "src/components/ui/data-table.tsx",
+      "line": 365
+    },
+    {
+      "type": "export",
+      "name": "DataTableViewOptions",
+      "file": "src/components/ui/data-table.tsx",
+      "line": 464
+    },
+    {
+      "type": "export",
       "name": "useUpdatePartsCar",
       "file": "src/lib/queries/use-inventory.ts",
       "line": 556
@@ -672,18 +673,6 @@
       "name": "DropdownMenuGroup",
       "file": "src/components/ui/dropdown-menu.tsx",
       "line": 260
-    },
-    {
-      "type": "export",
-      "name": "DropdownMenuLabel",
-      "file": "src/components/ui/dropdown-menu.tsx",
-      "line": 261
-    },
-    {
-      "type": "export",
-      "name": "DropdownMenuCheckboxItem",
-      "file": "src/components/ui/dropdown-menu.tsx",
-      "line": 263
     },
     {
       "type": "export",
@@ -1547,12 +1536,6 @@
     },
     {
       "type": "export",
-      "name": "TableCaption",
-      "file": "src/components/ui/table.tsx",
-      "line": 115
-    },
-    {
-      "type": "export",
       "name": "SidebarGroupAction",
       "file": "src/components/ui/sidebar.tsx",
       "line": 702
@@ -1631,6 +1614,12 @@
     },
     {
       "type": "export",
+      "name": "TableCaption",
+      "file": "src/components/ui/table.tsx",
+      "line": 115
+    },
+    {
+      "type": "export",
       "name": "FieldDescription",
       "file": "src/components/ui/field.tsx",
       "line": 230
@@ -1667,6 +1656,18 @@
     },
     {
       "type": "export",
+      "name": "DataTablePagination",
+      "file": "src/components/ui/data-table.tsx",
+      "line": 365
+    },
+    {
+      "type": "export",
+      "name": "DataTableViewOptions",
+      "file": "src/components/ui/data-table.tsx",
+      "line": 464
+    },
+    {
+      "type": "export",
       "name": "useUpdatePartsCar",
       "file": "src/lib/queries/use-inventory.ts",
       "line": 556
@@ -1700,18 +1701,6 @@
       "name": "DropdownMenuGroup",
       "file": "src/components/ui/dropdown-menu.tsx",
       "line": 260
-    },
-    {
-      "type": "export",
-      "name": "DropdownMenuLabel",
-      "file": "src/components/ui/dropdown-menu.tsx",
-      "line": 261
-    },
-    {
-      "type": "export",
-      "name": "DropdownMenuCheckboxItem",
-      "file": "src/components/ui/dropdown-menu.tsx",
-      "line": 263
     },
     {
       "type": "export",
@@ -2543,6 +2532,26 @@
     },
     {
       "type": "file",
+      "name": "src/hooks/use-breadcrumbs.ts",
+      "file": "src/hooks/use-breadcrumbs.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/hooks/use-persisted-state.ts",
+      "file": "src/hooks/use-persisted-state.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/sidebar-transitions.ts",
+      "file": "src/lib/sidebar-transitions.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/validations.ts",
+      "file": "src/lib/validations.ts"
+    },
+    {
+      "type": "file",
       "name": "src/components/_data-table-chart.tsx",
       "file": "src/components/_data-table-chart.tsx"
     },
@@ -2588,26 +2597,6 @@
     },
     {
       "type": "file",
-      "name": "src/hooks/use-breadcrumbs.ts",
-      "file": "src/hooks/use-breadcrumbs.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/hooks/use-persisted-state.ts",
-      "file": "src/hooks/use-persisted-state.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/sidebar-transitions.ts",
-      "file": "src/lib/sidebar-transitions.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/validations.ts",
-      "file": "src/lib/validations.ts"
-    },
-    {
-      "type": "file",
       "name": "src/test/factories.ts",
       "file": "src/test/factories.ts"
     },
@@ -2625,6 +2614,31 @@
       "type": "file",
       "name": "docs/.vitepress/theme/style.css",
       "file": "docs/.vitepress/theme/style.css"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/i18n/request.ts",
+      "file": "src/lib/i18n/request.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/cache/server.ts",
+      "file": "src/lib/cache/server.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/services/bay-view-seed-data.ts",
+      "file": "src/lib/services/bay-view-seed-data.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/services/dashboard-service.ts",
+      "file": "src/lib/services/dashboard-service.ts"
+    },
+    {
+      "type": "file",
+      "name": "src/lib/utils/name.ts",
+      "file": "src/lib/utils/name.ts"
     },
     {
       "type": "file",
@@ -2723,6 +2737,26 @@
     },
     {
       "type": "file",
+      "name": "src/components/work-orders/customer-select.tsx",
+      "file": "src/components/work-orders/customer-select.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/part-lines.tsx",
+      "file": "src/components/work-orders/part-lines.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/service-lines.tsx",
+      "file": "src/components/work-orders/service-lines.tsx"
+    },
+    {
+      "type": "file",
+      "name": "src/components/work-orders/vehicle-select.tsx",
+      "file": "src/components/work-orders/vehicle-select.tsx"
+    },
+    {
+      "type": "file",
       "name": "src/components/charts/_area-interactive-chart.tsx",
       "file": "src/components/charts/_area-interactive-chart.tsx"
     },
@@ -2808,11 +2842,6 @@
     },
     {
       "type": "file",
-      "name": "src/components/ui/data-table.tsx",
-      "file": "src/components/ui/data-table.tsx"
-    },
-    {
-      "type": "file",
       "name": "src/components/ui/direction.tsx",
       "file": "src/components/ui/direction.tsx"
     },
@@ -2878,63 +2907,18 @@
     },
     {
       "type": "file",
-      "name": "src/components/work-orders/customer-select.tsx",
-      "file": "src/components/work-orders/customer-select.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/components/work-orders/part-lines.tsx",
-      "file": "src/components/work-orders/part-lines.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/components/work-orders/service-lines.tsx",
-      "file": "src/components/work-orders/service-lines.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/components/work-orders/vehicle-select.tsx",
-      "file": "src/components/work-orders/vehicle-select.tsx"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/cache/server.ts",
-      "file": "src/lib/cache/server.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/i18n/request.ts",
-      "file": "src/lib/i18n/request.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/services/bay-view-seed-data.ts",
-      "file": "src/lib/services/bay-view-seed-data.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/services/dashboard-service.ts",
-      "file": "src/lib/services/dashboard-service.ts"
-    },
-    {
-      "type": "file",
-      "name": "src/lib/utils/name.ts",
-      "file": "src/lib/utils/name.ts"
-    },
-    {
-      "type": "file",
       "name": "supabase/functions/check-service-reminders/index.ts",
       "file": "supabase/functions/check-service-reminders/index.ts"
     },
     {
       "type": "file",
-      "name": "src/test/mocks/handlers.ts",
-      "file": "src/test/mocks/handlers.ts"
+      "name": "supabase/functions/expire-subscriptions/index.ts",
+      "file": "supabase/functions/expire-subscriptions/index.ts"
     },
     {
       "type": "file",
-      "name": "supabase/functions/expire-subscriptions/index.ts",
-      "file": "supabase/functions/expire-subscriptions/index.ts"
+      "name": "src/test/mocks/handlers.ts",
+      "file": "src/test/mocks/handlers.ts"
     },
     {
       "type": "file",
@@ -2964,12 +2948,6 @@
       "name": "@phosphor-icons/react",
       "file": "package.json",
       "line": 26
-    },
-    {
-      "type": "dependency",
-      "name": "@tanstack/react-table",
-      "file": "package.json",
-      "line": 30
     },
     {
       "type": "dependency",
@@ -3009,5 +2987,5 @@
     }
   ],
   "unlistedDeps": [],
-  "summary": "Found 264 issues"
+  "summary": "Found 262 issues"
 }

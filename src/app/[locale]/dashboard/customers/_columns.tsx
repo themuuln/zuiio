@@ -1,0 +1,142 @@
+"use client";
+
+import type { ColumnDef } from "@tanstack/react-table";
+import { Building2, Car, ChevronRight, Clock, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { DataTableColumnHeader } from "@/components/ui/data-table";
+import type { Customer } from "@/lib/types";
+
+export interface CustomerRow extends Customer {
+  vehicle_count?: number;
+}
+
+function getCustomerDisplayName(customer: CustomerRow): string {
+  return (
+    [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
+    customer.company_name ||
+    customer.contact_person ||
+    customer.full_name ||
+    customer.phone ||
+    "No name"
+  );
+}
+
+function formatDate(dateString: string | null): string | null {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) {
+    const weeks = Math.floor(days / 7);
+    return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
+  }
+  return date.toLocaleDateString();
+}
+
+export const columns: ColumnDef<CustomerRow>[] = [
+  {
+    id: "name",
+    accessorFn: (row) => getCustomerDisplayName(row),
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
+    cell: ({ row }) => {
+      const customer = row.original;
+      return (
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 ring-1 ring-border">
+            {customer.type === "company" ? (
+              <Building2 className="size-4 text-muted-foreground/70" />
+            ) : (
+              <User className="size-4 text-muted-foreground/70" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">
+              {getCustomerDisplayName(customer)}
+            </p>
+            <p className="text-xs text-muted-foreground capitalize">
+              {customer.type}
+            </p>
+          </div>
+        </div>
+      );
+    },
+  },
+  {
+    id: "contact",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Contact" />
+    ),
+    cell: ({ row }) => {
+      const customer = row.original;
+      return (
+        <div className="min-w-0 max-w-44">
+          {customer.phone ? (
+            <p className="truncate text-sm">{customer.phone}</p>
+          ) : customer.email ? (
+            <p className="truncate text-sm text-muted-foreground">
+              {customer.email}
+            </p>
+          ) : (
+            <span className="text-sm text-muted-foreground/50">&mdash;</span>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    id: "vehicles",
+    accessorKey: "vehicle_count",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Vehicles" />
+    ),
+    cell: ({ row }) => (
+      <Badge variant="secondary" className="gap-1 tabular-nums">
+        <Car className="size-3 text-muted-foreground/60" />
+        {row.original.vehicle_count ?? 0}
+      </Badge>
+    ),
+  },
+  {
+    id: "total_visits",
+    accessorKey: "total_visits",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Visits" />
+    ),
+    cell: ({ row }) => (
+      <span className="text-sm tabular-nums">{row.original.total_visits}</span>
+    ),
+  },
+  {
+    id: "last_visit",
+    accessorKey: "last_visit_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Last Visit" />
+    ),
+    cell: ({ row }) => {
+      const lastVisit = formatDate(row.original.last_visit_at);
+      return lastVisit ? (
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Clock className="size-3.5 shrink-0 text-muted-foreground/50" />
+          <span>{lastVisit}</span>
+        </div>
+      ) : (
+        <span className="text-sm text-muted-foreground/50">Never</span>
+      );
+    },
+  },
+  {
+    id: "chevron",
+    header: "",
+    enableSorting: false,
+    cell: () => (
+      <ChevronRight className="size-4 text-muted-foreground/40" />
+    ),
+  },
+];

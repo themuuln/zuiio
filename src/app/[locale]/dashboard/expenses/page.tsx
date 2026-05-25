@@ -1,22 +1,15 @@
 "use client";
 
-import {
-  ArrowRight,
-  Clock,
-  DollarSign,
-  Plus,
-  TrendingUp,
-  Wallet,
-} from "lucide-react";
+import { Clock, DollarSign, Plus, TrendingUp, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable } from "@/components/ui/data-table";
 import {
   Empty,
   EmptyContent,
@@ -24,14 +17,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import type { ExportColumn } from "@/lib/export";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import {
@@ -45,6 +30,7 @@ import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import type { ExpenseWithCategory } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
+import { columns } from "./_columns";
 
 // ── Inline KPI Card ──
 
@@ -78,70 +64,17 @@ function KpiCard({
   );
 }
 
-// ── Category Badge ──
-
-function CategoryBadge({ name, color }: { name: string; color: string }) {
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
-      style={{ backgroundColor: `${color}20`, color }}
-    >
-      <span
-        className="size-1.5 rounded-full"
-        style={{ backgroundColor: color }}
-      />
-      {name}
-    </span>
-  );
-}
-
-// ── Table Skeleton ──
-
 function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Date</TableHead>
-          <TableHead>Description</TableHead>
-          <TableHead className="hidden sm:table-cell">Category</TableHead>
-          <TableHead className="hidden md:table-cell">Vendor</TableHead>
-          <TableHead className="text-right">Amount</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="w-10" />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {Array.from({ length: rows }).map((_, i) => (
-          <TableRow key={`row-${i}`}>
-            <TableCell>
-              <Skeleton className="h-4 w-24" />
-            </TableCell>
-            <TableCell>
-              <div className="flex flex-col gap-1">
-                <Skeleton className="size-40" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-            </TableCell>
-            <TableCell className="hidden sm:table-cell">
-              <Skeleton className="h-5 w-20 rounded-full" />
-            </TableCell>
-            <TableCell className="hidden md:table-cell">
-              <Skeleton className="h-4 w-28" />
-            </TableCell>
-            <TableCell className="text-right">
-              <Skeleton className="ml-auto h-4 w-20" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-5 w-14 rounded-full" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="size-4" />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="flex flex-col gap-2 p-4">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex items-center gap-4">
+          {Array.from({ length: 6 }).map((_, j) => (
+            <Skeleton key={j} className="h-5 flex-1" />
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -254,20 +187,6 @@ export default function ExpensesPage() {
     ],
     [],
   );
-
-  // ── Date formatter ──
-
-  const formatDate = (iso: string) => {
-    try {
-      return new Date(iso).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-    } catch {
-      return iso;
-    }
-  };
 
   // ── Render: Loading ──
 
@@ -465,90 +384,13 @@ export default function ExpensesPage() {
               </EmptyContent>
             </Empty>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="hidden sm:table-cell">
-                    Category
-                  </TableHead>
-                  <TableHead className="hidden md:table-cell">Vendor</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-10" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {expenses.map((expense) => (
-                  <TableRow
-                    key={expense.id}
-                    className="h-16 cursor-pointer"
-                    onClick={() =>
-                      push(`/dashboard/expenses/${expense.id}`)
-                    }
-                  >
-                    <TableCell>
-                      <span className="text-sm tabular-nums">
-                        {formatDate(expense.expense_date)}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="min-w-0 max-w-64">
-                        <p className="truncate text-sm font-medium">
-                          {expense.description}
-                        </p>
-                        {expense.reference_number && (
-                          <p className="truncate text-xs text-muted-foreground">
-                            {expense.reference_number}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      {expense.category ? (
-                        <CategoryBadge
-                          name={expense.category.name}
-                          color={expense.category.color}
-                        />
-                      ) : (
-                        <span className="text-sm text-muted-foreground/50">
-                          &mdash;
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {expense.vendor_name ? (
-                        <span className="text-sm">{expense.vendor_name}</span>
-                      ) : (
-                        <span className="text-sm text-muted-foreground/50">
-                          &mdash;
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className="text-sm font-medium tabular-nums">
-                        {formatMNT(expense.amount)}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {expense.paid_at ? (
-                        <Badge variant="outline">
-                          Paid
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline">
-                          Unpaid
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <ArrowRight className="size-4 text-muted-foreground/40" />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={expenses}
+              getRowId={(row) => row.id}
+              pageSize={20}
+              onRowClick={(row) => push(`/dashboard/expenses/${row.id}`)}
+            />
           )}
         </CardContent>
       </Card>

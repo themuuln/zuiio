@@ -1700,7 +1700,57 @@
         }
       ],
       "trend": "stable"
+    },
+    "src/app/[locale]/dashboard/work-orders/_columns.tsx": {
+      "latest": {
+        "commit": "f40b327",
+        "timestamp": "2026-05-25T07:47:56.076Z",
+        "mi": 20.5,
+        "cognitive": 42,
+        "nesting": 4,
+        "lines": 303,
+        "maxCyclomatic": 28,
+        "entropy": 5.99
+      },
+      "history": [
+        {
+          "commit": "f40b327",
+          "timestamp": "2026-05-25T07:47:56.076Z",
+          "mi": 20.5,
+          "cognitive": 42,
+          "nesting": 4,
+          "lines": 303,
+          "maxCyclomatic": 28,
+          "entropy": 5.99
+        }
+      ],
+      "trend": "stable"
+    },
+    "src/app/[locale]/dashboard/expenses/page.tsx": {
+      "latest": {
+        "commit": "f40b327",
+        "timestamp": "2026-05-25T07:51:23.947Z",
+        "mi": 14.8,
+        "cognitive": 59,
+        "nesting": 4,
+        "lines": 507,
+        "maxCyclomatic": 58,
+        "entropy": 6.22
+      },
+      "history": [
+        {
+          "commit": "f40b327",
+          "timestamp": "2026-05-25T07:51:23.947Z",
+          "mi": 14.8,
+          "cognitive": 59,
+          "nesting": 4,
+          "lines": 507,
+          "maxCyclomatic": 58,
+          "entropy": 6.22
+        }
+      ],
+      "trend": "stable"
     }
   },
-  "capturedAt": "2026-05-25T07:43:30.622Z"
+  "capturedAt": "2026-05-25T07:51:28.948Z"
 }

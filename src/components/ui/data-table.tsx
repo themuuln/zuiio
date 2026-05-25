@@ -316,7 +316,7 @@ export function DataTable<TData, TValue>({
 
 interface DataTableColumnHeaderProps<TData>
   extends React.HTMLAttributes<HTMLDivElement> {
-  table: TanStackTable<TData>;
+  table?: TanStackTable<TData>;
   column: {
     id: string;
     getIsSorted: () => false | "asc" | "desc";

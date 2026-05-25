@@ -1,15 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  ClipboardList,
-  MoreHorizontal,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
@@ -20,6 +12,7 @@ import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
+import { DataTable } from "@/components/ui/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,22 +26,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Empty,
   EmptyContent,
@@ -66,23 +44,7 @@ import {
   useWorkOrders,
   type WorkOrderListItem,
 } from "@/lib/queries/use-work-orders";
-import { formatMNT } from "@/lib/utils";
-
-// ── Sort ──────────────────────────────────────────────────────
-
-type SortKey =
-  | "id"
-  | "customer"
-  | "status"
-  | "created_at"
-  | "grand_total"
-  | "mechanic"
-  | "profit";
-type SortDir = "asc" | "desc";
-interface SortConfig {
-  key: SortKey;
-  dir: SortDir;
-}
+import { createColumns } from "./_columns";
 
 // ── Status helpers ────────────────────────────────────────────
 
@@ -119,9 +81,6 @@ const STATUS_KEYS = [
   "Cancelled",
 ] as const;
 
-// All statuses available for quick-change (excluding current)
-const STATUS_OPTIONS = STATUS_KEYS.filter(Boolean) as string[];
-
 // ── Helpers ───────────────────────────────────────────────────
 
 function getCustomerName(wo: WorkOrderListItem): string {
@@ -140,71 +99,6 @@ function getVehicleDisplay(wo: WorkOrderListItem): string {
     wo.vehicle.plate_number,
   ].filter(Boolean);
   return parts.join(" ");
-}
-
-function getDaysSince(dateStr: string, now: Date): number {
-  const created = new Date(dateStr);
-  return Math.floor(
-    (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24),
-  );
-}
-
-function getAgeDisplay(
-  days: number,
-  t: (key: string, params?: Record<string, number>) => string,
-): string {
-  if (days === 0) return t("workOrders.today");
-  if (days === 1) return t("workOrders.yesterday");
-  return t("workOrders.daysAgo", { days });
-}
-
-function getSortValue(wo: WorkOrderListItem, key: SortKey): string | number {
-  switch (key) {
-    case "id":
-      return wo.id;
-    case "customer":
-      return getCustomerName(wo).toLowerCase();
-    case "status":
-      return wo.status;
-    case "created_at":
-      return wo.created_at;
-    case "grand_total":
-      return wo.grand_total ?? 0;
-    case "mechanic":
-      return wo.mechanic?.full_name?.toLowerCase() ?? "";
-    case "profit":
-      return wo.gross_profit ?? 0;
-  }
-}
-
-// ── Sort header ───────────────────────────────────────────────
-
-function SortHeader({
-  label,
-  sortKey,
-  current,
-  onSort,
-}: {
-  label: string;
-  sortKey: SortKey;
-  current: SortConfig;
-  onSort: (key: SortKey) => void;
-}) {
-  const active = current.key === sortKey;
-  const dir = active ? current.dir : null;
-  return (
-    <Button
-      onClick={() => onSort(sortKey)}
-      variant="ghost"
-      size="sm"
-      className="text-muted-foreground uppercase tracking-wider"
-    >
-      {label}
-      {!active && <ArrowUpDown className="size-3 opacity-40" />}
-      {active && dir === "asc" && <ArrowUp className="size-3" />}
-      {active && dir === "desc" && <ArrowDown className="size-3" />}
-    </Button>
-  );
 }
 
 // ── Export columns ────────────────────────────────────────────
@@ -263,10 +157,6 @@ export default function WorkOrdersPage() {
   const queryClient = useQueryClient();
   const [statusIdx, setStatusIdx] = useState(0);
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<SortConfig>({
-    key: "created_at",
-    dir: "desc",
-  });
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
@@ -312,21 +202,7 @@ export default function WorkOrdersPage() {
     },
   });
 
-  // ── Sorted list ─────────────────────────────────────────────
-
-  const list = useMemo(() => {
-    const raw = orders ?? [];
-    const sorted = raw.toSorted((a, b) => {
-      const va = getSortValue(a, sort.key);
-      const vb = getSortValue(b, sort.key);
-      const cmp =
-        typeof va === "string"
-          ? va.localeCompare(vb as string)
-          : (va as number) - (vb as number);
-      return sort.dir === "asc" ? cmp : -cmp;
-    });
-    return sorted;
-  }, [orders, sort]);
+  const list = orders ?? [];
 
   const statusCounts = useMemo(() => {
     if (!orders) return [];
@@ -377,13 +253,6 @@ export default function WorkOrdersPage() {
     setSearch(value);
   };
 
-  const handleSort = (key: SortKey) => {
-    setSort((prev) => ({
-      key,
-      dir: prev.key === key && prev.dir === "asc" ? "desc" : "asc",
-    }));
-  };
-
   const handleStatusChange = (woId: string, newStatus: string) => {
     updateStatus.mutate({ woId, status: newStatus });
   };
@@ -398,6 +267,17 @@ export default function WorkOrdersPage() {
         colorDot: i > 0 ? (STATUS_COLORS[key] ?? "bg-gray-500") : undefined,
       })),
     [statusIdx, t],
+  );
+
+  // Build column definitions with callbacks (stable reference)
+  const columns = useMemo(
+    () =>
+      createColumns({
+        onStatusChange: handleStatusChange,
+        onCancel: (woId) => setCancelTarget(woId),
+        updatePending: updateStatus.isPending,
+      }),
+    [handleStatusChange, updateStatus.isPending],
   );
 
   // ── Loading state ──────────────────────────────────────────
@@ -422,7 +302,15 @@ export default function WorkOrdersPage() {
         />
         <Card>
           <CardContent className="p-0">
-            <TableSkeleton />
+            <div className="flex flex-col gap-2 p-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  {Array.from({ length: 5 }).map((_, j) => (
+                    <Skeleton key={j} className="h-5 flex-1" />
+                  ))}
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -534,356 +422,20 @@ export default function WorkOrdersPage() {
           </EmptyContent>
         </Empty>
       ) : (
-        /* ── Table ──────────────────────────────────────────── */
+        /* ── DataTable ──────────────────────────────────────── */
         <Card>
           <CardContent className="p-0">
-            <Table className="[&_td]:p-1.5 [&_th]:h-8">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-24">
-                    <SortHeader
-                      label={t("workOrders.id")}
-                      sortKey="id"
-                      current={sort}
-                      onSort={handleSort}
-                    />
-                  </TableHead>
-                  <TableHead>
-                    <SortHeader
-                      label={t("workOrders.customer")}
-                      sortKey="customer"
-                      current={sort}
-                      onSort={handleSort}
-                    />
-                  </TableHead>
-                  <TableHead className="hidden md:table-cell w-44">
-                    {t("workOrders.vehicle")}
-                  </TableHead>
-                  <TableHead className="hidden lg:table-cell w-32">
-                    <SortHeader
-                      label={t("workOrders.mechanic")}
-                      sortKey="mechanic"
-                      current={sort}
-                      onSort={handleSort}
-                    />
-                  </TableHead>
-                  <TableHead className="w-36">
-                    <SortHeader
-                      label={t("workOrders.status")}
-                      sortKey="status"
-                      current={sort}
-                      onSort={handleSort}
-                    />
-                  </TableHead>
-                  <TableHead className="hidden sm:table-cell w-24">
-                    <SortHeader
-                      label={t("workOrders.age")}
-                      sortKey="created_at"
-                      current={sort}
-                      onSort={handleSort}
-                    />
-                  </TableHead>
-                  <TableHead className="w-28 text-right">
-                    <SortHeader
-                      label={t("workOrders.total")}
-                      sortKey="grand_total"
-                      current={sort}
-                      onSort={handleSort}
-                    />
-                  </TableHead>
-                  <TableHead className="hidden xl:table-cell w-28 text-right text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                    {t("workOrders.servicesCost")}
-                  </TableHead>
-                  <TableHead className="hidden xl:table-cell w-28 text-right text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                    {t("workOrders.partsCost")}
-                  </TableHead>
-                  <TableHead className="hidden lg:table-cell w-28 text-right">
-                    <SortHeader
-                      label={t("workOrders.grossProfit")}
-                      sortKey="profit"
-                      current={sort}
-                      onSort={handleSort}
-                    />
-                  </TableHead>
-                  <TableHead className="hidden lg:table-cell w-24 text-right text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                    {t("workOrders.margin")}
-                  </TableHead>
-                  <TableHead className="w-10" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((wo) => {
-                  const days = getDaysSince(wo.created_at, now);
-                  return (
-                    <TableRow
-                      key={wo.id}
-                      className="cursor-pointer"
-                      onClick={() =>
-                        push(`/dashboard/work-orders/${wo.id}`)
-                      }
-                    >
-                      {/* WO# */}
-                      <TableCell className="font-mono text-sm text-muted-foreground">
-                        #{wo.id.slice(0, 8)}
-                      </TableCell>
-
-                      {/* Customer */}
-                      <TableCell>
-                        <div className="flex flex-col gap-0.5">
-                          <p className="font-medium truncate max-w-[200px]">
-                            {getCustomerName(wo)}
-                          </p>
-                          {wo.vehicle?.plate_number && (
-                            <p className="text-xs text-muted-foreground truncate max-w-[200px]">
-                              {getVehicleDisplay(wo)}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-
-                      {/* Vehicle (desktop) */}
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                        {getVehicleDisplay(wo)}
-                      </TableCell>
-
-                      {/* Mechanic (desktop) */}
-                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                        {wo.mechanic?.full_name ?? "—"}
-                      </TableCell>
-
-                      {/* Status */}
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger>
-                            <Badge variant="outline" className="gap-1.5 cursor-pointer hover:opacity-80 transition-opacity">
-                              {wo.status}
-                              <ArrowUpDown className="size-3 opacity-60" />
-                            </Badge>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="start"
-                            className="min-w-[160px]"
-                          >
-                            {STATUS_OPTIONS.flatMap((s) =>
-                              s !== wo.status && s !== "Cancelled"
-                                ? [
-                                    <DropdownMenuItem
-                                      key={s}
-                                      onClick={() => handleStatusChange(wo.id, s)}
-                                      disabled={updateStatus.isPending}
-                                    >
-                                      {translateStatus(t, s)}
-                                    </DropdownMenuItem>,
-                                  ]
-                                : [],
-                            )}
-                            {wo.status !== "Cancelled" && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  className="text-destructive"
-                                  onClick={() => setCancelTarget(wo.id)}
-                                >
-                                  <Trash2 className="size-3.5 mr-2" />
-                                  {t("workOrders.cancelWorkOrder")}
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-
-                      {/* Age */}
-                      <TableCell className="hidden sm:table-cell text-sm text-muted-foreground tabular-nums">
-                        {getAgeDisplay(days, t)}
-                      </TableCell>
-
-                      {/* Total */}
-                      <TableCell className="text-right text-sm font-medium tabular-nums">
-                        {wo.grand_total !== undefined
-                          ? `₮${wo.grand_total.toLocaleString()}`
-                          : "—"}
-                      </TableCell>
-
-                      {/* Services Cost */}
-                      <TableCell className="hidden xl:table-cell text-right text-sm tabular-nums text-muted-foreground">
-                        {wo.services_cost !== undefined
-                          ? formatMNT(wo.services_cost)
-                          : "—"}
-                      </TableCell>
-
-                      {/* Parts Cost */}
-                      <TableCell className="hidden xl:table-cell text-right text-sm tabular-nums text-muted-foreground">
-                        {wo.parts_cost !== undefined
-                          ? formatMNT(wo.parts_cost)
-                          : "—"}
-                      </TableCell>
-
-                      {/* Gross Profit */}
-                      <TableCell className="hidden lg:table-cell text-right text-sm font-medium tabular-nums">
-                        {wo.gross_profit !== undefined ? (
-                          <span
-                            className={
-                              wo.gross_profit > 0
-                                ? "text-green-600 dark:text-green-400"
-                                : wo.gross_profit < 0
-                                  ? "text-red-600 dark:text-red-400"
-                                  : ""
-                            }
-                          >
-                            {formatMNT(wo.gross_profit)}
-                          </span>
-                        ) : (
-                          "—"
-                        )}
-                      </TableCell>
-
-                      {/* Margin % */}
-                      <TableCell className="hidden lg:table-cell text-right text-sm tabular-nums">
-                        {wo.margin_percent !== undefined ? (
-                          <span
-                            className={
-                              wo.margin_percent > 0
-                                ? "text-green-600 dark:text-green-400"
-                                : wo.margin_percent < 0
-                                  ? "text-red-600 dark:text-red-400"
-                                  : "text-muted-foreground"
-                            }
-                          >
-                            {wo.margin_percent.toFixed(1)}%
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">–</span>
-                        )}
-                      </TableCell>
-
-                      {/* Actions button */}
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
-                            <MoreHorizontal className="size-4" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="min-w-[140px]"
-                          >
-                            <DropdownMenuItem
-                              onClick={() =>
-                                push(`/dashboard/work-orders/${wo.id}`)
-                              }
-                            >
-                              {t("workOrders.viewDetails")}
-                            </DropdownMenuItem>
-                            {wo.status !== "Cancelled" && (
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => setCancelTarget(wo.id)}
-                              >
-                                <Trash2 className="size-3.5 mr-2" />
-                                {t("workOrders.cancelWorkOrder")}
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={list}
+              getRowId={(row) => row.id}
+              pageSize={20}
+              onRowClick={(row) => push(`/dashboard/work-orders/${row.id}`)}
+              showColumnVisibility
+            />
           </CardContent>
         </Card>
       )}
     </div>
-  );
-}
-
-// ── Loading skeleton ──────────────────────────────────────────
-
-function TableSkeleton() {
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-24">
-            <Skeleton className="h-4 w-16" />
-          </TableHead>
-          <TableHead>
-            <Skeleton className="h-4 w-20" />
-          </TableHead>
-          <TableHead className="hidden md:table-cell">
-            <Skeleton className="h-4 w-16" />
-          </TableHead>
-          <TableHead className="hidden lg:table-cell">
-            <Skeleton className="h-4 w-16" />
-          </TableHead>
-          <TableHead>
-            <Skeleton className="h-4 w-14" />
-          </TableHead>
-          <TableHead className="hidden sm:table-cell">
-            <Skeleton className="h-4 w-12" />
-          </TableHead>
-          <TableHead className="text-right">
-            <Skeleton className="h-4 w-16 ml-auto" />
-          </TableHead>
-          <TableHead className="hidden xl:table-cell text-right">
-            <Skeleton className="h-4 w-14 ml-auto" />
-          </TableHead>
-          <TableHead className="hidden xl:table-cell text-right">
-            <Skeleton className="h-4 w-14 ml-auto" />
-          </TableHead>
-          <TableHead className="hidden lg:table-cell text-right">
-            <Skeleton className="h-4 w-14 ml-auto" />
-          </TableHead>
-          <TableHead className="hidden lg:table-cell text-right">
-            <Skeleton className="h-4 w-12 ml-auto" />
-          </TableHead>
-          <TableHead className="w-10" />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <TableRow key={`row-${i}`}>
-            <TableCell>
-              <Skeleton className="h-4 w-16" />
-            </TableCell>
-            <TableCell>
-              <div className="flex flex-col gap-1.5">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-3 w-20" />
-              </div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell">
-              <Skeleton className="h-4 w-24" />
-            </TableCell>
-            <TableCell className="hidden lg:table-cell">
-              <Skeleton className="h-4 w-20" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-5 w-20 rounded-full" />
-            </TableCell>
-            <TableCell className="hidden sm:table-cell">
-              <Skeleton className="h-4 w-12" />
-            </TableCell>
-            <TableCell className="text-right">
-              <Skeleton className="h-4 w-16 ml-auto" />
-            </TableCell>
-            <TableCell className="hidden xl:table-cell text-right">
-              <Skeleton className="h-4 w-14 ml-auto" />
-            </TableCell>
-            <TableCell className="hidden xl:table-cell text-right">
-              <Skeleton className="h-4 w-14 ml-auto" />
-            </TableCell>
-            <TableCell className="hidden lg:table-cell text-right">
-              <Skeleton className="h-4 w-14 ml-auto" />
-            </TableCell>
-            <TableCell className="hidden lg:table-cell text-right">
-              <Skeleton className="h-4 w-12 ml-auto" />
-            </TableCell>
-            <TableCell />
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
   );
 }
