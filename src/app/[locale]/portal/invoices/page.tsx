@@ -5,21 +5,24 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { PageErrorState, PageShellSkeleton } from "@/components/page-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { formatMNT } from "@/lib/utils";
 
-const STATUS_COLORS: Record<string, string> = {
-  paid: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  sent: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  overdue: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  draft: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  partial: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  cancelled: "bg-gray-100 text-gray-500",
+const STATUS_VARIANTS: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  paid: "default",
+  sent: "secondary",
+  overdue: "destructive",
+  draft: "outline",
+  partial: "secondary",
+  cancelled: "outline",
 };
 
 const CAN_PAY = new Set(["sent", "overdue", "partial", "draft"]);
@@ -33,11 +36,11 @@ export default function PortalInvoicesPage() {
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const { data: invoices, isLoading, refetch } = useQuery({
+  const { data: invoices, isLoading, error, refetch } = useQuery({
     queryKey: ["portal", "invoices"],
     queryFn: async () => {
       const res = await fetch("/api/portal/invoices", { headers });
-      if (!res.ok) return [];
+      if (!res.ok) throw new Error(t("portal.failedToLoadInvoices"));
       const json = await res.json();
       return json.data ?? [];
     },
@@ -75,16 +78,16 @@ export default function PortalInvoicesPage() {
   }
 
   if (authLoading || isLoading) {
+    return <PageShellSkeleton cards={2} />;
+  }
+
+  if (error) {
     return (
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-4 w-48" />
-        <div className="flex flex-col gap-2">
-          {[1, 2].map((i) => (
-            <Skeleton key={`skeleton-${i}`} className="h-20 rounded-xl" />
-          ))}
-        </div>
-      </div>
+      <PageErrorState
+        description={error.message}
+        onRetry={() => refetch()}
+        className="min-h-[260px]"
+      />
     );
   }
 
@@ -112,16 +115,13 @@ export default function PortalInvoicesPage() {
         <div className="flex flex-col gap-2">
           {invoices.map((inv: Record<string, unknown>) => (
             <Card key={inv.id as string}>
-              <CardContent className="flex items-center justify-between py-3.5">
+              <CardContent className="flex flex-col gap-3 py-3.5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="truncate text-sm font-semibold">
                       #{inv.invoice_number as string}
                     </span>
-                    <Badge
-                      variant="secondary"
-                      className={STATUS_COLORS[inv.status as string] ?? ""}
-                    >
+                    <Badge variant={STATUS_VARIANTS[inv.status as string] ?? "outline"}>
                       {inv.status as string}
                     </Badge>
                   </div>
@@ -132,7 +132,7 @@ export default function PortalInvoicesPage() {
                     {inv.vehicle_plate ? ` · ${inv.vehicle_plate}` : ""}
                   </p>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 self-start sm:shrink-0 sm:self-center">
                   <span className="text-sm font-semibold tabular-nums">
                     {formatMNT(Number(inv.total ?? 0))}
                   </span>
@@ -183,8 +183,8 @@ export default function PortalInvoicesPage() {
                 </p>
               </div>
             </div>
-            <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3">
-              <p className="text-xs text-amber-800 dark:text-amber-300">
+            <div className="rounded-lg border border-border bg-muted p-3">
+              <p className="text-xs text-muted-foreground">
                 {t("portal.paymentNote")}
               </p>
             </div>

@@ -5,10 +5,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import {
+  PageErrorState,
+  PageNotFoundState,
+  PageShellSkeleton,
+} from "@/components/page-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { cn, formatMNT } from "@/lib/utils";
 
@@ -30,11 +33,12 @@ export default function PortalVehicleDetailPage() {
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["portal", "vehicle", vehicleId],
     queryFn: async () => {
       const res = await fetch(`/api/portal/vehicles/${vehicleId}`, { headers });
-      if (!res.ok) throw new Error("Failed to load vehicle");
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error(t("portal.failedToLoadVehicle"));
       const json = await res.json();
       return json.data as {
         vehicle: Record<string, unknown>;
@@ -46,21 +50,21 @@ export default function PortalVehicleDetailPage() {
   });
 
   if (authLoading || isLoading) {
+    return <PageShellSkeleton cards={2} />;
+  }
+
+  if (error) {
     return (
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-5 w-32" />
-        <Skeleton className="h-28 rounded-xl" />
-        <Skeleton className="h-48 rounded-xl" />
-      </div>
+      <PageErrorState
+        description={error.message}
+        onRetry={() => refetch()}
+        className="min-h-[260px]"
+      />
     );
   }
 
   if (!data) {
-    return (
-      <p className="text-sm text-muted-foreground py-8 text-center">
-        Vehicle not found.
-      </p>
-    );
+    return <PageNotFoundState description={t("portal.vehicleNotFound")} />;
   }
 
   const { vehicle, workOrders, upcomingServices } = data;

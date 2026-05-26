@@ -60,13 +60,13 @@ export default async function LocaleLayout({
           <QueryProvider>
             {children}
             <Toaster
-            position="bottom-left"
-            richColors
-            closeButton
-            toastOptions={{
-              duration: 4000,
-            }}
-          />
+              position="bottom-left"
+              richColors
+              closeButton
+              toastOptions={{
+                duration: 4000,
+              }}
+            />
         </QueryProvider>
       </NextIntlClientProvider>
       </TooltipProvider>

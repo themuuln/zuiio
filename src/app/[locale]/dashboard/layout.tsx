@@ -63,7 +63,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <DashboardHeader />
               <GlobalDialogs />
               <div className="flex min-h-0 flex-1 overflow-hidden">
-                <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-auto px-4 pt-4 md:px-6">
+                <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-6 pt-4 md:px-6">
                   {children}
                 </div>
                 <RightSidebar />

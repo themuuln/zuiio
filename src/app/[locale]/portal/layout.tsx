@@ -2,7 +2,7 @@
 
 import { Car, FileText, LogOut, Settings, Wrench } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ export default function PortalLayout({
 }) {
   const t = useTranslations();
   const { push } = useRouter();
+  const pathname = usePathname();
   const { customer, loading } = usePortalAuth();
 
   async function handleLogout() {
@@ -63,47 +64,54 @@ export default function PortalLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Top nav */}
-      <header className="flex h-14 items-center justify-between border-b bg-background px-4 sticky top-0 z-10">
+    <div className="flex min-h-dvh flex-col bg-background">
+      <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
         <Link href="/portal" className="flex items-center gap-2 font-semibold text-base">
           <Wrench className="size-4 text-primary" />
           TOLOM
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="hidden sm:inline text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="hidden text-sm text-muted-foreground md:inline">
             {customer.full_name ?? customer.first_name ?? "Customer"}
           </span>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-xs gap-1.5">
+          <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-xs">
             <LogOut className="size-3.5" />
             {t("common.logout") ?? "Logout"}
           </Button>
         </div>
       </header>
 
-      {/* Nav tabs */}
-      <nav className="flex gap-1 border-b bg-muted/30 px-4 overflow-x-auto">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-xs font-medium transition-colors shrink-0",
-                "border-transparent text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Icon className="size-3.5" />
-              {t(item.labelKey)}
-            </Link>
-          );
-        })}
+      <nav className="overflow-x-auto border-b bg-muted/30 px-2 sm:px-4">
+        <div className="flex min-w-max gap-1">
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive =
+              item.href === "/portal"
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-3 text-xs font-medium transition-colors",
+                  isActive
+                    ? "border-foreground text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
+                )}
+                aria-current={isActive ? "page" : undefined}
+              >
+                <Icon className="size-3.5" />
+                {t(item.labelKey)}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
-      {/* Content */}
-      <main className="flex-1 p-4 lg:p-6">
-        <div className="mx-auto max-w-4xl">{children}</div>
+      <main className="flex-1 px-4 py-5 sm:px-6 lg:py-6">
+        <div className="mx-auto w-full max-w-4xl">{children}</div>
       </main>
 
       <footer className="border-t py-3 text-center text-[10px] text-muted-foreground/50">

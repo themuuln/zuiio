@@ -5,10 +5,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import {
+  PageErrorState,
+  PageNotFoundState,
+  PageShellSkeleton,
+} from "@/components/page-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { cn, formatMNT } from "@/lib/utils";
 
@@ -94,13 +97,16 @@ interface WorkOrderDetail {
   invoices: Invoice[];
 }
 
-const INVOICE_STATUS_COLORS: Record<string, string> = {
-  paid: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  sent: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  overdue: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  draft: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  partial: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  cancelled: "bg-gray-100 text-gray-500",
+const INVOICE_STATUS_VARIANTS: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  paid: "default",
+  sent: "secondary",
+  overdue: "destructive",
+  draft: "outline",
+  partial: "secondary",
+  cancelled: "outline",
 };
 
 export default function PortalWorkOrderDetailPage() {
@@ -112,7 +118,7 @@ export default function PortalWorkOrderDetailPage() {
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["portal", "work-order", workOrderId],
     queryFn: async () => {
       const res = await fetch(`/api/portal/work-orders/${workOrderId}`, {
@@ -120,7 +126,7 @@ export default function PortalWorkOrderDetailPage() {
       });
       if (!res.ok) {
         if (res.status === 404) return null;
-        throw new Error("Failed to load work order");
+        throw new Error(t("portal.failedToLoadWorkOrder"));
       }
       const json = await res.json();
       return json.data as WorkOrderDetail;
@@ -129,25 +135,21 @@ export default function PortalWorkOrderDetailPage() {
   });
 
   if (authLoading || isLoading) {
+    return <PageShellSkeleton cards={2} />;
+  }
+
+  if (error) {
     return (
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-5 w-32" />
-        <Skeleton className="h-32 rounded-xl" />
-        <Skeleton className="h-48 rounded-xl" />
-        <Skeleton className="h-40 rounded-xl" />
-      </div>
+      <PageErrorState
+        description={error.message}
+        onRetry={() => refetch()}
+        className="min-h-[260px]"
+      />
     );
   }
 
   if (!data) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Wrench className="size-10 text-muted-foreground/40 mb-3" />
-        <p className="text-sm text-muted-foreground">
-          {error ? "Failed to load work order." : "Work order not found."}
-        </p>
-      </div>
-    );
+    return <PageNotFoundState description={t("portal.workOrderNotFound")} />;
   }
 
   const style = STATUS_STYLES[data.status] ?? STATUS_STYLES.Completed;
@@ -395,11 +397,8 @@ export default function PortalWorkOrderDetailPage() {
                         #{inv.invoice_number}
                       </span>
                       <Badge
-                        variant="secondary"
-                        className={cn(
-                          "text-[10px]",
-                          INVOICE_STATUS_COLORS[inv.status] ?? "",
-                        )}
+                        variant={INVOICE_STATUS_VARIANTS[inv.status] ?? "outline"}
+                        className="text-[10px]"
                       >
                         {inv.status}
                       </Badge>

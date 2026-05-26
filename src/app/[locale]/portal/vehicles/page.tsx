@@ -1,11 +1,11 @@
 "use client";
 
-import { ArrowRight, Car, Loader2 } from "lucide-react";
+import { ArrowRight, Car } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { PageErrorState, PageShellSkeleton } from "@/components/page-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 
 export default function PortalVehiclesPage() {
@@ -15,11 +15,11 @@ export default function PortalVehiclesPage() {
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const { data: vehicles, isLoading } = useQuery({
+  const { data: vehicles, isLoading, error, refetch } = useQuery({
     queryKey: ["portal", "vehicles", "list"],
     queryFn: async () => {
       const res = await fetch("/api/portal/vehicles", { headers });
-      if (!res.ok) return [];
+      if (!res.ok) throw new Error(t("portal.failedToLoadVehicles"));
       const json = await res.json();
       return json.data ?? [];
     },
@@ -27,16 +27,16 @@ export default function PortalVehiclesPage() {
   });
 
   if (authLoading || isLoading) {
+    return <PageShellSkeleton cards={3} />;
+  }
+
+  if (error) {
     return (
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-4 w-56" />
-        <div className="flex flex-col gap-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={`skeleton-${i}`} className="h-20 rounded-xl" />
-          ))}
-        </div>
-      </div>
+      <PageErrorState
+        description={error.message}
+        onRetry={() => refetch()}
+        className="min-h-[260px]"
+      />
     );
   }
 
@@ -66,17 +66,17 @@ export default function PortalVehiclesPage() {
             <Link
               key={v.id as string}
               href={`/portal/vehicles/${v.id}`}
-              className="flex items-center justify-between rounded-xl border border-border/60 bg-card p-4 hover:bg-muted/30 transition-colors"
+              className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card p-4 transition-colors hover:bg-muted/30"
             >
-              <div className="flex items-center gap-4">
+              <div className="flex min-w-0 items-center gap-4">
                 <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10">
                   <Car className="size-5 text-primary" />
                 </div>
-                <div>
-                  <p className="font-semibold">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">
                     {v.plate_number as string}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="truncate text-sm text-muted-foreground">
                     {v.make as string} {v.model as string}
                     {v.year ? ` (${v.year})` : ""}
                   </p>

@@ -39,15 +39,28 @@ export async function updateSession(request: NextRequest) {
   const isPortalRoute = pathname.startsWith("/portal");
   const isInviteRoute = pathname.startsWith("/invite/");
   const isPricingRoute = pathname.startsWith("/pricing");
-  const isMarketingRoute =
+  const isPublicRoute =
     pathname === "/" ||
     pathname.startsWith("/features") ||
     pathname.startsWith("/products") ||
     pathname.startsWith("/about") ||
-    pathname.startsWith("/contact");
+    pathname.startsWith("/contact") ||
+    pathname.startsWith("/faq") ||
+    pathname.startsWith("/blog") ||
+    pathname.startsWith("/status") ||
+    pathname.startsWith("/integrations") ||
+    pathname.startsWith("/services");
   const isLoginRoute = pathname.includes("/auth/login");
 
-  if (!user && !isAuthRoute && !isInvoiceRoute && !isPortalRoute && !isInviteRoute && !isPricingRoute && !isMarketingRoute) {
+  if (
+    !user &&
+    !isAuthRoute &&
+    !isInvoiceRoute &&
+    !isPortalRoute &&
+    !isInviteRoute &&
+    !isPricingRoute &&
+    !isPublicRoute
+  ) {
     const url = request.nextUrl.clone();
     // With localePrefix: "never" the URL has no locale segment
     url.pathname = "/auth/login";

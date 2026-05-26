@@ -1,29 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
 import {
   ArrowRight,
-  Check,
-  ClipboardList,
-  Package,
-  Users,
-  Tag,
-  BarChart3,
-  LineChart,
-  Store,
-  MessageSquareText,
-  Code2,
-  Star,
-  ChevronRight,
-  Wrench,
   ArrowUpRight,
+  BarChart3,
+  Check,
+  ChevronRight,
+  ClipboardList,
+  Code2,
+  LineChart,
+  MessageSquareText,
+  Package,
+  Star,
+  Store,
+  Tag,
+  Users,
+  Wrench,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
+import { LandingNav } from "@/components/landing-nav";
+import { LocaleSwitcher } from "@/components/locale-switcher";
+import { PartnersSlider } from "@/components/partners-slider";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -32,9 +34,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { LandingNav } from "@/components/landing-nav";
+import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 
 const FEATURES = [
   {
@@ -90,6 +92,19 @@ const STEPS = [
   { key: "step3", icon: Check },
 ];
 
+const WORKFLOW_PILLARS = [
+  { key: 'workflowFrontDesk', icon: ClipboardList },
+  { key: 'workflowWorkshop', icon: Wrench },
+  { key: 'workflowManagement', icon: LineChart },
+];
+
+const DIFFERENTIATORS = [
+  { key: 'differenceTablet', icon: Check },
+  { key: 'differencePricing', icon: Tag },
+  { key: 'differenceVisibility', icon: Users },
+  { key: 'differenceScalability', icon: Store },
+];
+
 const PRICING_TIERS = [
   { key: "pricingTier1", popular: false },
   { key: "pricingTier2", popular: true },
@@ -99,8 +114,14 @@ const PRICING_TIERS = [
 export default function HomePage() {
   const t = useTranslations("home");
   const appT = useTranslations("app");
-  const authT = useTranslations("auth");
+  const _authT = useTranslations("auth");
   const router = useRouter();
+  const [stats, setStats] = useState<{
+    totalWorkOrders: number;
+    totalCustomers: number;
+    totalVehicles: number;
+  } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -113,6 +134,16 @@ export default function HomePage() {
       }
     });
   }, [router]);
+
+  useEffect(() => {
+    fetch("/api/public/stats")
+      .then((res) => res.json())
+      .then((data) => {
+        setStats(data);
+        setStatsLoading(false);
+      })
+      .catch(() => setStatsLoading(false));
+  }, []);
 
   if (checkingAuth) {
     return (
@@ -146,44 +177,66 @@ export default function HomePage() {
               {t("heroSubtitle")}
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button size="lg" render={<Link href="/auth/signup" />} className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                render={<Link href="/auth/signup" />}
+                nativeButton={false}
+                className="w-full sm:w-auto"
+              >
                 {t("heroCtaPrimary")}
                 <ArrowRight className="ml-2 size-4" />
               </Button>
-              <Button variant="outline" size="lg" render={<Link href="#features" />} className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="lg"
+                render={<Link href="#features" />}
+                nativeButton={false}
+                className="w-full sm:w-auto"
+              >
                 {t("heroCtaSecondary")}
               </Button>
             </div>
 
             {/* Stats row */}
             <div className="mt-12 grid grid-cols-3 gap-6 border-t pt-8 sm:mt-16 sm:pt-10">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="text-center">
-                  <div className="text-2xl font-bold tracking-tight sm:text-3xl">
-                    {i === 1 && "500+"}
-                    {i === 2 && "50,000+"}
-                    {i === 3 && "5"}
+              {[1, 2, 3].map((i) => {
+                const value =
+                  i === 1
+                    ? stats?.totalWorkOrders
+                    : i === 2
+                      ? stats?.totalCustomers
+                      : stats?.totalVehicles;
+                return (
+                  <div key={i} className="text-center">
+                    {statsLoading || value === undefined ? (
+                      <>
+                        <Skeleton className="mx-auto h-9 w-20 sm:h-10" />
+                        <Skeleton className="mx-auto mt-2 h-4 w-24" />
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+                          {value.toLocaleString()}
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                          {t(`heroStats${i}`)}
+                        </div>
+                      </>
+                    )}
                   </div>
-                  <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                    {t(`heroStats${i}`)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
 
-        {/* ═══ Trust Bar ══════════════════════════════════════ */}
-        <section className="border-b bg-muted/30 px-4 py-10 sm:px-6">
-          <div className="mx-auto max-w-5xl text-center">
-            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-              {t("trustTitle")}
-            </p>
-          </div>
-        </section>
+        <PartnersSlider />
 
         {/* ═══ Features ═══════════════════════════════════════ */}
-        <section id="features" className="scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24">
+        <section
+          id="features"
+          className="scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24"
+        >
           <div className="mx-auto max-w-6xl">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
@@ -267,6 +320,95 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ═══ Workflow Details ═══════════════════════════════ */}
+        <section className="border-t px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="mx-auto max-w-3xl text-center">
+              <Badge variant="outline">{t('workflowEyebrow')}</Badge>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+                {t('workflowTitle')}
+              </h2>
+              <p className="mt-4 text-muted-foreground">
+                {t('workflowSubtitle')}
+              </p>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                {t('workflowBody')}
+              </p>
+            </div>
+
+            <div className="mt-12 grid gap-6 lg:grid-cols-3">
+              {WORKFLOW_PILLARS.map((pillar) => {
+                const Icon = pillar.icon;
+
+                return (
+                  <Card key={pillar.key} className="flex h-full flex-col">
+                    <CardHeader className="gap-3">
+                      <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10">
+                        <Icon className="size-5 text-primary" />
+                      </div>
+                      <CardTitle className="text-base">
+                        {t(`${pillar.key}Title`)}
+                      </CardTitle>
+                      <CardDescription>
+                        {t(`${pillar.key}Desc`)}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-3 pt-0">
+                      {[1, 2, 3].map((item) => (
+                        <div key={item} className="flex gap-3">
+                          <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                            <Check className="size-3 text-primary" />
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {t(`${pillar.key}Point${item}`)}
+                          </p>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ Differentiators ════════════════════════════════ */}
+        <section className="border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-6xl">
+            <div className="mx-auto max-w-3xl text-center">
+              <Badge variant="outline">{t('differenceEyebrow')}</Badge>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+                {t('differenceTitle')}
+              </h2>
+              <p className="mt-4 text-muted-foreground">
+                {t('differenceSubtitle')}
+              </p>
+            </div>
+
+            <div className="mt-12 grid gap-6 md:grid-cols-2">
+              {DIFFERENTIATORS.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <Card key={item.key} className="h-full">
+                    <CardHeader className="gap-3">
+                      <div className="flex size-11 items-center justify-center rounded-2xl border bg-background shadow-xs">
+                        <Icon className="size-5 text-primary" />
+                      </div>
+                      <CardTitle className="text-lg">
+                        {t(`${item.key}Title`)}
+                      </CardTitle>
+                      <CardDescription className="text-sm leading-6">
+                        {t(`${item.key}Desc`)}
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
         {/* ═══ Testimonials ═══════════════════════════════════ */}
         <section className="border-b px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-5xl">
@@ -333,12 +475,12 @@ export default function HomePage() {
                   <Card
                     key={tier.key}
                     className={cn(
-                      "relative flex flex-col",
+                      "relative flex flex-col overflow-visible pt-2",
                       tier.popular && "ring-2 ring-primary shadow-md",
                     )}
                   >
                     {tier.popular && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2">
                         <Badge className="pointer-events-none whitespace-nowrap bg-primary text-primary-foreground">
                           <Star className="mr-1 size-3" />
                           {t("pricingMostPopular")}
@@ -359,6 +501,7 @@ export default function HomePage() {
                         variant={tier.popular ? "default" : "outline"}
                         className="w-full"
                         render={<Link href="/auth/signup" />}
+                        nativeButton={false}
                       >
                         {t("pricingCta")}
                         <ArrowRight className="ml-2 size-4" />
@@ -372,7 +515,12 @@ export default function HomePage() {
               <p className="text-sm text-muted-foreground">
                 {t("pricingEnterprise")}
               </p>
-              <Button variant="link" render={<Link href="/pricing" />} className="mt-2">
+              <Button
+                variant="link"
+                render={<Link href="/pricing" />}
+                nativeButton={false}
+                className="mt-2"
+              >
                 {t("pricingFullLink")}
                 <ChevronRight className="ml-1 size-4" />
               </Button>
@@ -390,15 +538,24 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
               {t("ctaTitle")}
             </h2>
-            <p className="mt-4 text-muted-foreground">
-              {t("ctaSubtitle")}
-            </p>
+            <p className="mt-4 text-muted-foreground">{t("ctaSubtitle")}</p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button size="lg" render={<Link href="/auth/signup" />} className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                render={<Link href="/auth/signup" />}
+                nativeButton={false}
+                className="w-full sm:w-auto"
+              >
                 {t("ctaButton")}
                 <ArrowUpRight className="ml-2 size-4" />
               </Button>
-              <Button variant="outline" size="lg" render={<Link href="/pricing" />} className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="lg"
+                render={<Link href="/pricing" />}
+                nativeButton={false}
+                className="w-full sm:w-auto"
+              >
                 {t("navPricing")}
               </Button>
             </div>
@@ -412,7 +569,10 @@ export default function HomePage() {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {/* Brand */}
             <div className="flex flex-col gap-3">
-              <Link href="/" className="flex items-center gap-2 text-sm font-semibold">
+              <Link
+                href="/"
+                className="flex items-center gap-2 text-sm font-semibold"
+              >
                 <div className="flex size-8 items-center justify-center rounded-lg bg-primary shadow-xs">
                   <Wrench className="size-4 text-primary-foreground" />
                 </div>
@@ -421,6 +581,9 @@ export default function HomePage() {
               <p className="text-xs text-muted-foreground">
                 {t("footerTagline")}
               </p>
+              <div className="mt-2">
+                <LocaleSwitcher />
+              </div>
             </div>
 
             {/* Product */}
@@ -432,7 +595,13 @@ export default function HomePage() {
                 {["Features", "Pricing", "Integrations"].map((item) => (
                   <li key={item}>
                     <Link
-                      href={item === "Pricing" ? "/pricing" : "#features"}
+                      href={
+                        item === "Pricing"
+                          ? "/pricing"
+                          : item === "Integrations"
+                            ? "/integrations"
+                            : "#features"
+                      }
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {t(`footerProduct${item}`)}
@@ -451,7 +620,13 @@ export default function HomePage() {
                 {["About", "Blog", "Contact"].map((item) => (
                   <li key={item}>
                     <Link
-                      href="/auth/login"
+                      href={
+                        item === "About"
+                          ? "/about"
+                          : item === "Blog"
+                            ? "/blog"
+                            : "/auth/login"
+                      }
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {t(`footerCompany${item}`)}
@@ -470,7 +645,15 @@ export default function HomePage() {
                 {["Docs", "FAQ", "Status"].map((item) => (
                   <li key={item}>
                     <Link
-                      href="/auth/login"
+                      href={
+                        item === "FAQ"
+                          ? "/faq"
+                          : item === "Status"
+                            ? "/status"
+                            : item === "Docs"
+                              ? "/guide"
+                              : "/auth/login"
+                      }
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {t(`footerSupport${item}`)}

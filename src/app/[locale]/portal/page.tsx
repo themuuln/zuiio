@@ -1,14 +1,12 @@
 "use client";
 
-import { Car, CalendarClock, Wrench, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, CalendarClock, Car, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { PageErrorState, PageShellSkeleton } from "@/components/page-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
-import { cn } from "@/lib/utils";
 
 export default function PortalDashboardPage() {
   const t = useTranslations();
@@ -17,11 +15,16 @@ export default function PortalDashboardPage() {
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const { data: vehicles, isLoading: vehiclesLoading } = useQuery({
+  const {
+    data: vehicles,
+    isLoading: vehiclesLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["portal", "vehicles"],
     queryFn: async () => {
       const res = await fetch("/api/portal/vehicles", { headers });
-      if (!res.ok) return [];
+      if (!res.ok) throw new Error(t("portal.failedToLoadVehicles"));
       const json = await res.json();
       return json.data ?? [];
     },
@@ -31,16 +34,16 @@ export default function PortalDashboardPage() {
   const isLoad = authLoading || vehiclesLoading;
 
   if (isLoad) {
+    return <PageShellSkeleton cards={3} />;
+  }
+
+  if (error) {
     return (
-      <div className="flex flex-col gap-6">
-        <Skeleton className="h-8 w-56" />
-        <Skeleton className="h-4 w-72" />
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={`skeleton-${i}`} className="h-28 rounded-xl" />
-          ))}
-        </div>
-      </div>
+      <PageErrorState
+        description={error.message}
+        onRetry={() => refetch()}
+        className="min-h-[260px]"
+      />
     );
   }
 
@@ -120,15 +123,15 @@ export default function PortalDashboardPage() {
                 <Link
                   key={v.id as string}
                   href={`/portal/vehicles/${v.id}`}
-                  className="flex items-center justify-between rounded-lg border border-border/60 px-3.5 py-2.5 hover:bg-muted/40 transition-colors"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3.5 py-3 transition-colors hover:bg-muted/40"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <Car className="size-4 text-muted-foreground/60" />
-                    <div>
-                      <p className="text-sm font-medium">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
                         {v.plate_number as string}
                       </p>
-                      <p className="text-xs text-muted-foreground/70">
+                      <p className="truncate text-xs text-muted-foreground/70">
                         {v.make as string} {v.model as string}
                         {v.year ? ` · ${v.year}` : ""}
                       </p>

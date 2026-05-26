@@ -5,8 +5,7 @@ import type { ReactNode } from "react";
 import ThemeProvider from "@/components/theme-provider";
 import "./globals.css";
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -35,13 +34,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <head>
-        {process.env.NODE_ENV === "development" && (
-          <Script
-            src="//unpkg.com/react-grab/dist/index.global.js"
-            crossOrigin="anonymous"
-            strategy="beforeInteractive"
-          />
-        )}
+        <Script
+          src="//unpkg.com/react-grab/dist/index.global.js"
+          crossOrigin="anonymous"
+          strategy="beforeInteractive"
+        />
       </head>
       <body className="flex min-h-dvh flex-col">
         <ThemeProvider>{children}</ThemeProvider>
