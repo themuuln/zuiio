@@ -1,15 +1,20 @@
 "use client";
 
-import { ExternalLink, FileText, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { ExternalLink, FileText, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageErrorState, PageShellSkeleton } from "@/components/page-state";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { formatMNT } from "@/lib/utils";
 
@@ -30,13 +35,21 @@ const CAN_PAY = new Set(["sent", "overdue", "partial", "draft"]);
 export default function PortalInvoicesPage() {
   const t = useTranslations();
   const { customer, loading: authLoading, token } = usePortalAuth();
-  const [payingInvoice, setPayingInvoice] = useState<Record<string, unknown> | null>(null);
+  const [payingInvoice, setPayingInvoice] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (token) headers.Authorization = `Bearer ${token}`;
 
-  const { data: invoices, isLoading, error, refetch } = useQuery({
+  const {
+    data: invoices,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["portal", "invoices"],
     queryFn: async () => {
       const res = await fetch("/api/portal/invoices", { headers });
@@ -51,18 +64,21 @@ export default function PortalInvoicesPage() {
     if (!payingInvoice) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/portal/invoices/${payingInvoice.id as string}/pay`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...headers,
+      const res = await fetch(
+        `/api/portal/invoices/${payingInvoice.id as string}/pay`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...headers,
+          },
+          body: JSON.stringify({
+            invoiceId: payingInvoice.id,
+            amount: payingInvoice.total,
+            reference: payingInvoice.invoice_number,
+          }),
         },
-        body: JSON.stringify({
-          invoiceId: payingInvoice.id,
-          amount: payingInvoice.total,
-          reference: payingInvoice.invoice_number,
-        }),
-      });
+      );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error?.message ?? "Payment failed");
@@ -71,7 +87,9 @@ export default function PortalInvoicesPage() {
       setPayingInvoice(null);
       refetch();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("portal.paymentFailed"));
+      toast.error(
+        err instanceof Error ? err.message : t("portal.paymentFailed"),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -121,7 +139,11 @@ export default function PortalInvoicesPage() {
                     <span className="truncate text-sm font-semibold">
                       #{inv.invoice_number as string}
                     </span>
-                    <Badge variant={STATUS_VARIANTS[inv.status as string] ?? "outline"}>
+                    <Badge
+                      variant={
+                        STATUS_VARIANTS[inv.status as string] ?? "outline"
+                      }
+                    >
                       {inv.status as string}
                     </Badge>
                   </div>
@@ -145,13 +167,17 @@ export default function PortalInvoicesPage() {
                       {t("portal.payNow")}
                     </Button>
                   )}
-                  {inv.public_token as string && (
+                  {(inv.public_token as string) && (
                     <a
                       href={`/invoice/${inv.public_token}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <Button variant="outline" size="sm" className="text-xs gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs gap-1"
+                      >
                         <ExternalLink className="size-3" />
                         View
                       </Button>
@@ -166,20 +192,26 @@ export default function PortalInvoicesPage() {
 
       <Dialog
         open={!!payingInvoice}
-        onOpenChange={(open) => { if (!open) setPayingInvoice(null); }}
+        onOpenChange={(open) => {
+          if (!open) setPayingInvoice(null);
+        }}
       >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {t("portal.payInvoice")} &mdash; #{payingInvoice?.invoice_number as string}
+              {t("portal.payInvoice")} &mdash; #
+              {payingInvoice?.invoice_number as string}
             </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="rounded-lg bg-muted p-4 flex flex-col gap-2">
-              <p className="text-sm font-medium">{t("portal.bankTransferInfo")}</p>
+              <p className="text-sm font-medium">
+                {t("portal.bankTransferInfo")}
+              </p>
               <div className="text-xs text-muted-foreground flex flex-col gap-1">
                 <p className="font-medium text-foreground text-sm">
-                  {t("portal.payInvoice")}: {formatMNT(Number(payingInvoice?.total ?? 0))}
+                  {t("portal.payInvoice")}:{" "}
+                  {formatMNT(Number(payingInvoice?.total ?? 0))}
                 </p>
               </div>
             </div>

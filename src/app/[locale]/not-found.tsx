@@ -1,9 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Link } from "@/lib/i18n/navigation";
 import { PageNotFoundState } from "@/components/page-state";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/lib/i18n/navigation";
 
 export default function LocaleNotFound() {
   const t = useTranslations("common");

@@ -33,24 +33,25 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims;
 
   const pathname = request.nextUrl.pathname;
+  const normalizedPathname = pathname.replace(/^\/(mn|en)(?=\/|$)/, "") || "/";
 
-  const isAuthRoute = pathname.includes("/auth/");
-  const isInvoiceRoute = pathname.startsWith("/invoice/");
-  const isPortalRoute = pathname.startsWith("/portal");
-  const isInviteRoute = pathname.startsWith("/invite/");
-  const isPricingRoute = pathname.startsWith("/pricing");
+  const isAuthRoute = normalizedPathname.includes("/auth/");
+  const isInvoiceRoute = normalizedPathname.startsWith("/invoice/");
+  const isPortalRoute = normalizedPathname.startsWith("/portal");
+  const isInviteRoute = normalizedPathname.startsWith("/invite/");
+  const isPricingRoute = normalizedPathname.startsWith("/pricing");
   const isPublicRoute =
-    pathname === "/" ||
-    pathname.startsWith("/features") ||
-    pathname.startsWith("/products") ||
-    pathname.startsWith("/about") ||
-    pathname.startsWith("/contact") ||
-    pathname.startsWith("/faq") ||
-    pathname.startsWith("/blog") ||
-    pathname.startsWith("/status") ||
-    pathname.startsWith("/integrations") ||
-    pathname.startsWith("/services");
-  const isLoginRoute = pathname.includes("/auth/login");
+    normalizedPathname === "/" ||
+    normalizedPathname.startsWith("/features") ||
+    normalizedPathname.startsWith("/products") ||
+    normalizedPathname.startsWith("/about") ||
+    normalizedPathname.startsWith("/contact") ||
+    normalizedPathname.startsWith("/faq") ||
+    normalizedPathname.startsWith("/blog") ||
+    normalizedPathname.startsWith("/status") ||
+    normalizedPathname.startsWith("/integrations") ||
+    normalizedPathname.startsWith("/services");
+  const isLoginRoute = normalizedPathname.includes("/auth/login");
 
   if (
     !user &&

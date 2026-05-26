@@ -1,17 +1,17 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Car, ChevronRight, History, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import {
   PageErrorState,
   PageNotFoundState,
   PageShellSkeleton,
 } from "@/components/page-state";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { cn, formatMNT } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ export default function PortalVehicleDetailPage() {
   const { customer, loading: authLoading, token } = usePortalAuth();
 
   const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (token) headers.Authorization = `Bearer ${token}`;
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["portal", "vehicle", vehicleId],
@@ -88,15 +88,25 @@ export default function PortalVehicleDetailPage() {
               <Car className="size-7 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl font-semibold">{vehicle.plate_number as string}</h1>
+              <h1 className="text-xl font-semibold">
+                {vehicle.plate_number as string}
+              </h1>
               <p className="text-sm text-muted-foreground mt-0.5">
                 {vehicle.make as string} {vehicle.model as string}
                 {vehicle.year ? ` (${vehicle.year})` : ""}
               </p>
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground/70">
-                {(vehicle.vin as string) && <span>VIN: {vehicle.vin as string}</span>}
-                {(vehicle.odometer as number) && <span>{(vehicle.odometer as number)?.toLocaleString()} km</span>}
-                {(vehicle.color as string) && <span>{vehicle.color as string}</span>}
+                {(vehicle.vin as string) && (
+                  <span>VIN: {vehicle.vin as string}</span>
+                )}
+                {(vehicle.odometer as number) && (
+                  <span>
+                    {(vehicle.odometer as number)?.toLocaleString()} km
+                  </span>
+                )}
+                {(vehicle.color as string) && (
+                  <span>{vehicle.color as string}</span>
+                )}
               </div>
             </div>
           </div>
@@ -114,13 +124,15 @@ export default function PortalVehicleDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-2">
-              {upcomingServices.map((s, i) => (
+              {upcomingServices.map((s) => (
                 <div
                   key={s.id as string}
                   className="flex items-center justify-between rounded-lg border border-border/60 px-3.5 py-2.5"
                 >
                   <div>
-                    <p className="text-sm font-medium">{s.service_name as string}</p>
+                    <p className="text-sm font-medium">
+                      {s.service_name as string}
+                    </p>
                     <p className="text-xs text-muted-foreground/70 mt-0.5">
                       {s.next_due_date
                         ? `Due by ${new Date(s.next_due_date as string).toLocaleDateString()}`
@@ -131,7 +143,9 @@ export default function PortalVehicleDetailPage() {
                     </p>
                   </div>
                   {(s as { priority?: string }).priority === "urgent" && (
-                    <Badge variant="destructive" className="text-[10px]">Urgent</Badge>
+                    <Badge variant="destructive" className="text-[10px]">
+                      Urgent
+                    </Badge>
                   )}
                 </div>
               ))}
@@ -156,7 +170,8 @@ export default function PortalVehicleDetailPage() {
           ) : (
             <div className="flex flex-col gap-1">
               {workOrders.map((wo) => {
-                const style = STATUS_STYLES[wo.status as string] ?? STATUS_STYLES.Completed;
+                const style =
+                  STATUS_STYLES[wo.status as string] ?? STATUS_STYLES.Completed;
                 return (
                   <Link
                     key={wo.id as string}
@@ -164,13 +179,22 @@ export default function PortalVehicleDetailPage() {
                     className="flex items-center justify-between rounded-lg px-3.5 py-2.5 hover:bg-muted/40 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className={cn("size-2 shrink-0 rounded-full", style.dot)} />
+                      <span
+                        className={cn(
+                          "size-2 shrink-0 rounded-full",
+                          style.dot,
+                        )}
+                      />
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">
-                          {(wo.description as string) ?? (wo.complaint as string) ?? "Service"}
+                          {(wo.description as string) ??
+                            (wo.complaint as string) ??
+                            "Service"}
                         </p>
                         <p className="text-xs text-muted-foreground/60">
-                          {new Date(wo.created_at as string).toLocaleDateString()}
+                          {new Date(
+                            wo.created_at as string,
+                          ).toLocaleDateString()}
                         </p>
                       </div>
                     </div>

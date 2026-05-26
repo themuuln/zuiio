@@ -1,6 +1,11 @@
 "use client";
 
-import { AlertCircle, FileSearch, type LucideIcon, RefreshCw } from "lucide-react";
+import {
+  AlertCircle,
+  FileSearch,
+  type LucideIcon,
+  RefreshCw,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";

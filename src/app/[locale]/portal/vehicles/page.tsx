@@ -1,11 +1,11 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Car } from "lucide-react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { PageErrorState, PageShellSkeleton } from "@/components/page-state";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 
 export default function PortalVehiclesPage() {
@@ -13,9 +13,14 @@ export default function PortalVehiclesPage() {
   const { customer, loading: authLoading, token } = usePortalAuth();
 
   const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (token) headers.Authorization = `Bearer ${token}`;
 
-  const { data: vehicles, isLoading, error, refetch } = useQuery({
+  const {
+    data: vehicles,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["portal", "vehicles", "list"],
     queryFn: async () => {
       const res = await fetch("/api/portal/vehicles", { headers });

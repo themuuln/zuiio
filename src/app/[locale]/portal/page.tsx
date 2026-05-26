@@ -1,8 +1,8 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CalendarClock, Car, Wrench } from "lucide-react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { PageErrorState, PageShellSkeleton } from "@/components/page-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,7 @@ export default function PortalDashboardPage() {
   const { customer, loading: authLoading, token } = usePortalAuth();
 
   const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (token) headers.Authorization = `Bearer ${token}`;
 
   const {
     data: vehicles,
@@ -79,7 +79,9 @@ export default function PortalDashboardPage() {
             <Wrench className="size-4 text-muted-foreground/60" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{customer?.total_visits ?? 0}</p>
+            <p className="text-2xl font-semibold">
+              {customer?.total_visits ?? 0}
+            </p>
           </CardContent>
         </Card>
         <Card>

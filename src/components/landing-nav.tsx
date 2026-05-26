@@ -11,11 +11,10 @@ import {
   Wrench,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { useTranslations } from "next-intl";
-
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -198,7 +197,9 @@ export function LandingNav() {
           <LocaleSwitcher />
           <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
             <SheetTrigger
-              render={<Button variant="ghost" size="icon-sm" className="md:hidden" />}
+              render={
+                <Button variant="ghost" size="icon-sm" className="md:hidden" />
+              }
             >
               <Menu className="size-4" />
               <span className="sr-only">{t("navOpenMenu")}</span>

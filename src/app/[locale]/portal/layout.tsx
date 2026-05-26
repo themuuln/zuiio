@@ -4,10 +4,10 @@ import { Car, FileText, LogOut, Settings, Wrench } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -66,7 +66,10 @@ export default function PortalLayout({
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
-        <Link href="/portal" className="flex items-center gap-2 font-semibold text-base">
+        <Link
+          href="/portal"
+          className="flex items-center gap-2 font-semibold text-base"
+        >
           <Wrench className="size-4 text-primary" />
           TOLOM
         </Link>
@@ -74,7 +77,12 @@ export default function PortalLayout({
           <span className="hidden text-sm text-muted-foreground md:inline">
             {customer.full_name ?? customer.first_name ?? "Customer"}
           </span>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1.5 text-xs">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="gap-1.5 text-xs"
+          >
             <LogOut className="size-3.5" />
             {t("common.logout") ?? "Logout"}
           </Button>
@@ -88,7 +96,8 @@ export default function PortalLayout({
             const isActive =
               item.href === "/portal"
                 ? pathname === item.href
-                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                : pathname === item.href ||
+                  pathname.startsWith(`${item.href}/`);
 
             return (
               <Link

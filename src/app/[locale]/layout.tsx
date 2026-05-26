@@ -67,8 +67,8 @@ export default async function LocaleLayout({
                 duration: 4000,
               }}
             />
-        </QueryProvider>
-      </NextIntlClientProvider>
+          </QueryProvider>
+        </NextIntlClientProvider>
       </TooltipProvider>
     </div>
   );
