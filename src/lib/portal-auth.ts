@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { handleApiError, UnauthorizedError } from "@/lib/errors";
+import { authRateLimiter } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -33,7 +34,9 @@ export async function authenticatePortalRequest(
     const supabase = await createClient();
     const { data } = await supabase
       .from("customers")
-      .select("id, organization_id, first_name, last_name, phone, email, portal_token, customer_user_id")
+      .select(
+        "id, organization_id, first_name, last_name, phone, email, portal_token, customer_user_id",
+      )
       .eq("portal_token", tokenMatch[1])
       .is("deleted_at", null)
       .maybeSingle();
@@ -47,7 +50,9 @@ export async function authenticatePortalRequest(
   if (user) {
     const { data } = await supabase
       .from("customers")
-      .select("id, organization_id, first_name, last_name, phone, email, portal_token")
+      .select(
+        "id, organization_id, first_name, last_name, phone, email, portal_token",
+      )
       .eq("customer_user_id", user.id)
       .is("deleted_at", null)
       .maybeSingle();
@@ -75,6 +80,23 @@ export function createPortalRouteHandler(handler: PortalRouteHandler) {
     request: NextRequest,
     context?: { params: Promise<Record<string, string>> },
   ) => {
+    // Rate limiting: prevent brute force and DoS on portal token endpoints
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+    const rateCheck = authRateLimiter.check(ip);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+            ),
+          },
+        },
+      );
+    }
+
     try {
       const customer = await authenticatePortalRequest(request);
       if (!customer) throw new UnauthorizedError();

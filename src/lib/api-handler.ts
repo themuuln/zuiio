@@ -1,7 +1,10 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import { type NextRequest, NextResponse } from "next/server";
-import { UnauthorizedError } from "@/lib/errors";
-import { handleApiError } from "@/lib/errors";
+import type { NextRequest, NextResponse } from "next/server";
+import {
+  ForbiddenError,
+  handleApiError,
+  UnauthorizedError,
+} from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -58,6 +61,20 @@ export function createRouteHandler(
       const params = await context.params;
       const orgId = options?.requireOrg === false ? "" : (params.id ?? "");
 
+      // Verify org membership when orgId is present
+      if (orgId) {
+        const { data: membership } = await supabase
+          .from("organization_users")
+          .select("organization_id")
+          .eq("user_id", user.id)
+          .eq("organization_id", orgId)
+          .maybeSingle();
+
+        if (!membership) {
+          throw new ForbiddenError("Not a member of this organization");
+        }
+      }
+
       return await handler({ request, params, orgId, user, supabase });
     } catch (error) {
       return handleApiError(error);
@@ -73,9 +90,7 @@ interface SimpleHandlerContext {
   supabase: SupabaseClient;
 }
 
-type SimpleRouteHandler = (
-  ctx: SimpleHandlerContext,
-) => Promise<NextResponse>;
+type SimpleRouteHandler = (ctx: SimpleHandlerContext) => Promise<NextResponse>;
 
 /**
  * For routes that don't need orgId extraction (profile, org list, etc.)
