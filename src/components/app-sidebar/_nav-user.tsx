@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { SettingsIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +32,8 @@ export function NavUser() {
   const displayName = profile?.fullName ?? "User";
   const email = profile?.email ?? "";
   const initials = getInitials(profile?.fullName);
+
+  const router = useRouter();
 
   const handleSignOut = async () => {
     await fetch("/auth/signout", { method: "POST" });
@@ -72,6 +76,13 @@ export function NavUser() {
           </div>
         </div>
         <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => router.push("/dashboard/settings")}
+          className="gap-2 text-xs"
+        >
+          <SettingsIcon />
+          <span>Settings</span>
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={handleSignOut}
           className="text-destructive focus:text-destructive gap-2 text-xs"

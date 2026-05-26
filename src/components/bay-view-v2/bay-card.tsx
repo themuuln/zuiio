@@ -144,9 +144,8 @@ export function BayCard({
       className={cn("h-full", isOver && "ring-2 ring-primary/20")}
     >
       <Card
-        size="sm"
         className={cn(
-          "relative h-full transition-all py-0 gap-0",
+          "relative h-full min-h-[145px] transition-all py-0 gap-0",
           wo
             ? "border-border/80 bg-card"
             : "border-dashed border-muted-foreground/25 bg-muted/10",
@@ -210,9 +209,14 @@ export function BayCard({
                   )}
                 </div>
               </DraggableVehicleWrapper>
-              
+
               <div className="mt-0 flex min-h-[20px] items-center gap-1 border-t border-border/10 pt-1.5">
-                <MechanicBadge workOrderId={wo.id} mechanic={wo.mechanic} disabled={isPending} compact />
+                <MechanicBadge
+                  workOrderId={wo.id}
+                  mechanic={wo.mechanic}
+                  disabled={isPending}
+                  compact
+                />
               </div>
             </CardContent>
 
@@ -298,7 +302,7 @@ export function BayCard({
           <Button
             variant="ghost"
             onClick={() => onAssignClick?.(bay.bayNumber)}
-            className="flex flex-1 flex-col items-center justify-center gap-1 px-3 py-3 h-auto text-center"
+            className="flex flex-1 flex-col items-center justify-center gap-1 px-3 py-3 h-auto min-h-[130px] text-center"
           >
             <div className="flex size-7 items-center justify-center border border-dashed border-muted-foreground/30 bg-background/80">
               <Plus className="size-3 text-muted-foreground/40" />

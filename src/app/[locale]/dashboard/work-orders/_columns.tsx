@@ -26,9 +26,9 @@ const STATUS_NAMES: Record<string, string> = {
   Cancelled: "statusCancelled",
 };
 
-const STATUS_OPTIONS = Object.keys(STATUS_NAMES).filter((s) => s !== "Cancelled");
-
-
+const STATUS_OPTIONS = Object.keys(STATUS_NAMES).filter(
+  (s) => s !== "Cancelled",
+);
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -69,7 +69,9 @@ interface ColumnCallbacks {
   updatePending: boolean;
 }
 
-export function createColumns(cb: ColumnCallbacks): ColumnDef<WorkOrderListItem>[] {
+export function createColumns(
+  cb: ColumnCallbacks,
+): ColumnDef<WorkOrderListItem>[] {
   return [
     {
       accessorKey: "id",
@@ -137,7 +139,10 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<WorkOrderListItem>
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Badge variant="outline" className="gap-1.5 cursor-pointer hover:opacity-80 transition-opacity">
+                <Badge
+                  variant="outline"
+                  className="gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
+                >
                   {wo.status}
                   <ArrowUpDown className="size-3 opacity-60" />
                 </Badge>
@@ -234,7 +239,8 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<WorkOrderListItem>
       ),
       cell: ({ row }) => {
         const val = row.original.gross_profit;
-        if (val === undefined) return <span className="text-muted-foreground">—</span>;
+        if (val === undefined)
+          return <span className="text-muted-foreground">—</span>;
         return (
           <span
             className={`text-sm font-medium tabular-nums ${
@@ -256,7 +262,8 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<WorkOrderListItem>
       header: "Margin",
       cell: ({ row }) => {
         const val = row.original.margin_percent;
-        if (val === undefined) return <span className="text-muted-foreground">–</span>;
+        if (val === undefined)
+          return <span className="text-muted-foreground">–</span>;
         return (
           <span
             className={`text-sm tabular-nums ${
@@ -286,7 +293,11 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<WorkOrderListItem>
               }
             />
             <DropdownMenuContent align="end" className="min-w-[140px]">
-              <DropdownMenuItem onClick={() => window.location.href = `/dashboard/work-orders/${wo.id}`}>
+              <DropdownMenuItem
+                onClick={() =>
+                  (window.location.href = `/dashboard/work-orders/${wo.id}`)
+                }
+              >
                 View Details
               </DropdownMenuItem>
               {wo.status !== "Cancelled" && (

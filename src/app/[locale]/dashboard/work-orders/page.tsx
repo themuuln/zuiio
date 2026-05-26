@@ -240,12 +240,20 @@ export default function WorkOrdersPage() {
   }, [orders, now]);
 
   useEffect(() => {
-    registerTab("stats", "Stats", (
-      <StatusSummary items={statusCounts} title="Work Orders" />
-    ));
-    registerTab("activity", "Activity", (
-      <RecentList items={todayWOs} title="Today" emptyMessage="No work orders today" />
-    ));
+    registerTab(
+      "stats",
+      "Stats",
+      <StatusSummary items={statusCounts} title="Work Orders" />,
+    );
+    registerTab(
+      "activity",
+      "Activity",
+      <RecentList
+        items={todayWOs}
+        title="Today"
+        emptyMessage="No work orders today"
+      />,
+    );
     setOpen(true);
   }, [registerTab, setOpen, statusCounts, todayWOs]);
 
@@ -411,9 +419,7 @@ export default function WorkOrdersPage() {
               <ClipboardList />
             </EmptyMedia>
             <EmptyTitle>{t("workOrders.noWorkOrders")}</EmptyTitle>
-            <EmptyDescription>
-              {t("workOrders.subtitle")}
-            </EmptyDescription>
+            <EmptyDescription>{t("workOrders.subtitle")}</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
             <Link href="/dashboard/work-orders/new">

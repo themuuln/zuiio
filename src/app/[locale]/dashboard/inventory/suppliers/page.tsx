@@ -10,6 +10,7 @@ import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable } from "@/components/ui/data-table";
 import {
   Empty,
   EmptyContent,
@@ -17,19 +18,12 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
 import { useDeleteSupplier, useSuppliers } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Supplier } from "@/lib/types";
+import { createColumns } from "./_columns";
 
 export default function SuppliersPage() {
   const t = useTranslations("inventory");
@@ -70,6 +64,11 @@ export default function SuppliersPage() {
       toast.error(t("failedToDelete"));
     }
   };
+
+  const columns = useMemo(
+    () => createColumns({ onDelete: handleDelete }),
+    [handleDelete],
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -136,68 +135,12 @@ export default function SuppliersPage() {
               </EmptyContent>
             </Empty>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    {t("name")}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    {t("contactPerson")}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    {t("phone")}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    {t("email")}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-center font-medium text-muted-foreground">
-                    {t("actions")}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border">
-                {filtered.map((s) => (
-                  <TableRow
-                    key={s.id}
-                    className="transition-colors hover:bg-muted/30"
-                  >
-                    <TableCell className="px-4 py-3 font-medium">
-                      <Link
-                        href={`/dashboard/inventory/suppliers/${s.id}`}
-                        className="hover:underline"
-                      >
-                        {s.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-muted-foreground">
-                      {s.contact_person ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">{s.phone ?? "—"}</TableCell>
-                    <TableCell className="px-4 py-3 text-muted-foreground">
-                      {s.email ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Link href={`/dashboard/inventory/suppliers/${s.id}`}>
-                          <Button variant="ghost" size="sm">
-                            {t("edit")}
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive"
-                          onClick={() => handleDelete(s.id)}
-                        >
-                          {t("delete")}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={filtered}
+              getRowId={(row) => row.id}
+              pageSize={20}
+            />
           )}
         </CardContent>
       </Card>

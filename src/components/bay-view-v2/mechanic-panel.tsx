@@ -95,7 +95,7 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
   const availableMechanics = mechanics.filter((m) => m.current_jobs === 0);
 
   return (
-    <Card size="sm" className="bg-card/90">
+    <Card size="sm" variant="naked">
       <CardHeader className="gap-2 border-b border-border/40">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm">Mechanic Roster</CardTitle>

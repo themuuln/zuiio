@@ -55,7 +55,6 @@ function RightSidebarPanel({
 }) {
   return (
     <div data-no-dnd="true" className="flex min-h-0 flex-1 flex-col">
-
       <Tabs
         value={activeTab}
         onValueChange={onSelect}
@@ -63,7 +62,7 @@ function RightSidebarPanel({
       >
         <TabsList
           variant="line"
-          className="mt-3 h-auto w-full justify-start gap-1 rounded-2xl p-1"
+          className="sticky top-0 z-10 mt-3 h-auto w-full justify-start gap-1 rounded-2xl bg-background p-1"
         >
           {tabs.map((tab) => (
             <TabsTrigger

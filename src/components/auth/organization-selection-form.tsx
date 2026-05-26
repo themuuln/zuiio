@@ -1,7 +1,7 @@
 "use client";
 
 import { Building2, KeyRound, Loader2 } from "lucide-react";
-import { useActionState, useMemo, useState } from "react";
+import { useEffect, useActionState, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { CompleteOrganizationLoginState } from "@/lib/actions/complete-organization-login";
 import type { UserOrganizationAccessOption } from "@/lib/services/organization-access-service";
@@ -50,6 +50,12 @@ export function OrganizationSelectionForm({
       ) ?? null,
     [organizationId, organizations],
   );
+
+  useEffect(() => {
+    if (state?.redirectTo) {
+      window.location.replace(state.redirectTo);
+    }
+  }, [state?.redirectTo]);
 
   if (organizations.length === 0) {
     return (

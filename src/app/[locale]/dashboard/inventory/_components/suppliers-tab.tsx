@@ -4,19 +4,13 @@ import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import type { ColumnDef } from "@tanstack/react-table";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import type { Supplier } from "@/lib/types";
@@ -35,7 +29,11 @@ interface SuppliersTabProps {
   onSearchChange: (value: string) => void;
 }
 
-export function SuppliersTab({ orgId, search, onSearchChange }: SuppliersTabProps) {
+export function SuppliersTab({
+  orgId,
+  search,
+  onSearchChange,
+}: SuppliersTabProps) {
   const t = useTranslations("inventory");
   const now = useClientNow();
   const { data: suppliers = [], isLoading } = useSuppliers(orgId);
@@ -65,6 +63,81 @@ export function SuppliersTab({ orgId, search, onSearchChange }: SuppliersTabProp
     { key: "phone", label: "Phone" },
     { key: "email", label: "Email" },
   ];
+
+  const columns: ColumnDef<Supplier>[] = useMemo(
+    () => [
+      {
+        accessorKey: "name",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Name" />
+        ),
+        cell: ({ row }) => (
+          <span className="font-medium">{row.original.name}</span>
+        ),
+      },
+      {
+        accessorKey: "contact_person",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Contact" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            {row.original.contact_person ?? "—"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "phone",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Phone" />
+        ),
+      },
+      {
+        accessorKey: "email",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Email" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            {row.original.email ?? "—"}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        header: "",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div
+            className="flex items-center justify-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setEditingSupplier(row.original);
+                setShowAddSupplier(true);
+              }}
+              title="Edit"
+            >
+              <Pencil className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDeleteSupplier(row.original.id)}
+              className="text-destructive/70 hover:text-destructive"
+              title="Delete"
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
 
   function handleSaveSupplier(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -162,70 +235,12 @@ export function SuppliersTab({ orgId, search, onSearchChange }: SuppliersTabProp
       ) : (
         <Card>
           <CardContent className="overflow-x-auto p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Name
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Contact
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Phone
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Email
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-center font-medium text-muted-foreground">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSuppliers.map((s) => (
-                  <TableRow
-                    key={s.id}
-                    className="border-b border-border transition-colors hover:bg-muted/30"
-                  >
-                    <TableCell className="px-4 py-3 font-medium">
-                      {s.name}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-muted-foreground">
-                      {s.contact_person ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">{s.phone ?? "—"}</TableCell>
-                    <TableCell className="px-4 py-3 text-muted-foreground">
-                      {s.email ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setEditingSupplier(s);
-                            setShowAddSupplier(true);
-                          }}
-                          title="Edit"
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteSupplier(s.id)}
-                          className="text-destructive/70 hover:text-destructive"
-                          title="Delete"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={filteredSuppliers}
+              getRowId={(row) => row.id}
+              pageSize={20}
+            />
           </CardContent>
         </Card>
       )}

@@ -1,18 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
 import type { ExportColumn } from "@/lib/export";
 import { formatCurrency } from "@/lib/utils";
 import { EmptyFinanceState } from "./_empty-finance-state";
@@ -44,6 +39,12 @@ function formatDate(iso: string) {
   } catch {
     return iso;
   }
+}
+
+function getGrandTotal(wo: WorkOrderRow) {
+  const svcTotal = wo.services.reduce((s, x) => s + Number(x.final_price), 0);
+  const prtTotal = wo.parts.reduce((s, x) => s + Number(x.final_price), 0);
+  return { svcTotal, prtTotal, grandTotal: svcTotal + prtTotal };
 }
 
 export function TransactionsTab({
@@ -78,17 +79,13 @@ export function TransactionsTab({
       key: "services",
       label: "Services",
       format: "currency",
-      value: (wo) => {
-        return wo.services.reduce((s, x) => s + Number(x.final_price), 0);
-      },
+      value: (wo) => wo.services.reduce((s, x) => s + Number(x.final_price), 0),
     },
     {
       key: "parts",
       label: "Parts",
       format: "currency",
-      value: (wo) => {
-        return wo.parts.reduce((s, x) => s + Number(x.final_price), 0);
-      },
+      value: (wo) => wo.parts.reduce((s, x) => s + Number(x.final_price), 0),
     },
     {
       key: "grand_total",
@@ -103,6 +100,122 @@ export function TransactionsTab({
     },
     { key: "created_at", label: "Date", format: "date" },
   ];
+
+  const columns: ColumnDef<WorkOrderRow>[] = useMemo(
+    () => [
+      {
+        accessorKey: "id",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="#" />
+        ),
+        cell: ({ row }) => (
+          <span className="font-mono text-xs">
+            {row.original.id.slice(0, 8)}...
+          </span>
+        ),
+      },
+      {
+        id: "customer",
+        accessorFn: (row) => {
+          const c = row.customer;
+          return c ? `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() : "";
+        },
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Customer" />
+        ),
+      },
+      {
+        id: "vehicle",
+        accessorFn: (row) => row.vehicle?.plate_number ?? "",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Vehicle" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            {row.original.vehicle?.plate_number ?? "\u2014"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Status" />
+        ),
+        cell: ({ row }) => (
+          <Badge variant="outline">{row.original.status}</Badge>
+        ),
+      },
+      {
+        id: "services",
+        accessorFn: (row) =>
+          row.services.reduce((s, x) => s + Number(x.final_price), 0),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Services" />
+        ),
+        cell: ({ row }) => {
+          const { svcTotal } = getGrandTotal(row.original);
+          return (
+            <span className="tabular-nums">{formatCurrency(svcTotal)}</span>
+          );
+        },
+      },
+      {
+        id: "parts",
+        accessorFn: (row) =>
+          row.parts.reduce((s, x) => s + Number(x.final_price), 0),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Parts" />
+        ),
+        cell: ({ row }) => {
+          const { prtTotal } = getGrandTotal(row.original);
+          return (
+            <span className="tabular-nums">{formatCurrency(prtTotal)}</span>
+          );
+        },
+      },
+      {
+        id: "grand_total",
+        accessorFn: (row) => {
+          const svc = row.services.reduce(
+            (s, x) => s + Number(x.final_price),
+            0,
+          );
+          const prt = row.parts.reduce((s, x) => s + Number(x.final_price), 0);
+          return svc + prt;
+        },
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Total" />
+        ),
+        cell: ({ row }) => {
+          const { grandTotal } = getGrandTotal(row.original);
+          return (
+            <span className="font-semibold tabular-nums">
+              {formatCurrency(grandTotal)}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "created_at",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Date" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            {formatDate(row.original.created_at)}
+          </span>
+        ),
+      },
+    ],
+    [],
+  );
+
+  const emptyMessage =
+    filteredWorkOrders.length === 0 && search
+      ? "No work orders match your search"
+      : !data?.recentWorkOrders || data.recentWorkOrders.length === 0
+        ? "No work orders in this period"
+        : null;
 
   return (
     <>
@@ -134,115 +247,19 @@ export function TransactionsTab({
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    #
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    Customer
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    Vehicle
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    Status
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    Services
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    Parts
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    Total
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    Date
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredWorkOrders.length === 0 && search ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      className="px-5 py-16 text-center text-muted-foreground"
-                    >
-                      No work orders match your search
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  (!data?.recentWorkOrders ||
-                    data.recentWorkOrders.length === 0) && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={8}
-                        className="px-5 py-16 text-center text-muted-foreground"
-                      >
-                        No work orders in this period
-                      </TableCell>
-                    </TableRow>
-                  )
-                )}
-                {filteredWorkOrders.map((wo) => {
-                  const svcTotal = (
-                    wo.services as Array<{ final_price: number }>
-                  ).reduce(
-                    (sum: number, s: { final_price: number }) =>
-                      sum + Number(s.final_price),
-                    0,
-                  );
-                  const prtTotal = (
-                    wo.parts as Array<{ final_price: number }>
-                  ).reduce(
-                    (sum: number, p: { final_price: number }) =>
-                      sum + Number(p.final_price),
-                    0,
-                  );
-                  const grandTotal = svcTotal + prtTotal;
-
-                  return (
-                    <TableRow
-                      key={wo.id}
-                      className="border-b border-border transition-colors hover:bg-muted/30"
-                    >
-                      <TableCell className="px-5 py-3.5 font-mono text-xs">
-                        {wo.id.slice(0, 8)}...
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5">
-                        {wo.customer
-                          ? `${wo.customer.first_name} ${wo.customer.last_name ?? ""}`.trim()
-                          : "\u2014"}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-muted-foreground">
-                        {wo.vehicle?.plate_number ?? "\u2014"}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5">
-                        <Badge variant="outline">
-                          {wo.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-right tabular-nums">
-                        {formatCurrency(svcTotal)}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-right tabular-nums">
-                        {formatCurrency(prtTotal)}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-right font-semibold tabular-nums">
-                        {formatCurrency(grandTotal)}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-right text-muted-foreground">
-                        {formatDate(wo.created_at)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            columns={columns}
+            data={filteredWorkOrders}
+            getRowId={(row) => row.id}
+            pageSize={20}
+            emptyState={
+              emptyMessage ? (
+                <div className="px-5 py-16 text-center text-muted-foreground">
+                  {emptyMessage}
+                </div>
+              ) : undefined
+            }
+          />
         </CardContent>
       </Card>
     </>

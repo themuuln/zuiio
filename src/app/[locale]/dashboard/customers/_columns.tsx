@@ -135,8 +135,6 @@ export const columns: ColumnDef<CustomerRow>[] = [
     id: "chevron",
     header: "",
     enableSorting: false,
-    cell: () => (
-      <ChevronRight className="size-4 text-muted-foreground/40" />
-    ),
+    cell: () => <ChevronRight className="size-4 text-muted-foreground/40" />,
   },
 ];

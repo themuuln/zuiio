@@ -13,14 +13,9 @@ import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ChartConfig } from "@/components/ui/chart";
 import { AreaChart } from "@/components/charts/area-chart";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
+import { useMemo } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
 import { formatCurrency } from "@/lib/utils";
 import type { RevenueTrendPoint } from "@/lib/types";
 import { EmptyFinanceState } from "./_empty-finance-state";
@@ -206,16 +201,20 @@ export function OverviewTab({
       {/* Revenue Trend Chart */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{t('dashboard.revenueTrend')}</CardTitle>
+          <CardTitle className="text-base">
+            {t("dashboard.revenueTrend")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {revenueTrend.length > 0 ? (
             <AreaChart
               data={revenueTrend as unknown as Record<string, unknown>[]}
-              config={{
-                revenue: { label: "Revenue", color: "#3b82f6" },
-                workOrders: { label: "Work Orders", color: "#22c55e" },
-              } satisfies ChartConfig}
+              config={
+                {
+                  revenue: { label: "Revenue", color: "#3b82f6" },
+                  workOrders: { label: "Work Orders", color: "#22c55e" },
+                } satisfies ChartConfig
+              }
               xKey="date"
               series={[
                 { key: "revenue", color: "#3b82f6" },
@@ -248,42 +247,53 @@ export function OverviewTab({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                      Service
-                    </TableHead>
-                    <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                      Count
-                    </TableHead>
-                    <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                      Revenue
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {topServices.slice(0, 8).map((svc) => (
-                    <TableRow
-                      key={svc.name}
-                      className="border-b border-border transition-colors hover:bg-muted/30"
-                    >
-                      <TableCell className="px-5 py-3.5">{svc.name}</TableCell>
-                      <TableCell className="px-5 py-3.5 text-right tabular-nums">
-                        {svc.count}
-                      </TableCell>
-                      <TableCell className="px-5 py-3.5 text-right font-medium tabular-nums">
-                        {formatCurrency(svc.revenue)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <TopServicesTable services={topServices} />
           </CardContent>
         </Card>
       )}
     </>
+  );
+}
+
+function TopServicesTable({ services }: { services: TopService[] }) {
+  const columns: ColumnDef<TopService>[] = useMemo(
+    () => [
+      {
+        accessorKey: "name",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Service" />
+        ),
+      },
+      {
+        accessorKey: "count",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Count" />
+        ),
+        cell: ({ row }) => (
+          <span className="tabular-nums">{row.original.count}</span>
+        ),
+      },
+      {
+        accessorKey: "revenue",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Revenue" />
+        ),
+        cell: ({ row }) => (
+          <span className="font-medium tabular-nums">
+            {formatCurrency(row.original.revenue)}
+          </span>
+        ),
+      },
+    ],
+    [],
+  );
+
+  return (
+    <DataTable
+      columns={columns}
+      data={services.slice(0, 8)}
+      getRowId={(row) => row.name}
+      pageSize={8}
+    />
   );
 }

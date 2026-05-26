@@ -1,12 +1,12 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { AppError, UnauthorizedError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import { activateOrganizationAccess } from "@/lib/services/organization-access-service";
 
 export interface CompleteOrganizationLoginState {
   error?: string;
+  redirectTo?: string;
 }
 
 export async function completeOrganizationLogin(
@@ -34,5 +34,5 @@ export async function completeOrganizationLogin(
   }
 
   const redirectToUrl = formData.get("redirectTo") as string | null;
-  redirect(redirectToUrl || "/dashboard/bay-view");
+  return { redirectTo: redirectToUrl || "/dashboard/bay-view" };
 }

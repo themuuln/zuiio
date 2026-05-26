@@ -1,10 +1,10 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 interface LoginState {
   error?: string;
+  redirectTo?: string;
 }
 
 export async function login(
@@ -24,5 +24,5 @@ export async function login(
   const params = redirectTo
     ? `?redirectTo=${encodeURIComponent(redirectTo)}`
     : "";
-  redirect(`/auth/select-organization${params}`);
+  return { redirectTo: `/auth/select-organization${params}` };
 }

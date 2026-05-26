@@ -227,7 +227,8 @@ function HeaderBreadcrumbs() {
 function QuickCreateActions() {
   const t = useTranslations();
   const { push } = useRouter();
-  const { setNewCustomerDialogOpen } = usePageHeader();
+  const { setNewCustomerDialogOpen, setNewVehicleDialogOpen } =
+    usePageHeader();
 
   const items = [
     {
@@ -241,9 +242,9 @@ function QuickCreateActions() {
       onClick: () => setNewCustomerDialogOpen(true),
     },
     {
-      href: "/dashboard/vehicles/new",
       label: t("dashboard.newVehicle"),
       icon: Car,
+      onClick: () => setNewVehicleDialogOpen(true),
     },
   ];
 

@@ -2,7 +2,7 @@
 
 import { Loader2, LogIn } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useActionState } from "react";
+import { useEffect, useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +23,12 @@ export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(login, { error: "" });
   const searchParams = useSearchParams();
   const redirectTo = searchParams?.get("redirectTo") ?? "";
+
+  useEffect(() => {
+    if (state?.redirectTo) {
+      window.location.replace(state.redirectTo);
+    }
+  }, [state?.redirectTo]);
 
   const handleLanguageSwitch = (newLocale: "mn" | "en") => {
     if (newLocale === locale) return;

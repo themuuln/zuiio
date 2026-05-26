@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import BrandThemeProvider from "@/components/brand-theme-provider";
 import { NewCustomerDialog } from "@/components/new-customer-dialog";
+import { NewVehicleDialog } from "@/components/new-vehicle-dialog";
 import { PageHeader } from "@/components/page-header";
 import { RightSidebar } from "@/components/right-sidebar";
 import { SubscriptionGuard } from "@/components/subscription-guard";
@@ -27,14 +28,24 @@ function DashboardHeader() {
 }
 
 function GlobalDialogs() {
-  const { isNewCustomerDialogOpen, setNewCustomerDialogOpen } =
-    usePageHeader();
+  const {
+    isNewCustomerDialogOpen,
+    setNewCustomerDialogOpen,
+    isNewVehicleDialogOpen,
+    setNewVehicleDialogOpen,
+  } = usePageHeader();
 
   return (
-    <NewCustomerDialog
-      open={isNewCustomerDialogOpen}
-      onOpenChange={setNewCustomerDialogOpen}
-    />
+    <>
+      <NewCustomerDialog
+        open={isNewCustomerDialogOpen}
+        onOpenChange={setNewCustomerDialogOpen}
+      />
+      <NewVehicleDialog
+        open={isNewVehicleDialogOpen}
+        onOpenChange={setNewVehicleDialogOpen}
+      />
+    </>
   );
 }
 

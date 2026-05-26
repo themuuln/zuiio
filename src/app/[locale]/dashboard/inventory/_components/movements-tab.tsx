@@ -5,20 +5,14 @@ import { ClipboardList } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import type { ColumnDef } from "@tanstack/react-table";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
 import { useClientNow } from "@/hooks/use-client-now";
 import {
   useCreateMovement,
@@ -27,88 +21,228 @@ import {
 import type { InventoryMovement, PartsCatalogItem } from "@/lib/types";
 import type { ExportColumn } from "@/lib/export";
 import { formatMNT } from "@/lib/utils";
-import {
-  MOVEMENT_COLORS,
-  MOVEMENT_FILTER_TYPES,
-  MOVEMENT_LABELS,
-  formatDate,
-} from "./constants";
+import { MOVEMENT_COLORS, MOVEMENT_LABELS, formatDate } from "./constants";
 import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
 
 // API returns part_name joined on movements
 type MovementRow = InventoryMovement & { part_name: string };
-type MovementFormData = {
-  part_id: string;
-  movement_type: string;
-  quantity: number;
-  unit_cost?: number;
-  notes?: string;
-};
 
 interface MovementsTabProps {
   orgId: string;
   search: string;
   onSearchChange: (value: string) => void;
-  parts: PartsCatalogItem[];
+  movementFilter: string;
+  onMovementFilterChange: (filter: string) => void;
 }
 
-export function MovementsTab({ orgId, search, onSearchChange, parts }: MovementsTabProps) {
-  const locale = useLocale();
+export function MovementsTab({
+  orgId,
+  search,
+  onSearchChange,
+  movementFilter,
+  onMovementFilterChange,
+}: MovementsTabProps) {
+  // const locale = useLocale();
   const t = useTranslations("inventory");
   const now = useClientNow();
-  const [movementFilter, setMovementFilter] = useState("");
-  const [showAddMovement, setShowAddMovement] = useState(false);
 
-  const { data: movements = [], isLoading } = useInventoryMovements(
-    orgId,
-    movementFilter || undefined,
-  );
+  const { data: movements = [], isLoading } = useInventoryMovements(orgId);
   const createMovement = useCreateMovement(orgId);
 
-  const movementChips: FilterChip[] = useMemo(
+  const [showAddMovement, setShowAddMovement] = useState(false);
+  const [movementForm, setMovementForm] = useState({
+    part_id: "",
+    part_name: "",
+    quantity: "",
+    unit_cost: "",
+    movement_type: "purchase",
+    notes: "",
+  });
+  const [parts, setParts] = useState<PartsCatalogItem[]>([]);
+  const [partsSearch, setPartsSearch] = useState("");
+
+  const movementFilterChips: FilterChip[] = useMemo(
     () =>
-      MOVEMENT_FILTER_TYPES.map((type) => ({
-        key: type || "all",
-        label: type ? (MOVEMENT_LABELS[type] ?? type) : "All",
-        active: movementFilter === type,
-        onClick: () => setMovementFilter(type),
-      })),
-    [movementFilter],
+      ["all", "purchase", "sale", "adjustment", "return", "waste"].map(
+        (key) => ({
+          key,
+          label:
+            key === "all"
+              ? "All"
+              : (MOVEMENT_LABELS[key as keyof typeof MOVEMENT_LABELS] ?? key),
+          active: movementFilter === key,
+          onClick: () => onMovementFilterChange(key),
+        }),
+      ),
+    [movementFilter, onMovementFilterChange],
   );
+
+  const filteredMovements = useMemo(() => {
+    let list = movements;
+    if (movementFilter && movementFilter !== "all") {
+      list = list.filter((m) => m.movement_type === movementFilter);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (m) =>
+          ("part_name" in m &&
+            (m as MovementRow).part_name.toLowerCase().includes(q)) ||
+          (m.notes ?? "").toLowerCase().includes(q) ||
+          (m.reference_type ?? "").toLowerCase().includes(q),
+      );
+    }
+    return list as MovementRow[];
+  }, [movements, movementFilter, search]);
 
   const movementExportColumns: ExportColumn<MovementRow>[] = [
     { key: "created_at", label: "Date", format: "date" },
-    { key: "movement_type", label: "Type" },
+    {
+      key: "movement_type",
+      label: "Type",
+      value: (m) => MOVEMENT_LABELS[m.movement_type] ?? m.movement_type,
+    },
     { key: "part_name", label: "Part" },
-    { key: "quantity", label: "Qty" },
-    { key: "unit_cost", label: "Unit Cost", format: "currency" },
-    { key: "reference_type", label: "Ref" },
+    { key: "quantity", label: "Qty", format: "number" },
+    { key: "unit_cost", label: "Unit Cost", format: "number" },
+    { key: "reference_type", label: "Reference" },
     { key: "notes", label: "Notes" },
   ];
 
-  function handleAddMovement(e: React.SyntheticEvent<HTMLFormElement>) {
+  const columns: ColumnDef<MovementRow>[] = useMemo(
+    () => [
+      {
+        id: "date",
+        accessorKey: "created_at",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Date" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {formatDate(row.original.created_at)}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "movement_type",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Type" />
+        ),
+        cell: ({ row }) => (
+          <Badge variant="outline">
+            {MOVEMENT_LABELS[row.original.movement_type] ??
+              row.original.movement_type}
+          </Badge>
+        ),
+      },
+      {
+        id: "part_name",
+        accessorKey: "part_name",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Part" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm font-medium">{row.original.part_name}</span>
+        ),
+      },
+      {
+        accessorKey: "quantity",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Qty" />
+        ),
+        cell: ({ row }) => (
+          <span className="font-semibold tabular-nums">
+            {row.original.quantity}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "unit_cost",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Unit Cost" />
+        ),
+        cell: ({ row }) => (
+          <span className="tabular-nums">
+            {row.original.unit_cost ? formatMNT(row.original.unit_cost) : "—"}
+          </span>
+        ),
+      },
+      {
+        id: "reference",
+        accessorKey: "reference_type",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Ref" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {row.original.reference_type ?? "—"}
+          </span>
+        ),
+      },
+      {
+        id: "notes",
+        accessorKey: "notes",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Notes" />
+        ),
+        cell: ({ row }) => (
+          <span className="max-w-[200px] truncate text-xs text-muted-foreground">
+            {row.original.notes ?? "—"}
+          </span>
+        ),
+      },
+    ],
+    [],
+  );
+
+  async function handleRecordMovement(e: React.FormEvent) {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
-    const body: MovementFormData = {
-      part_id: form.get("part_id") as string,
-      movement_type: form.get("movement_type") as string,
-      quantity: Number(form.get("quantity")),
-      unit_cost: form.get("unit_cost")
-        ? Number(form.get("unit_cost"))
+    if (!movementForm.part_id || !movementForm.quantity) return;
+
+    const body = {
+      part_id: movementForm.part_id,
+      quantity: parseInt(movementForm.quantity),
+      movement_type: movementForm.movement_type,
+      unit_cost: movementForm.unit_cost
+        ? parseFloat(movementForm.unit_cost)
         : undefined,
-      notes: (form.get("notes") as string) || undefined,
+      notes: movementForm.notes || undefined,
     };
+
     createMovement.mutate(body, {
       onSuccess: () => {
         toast.success("Movement recorded");
         setShowAddMovement(false);
+        setMovementForm({
+          part_id: "",
+          part_name: "",
+          quantity: "",
+          unit_cost: "",
+          movement_type: "purchase",
+          notes: "",
+        });
       },
       onError: (err: Error) => toast.error(err.message),
     });
   }
 
-  const activeParts = parts.filter((p) => p.is_active);
+  async function searchParts(q: string) {
+    setPartsSearch(q);
+    if (q.length < 2) {
+      setParts([]);
+      return;
+    }
+    try {
+      const r = await fetch(
+        `/api/organizations/${orgId}/inventory/parts?q=${encodeURIComponent(q)}&limit=10`,
+      );
+      const d = await r.json();
+      setParts(d.data ?? []);
+    } catch {
+      setParts([]);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -118,19 +252,22 @@ export function MovementsTab({ orgId, search, onSearchChange, parts }: Movements
           value: search,
           onChange: onSearchChange,
         }}
-        filters={<FilterChips items={movementChips} />}
-        stats={<span>{movements.length} movements</span>}
+        filters={<FilterChips items={movementFilterChips} />}
+        stats={
+          <span>
+            {filteredMovements.length} {t("movements")}
+          </span>
+        }
         actions={
           <div className="flex items-center gap-2">
             <ExportButton
-              data={movements as MovementRow[]}
+              data={filteredMovements}
               columns={movementExportColumns}
               filename={`inventory-movements-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Movements"
             />
             <Button size="lg" onClick={() => setShowAddMovement(true)}>
-              <ClipboardList className="size-4" />
-              {t("recordMovement")}
+              Record Movement
             </Button>
           </div>
         }
@@ -148,62 +285,12 @@ export function MovementsTab({ orgId, search, onSearchChange, parts }: Movements
       ) : (
         <Card>
           <CardContent className="overflow-x-auto p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Date
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Type
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Part
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Qty
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                    Unit Cost
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Ref
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Notes
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(movements as MovementRow[]).map((m) => (
-                  <TableRow key={m.id} className="border-b border-border">
-                    <TableCell className="px-4 py-3 text-muted-foreground text-xs">
-                      {formatDate(m.created_at)}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <Badge variant="outline">
-                        {MOVEMENT_LABELS[m.movement_type] ?? m.movement_type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-sm font-medium">
-                      {m.part_name}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 font-semibold tabular-nums">
-                      {m.quantity}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right tabular-nums">
-                      {m.unit_cost ? formatMNT(m.unit_cost) : "—"}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-muted-foreground text-xs">
-                      {m.reference_type ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-muted-foreground text-xs max-w-[200px] truncate">
-                      {m.notes ?? "—"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={filteredMovements}
+              getRowId={(row) => row.id}
+              pageSize={20}
+            />
           </CardContent>
         </Card>
       )}
@@ -212,94 +299,119 @@ export function MovementsTab({ orgId, search, onSearchChange, parts }: Movements
       {showAddMovement && (
         <Modal
           title="Record Stock Movement"
-          onClose={() => setShowAddMovement(false)}
+          onClose={() => {
+            setShowAddMovement(false);
+            setMovementForm({
+              part_id: "",
+              part_name: "",
+              quantity: "",
+              unit_cost: "",
+              movement_type: "purchase",
+              notes: "",
+            });
+            setParts([]);
+            setPartsSearch("");
+          }}
         >
-          <form onSubmit={handleAddMovement} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="inv-part-select"
-                className="text-sm font-medium"
-              >
-                Part *
-              </label>
+          <form onSubmit={handleRecordMovement} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">Part *</label>
+              <Input
+                placeholder="Search parts..."
+                value={partsSearch}
+                onChange={(e) => searchParts(e.target.value)}
+              />
+              {parts.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {parts.map((p) => (
+                    <Button
+                      key={p.id}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setMovementForm((prev) => ({
+                          ...prev,
+                          part_id: p.id,
+                          part_name: p.name,
+                        }));
+                        setParts([]);
+                        setPartsSearch(p.name);
+                      }}
+                    >
+                      {p.name}
+                    </Button>
+                  ))}
+                </div>
+              )}
+              {movementForm.part_id && !partsSearch && (
+                <p className="text-sm text-muted-foreground">
+                  Selected: {movementForm.part_name}
+                </p>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium">Quantity *</label>
+                <Input
+                  type="number"
+                  min="1"
+                  required
+                  value={movementForm.quantity}
+                  onChange={(e) =>
+                    setMovementForm((prev) => ({
+                      ...prev,
+                      quantity: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium">Unit Cost</label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="₮"
+                  value={movementForm.unit_cost}
+                  onChange={(e) =>
+                    setMovementForm((prev) => ({
+                      ...prev,
+                      unit_cost: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">Movement Type</label>
               <select
-                id="inv-part-select"
-                name="part_id"
-                required
-                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                value={movementForm.movement_type}
+                onChange={(e) =>
+                  setMovementForm((prev) => ({
+                    ...prev,
+                    movement_type: e.target.value,
+                  }))
+                }
+                className="h-11 rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <option value="">Select part</option>
-                {activeParts.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {locale === "mn" && p.name_mn ? p.name_mn : p.name} (
-                    {p.part_number ?? "no #"})
+                {Object.entries(MOVEMENT_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
                   </option>
                 ))}
               </select>
             </div>
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="inv-movement-type"
-                className="text-sm font-medium"
-              >
-                Movement Type *
-              </label>
-              <select
-                id="inv-movement-type"
-                name="movement_type"
-                required
-                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
-              >
-                <option value="">Select type</option>
-                <option value="purchase">Purchase (stock in)</option>
-                <option value="sale">Sale (stock out)</option>
-                <option value="adjustment">Adjustment</option>
-                <option value="return">Return to Supplier</option>
-                <option value="waste">Waste / Damaged</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-2">
-                <label htmlFor="inv-quantity" className="text-sm font-medium">
-                  Quantity *
-                </label>
-                <Input
-                  id="inv-quantity"
-                  name="quantity"
-                  type="number"
-                  required
-                  min="1"
-                  className="h-11"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label
-                  htmlFor="inv-unit-cost"
-                  className="text-sm font-medium"
-                >
-                  Unit Cost (₮)
-                </label>
-                <Input
-                  id="inv-unit-cost"
-                  name="unit_cost"
-                  type="number"
-                  min="0"
-                  className="h-11"
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="inv-movement-notes"
-                className="text-sm font-medium"
-              >
-                Notes
-              </label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">Notes</label>
               <Input
-                id="inv-movement-notes"
-                name="notes"
-                placeholder="Optional notes"
-                className="h-11"
+                value={movementForm.notes}
+                onChange={(e) =>
+                  setMovementForm((prev) => ({
+                    ...prev,
+                    notes: e.target.value,
+                  }))
+                }
               />
             </div>
             <div className="flex justify-end gap-3 pt-2">

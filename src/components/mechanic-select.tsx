@@ -57,8 +57,7 @@ export function MechanicSelect({
   className,
   size = "default",
 }: MechanicSelectProps) {
-  const selectedMechanic =
-    mechanics.find((m) => m.id === value) ?? null;
+  const selectedMechanic = mechanics.find((m) => m.id === value) ?? null;
 
   return (
     <div className={className}>

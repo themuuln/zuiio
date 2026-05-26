@@ -9,18 +9,13 @@ import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable } from "@/components/ui/data-table";
 import type { ExportColumn } from "@/lib/export";
 import { useInventoryBalances } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import type { InventoryBalanceWithAvgCost } from "@/lib/types";
+
+import { columns } from "./_columns";
+import type { ValuationRow } from "./_columns";
 
 export default function ValuationPage() {
   const t = useTranslations("inventory");
@@ -39,7 +34,7 @@ export default function ValuationPage() {
     return Array.from(set).sort();
   }, [balances]);
 
-  const filtered = useMemo(() => {
+  const filtered: ValuationRow[] = useMemo(() => {
     let list = [...balances];
     if (categoryFilter) {
       list = list.filter((b) => b.category === categoryFilter);
@@ -64,9 +59,7 @@ export default function ValuationPage() {
     [filtered],
   );
 
-  const exportColumns: ExportColumn<
-    InventoryBalanceWithAvgCost & { avgUnitCost: number; totalValue: number }
-  >[] = [
+  const exportColumns: ExportColumn<ValuationRow>[] = [
     { key: "part_name", label: t("partName") },
     { key: "category", label: t("category") },
     { key: "quantity_on_hand", label: t("onHand") },
@@ -157,56 +150,14 @@ export default function ValuationPage() {
               <p className="text-muted-foreground">{t("noValuationData")}</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    {t("partName")}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    {t("category")}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                    {t("onHand")}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                    {t("avgUnitCost")}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                    {t("totalValue")}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border">
-                {filtered.map((b) => (
-                  <TableRow
-                    key={b.part_id}
-                    className="transition-colors hover:bg-muted/30"
-                  >
-                    <TableCell className="px-4 py-3 font-medium">
-                      <div>
-                        <p>{b.part_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {b.part_number ?? "—"}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-muted-foreground">
-                      {b.category ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right tabular-nums">
-                      {b.quantity_on_hand} {b.unit}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right tabular-nums">
-                      {b.avgUnitCost.toLocaleString("mn-MN")} ₮
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right font-semibold tabular-nums">
-                      {b.totalValue.toLocaleString("mn-MN")} ₮
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={filtered}
+              getRowId={(row) =>
+                row.part_id ?? row.part_name ?? Math.random().toString()
+              }
+              pageSize={20}
+            />
           )}
         </CardContent>
       </Card>

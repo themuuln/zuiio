@@ -238,7 +238,7 @@ export function QueuePanel({
   });
 
   return (
-    <Card size="sm" className="flex h-full min-h-0 flex-col bg-card/90">
+    <Card size="sm" variant="naked" className="flex h-full min-h-0 flex-col">
       <CardHeader className="gap-3 border-b border-border/40">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">

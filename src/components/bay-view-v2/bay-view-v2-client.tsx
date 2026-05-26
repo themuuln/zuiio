@@ -558,201 +558,203 @@ export function BayViewV2Client() {
       onDragEnd={onDragEnd}
     >
       <div className="flex h-full flex-col bg-muted/20">
-        <div className="border-b border-border/50 bg-background/95 p-4 backdrop-blur">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <StatChip
-              label={t("totalBays")}
-              value={data.bayCount}
-              dotClassName="bg-muted-foreground/40"
-            />
-            <StatChip
-              label={t("occupied")}
-              value={occupiedBays}
-              dotClassName="bg-emerald-500"
-            />
-            <StatChip
-              label={t("available")}
-              value={availableBays}
-              dotClassName="bg-blue-500"
-            />
+        <div className="flex flex-1 flex-col overflow-y-auto">
+          <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 p-4 backdrop-blur">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <StatChip
+                label={t("totalBays")}
+                value={data.bayCount}
+                dotClassName="bg-muted-foreground/40"
+              />
+              <StatChip
+                label={t("occupied")}
+                value={occupiedBays}
+                dotClassName="bg-emerald-500"
+              />
+              <StatChip
+                label={t("available")}
+                value={availableBays}
+                dotClassName="bg-blue-500"
+              />
 
-            <div className="flex h-8 items-center gap-1 border border-border/60 bg-card p-1">
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      type="button"
-                      size="icon-xs"
-                      variant="ghost"
-                      onClick={() => setShowVehicleReg(true)}
-                    />
-                  }
-                >
-                  <Car className="size-3" />
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  {t("registerVehicle")}
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      type="button"
-                      size="icon-xs"
-                      variant="ghost"
-                      onClick={() => setShowMechanicReg(true)}
-                    />
-                  }
-                >
-                  <Wrench className="size-3" />
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  {t("registerMechanic")}
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      type="button"
-                      size="icon-xs"
-                      variant="ghost"
-                      onClick={() => setShowShiftReport(true)}
-                    />
-                  }
-                >
-                  <LayoutDashboard className="size-3" />
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  {t("shiftReport")}
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      type="button"
-                      size="icon-xs"
-                      variant="ghost"
-                      onClick={() => setShowPinSettings(true)}
-                    />
-                  }
-                >
-                  <KeyRound className="size-3" />
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  {t("bayPinSettings")}
-                </TooltipContent>
-              </Tooltip>
-            </div>
+              <div className="flex h-8 items-center gap-1 border border-border/60 bg-card p-1">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        size="icon-xs"
+                        variant="ghost"
+                        onClick={() => setShowVehicleReg(true)}
+                      />
+                    }
+                  >
+                    <Car className="size-3" />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {t("registerVehicle")}
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        size="icon-xs"
+                        variant="ghost"
+                        onClick={() => setShowMechanicReg(true)}
+                      />
+                    }
+                  >
+                    <Wrench className="size-3" />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {t("registerMechanic")}
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        size="icon-xs"
+                        variant="ghost"
+                        onClick={() => setShowShiftReport(true)}
+                      />
+                    }
+                  >
+                    <LayoutDashboard className="size-3" />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {t("shiftReport")}
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        size="icon-xs"
+                        variant="ghost"
+                        onClick={() => setShowPinSettings(true)}
+                      />
+                    }
+                  >
+                    <KeyRound className="size-3" />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {t("bayPinSettings")}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
 
-            <div className="ml-auto flex flex-wrap items-center gap-2">
-              {userIsMechanic && (
+              <div className="ml-auto flex flex-wrap items-center gap-2">
+                {userIsMechanic && (
+                  <Button
+                    type="button"
+                    size="default"
+                    variant={myJobsOnly ? "default" : "outline"}
+                    onClick={() => setMyJobsOnly(!myJobsOnly)}
+                  >
+                    {myJobsOnly ? t("myJobs") : t("allJobs")}
+                  </Button>
+                )}
+
                 <Button
                   type="button"
+                  size="icon"
+                  variant="outline"
+                  onClick={() => setOpen(true)}
+                  title={t("showSidebar")}
+                >
+                  <PanelRightOpen className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  onClick={() => fetchData(true)}
+                  title={t("refresh")}
+                >
+                  <RefreshCw className="size-4" />
+                </Button>
+
+                <ToggleGroup
+                  multiple={false}
+                  value={[viewMode]}
+                  onValueChange={(value) => {
+                    if (value.length > 0) setViewMode(value[0] as ViewMode);
+                  }}
+                  variant="outline"
                   size="default"
-                  variant={myJobsOnly ? "default" : "outline"}
-                  onClick={() => setMyJobsOnly(!myJobsOnly)}
+                  className="overflow-hidden rounded-lg bg-card p-0 [&>[data-slot=toggle-group-item]]:size-9 [&>[data-slot=toggle-group-item]]:aspect-square [&>[data-slot=toggle-group-item]]:min-w-0 [&>[data-slot=toggle-group-item]]:px-0"
                 >
-                  {myJobsOnly ? t("myJobs") : t("allJobs")}
-                </Button>
-              )}
+                  {VIEW_OPTIONS.map((opt) => {
+                    const Icon = opt.icon;
+                    return (
+                      <Tooltip key={opt.mode}>
+                        <TooltipTrigger
+                          render={
+                            <ToggleGroupItem
+                              value={opt.mode}
+                              aria-label={t(opt.labelKey)}
+                              className="size-9 aspect-square min-w-0 px-0"
+                            />
+                          }
+                        >
+                          <Icon className="size-4" />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          {t(opt.labelKey)}
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </ToggleGroup>
 
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                onClick={() => setOpen(true)}
-                title={t("showSidebar")}
-              >
-                <PanelRightOpen className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                onClick={() => fetchData(true)}
-                title={t("refresh")}
-              >
-                <RefreshCw className="size-4" />
-              </Button>
-
-              <ToggleGroup
-                multiple={false}
-                value={[viewMode]}
-                onValueChange={(value) => {
-                  if (value.length > 0) setViewMode(value[0] as ViewMode);
-                }}
-                variant="outline"
-                size="default"
-                className="overflow-hidden rounded-lg bg-card p-0 [&>[data-slot=toggle-group-item]]:size-9 [&>[data-slot=toggle-group-item]]:aspect-square [&>[data-slot=toggle-group-item]]:min-w-0 [&>[data-slot=toggle-group-item]]:px-0"
-              >
-                {VIEW_OPTIONS.map((opt) => {
-                  const Icon = opt.icon;
-                  return (
-                    <Tooltip key={opt.mode}>
-                      <TooltipTrigger
-                        render={
-                          <ToggleGroupItem
-                            value={opt.mode}
-                            aria-label={t(opt.labelKey)}
-                            className="size-9 aspect-square min-w-0 px-0"
-                          />
-                        }
-                      >
-                        <Icon className="size-4" />
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        {t(opt.labelKey)}
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </ToggleGroup>
-
-              <div className="flex h-9 items-center gap-1 border border-border/60 bg-card px-2">
-                <Button
-                  type="button"
-                  size="icon-xs"
-                  variant="ghost"
-                  onClick={async () => {
-                    await handleBayCountChange(data.bayCount - 1);
-                    await fetchData(false);
-                  }}
-                  disabled={data.bayCount <= 1}
-                >
-                  <Minus className="size-3" />
-                </Button>
-                <span className="min-w-[20px] text-center text-xs font-semibold tabular-nums text-foreground">
-                  {data.bayCount}
-                </span>
-                <Button
-                  type="button"
-                  size="icon-xs"
-                  variant="ghost"
-                  onClick={async () => {
-                    await handleBayCountChange(data.bayCount + 1);
-                    await fetchData(false);
-                  }}
-                  disabled={data.bayCount >= 50}
-                >
-                  <Plus className="size-3" />
-                </Button>
+                <div className="flex h-9 items-center gap-1 border border-border/60 bg-card px-2">
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    onClick={async () => {
+                      await handleBayCountChange(data.bayCount - 1);
+                      await fetchData(false);
+                    }}
+                    disabled={data.bayCount <= 1}
+                  >
+                    <Minus className="size-3" />
+                  </Button>
+                  <span className="min-w-[20px] text-center text-xs font-semibold tabular-nums text-foreground">
+                    {data.bayCount}
+                  </span>
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    onClick={async () => {
+                      await handleBayCountChange(data.bayCount + 1);
+                      await fetchData(false);
+                    }}
+                    disabled={data.bayCount >= 50}
+                  >
+                    <Plus className="size-3" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex flex-1 flex-col">
             {viewMode === "grid" && (
               <div className="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2 xl:grid-cols-3">
                 {filteredBays.map((bay) => (
                   <BayCard
                     key={bay.bayNumber}
                     bay={bay}
-                    isPending={bay.workOrder ? !!pendingWoIds[bay.workOrder.id] : false}
+                    isPending={
+                      bay.workOrder ? !!pendingWoIds[bay.workOrder.id] : false
+                    }
                     onStatusChange={handleStatusClick}
                     onRemoveFromBay={handleRemoveFromBay}
                     onOpenDetail={handleOpenDetail}
@@ -791,7 +793,11 @@ export function BayViewV2Client() {
                             <BayCard
                               key={bay.bayNumber}
                               bay={bay}
-                              isPending={bay.workOrder ? !!pendingWoIds[bay.workOrder.id] : false}
+                              isPending={
+                                bay.workOrder
+                                  ? !!pendingWoIds[bay.workOrder.id]
+                                  : false
+                              }
                               onStatusChange={handleStatusClick}
                               onRemoveFromBay={handleRemoveFromBay}
                               onOpenDetail={handleOpenDetail}
