@@ -31,6 +31,7 @@ export default function InventoryPage() {
   const { registerTab, setOpen } = useRightSidebar();
   const [tab, setTab] = useState<Tab>("parts");
   const [search, setSearch] = useState("");
+  const [movementFilter, setMovementFilter] = useState("all");
 
   // Data for sidebar + cross-tab coordination
   const { data: parts = [] } = usePartsCatalog(orgId ?? undefined);
@@ -144,7 +145,8 @@ export default function InventoryPage() {
           orgId={orgId}
           search={search}
           onSearchChange={setSearch}
-          parts={parts}
+          movementFilter={movementFilter}
+          onMovementFilterChange={setMovementFilter}
         />
       )}
       {tab === "suppliers" && (

@@ -68,11 +68,12 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
           className="flex items-center justify-center gap-1"
           onClick={(e) => e.stopPropagation()}
         >
-          <Button variant="ghost" size="sm" asChild>
-            <a href={`/dashboard/inventory/suppliers/${row.original.id}`}>
-              Edit
-            </a>
-          </Button>
+          <a
+            href={`/dashboard/inventory/suppliers/${row.original.id}`}
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-8 px-3"
+          >
+            Edit
+          </a>
           <Button
             variant="ghost"
             size="sm"

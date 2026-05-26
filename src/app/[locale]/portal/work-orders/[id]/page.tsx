@@ -1,17 +1,24 @@
 "use client";
 
-import { ArrowLeft, Calendar, ClipboardList, History, Wrench } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  ArrowLeft,
+  Calendar,
+  ClipboardList,
+  History,
+  Wrench,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import {
   PageErrorState,
   PageNotFoundState,
   PageShellSkeleton,
 } from "@/components/page-state";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { cn, formatMNT } from "@/lib/utils";
 
@@ -116,7 +123,7 @@ export default function PortalWorkOrderDetailPage() {
   const { customer, loading: authLoading, token } = usePortalAuth();
 
   const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (token) headers.Authorization = `Bearer ${token}`;
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["portal", "work-order", workOrderId],
@@ -181,7 +188,12 @@ export default function PortalWorkOrderDetailPage() {
                   variant="secondary"
                   className={cn("text-[11px]", style.bg)}
                 >
-                  <span className={cn("mr-1 inline-block size-1.5 rounded-full", style.dot)} />
+                  <span
+                    className={cn(
+                      "mr-1 inline-block size-1.5 rounded-full",
+                      style.dot,
+                    )}
+                  />
                   {data.status}
                 </Badge>
               </div>
@@ -194,15 +206,22 @@ export default function PortalWorkOrderDetailPage() {
                   <span>{data.odometer_at_service.toLocaleString()} km</span>
                 )}
                 {data.started_at && (
-                  <span>Started: {new Date(data.started_at).toLocaleDateString()}</span>
+                  <span>
+                    Started: {new Date(data.started_at).toLocaleDateString()}
+                  </span>
                 )}
                 {data.completed_at && (
-                  <span>Completed: {new Date(data.completed_at).toLocaleDateString()}</span>
+                  <span>
+                    Completed:{" "}
+                    {new Date(data.completed_at).toLocaleDateString()}
+                  </span>
                 )}
               </div>
             </div>
             <div className="shrink-0 text-right">
-              <p className="text-lg font-bold tabular-nums">{formatMNT(Number(data.total))}</p>
+              <p className="text-lg font-bold tabular-nums">
+                {formatMNT(Number(data.total))}
+              </p>
               <p className="text-[10px] text-muted-foreground/60">Total</p>
             </div>
           </div>
@@ -249,29 +268,48 @@ export default function PortalWorkOrderDetailPage() {
         </CardHeader>
         <CardContent>
           {data.services.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">No services added.</p>
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              No services added.
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs text-muted-foreground/70">
-                    <th className="pb-2 font-medium">{t("common.description") ?? "Service"}</th>
-                    <th className="pb-2 font-medium text-right">{t("common.quantity") ?? "Qty"}</th>
-                    <th className="pb-2 font-medium text-right">{t("common.unitPrice") ?? "Unit Price"}</th>
-                    <th className="pb-2 font-medium text-right">{t("common.total") ?? "Total"}</th>
+                    <th className="pb-2 font-medium">
+                      {t("common.description") ?? "Service"}
+                    </th>
+                    <th className="pb-2 font-medium text-right">
+                      {t("common.quantity") ?? "Qty"}
+                    </th>
+                    <th className="pb-2 font-medium text-right">
+                      {t("common.unitPrice") ?? "Unit Price"}
+                    </th>
+                    <th className="pb-2 font-medium text-right">
+                      {t("common.total") ?? "Total"}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.services.map((s) => (
-                    <tr key={s.id} className="border-b border-border/40 last:border-0">
+                    <tr
+                      key={s.id}
+                      className="border-b border-border/40 last:border-0"
+                    >
                       <td className="py-2.5 pr-4">
                         <p className="font-medium">{s.service_name}</p>
                         {s.notes && (
-                          <p className="text-xs text-muted-foreground/60 mt-0.5">{s.notes}</p>
+                          <p className="text-xs text-muted-foreground/60 mt-0.5">
+                            {s.notes}
+                          </p>
                         )}
                       </td>
-                      <td className="py-2.5 px-2 text-right tabular-nums">{s.quantity}</td>
-                      <td className="py-2.5 px-2 text-right tabular-nums">{formatMNT(Number(s.unit_price))}</td>
+                      <td className="py-2.5 px-2 text-right tabular-nums">
+                        {s.quantity}
+                      </td>
+                      <td className="py-2.5 px-2 text-right tabular-nums">
+                        {formatMNT(Number(s.unit_price))}
+                      </td>
                       <td className="py-2.5 pl-2 text-right tabular-nums font-semibold">
                         {formatMNT(Number(s.final_price))}
                       </td>
@@ -298,27 +336,46 @@ export default function PortalWorkOrderDetailPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs text-muted-foreground/70">
-                    <th className="pb-2 font-medium">{t("common.description") ?? "Part"}</th>
-                    <th className="pb-2 font-medium">{t("common.unitPrice") ?? "Part #"}</th>
-                    <th className="pb-2 font-medium text-right">{t("common.quantity") ?? "Qty"}</th>
-                    <th className="pb-2 font-medium text-right">{t("common.unitPrice") ?? "Unit Price"}</th>
-                    <th className="pb-2 font-medium text-right">{t("common.total") ?? "Total"}</th>
+                    <th className="pb-2 font-medium">
+                      {t("common.description") ?? "Part"}
+                    </th>
+                    <th className="pb-2 font-medium">
+                      {t("common.unitPrice") ?? "Part #"}
+                    </th>
+                    <th className="pb-2 font-medium text-right">
+                      {t("common.quantity") ?? "Qty"}
+                    </th>
+                    <th className="pb-2 font-medium text-right">
+                      {t("common.unitPrice") ?? "Unit Price"}
+                    </th>
+                    <th className="pb-2 font-medium text-right">
+                      {t("common.total") ?? "Total"}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.parts.map((p) => (
-                    <tr key={p.id} className="border-b border-border/40 last:border-0">
+                    <tr
+                      key={p.id}
+                      className="border-b border-border/40 last:border-0"
+                    >
                       <td className="py-2.5 pr-4">
                         <p className="font-medium">{p.part_name}</p>
                         {p.notes && (
-                          <p className="text-xs text-muted-foreground/60 mt-0.5">{p.notes}</p>
+                          <p className="text-xs text-muted-foreground/60 mt-0.5">
+                            {p.notes}
+                          </p>
                         )}
                       </td>
                       <td className="py-2.5 pr-4 text-xs text-muted-foreground/70">
                         {p.part_number ?? "—"}
                       </td>
-                      <td className="py-2.5 px-2 text-right tabular-nums">{p.quantity}</td>
-                      <td className="py-2.5 px-2 text-right tabular-nums">{formatMNT(Number(p.unit_price))}</td>
+                      <td className="py-2.5 px-2 text-right tabular-nums">
+                        {p.quantity}
+                      </td>
+                      <td className="py-2.5 px-2 text-right tabular-nums">
+                        {formatMNT(Number(p.unit_price))}
+                      </td>
                       <td className="py-2.5 pl-2 text-right tabular-nums font-semibold">
                         {formatMNT(Number(p.final_price))}
                       </td>
@@ -343,7 +400,8 @@ export default function PortalWorkOrderDetailPage() {
           <CardContent>
             <div className="flex flex-col gap-0">
               {data.status_history.map((entry, idx) => {
-                const entryStyle = STATUS_STYLES[entry.status] ?? STATUS_STYLES.Completed;
+                const entryStyle =
+                  STATUS_STYLES[entry.status] ?? STATUS_STYLES.Completed;
                 const isLast = idx === data.status_history.length - 1;
                 return (
                   <div key={entry.id} className="flex gap-3">
@@ -354,17 +412,25 @@ export default function PortalWorkOrderDetailPage() {
                           entryStyle.dot.replace("animate-pulse", ""),
                         )}
                       />
-                      {!isLast && <div className="w-px flex-1 bg-border/60 my-0.5" />}
+                      {!isLast && (
+                        <div className="w-px flex-1 bg-border/60 my-0.5" />
+                      )}
                     </div>
-                    <div className={cn("pb-4 min-w-0 flex-1", isLast && "pb-0")}>
+                    <div
+                      className={cn("pb-4 min-w-0 flex-1", isLast && "pb-0")}
+                    >
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium">{entry.status}</span>
+                        <span className="text-sm font-medium">
+                          {entry.status}
+                        </span>
                         <span className="text-[10px] text-muted-foreground/50">
                           {new Date(entry.created_at).toLocaleString()}
                         </span>
                       </div>
                       {entry.notes && (
-                        <p className="text-xs text-muted-foreground/70 mt-0.5">{entry.notes}</p>
+                        <p className="text-xs text-muted-foreground/70 mt-0.5">
+                          {entry.notes}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -397,7 +463,9 @@ export default function PortalWorkOrderDetailPage() {
                         #{inv.invoice_number}
                       </span>
                       <Badge
-                        variant={INVOICE_STATUS_VARIANTS[inv.status] ?? "outline"}
+                        variant={
+                          INVOICE_STATUS_VARIANTS[inv.status] ?? "outline"
+                        }
                         className="text-[10px]"
                       >
                         {inv.status}
@@ -407,7 +475,9 @@ export default function PortalWorkOrderDetailPage() {
                       {inv.issued_at
                         ? new Date(inv.issued_at).toLocaleDateString()
                         : ""}
-                      {inv.due_at ? ` · Due: ${new Date(inv.due_at).toLocaleDateString()}` : ""}
+                      {inv.due_at
+                        ? ` · Due: ${new Date(inv.due_at).toLocaleDateString()}`
+                        : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
