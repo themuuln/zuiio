@@ -326,7 +326,7 @@ export default function NewVehiclePage() {
                 className="mb-1 block text-sm font-medium"
                 htmlFor="plateNumber"
               >
-                {t("plate")}
+                {t("plate")} <span className="text-destructive">*</span>
               </label>
               <Input
                 id="plateNumber"
@@ -349,7 +349,7 @@ export default function NewVehiclePage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="vin">
-                {t("vin")}
+                {t("vin")} <span className="text-muted-foreground">(optional)</span>
               </label>
               <Input
                 id="vin"
@@ -366,7 +366,7 @@ export default function NewVehiclePage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="make">
-                {t("make")}
+                {t("make")} <span className="text-destructive">*</span>
               </label>
               <Input
                 id="make"
@@ -381,10 +381,15 @@ export default function NewVehiclePage() {
                 aria-invalid={!!fieldErrors.make}
                 placeholder="Toyota"
               />
+              {fieldErrors.make && (
+                <p className="mt-1 text-xs text-destructive">
+                  {fieldErrors.make}
+                </p>
+              )}
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="model">
-                {t("model")}
+                {t("model")} <span className="text-destructive">*</span>
               </label>
               <Input
                 id="model"
@@ -399,11 +404,6 @@ export default function NewVehiclePage() {
                 aria-invalid={!!fieldErrors.model}
                 placeholder="Prius"
               />
-              {fieldErrors.make && (
-                <p className="mt-1 text-xs text-destructive">
-                  {fieldErrors.make}
-                </p>
-              )}
               {fieldErrors.model && (
                 <p className="mt-1 text-xs text-destructive">
                   {fieldErrors.model}

@@ -50,7 +50,7 @@ export default function CustomerLoginPage() {
             <input type="hidden" name="redirectTo" value={redirectTo} />
 
             <Field>
-              <FieldLabel htmlFor="email">{t("portal.email")}</FieldLabel>
+              <FieldLabel htmlFor="email">{t("portal.email")} <span className="text-destructive">*</span></FieldLabel>
               <Input
                 id="email"
                 name="email"
@@ -68,7 +68,7 @@ export default function CustomerLoginPage() {
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="password">{t("portal.password")}</FieldLabel>
+              <FieldLabel htmlFor="password">{t("portal.password")} <span className="text-destructive">*</span></FieldLabel>
               <Input
                 id="password"
                 name="password"

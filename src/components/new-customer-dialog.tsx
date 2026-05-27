@@ -229,7 +229,7 @@ export function NewCustomerDialog({
                     className="mb-1 block text-sm font-medium"
                     htmlFor="type"
                   >
-                    {t("type")}
+                    {t("type")} <span className="text-destructive">*</span>
                   </Label>
                   <NativeSelect
                     id="type"
@@ -256,6 +256,7 @@ export function NewCustomerDialog({
                         htmlFor="companyName"
                       >
                         {t("companyName")}
+                        {!form.type || form.type === "company" ? <span className="text-destructive">*</span> : null}
                       </Label>
                       <Input
                         id="companyName"
@@ -304,7 +305,7 @@ export function NewCustomerDialog({
                         className="mb-1 block text-sm font-medium"
                         htmlFor="firstName"
                       >
-                        {t("firstName")}
+                        {t("firstName")} <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="firstName"

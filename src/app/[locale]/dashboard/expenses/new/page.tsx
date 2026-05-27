@@ -56,6 +56,7 @@ export default function NewExpensePage() {
   const { data: categories } = useExpenseCategories(orgId ?? undefined);
   const createExpense = useCreateExpense(orgId ?? undefined);
   const [form, setForm] = useState<ExpenseFormState>(initialForm);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -65,11 +66,13 @@ export default function NewExpensePage() {
       return;
     }
 
+    const errors: Record<string, string> = {};
+    if (!form.description.trim()) errors.description = "Description is required";
     const amount = parseFloat(form.amount);
-    if (Number.isNaN(amount) || amount <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
+    if (!form.amount.trim()) errors.amount = "Amount is required";
+    else if (Number.isNaN(amount) || amount <= 0) errors.amount = "Enter a valid amount";
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     const taxAmount = form.taxAmount ? parseFloat(form.taxAmount) : 0;
 
@@ -162,7 +165,7 @@ export default function NewExpensePage() {
                   htmlFor="description"
                   className="mb-1 block text-sm font-medium"
                 >
-                  {t("description")} *
+                  {t("description")} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="description"
@@ -173,10 +176,14 @@ export default function NewExpensePage() {
                       description: e.target.value,
                     }))
                   }
-                  className="h-11"
+                  className={`h-11 ${fieldErrors.description ? "border-destructive" : ""}`}
                   placeholder={t("descriptionPlaceholder")}
                   required
+                  aria-invalid={!!fieldErrors.description}
                 />
+                {fieldErrors.description && (
+                  <p className="text-xs text-destructive mt-1">{fieldErrors.description}</p>
+                )}
               </div>
 
               <div>
@@ -184,9 +191,9 @@ export default function NewExpensePage() {
                   htmlFor="amount"
                   className="mb-1 block text-sm font-medium"
                 >
-                  {t("amount")} *
-                </Label>
-                <Input
+                {t("amount")} <span className="text-destructive">*</span>
+              </Label>
+              <Input
                   id="amount"
                   type="number"
                   step="0.01"
@@ -195,10 +202,14 @@ export default function NewExpensePage() {
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, amount: e.target.value }))
                   }
-                  className="h-11"
+                  className={`h-11 ${fieldErrors.amount ? "border-destructive" : ""}`}
                   placeholder="₮"
                   required
+                  aria-invalid={!!fieldErrors.amount}
                 />
+                {fieldErrors.amount && (
+                  <p className="text-xs text-destructive mt-1">{fieldErrors.amount}</p>
+                )}
               </div>
 
               <div>

@@ -34,7 +34,7 @@ export default function ResetPasswordPage() {
       <form action={formAction} className="flex flex-col gap-4">
         {state?.formError && <FieldError>{state.formError}</FieldError>}
         <Field>
-          <FieldLabel htmlFor="password">{t("passwordLabel")}</FieldLabel>
+          <FieldLabel htmlFor="password">{t("passwordLabel")} <span className="text-destructive">*</span></FieldLabel>
           <Input
             id="password"
             name="password"
@@ -52,7 +52,7 @@ export default function ResetPasswordPage() {
         </Field>
         <Field>
           <FieldLabel htmlFor="confirmPassword">
-            {t("confirmPasswordLabel")}
+            {t("confirmPasswordLabel")} <span className="text-destructive">*</span>
           </FieldLabel>
           <Input
             id="confirmPassword"

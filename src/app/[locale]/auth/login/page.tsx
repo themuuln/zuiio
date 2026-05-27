@@ -96,7 +96,7 @@ export default function LoginPage() {
               htmlFor="email"
               className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono font-bold"
             >
-              {t("emailLabel")}
+              {t("emailLabel")} <span className="text-destructive">*</span>
             </FieldLabel>
             <Input
               id="email"
@@ -120,7 +120,7 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono font-bold"
               >
-                {t("passwordLabel")}
+                {t("passwordLabel")} <span className="text-destructive">*</span>
               </FieldLabel>
               <Link
                 href="/auth/forgot-password"

@@ -3,14 +3,22 @@ import { defineConfig } from "vitepress";
 export default defineConfig({
   lang: "mn-MN",
   title: "TOLOM — Гарын авлага",
-  description: "TOLOM авто засварын удирдлагын систем — хэрэглэгчийн гарын авлага",
+  description:
+    "TOLOM авто засварын удирдлагын систем — хэрэглэгчийн гарын авлага",
   base: "/guide/",
   outDir: "../public/guide",
   cleanUrls: true,
   lastUpdated: true,
 
   head: [
-    ["meta", { name: "theme-color", content: "#09090b" }],    ["meta", { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" }],
+    ["meta", { name: "theme-color", content: "#09090b" }],
+    [
+      "meta",
+      {
+        name: "apple-mobile-web-app-status-bar-style",
+        content: "black-translucent",
+      },
+    ],
     ["link", { rel: "icon", href: "/favicon.ico" }],
   ],
 
@@ -28,6 +36,7 @@ export default defineConfig({
         items: [
           { text: "Танилцуулга", link: "/intro" },
           { text: "Системд нэвтрэх", link: "/getting-started" },
+          { text: "Архитектур", link: "/architecture/index" },
           { text: "Нэршил", link: "/nershil" },
         ],
       },
@@ -59,9 +68,7 @@ export default defineConfig({
       },
       {
         text: "Үйлчилгээний сануулга",
-        items: [
-          { text: "Үйлчилгээний сануулга", link: "/service-reminders" },
-        ],
+        items: [{ text: "Үйлчилгээний сануулга", link: "/service-reminders" }],
       },
       {
         text: "Тохиргоо",
@@ -74,9 +81,7 @@ export default defineConfig({
       },
       {
         text: "Бусад",
-        items: [
-          { text: "Зөвлөмжүүд", link: "/tips" },
-        ],
+        items: [{ text: "Зөвлөмжүүд", link: "/tips" }],
       },
     ],
 

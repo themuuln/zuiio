@@ -117,25 +117,36 @@ export default function NewPurchaseOrderPage() {
         <Card>
           <CardContent className="p-6 flex flex-col gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field>
-                <FieldLabel htmlFor="order_number">$$$</FieldLabel>
-                <Input id="order_number"
-                value={orderNumber}
-                onChange={(e) => setOrderNumber(e.target.value)}
-                placeholder="PO-001"
-                className="h-11"
-                required />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="supplier_id">$$$</FieldLabel>
-                <select id="supplier_id"
-                value={supplierId}
-                onChange={(e) => setSupplierId(e.target.value)}
-                className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm">$$$</select>
-              </Field>
+            <Field>
+              <FieldLabel htmlFor="order_number">
+                {t("orderNumber")} <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Input id="order_number"
+              value={orderNumber}
+              onChange={(e) => setOrderNumber(e.target.value)}
+              placeholder="PO-001"
+              className="h-11"
+              required />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="supplier_id">
+                {t("supplier")}
+              </FieldLabel>
+              <select id="supplier_id"
+              value={supplierId}
+              onChange={(e) => setSupplierId(e.target.value)}
+              className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm">
+                <option value="">—</option>
+                {suppliers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
             </div>
             <Field>
-              <FieldLabel htmlFor="notes">$$$</FieldLabel>
+              <FieldLabel htmlFor="notes">{t("notes")}</FieldLabel>
               <Input id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -171,15 +182,26 @@ export default function NewPurchaseOrderPage() {
                     className="flex items-end gap-2 border-b border-border pb-3"
                   >
                     <Field>
-                      <FieldLabel className="text-xs text-muted-foreground">$$$</FieldLabel>
+                      <FieldLabel className="text-xs text-muted-foreground">
+                        {t("part")}
+                      </FieldLabel>
                       <select value={item.part_id}
                       onChange={(e) =>
                         updateItem(item.id, { part_id: e.target.value })
                       }
-                      className="h-9 w-full rounded border border-input bg-background px-2 text-sm">$$$</select>
+                      className="h-9 w-full rounded border border-input bg-background px-2 text-sm">
+                        <option value="">{t("selectPart")}</option>
+                        {parts.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
                     </Field>
                     <Field>
-                      <FieldLabel className="text-xs text-muted-foreground">$$$</FieldLabel>
+                      <FieldLabel className="text-xs text-muted-foreground">
+                        {t("quantity")}
+                      </FieldLabel>
                       <Input type="number"
                       min={1}
                       value={item.quantity_ordered}
@@ -191,7 +213,9 @@ export default function NewPurchaseOrderPage() {
                       className="h-9 text-center" />
                     </Field>
                     <Field>
-                      <FieldLabel className="text-xs text-muted-foreground">$$$</FieldLabel>
+                      <FieldLabel className="text-xs text-muted-foreground">
+                        {t("unitCost")}
+                      </FieldLabel>
                       <Input type="number"
                       min={0}
                       value={item.unit_cost}

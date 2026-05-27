@@ -77,14 +77,18 @@ export default function NewPartsCarPage() {
           <CardContent className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-4">
               <Field>
-                <FieldLabel htmlFor="make">$$$</FieldLabel>
+                <FieldLabel htmlFor="make">
+                  Үйлдвэрлэгч <span className="text-destructive">*</span>
+                </FieldLabel>
                 <Input id="make"
                 name="make"
                 required
                 placeholder="Toyota, Honda" />
               </Field>
               <Field>
-                <FieldLabel htmlFor="model">$$$</FieldLabel>
+                <FieldLabel htmlFor="model">
+                  Модель <span className="text-destructive">*</span>
+                </FieldLabel>
                 <Input id="model"
                 name="model"
                 required
@@ -94,7 +98,7 @@ export default function NewPartsCarPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <Field>
-                <FieldLabel htmlFor="year">$$$</FieldLabel>
+                <FieldLabel htmlFor="year">Он</FieldLabel>
                 <Input id="year"
                 name="year"
                 type="number"
@@ -103,7 +107,7 @@ export default function NewPartsCarPage() {
                 placeholder="2018" />
               </Field>
               <Field>
-                <FieldLabel htmlFor="arrival_date">$$$</FieldLabel>
+                <FieldLabel htmlFor="arrival_date">Ирсэн огноо</FieldLabel>
                 <DatePicker value={arrivalDate}
                 onChange={(date) => date && setArrivalDate(date)}
                 placeholder="Огноо сонгох"
@@ -114,7 +118,7 @@ export default function NewPartsCarPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <Field>
-                <FieldLabel htmlFor="vin">$$$</FieldLabel>
+                <FieldLabel htmlFor="vin">VIN</FieldLabel>
                 <Input id="vin"
                 name="vin"
                 placeholder="1HGCM82633A004352"
@@ -124,7 +128,7 @@ export default function NewPartsCarPage() {
                 }} />
               </Field>
               <Field>
-                <FieldLabel htmlFor="license_plate">$$$</FieldLabel>
+                <FieldLabel htmlFor="license_plate">Хятадын дугаар</FieldLabel>
                 <Input id="license_plate"
                 name="license_plate"
                 placeholder="Хятадын дугаар" />
@@ -132,7 +136,7 @@ export default function NewPartsCarPage() {
             </div>
 
             <Field>
-              <FieldLabel htmlFor="purchase_cost">$$$</FieldLabel>
+              <FieldLabel htmlFor="purchase_cost">Худалдан авалтын үнэ</FieldLabel>
               <Input id="purchase_cost"
               name="purchase_cost"
               type="number"
@@ -142,7 +146,7 @@ export default function NewPartsCarPage() {
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="notes">$$$</FieldLabel>
+              <FieldLabel htmlFor="notes">Тэмдэглэл</FieldLabel>
               <Textarea id="notes"
               name="notes"
               placeholder="Машины тухай нэмэлт мэдээлэл..."

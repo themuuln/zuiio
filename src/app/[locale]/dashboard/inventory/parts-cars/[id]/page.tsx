@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Select, SelectItem } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/lib/i18n/navigation";
 import {
@@ -314,7 +314,7 @@ export default function PartsCarDetailPage() {
               <div className="flex flex-wrap items-end gap-3">
                 <Field>
                   <FieldLabel htmlFor="partName" className="text-xs">
-                    $$$
+                    {t("partForm.name")}
                   </FieldLabel>
                   <Input
                     ref={nameInputRef}
@@ -326,7 +326,7 @@ export default function PartsCarDetailPage() {
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="partLocation" className="text-xs">
-                    $$$
+                    {t("partForm.group")}
                   </FieldLabel>
                   <Select
                     value={partLocation}
@@ -334,18 +334,22 @@ export default function PartsCarDetailPage() {
                       setPartLocation(v as PartsCarLocationGroup)
                     }
                   >
-                    $$$
+                    {_LOCATION_GROUPS.map((lg) => (
+                      <SelectItem key={lg} value={lg}>
+                        {t(`locations.${lg}`)}
+                      </SelectItem>
+                    ))}
                   </Select>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="partQty" className="text-xs">
-                    $$$
+                    {t("partForm.quantity")}
                   </FieldLabel>
                   <div className="flex items-center gap-0.5">$$$</div>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="partPrice" className="text-xs">
-                    $$$
+                    {t("partForm.price")}
                   </FieldLabel>
                   <Input
                     id="partPrice"

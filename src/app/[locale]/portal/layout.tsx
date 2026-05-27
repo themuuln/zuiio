@@ -1,6 +1,13 @@
 "use client";
 
-import { Car, FileText, LogOut, Settings, Wrench } from "lucide-react";
+import {
+  Car,
+  ClipboardList,
+  FileText,
+  LogOut,
+  Settings,
+  Wrench,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -13,6 +20,11 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/portal", labelKey: "portal.dashboard", icon: Wrench },
   { href: "/portal/vehicles", labelKey: "portal.vehicles", icon: Car },
+  {
+    href: "/portal/work-orders",
+    labelKey: "portal.workOrders",
+    icon: ClipboardList,
+  },
   { href: "/portal/invoices", labelKey: "portal.invoices", icon: FileText },
   { href: "/portal/settings", labelKey: "portal.settings", icon: Settings },
 ];
