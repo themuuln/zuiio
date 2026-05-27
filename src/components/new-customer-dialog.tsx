@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Loader2, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,11 +65,22 @@ export function NewCustomerDialog({
   const orgId = orgQuery.data?.orgId ?? null;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [conflictInfo, setConflictInfo] = useState<{
     field: "phone" | "email";
     existingCustomerId: string;
   } | null>(null);
   const [form, setForm] = useState<CustomerFormState>(initialForm);
+
+  // Clear errors on any input change
+  useEffect(() => {
+    if (error || Object.keys(fieldErrors).length > 0) {
+      setError(null);
+      setFieldErrors({});
+      setConflictInfo(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form]);
   const t = useTranslations("customers");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -79,6 +90,29 @@ export function NewCustomerDialog({
       setError(t("noOrganization"));
       return;
     }
+
+    // Client-side validation
+    const errors: Record<string, string> = {};
+    if (
+      form.type === "individual" &&
+      !form.firstName.trim() &&
+      !form.lastName.trim()
+    ) {
+      errors.firstName = t("firstNameRequired", {
+        fallback: "First or last name is required",
+      });
+    }
+    if (
+      form.type === "company" &&
+      !form.companyName.trim() &&
+      !form.contactPerson.trim()
+    ) {
+      errors.companyName = t("companyNameRequired", {
+        fallback: "Company name or contact person is required",
+      });
+    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setSaving(true);
     setError(null);
@@ -232,9 +266,15 @@ export function NewCustomerDialog({
                             companyName: event.target.value,
                           }))
                         }
-                        className="h-11"
+                        className={`h-11 ${fieldErrors.companyName ? "border-destructive" : ""}`}
                         placeholder="Fleet Co."
+                        aria-invalid={!!fieldErrors.companyName}
                       />
+                      {fieldErrors.companyName && (
+                        <p className="text-xs text-destructive mt-1">
+                          {fieldErrors.companyName}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <Label
@@ -275,9 +315,15 @@ export function NewCustomerDialog({
                             firstName: event.target.value,
                           }))
                         }
-                        className="h-11"
+                        className={`h-11 ${fieldErrors.firstName ? "border-destructive" : ""}`}
                         placeholder="Bat"
+                        aria-invalid={!!fieldErrors.firstName}
                       />
+                      {fieldErrors.firstName && (
+                        <p className="text-xs text-destructive mt-1">
+                          {fieldErrors.firstName}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <Label

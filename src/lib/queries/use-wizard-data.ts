@@ -362,14 +362,21 @@ export function useVehicleServicePrices(
   vehicleModel: string | undefined,
 ): UseQueryResult<VehicleServicePriceEntry[], Error> {
   return useQuery({
-    queryKey: priceMemoryKeys.servicePrices(orgId ?? '', serviceCatalogId ?? '', vehicleMake, vehicleModel),
+    queryKey: priceMemoryKeys.servicePrices(
+      orgId ?? "",
+      serviceCatalogId ?? "",
+      vehicleMake,
+      vehicleModel,
+    ),
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (serviceCatalogId) params.set('service_catalog_id', serviceCatalogId);
-      if (vehicleMake) params.set('vehicle_make', vehicleMake);
-      if (vehicleModel) params.set('vehicle_model', vehicleModel);
-      const res = await fetch(`/api/organizations/${orgId}/price-history/service?${params}`);
-      if (!res.ok) throw new Error('Failed to load vehicle service prices');
+      if (serviceCatalogId) params.set("service_catalog_id", serviceCatalogId);
+      if (vehicleMake) params.set("vehicle_make", vehicleMake);
+      if (vehicleModel) params.set("vehicle_model", vehicleModel);
+      const res = await fetch(
+        `/api/organizations/${orgId}/price-history/service?${params}`,
+      );
+      if (!res.ok) throw new Error("Failed to load vehicle service prices");
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
       return (json.data ?? []) as VehicleServicePriceEntry[];
@@ -390,13 +397,19 @@ export function useVehiclePartPrices(
   vehicleMake: string | undefined,
 ): UseQueryResult<VehiclePartPriceEntry[], Error> {
   return useQuery({
-    queryKey: priceMemoryKeys.partPrices(orgId ?? '', partName ?? '', vehicleMake),
+    queryKey: priceMemoryKeys.partPrices(
+      orgId ?? "",
+      partName ?? "",
+      vehicleMake,
+    ),
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (partName) params.set('part_name', partName);
-      if (vehicleMake) params.set('vehicle_make', vehicleMake);
-      const res = await fetch(`/api/organizations/${orgId}/price-history/part?${params}`);
-      if (!res.ok) throw new Error('Failed to load vehicle part prices');
+      if (partName) params.set("part_name", partName);
+      if (vehicleMake) params.set("vehicle_make", vehicleMake);
+      const res = await fetch(
+        `/api/organizations/${orgId}/price-history/part?${params}`,
+      );
+      if (!res.ok) throw new Error("Failed to load vehicle part prices");
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
       return (json.data ?? []) as VehiclePartPriceEntry[];
@@ -535,9 +548,6 @@ export function useCreateWorkOrder(orgId: string | undefined) {
           queryKey: workOrderKeys.all(orgId),
         });
       }
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
     },
   });
 }

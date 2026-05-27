@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { CarFront, Loader2, User } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -92,6 +92,7 @@ export function NewVehicleDialog({
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<VehicleFormState>(initialForm);
   const [customerResults, setCustomerResults] = useState<Customer[]>([]);
   const [customerSearching, setCustomerSearching] = useState(false);
@@ -123,6 +124,15 @@ export function NewVehicleDialog({
     [orgId],
   );
 
+  // Clear errors on any input change
+  useEffect(() => {
+    if (error || Object.keys(fieldErrors).length > 0) {
+      setError(null);
+      setFieldErrors({});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -135,6 +145,15 @@ export function NewVehicleDialog({
       setError("Select a customer before creating a vehicle");
       return;
     }
+
+    // Client-side validation
+    const errors: Record<string, string> = {};
+    if (!form.plateNumber.trim())
+      errors.plateNumber = "Plate number is required";
+    if (!form.make.trim()) errors.make = "Make is required";
+    if (!form.model.trim()) errors.model = "Model is required";
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setSaving(true);
     setError(null);
@@ -174,6 +193,7 @@ export function NewVehicleDialog({
     if (!open) {
       setForm(initialForm);
       setError(null);
+      setFieldErrors({});
       setSelectedCustomer(null);
       setCustomerResults([]);
     }
@@ -294,9 +314,15 @@ export function NewVehicleDialog({
                       plateNumber: event.target.value.toUpperCase(),
                     }))
                   }
-                  className="h-11 font-mono"
+                  className={`h-11 font-mono ${fieldErrors.plateNumber ? "border-destructive" : ""}`}
                   placeholder="1234 UBA"
+                  aria-invalid={!!fieldErrors.plateNumber}
                 />
+                {fieldErrors.plateNumber && (
+                  <p className="mt-1 text-xs text-destructive">
+                    {fieldErrors.plateNumber}
+                  </p>
+                )}
               </div>
               <div>
                 <label
@@ -334,9 +360,15 @@ export function NewVehicleDialog({
                       make: event.target.value,
                     }))
                   }
-                  className="h-11"
+                  className={`h-11 ${fieldErrors.make ? "border-destructive" : ""}`}
                   placeholder="Toyota"
+                  aria-invalid={!!fieldErrors.make}
                 />
+                {fieldErrors.make && (
+                  <p className="mt-1 text-xs text-destructive">
+                    {fieldErrors.make}
+                  </p>
+                )}
               </div>
               <div>
                 <label
@@ -354,9 +386,15 @@ export function NewVehicleDialog({
                       model: event.target.value,
                     }))
                   }
-                  className="h-11"
+                  className={`h-11 ${fieldErrors.model ? "border-destructive" : ""}`}
                   placeholder="Prius"
+                  aria-invalid={!!fieldErrors.model}
                 />
+                {fieldErrors.model && (
+                  <p className="mt-1 text-xs text-destructive">
+                    {fieldErrors.model}
+                  </p>
+                )}
               </div>
               <div>
                 <label

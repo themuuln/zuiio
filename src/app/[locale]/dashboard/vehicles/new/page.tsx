@@ -97,6 +97,7 @@ export default function NewVehiclePage() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<VehicleFormState>(initialForm);
   const [customerResults, setCustomerResults] = useState<Customer[]>([]);
   const [customerSearching, setCustomerSearching] = useState(false);
@@ -135,6 +136,15 @@ export default function NewVehiclePage() {
     [orgId],
   );
 
+  // Clear errors on any input change
+  useEffect(() => {
+    if (error || Object.keys(fieldErrors).length > 0) {
+      setError(null);
+      setFieldErrors({});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -147,6 +157,19 @@ export default function NewVehiclePage() {
       setError("Select a customer before creating a vehicle");
       return;
     }
+
+    // Client-side validation
+    const errors: Record<string, string> = {};
+    if (!form.plateNumber.trim())
+      errors.plateNumber = t("plateRequired", {
+        fallback: "Plate number is required",
+      });
+    if (!form.make.trim())
+      errors.make = t("makeRequired", { fallback: "Make is required" });
+    if (!form.model.trim())
+      errors.model = t("modelRequired", { fallback: "Model is required" });
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setSaving(true);
     setError(null);
@@ -314,9 +337,15 @@ export default function NewVehiclePage() {
                     plateNumber: event.target.value.toUpperCase(),
                   }))
                 }
-                className="h-11 font-mono"
+                className={`h-11 font-mono ${fieldErrors.plateNumber ? "border-destructive" : ""}`}
                 placeholder="1234 UBA"
+                aria-invalid={!!fieldErrors.plateNumber}
               />
+              {fieldErrors.plateNumber && (
+                <p className="mt-1 text-xs text-destructive">
+                  {fieldErrors.plateNumber}
+                </p>
+              )}
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="vin">
@@ -348,7 +377,8 @@ export default function NewVehiclePage() {
                     make: event.target.value,
                   }))
                 }
-                className="h-11"
+                className={`h-11 ${fieldErrors.make ? "border-destructive" : ""}`}
+                aria-invalid={!!fieldErrors.make}
                 placeholder="Toyota"
               />
             </div>
@@ -365,9 +395,20 @@ export default function NewVehiclePage() {
                     model: event.target.value,
                   }))
                 }
-                className="h-11"
+                className={`h-11 ${fieldErrors.model ? "border-destructive" : ""}`}
+                aria-invalid={!!fieldErrors.model}
                 placeholder="Prius"
               />
+              {fieldErrors.make && (
+                <p className="mt-1 text-xs text-destructive">
+                  {fieldErrors.make}
+                </p>
+              )}
+              {fieldErrors.model && (
+                <p className="mt-1 text-xs text-destructive">
+                  {fieldErrors.model}
+                </p>
+              )}
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="year">

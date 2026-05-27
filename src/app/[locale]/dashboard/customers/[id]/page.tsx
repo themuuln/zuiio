@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Building2,
   Car,
+  Loader2,
   Mail,
   MapPin,
   Pencil,
@@ -196,6 +197,7 @@ export default function CustomerDetailPage() {
 
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [form, setForm] = useState<CustomerFormState>(emptyForm);
 
   const syncForm = useCallback((nextCustomer: CustomerDetailResponse) => {
@@ -265,7 +267,9 @@ export default function CustomerDetailPage() {
       toast.error(t("failedToSave"));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: customerKeys.all(orgId ?? "") });
+      queryClient.invalidateQueries({
+        queryKey: customerKeys.all(orgId ?? ""),
+      });
       setEditing(false);
     },
   });
@@ -285,11 +289,13 @@ export default function CustomerDetailPage() {
         queryKey: customerKeys.all(orgId ?? ""),
       });
     },
-    onError: () => {
+    onError: (err) => {
       queryClient.invalidateQueries({
         queryKey: customerKeys.all(orgId ?? ""),
       });
-      toast.error(t("failedToSave"));
+      const message = err instanceof Error ? err.message : t("failedToSave");
+      setSaveError(message);
+      toast.error(message);
     },
     onSettled: () => {
       toast.success(t("deleted"));
@@ -299,6 +305,7 @@ export default function CustomerDetailPage() {
 
   const handleSave = () => {
     if (!orgId || !customerId) return;
+    setSaveError(null);
     editMutation.mutate(form);
   };
 
@@ -406,8 +413,16 @@ export default function CustomerDetailPage() {
           </div>
         ) : (
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={editMutation.isPending}>
-              <Save className="size-4" />
+            <Button
+              type="submit"
+              form="customer-edit-form"
+              disabled={editMutation.isPending}
+            >
+              {editMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Save className="size-4" />
+              )}
               {editMutation.isPending ? commonT("saving") : commonT("save")}
             </Button>
             <Button
@@ -424,13 +439,15 @@ export default function CustomerDetailPage() {
         )}
       </div>
 
-      {error && (
+      {(editing && saveError) || (!editing && error) ? (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
-            <p className="text-sm text-destructive">{error}</p>
+            <p className="text-sm text-destructive">
+              {editing ? saveError : error}
+            </p>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       <Card>
         <CardHeader>
@@ -438,7 +455,15 @@ export default function CustomerDetailPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {editing ? (
-            <CustomerEditForm form={form} setForm={setForm} t={t} />
+            <form
+              id="customer-edit-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSave();
+              }}
+            >
+              <CustomerEditForm form={form} setForm={setForm} t={t} />
+            </form>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-lg bg-muted/50 p-3">

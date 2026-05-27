@@ -32,7 +32,12 @@ import {
   useVehicleSearch,
 } from "@/lib/queries/use-wizard-data";
 import { usePartsCatalog } from "@/lib/queries/use-inventory";
-import type { Customer, PartsCatalogItem, ServiceCatalog, Vehicle } from "@/lib/types";
+import type {
+  Customer,
+  PartsCatalogItem,
+  ServiceCatalog,
+  Vehicle,
+} from "@/lib/types";
 
 export interface ServiceLine {
   service_catalog_id: string | null;
@@ -251,8 +256,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [selectedMechanic, setSelectedMechanic] = useState("");
 
   const [description, setDescription] = useState("");
-const [complaint, setComplaint] = useState("");
-const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
+  const [complaint, setComplaint] = useState("");
+  const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
 
   const [lastVisitData, setLastVisitData] = useState<LastVisitInfo | null>(
     null,
@@ -265,7 +270,9 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
   const [showDraftBanner, setShowDraftBanner] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const draftCheckedRef = useRef(false);
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile"],
@@ -347,7 +354,11 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
   const createWorkOrderMutation = useCreateWorkOrder(orgId);
 
   const loading =
-    profileLoading || catalogLoading || partsCatalogLoading || mechanicsLoading || priceHistoryLoading;
+    profileLoading ||
+    catalogLoading ||
+    partsCatalogLoading ||
+    mechanicsLoading ||
+    priceHistoryLoading;
   const saving = createWorkOrderMutation.isPending;
   const customerSearching = customerSearchFetching || plateSearchFetching;
   const creatingCustomer = createCustomerMutation.isPending;
@@ -505,8 +516,7 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
       const json = await res.json();
       return json.data as Customer;
     },
-    enabled:
-      !!orgId && !!draftData?.selectedCustomerId && draftRestored,
+    enabled: !!orgId && !!draftData?.selectedCustomerId && draftRestored,
     staleTime: 30_000,
   });
 
@@ -526,8 +536,7 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
       const json = await res.json();
       return json.data as Vehicle;
     },
-    enabled:
-      !!orgId && !!draftData?.selectedVehicleId && draftRestored,
+    enabled: !!orgId && !!draftData?.selectedVehicleId && draftRestored,
     staleTime: 30_000,
   });
 
@@ -567,9 +576,7 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
       const message =
         err instanceof Error ? err.message : "Failed to create customer";
       const code =
-        err instanceof Error
-          ? (err as { code?: string }).code
-          : undefined;
+        err instanceof Error ? (err as { code?: string }).code : undefined;
       if (code === "CONFLICT") {
         setCustomerCreateConflict(true);
         setCustomerCreateError(
@@ -747,24 +754,21 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
     [],
   );
 
-  const addPartFromCatalog = useCallback(
-    (part: PartsCatalogItem) => {
-      const price = part.default_price ?? 0;
-      setPartLines((prev) => [
-        ...prev,
-        {
-          part_name: part.name,
-          part_number: part.part_number ?? "",
-          quantity: 1,
-          unit_price: price,
-          final_price: price,
-          last_price: undefined,
-        },
-      ]);
-      setPartSearch("");
-    },
-    [],
-  );
+  const addPartFromCatalog = useCallback((part: PartsCatalogItem) => {
+    const price = part.default_price ?? 0;
+    setPartLines((prev) => [
+      ...prev,
+      {
+        part_name: part.name,
+        part_number: part.part_number ?? "",
+        quantity: 1,
+        unit_price: price,
+        final_price: price,
+        last_price: undefined,
+      },
+    ]);
+    setPartSearch("");
+  }, []);
 
   const addPart = useCallback(() => {
     setPartLines((prev) => [
@@ -819,7 +823,10 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
           selectedVehicle.make,
         ).then((vehiclePrice) => {
           if (vehiclePrice !== null) {
-            setVehiclePartPrices((prev) => ({ ...prev, [pname]: vehiclePrice }));
+            setVehiclePartPrices((prev) => ({
+              ...prev,
+              [pname]: vehiclePrice,
+            }));
             setPartLines((prev) => {
               const idx = prev.findIndex(
                 (p) => p.part_name.toLowerCase() === pname,
@@ -888,8 +895,8 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
           toast.success("Work order created");
           push(`/dashboard/work-orders/${data.id}`);
         },
-        onError: () => {
-          toast.error("Failed to create work order");
+        onError: (err) => {
+          toast.error(err?.message ?? "Failed to create work order");
         },
       },
     );
@@ -1039,11 +1046,7 @@ const [diagnosisLabelId, setDiagnosisLabelId] = useState("");
               {format(draftData.savedAt, "MMM d, HH:mm")}.
             </p>
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleDiscardDraft}
-              >
+              <Button size="sm" variant="ghost" onClick={handleDiscardDraft}>
                 Discard
               </Button>
               <Button size="sm" onClick={handleRestoreDraft}>
