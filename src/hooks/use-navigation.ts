@@ -94,7 +94,7 @@ const navGroups: NavGroup[] = [
         icon: Bell,
       },
     ],
-    isCollapsible: true,
+    isCollapsible: false,
   },
   {
     labelKey: "nav.group.inventory",
@@ -136,7 +136,7 @@ const navGroups: NavGroup[] = [
         icon: TrendingUp,
       },
     ],
-    isCollapsible: true,
+    isCollapsible: false,
   },
   {
     labelKey: "nav.group.financials",
@@ -158,7 +158,7 @@ const navGroups: NavGroup[] = [
         icon: BarChart3,
       },
     ],
-    isCollapsible: true,
+    isCollapsible: false,
   },
 ];
 
@@ -221,10 +221,6 @@ export function useNavigation() {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  function groupHasActive(group: NavGroup) {
-    return group.children.some((item) => isActive(item.href));
-  }
-
   const currentItem =
     [...allItems]
       .sort((a, b) => b.href.length - a.href.length)
@@ -263,7 +259,6 @@ export function useNavigation() {
     currentItem,
     breadcrumbs,
     isActive,
-    groupHasActive,
     pathname,
   };
 }
