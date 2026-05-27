@@ -49,7 +49,10 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
   });
 
   const setOpen = useCallback(
-    (open: boolean) => setState((prev) => ({ ...prev, isOpen: open })),
+    (open: boolean) =>
+      setState((prev) =>
+        prev.isOpen === open ? prev : { ...prev, isOpen: open },
+      ),
     [],
   );
 
@@ -59,24 +62,24 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
   );
 
   const setActiveTab = useCallback(
-    (tab: string) => setState((prev) => ({ ...prev, activeTab: tab })),
+    (tab: string) =>
+      setState((prev) =>
+        prev.activeTab === tab ? prev : { ...prev, activeTab: tab },
+      ),
     [],
   );
 
   const registerTab = useCallback(
     (value: string, label: string, content: ReactNode, icon?: ReactNode) =>
       setState((prev) => {
-        const exists = prev.tabs.some((t) => t.value === value);
-        const tabs = exists
-          ? prev.tabs.map((t) =>
-              t.value === value ? { ...t, icon: icon ?? t.icon } : t,
-            )
-          : [...prev.tabs, { value, label, icon }];
-        const activeTab = prev.activeTab || value;
+        const existing = prev.tabs.find((t) => t.value === value);
+        // Bail out early if tab already registered — prevents cascading
+        // re-renders when a context consumer re-fires from a state change.
+        if (existing) return prev;
         return {
           ...prev,
-          tabs,
-          activeTab,
+          tabs: [...prev.tabs, { value, label, icon }],
+          activeTab: prev.activeTab || value,
           content: { ...prev.content, [value]: content },
         };
       }),
