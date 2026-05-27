@@ -44,6 +44,11 @@ export default async function SelectOrganizationPage({
             subtitle: setupT("subtitle"),
             error: setupT("error"),
             retry: setupT("retry"),
+            manualSetup: setupT("manualSetup"),
+            orgNameLabel: setupT("orgNameLabel"),
+            orgNamePlaceholder: setupT("orgNamePlaceholder"),
+            createOrg: setupT("createOrg"),
+            manualError: setupT("manualError"),
           }}
         />
       );

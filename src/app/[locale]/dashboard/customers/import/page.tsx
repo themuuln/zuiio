@@ -364,7 +364,7 @@ export default function ImportCustomersPage() {
         <Button
           render={<Link href="/dashboard/customers" />}
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           aria-label="Back"
         >
           <ArrowLeft className="size-4" />

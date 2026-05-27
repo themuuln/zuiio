@@ -12,12 +12,42 @@ export interface FinalizeSignupResult {
 
 /** Transliterate Cyrillic → Latin, then slugify. */
 const CYRILLIC_TO_LATIN: Record<string, string> = {
-  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo",
-  ж: "zh", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m",
-  н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u",
-  ф: "f", х: "kh", ц: "ts", ч: "ch", ш: "sh", щ: "shch",
-  ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya",
-  ү: "u", ө: "o", ң: "ng",
+  а: "a",
+  б: "b",
+  в: "v",
+  г: "g",
+  д: "d",
+  е: "e",
+  ё: "yo",
+  ж: "zh",
+  з: "z",
+  и: "i",
+  й: "y",
+  к: "k",
+  л: "l",
+  м: "m",
+  н: "n",
+  о: "o",
+  п: "p",
+  р: "r",
+  с: "s",
+  т: "t",
+  у: "u",
+  ф: "f",
+  х: "kh",
+  ц: "ts",
+  ч: "ch",
+  ш: "sh",
+  щ: "shch",
+  ъ: "",
+  ы: "y",
+  ь: "",
+  э: "e",
+  ю: "yu",
+  я: "ya",
+  ү: "u",
+  ө: "o",
+  ң: "ng",
 };
 
 function slugify(name: string): string {
@@ -43,8 +73,15 @@ function slugify(name: string): string {
  * client for DB mutations to bypass RLS — necessary because the user is
  * not yet an org member when the first org is created.
  */
+export interface FinalizeSignupOptions {
+  /** Override org name from user_metadata. If omitted, falls back to
+   *  metadata → email-based default. */
+  orgName?: string;
+}
+
 export async function finalizeSignup(
   supabase: SupabaseClient,
+  options?: FinalizeSignupOptions,
 ): Promise<FinalizeSignupResult> {
   const { data: authData, error: authError } = await supabase.auth.getUser();
   const user = authData?.user;
@@ -68,6 +105,7 @@ export async function finalizeSignup(
 
   const meta = (user.user_metadata ?? {}) as unknown as Record<string, unknown>;
   const orgName =
+    options?.orgName?.trim() ||
     (meta?.org_name as string) ||
     (meta?.organization_name as string) ||
     `Shop of ${user.email ?? "user"}`;
@@ -158,7 +196,9 @@ async function bootstrapOrganization(
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, name, slug, settings, is_active, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, name, slug, settings, is_active, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (orgError || !org) {

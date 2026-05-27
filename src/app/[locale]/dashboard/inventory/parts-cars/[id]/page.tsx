@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Cpu,
   Fan,
-  Flame,
   Fuel,
   Gauge,
   Loader2,
@@ -18,45 +17,39 @@ import {
   Wind,
   Wrench,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
-import {
-  usePartsCar,
-  usePartsCarParts,
-  useStartDisassembly,
-  useCompleteDisassembly,
-  usePublishPartsCarToCatalog,
-  useAddPartsCarPart,
-  useRemovePartsCarPart,
-} from "@/lib/queries/use-inventory";
+import { useTranslations } from "next-intl";
+import { useCallback, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/lib/i18n/navigation";
-import { formatMNT } from "@/lib/utils";
-import { toast } from "sonner";
-import { useCallback, useRef, useState } from "react";
+import {
+  useAddPartsCarPart,
+  useCompleteDisassembly,
+  usePartsCar,
+  usePartsCarParts,
+  usePublishPartsCarToCatalog,
+  useRemovePartsCarPart,
+  useStartDisassembly,
+} from "@/lib/queries/use-inventory";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { PartsCarLocationGroup } from "@/lib/types";
+import { formatMNT } from "@/lib/utils";
 
-const STATUS_BADGE_COLORS: Record<string, string> = {
+const _STATUS_BADGE_COLORS: Record<string, string> = {
   arrived: "bg-blue-100 text-blue-700",
   disassembling: "bg-amber-100 text-amber-700",
   completed: "bg-green-100 text-green-700",
   cancelled: "bg-red-100 text-red-700",
 };
 
-const LOCATION_GROUPS: PartsCarLocationGroup[] = [
+const _LOCATION_GROUPS: PartsCarLocationGroup[] = [
   "engine",
   "transmission",
   "suspension",
@@ -72,7 +65,10 @@ const LOCATION_GROUPS: PartsCarLocationGroup[] = [
   "other",
 ];
 
-const LOCATION_GROUP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const LOCATION_GROUP_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   engine: Cpu,
   transmission: Gauge,
   suspension: Wrench,
@@ -95,8 +91,10 @@ export default function PartsCarDetailPage() {
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const { data: car, isLoading: carLoading } = usePartsCar(orgId, carId);
-  const { data: parts = [], isLoading: partsLoading } =
-    usePartsCarParts(orgId, carId);
+  const { data: parts = [], isLoading: partsLoading } = usePartsCarParts(
+    orgId,
+    carId,
+  );
 
   const startDisassembly = useStartDisassembly(orgId);
   const completeDisassembly = useCompleteDisassembly(orgId);
@@ -115,22 +113,20 @@ export default function PartsCarDetailPage() {
   const handleStart = useCallback(async () => {
     try {
       await startDisassembly.mutateAsync(carId);
-      toast.success(t('toast.started'));
+      toast.success(t("toast.started"));
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : t('toast.startError'),
-      );
+      toast.error(err instanceof Error ? err.message : t("toast.startError"));
     }
   }, [startDisassembly, carId, t]);
 
   const handleComplete = useCallback(async () => {
-    if (!confirm(t('toast.completeConfirm'))) return;
+    if (!confirm(t("toast.completeConfirm"))) return;
     try {
       await completeDisassembly.mutateAsync(carId);
-      toast.success(t('toast.completed'));
+      toast.success(t("toast.completed"));
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : t('toast.completeError'),
+        err instanceof Error ? err.message : t("toast.completeError"),
       );
     }
   }, [completeDisassembly, carId, t]);
@@ -138,7 +134,10 @@ export default function PartsCarDetailPage() {
   const handleAddPart = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!partName.trim()) return;
+      if (!partName.trim()) {
+        toast.error("Please enter a part name");
+        return;
+      }
       setAdding(true);
       try {
         await addPart.mutateAsync({
@@ -153,9 +152,7 @@ export default function PartsCarDetailPage() {
         setPartPrice(0);
         nameInputRef.current?.focus();
       } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : t('toast.addError'),
-        );
+        toast.error(err instanceof Error ? err.message : t("toast.addError"));
       } finally {
         setAdding(false);
       }
@@ -169,7 +166,7 @@ export default function PartsCarDetailPage() {
         await removePart.mutateAsync({ carId, partId });
       } catch (err) {
         toast.error(
-          err instanceof Error ? err.message : t('toast.deleteError'),
+          err instanceof Error ? err.message : t("toast.deleteError"),
         );
       }
     },
@@ -184,9 +181,7 @@ export default function PartsCarDetailPage() {
   const profit = totalValue - totalCost;
   const partsCount = parts.length;
 
-  const grouped = parts.reduce<
-    Record<string, typeof parts>
-  >((acc, p) => {
+  const grouped = parts.reduce<Record<string, typeof parts>>((acc, p) => {
     const group = p.location_group ?? "other";
     if (!acc[group]) acc[group] = [];
     acc[group].push(p);
@@ -206,9 +201,12 @@ export default function PartsCarDetailPage() {
     return (
       <div className="flex flex-col items-center gap-4 py-16">
         <Package className="size-10 text-muted-foreground/40" />
-        <p className="text-muted-foreground">{t('notFound')}</p>
-        <Button variant="outline" render={<Link href="/dashboard/inventory/parts-cars" />}>
-          {t('back')}
+        <p className="text-muted-foreground">{t("notFound")}</p>
+        <Button
+          variant="outline"
+          render={<Link href="/dashboard/inventory/parts-cars" />}
+        >
+          {t("back")}
         </Button>
       </div>
     );
@@ -222,7 +220,11 @@ export default function PartsCarDetailPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
-          <Button variant="ghost" size="icon" render={<Link href="/dashboard/inventory/parts-cars" />}>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            render={<Link href="/dashboard/inventory/parts-cars" />}
+          >
             <ArrowLeft className="size-5" />
           </Button>
           <div>
@@ -230,13 +232,11 @@ export default function PartsCarDetailPage() {
               <h1 className="text-2xl font-semibold tracking-tight">
                 {car.make} {car.model}
               </h1>
-              <Badge variant="outline">
-                {t('status.' + car.status)}
-              </Badge>
+              <Badge variant="outline">{t(`status.${car.status}`)}</Badge>
             </div>
             <p className="text-muted-foreground text-sm mt-0.5">
               {car.year && `${car.year} · `}
-              {t('fields.cost')}: {formatMNT(car.purchase_cost)}
+              {t("fields.cost")}: {formatMNT(car.purchase_cost)}
               {car.vin && ` · VIN: ${car.vin}`}
             </p>
           </div>
@@ -246,8 +246,8 @@ export default function PartsCarDetailPage() {
           {car.status === "arrived" && (
             <Button onClick={handleStart} disabled={startDisassembly.isPending}>
               {startDisassembly.isPending
-                ? t('actions.starting')
-                : t('actions.startDisassembly')}
+                ? t("actions.starting")
+                : t("actions.startDisassembly")}
             </Button>
           )}
           {car.status === "disassembling" && (
@@ -256,8 +256,8 @@ export default function PartsCarDetailPage() {
               disabled={completeDisassembly.isPending || partsCount === 0}
             >
               {completeDisassembly.isPending
-                ? t('actions.completing')
-                : t('actions.completeDisassembly')}
+                ? t("actions.completing")
+                : t("actions.completeDisassembly")}
             </Button>
           )}
         </div>
@@ -267,13 +267,17 @@ export default function PartsCarDetailPage() {
       <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">{t('fields.partCount')}</p>
+            <p className="text-xs text-muted-foreground mb-1">
+              {t("fields.partCount")}
+            </p>
             <p className="text-2xl font-semibold">{partsCount}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">{t('fields.totalValue')}</p>
+            <p className="text-xs text-muted-foreground mb-1">
+              {t("fields.totalValue")}
+            </p>
             <p className="text-2xl font-semibold text-blue-600">
               {formatMNT(totalValue)}
             </p>
@@ -281,7 +285,9 @@ export default function PartsCarDetailPage() {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">{t('fields.profit')}</p>
+            <p className="text-xs text-muted-foreground mb-1">
+              {t("fields.profit")}
+            </p>
             <p
               className={`text-2xl font-semibold ${
                 profit >= 0 ? "text-green-600" : "text-red-600"
@@ -302,38 +308,54 @@ export default function PartsCarDetailPage() {
               <div className="flex items-center gap-2">
                 <Plus className="size-4 text-amber-600" />
                 <span className="font-medium text-sm">
-                  {t('actions.quickAddPart')}
+                  {t("actions.quickAddPart")}
                 </span>
               </div>
               <div className="flex flex-wrap items-end gap-3">
                 <Field>
-                  <FieldLabel htmlFor="partName" className="text-xs">$$$</FieldLabel>
-                  <Input ref={nameInputRef}
-                  id="partName"
-                  value={partName}
-                  onChange={(e) => setPartName(e.target.value)}
-                  placeholder={t('partForm.namePlaceholder')} />
+                  <FieldLabel htmlFor="partName" className="text-xs">
+                    $$$
+                  </FieldLabel>
+                  <Input
+                    ref={nameInputRef}
+                    id="partName"
+                    value={partName}
+                    onChange={(e) => setPartName(e.target.value)}
+                    placeholder={t("partForm.namePlaceholder")}
+                  />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="partLocation" className="text-xs">$$$</FieldLabel>
-                  <Select value={partLocation}
-                  onValueChange={(v) =>
-                    setPartLocation(v as PartsCarLocationGroup)
-                  }>$$$</Select>
+                  <FieldLabel htmlFor="partLocation" className="text-xs">
+                    $$$
+                  </FieldLabel>
+                  <Select
+                    value={partLocation}
+                    onValueChange={(v) =>
+                      setPartLocation(v as PartsCarLocationGroup)
+                    }
+                  >
+                    $$$
+                  </Select>
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="partQty" className="text-xs">$$$</FieldLabel>
+                  <FieldLabel htmlFor="partQty" className="text-xs">
+                    $$$
+                  </FieldLabel>
                   <div className="flex items-center gap-0.5">$$$</div>
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="partPrice" className="text-xs">$$$</FieldLabel>
-                  <Input id="partPrice"
-                  type="number"
-                  min={0}
-                  step={1000}
-                  value={partPrice}
-                  onChange={(e) => setPartPrice(Number(e.target.value))}
-                  placeholder="0" />
+                  <FieldLabel htmlFor="partPrice" className="text-xs">
+                    $$$
+                  </FieldLabel>
+                  <Input
+                    id="partPrice"
+                    type="number"
+                    min={0}
+                    step={1000}
+                    value={partPrice}
+                    onChange={(e) => setPartPrice(Number(e.target.value))}
+                    placeholder="0"
+                  />
                 </Field>
                 <Button
                   type="submit"
@@ -345,7 +367,7 @@ export default function PartsCarDetailPage() {
                   ) : (
                     <Plus className="size-4" />
                   )}
-                  {t('actions.addPart')}
+                  {t("actions.addPart")}
                 </Button>
               </div>
             </form>
@@ -356,10 +378,10 @@ export default function PartsCarDetailPage() {
       {/* Parts List Grouped by Location */}
       <div className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">
-          {t('partsSection.title')}
+          {t("partsSection.title")}
           {partsCount > 0 && (
             <span className="text-muted-foreground font-normal text-sm ml-2">
-              {t('partsSection.count', { count: partsCount })}
+              {t("partsSection.count", { count: partsCount })}
             </span>
           )}
         </h2>
@@ -372,14 +394,14 @@ export default function PartsCarDetailPage() {
               <Package className="size-10 text-muted-foreground/40" />
               <p className="text-muted-foreground text-sm">
                 {canAddParts
-                  ? t('partsSection.emptyCanAdd')
-                  : t('partsSection.emptyNoParts')}
+                  ? t("partsSection.emptyCanAdd")
+                  : t("partsSection.emptyNoParts")}
               </p>
             </CardContent>
           </Card>
         ) : (
           Object.entries(grouped).map(([group, groupParts]) => {
-            const groupLabel = t('locations.' + group);
+            const groupLabel = t(`locations.${group}`);
             const GroupIcon = LOCATION_GROUP_ICONS[group] ?? Package;
             const groupTotal = groupParts.reduce(
               (s, p) => s + (p.estimated_price ?? 0) * (p.quantity ?? 1),
@@ -394,7 +416,10 @@ export default function PartsCarDetailPage() {
                       {groupLabel}
                     </span>
                     <span className="text-sm text-muted-foreground tabular-nums">
-                      {t('partsSection.itemCount', { count: groupParts.length })} ·{" "}
+                      {t("partsSection.itemCount", {
+                        count: groupParts.length,
+                      })}{" "}
+                      ·{" "}
                       <span className="font-medium text-foreground">
                         {formatMNT(groupTotal)}
                       </span>
@@ -412,10 +437,10 @@ export default function PartsCarDetailPage() {
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {p.condition === "good"
-                              ? t('conditions.good')
+                              ? t("conditions.good")
                               : p.condition === "fair"
-                                ? t('conditions.fair')
-                                : t('conditions.damaged')}
+                                ? t("conditions.fair")
+                                : t("conditions.damaged")}
                           </p>
                         </div>
                         <span className="text-sm font-semibold tabular-nums shrink-0">
@@ -430,12 +455,14 @@ export default function PartsCarDetailPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              if (confirm(t('deleteConfirm', { name: p.name }))) {
+                              if (
+                                confirm(t("deleteConfirm", { name: p.name }))
+                              ) {
                                 handleRemovePart(p.id);
                               }
                             }}
                             className="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors shrink-0 cursor-pointer"
-                            aria-label={t('deleteAria', { name: p.name })}
+                            aria-label={t("deleteAria", { name: p.name })}
                           >
                             <Trash2 className="size-4" />
                           </button>
@@ -458,10 +485,13 @@ export default function PartsCarDetailPage() {
               <CheckCircle2 className="size-5 text-green-600" />
               <div>
                 <p className="font-medium text-sm text-green-800">
-                  {t('completed.title')}
+                  {t("completed.title")}
                 </p>
                 <p className="text-xs text-green-600">
-                  {t('completed.description', { count: car.total_parts_actual, value: formatMNT(car.total_estimated_value) })}
+                  {t("completed.description", {
+                    count: car.total_parts_actual,
+                    value: formatMNT(car.total_estimated_value),
+                  })}
                 </p>
               </div>
             </div>
@@ -469,14 +499,22 @@ export default function PartsCarDetailPage() {
               onClick={async () => {
                 try {
                   const result = await publishToCatalog.mutateAsync(carId);
-                  toast.success(t('toast.published', { count: result.publishedCount }));
+                  toast.success(
+                    t("toast.published", { count: result.publishedCount }),
+                  );
                 } catch (err) {
-                  toast.error(err instanceof Error ? err.message : t('toast.publishError'));
+                  toast.error(
+                    err instanceof Error
+                      ? err.message
+                      : t("toast.publishError"),
+                  );
                 }
               }}
               disabled={publishToCatalog.isPending}
             >
-              {publishToCatalog.isPending ? t('actions.publishing') : t('actions.publishToCatalog')}
+              {publishToCatalog.isPending
+                ? t("actions.publishing")
+                : t("actions.publishToCatalog")}
             </Button>
           </CardContent>
         </Card>

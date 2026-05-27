@@ -91,7 +91,7 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
               <CheckCircle2 className="size-6 text-green-600" />
             </div>
             <p className="text-sm font-medium text-center">{t("pinUpdated")}</p>
-            <Button onClick={() => onOpenChange(false)} size="lg">
+            <Button onClick={() => onOpenChange(false)} size="default">
               {t("done")}
             </Button>
           </div>
@@ -159,7 +159,7 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
               type="submit"
               className="w-full"
               disabled={saving || !isValid}
-              size="lg"
+              size="default"
             >
               {saving ? (
                 <Loader2 className="size-4 animate-spin" />

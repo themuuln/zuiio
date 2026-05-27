@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, DollarSign, Plus, TrendingUp, Wallet } from "lucide-react";
+import { Clock, DollarSign, Plus, Tag, TrendingUp, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
@@ -140,6 +140,7 @@ export default function ExpensesPage() {
           { label: "Unpaid", count: stats.unpaidAmount, color: "destructive" },
         ]}
       />,
+      <DollarSign className="size-4" />,
     );
 
     sidebar.registerTab(
@@ -152,6 +153,7 @@ export default function ExpensesPage() {
         }))}
         emptyMessage="No categories"
       />,
+      <Tag className="size-4" />,
     );
 
     return () => {
@@ -255,7 +257,7 @@ export default function ExpensesPage() {
             {(expenses?.length ?? 0) === 1 ? "expense" : "expenses"}
           </p>
         </div>
-        <Button render={<Link href="/dashboard/expenses/new" />} size="lg">
+        <Button render={<Link href="/dashboard/expenses/new" />} size="default">
           <Plus className="size-4" />
           Add Expense
         </Button>

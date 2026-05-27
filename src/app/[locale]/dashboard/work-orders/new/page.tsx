@@ -36,7 +36,7 @@ function NewWorkOrderForm() {
         <Button
           render={<Link href="/dashboard/work-orders" />}
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           className="min-h-[var(--ui-touch-target)] min-w-[44px]"
         >
           <ArrowLeft className="size-5" />

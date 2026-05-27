@@ -1,7 +1,18 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Mail, MapPin, Pencil, Phone, Save, Trash2, X } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  ArrowLeft,
+  Building2,
+  Car,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Save,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
@@ -141,11 +152,17 @@ export default function CustomerDetailPage() {
       "Contact",
       <ContactCard
         items={[
-          { label: "Phone", value: customer.phone, icon: Phone, copyable: true },
+          {
+            label: "Phone",
+            value: customer.phone,
+            icon: Phone,
+            copyable: true,
+          },
           { label: "Email", value: customer.email, icon: Mail, copyable: true },
           { label: "Address", value: customer.address, icon: MapPin },
         ]}
       />,
+      <Phone className="size-4" />,
     );
 
     sidebar.registerTab(
@@ -160,6 +177,7 @@ export default function CustomerDetailPage() {
         }))}
         emptyMessage="No vehicles"
       />,
+      <Car className="size-4" />,
     );
 
     return () => {
@@ -176,8 +194,8 @@ export default function CustomerDetailPage() {
     { key: "year", label: "Year" },
   ];
 
+  const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<CustomerFormState>(emptyForm);
 
   const syncForm = useCallback((nextCustomer: CustomerDetailResponse) => {
@@ -195,56 +213,98 @@ export default function CustomerDetailPage() {
     });
   }, []);
 
-  const handleSave = async () => {
-    if (!orgId || !customerId) {
-      return;
-    }
-
-    setSaving(true);
-
-    try {
+  const editMutation = useMutation({
+    mutationFn: async (formData: CustomerFormState) => {
       const response = await fetch(
         `/api/organizations/${orgId}/customers/${customerId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
+          body: JSON.stringify(formData),
         },
       );
       const json = await response.json();
-
-      if (json.error) {
-        toast.error(json.error.message);
-        return;
+      if (json.error) throw new Error(json.error.message);
+      return json.data;
+    },
+    onMutate: async (formData) => {
+      await queryClient.cancelQueries({
+        queryKey: customerKeys.detail(orgId ?? "", customerId ?? ""),
+      });
+      const previous = queryClient.getQueryData<CustomerDetailResponse>(
+        customerKeys.detail(orgId ?? "", customerId ?? ""),
+      );
+      queryClient.setQueryData<CustomerDetailResponse>(
+        customerKeys.detail(orgId ?? "", customerId ?? ""),
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            first_name: formData.firstName || old.first_name,
+            last_name: formData.lastName || old.last_name,
+            company_name: formData.companyName || old.company_name,
+            contact_person: formData.contactPerson || old.contact_person,
+            phone: formData.phone || old.phone,
+            email: formData.email || old.email,
+            address: formData.address || old.address,
+            notes: formData.notes || old.notes,
+            source: formData.source || old.source,
+            type: formData.type,
+          };
+        },
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          customerKeys.detail(orgId ?? "", customerId ?? ""),
+          context.previous,
+        );
       }
-
-      refetch();
-      setEditing(false);
-      toast.success("Customer updated");
-    } catch {
       toast.error(t("failedToSave"));
-    } finally {
-      setSaving(false);
-    }
-  };
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: customerKeys.all(orgId ?? "") });
+      setEditing(false);
+    },
+  });
 
-  const handleDelete = async () => {
-    if (!orgId || !customerId) return;
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
       const response = await fetch(
         `/api/organizations/${orgId}/customers/${customerId}`,
         { method: "DELETE" },
       );
       const json = await response.json();
-      if (json.error) {
-        toast.error(json.error.message);
-        return;
-      }
+      if (json.error) throw new Error(json.error.message);
+      return json.data;
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: customerKeys.all(orgId ?? ""),
+      });
+    },
+    onError: () => {
+      queryClient.invalidateQueries({
+        queryKey: customerKeys.all(orgId ?? ""),
+      });
+      toast.error(t("failedToSave"));
+    },
+    onSettled: () => {
       toast.success(t("deleted"));
       push("/dashboard/customers");
-    } catch {
-      toast.error(t("failedToSave"));
-    }
+    },
+  });
+
+  const handleSave = () => {
+    if (!orgId || !customerId) return;
+    editMutation.mutate(form);
+  };
+
+  const handleDelete = () => {
+    if (!orgId || !customerId) return;
+    deleteMutation.mutate();
   };
 
   if (orgQuery.isLoading || loading) {
@@ -291,13 +351,15 @@ export default function CustomerDetailPage() {
         <Button
           render={<Link href="/dashboard/customers" />}
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           aria-label={commonT("back")}
         >
           <ArrowLeft className="size-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{customerName}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {customerName}
+          </h1>
           <p className="text-sm text-muted-foreground">
             Added {new Date(customer.created_at).toLocaleDateString()}
           </p>
@@ -315,7 +377,14 @@ export default function CustomerDetailPage() {
               {commonT("edit")}
             </Button>
             <AlertDialog>
-              <AlertDialogTrigger render={<Button variant="outline" className="text-destructive hover:text-destructive" />}>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    className="text-destructive hover:text-destructive"
+                  />
+                }
+              >
                 <Trash2 className="size-4" />
                 {commonT("delete")}
               </AlertDialogTrigger>
@@ -337,9 +406,9 @@ export default function CustomerDetailPage() {
           </div>
         ) : (
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={editMutation.isPending}>
               <Save className="size-4" />
-              {saving ? commonT("saving") : commonT("save")}
+              {editMutation.isPending ? commonT("saving") : commonT("save")}
             </Button>
             <Button
               variant="ghost"

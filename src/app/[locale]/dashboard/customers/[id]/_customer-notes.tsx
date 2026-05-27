@@ -193,7 +193,7 @@ export function CustomerNotes({ orgId, customerId }: CustomerNotesProps) {
                   </div>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     className="size-7 shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
                     onClick={() => handleDelete(note.id)}
                   >

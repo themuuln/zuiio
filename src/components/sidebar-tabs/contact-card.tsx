@@ -49,7 +49,7 @@ export function ContactCard({
               {item.copyable && (
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="icon-xs"
                   className="size-5 shrink-0 text-muted-foreground/30 hover:text-foreground"
                   onClick={() => {
                     navigator.clipboard.writeText(item.value!);

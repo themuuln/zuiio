@@ -312,6 +312,7 @@ export async function createWorkOrder(
     cacheTags.dailyWorkOrders(orgId, new Date().toISOString().split("T")[0]),
     "max",
   );
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 
   return getWorkOrder(wo.id);
 }

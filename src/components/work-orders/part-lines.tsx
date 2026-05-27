@@ -93,7 +93,7 @@ export function PartLines({ lines, onAdd, onUpdate, onRemove }: PartLinesProps) 
                   </span>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     onClick={() => onRemove(idx)}
                     className="shrink-0 min-w-[44px] min-h-[var(--ui-touch-target)]"
                     aria-label={`Remove ${part.part_name || "part"}`}

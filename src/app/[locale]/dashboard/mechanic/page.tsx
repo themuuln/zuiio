@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BarChart3,
   CheckCircle2,
   ChevronDown,
   ClipboardList,
@@ -107,15 +108,13 @@ const STATUS_CONFIG: Record<
     bg: "hover:bg-green-50/50 dark:hover:bg-green-950/10",
   },
   Completed: {
-    label:
-      "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+    label: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
     bar: "bg-gray-400",
     dot: "bg-gray-400",
     bg: "hover:bg-gray-50/50 dark:hover:bg-gray-950/10",
   },
   Cancelled: {
-    label:
-      "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    label: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
     bar: "bg-red-400",
     dot: "bg-red-400",
     bg: "hover:bg-red-50/50 dark:hover:bg-red-950/10",
@@ -145,9 +144,7 @@ function getStatusCfg(status: string) {
 // ── Helpers ────────────────────────────────────────
 
 function timeAgo(dateStr: string): string {
-  const mins = Math.floor(
-    (Date.now() - new Date(dateStr).getTime()) / 60000,
-  );
+  const mins = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m`;
   const h = Math.floor(mins / 60);
@@ -288,12 +285,7 @@ function WorkOrderRow({
       />
 
       {/* Status dot */}
-      <span
-        className={cn(
-          "size-2 shrink-0 rounded-full shadow-sm",
-          cfg.dot,
-        )}
-      />
+      <span className={cn("size-2 shrink-0 rounded-full shadow-sm", cfg.dot)} />
 
       {/* Main content */}
       <div className="flex-1 min-w-0">
@@ -327,7 +319,10 @@ function WorkOrderRow({
               className="flex items-center gap-0.5 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
             >
               <Badge
-                className={cn(cfg.label, "border-0 text-[10px] font-semibold px-2 py-0.5")}
+                className={cn(
+                  cfg.label,
+                  "border-0 text-[10px] font-semibold px-2 py-0.5",
+                )}
                 variant="secondary"
               >
                 {wo.status}
@@ -349,7 +344,9 @@ function WorkOrderRow({
                     {status === "Cancelled" ? (
                       <X className="size-3.5 text-destructive" />
                     ) : (
-                      <span className={cn("size-2 shrink-0 rounded-full", sc.dot)} />
+                      <span
+                        className={cn("size-2 shrink-0 rounded-full", sc.dot)}
+                      />
                     )}
                     <span className="text-xs">{status}</span>
                   </DropdownMenuItem>
@@ -359,7 +356,10 @@ function WorkOrderRow({
           </DropdownMenu>
         ) : (
           <Badge
-            className={cn(cfg.label, "border-0 text-[10px] font-semibold px-2 py-0.5")}
+            className={cn(
+              cfg.label,
+              "border-0 text-[10px] font-semibold px-2 py-0.5",
+            )}
             variant="secondary"
           >
             {wo.status}
@@ -399,7 +399,8 @@ function ClockInOutButton({
       disabled={loading}
       className={cn(
         "gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm",
-        !clockedIn && "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-300 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-950/50",
+        !clockedIn &&
+          "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-300 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-950/50",
         clockedIn && "border-red-300 dark:border-red-800",
         loading && "opacity-50 cursor-not-allowed",
       )}
@@ -409,9 +410,7 @@ function ClockInOutButton({
       ) : (
         <Play className="size-4 shrink-0 translate-x-0.5" />
       )}
-      <span>
-        {clockedIn ? t("mechanic.clockOut") : t("mechanic.clockIn")}
-      </span>
+      <span>{clockedIn ? t("mechanic.clockOut") : t("mechanic.clockIn")}</span>
       {elapsed && (
         <span className="tabular-nums text-xs font-mono text-muted-foreground/70">
           {elapsed}
@@ -462,43 +461,55 @@ function MechanicDashboard({
   }>({ clockedIn: false, since: null, todayHours: 0 });
   const [clockLoading, setClockLoading] = useState(false);
 
-  const fetchData = useCallback(async (showLoader = false) => {
-    if (showLoader) setDataLoading(true);
-    setIsRefreshing(!showLoader);
-    const today = new Date().toISOString().split("T")[0];
-    const eodUrl = `/api/organizations/${orgId}/reports?type=eod&date=${today}&mechanic=${userId}`;
-    const woUrl = `/api/organizations/${orgId}/work-orders?mechanic=${userId}&status=In Progress&status=Diagnosing&status=New&status=Ready for Pickup`;
-    const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000)
-      .toISOString().split("T")[0];
-    const trendUrl = `/api/organizations/${orgId}/reports?type=mechanic-trend&mechanic=${userId}&period=weekly&startDate=${eightWeeksAgo}&endDate=${today}`;
-    const clockUrl = `/api/organizations/${orgId}/me/time/status`;
+  const fetchData = useCallback(
+    async (showLoader = false) => {
+      if (showLoader) setDataLoading(true);
+      setIsRefreshing(!showLoader);
+      const today = new Date().toISOString().split("T")[0];
+      const eodUrl = `/api/organizations/${orgId}/reports?type=eod&date=${today}&mechanic=${userId}`;
+      const woUrl = `/api/organizations/${orgId}/work-orders?mechanic=${userId}&status=In Progress&status=Diagnosing&status=New&status=Ready for Pickup`;
+      const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0];
+      const trendUrl = `/api/organizations/${orgId}/reports?type=mechanic-trend&mechanic=${userId}&period=weekly&startDate=${eightWeeksAgo}&endDate=${today}`;
+      const clockUrl = `/api/organizations/${orgId}/me/time/status`;
 
-    try {
-      const [eodJson, woJson, trendJson, clockJson] = await Promise.all([
-        fetch(eodUrl).then((r) => r.json()).catch(() => ({ data: null })),
-        fetch(woUrl).then((r) => r.json()).catch(() => ({ data: [] })),
-        fetch(trendUrl).then((r) => r.json()).catch(() => ({ data: null })),
-        fetch(clockUrl).then((r) => r.json()).catch(() => ({ data: null })),
-      ]);
-      if (eodJson.data?.mechanics?.length > 0) {
-        setEod(eodJson.data.mechanics[0]);
+      try {
+        const [eodJson, woJson, trendJson, clockJson] = await Promise.all([
+          fetch(eodUrl)
+            .then((r) => r.json())
+            .catch(() => ({ data: null })),
+          fetch(woUrl)
+            .then((r) => r.json())
+            .catch(() => ({ data: [] })),
+          fetch(trendUrl)
+            .then((r) => r.json())
+            .catch(() => ({ data: null })),
+          fetch(clockUrl)
+            .then((r) => r.json())
+            .catch(() => ({ data: null })),
+        ]);
+        if (eodJson.data?.mechanics?.length > 0) {
+          setEod(eodJson.data.mechanics[0]);
+        }
+        if (Array.isArray(woJson.data)) {
+          setAssignedWos(woJson.data);
+        }
+        if (trendJson.data) {
+          setTrend(trendJson.data);
+        }
+        if (clockJson.data) {
+          setClockStatus(clockJson.data);
+        }
+      } catch {
+        // silent
+      } finally {
+        setDataLoading(false);
+        setIsRefreshing(false);
       }
-      if (Array.isArray(woJson.data)) {
-        setAssignedWos(woJson.data);
-      }
-      if (trendJson.data) {
-        setTrend(trendJson.data);
-      }
-      if (clockJson.data) {
-        setClockStatus(clockJson.data);
-      }
-    } catch {
-      // silent
-    } finally {
-      setDataLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [userId, orgId]);
+    },
+    [userId, orgId],
+  );
 
   useEffect(() => {
     fetchData(true);
@@ -515,15 +526,14 @@ function MechanicDashboard({
       Diagnosing: 3,
     };
     return assignedWos.toSorted(
-      (a, b) =>
-        (priority[a.status] ?? 99) - (priority[b.status] ?? 99),
+      (a, b) => (priority[a.status] ?? 99) - (priority[b.status] ?? 99),
     );
   }, [assignedWos]);
 
   // ── Mount: register tabs + open sidebar (once) ────────
   useEffect(() => {
-    registerTab("stats", "Stats", null);
-    registerTab("jobs", "Jobs", null);
+    registerTab("stats", "Stats", null, <BarChart3 className="size-4" />);
+    registerTab("jobs", "Jobs", null, <Wrench className="size-4" />);
     setOpen(true);
     return () => {
       unregisterTab("stats");
@@ -534,18 +544,27 @@ function MechanicDashboard({
 
   // ── Data: update tab content without reopening ─────────
   useEffect(() => {
-    registerTab("stats", "Stats", (
+    registerTab(
+      "stats",
+      "Stats",
       <StatusSummary
         title="Today"
         items={[
           { label: "Completed Today", count: eod?.work_orders_completed ?? 0 },
           { label: "Revenue Today", count: eod?.total_revenue ?? 0 },
-          { label: "Active Jobs", count: assignedWos.length, color: "secondary" },
+          {
+            label: "Active Jobs",
+            count: assignedWos.length,
+            color: "secondary",
+          },
         ]}
-      />
-    ));
+      />,
+      <BarChart3 className="size-4" />,
+    );
 
-    registerTab("jobs", "Jobs", (
+    registerTab(
+      "jobs",
+      "Jobs",
       <RecentList
         title="Assigned"
         items={sortedWos.map((wo) => ({
@@ -557,8 +576,8 @@ function MechanicDashboard({
         }))}
         loading={dataLoading}
         emptyMessage="No active work orders"
-      />
-    ));
+      />,
+    );
   }, [eod, assignedWos, sortedWos, dataLoading, registerTab]);
 
   const updateStatus = useUpdateWorkOrderStatus(orgId);
@@ -597,7 +616,7 @@ function MechanicDashboard({
 
   const handleStatusChange = async (woId: string, newStatus: string) => {
     setAssignedWos((prev) =>
-      prev.map((wo) => (wo.id === woId ? { ...wo, status: newStatus } : wo))
+      prev.map((wo) => (wo.id === woId ? { ...wo, status: newStatus } : wo)),
     );
     try {
       await updateStatus.mutateAsync({ woId, status: newStatus });
@@ -685,7 +704,11 @@ function MechanicDashboard({
           icon={Clock}
           label={t("mechanic.hoursToday")}
           value={clockStatus.todayHours.toFixed(1)}
-          subtext={clockStatus.clockedIn ? t("mechanic.clockedIn") : t("mechanic.clockedOut")}
+          subtext={
+            clockStatus.clockedIn
+              ? t("mechanic.clockedIn")
+              : t("mechanic.clockedOut")
+          }
           accent="blue"
         />
       </div>
@@ -753,10 +776,10 @@ function MechanicDashboard({
               <WorkOrderRow
                 key={wo.id}
                 wo={wo}
-                onClick={() =>
-                  push(`/dashboard/work-orders/${wo.id}`)
+                onClick={() => push(`/dashboard/work-orders/${wo.id}`)}
+                onStatusChange={(newStatus) =>
+                  handleStatusChange(wo.id, newStatus)
                 }
-                onStatusChange={(newStatus) => handleStatusChange(wo.id, newStatus)}
               />
             ))}
           </div>
@@ -778,9 +801,9 @@ export default function MechanicPage() {
     isAdmin,
   } = useCurrentUserRole();
   const [mechanics, setMechanics] = useState<MechanicItem[]>([]);
-  const [selectedMechanicId, setSelectedMechanicId] = useState<
-    string | null
-  >(null);
+  const [selectedMechanicId, setSelectedMechanicId] = useState<string | null>(
+    null,
+  );
   const [mechanicsLoading, setMechanicsLoading] = useState(true);
 
   useEffect(() => {
@@ -819,11 +842,14 @@ export default function MechanicPage() {
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           {[1, 2, 3].map((i) => (
-                <div key={`skeleton-${i}`} className="rounded-xl border border-border/60 bg-card p-4">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="mt-2 h-7 w-16" />
-                  <Skeleton className="mt-1 h-3 w-20" />
-                </div>
+            <div
+              key={`skeleton-${i}`}
+              className="rounded-xl border border-border/60 bg-card p-4"
+            >
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="mt-2 h-7 w-16" />
+              <Skeleton className="mt-1 h-3 w-20" />
+            </div>
           ))}
         </div>
       </div>
@@ -840,8 +866,7 @@ export default function MechanicPage() {
         <p className="text-sm text-muted-foreground text-center max-w-md">
           This view is for mechanics. Your current role is{" "}
           <strong>{profile?.roleName ?? "unknown"}</strong>.{"\n"}
-          Ask your admin to assign you the Mechanic role to access this
-          page.
+          Ask your admin to assign you the Mechanic role to access this page.
         </p>
       </div>
     );
@@ -858,7 +883,10 @@ export default function MechanicPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {[1, 2, 3].map((i) => (
-            <div key={`skeleton-${i}`} className="rounded-xl border border-border/60 bg-card p-4">
+                <div
+                  key={`skeleton-${i}`}
+                  className="rounded-xl border border-border/60 bg-card p-4"
+                >
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="mt-2 h-7 w-16" />
                   <Skeleton className="mt-1 h-3 w-20" />
@@ -885,7 +913,8 @@ export default function MechanicPage() {
               <div>
                 <div className="flex items-center gap-2.5">
                   <h1 className="text-xl font-semibold tracking-tight">
-                    {mechanics.find((m) => m.id === selectedMechanicId)?.full_name ?? t("nav.mechanic")}
+                    {mechanics.find((m) => m.id === selectedMechanicId)
+                      ?.full_name ?? t("nav.mechanic")}
                   </h1>
                   <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-50/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
                     <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px] shadow-emerald-500/60" />
@@ -917,7 +946,9 @@ export default function MechanicPage() {
             <MechanicDashboard
               userId={selectedMechanicId}
               orgId={profile?.organizationId!}
-              mechanicName={mechanics.find((m) => m.id === selectedMechanicId)?.full_name}
+              mechanicName={
+                mechanics.find((m) => m.id === selectedMechanicId)?.full_name
+              }
               isAdminView
             />
           </div>

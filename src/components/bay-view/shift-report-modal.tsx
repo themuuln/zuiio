@@ -57,7 +57,7 @@ export function ShiftReportModal({ onClose }: Props) {
           </CardTitle>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             onClick={onClose}
             aria-label={t("close")}
           >

@@ -310,9 +310,6 @@ export function BayCard({
             <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/60">
               Bay {String(bay.bayNumber).padStart(2, "0")}
             </span>
-            <span className="text-[10px] text-muted-foreground/50">
-              Available - click to assign
-            </span>
           </Button>
         )}
       </Card>

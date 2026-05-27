@@ -168,7 +168,7 @@ export default function MovementsPage() {
               sheetName="Movements"
             />
             <Button
-              size="lg"
+              size="default"
               className="h-12"
               onClick={() => setShowDialog(true)}
             >

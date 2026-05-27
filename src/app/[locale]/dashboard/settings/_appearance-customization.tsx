@@ -95,7 +95,7 @@ export function AppearanceCustomization({
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
-              size="icon"
+              size="icon-xs"
               className="size-9 rounded-full overflow-hidden p-0 border-2 relative shrink-0"
               render={<label />}
               style={{

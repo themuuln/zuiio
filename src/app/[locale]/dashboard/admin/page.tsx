@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Loader2, Shield, ShieldAlert } from "lucide-react";
+import { Check, Loader2, RefreshCw, Shield, ShieldAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -78,6 +78,34 @@ export default function AdminPage() {
     }
   }
 
+  async function handleExtendTrial(orgId: string) {
+    setSavingOrgId(orgId);
+    try {
+      const res = await fetch(
+        `/api/admin/organizations/${orgId}/subscription`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "extend" }),
+        },
+      );
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      setOrgs((prev) =>
+        prev.map((o) =>
+          o.id === orgId && o.subscription
+            ? { ...o, subscription: json.data }
+            : o,
+        ),
+      );
+      toast.success("Trial reset — 14 days starting now");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to reset trial");
+    } finally {
+      setSavingOrgId(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex flex-col gap-6">
@@ -129,7 +157,7 @@ export default function AdminPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y">
-            <div className="hidden md:grid md:grid-cols-[1fr_120px_100px_160px] gap-4 px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <div className="hidden md:grid md:grid-cols-[1fr_120px_100px_230px] gap-4 px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
               <span>Organization</span>
               <span>Plan</span>
               <span>Status</span>
@@ -143,7 +171,7 @@ export default function AdminPage() {
               orgs.map((org) => (
                 <div
                   key={org.id}
-                  className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px_160px] gap-3 md:gap-4 px-6 py-4 items-center"
+                  className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px_230px] gap-3 md:gap-4 px-6 py-4 items-center"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{org.name}</p>
@@ -213,6 +241,21 @@ export default function AdminPage() {
                         )}
                       </Button>
                     ))}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={savingOrgId === org.id}
+                      onClick={() => handleExtendTrial(org.id)}
+                      className="h-7 text-[11px] px-2"
+                      title="Reset to 14-day trial starting now"
+                    >
+                      {savingOrgId === org.id ? (
+                        <Loader2 className="size-3 animate-spin" />
+                      ) : (
+                        <RefreshCw className="size-3" />
+                      )}
+                      Trial
+                    </Button>
                   </div>
                 </div>
               ))

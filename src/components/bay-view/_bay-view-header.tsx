@@ -112,7 +112,7 @@ export function BayViewHeader({
                 render={
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     onClick={onShowVehicleReg}
                     className="size-5"
                   />
@@ -127,7 +127,7 @@ export function BayViewHeader({
                 render={
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     onClick={onShowMechanicReg}
                     className="size-5"
                   />
@@ -142,7 +142,7 @@ export function BayViewHeader({
                 render={
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     onClick={onShowServiceLookup}
                     className="size-5"
                   />
@@ -157,7 +157,7 @@ export function BayViewHeader({
                 render={
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     onClick={onShowShiftReport}
                     className="size-5"
                   />
@@ -172,7 +172,7 @@ export function BayViewHeader({
                 render={
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     onClick={onShowPinSettings}
                     className="size-5"
                   />

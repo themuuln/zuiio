@@ -92,7 +92,7 @@ export function MemberList({
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger>
-                    <Button variant="ghost" size="icon" className="size-8">
+                    <Button variant="ghost" size="icon-xs" className="size-8">
                       <MoreHorizontal className="size-4" />
                     </Button>
                   </DropdownMenuTrigger>

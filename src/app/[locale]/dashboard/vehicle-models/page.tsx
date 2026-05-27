@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { vehicleModelKeys } from "@/lib/queries/keys";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface VehicleModelItem {
   id: string;
@@ -133,6 +133,8 @@ export default function VehicleModelsPage() {
     Record<string, Set<string>>
   >({});
 
+  const queryClient = useQueryClient();
+
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
@@ -144,8 +146,6 @@ export default function VehicleModelsPage() {
     engine: "",
     body_type: "",
   });
-
-  const [saving, setSaving] = useState(false);
 
   const resetForm = () => {
     setEditForm({
@@ -160,101 +160,218 @@ export default function VehicleModelsPage() {
     setShowDetails(false);
   };
 
-  // ── CRUD handlers ─────────────────────────────────────────────
+  // ── Mutation hooks ────────────────────────────────────────────
 
-  const handleAdd = async () => {
-    if (!orgId || !editForm.make.trim() || !editForm.model.trim()) return;
-    setSaving(true);
-    try {
+  const addMutation = useMutation({
+    mutationFn: async (formData: typeof editForm) => {
       const r = await fetch(`/api/organizations/${orgId}/vehicle-models`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          make: editForm.make,
-          model: editForm.model,
-          generation: editForm.generation || null,
-          year_start: editForm.year_start
-            ? parseInt(editForm.year_start, 10)
+          make: formData.make,
+          model: formData.model,
+          generation: formData.generation || null,
+          year_start: formData.year_start
+            ? parseInt(formData.year_start, 10)
             : null,
-          year_end: editForm.year_end ? parseInt(editForm.year_end, 10) : null,
-          engine: editForm.engine || null,
-          body_type: editForm.body_type || null,
+          year_end: formData.year_end
+            ? parseInt(formData.year_end, 10)
+            : null,
+          engine: formData.engine || null,
+          body_type: formData.body_type || null,
         }),
       });
       const d = await r.json();
-      if (d.data) {
-        toast.success("Vehicle model created");
-        refetch();
-        setShowAdd(false);
-        setEditingId(null);
-        resetForm();
-      } else {
-        toast.error(d.error?.message ?? "Failed to create");
+      if (d.error) throw new Error(d.error.message);
+      return d.data as VehicleModelItem;
+    },
+    onMutate: async (formData) => {
+      await queryClient.cancelQueries({
+        queryKey: vehicleModelKeys.list(orgId ?? ""),
+      });
+      const previous = queryClient.getQueryData<VehicleModelItem[]>(
+        vehicleModelKeys.list(orgId ?? ""),
+      );
+      const optimistic: VehicleModelItem = {
+        id: `temp-${Date.now()}`,
+        make: formData.make,
+        model: formData.model,
+        generation: formData.generation || null,
+        year_start: formData.year_start
+          ? parseInt(formData.year_start, 10)
+          : null,
+        year_end: formData.year_end
+          ? parseInt(formData.year_end, 10)
+          : null,
+        engine: formData.engine || null,
+        body_type: formData.body_type || null,
+      };
+      queryClient.setQueryData<VehicleModelItem[]>(
+        vehicleModelKeys.list(orgId ?? ""),
+        (old) => [...(old ?? []), optimistic],
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          vehicleModelKeys.list(orgId ?? ""),
+          context.previous,
+        );
       }
-    } catch (e: unknown) {
-      toast.error((e as Error).message ?? "Failed to create");
-    } finally {
-      setSaving(false);
-    }
-  };
+      toast.error("Failed to create vehicle model");
+    },
+    onSuccess: () => {
+      toast.success("Vehicle model created");
+      setShowAdd(false);
+      setEditingId(null);
+      resetForm();
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: vehicleModelKeys.list(orgId ?? ""),
+      });
+    },
+  });
 
-  const handleUpdate = async (id: string) => {
-    if (!orgId || !editForm.make.trim() || !editForm.model.trim()) return;
-    setSaving(true);
-    try {
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      id,
+      formData,
+    }: {
+      id: string;
+      formData: typeof editForm;
+    }) => {
       const r = await fetch(
         `/api/organizations/${orgId}/vehicle-models/${id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            make: editForm.make,
-            model: editForm.model,
-            generation: editForm.generation || null,
-            year_start: editForm.year_start
-              ? parseInt(editForm.year_start, 10)
+            make: formData.make,
+            model: formData.model,
+            generation: formData.generation || null,
+            year_start: formData.year_start
+              ? parseInt(formData.year_start, 10)
               : null,
-            year_end: editForm.year_end
-              ? parseInt(editForm.year_end, 10)
+            year_end: formData.year_end
+              ? parseInt(formData.year_end, 10)
               : null,
-            engine: editForm.engine || null,
-            body_type: editForm.body_type || null,
+            engine: formData.engine || null,
+            body_type: formData.body_type || null,
           }),
         },
       );
       const d = await r.json();
-      if (d.data) {
-        toast.success("Vehicle model updated");
-        refetch();
-        setEditingId(null);
-        resetForm();
-      } else {
-        toast.error(d.error?.message ?? "Failed to update");
+      if (d.error) throw new Error(d.error.message);
+      return d.data as VehicleModelItem;
+    },
+    onMutate: async ({ id, formData }) => {
+      await queryClient.cancelQueries({
+        queryKey: vehicleModelKeys.list(orgId ?? ""),
+      });
+      const previous = queryClient.getQueryData<VehicleModelItem[]>(
+        vehicleModelKeys.list(orgId ?? ""),
+      );
+      queryClient.setQueryData<VehicleModelItem[]>(
+        vehicleModelKeys.list(orgId ?? ""),
+        (old) =>
+          (old ?? []).map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  make: formData.make,
+                  model: formData.model,
+                  generation: formData.generation || null,
+                  year_start: formData.year_start
+                    ? parseInt(formData.year_start, 10)
+                    : null,
+                  year_end: formData.year_end
+                    ? parseInt(formData.year_end, 10)
+                    : null,
+                  engine: formData.engine || null,
+                  body_type: formData.body_type || null,
+                }
+              : item,
+          ),
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          vehicleModelKeys.list(orgId ?? ""),
+          context.previous,
+        );
       }
-    } catch (e: unknown) {
-      toast.error((e as Error).message ?? "Failed to update");
-    } finally {
-      setSaving(false);
-    }
-  };
+      toast.error("Failed to update vehicle model");
+    },
+    onSuccess: () => {
+      toast.success("Vehicle model updated");
+      setEditingId(null);
+      resetForm();
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: vehicleModelKeys.list(orgId ?? ""),
+      });
+    },
+  });
 
-  const handleDelete = async (id: string) => {
-    if (!orgId) return;
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
       const r = await fetch(
         `/api/organizations/${orgId}/vehicle-models/${id}`,
         { method: "DELETE" },
       );
       const d = await r.json();
-      if (d.error) {
-        toast.error(d.error.message);
-        return;
+      if (d.error) throw new Error(d.error.message);
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({
+        queryKey: vehicleModelKeys.list(orgId ?? ""),
+      });
+      const previous = queryClient.getQueryData<VehicleModelItem[]>(
+        vehicleModelKeys.list(orgId ?? ""),
+      );
+      queryClient.setQueryData<VehicleModelItem[]>(
+        vehicleModelKeys.list(orgId ?? ""),
+        (old) => (old ?? []).filter((item) => item.id !== id),
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          vehicleModelKeys.list(orgId ?? ""),
+          context.previous,
+        );
       }
-      refetch();
-      toast.success("Vehicle model deleted");
-    } catch {
-      toast.error("Failed to delete");
-    }
+      toast.error("Failed to delete vehicle model");
+    },
+    onSuccess: () => toast.success("Vehicle model deleted"),
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: vehicleModelKeys.list(orgId ?? ""),
+      });
+    },
+  });
+
+  // ── CRUD handlers ─────────────────────────────────────────────
+
+  const handleAdd = () => {
+    if (!orgId || !editForm.make.trim() || !editForm.model.trim()) return;
+    addMutation.mutate(editForm);
+  };
+
+  const handleUpdate = (id: string) => {
+    if (!orgId || !editForm.make.trim() || !editForm.model.trim()) return;
+    updateMutation.mutate({ id, formData: editForm });
+  };
+
+  const handleDelete = (id: string) => {
+    if (!orgId) return;
+    deleteMutation.mutate(id);
   };
 
   const startEdit = (v: VariantItem) => {
@@ -355,7 +472,7 @@ export default function VehicleModelsPage() {
               sheetName="Vehicle Models"
             />
             <Button
-              size="lg"
+              size="default"
               className="h-12"
               onClick={() => {
                 setShowAdd(!showAdd);
@@ -506,11 +623,13 @@ export default function VehicleModelsPage() {
               <Button
                 onClick={editingId ? () => handleUpdate(editingId) : handleAdd}
                 disabled={
-                  saving || !editForm.make.trim() || !editForm.model.trim()
+                  (editingId ? updateMutation.isPending : addMutation.isPending) ||
+                  !editForm.make.trim() ||
+                  !editForm.model.trim()
                 }
-                size="lg"
+                size="default"
               >
-                {saving
+                {(editingId ? updateMutation.isPending : addMutation.isPending)
                   ? t("saving")
                   : editingId
                     ? t("saveChanges")
@@ -518,7 +637,7 @@ export default function VehicleModelsPage() {
               </Button>
               <Button
                 variant="outline"
-                size="lg"
+                size="default"
                 onClick={() => {
                   setShowAdd(false);
                   setEditingId(null);
@@ -678,7 +797,7 @@ export default function VehicleModelsPage() {
                                         </Button>
                                         <Button
                                           variant="ghost"
-                                          size="icon"
+                                          size="icon-xs"
                                           onClick={() => handleDelete(v.id)}
                                           className="size-8"
                                           aria-label={t("deleteVariant")}

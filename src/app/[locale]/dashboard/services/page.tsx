@@ -25,7 +25,7 @@ import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { serviceKeys } from "@/lib/queries/keys";
 import { useServiceLastUsedPrices } from "@/lib/queries/use-price-memory";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatMNT } from "@/lib/utils";
 
 interface ServiceItem {
@@ -61,6 +61,7 @@ export default function ServicesPage() {
 
   const error = queryError ? queryError.message : null;
 
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [newService, setNewService] = useState({
@@ -69,7 +70,6 @@ export default function ServicesPage() {
     default_price: "",
     category: "",
   });
-  const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -77,7 +77,6 @@ export default function ServicesPage() {
     default_price: "",
     category: "",
   });
-  const [editSaving, setEditSaving] = useState(false);
 
   const lastUsedPrices = useServiceLastUsedPrices(orgId ?? undefined);
 
@@ -90,57 +89,173 @@ export default function ServicesPage() {
     [],
   );
 
-  const handleAdd = async () => {
-    if (!orgId || !newService.name.trim()) return;
-    setSaving(true);
-    try {
+  const addMutation = useMutation({
+    mutationFn: async (formData: typeof newService) => {
       const r = await fetch(`/api/organizations/${orgId}/services`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: newService.name,
-          description: newService.description || null,
-          default_price: parseFloat(newService.default_price) || 0,
-          category: newService.category || null,
+          name: formData.name,
+          description: formData.description || null,
+          default_price: parseFloat(formData.default_price) || 0,
+          category: formData.category || null,
         }),
       });
       const d = await r.json();
-      if (d.data) {
-        toast.success("Service created");
-        refetch();
-        setShowAdd(false);
-        setNewService({
-          name: "",
-          description: "",
-          default_price: "",
-          category: "",
-        });
-      } else {
-        toast.error(d.error?.message ?? "Failed to create service");
+      if (d.error) throw new Error(d.error.message);
+      return d.data as ServiceItem;
+    },
+    onMutate: async (formData) => {
+      await queryClient.cancelQueries({
+        queryKey: serviceKeys.list(orgId ?? ""),
+      });
+      const previous = queryClient.getQueryData<ServiceItem[]>(
+        serviceKeys.list(orgId ?? ""),
+      );
+      const optimistic: ServiceItem = {
+        id: `temp-${Date.now()}`,
+        name: formData.name,
+        description: formData.description || null,
+        default_price: parseFloat(formData.default_price) || 0,
+        category: formData.category || null,
+      };
+      queryClient.setQueryData<ServiceItem[]>(
+        serviceKeys.list(orgId ?? ""),
+        (old) => [...(old ?? []), optimistic],
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          serviceKeys.list(orgId ?? ""),
+          context.previous,
+        );
       }
-    } catch (e: unknown) {
-      toast.error((e as Error).message ?? "Failed to create service");
-    } finally {
-      setSaving(false);
-    }
-  };
+      toast.error("Failed to create service");
+    },
+    onSuccess: () => {
+      toast.success("Service created");
+      setShowAdd(false);
+      setNewService({ name: "", description: "", default_price: "", category: "" });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: serviceKeys.list(orgId ?? "") });
+    },
+  });
 
-  const handleDelete = async (id: string) => {
-    if (!orgId) return;
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
       const r = await fetch(`/api/organizations/${orgId}/services/${id}`, {
         method: "DELETE",
       });
       const d = await r.json();
-      if (d.error) {
-        toast.error(d.error.message);
-        return;
+      if (d.error) throw new Error(d.error.message);
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({
+        queryKey: serviceKeys.list(orgId ?? ""),
+      });
+      const previous = queryClient.getQueryData<ServiceItem[]>(
+        serviceKeys.list(orgId ?? ""),
+      );
+      queryClient.setQueryData<ServiceItem[]>(
+        serviceKeys.list(orgId ?? ""),
+        (old) => (old ?? []).filter((s) => s.id !== id),
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          serviceKeys.list(orgId ?? ""),
+          context.previous,
+        );
       }
-      refetch();
-      toast.success("Service deleted");
-    } catch {
       toast.error("Failed to delete service");
-    }
+    },
+    onSuccess: () => toast.success("Service deleted"),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: serviceKeys.list(orgId ?? "") });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      id,
+      formData,
+    }: {
+      id: string;
+      formData: typeof editForm;
+    }) => {
+      const r = await fetch(
+        `/api/organizations/${orgId}/services/${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.name,
+            description: formData.description || null,
+            default_price: parseFloat(formData.default_price) || 0,
+            category: formData.category || null,
+          }),
+        },
+      );
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      return d.data as ServiceItem;
+    },
+    onMutate: async ({ id, formData }) => {
+      await queryClient.cancelQueries({
+        queryKey: serviceKeys.list(orgId ?? ""),
+      });
+      const previous = queryClient.getQueryData<ServiceItem[]>(
+        serviceKeys.list(orgId ?? ""),
+      );
+      queryClient.setQueryData<ServiceItem[]>(
+        serviceKeys.list(orgId ?? ""),
+        (old) =>
+          (old ?? []).map((s) =>
+            s.id === id
+              ? {
+                  ...s,
+                  name: formData.name,
+                  description: formData.description || null,
+                  default_price: parseFloat(formData.default_price) || 0,
+                  category: formData.category || null,
+                }
+              : s,
+          ),
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          serviceKeys.list(orgId ?? ""),
+          context.previous,
+        );
+      }
+      toast.error("Failed to update service");
+    },
+    onSuccess: () => {
+      toast.success("Service updated");
+      setEditingId(null);
+      setEditForm({ name: "", description: "", default_price: "", category: "" });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: serviceKeys.list(orgId ?? "") });
+    },
+  });
+
+  const handleAdd = () => {
+    if (!orgId || !newService.name.trim()) return;
+    addMutation.mutate(newService);
+  };
+
+  const handleDelete = (id: string) => {
+    if (!orgId) return;
+    deleteMutation.mutate(id);
   };
 
   const handleStartEdit = (service: ServiceItem) => {
@@ -163,36 +278,9 @@ export default function ServicesPage() {
     });
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = () => {
     if (!orgId || !editingId || !editForm.name.trim()) return;
-    setEditSaving(true);
-    try {
-      const r = await fetch(
-        `/api/organizations/${orgId}/services/${editingId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: editForm.name,
-            description: editForm.description || null,
-            default_price: parseFloat(editForm.default_price) || 0,
-            category: editForm.category || null,
-          }),
-        },
-      );
-      const d = await r.json();
-      if (d.data) {
-        toast.success("Service updated");
-        refetch();
-        handleCancelEdit();
-      } else {
-        toast.error(d.error?.message ?? "Failed to update service");
-      }
-    } catch (e: unknown) {
-      toast.error((e as Error).message ?? "Failed to update service");
-    } finally {
-      setEditSaving(false);
-    }
+    updateMutation.mutate({ id: editingId, formData: editForm });
   };
 
   const filtered = services.filter(
@@ -279,7 +367,7 @@ export default function ServicesPage() {
               sheetName="Services"
             />
             <Button
-              size="lg"
+              size="default"
               className="h-12"
               onClick={() => setShowAdd(!showAdd)}
             >
@@ -334,11 +422,11 @@ export default function ServicesPage() {
             <Button
               onClick={handleAdd}
               disabled={
-                saving || !newService.name.trim() || !newService.default_price
+                addMutation.isPending || !newService.name.trim() || !newService.default_price
               }
-              size="lg"
+              size="default"
             >
-              {saving ? t("services.saving") : t("services.saveService")}
+              {addMutation.isPending ? t("services.saving") : t("services.saveService")}
             </Button>
           </CardContent>
         </Card>
@@ -420,14 +508,14 @@ export default function ServicesPage() {
                       <div className="flex gap-2">
                         <Button
                           onClick={handleUpdate}
-                          disabled={editSaving || !editForm.name.trim()}
-                          size="lg"
+                          disabled={updateMutation.isPending || !editForm.name.trim()}
+                          size="default"
                         >
-                          {editSaving ? t("services.saving") : "Save"}
+                          {updateMutation.isPending ? t("services.saving") : "Save"}
                         </Button>
                         <Button
                           variant="outline"
-                          size="lg"
+                          size="default"
                           onClick={handleCancelEdit}
                         >
                           Cancel
@@ -453,7 +541,7 @@ export default function ServicesPage() {
                       )}
                       <Button
                         variant="ghost"
-                        size="icon"
+                        size="icon-xs"
                         onClick={() => handleStartEdit(s)}
                         aria-label="Edit service"
                       >
@@ -461,7 +549,7 @@ export default function ServicesPage() {
                       </Button>
                       <Button
                         variant="ghost"
-                        size="icon"
+                        size="icon-xs"
                         onClick={() => handleDelete(s.id)}
                         aria-label="Delete service"
                       >

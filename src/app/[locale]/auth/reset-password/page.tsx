@@ -2,23 +2,28 @@
 
 import { Loader2, Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { resetPassword } from "./actions";
 
-
 export default function ResetPasswordPage() {
   const t = useTranslations("auth.resetPassword");
-  const [state, formAction, isPending] = useActionState(resetPassword, {
-    error: "",
-  });
+  const [state, formAction, isPending] = useActionState(resetPassword, {});
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const fieldErrors = state?.fieldErrors ?? {};
+
+  const prevFormError = useRef(state?.formError);
+  useEffect(() => {
+    if (state?.formError && state.formError !== prevFormError.current) {
+      toast.error(state.formError);
+    }
+    prevFormError.current = state?.formError;
+  }, [state?.formError]);
 
   return (
     <div>
@@ -27,9 +32,7 @@ export default function ResetPasswordPage() {
         <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
       <form action={formAction} className="flex flex-col gap-4">
-        {state?.error && (
-          <FieldError>{state.error}</FieldError>
-        )}
+        {state?.formError && <FieldError>{state.formError}</FieldError>}
         <Field>
           <FieldLabel htmlFor="password">{t("passwordLabel")}</FieldLabel>
           <Input
@@ -38,21 +41,33 @@ export default function ResetPasswordPage() {
             type="password"
             autoComplete="new-password"
             required
-            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder={t("passwordPlaceholder")}
+            aria-invalid={"password" in fieldErrors || undefined}
           />
+          {"password" in fieldErrors && (
+            <FieldError>{fieldErrors.password}</FieldError>
+          )}
         </Field>
         <Field>
-          <FieldLabel htmlFor="confirmPassword">{t("confirmPasswordLabel")}</FieldLabel>
+          <FieldLabel htmlFor="confirmPassword">
+            {t("confirmPasswordLabel")}
+          </FieldLabel>
           <Input
             id="confirmPassword"
             name="confirmPassword"
             type="password"
             autoComplete="new-password"
             required
-            minLength={8}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder={t("confirmPasswordPlaceholder")}
+            aria-invalid={"confirmPassword" in fieldErrors || undefined}
           />
+          {"confirmPassword" in fieldErrors && (
+            <FieldError>{fieldErrors.confirmPassword}</FieldError>
+          )}
         </Field>
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? <Loader2 className="animate-spin" /> : <Lock />}

@@ -1,7 +1,8 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { CarFront, Loader2, User } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
+import { ColorSelect } from "@/components/vehicles/color-select";
 import { useRouter } from "@/lib/i18n/navigation";
+import { vehicleKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Customer } from "@/lib/types";
 
@@ -79,6 +86,7 @@ export function NewVehicleDialog({
   onOpenChange,
 }: NewVehicleDialogProps) {
   const { replace } = useRouter();
+  const queryClient = useQueryClient();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? null;
 
@@ -150,6 +158,9 @@ export function NewVehicleDialog({
       }
 
       toast.success("Vehicle created");
+      queryClient.invalidateQueries({
+        queryKey: vehicleKeys.all(orgId),
+      });
       onOpenChange(false);
       replace(`/dashboard/vehicles/${json.data.id}`);
     } catch {
@@ -415,16 +426,12 @@ export function NewVehicleDialog({
                 >
                   Color
                 </label>
-                <Input
-                  id="vehicle-color"
+                <ColorSelect
                   value={form.color}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      color: event.target.value,
-                    }))
+                  onChange={(color) =>
+                    setForm((current) => ({ ...current, color }))
                   }
-                  className="h-11"
+                  className="w-full"
                 />
               </div>
               <div>
@@ -472,7 +479,7 @@ export function NewVehicleDialog({
                 >
                   Fuel Type
                 </label>
-                <Input
+                <NativeSelect
                   id="vehicle-fuel"
                   value={form.fuelType}
                   onChange={(event) =>
@@ -481,9 +488,22 @@ export function NewVehicleDialog({
                       fuelType: event.target.value,
                     }))
                   }
-                  className="h-11"
-                  placeholder="Gasoline"
-                />
+                  className="w-full"
+                  size="default"
+                >
+                  <NativeSelectOption value="">
+                    Select fuel type
+                  </NativeSelectOption>
+                  <NativeSelectOption value="Gasoline">
+                    Gasoline
+                  </NativeSelectOption>
+                  <NativeSelectOption value="Diesel">Diesel</NativeSelectOption>
+                  <NativeSelectOption value="Electric">
+                    Electric
+                  </NativeSelectOption>
+                  <NativeSelectOption value="Hybrid">Hybrid</NativeSelectOption>
+                  <NativeSelectOption value="LPG">LPG</NativeSelectOption>
+                </NativeSelect>
               </div>
               <div>
                 <label
@@ -492,7 +512,7 @@ export function NewVehicleDialog({
                 >
                   Transmission
                 </label>
-                <Input
+                <NativeSelect
                   id="vehicle-transmission"
                   value={form.transmission}
                   onChange={(event) =>
@@ -501,9 +521,19 @@ export function NewVehicleDialog({
                       transmission: event.target.value,
                     }))
                   }
-                  className="h-11"
-                  placeholder="Automatic"
-                />
+                  className="w-full"
+                  size="default"
+                >
+                  <NativeSelectOption value="">
+                    Select transmission
+                  </NativeSelectOption>
+                  <NativeSelectOption value="Automatic">
+                    Automatic
+                  </NativeSelectOption>
+                  <NativeSelectOption value="Manual">Manual</NativeSelectOption>
+                  <NativeSelectOption value="CVT">CVT</NativeSelectOption>
+                  <NativeSelectOption value="DCT">DCT</NativeSelectOption>
+                </NativeSelect>
               </div>
               <div>
                 <label
@@ -512,7 +542,7 @@ export function NewVehicleDialog({
                 >
                   Drivetrain
                 </label>
-                <Input
+                <NativeSelect
                   id="vehicle-drivetrain"
                   value={form.drivetrain}
                   onChange={(event) =>
@@ -521,9 +551,17 @@ export function NewVehicleDialog({
                       drivetrain: event.target.value,
                     }))
                   }
-                  className="h-11"
-                  placeholder="AWD"
-                />
+                  className="w-full"
+                  size="default"
+                >
+                  <NativeSelectOption value="">
+                    Select drivetrain
+                  </NativeSelectOption>
+                  <NativeSelectOption value="AWD">AWD</NativeSelectOption>
+                  <NativeSelectOption value="4WD">4WD</NativeSelectOption>
+                  <NativeSelectOption value="FWD">FWD</NativeSelectOption>
+                  <NativeSelectOption value="RWD">RWD</NativeSelectOption>
+                </NativeSelect>
               </div>
               <div>
                 <label
@@ -532,7 +570,7 @@ export function NewVehicleDialog({
                 >
                   Body Type
                 </label>
-                <Input
+                <NativeSelect
                   id="vehicle-body"
                   value={form.bodyType}
                   onChange={(event) =>
@@ -541,9 +579,26 @@ export function NewVehicleDialog({
                       bodyType: event.target.value,
                     }))
                   }
-                  className="h-11"
-                  placeholder="SUV"
-                />
+                  className="w-full"
+                  size="default"
+                >
+                  <NativeSelectOption value="">
+                    Select body type
+                  </NativeSelectOption>
+                  <NativeSelectOption value="SUV">SUV</NativeSelectOption>
+                  <NativeSelectOption value="Sedan">Sedan</NativeSelectOption>
+                  <NativeSelectOption value="Hatchback">
+                    Hatchback
+                  </NativeSelectOption>
+                  <NativeSelectOption value="Coupe">Coupe</NativeSelectOption>
+                  <NativeSelectOption value="Convertible">
+                    Convertible
+                  </NativeSelectOption>
+                  <NativeSelectOption value="Wagon">Wagon</NativeSelectOption>
+                  <NativeSelectOption value="Van">Van</NativeSelectOption>
+                  <NativeSelectOption value="Truck">Truck</NativeSelectOption>
+                  <NativeSelectOption value="Bus">Bus</NativeSelectOption>
+                </NativeSelect>
               </div>
               <div>
                 <label
@@ -617,7 +672,7 @@ export function NewVehicleDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" size="lg" disabled={saving}>
+            <Button type="submit" size="default" disabled={saving}>
               {saving ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (

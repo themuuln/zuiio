@@ -160,7 +160,7 @@ export function ServiceLines({
                   </span>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     onClick={() => onRemove(idx)}
                     className="shrink-0 min-w-[44px] min-h-[var(--ui-touch-target)]"
                     aria-label={`Remove ${svc.name}`}

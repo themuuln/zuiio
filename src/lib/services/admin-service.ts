@@ -50,3 +50,14 @@ export async function updateOrgSubscription(
   if (error) throw new Error(error.message);
   return data as AdminOrg["subscription"];
 }
+
+export async function extendSubscriptionTrial(
+  orgId: string,
+): Promise<AdminOrg["subscription"]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_extend_subscription", {
+    target_org_id: orgId,
+  });
+  if (error) throw new Error(error.message);
+  return data as AdminOrg["subscription"];
+}

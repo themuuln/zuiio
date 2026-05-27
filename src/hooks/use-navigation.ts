@@ -61,14 +61,14 @@ const navGroups: NavGroup[] = [
     icon: Wrench,
     children: [
       {
-        labelKey: "nav.mechanic",
-        href: "/dashboard/mechanic",
-        icon: Wrench,
-      },
-      {
         labelKey: "nav.bayView",
         href: "/dashboard/bay-view",
         icon: LayoutGrid,
+      },
+      {
+        labelKey: "nav.mechanic",
+        href: "/dashboard/mechanic",
+        icon: Wrench,
       },
       {
         labelKey: "nav.workOrders",

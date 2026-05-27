@@ -1,27 +1,27 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import type { ColumnDef } from "@tanstack/react-table";
 import { ClipboardList } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import type { ColumnDef } from "@tanstack/react-table";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
+import { Input } from "@/components/ui/input";
 import { useClientNow } from "@/hooks/use-client-now";
+import type { ExportColumn } from "@/lib/export";
 import {
   useCreateMovement,
   useInventoryMovements,
 } from "@/lib/queries/use-inventory";
 import type { InventoryMovement, PartsCatalogItem } from "@/lib/types";
-import type { ExportColumn } from "@/lib/export";
 import { formatMNT } from "@/lib/utils";
-import { MOVEMENT_COLORS, MOVEMENT_LABELS, formatDate } from "./constants";
+import { formatDate, MOVEMENT_LABELS } from "./constants";
 import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
 
@@ -198,7 +198,10 @@ export function MovementsTab({
 
   async function handleRecordMovement(e: React.FormEvent) {
     e.preventDefault();
-    if (!movementForm.part_id || !movementForm.quantity) return;
+    if (!movementForm.part_id || !movementForm.quantity) {
+      toast.error("Please select a part and enter a quantity");
+      return;
+    }
 
     const body = {
       part_id: movementForm.part_id,
@@ -266,7 +269,7 @@ export function MovementsTab({
               filename={`inventory-movements-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Movements"
             />
-            <Button size="lg" onClick={() => setShowAddMovement(true)}>
+            <Button size="default" onClick={() => setShowAddMovement(true)}>
               Record Movement
             </Button>
           </div>
@@ -422,7 +425,9 @@ export function MovementsTab({
               >
                 Cancel
               </Button>
-              <Button type="submit">Record</Button>
+              <Button type="submit" disabled={createMovement.isPending}>
+                Record
+              </Button>
             </div>
           </form>
         </Modal>

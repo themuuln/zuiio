@@ -172,7 +172,7 @@ export function QueuedVehicleCard({
         {onQuickAssign && !isPending && (
           <Button
             variant="default"
-            size="icon"
+            size="icon-xs"
             onClick={(e) => {
               e.stopPropagation();
               onQuickAssign(workOrder.id);
@@ -287,7 +287,7 @@ export function WaitingQueue({
               {searchQuery && (
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="icon-xs"
                   onClick={() => setSearchQuery("")}
                   className="absolute right-1.5 top-1/2 -translate-y-1/2 size-5"
                 >

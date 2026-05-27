@@ -99,7 +99,7 @@ export default function SuppliersPage() {
               sheetName="Suppliers"
             />
             <Link href="/dashboard/inventory/suppliers/new">
-              <Button size="lg" className="h-12">
+              <Button size="default">
                 <Plus className="size-5" /> {t("newSupplier")}
               </Button>
             </Link>

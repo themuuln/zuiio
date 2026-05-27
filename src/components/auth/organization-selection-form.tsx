@@ -1,7 +1,8 @@
 "use client";
 
 import { Building2, KeyRound, Loader2 } from "lucide-react";
-import { useEffect, useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { CompleteOrganizationLoginState } from "@/lib/actions/complete-organization-login";
 import type { UserOrganizationAccessOption } from "@/lib/services/organization-access-service";
@@ -36,6 +37,20 @@ export function OrganizationSelectionForm({
   copy,
 }: OrganizationSelectionFormProps) {
   const [state, formAction, isPending] = useActionState(action, {});
+  const [pin, setPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+
+  const fieldErrors = state?.fieldErrors ?? {};
+  const hasFormError = !!state?.formError;
+
+  const prevFormError = useRef(state?.formError);
+  useEffect(() => {
+    if (state?.formError && state.formError !== prevFormError.current) {
+      toast.error(state.formError);
+    }
+    prevFormError.current = state?.formError;
+  }, [state?.formError]);
+
   const [organizationId, setOrganizationId] = useState(
     organizations.find((organization) => organization.isPrimary)
       ?.organizationId ??
@@ -86,9 +101,9 @@ export function OrganizationSelectionForm({
         {redirectTo && (
           <input type="hidden" name="redirectTo" value={redirectTo} />
         )}
-        {state?.error && (
+        {state?.formError && (
           <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {state.error}
+            {state.formError}
           </div>
         )}
 
@@ -107,7 +122,8 @@ export function OrganizationSelectionForm({
               value={organizationId}
               onChange={(event) => setOrganizationId(event.target.value)}
               onKeyDown={(e) => e.key === "Enter" && e.stopPropagation()}
-              className="h-10 w-full rounded-md border border-input bg-background py-2 pr-3 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className={`h-10 w-full rounded-md border bg-background py-2 pr-3 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${"organizationId" in fieldErrors ? "border-destructive ring-1 ring-destructive/20" : "border-input"}`}
+              aria-invalid={"organizationId" in fieldErrors || undefined}
             >
               {organizations.map((organization) => (
                 <option
@@ -119,6 +135,11 @@ export function OrganizationSelectionForm({
               ))}
             </select>
           </div>
+          {"organizationId" in fieldErrors && (
+            <p className="text-sm text-destructive">
+              {fieldErrors.organizationId}
+            </p>
+          )}
           <p className="text-xs text-muted-foreground">
             {selectedOrganization?.slug ?? copy.organizationPlaceholder}
           </p>
@@ -139,10 +160,16 @@ export function OrganizationSelectionForm({
               minLength={4}
               maxLength={6}
               required
-              className="w-full rounded-md border border-input bg-background px-3 py-2 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
+              className={`w-full rounded-md border bg-background px-3 py-2 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${"pin" in fieldErrors || hasFormError ? "border-destructive ring-1 ring-destructive/20" : "border-input"}`}
               placeholder={copy.pinPlaceholder}
+              aria-invalid={"pin" in fieldErrors || hasFormError || undefined}
             />
           </div>
+          {"pin" in fieldErrors && (
+            <p className="text-sm text-destructive">{fieldErrors.pin}</p>
+          )}
           <p className="text-xs text-muted-foreground">
             {selectedOrganization?.hasBayViewPin
               ? copy.verifyHint
@@ -167,9 +194,19 @@ export function OrganizationSelectionForm({
               minLength={4}
               maxLength={6}
               required
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              value={confirmPin}
+              onChange={(e) => setConfirmPin(e.target.value)}
+              className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${"confirmPin" in fieldErrors || hasFormError ? "border-destructive ring-1 ring-destructive/20" : "border-input"}`}
               placeholder={copy.pinPlaceholder}
+              aria-invalid={
+                "confirmPin" in fieldErrors || hasFormError || undefined
+              }
             />
+            {"confirmPin" in fieldErrors && (
+              <p className="text-sm text-destructive">
+                {fieldErrors.confirmPin}
+              </p>
+            )}
           </div>
         )}
 

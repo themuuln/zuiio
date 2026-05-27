@@ -91,7 +91,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
           </div>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             onClick={onClose}
             aria-label={t("close")}
           >
@@ -173,7 +173,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
               type="submit"
               className="w-full"
               disabled={saving || !email.trim() || !fullName.trim()}
-              size="lg"
+              size="default"
             >
               {saving ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -189,7 +189,7 @@ export function MechanicRegistrationDialog({ onClose }: Props) {
               variant="default"
               className="w-full"
               onClick={onClose}
-              size="lg"
+              size="default"
             >
               <CheckCircle2 className="size-4" />
               {t("done")}

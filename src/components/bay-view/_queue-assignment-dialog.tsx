@@ -146,7 +146,7 @@ export function QueueAssignmentDialog({
             </div>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-xs"
               onClick={onClose}
               aria-label={t("close")}
             >

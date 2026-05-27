@@ -64,7 +64,7 @@ export function StatusNotesModal({
           </CardTitle>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             onClick={onCancel}
             aria-label={t("cancel")}
           >
@@ -87,10 +87,10 @@ export function StatusNotesModal({
             }}
           />
           <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={onCancel} size="lg">
+            <Button variant="outline" onClick={onCancel} size="default">
               {t("cancel")}
             </Button>
-            <Button onClick={handleSubmit} size="lg">
+            <Button onClick={handleSubmit} size="default">
               {title}
             </Button>
           </div>

@@ -142,7 +142,7 @@ export function ServicesSection({
                 <div className="w-7 flex justify-center">
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     onClick={() => onRemoveService(svc.id)}
                     className="text-destructive/60 hover:text-destructive size-6 opacity-0 group-hover:opacity-100"
                     aria-label="Remove service"

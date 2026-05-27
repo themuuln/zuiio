@@ -120,7 +120,7 @@ function DragHandle({ id }: { id: number }) {
       {...attributes}
       {...listeners}
       variant="ghost"
-      size="icon"
+      size="icon-xs"
       className="size-7 text-muted-foreground hover:bg-transparent"
     >
       <GripVertical className="size-3 text-muted-foreground" />
@@ -282,7 +282,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     id: "actions",
     cell: () => (
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="ghost" className="flex size-8 text-muted-foreground data-[state=open]:bg-muted" size="icon" />}>
+        <DropdownMenuTrigger render={<Button variant="ghost" className="flex size-8 text-muted-foreground data-[state=open]:bg-muted" size="icon-xs" />}>
           <EllipsisVertical />
           <span className="sr-only">Open menu</span>
         </DropdownMenuTrigger>
@@ -560,7 +560,7 @@ export function DataTable({
               <Button
                 variant="outline"
                 className="size-8"
-                size="icon"
+                size="icon-xs"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
@@ -570,7 +570,7 @@ export function DataTable({
               <Button
                 variant="outline"
                 className="size-8"
-                size="icon"
+                size="icon-xs"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
@@ -580,7 +580,7 @@ export function DataTable({
               <Button
                 variant="outline"
                 className="hidden size-8 lg:flex"
-                size="icon"
+                size="icon-xs"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
               >

@@ -145,7 +145,7 @@ export function PickupCompleteForm({
             </span>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-xs"
               onClick={onCancel}
             >
               <X className="size-4" />
@@ -201,10 +201,10 @@ export function PickupCompleteForm({
 
           {/* Actions */}
           <div className="flex gap-2 justify-end pt-2 border-t">
-            <Button variant="outline" onClick={onCancel} size="lg" disabled={saving}>
+            <Button variant="outline" onClick={onCancel} size="default" disabled={saving}>
               {t("cancel")}
             </Button>
-            <Button onClick={handleSubmit} size="lg" disabled={saving}>
+            <Button onClick={handleSubmit} size="default" disabled={saving}>
               {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
               {saving ? t("saving") : t("complete")}
             </Button>

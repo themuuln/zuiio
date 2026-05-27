@@ -104,7 +104,7 @@ export function GoalCard({
             )}
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-xs"
               onClick={onEdit}
               aria-label="Set daily goal"
             >

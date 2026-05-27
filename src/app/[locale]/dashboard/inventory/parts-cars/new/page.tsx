@@ -56,7 +56,7 @@ export default function NewPartsCarPage() {
   return (
     <div className="mx-auto max-w-2xl flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" render={<Link href="/dashboard/inventory/parts-cars" />}>
+        <Button variant="ghost" size="icon-xs" render={<Link href="/dashboard/inventory/parts-cars" />}>
           <ArrowLeft className="size-5" />
         </Button>
         <div>

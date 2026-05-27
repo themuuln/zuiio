@@ -244,7 +244,7 @@ export default function OrganizationPage() {
               {!editing && (
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="icon-xs"
                   className="ml-auto size-7"
                   onClick={() => setEditing(true)}
                 >

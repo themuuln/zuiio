@@ -1,13 +1,14 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ClipboardList, Plus } from "lucide-react";
+import { Activity, BarChart3, ClipboardList, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { NewWorkOrderSheet } from "@/components/work-orders/new-work-order-sheet";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
@@ -23,7 +24,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,7 +36,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import type { ExportColumn } from "@/lib/export";
-import { Link, useRouter } from "@/lib/i18n/navigation";
+import { useRouter } from "@/lib/i18n/navigation";
 import { workOrderKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
@@ -159,6 +159,7 @@ export default function WorkOrdersPage() {
   const [search, setSearch] = useState("");
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [showNewSheet, setShowNewSheet] = useState(false);
 
   const { data: org } = useCurrentOrg();
   const status = statusIdx > 0 ? STATUS_KEYS[statusIdx] : "";
@@ -210,16 +211,18 @@ export default function WorkOrdersPage() {
     for (const wo of orders) {
       counts[wo.status] = (counts[wo.status] || 0) + 1;
     }
-    return STATUS_KEYS.filter(Boolean).map((key) => ({
-      label: key,
-      count: counts[key] ?? 0,
-      color:
-        key === "Cancelled"
-          ? ("destructive" as const)
-          : key === "Completed"
-            ? ("outline" as const)
-            : ("default" as const),
-    }));
+    return STATUS_KEYS.filter(Boolean)
+      .map((key) => ({
+        label: key,
+        count: counts[key] ?? 0,
+        color:
+          key === "Cancelled"
+            ? ("destructive" as const)
+            : key === "Completed"
+              ? ("outline" as const)
+              : ("default" as const),
+      }))
+      .filter((sc) => sc.count > 0);
   }, [orders]);
 
   const todayWOs = useMemo(() => {
@@ -244,6 +247,7 @@ export default function WorkOrdersPage() {
       "stats",
       "Stats",
       <StatusSummary items={statusCounts} title="Work Orders" />,
+      <BarChart3 className="size-4" />,
     );
     registerTab(
       "activity",
@@ -253,6 +257,7 @@ export default function WorkOrdersPage() {
         title="Today"
         emptyMessage="No work orders today"
       />,
+      <Activity className="size-4" />,
     );
     setOpen(true);
   }, [registerTab, setOpen, statusCounts, todayWOs]);
@@ -265,17 +270,25 @@ export default function WorkOrdersPage() {
     updateStatus.mutate({ woId, status: newStatus });
   };
 
-  const statusChips: FilterChip[] = useMemo(
-    () =>
-      STATUS_KEYS.map((key, i) => ({
+  const statusChips: FilterChip[] = useMemo(() => {
+    // Only show chips for statuses that have at least one order
+    const countMap: Record<string, number> = {};
+    for (const sc of statusCounts) {
+      countMap[sc.label] = sc.count;
+    }
+    return STATUS_KEYS.filter(
+      (key) => key === "" || (countMap[key] ?? 0) > 0,
+    ).map((key) => {
+      const i = STATUS_KEYS.indexOf(key);
+      return {
         key: key || "all",
         label: i === 0 ? t("common.all") : translateStatus(t, key),
         active: statusIdx === i,
         onClick: () => setStatusIdx(i),
         colorDot: i > 0 ? (STATUS_COLORS[key] ?? "bg-gray-500") : undefined,
-      })),
-    [statusIdx, t],
-  );
+      };
+    });
+  }, [statusIdx, t, statusCounts]);
 
   // Build column definitions with callbacks (stable reference)
   const columns = useMemo(
@@ -393,11 +406,9 @@ export default function WorkOrdersPage() {
               filename={`work-orders-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Work Orders"
             />
-            <Link href="/dashboard/work-orders/new">
-              <Button>
-                <Plus className="size-4" /> {t("workOrders.newWorkOrder")}
-              </Button>
-            </Link>
+            <Button onClick={() => setShowNewSheet(true)}>
+              <Plus className="size-4" /> {t("workOrders.newWorkOrder")}
+            </Button>
           </div>
         }
       />
@@ -422,9 +433,9 @@ export default function WorkOrdersPage() {
             <EmptyDescription>{t("workOrders.subtitle")}</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Link href="/dashboard/work-orders/new">
-              <Button>{t("workOrders.createFirst")}</Button>
-            </Link>
+            <Button onClick={() => setShowNewSheet(true)}>
+              {t("workOrders.createFirst")}
+            </Button>
           </EmptyContent>
         </Empty>
       ) : (
@@ -442,6 +453,8 @@ export default function WorkOrdersPage() {
           </CardContent>
         </Card>
       )}
+
+      <NewWorkOrderSheet open={showNewSheet} onOpenChange={setShowNewSheet} />
     </div>
   );
 }

@@ -1,10 +1,10 @@
 "use server";
 
-import type { WorkOrder, WorkOrderService } from "@/lib/types";
 import { ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import { createCustomer } from "./customer-service";
 import { createVehicle, updateVehicle } from "./vehicle-service";
+import { createWorkOrder } from "./work-order-service";
 
 // ── Helper ──────────────────────────────────────────────────────
 
@@ -24,7 +24,9 @@ async function getOrgId(): Promise<string> {
 // ── Find or Create Customer ─────────────────────────────────────
 
 export async function findCustomerByPhone(phone: string) {
-  const { data: { user } } = await (await createClient()).auth.getUser();
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
   if (!user) throw new Error("Not authenticated");
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
@@ -40,7 +42,9 @@ export async function findCustomerByPhone(phone: string) {
 }
 
 export async function findCustomerByPlate(plate: string) {
-  const { data: { user } } = await (await createClient()).auth.getUser();
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
   if (!user) throw new Error("Not authenticated");
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
@@ -94,15 +98,21 @@ export interface VehicleLookupResult {
   }[];
 }
 
-export async function lookupVehicleByPlate(plate: string): Promise<VehicleLookupResult> {
-  const { data: { user } } = await (await createClient()).auth.getUser();
+export async function lookupVehicleByPlate(
+  plate: string,
+): Promise<VehicleLookupResult> {
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
   if (!user) throw new Error("Not authenticated");
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Find vehicle
   const { data: vehicle } = await supabase
     .from("vehicles")
-    .select("id, plate_number, make, model, year, color, vin, engine, transmission, fuel_type, odometer")
+    .select(
+      "id, plate_number, make, model, year, color, vin, engine, transmission, fuel_type, odometer",
+    )
     .eq("organization_id", orgId)
     .eq("plate_number", plate)
     .is("deleted_at", null)
@@ -128,10 +138,38 @@ export async function lookupVehicleByPlate(plate: string): Promise<VehicleLookup
 
   const customer = owner
     ? {
-        id: (owner.customers as unknown as { id: string; first_name: string | null; last_name: string | null; phone: string | null }).id,
-        first_name: (owner.customers as unknown as { id: string; first_name: string | null; last_name: string | null; phone: string | null }).first_name,
-        last_name: (owner.customers as unknown as { id: string; first_name: string | null; last_name: string | null; phone: string | null }).last_name,
-        phone: (owner.customers as unknown as { id: string; first_name: string | null; last_name: string | null; phone: string | null }).phone,
+        id: (
+          owner.customers as unknown as {
+            id: string;
+            first_name: string | null;
+            last_name: string | null;
+            phone: string | null;
+          }
+        ).id,
+        first_name: (
+          owner.customers as unknown as {
+            id: string;
+            first_name: string | null;
+            last_name: string | null;
+            phone: string | null;
+          }
+        ).first_name,
+        last_name: (
+          owner.customers as unknown as {
+            id: string;
+            first_name: string | null;
+            last_name: string | null;
+            phone: string | null;
+          }
+        ).last_name,
+        phone: (
+          owner.customers as unknown as {
+            id: string;
+            first_name: string | null;
+            last_name: string | null;
+            phone: string | null;
+          }
+        ).phone,
       }
     : null;
 
@@ -148,22 +186,36 @@ export async function lookupVehicleByPlate(plate: string): Promise<VehicleLookup
     .limit(20);
 
   // Fetch mechanic names and services for each WO (parallel)
-  const mechanicIds = [...new Set((workOrders ?? []).flatMap(wo => wo.mechanic_id ? [wo.mechanic_id] : []))] as string[];
-  const woIds = (workOrders ?? []).map(wo => wo.id);
+  const mechanicIds = [
+    ...new Set(
+      (workOrders ?? []).flatMap((wo) =>
+        wo.mechanic_id ? [wo.mechanic_id] : [],
+      ),
+    ),
+  ] as string[];
+  const woIds = (workOrders ?? []).map((wo) => wo.id);
   const [{ data: profiles }, { data: allServices }] = await Promise.all([
     supabase.from("profiles").select("id, full_name").in("id", mechanicIds),
-    supabase.from("work_order_services").select("work_order_id, service_name, final_price").in("work_order_id", woIds),
+    supabase
+      .from("work_order_services")
+      .select("work_order_id, service_name, final_price")
+      .in("work_order_id", woIds),
   ]);
 
-  const mechanicNameMap = new Map((profiles ?? []).map(p => [p.id, p.full_name]));
+  const mechanicNameMap = new Map(
+    (profiles ?? []).map((p) => [p.id, p.full_name]),
+  );
 
   const servicesByWo = new Map<string, { name: string; price: number }[]>();
   for (const s of allServices ?? []) {
-    if (!servicesByWo.has(s.work_order_id)) servicesByWo.set(s.work_order_id, []);
-    servicesByWo.get(s.work_order_id)!.push({ name: s.service_name, price: Number(s.final_price) });
+    if (!servicesByWo.has(s.work_order_id))
+      servicesByWo.set(s.work_order_id, []);
+    servicesByWo
+      .get(s.work_order_id)!
+      .push({ name: s.service_name, price: Number(s.final_price) });
   }
 
-  const serviceHistory = (workOrders ?? []).map(wo => ({
+  const serviceHistory = (workOrders ?? []).map((wo) => ({
     work_order_id: wo.id,
     status: wo.status,
     created_at: wo.created_at,
@@ -171,7 +223,9 @@ export async function lookupVehicleByPlate(plate: string): Promise<VehicleLookup
     diagnosis: wo.diagnosis,
     notes: wo.notes,
     total: Number(wo.total),
-    mechanic_name: wo.mechanic_id ? (mechanicNameMap.get(wo.mechanic_id) ?? null) : null,
+    mechanic_name: wo.mechanic_id
+      ? (mechanicNameMap.get(wo.mechanic_id) ?? null)
+      : null,
     services: servicesByWo.get(wo.id) ?? [],
   }));
 
@@ -210,11 +264,14 @@ export async function quickRegisterVehicle(params: {
   customerLastName?: string;
   customerPhone?: string;
 }) {
-  if (!params.plateNumber?.trim()) throw new ValidationError("Plate number is required");
+  if (!params.plateNumber?.trim())
+    throw new ValidationError("Plate number is required");
   if (!params.make?.trim()) throw new ValidationError("Make is required");
   if (!params.model?.trim()) throw new ValidationError("Model is required");
 
-  const { data: { user: authUser } } = await (await createClient()).auth.getUser();
+  const {
+    data: { user: authUser },
+  } = await (await createClient()).auth.getUser();
   if (!authUser) throw new Error("Not authenticated");
 
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
@@ -294,7 +351,9 @@ export async function quickRegisterVehicle(params: {
 // ── Search mechanics (for registration) ─────────────────────────
 
 export async function searchMechanics(search?: string) {
-  const { data: { user } } = await (await createClient()).auth.getUser();
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
   if (!user) throw new Error("Not authenticated");
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
@@ -322,30 +381,34 @@ export async function registerMechanic(params: {
   if (!params.email?.trim()) throw new ValidationError("Email is required");
   if (!params.fullName?.trim()) throw new ValidationError("Name is required");
 
-  const { data: { user } } = await (await createClient()).auth.getUser();
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   // Check if user exists and create profile entry in parallel
-  const [{ data: existingUser }, { data: profile, error }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, is_active")
-      .eq("id", params.email.trim()) // profiles.id = auth.users.id
-      .maybeSingle(),
-    supabase
-      .from("profiles")
-      .upsert({
-        id: params.email.trim(),
-        organization_id: orgId,
-        full_name: params.fullName.trim(),
-        phone: params.phone?.trim() ?? null,
-        is_active: true,
-      })
-      .select("id, full_name, phone, is_active")
-      .single(),
-  ]);
+  const [{ data: _existingUser }, { data: profile, error }] = await Promise.all(
+    [
+      supabase
+        .from("profiles")
+        .select("id, is_active")
+        .eq("id", params.email.trim()) // profiles.id = auth.users.id
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .upsert({
+          id: params.email.trim(),
+          organization_id: orgId,
+          full_name: params.fullName.trim(),
+          phone: params.phone?.trim() ?? null,
+          is_active: true,
+        })
+        .select("id, full_name, phone, is_active")
+        .single(),
+    ],
+  );
 
   if (error) throw new Error(error.message ?? "Failed to register mechanic");
 
@@ -357,35 +420,53 @@ export async function registerMechanic(params: {
 export async function getVehicleServiceTimeline(
   vehicleId: string,
 ): Promise<VehicleLookupResult["serviceHistory"]> {
-  const { data: { user } } = await (await createClient()).auth.getUser();
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
   if (!user) throw new Error("Not authenticated");
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   const { data: workOrders } = await supabase
     .from("work_orders")
-    .select("id, status, created_at, complaint, diagnosis, notes, total, mechanic_id")
+    .select(
+      "id, status, created_at, complaint, diagnosis, notes, total, mechanic_id",
+    )
     .eq("organization_id", orgId)
     .eq("vehicle_id", vehicleId)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(50);
 
-  const mechanicIds = [...new Set((workOrders ?? []).flatMap(wo => wo.mechanic_id ? [wo.mechanic_id] : []))] as string[];
-  const woIds = (workOrders ?? []).map(wo => wo.id);
+  const mechanicIds = [
+    ...new Set(
+      (workOrders ?? []).flatMap((wo) =>
+        wo.mechanic_id ? [wo.mechanic_id] : [],
+      ),
+    ),
+  ] as string[];
+  const woIds = (workOrders ?? []).map((wo) => wo.id);
   const [{ data: profiles }, { data: allServices }] = await Promise.all([
     supabase.from("profiles").select("id, full_name").in("id", mechanicIds),
-    supabase.from("work_order_services").select("work_order_id, service_name, final_price").in("work_order_id", woIds),
+    supabase
+      .from("work_order_services")
+      .select("work_order_id, service_name, final_price")
+      .in("work_order_id", woIds),
   ]);
 
-  const mechanicNameMap = new Map((profiles ?? []).map(p => [p.id, p.full_name]));
+  const mechanicNameMap = new Map(
+    (profiles ?? []).map((p) => [p.id, p.full_name]),
+  );
 
   const servicesByWo = new Map<string, { name: string; price: number }[]>();
   for (const s of allServices ?? []) {
-    if (!servicesByWo.has(s.work_order_id)) servicesByWo.set(s.work_order_id, []);
-    servicesByWo.get(s.work_order_id)!.push({ name: s.service_name, price: Number(s.final_price) });
+    if (!servicesByWo.has(s.work_order_id))
+      servicesByWo.set(s.work_order_id, []);
+    servicesByWo
+      .get(s.work_order_id)!
+      .push({ name: s.service_name, price: Number(s.final_price) });
   }
 
-  return (workOrders ?? []).map(wo => ({
+  return (workOrders ?? []).map((wo) => ({
     work_order_id: wo.id,
     status: wo.status,
     created_at: wo.created_at,
@@ -393,7 +474,51 @@ export async function getVehicleServiceTimeline(
     diagnosis: wo.diagnosis,
     notes: wo.notes,
     total: Number(wo.total),
-    mechanic_name: wo.mechanic_id ? (mechanicNameMap.get(wo.mechanic_id) ?? null) : null,
+    mechanic_name: wo.mechanic_id
+      ? (mechanicNameMap.get(wo.mechanic_id) ?? null)
+      : null,
     services: servicesByWo.get(wo.id) ?? [],
   }));
+}
+
+// ── Add Vehicle to Waiting Queue ────────────────────────────────
+
+export async function addVehicleToQueue(params: {
+  vehicleId: string;
+  customerId: string;
+  complaint?: string;
+}): Promise<{ workOrderId: string }> {
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+
+  if (!params.vehicleId) throw new ValidationError("Vehicle is required");
+  if (!params.customerId) throw new ValidationError("Customer is required");
+
+  // Check for duplicate active work order on this vehicle
+  const { data: activeWO } = await supabase
+    .from("work_orders")
+    .select("id, status, bay_number")
+    .eq("organization_id", orgId)
+    .eq("vehicle_id", params.vehicleId)
+    .is("deleted_at", null)
+    .not("status", "in", '("Completed","Cancelled")')
+    .maybeSingle();
+
+  if (activeWO) {
+    const location = activeWO.bay_number
+      ? `already assigned to Bay #${activeWO.bay_number}`
+      : "already in the waiting queue";
+    throw new ValidationError(`This vehicle is ${location}.`);
+  }
+
+  const result = await createWorkOrder(orgId, {
+    customer_id: params.customerId,
+    vehicle_id: params.vehicleId,
+    complaint: params.complaint?.trim() || undefined,
+  });
+
+  return { workOrderId: result.id };
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { AuthShowcase } from "@/components/auth/auth-showcase";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Auth",
@@ -13,9 +14,9 @@ export default async function AuthLayout({
 }) {
   const t = await getTranslations("app");
   return (
-    <div className="min-h-dvh flex flex-col md:grid md:grid-cols-12 bg-background select-none">
+    <div className="h-dvh flex flex-col md:grid md:grid-cols-12 bg-background select-none overscroll-none">
       {/* Left side showcase - visible on desktop */}
-      <div className="hidden md:flex md:col-span-7 lg:col-span-8 bg-zinc-950 border-r border-zinc-900 flex-col p-10 relative overflow-hidden">
+      <div className="hidden md:flex md:col-span-7 lg:col-span-8 bg-zinc-950 border-r border-zinc-900 flex-col p-10 relative overflow-hidden h-full">
         {/* Abstract futuristic grid background overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1f23_1.5px,transparent_1.5px),linear-gradient(to_bottom,#1f1f23_1.5px,transparent_1.5px)] bg-[size:4rem_4rem] opacity-35" />
 
@@ -30,7 +31,7 @@ export default async function AuthLayout({
       </div>
 
       {/* Right side form card */}
-      <div className="flex-1 flex col-span-12 md:col-span-5 lg:col-span-4 flex-col items-center justify-center p-6 sm:p-12 bg-gradient-to-br from-background via-muted/20 to-muted/40 relative">
+      <div className="flex-1 flex col-span-12 md:col-span-5 lg:col-span-4 flex-col items-center md:justify-center justify-start p-6 sm:p-12 bg-gradient-to-br from-background via-muted/20 to-muted/40 relative overflow-y-auto min-h-dvh">
         {/* Subtle grid lines background overlay for card side */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(18,18,18,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(18,18,18,0.02)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
@@ -62,6 +63,7 @@ export default async function AuthLayout({
           </div>
         </div>
       </div>
+      <Toaster />
     </div>
   );
 }

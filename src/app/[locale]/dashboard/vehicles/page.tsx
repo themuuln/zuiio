@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, Plus } from "lucide-react";
+import { BarChart3, Car, Clock, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
@@ -49,7 +49,14 @@ export default function VehiclesPage() {
   const now = useClientNow();
 
   const { data: org, isError: orgError } = useCurrentOrg();
-  const { data: vehicles, isLoading, isFetching, isError, error, refetch } = useVehicles(org?.orgId, search);
+  const {
+    data: vehicles,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useVehicles(org?.orgId, search);
 
   const list: Array<Vehicle & { owner_name?: string }> = vehicles ?? [];
 
@@ -58,30 +65,42 @@ export default function VehiclesPage() {
   useEffect(() => {
     if (!list.length) return;
     const makes = [...new Set(list.map((v) => v.make).filter(Boolean))];
-    registerTab("stats", "Stats", (
+    registerTab(
+      "stats",
+      "Stats",
       <StatusSummary
         title="Stats"
         items={[
           { label: "Total", count: list.length },
           { label: "Makes", count: makes.length },
         ]}
-      />
-    ));
-    registerTab("recent", "Recent", (
+      />,
+      <BarChart3 className="size-4" />,
+    );
+    registerTab(
+      "recent",
+      "Recent",
       <RecentList
         title="Recently Added"
         items={[...list]
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          )
           .slice(0, 5)
           .map((v) => ({
             id: v.id,
             primary: v.plate_number,
             secondary: [v.make, v.model].filter(Boolean).join(" "),
-            timestamp: v.created_at ? new Date(v.created_at).toLocaleDateString() : undefined,
+            timestamp: v.created_at
+              ? new Date(v.created_at).toLocaleDateString()
+              : undefined,
             href: `/dashboard/vehicles/${v.id}`,
           }))}
-      />
-    ));
+      />,
+      <Clock className="size-4" />,
+    );
     setOpen(true);
   }, [list, registerTab, setOpen]);
 
@@ -109,10 +128,12 @@ export default function VehiclesPage() {
       <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {t("title")}
+            </h1>
             <p className="text-muted-foreground">{t("subtitle")}</p>
           </div>
-          <Button render={<Link href="/dashboard/vehicles/new" />} size="lg">
+          <Button render={<Link href="/dashboard/vehicles/new" />} size="default">
             <Plus className="size-4" />
             {t("addVehicle")}
           </Button>
@@ -146,12 +167,14 @@ export default function VehiclesPage() {
     <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {t("title")}
+          </h1>
           <p className="text-muted-foreground">
             {t("searchResults", { count: list.length })}
           </p>
         </div>
-        <Button render={<Link href="/dashboard/vehicles/new" />} size="lg">
+        <Button render={<Link href="/dashboard/vehicles/new" />} size="default">
           <Plus className="size-4" />
           {t("addVehicle")}
         </Button>
@@ -173,7 +196,7 @@ export default function VehiclesPage() {
               filename={`vehicles-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Vehicles"
             />
-            <Button render={<Link href="/dashboard/vehicles/new" />} size="lg">
+            <Button render={<Link href="/dashboard/vehicles/new" />} size="default">
               <Plus className="size-4" />
               {t("addVehicle")}
             </Button>
@@ -192,9 +215,7 @@ export default function VehiclesPage() {
                 <EmptyTitle>
                   {search ? t("noMatchForPlateOrVin") : t("noVehicles")}
                 </EmptyTitle>
-                <EmptyDescription>
-                  {t("noVehiclesDesc") || ""}
-                </EmptyDescription>
+                <EmptyDescription>{t("noVehiclesDesc") || ""}</EmptyDescription>
               </EmptyHeader>
               {!search && (
                 <EmptyContent>

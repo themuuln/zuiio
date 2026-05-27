@@ -3,7 +3,6 @@
 import {
   Car,
   CheckCircle2,
-  Clock,
   HistoryIcon,
   Loader2,
   Search,
@@ -15,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ColorSelect } from "@/components/vehicles/color-select";
 import { formatMNT } from "@/lib/utils";
 
 interface Props {
@@ -155,10 +155,7 @@ function ServiceTimeline({
               {entry.services.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {entry.services.map((s) => (
-                    <Badge
-                      key={`${s.name}-${s.price}`}
-                      variant="outline"
-                    >
+                    <Badge key={`${s.name}-${s.price}`} variant="outline">
                       <Wrench className="size-2.5" />
                       {s.name}
                     </Badge>
@@ -382,7 +379,7 @@ export function VehicleRegistrationDialog({
             </Button>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-xs"
               onClick={onClose}
               aria-label={t("close")}
             >
@@ -489,13 +486,16 @@ export function VehicleRegistrationDialog({
                     placeholder={t("year")}
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
-                  <input
-                    type="text"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    placeholder={t("color")}
-                    className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                  />
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      {t("color")}
+                    </label>
+                    <ColorSelect
+                      value={color}
+                      onChange={(val) => setColor(val)}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -567,7 +567,7 @@ export function VehicleRegistrationDialog({
                 disabled={
                   saving || !plate.trim() || !make.trim() || !model.trim()
                 }
-                size="lg"
+                size="default"
               >
                 {saving ? (
                   <Loader2 className="size-4 animate-spin" />

@@ -266,11 +266,11 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
               filename={`inventory-parts-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Parts"
             />
-            <Button size="lg" onClick={() => onNavigate("movements")}>
+            <Button size="default" onClick={() => onNavigate("movements")}>
               <ClipboardList className="size-4" />
               {t("recordMovement")}
             </Button>
-            <Button size="lg" onClick={() => setShowAddPart(true)}>
+            <Button size="default" onClick={() => setShowAddPart(true)}>
               <Plus className="size-4" />
               Add Part
             </Button>

@@ -1,25 +1,25 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import type { ColumnDef } from "@tanstack/react-table";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
+import { Input } from "@/components/ui/input";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
-import type { Supplier } from "@/lib/types";
 import {
-  useSuppliers,
   useCreateSupplier,
-  useUpdateSupplier,
   useDeleteSupplier,
+  useSuppliers,
+  useUpdateSupplier,
 } from "@/lib/queries/use-inventory";
+import type { Supplier } from "@/lib/types";
 import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
 
@@ -114,7 +114,7 @@ export function SuppliersTab({
           >
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-xs"
               onClick={() => {
                 setEditingSupplier(row.original);
                 setShowAddSupplier(true);
@@ -125,7 +125,7 @@ export function SuppliersTab({
             </Button>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-xs"
               onClick={() => handleDeleteSupplier(row.original.id)}
               className="text-destructive/70 hover:text-destructive"
               title="Delete"
@@ -201,7 +201,7 @@ export function SuppliersTab({
               sheetName="Suppliers"
             />
             <Button
-              size="lg"
+              size="default"
               onClick={() => {
                 setShowAddSupplier(true);
                 setEditingSupplier(null);
@@ -371,7 +371,10 @@ export function SuppliersTab({
               >
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button
+                type="submit"
+                disabled={createSupplier.isPending || updateSupplier.isPending}
+              >
                 {editingSupplier ? "Update" : "Create"}
               </Button>
             </div>

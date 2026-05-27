@@ -107,7 +107,7 @@ export function DrawerHeaderSection({
           {wo?.status && <StatusPill status={wo.status} />}
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             onClick={onClose}
             aria-label={t("close")}
           >

@@ -221,7 +221,7 @@ export function PartsSection() {
                     </span>
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="icon-xs"
                       onClick={() => ctx.removePart(idx)}
                       data-slot="touch-target"
                       className="min-w-[44px]"

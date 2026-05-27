@@ -17,14 +17,14 @@ import {
   LayoutGrid,
   List,
   Minus,
-  PanelRightOpen,
   Plus,
   RefreshCw,
+  Users,
   Wrench,
 } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useBayActionHandlers } from "@/components/bay-view/_bay-action-handlers";
 import { useBayDragHandlers } from "@/components/bay-view/_bay-drag-handlers";
 import { StatusNotesModal } from "@/components/bay-view/status-notes-modal";
@@ -115,25 +115,6 @@ interface ToastState {
   variant: "info" | "error";
 }
 
-function StatChip({
-  label,
-  value,
-  dotClassName,
-}: {
-  label: string;
-  value: number;
-  dotClassName: string;
-}) {
-  return (
-    <div className="inline-flex h-8 items-center gap-2 border border-border/60 bg-card px-3 text-xs">
-      <span className={cn("size-2 shrink-0", dotClassName)} />
-      <span className="text-muted-foreground">
-        <span className="font-semibold text-foreground">{value}</span> {label}
-      </span>
-    </div>
-  );
-}
-
 export function BayViewV2Client() {
   const t = useTranslations("bayView");
   const [data, setData] = useState<BayViewData | null>(null);
@@ -160,6 +141,14 @@ export function BayViewV2Client() {
   const [myJobsOnly, setMyJobsOnly] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [assignBay, setAssignBay] = useState<number | null>(null);
+  const bayCountMutationInFlightRef = useRef(false);
+  const [bayCountPending, setBayCountPending] = useState(false);
+  const [bayCountInputValue, setBayCountInputValue] = useState<number | string>(
+    "",
+  );
+  const bayCountDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   // Dialog open states
   const [showShiftReport, setShowShiftReport] = useState(false);
@@ -187,6 +176,7 @@ export function BayViewV2Client() {
 
   const { registerTab, unregisterTab, setOpen } = useRightSidebar();
   const [toast, setToast] = useState<ToastState | null>(null);
+  const bayCountValueRef = useRef(data?.bayCount ?? 0);
 
   const markPending = useCallback((...ids: string[]) => {
     setPendingWoIds((prev) => {
@@ -241,6 +231,14 @@ export function BayViewV2Client() {
       clearInterval(interval);
     };
   }, [fetchData]);
+
+  useEffect(() => {
+    if (data) bayCountValueRef.current = data.bayCount;
+  }, [data?.bayCount]);
+
+  useEffect(() => {
+    if (data) setBayCountInputValue(data.bayCount);
+  }, [data?.bayCount]);
 
   const pointerSensor = useSensor(GuardedPointerSensor, {
     activationConstraint: { distance: 8 },
@@ -308,6 +306,28 @@ export function BayViewV2Client() {
     fetchData,
     setToast,
   });
+
+  const applyBayCountChange = useCallback(
+    async (next: number) => {
+      if (next === data?.bayCount) return;
+      if (bayCountMutationInFlightRef.current) return;
+      if (bayCountDebounceRef.current) {
+        clearTimeout(bayCountDebounceRef.current);
+        bayCountDebounceRef.current = null;
+      }
+      bayCountMutationInFlightRef.current = true;
+      bayCountValueRef.current = next;
+      setBayCountPending(true);
+      try {
+        await handleBayCountChange(next);
+        await fetchData(false);
+      } finally {
+        bayCountMutationInFlightRef.current = false;
+        setBayCountPending(false);
+      }
+    },
+    [data?.bayCount, fetchData, handleBayCountChange],
+  );
 
   // Intercept status clicks — open PostServiceDialog for "Ready for Pickup"
   // and PickupCompleteDialog for "Completed"
@@ -500,11 +520,13 @@ export function BayViewV2Client() {
         mechanics={data.mechanics}
         onItemClick={handleQueueItemClick}
       />,
+      <List className="size-4" />,
     );
     registerTab(
       "mechanics",
       t("mechanics"),
       <MechanicPanel mechanics={data.mechanics} />,
+      <Users className="size-4" />,
     );
     setOpen(true);
     return () => {
@@ -557,389 +579,432 @@ export function BayViewV2Client() {
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
     >
-      <div className="flex h-full flex-col bg-muted/20">
-        <div className="flex flex-1 flex-col overflow-y-auto">
-          <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 p-4 backdrop-blur">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <StatChip
-                label={t("totalBays")}
-                value={data.bayCount}
-                dotClassName="bg-muted-foreground/40"
-              />
-              <StatChip
-                label={t("occupied")}
-                value={occupiedBays}
-                dotClassName="bg-emerald-500"
-              />
-              <StatChip
-                label={t("available")}
-                value={availableBays}
-                dotClassName="bg-blue-500"
-              />
+      <div className="flex h-full flex-col bg-muted/20 overflow-hidden">
+        <div className="flex-shrink-0 border-b border-border/50 bg-background/95 p-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant="outline">
+              <span className="size-2 shrink-0 rounded-full bg-muted-foreground/40" />
+              <span className="text-muted-foreground">
+                <span className="font-semibold text-foreground">
+                  {data.bayCount}
+                </span>{" "}
+                {t("totalBays")}
+              </span>
+            </Badge>
+            <Badge variant="outline">
+              <span className="size-2 shrink-0 rounded-full bg-emerald-500" />
+              <span className="text-muted-foreground">
+                <span className="font-semibold text-foreground">
+                  {occupiedBays}
+                </span>{" "}
+                {t("occupied")}
+              </span>
+            </Badge>
+            <Badge variant="outline">
+              <span className="size-2 shrink-0 rounded-full bg-blue-500" />
+              <span className="text-muted-foreground">
+                <span className="font-semibold text-foreground">
+                  {availableBays}
+                </span>{" "}
+                {t("available")}
+              </span>
+            </Badge>
 
-              <div className="flex h-8 items-center gap-1 border border-border/60 bg-card p-1">
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        type="button"
-                        size="icon-xs"
-                        variant="ghost"
-                        onClick={() => setShowVehicleReg(true)}
-                      />
-                    }
-                  >
-                    <Car className="size-3" />
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {t("registerVehicle")}
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        type="button"
-                        size="icon-xs"
-                        variant="ghost"
-                        onClick={() => setShowMechanicReg(true)}
-                      />
-                    }
-                  >
-                    <Wrench className="size-3" />
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {t("registerMechanic")}
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        type="button"
-                        size="icon-xs"
-                        variant="ghost"
-                        onClick={() => setShowShiftReport(true)}
-                      />
-                    }
-                  >
-                    <LayoutDashboard className="size-3" />
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {t("shiftReport")}
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        type="button"
-                        size="icon-xs"
-                        variant="ghost"
-                        onClick={() => setShowPinSettings(true)}
-                      />
-                    }
-                  >
-                    <KeyRound className="size-3" />
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {t("bayPinSettings")}
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+            <div className="flex items-center gap-0.5 rounded-md border border-border/60 bg-card p-0.5">
+              <Tooltip>
+                <TooltipTrigger
+                  className="size-6 shrink-0"
+                  render={
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={() => setShowVehicleReg(true)}
+                    />
+                  }
+                >
+                  <Car className="size-3" />
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {t("registerVehicle")}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger
+                  className="size-6 shrink-0"
+                  render={
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={() => setShowMechanicReg(true)}
+                    />
+                  }
+                >
+                  <Wrench className="size-3" />
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {t("registerMechanic")}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger
+                  className="size-6 shrink-0"
+                  render={
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={() => setShowShiftReport(true)}
+                    />
+                  }
+                >
+                  <LayoutDashboard className="size-3" />
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {t("shiftReport")}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger
+                  className="size-6 shrink-0"
+                  render={
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={() => setShowPinSettings(true)}
+                    />
+                  }
+                >
+                  <KeyRound className="size-3" />
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {t("bayPinSettings")}
+                </TooltipContent>
+              </Tooltip>
+            </div>
 
-              <div className="ml-auto flex flex-wrap items-center gap-2">
-                {userIsMechanic && (
-                  <Button
-                    type="button"
-                    size="default"
-                    variant={myJobsOnly ? "default" : "outline"}
-                    onClick={() => setMyJobsOnly(!myJobsOnly)}
-                  >
-                    {myJobsOnly ? t("myJobs") : t("allJobs")}
-                  </Button>
-                )}
-
+            <div className="ml-auto flex flex-wrap items-center gap-1.5">
+              {userIsMechanic && (
                 <Button
                   type="button"
-                  size="icon"
-                  variant="outline"
-                  onClick={() => setOpen(true)}
-                  title={t("showSidebar")}
+                  size="sm"
+                  variant={myJobsOnly ? "default" : "outline"}
+                  onClick={() => setMyJobsOnly(!myJobsOnly)}
                 >
-                  <PanelRightOpen className="size-4" />
+                  {myJobsOnly ? t("myJobs") : t("allJobs")}
                 </Button>
+              )}
+
+              <Button
+                type="button"
+                size="icon-xs"
+                variant="outline"
+                onClick={() => fetchData(true)}
+                title={t("refresh")}
+              >
+                <RefreshCw className="size-3" />
+              </Button>
+
+              <ToggleGroup
+                multiple={false}
+                value={[viewMode]}
+                onValueChange={(value) => {
+                  if (value.length > 0) setViewMode(value[0] as ViewMode);
+                }}
+                variant="outline"
+                className="[&>[data-slot=toggle-group-item]]:h-6 [&>[data-slot=toggle-group-item]]:w-6 [&>[data-slot=toggle-group-item]]:min-w-0 [&>[data-slot=toggle-group-item]]:px-0"
+              >
+                {VIEW_OPTIONS.map((opt) => {
+                  const Icon = opt.icon;
+                  return (
+                    <Tooltip key={opt.mode}>
+                      <TooltipTrigger
+                        className="size-6 shrink-0"
+                        render={
+                          <ToggleGroupItem
+                            value={opt.mode}
+                            aria-label={t(opt.labelKey)}
+                            className="h-6 w-6 min-w-0 px-0"
+                          />
+                        }
+                      >
+                        <Icon className="size-3" />
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {t(opt.labelKey)}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </ToggleGroup>
+
+              <div className="flex items-center gap-0.5 rounded-md border border-border/60 bg-card p-0.5">
                 <Button
                   type="button"
-                  size="icon"
-                  variant="outline"
-                  onClick={() => fetchData(true)}
-                  title={t("refresh")}
-                >
-                  <RefreshCw className="size-4" />
-                </Button>
-
-                <ToggleGroup
-                  multiple={false}
-                  value={[viewMode]}
-                  onValueChange={(value) => {
-                    if (value.length > 0) setViewMode(value[0] as ViewMode);
+                  size="icon-xs"
+                  variant="ghost"
+                  onClick={async () => {
+                    if (!data || bayCountMutationInFlightRef.current) return;
+                    const next = Math.max(1, data.bayCount - 1);
+                    if (next === data.bayCount) return;
+                    setBayCountInputValue(next);
+                    await applyBayCountChange(next);
                   }}
-                  variant="outline"
-                  size="default"
-                  className="overflow-hidden rounded-lg bg-card p-0 [&>[data-slot=toggle-group-item]]:size-9 [&>[data-slot=toggle-group-item]]:aspect-square [&>[data-slot=toggle-group-item]]:min-w-0 [&>[data-slot=toggle-group-item]]:px-0"
+                  disabled={bayCountPending || data.bayCount <= 1}
                 >
-                  {VIEW_OPTIONS.map((opt) => {
-                    const Icon = opt.icon;
-                    return (
-                      <Tooltip key={opt.mode}>
-                        <TooltipTrigger
-                          render={
-                            <ToggleGroupItem
-                              value={opt.mode}
-                              aria-label={t(opt.labelKey)}
-                              className="size-9 aspect-square min-w-0 px-0"
-                            />
-                          }
-                        >
-                          <Icon className="size-4" />
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          {t(opt.labelKey)}
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
-                </ToggleGroup>
+                  <Minus className="size-3" />
+                </Button>
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={bayCountInputValue}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    setBayCountInputValue(raw);
+                    const next = parseInt(raw, 10);
+                    if (isNaN(next) || next < 1 || next > 50) return;
 
-                <div className="flex h-9 items-center gap-1 border border-border/60 bg-card px-2">
-                  <Button
-                    type="button"
-                    size="icon-xs"
-                    variant="ghost"
-                    onClick={async () => {
-                      await handleBayCountChange(data.bayCount - 1);
-                      await fetchData(false);
-                    }}
-                    disabled={data.bayCount <= 1}
-                  >
-                    <Minus className="size-3" />
-                  </Button>
-                  <span className="min-w-[20px] text-center text-xs font-semibold tabular-nums text-foreground">
-                    {data.bayCount}
-                  </span>
-                  <Button
-                    type="button"
-                    size="icon-xs"
-                    variant="ghost"
-                    onClick={async () => {
-                      await handleBayCountChange(data.bayCount + 1);
-                      await fetchData(false);
-                    }}
-                    disabled={data.bayCount >= 50}
-                  >
-                    <Plus className="size-3" />
-                  </Button>
-                </div>
+                    if (bayCountDebounceRef.current)
+                      clearTimeout(bayCountDebounceRef.current);
+                    bayCountDebounceRef.current = setTimeout(() => {
+                      applyBayCountChange(next);
+                    }, 500);
+                  }}
+                  onBlur={() => {
+                    if (bayCountDebounceRef.current) {
+                      clearTimeout(bayCountDebounceRef.current);
+                      bayCountDebounceRef.current = null;
+                    }
+                    const next = parseInt(String(bayCountInputValue), 10);
+                    if (isNaN(next) || next < 1 || next > 50) {
+                      setBayCountInputValue(data.bayCount);
+                      return;
+                    }
+                    applyBayCountChange(next);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      (e.target as HTMLInputElement).blur();
+                    }
+                  }}
+                  disabled={bayCountPending}
+                  className="size-6 border border-border/60 bg-background text-center text-xs font-semibold tabular-nums text-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <Button
+                  type="button"
+                  size="icon-xs"
+                  variant="ghost"
+                  onClick={async () => {
+                    if (!data || bayCountMutationInFlightRef.current) return;
+                    const next = Math.min(50, data.bayCount + 1);
+                    if (next === data.bayCount) return;
+                    setBayCountInputValue(next);
+                    await applyBayCountChange(next);
+                  }}
+                  disabled={bayCountPending || data.bayCount >= 50}
+                >
+                  <Plus className="size-3" />
+                </Button>
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="flex flex-1 flex-col">
-            {viewMode === "grid" && (
-              <div className="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2 xl:grid-cols-3">
-                {filteredBays.map((bay) => (
-                  <BayCard
-                    key={bay.bayNumber}
-                    bay={bay}
-                    isPending={
-                      bay.workOrder ? !!pendingWoIds[bay.workOrder.id] : false
-                    }
-                    onStatusChange={handleStatusClick}
-                    onRemoveFromBay={handleRemoveFromBay}
-                    onOpenDetail={handleOpenDetail}
-                    onAssignClick={(n) => setAssignBay(n)}
-                  />
-                ))}
-              </div>
-            )}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto no-scrollbar">
+          {viewMode === "grid" && (
+            <div className="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2 xl:grid-cols-3">
+              {filteredBays.map((bay) => (
+                <BayCard
+                  key={bay.bayNumber}
+                  bay={bay}
+                  isPending={
+                    bay.workOrder ? !!pendingWoIds[bay.workOrder.id] : false
+                  }
+                  onStatusChange={handleStatusClick}
+                  onRemoveFromBay={handleRemoveFromBay}
+                  onOpenDetail={handleOpenDetail}
+                  onAssignClick={(n) => setAssignBay(n)}
+                />
+              ))}
+            </div>
+          )}
 
-            {viewMode === "kanban" && (
-              <div className="flex h-full gap-2 overflow-x-auto p-2">
-                {["New", "Diagnosing", "In Progress", "Ready for Pickup"].map(
-                  (status) => {
-                    const baysWithStatus = filteredBays.filter(
-                      (b) => b.workOrder?.status === status,
-                    );
-                    return (
-                      <div
-                        key={status}
-                        className="flex min-w-[240px] max-w-[280px] flex-shrink-0 flex-col gap-3 bg-card/90 py-3 ring-1 ring-foreground/10"
-                      >
-                        <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-3 pb-3">
-                          <div className="font-heading text-sm leading-snug font-medium">
-                            {status}
-                          </div>
-                          <Badge
-                            variant={
-                              status === "In Progress" ? "default" : "secondary"
-                            }
-                          >
-                            {baysWithStatus.length}
-                          </Badge>
+          {viewMode === "kanban" && (
+            <div className="flex h-full gap-2 overflow-x-auto p-2">
+              {["New", "Diagnosing", "In Progress", "Ready for Pickup"].map(
+                (status) => {
+                  const baysWithStatus = filteredBays.filter(
+                    (b) => b.workOrder?.status === status,
+                  );
+                  return (
+                    <div
+                      key={status}
+                      className="flex min-w-[240px] max-w-[280px] flex-shrink-0 flex-col gap-3 bg-card/90 py-3 ring-1 ring-foreground/10"
+                    >
+                      <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-3 pb-3">
+                        <div className="font-heading text-sm leading-snug font-medium">
+                          {status}
                         </div>
-                        <div className="flex flex-1 flex-col gap-2 px-3">
-                          {baysWithStatus.map((bay) => (
-                            <BayCard
-                              key={bay.bayNumber}
-                              bay={bay}
-                              isPending={
-                                bay.workOrder
-                                  ? !!pendingWoIds[bay.workOrder.id]
-                                  : false
-                              }
-                              onStatusChange={handleStatusClick}
-                              onRemoveFromBay={handleRemoveFromBay}
-                              onOpenDetail={handleOpenDetail}
-                            />
-                          ))}
-                          {baysWithStatus.length === 0 && (
-                            <div className="flex items-center justify-center border border-dashed border-muted-foreground/20 bg-muted/10 py-8 text-xs text-muted-foreground/50">
-                              {t("emptyBay")}
-                            </div>
-                          )}
-                        </div>
+                        <Badge
+                          variant={
+                            status === "In Progress" ? "default" : "secondary"
+                          }
+                        >
+                          {baysWithStatus.length}
+                        </Badge>
                       </div>
-                    );
-                  },
-                )}
-                <div className="flex min-w-[240px] max-w-[280px] flex-shrink-0 flex-col gap-3 bg-card/90 py-3 ring-1 ring-foreground/10">
-                  <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-3 pb-3">
-                    <div className="font-heading text-sm leading-snug font-medium">
-                      {t("available")}
+                      <div className="flex flex-1 flex-col gap-2 px-3">
+                        {baysWithStatus.map((bay) => (
+                          <BayCard
+                            key={bay.bayNumber}
+                            bay={bay}
+                            isPending={
+                              bay.workOrder
+                                ? !!pendingWoIds[bay.workOrder.id]
+                                : false
+                            }
+                            onStatusChange={handleStatusClick}
+                            onRemoveFromBay={handleRemoveFromBay}
+                            onOpenDetail={handleOpenDetail}
+                          />
+                        ))}
+                        {baysWithStatus.length === 0 && (
+                          <div className="flex items-center justify-center border border-dashed border-muted-foreground/20 bg-muted/10 py-8 text-xs text-muted-foreground/50">
+                            {t("emptyBay")}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <Badge variant="outline">
-                      {filteredBays.filter((b) => !b.workOrder).length}
-                    </Badge>
+                  );
+                },
+              )}
+              <div className="flex min-w-[240px] max-w-[280px] flex-shrink-0 flex-col gap-3 bg-card/90 py-3 ring-1 ring-foreground/10">
+                <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-3 pb-3">
+                  <div className="font-heading text-sm leading-snug font-medium">
+                    {t("available")}
                   </div>
-                  <div className="flex flex-1 flex-col gap-2 px-3">
-                    {filteredBays
-                      .filter((b) => !b.workOrder)
-                      .map((bay) => (
-                        <BayCard
-                          key={bay.bayNumber}
-                          bay={bay}
-                          isPending={false}
-                          onStatusChange={handleStatusClick}
-                          onRemoveFromBay={handleRemoveFromBay}
-                          onOpenDetail={handleOpenDetail}
-                          onAssignClick={(n) => setAssignBay(n)}
-                        />
-                      ))}
-                  </div>
+                  <Badge variant="outline">
+                    {filteredBays.filter((b) => !b.workOrder).length}
+                  </Badge>
+                </div>
+                <div className="flex flex-1 flex-col gap-2 px-3">
+                  {filteredBays
+                    .filter((b) => !b.workOrder)
+                    .map((bay) => (
+                      <BayCard
+                        key={bay.bayNumber}
+                        bay={bay}
+                        isPending={false}
+                        onStatusChange={handleStatusClick}
+                        onRemoveFromBay={handleRemoveFromBay}
+                        onOpenDetail={handleOpenDetail}
+                        onAssignClick={(n) => setAssignBay(n)}
+                      />
+                    ))}
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {viewMode === "list" && (
-              <div className="p-2">
-                <Card className="bg-card/90">
-                  <Table className="text-xs">
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
-                          {t("listHeaderBay")}
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
-                          {t("listHeaderStatus")}
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
-                          {t("listHeaderVehicle")}
-                        </TableHead>
-                        <TableHead className="hidden text-[10px] uppercase tracking-wider text-muted-foreground/60 sm:table-cell">
-                          {t("listHeaderModel")}
-                        </TableHead>
-                        <TableHead className="hidden text-[10px] uppercase tracking-wider text-muted-foreground/60 md:table-cell">
-                          {t("listHeaderMechanic")}
-                        </TableHead>
-                        <TableHead className="text-right text-[10px] uppercase tracking-wider text-muted-foreground/60">
-                          {t("listHeaderTime")}
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredBays.map((bay) => {
-                        const wo = bay.workOrder;
-                        const v = wo?.vehicle;
-                        return (
-                          <TableRow
-                            key={bay.bayNumber}
-                            onClick={() =>
-                              wo
-                                ? handleOpenDetail(wo.id)
-                                : setAssignBay(bay.bayNumber)
-                            }
-                            className={cn(
-                              "border-b border-border/40 transition-colors cursor-pointer",
-                              wo
-                                ? "hover:bg-muted/20"
-                                : "text-muted-foreground/50 hover:bg-accent/20",
+          {viewMode === "list" && (
+            <div className="p-2">
+              <Card className="bg-card/90">
+                <Table className="text-xs">
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
+                        {t("listHeaderBay")}
+                      </TableHead>
+                      <TableHead className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
+                        {t("listHeaderStatus")}
+                      </TableHead>
+                      <TableHead className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
+                        {t("listHeaderVehicle")}
+                      </TableHead>
+                      <TableHead className="hidden text-[10px] uppercase tracking-wider text-muted-foreground/60 sm:table-cell">
+                        {t("listHeaderModel")}
+                      </TableHead>
+                      <TableHead className="hidden text-[10px] uppercase tracking-wider text-muted-foreground/60 md:table-cell">
+                        {t("listHeaderMechanic")}
+                      </TableHead>
+                      <TableHead className="text-right text-[10px] uppercase tracking-wider text-muted-foreground/60">
+                        {t("listHeaderTime")}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredBays.map((bay) => {
+                      const wo = bay.workOrder;
+                      const v = wo?.vehicle;
+                      return (
+                        <TableRow
+                          key={bay.bayNumber}
+                          onClick={() =>
+                            wo
+                              ? handleOpenDetail(wo.id)
+                              : setAssignBay(bay.bayNumber)
+                          }
+                          className={cn(
+                            "border-b border-border/40 transition-colors cursor-pointer",
+                            wo
+                              ? "hover:bg-muted/20"
+                              : "text-muted-foreground/50 hover:bg-accent/20",
+                          )}
+                        >
+                          <TableCell className="font-medium">
+                            #{bay.bayNumber}
+                          </TableCell>
+                          <TableCell>
+                            {wo ? (
+                              <Badge
+                                variant={STATUS_VARIANT[wo.status] ?? "outline"}
+                                className="text-[9px]"
+                              >
+                                {wo.status}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground/50">
+                                {t("emptyBay")}
+                              </span>
                             )}
-                          >
-                            <TableCell className="font-medium">
-                              #{bay.bayNumber}
-                            </TableCell>
-                            <TableCell>
-                              {wo ? (
-                                <Badge
-                                  variant={
-                                    STATUS_VARIANT[wo.status] ?? "outline"
-                                  }
-                                  className="text-[9px]"
-                                >
-                                  {wo.status}
-                                </Badge>
-                              ) : (
-                                <span className="text-muted-foreground/50">
-                                  {t("emptyBay")}
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              {wo && v ? (
-                                formatPlateNumber(v.plate_number)
-                              ) : wo ? (
-                                "—"
-                              ) : (
-                                <span className="text-[10px] italic text-muted-foreground/40">
-                                  {t("clickToAssign")}
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="hidden text-muted-foreground sm:table-cell">
-                              {wo && v ? `${v.make} ${v.model}` : "—"}
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">
-                              {wo?.mechanic?.full_name ?? "—"}
-                            </TableCell>
-                            <TableCell className="text-right tabular-nums">
-                              {wo ? (
-                                <ElapsedText
-                                  startedAt={wo.started_at ?? wo.created_at}
-                                />
-                              ) : (
-                                ""
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </Card>
-              </div>
-            )}
-          </div>
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {wo && v ? (
+                              formatPlateNumber(v.plate_number)
+                            ) : wo ? (
+                              "—"
+                            ) : (
+                              <span className="text-[10px] italic text-muted-foreground/40">
+                                {t("clickToAssign")}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="hidden text-muted-foreground sm:table-cell">
+                            {wo && v ? `${v.make} ${v.model}` : "—"}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {wo?.mechanic?.full_name ?? "—"}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {wo ? (
+                              <ElapsedText
+                                startedAt={wo.started_at ?? wo.created_at}
+                              />
+                            ) : (
+                              ""
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
 
@@ -951,8 +1016,6 @@ export function BayViewV2Client() {
           onCancel={() => setPendingStatusChange(null)}
         />
       )}
-
-      {/* Post-service dialog (Ready for Pickup) */}
       {pendingPostService && (
         <PostServiceDialog
           open={!!pendingPostService}
@@ -970,8 +1033,6 @@ export function BayViewV2Client() {
           onConfirm={handlePostServiceConfirm}
         />
       )}
-
-      {/* Pickup complete dialog (Completed) */}
       {pendingPickupComplete && (
         <PickupCompleteDialog
           open={!!pendingPickupComplete}
@@ -1035,6 +1096,11 @@ export function BayViewV2Client() {
       <VehicleRegistrationDialog
         open={showVehicleReg}
         onOpenChange={setShowVehicleReg}
+        onQueued={() => {
+          setShowVehicleReg(false);
+          setToast({ message: "Added to waiting queue", variant: "info" });
+          void fetchData(false);
+        }}
       />
       <MechanicRegistrationDialog
         open={showMechanicReg}

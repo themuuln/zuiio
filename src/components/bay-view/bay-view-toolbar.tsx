@@ -59,7 +59,7 @@ export function BayViewToolbar({
       <div className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5 ring-1 ring-border/30">
         <Button
           variant={viewMode === "grid" ? "default" : "ghost"}
-          size="icon"
+          size="icon-xs"
           onClick={() => onViewModeChange("grid")}
           aria-label={t("gridView")}
         >
@@ -67,7 +67,7 @@ export function BayViewToolbar({
         </Button>
         <Button
           variant={viewMode === "list" ? "default" : "ghost"}
-          size="icon"
+          size="icon-xs"
           onClick={() => onViewModeChange("list")}
           aria-label={t("listView")}
         >
@@ -97,7 +97,7 @@ export function BayViewToolbar({
       <div className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5 ring-1 ring-border/30">
         <Button
           variant="outline"
-          size="icon"
+          size="icon-xs"
           onClick={() => handleChangeCount(-1)}
           disabled={loading || bayCount <= 1}
           className="size-6"
@@ -110,7 +110,7 @@ export function BayViewToolbar({
         </span>
         <Button
           variant="outline"
-          size="icon"
+          size="icon-xs"
           onClick={() => handleChangeCount(1)}
           disabled={loading || bayCount >= 50}
           className="size-6"
@@ -122,7 +122,7 @@ export function BayViewToolbar({
 
       <Button
         variant="ghost"
-        size="icon"
+        size="icon-xs"
         onClick={onRefresh}
         aria-label={t("refresh")}
         className="size-6 rounded-md text-muted-foreground hover:bg-muted/60 hover:text-foreground active:scale-95"

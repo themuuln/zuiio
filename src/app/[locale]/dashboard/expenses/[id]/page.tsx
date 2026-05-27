@@ -187,7 +187,7 @@ export default function ExpenseDetailPage() {
         <Button
           render={<Link href="/dashboard/expenses" />}
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           aria-label={commonT("back")}
         >
           <ArrowLeft className="size-5" />

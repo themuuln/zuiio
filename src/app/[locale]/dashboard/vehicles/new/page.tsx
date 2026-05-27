@@ -9,6 +9,11 @@ import { toast } from "sonner";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
+import { ColorSelect } from "@/components/vehicles/color-select";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useRouter } from "@/lib/i18n/navigation";
@@ -77,9 +82,7 @@ export default function NewVehiclePage() {
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 
-  const {
-    data: preselectedCustomer,
-  } = useQuery({
+  const { data: preselectedCustomer } = useQuery({
     queryKey: customerKeys.detail(orgId ?? "", preselectedCustomerId ?? ""),
     queryFn: async () => {
       const res = await fetch(
@@ -192,7 +195,7 @@ export default function NewVehiclePage() {
         <Button
           render={<Link href="/dashboard/vehicles" />}
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           aria-label="Back"
         >
           <ArrowLeft className="size-4" />
@@ -230,9 +233,9 @@ export default function NewVehiclePage() {
                       {getCustomerLabel(selectedCustomer, t)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                        {selectedCustomer.phone ||
-                          selectedCustomer.email ||
-                          t("noContactInfo")}
+                      {selectedCustomer.phone ||
+                        selectedCustomer.email ||
+                        t("noContactInfo")}
                     </p>
                   </div>
                 </div>
@@ -252,7 +255,8 @@ export default function NewVehiclePage() {
                   onSearch={searchCustomers}
                   debounceMs={400}
                 />
-                {!Array.isArray(customerResults) || customerResults.length === 0 ? (
+                {!Array.isArray(customerResults) ||
+                customerResults.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     Search for an existing customer before adding the vehicle.
                   </p>
@@ -289,7 +293,9 @@ export default function NewVehiclePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{t("vehicleInformation")}</CardTitle>
+            <CardTitle className="text-base">
+              {t("vehicleInformation")}
+            </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -422,16 +428,12 @@ export default function NewVehiclePage() {
               <label className="mb-1 block text-sm font-medium" htmlFor="color">
                 {t("color")}
               </label>
-              <Input
-                id="color"
+              <ColorSelect
                 value={form.color}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    color: event.target.value,
-                  }))
+                onChange={(color) =>
+                  setForm((current) => ({ ...current, color }))
                 }
-                className="h-11"
+                className="w-full"
               />
             </div>
             <div>
@@ -479,7 +481,7 @@ export default function NewVehiclePage() {
               >
                 {t("fuelType")}
               </label>
-              <Input
+              <NativeSelect
                 id="fuelType"
                 value={form.fuelType}
                 onChange={(event) =>
@@ -488,9 +490,22 @@ export default function NewVehiclePage() {
                     fuelType: event.target.value,
                   }))
                 }
-                className="h-11"
-                placeholder="Gasoline"
-              />
+                className="w-full"
+                size="default"
+              >
+                <NativeSelectOption value="">
+                  Select fuel type
+                </NativeSelectOption>
+                <NativeSelectOption value="Gasoline">
+                  Gasoline
+                </NativeSelectOption>
+                <NativeSelectOption value="Diesel">Diesel</NativeSelectOption>
+                <NativeSelectOption value="Electric">
+                  Electric
+                </NativeSelectOption>
+                <NativeSelectOption value="Hybrid">Hybrid</NativeSelectOption>
+                <NativeSelectOption value="LPG">LPG</NativeSelectOption>
+              </NativeSelect>
             </div>
             <div>
               <label
@@ -499,7 +514,7 @@ export default function NewVehiclePage() {
               >
                 {t("transmission")}
               </label>
-              <Input
+              <NativeSelect
                 id="transmission"
                 value={form.transmission}
                 onChange={(event) =>
@@ -508,9 +523,19 @@ export default function NewVehiclePage() {
                     transmission: event.target.value,
                   }))
                 }
-                className="h-11"
-                placeholder="Automatic"
-              />
+                className="w-full"
+                size="default"
+              >
+                <NativeSelectOption value="">
+                  Select transmission
+                </NativeSelectOption>
+                <NativeSelectOption value="Automatic">
+                  Automatic
+                </NativeSelectOption>
+                <NativeSelectOption value="Manual">Manual</NativeSelectOption>
+                <NativeSelectOption value="CVT">CVT</NativeSelectOption>
+                <NativeSelectOption value="DCT">DCT</NativeSelectOption>
+              </NativeSelect>
             </div>
             <div>
               <label
@@ -519,7 +544,7 @@ export default function NewVehiclePage() {
               >
                 {t("drivetrain")}
               </label>
-              <Input
+              <NativeSelect
                 id="drivetrain"
                 value={form.drivetrain}
                 onChange={(event) =>
@@ -528,9 +553,17 @@ export default function NewVehiclePage() {
                     drivetrain: event.target.value,
                   }))
                 }
-                className="h-11"
-                placeholder="AWD"
-              />
+                className="w-full"
+                size="default"
+              >
+                <NativeSelectOption value="">
+                  Select drivetrain
+                </NativeSelectOption>
+                <NativeSelectOption value="AWD">AWD</NativeSelectOption>
+                <NativeSelectOption value="4WD">4WD</NativeSelectOption>
+                <NativeSelectOption value="FWD">FWD</NativeSelectOption>
+                <NativeSelectOption value="RWD">RWD</NativeSelectOption>
+              </NativeSelect>
             </div>
             <div>
               <label
@@ -539,7 +572,7 @@ export default function NewVehiclePage() {
               >
                 {t("bodyType")}
               </label>
-              <Input
+              <NativeSelect
                 id="bodyType"
                 value={form.bodyType}
                 onChange={(event) =>
@@ -548,9 +581,26 @@ export default function NewVehiclePage() {
                     bodyType: event.target.value,
                   }))
                 }
-                className="h-11"
-                placeholder="SUV"
-              />
+                className="w-full"
+                size="default"
+              >
+                <NativeSelectOption value="">
+                  Select body type
+                </NativeSelectOption>
+                <NativeSelectOption value="SUV">SUV</NativeSelectOption>
+                <NativeSelectOption value="Sedan">Sedan</NativeSelectOption>
+                <NativeSelectOption value="Hatchback">
+                  Hatchback
+                </NativeSelectOption>
+                <NativeSelectOption value="Coupe">Coupe</NativeSelectOption>
+                <NativeSelectOption value="Convertible">
+                  Convertible
+                </NativeSelectOption>
+                <NativeSelectOption value="Wagon">Wagon</NativeSelectOption>
+                <NativeSelectOption value="Van">Van</NativeSelectOption>
+                <NativeSelectOption value="Truck">Truck</NativeSelectOption>
+                <NativeSelectOption value="Bus">Bus</NativeSelectOption>
+              </NativeSelect>
             </div>
             <div>
               <label
@@ -621,7 +671,7 @@ export default function NewVehiclePage() {
           >
             {t("cancel")}
           </Button>
-          <Button type="submit" size="lg" disabled={saving}>
+          <Button type="submit" size="default" disabled={saving}>
             {saving ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (

@@ -139,7 +139,7 @@ export function PickupSummary({
           </CardTitle>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             onClick={onDone}
           >
             <X className="size-4" />

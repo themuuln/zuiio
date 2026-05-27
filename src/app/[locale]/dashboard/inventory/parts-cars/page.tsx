@@ -67,7 +67,7 @@ export default function PartsCarsListPage() {
         }}
         stats={<span>{t('count', { count: filtered.length })}</span>}
         actions={
-          <Button size="lg" render={<Link href="/dashboard/inventory/parts-cars/new" />}>
+          <Button size="default" render={<Link href="/dashboard/inventory/parts-cars/new" />}>
             <Plus className="size-4" />
             {t('newCar')}
           </Button>

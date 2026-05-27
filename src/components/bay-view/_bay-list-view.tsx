@@ -117,7 +117,7 @@ export function BayListView({
                 wo.status !== "Cancelled" && (
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     onClick={() => onStatusClick(wo.id, "Ready for Pickup")}
                     className="bg-green-500/10 text-green-600 hover:bg-green-500/20"
                     aria-label={t("markReady")}
@@ -128,7 +128,7 @@ export function BayListView({
               {wo && (
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="icon-xs"
                   onClick={() => onOpenDetail(wo.id)}
                   className="bg-primary/10 text-primary hover:bg-primary/20"
                   aria-label={t("open")}

@@ -169,7 +169,7 @@ export function MechanicRegistrationDialog({ open, onOpenChange }: Props) {
               type="submit"
               className="w-full"
               disabled={saving || !email.trim() || !fullName.trim()}
-              size="lg"
+              size="default"
             >
               {saving ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -185,7 +185,7 @@ export function MechanicRegistrationDialog({ open, onOpenChange }: Props) {
               type="button"
               className="w-full"
               onClick={() => onOpenChange(false)}
-              size="lg"
+              size="default"
             >
               <CheckCircle2 className="size-4" />
               {t("done")}

@@ -131,7 +131,7 @@ export default function PurchaseOrdersPage() {
               sheetName="Purchase Orders"
             />
             <Link href="/dashboard/inventory/purchase-orders/new">
-              <Button size="lg" className="h-12">
+              <Button size="default">
                 <Plus className="size-5" /> {t("newPurchaseOrder")}
               </Button>
             </Link>

@@ -3,6 +3,7 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
+  createSubscription,
   getOrganizationSubscription,
   renewSubscription,
   updateSubscription,
@@ -19,10 +20,22 @@ export const PATCH = createRouteHandler(async ({ request, orgId }) => {
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
     );
   }
   const body = await request.json();
+
+  if (body.action === "start-trial") {
+    const subscription = await createSubscription(orgId);
+    return NextResponse.json({ data: subscription });
+  }
 
   if (body.action === "renew") {
     const subscription = await renewSubscription(orgId);

@@ -86,6 +86,7 @@ export default function InventoryPage() {
           { label: "Out of Stock", count: outOfStock, color: "destructive" },
         ]}
       />,
+      <Package className="size-4" />,
     );
 
     setOpen(true);

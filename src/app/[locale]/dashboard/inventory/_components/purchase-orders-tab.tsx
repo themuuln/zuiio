@@ -149,7 +149,7 @@ export function PurchaseOrdersTab({ orgId, search, onSearchChange }: PurchaseOrd
               filename={`inventory-pos-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Purchase Orders"
             />
-            <Button size="lg" onClick={() => setShowAddPO(true)}>
+            <Button size="default" onClick={() => setShowAddPO(true)}>
               <Plus className="size-4" />
               Create PO
             </Button>
@@ -423,7 +423,7 @@ function POItemEditor({
           </div>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             onClick={() => setCount((c) => c - 1)}
             className="text-destructive/70 hover:text-destructive"
           >

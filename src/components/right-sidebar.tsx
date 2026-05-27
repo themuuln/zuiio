@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { useRightSidebar, type SidebarTab } from "@/hooks/use-right-sidebar";
 import { cn } from "@/lib/utils";
 
 function RightSidebarRail({
@@ -13,7 +13,7 @@ function RightSidebarRail({
   onSelect,
 }: {
   activeTab: string;
-  tabs: { value: string; label: string }[];
+  tabs: SidebarTab[];
   onSelect: (value: string) => void;
 }) {
   return (
@@ -34,7 +34,7 @@ function RightSidebarRail({
                 : "border border-transparent bg-transparent text-muted-foreground/55 hover:border-border/70 hover:bg-accent/70 hover:text-foreground",
             )}
           >
-            {tab.label.slice(0, 1)}
+            {tab.icon ?? tab.label.slice(0, 1)}
           </Button>
         ))}
       </div>
@@ -49,7 +49,7 @@ function RightSidebarPanel({
   onSelect,
 }: {
   activeTab: string;
-  tabs: { value: string; label: string }[];
+  tabs: SidebarTab[];
   content: Record<string, ReactNode>;
   onSelect: (value: string) => void;
 }) {
@@ -68,7 +68,8 @@ function RightSidebarPanel({
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="min-w-0 flex-1 rounded-xl px-2 py-2 text-xs"
+              title={tab.label}
+              className="min-w-0 flex-1 rounded-xl px-1.5 py-1 text-xs leading-none"
             >
               <span className="truncate">{tab.label}</span>
             </TabsTrigger>

@@ -50,14 +50,14 @@ export function SummarySection() {
           <div className="flex flex-col gap-4 sm:flex-row sm:justify-end">
             <Button
               variant="outline"
-              size="lg"
+              size="default"
               render={<Link href="/dashboard/work-orders" />}
               className="min-h-[48px]"
             >
               {t("cancel")}
             </Button>
             <Button
-              size="lg"
+              size="default"
               onClick={ctx.handleCreate}
               disabled={!ctx.isFormValid}
               className="min-h-[48px] gap-2"

@@ -1,36 +1,38 @@
 "use client";
 
-import {
-  Car,
-  CheckCircle2,
-  Loader2,
-  AlertCircle,
-  KeyRound,
-} from "lucide-react";
+import { AlertCircle, CheckCircle2, KeyRound, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Suspense, useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { setCustomerPassword } from "./actions";
-
 
 export default function CustomerSetPasswordPage() {
   const t = useTranslations();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
-  const [state, formAction, isPending] = useActionState(setCustomerPassword, {
-    error: "",
-    success: false,
-  });
+  const [state, formAction, isPending] = useActionState(
+    setCustomerPassword,
+    {},
+  );
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const fieldErrors = state?.fieldErrors ?? {};
+
+  const prevFormError = useRef(state?.formError);
+  useEffect(() => {
+    if (state?.formError && state.formError !== prevFormError.current) {
+      toast.error(state.formError);
+    }
+    prevFormError.current = state?.formError;
+  }, [state?.formError]);
 
   if (!token) {
     return (
@@ -83,19 +85,32 @@ export default function CustomerSetPasswordPage() {
                   type="email"
                   placeholder="email@example.com"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  aria-invalid={"email" in fieldErrors || undefined}
                 />
+                {"email" in fieldErrors && (
+                  <FieldError>{fieldErrors.email}</FieldError>
+                )}
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="password">{t("portal.password")}</FieldLabel>
+                <FieldLabel htmlFor="password">
+                  {t("portal.password")}
+                </FieldLabel>
                 <Input
                   id="password"
                   name="password"
                   type="password"
                   placeholder="••••••••"
                   required
-                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={"password" in fieldErrors || undefined}
                 />
+                {"password" in fieldErrors && (
+                  <FieldError>{fieldErrors.password}</FieldError>
+                )}
               </Field>
 
               <Field>
@@ -108,13 +123,19 @@ export default function CustomerSetPasswordPage() {
                   type="password"
                   placeholder="••••••••"
                   required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  aria-invalid={"confirmPassword" in fieldErrors || undefined}
                 />
+                {"confirmPassword" in fieldErrors && (
+                  <FieldError>{fieldErrors.confirmPassword}</FieldError>
+                )}
               </Field>
 
-              {state?.error && (
+              {state?.formError && (
                 <FieldError className="flex items-start gap-2">
                   <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
-                  {state.error}
+                  {state.formError}
                 </FieldError>
               )}
 

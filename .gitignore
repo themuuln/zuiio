@@ -53,3 +53,4 @@ docs/.vitepress/cache/
 docs/.vitepress/dist/
 .sisyphus/
 .pi-lens/
+/piolium

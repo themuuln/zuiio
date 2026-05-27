@@ -1,9 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { AlertTriangle, Building2, Copy, Landmark, Wrench } from "lucide-react";
+import {
+  AlertTriangle,
+  Building2,
+  Copy,
+  Landmark,
+  Sparkles,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,7 +21,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { SubscriptionStatus } from "@/lib/types";
 
 interface BankOption {
@@ -48,87 +56,66 @@ function TdbLogo() {
 }
 
 const BANKS: BankOption[] = [
-  {
-    id: "khanbank",
-    label: "Khanbank",
-    account: "MN110005005431666225",
-  },
-  {
-    id: "tdb",
-    label: "TDB",
-    account: "MN960004000423063343",
-  },
+  { id: "khanbank", label: "Khanbank", account: "MN110005005431666225" },
+  { id: "tdb", label: "TDB", account: "MN960004000423063343" },
 ];
 
 interface Props {
   orgId: string;
   orgName: string;
+  subscriptionStatus: SubscriptionStatus;
 }
 
-export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
+export function SubscriptionExpiredDialog({
+  orgId,
+  orgName,
+  subscriptionStatus,
+}: Props) {
   const t = useTranslations("subscription");
   const appT = useTranslations("app");
-  const [status, setStatus] = useState<SubscriptionStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [status] = useState<SubscriptionStatus>(subscriptionStatus);
   const [selectedBank, setSelectedBank] = useState<BankOption>(BANKS[0]);
-  const [copied, setCopied] = useState(false);
   const [renewing, setRenewing] = useState(false);
   const [renewError, setRenewError] = useState<string | null>(null);
   const [renewed, setRenewed] = useState(false);
+  const [startedTrial, setStartedTrial] = useState(false);
 
-  useEffect(() => {
-    const abort = new AbortController();
-    async function check() {
-      try {
-        const res = await fetch(
-          `/api/organizations/${orgId}/subscription/status`,
-          { signal: abort.signal },
-        );
-        const body = await res.json();
-        if (!abort.signal.aborted && body.data) setStatus(body.data as SubscriptionStatus);
-      } catch (e) {
-        if (!abort.signal.aborted) console.error(e);
-      } finally {
-        if (!abort.signal.aborted) setLoading(false);
-      }
-    }
-    check();
-    return () => abort.abort();
-  }, [orgId]);
+  if (!status.expired) return null;
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-sm">
-        <Card className="w-full max-w-md">
-          <CardHeader className="items-center text-center">
-            <div className="mb-2 flex size-14 items-center justify-center rounded-2xl bg-primary shadow-sm">
-              <Wrench className="size-7 text-primary-foreground" />
-            </div>
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="mt-2 h-4 w-56" />
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!status?.expired) return null;
-
+  const isNewSubscription = status.status === "none";
   const graceEnd = status.grace_period_end
     ? new Date(status.grace_period_end).toLocaleDateString()
     : null;
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    toast.success(t("copied"));
   };
 
   const currentBank = BANKS.find((b) => b.id === selectedBank.id) ?? BANKS[0];
+
+  const handleStartTrial = async () => {
+    setRenewing(true);
+    setRenewError(null);
+    try {
+      const res = await fetch(`/api/organizations/${orgId}/subscription`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "start-trial" }),
+      });
+      const body = await res.json();
+      if (!res.ok)
+        throw new Error(body.error?.message ?? "Failed to start trial");
+      setStartedTrial(true);
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Something went wrong";
+      setRenewError(message);
+      toast.error(message);
+    } finally {
+      setRenewing(false);
+    }
+  };
 
   const handleRenew = async () => {
     setRenewing(true);
@@ -144,18 +131,39 @@ export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
       setRenewed(true);
       setTimeout(() => window.location.reload(), 2000);
     } catch (e) {
-      setRenewError(e instanceof Error ? e.message : "Something went wrong");
+      const message = e instanceof Error ? e.message : "Something went wrong";
+      setRenewError(message);
+      toast.error(message);
     } finally {
       setRenewing(false);
     }
   };
 
+  // ── Trial started success state ──
+  if (startedTrial) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-background/95 backdrop-blur-sm p-4">
+        <Card className="w-full max-w-md shadow-xl">
+          <CardHeader className="items-center text-center">
+            <CardTitle className="text-xl text-emerald-600">
+              {t("trialStartedTitle")}
+            </CardTitle>
+            <CardDescription>{t("trialStartedDescription")}</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  // ── Renewed (bank transfer claimed) success state ──
   if (renewed) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-background/95 backdrop-blur-sm p-4">
         <Card className="w-full max-w-md shadow-xl">
           <CardHeader className="items-center text-center">
-            <CardTitle className="text-xl text-emerald-600">{t("renewedTitle")}</CardTitle>
+            <CardTitle className="text-xl text-emerald-600">
+              {t("renewedTitle")}
+            </CardTitle>
             <CardDescription>{t("renewedDescription")}</CardDescription>
           </CardHeader>
         </Card>
@@ -163,16 +171,58 @@ export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
     );
   }
 
+  // ── NEW subscription: "Start 14-Day Free Trial" ──
+  if (isNewSubscription) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-background/95 backdrop-blur-sm p-4">
+        <Card className="w-full max-w-md shadow-xl">
+          <CardHeader className="items-center text-center">
+            <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">
+              <Sparkles className="size-7 text-primary" />
+            </div>
+            <CardTitle className="text-xl">{t("welcomeTitle")}</CardTitle>
+            <CardDescription className="text-balance">
+              {t("welcomeDescription")}
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="flex flex-col gap-4">
+            <div className="rounded-lg border bg-muted/30 px-4 py-3 text-center text-sm">
+              <span className="text-muted-foreground">{t("trialLength")}</span>
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex-col gap-3 pb-6">
+            {renewError && (
+              <p className="text-center text-xs font-medium text-destructive">
+                {renewError}
+              </p>
+            )}
+            <Button
+              variant="default"
+              className="w-full"
+              onClick={handleStartTrial}
+              disabled={renewing}
+            >
+              {renewing ? <Spinner /> : <Sparkles className="size-4" />}
+              {t("startTrialButton")}
+            </Button>
+            <p className="text-xs text-muted-foreground/60">
+              {appT("name")} &middot; {appT("tagline")}
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  // ── EXPIRED (previously had trial/subscription) → Bank transfer CTA ──
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-background/95 backdrop-blur-sm p-4">
       <Card className="w-full max-w-lg shadow-xl border-destructive/20">
         <CardHeader className="items-center text-center">
-          <div className="mb-3 flex size-14 items-center justify-center rounded-2xl bg-primary shadow-sm">
-            <Wrench className="size-7 text-primary-foreground" />
-          </div>
-
-          <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-destructive/10">
-            <AlertTriangle className="size-6 text-destructive" />
+          <div className="mb-4 flex size-14 items-center justify-center justify-self-center rounded-2xl bg-destructive/10 shadow-sm">
+            <AlertTriangle className="size-7 text-destructive" />
           </div>
 
           <CardTitle className="text-xl">{t("expiredTitle")}</CardTitle>
@@ -200,19 +250,31 @@ export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
                 <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                   {t("selectBank")}
                 </label>
-                <div className="flex gap-2">
+                <ToggleGroup
+                  value={[selectedBank.id]}
+                  onValueChange={(vals) => {
+                    const val = vals[0];
+                    if (!val) {
+                      setSelectedBank(selectedBank);
+                      return;
+                    }
+                    const bank = BANKS.find((b) => b.id === val);
+                    if (bank) setSelectedBank(bank);
+                    else setSelectedBank(selectedBank);
+                  }}
+                  className="w-full"
+                >
                   {BANKS.map((bank) => (
-                    <Button
+                    <ToggleGroupItem
                       key={bank.id}
-                      variant={selectedBank.id === bank.id ? "destructive" : "outline"}
-                      onClick={() => setSelectedBank(bank)}
-                      className="flex-1"
+                      value={bank.id}
+                      className="flex-1 gap-1.5"
                     >
                       {bank.id === "khanbank" ? <KhanbankLogo /> : <TdbLogo />}
                       {bank.label}
-                    </Button>
+                    </ToggleGroupItem>
                   ))}
-                </div>
+                </ToggleGroup>
               </div>
 
               <div className="rounded-lg border bg-background">
@@ -261,33 +323,23 @@ export function SubscriptionExpiredDialog({ orgId, orgName }: Props) {
               {t("instruction")}
             </div>
           </div>
-
-          {copied && (
-            <p className="text-center text-xs font-medium text-emerald-600">
-              {t("copied")}
-            </p>
-          )}
         </CardContent>
 
         <CardFooter className="flex-col gap-3 pb-6">
           {renewError && (
-            <p className="text-center text-xs font-medium text-destructive">{renewError}</p>
+            <p className="text-center text-xs font-medium text-destructive">
+              {renewError}
+            </p>
           )}
-
           <Button
             variant="default"
             className="w-full"
             onClick={handleRenew}
             disabled={renewing}
           >
-            {renewing ? (
-              <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            ) : (
-              <Landmark className="size-4" />
-            )}
+            {renewing ? <Spinner /> : <Landmark className="size-4" />}
             {t("renewButton")}
           </Button>
-
           <p className="text-balance text-center text-xs leading-relaxed text-muted-foreground">
             {t("afterPayment")}
           </p>

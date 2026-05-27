@@ -14,7 +14,8 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -67,6 +68,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "jsdom": "^26.1.0",
     "msw": "^2.14.6",
+    "react-doctor": "^0.2.6",
     "react-grab": "^0.1.37",
     "shadcn": "^4.8.0",
     "tailwindcss": "^4.3.0",

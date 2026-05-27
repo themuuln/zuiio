@@ -94,9 +94,7 @@ function ScheduleRow({
   onEdit: (item: ServiceScheduleItem) => void;
   onDelete: (id: string) => void;
 }) {
-  const dueDate = item.next_due_date
-    ? new Date(item.next_due_date)
-    : null;
+  const dueDate = item.next_due_date ? new Date(item.next_due_date) : null;
   const isOverdue = dueDate && dueDate < new Date();
   const isSoon =
     dueDate &&
@@ -120,9 +118,7 @@ function ScheduleRow({
           : ""}
       </TableCell>
       <TableCell>
-        {item.last_service_date
-          ? formatDate(item.last_service_date)
-          : "—"}
+        {item.last_service_date ? formatDate(item.last_service_date) : "—"}
       </TableCell>
       <TableCell>
         <span
@@ -147,18 +143,10 @@ function ScheduleRow({
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(item)}
-          >
+          <Button variant="ghost" size="icon-xs" onClick={() => onEdit(item)}>
             <Pencil className="size-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(item.id)}
-          >
+          <Button variant="ghost" size="icon-xs" onClick={() => onDelete(item.id)}>
             <Trash2 className="size-4 text-destructive" />
           </Button>
         </div>
@@ -214,7 +202,8 @@ export default function ServiceRemindersPage() {
   const { settings: orgSettings } = useOrgSettings(orgId);
   const updateOrgSettings = useUpdateOrgSettings(orgId);
 
-  const defaultChannel = (orgSettings?.reminder_default_channel as string) ?? "in_app";
+  const defaultChannel =
+    (orgSettings?.reminder_default_channel as string) ?? "in_app";
   const autoEnable = orgSettings?.reminder_auto_enable !== false;
 
   const [configChannel, setConfigChannel] = useState(defaultChannel);
@@ -223,7 +212,9 @@ export default function ServiceRemindersPage() {
   // Sync state when org settings load
   const configSynced = useRef(false);
   if (orgSettings && !configSynced.current) {
-    setConfigChannel((orgSettings?.reminder_default_channel as string) ?? "in_app");
+    setConfigChannel(
+      (orgSettings?.reminder_default_channel as string) ?? "in_app",
+    );
     setConfigAutoEnable(orgSettings?.reminder_auto_enable !== false);
     configSynced.current = true;
   }
@@ -245,8 +236,7 @@ export default function ServiceRemindersPage() {
     try {
       await createSchedule.mutateAsync({
         vehicle_id: newSchedule.vehicle_id || undefined,
-        service_catalog_id:
-          newSchedule.service_catalog_id || undefined,
+        service_catalog_id: newSchedule.service_catalog_id || undefined,
         service_name: newSchedule.service_name.trim(),
         interval_months: newSchedule.interval_months
           ? parseInt(newSchedule.interval_months, 10)
@@ -254,8 +244,7 @@ export default function ServiceRemindersPage() {
         interval_km: newSchedule.interval_km
           ? parseInt(newSchedule.interval_km, 10)
           : null,
-        last_service_date:
-          newSchedule.last_service_date || null,
+        last_service_date: newSchedule.last_service_date || null,
         last_service_odometer: newSchedule.last_service_odometer
           ? parseInt(newSchedule.last_service_odometer, 10)
           : null,
@@ -349,7 +338,8 @@ export default function ServiceRemindersPage() {
       (s) =>
         s.next_due_date &&
         new Date(s.next_due_date) >= now &&
-        new Date(s.next_due_date) < new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+        new Date(s.next_due_date) <
+          new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
     ).length;
 
     registerTab(
@@ -401,7 +391,7 @@ export default function ServiceRemindersPage() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            size="icon"
+            size="icon-xs"
             onClick={async () => {
               if (!orgId) return;
               setSyncing(true);
@@ -416,9 +406,7 @@ export default function ServiceRemindersPage() {
                 refetch();
               } catch (err) {
                 toast.error(
-                  err instanceof Error
-                    ? err.message
-                    : "Failed to sync history",
+                  err instanceof Error ? err.message : "Failed to sync history",
                 );
               } finally {
                 setSyncing(false);
@@ -431,7 +419,7 @@ export default function ServiceRemindersPage() {
           </Button>
           <Button
             variant="outline"
-            size="icon"
+            size="icon-xs"
             onClick={async () => {
               if (!orgId) return;
               setSending(true);
@@ -458,7 +446,11 @@ export default function ServiceRemindersPage() {
             <Send className={`size-4 ${sending ? "animate-spin" : ""}`} />
           </Button>
           <Sheet open={showConfig} onOpenChange={setShowConfig}>
-            <SheetTrigger render={<Button variant="outline" size="icon"><Settings className="size-4" /></Button>} />
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon-xs">
+                <Settings className="size-4" />
+              </Button>
+            </SheetTrigger>
             <SheetContent side="right" className="w-80 sm:w-96">
               <SheetHeader>
                 <SheetTitle>{t("serviceReminders.configTitle")}</SheetTitle>
@@ -524,7 +516,14 @@ export default function ServiceRemindersPage() {
           </Sheet>
 
           <Dialog open={showAdd} onOpenChange={setShowAdd}>
-            <DialogTrigger render={<Button><Plus className="mr-2 size-4" />{t("serviceReminders.addSchedule")}</Button>} />
+            <DialogTrigger
+              render={
+                <Button>
+                  <Plus className="mr-2 size-4" />
+                  {t("serviceReminders.addSchedule")}
+                </Button>
+              }
+            />
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>
@@ -622,10 +621,7 @@ export default function ServiceRemindersPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAdd(false)}
-                >
+                <Button variant="outline" onClick={() => setShowAdd(false)}>
                   {t("common.cancel")}
                 </Button>
                 <Button onClick={handleAdd} disabled={createSchedule.isPending}>
@@ -640,9 +636,7 @@ export default function ServiceRemindersPage() {
           <Dialog open={showEdit} onOpenChange={setShowEdit}>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>
-                  {t("serviceReminders.editSchedule")}
-                </DialogTitle>
+                <DialogTitle>{t("serviceReminders.editSchedule")}</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -700,9 +694,7 @@ export default function ServiceRemindersPage() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-notes">
-                    {t("common.notes")}
-                  </Label>
+                  <Label htmlFor="edit-notes">{t("common.notes")}</Label>
                   <Input
                     id="edit-notes"
                     value={editForm.notes}
@@ -734,10 +726,7 @@ export default function ServiceRemindersPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowEdit(false)}
-                >
+                <Button variant="outline" onClick={() => setShowEdit(false)}>
                   {t("common.cancel")}
                 </Button>
                 <Button
@@ -792,10 +781,7 @@ export default function ServiceRemindersPage() {
                     <EmptyTitle>{t("serviceReminders.noSchedules")}</EmptyTitle>
                   </EmptyHeader>
                   <EmptyContent>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowAdd(true)}
-                    >
+                    <Button variant="outline" onClick={() => setShowAdd(true)}>
                       <Plus className="mr-2 size-4" />
                       {t("serviceReminders.addSchedule")}
                     </Button>
@@ -805,19 +791,13 @@ export default function ServiceRemindersPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>
-                        {t("serviceReminders.vehicle")}
-                      </TableHead>
-                      <TableHead>
-                        {t("serviceReminders.serviceName")}
-                      </TableHead>
+                      <TableHead>{t("serviceReminders.vehicle")}</TableHead>
+                      <TableHead>{t("serviceReminders.serviceName")}</TableHead>
                       <TableHead>Interval</TableHead>
                       <TableHead>
                         {t("serviceReminders.lastServiceDate")}
                       </TableHead>
-                      <TableHead>
-                        {t("serviceReminders.nextDueDate")}
-                      </TableHead>
+                      <TableHead>{t("serviceReminders.nextDueDate")}</TableHead>
                       <TableHead>
                         {t("serviceReminders.reminderEnabled")}
                       </TableHead>
@@ -948,11 +928,7 @@ function StatusBadge({ status }: { status: string }) {
     custom: t("serviceReminders.typeCustom"),
   };
 
-  return (
-    <Badge variant="outline">
-      {labels[status] ?? status}
-    </Badge>
-  );
+  return <Badge variant="outline">{labels[status] ?? status}</Badge>;
 }
 
 function ChannelBadge({ channel }: { channel: string }) {
@@ -963,9 +939,5 @@ function ChannelBadge({ channel }: { channel: string }) {
     in_app: t("serviceReminders.channelInApp"),
   };
 
-  return (
-    <Badge variant="outline">
-      {labels[channel] ?? channel}
-    </Badge>
-  );
+  return <Badge variant="outline">{labels[channel] ?? channel}</Badge>;
 }

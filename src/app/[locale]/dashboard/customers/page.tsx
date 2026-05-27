@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Users } from "lucide-react";
+import { BarChart3, Clock, Plus, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
@@ -95,6 +95,7 @@ export default function CustomersPage() {
           { label: "New This Month", count: newThisMonth },
         ]}
       />,
+      <BarChart3 className="size-4" />,
     );
 
     const recent = [...customers]
@@ -117,12 +118,13 @@ export default function CustomersPage() {
       "recent",
       "Recent",
       <RecentList items={recent} title="Recent Customers" />,
+      <Clock className="size-4" />,
     );
 
     setOpen(true);
   }, [rawCustomers, customers, registerTab, setOpen]);
 
-  const isFirstLoad = !customers && !search;
+  const isFirstLoad = rawCustomers === undefined && !search;
   const showLoadingScreen = orgLoading || (customersLoading && isFirstLoad);
 
   // ── Loading state ──────────────────────────────────────────
@@ -176,7 +178,7 @@ export default function CustomersPage() {
             {customers.length} customer{customers.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Button onClick={() => setNewCustomerDialogOpen(true)} size="lg">
+        <Button onClick={() => setNewCustomerDialogOpen(true)} size="default">
           <Plus className="size-4" />
           {t("addCustomer")}
         </Button>

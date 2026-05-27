@@ -249,7 +249,7 @@ export function ServicesSection() {
                   </span>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     onClick={() => ctx.removeService(idx)}
                     data-slot="touch-target"
                     className="min-w-[44px]"

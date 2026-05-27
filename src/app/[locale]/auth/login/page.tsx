@@ -1,9 +1,10 @@
 "use client";
 
 import { Loader2, LogIn } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useActionState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -20,7 +21,9 @@ export default function LoginPage() {
   const t = useTranslations("auth.login");
   const authT = useTranslations("auth");
   const locale = useLocale();
-  const [state, formAction, isPending] = useActionState(login, { error: "" });
+  const [state, formAction, isPending] = useActionState(login, {});
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const searchParams = useSearchParams();
   const redirectTo = searchParams?.get("redirectTo") ?? "";
 
@@ -29,6 +32,16 @@ export default function LoginPage() {
       window.location.replace(state.redirectTo);
     }
   }, [state?.redirectTo]);
+
+  const prevFormError = useRef(state?.formError);
+  useEffect(() => {
+    if (state?.formError && state.formError !== prevFormError.current) {
+      toast.error(state.formError);
+    }
+    prevFormError.current = state?.formError;
+  }, [state?.formError]);
+
+  const fieldErrors = state?.fieldErrors ?? {};
 
   const handleLanguageSwitch = (newLocale: "mn" | "en") => {
     if (newLocale === locale) return;
@@ -73,9 +86,9 @@ export default function LoginPage() {
           <input type="hidden" name="redirectTo" value={redirectTo} />
         )}
         <FieldGroup className="gap-3.5">
-          {state?.error && (
+          {state?.formError && (
             <FieldError className="border border-destructive/20 bg-destructive/5 px-2.5 py-1.5 text-[10px] font-mono">
-              {state.error}
+              {state.formError}
             </FieldError>
           )}
           <Field className="gap-1">
@@ -91,9 +104,15 @@ export default function LoginPage() {
               type="email"
               autoComplete="email"
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder={t("emailPlaceholder")}
+              aria-invalid={"email" in fieldErrors ? true : undefined}
               className="font-mono text-xs bg-muted/10 focus-visible:bg-transparent h-8 min-h-0"
             />
+            {"email" in fieldErrors && (
+              <FieldError>{fieldErrors.email}</FieldError>
+            )}
           </Field>
           <Field className="gap-1">
             <div className="flex items-center justify-between">
@@ -116,9 +135,15 @@ export default function LoginPage() {
               type="password"
               autoComplete="current-password"
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder={t("passwordPlaceholder")}
+              aria-invalid={"password" in fieldErrors ? true : undefined}
               className="font-mono text-xs bg-muted/10 focus-visible:bg-transparent h-8 min-h-0"
             />
+            {"password" in fieldErrors && (
+              <FieldError>{fieldErrors.password}</FieldError>
+            )}
           </Field>
           <Field className="mt-1">
             <Button

@@ -1,11 +1,12 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Loader2, UserPlus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -13,9 +14,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "@/lib/i18n/navigation";
+import { customerKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useTranslations } from "next-intl";
 
 type CustomerType = "individual" | "company";
 
@@ -55,6 +60,7 @@ export function NewCustomerDialog({
   onOpenChange,
 }: NewCustomerDialogProps) {
   const { replace } = useRouter();
+  const queryClient = useQueryClient();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? null;
   const [saving, setSaving] = useState(false);
@@ -93,8 +99,7 @@ export function NewCustomerDialog({
             : ("email" as const);
           setConflictInfo({
             field,
-            existingCustomerId:
-              json.error.details?.existingCustomerId ?? null,
+            existingCustomerId: json.error.details?.existingCustomerId ?? null,
           });
           toast.error(json.error.message);
           return;
@@ -105,6 +110,9 @@ export function NewCustomerDialog({
       }
 
       toast.success("Customer created");
+      queryClient.invalidateQueries({
+        queryKey: customerKeys.all(orgId),
+      });
       onOpenChange(false);
       replace(`/dashboard/customers/${json.data.id}`);
     } catch {
@@ -142,9 +150,7 @@ export function NewCustomerDialog({
               <div className="text-sm">
                 <span className="font-medium text-amber-800 dark:text-amber-300">
                   A customer with this{" "}
-                  {conflictInfo.field === "phone"
-                    ? "phone number"
-                    : "email"}{" "}
+                  {conflictInfo.field === "phone" ? "phone number" : "email"}{" "}
                   already exists.
                 </span>{" "}
                 {conflictInfo.existingCustomerId ? (
@@ -185,13 +191,13 @@ export function NewCustomerDialog({
             <CardContent className="flex flex-col gap-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                  <label
+                  <Label
                     className="mb-1 block text-sm font-medium"
                     htmlFor="type"
                   >
                     {t("type")}
-                  </label>
-                  <select
+                  </Label>
+                  <NativeSelect
                     id="type"
                     value={form.type}
                     onChange={(event) =>
@@ -200,23 +206,23 @@ export function NewCustomerDialog({
                         type: event.target.value as CustomerType,
                       }))
                     }
-                    className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="w-full"
                     aria-label="Customer type"
                   >
                     <option value="individual">{t("individual")}</option>
                     <option value="company">{t("company")}</option>
-                  </select>
+                  </NativeSelect>
                 </div>
 
                 {form.type === "company" ? (
                   <>
                     <div>
-                      <label
+                      <Label
                         className="mb-1 block text-sm font-medium"
                         htmlFor="companyName"
                       >
                         {t("companyName")}
-                      </label>
+                      </Label>
                       <Input
                         id="companyName"
                         value={form.companyName}
@@ -231,12 +237,12 @@ export function NewCustomerDialog({
                       />
                     </div>
                     <div>
-                      <label
+                      <Label
                         className="mb-1 block text-sm font-medium"
                         htmlFor="contactPerson"
                       >
                         {t("contactPerson")}
-                      </label>
+                      </Label>
                       <Input
                         id="contactPerson"
                         value={form.contactPerson}
@@ -254,12 +260,12 @@ export function NewCustomerDialog({
                 ) : (
                   <>
                     <div>
-                      <label
+                      <Label
                         className="mb-1 block text-sm font-medium"
                         htmlFor="firstName"
                       >
                         {t("firstName")}
-                      </label>
+                      </Label>
                       <Input
                         id="firstName"
                         value={form.firstName}
@@ -274,12 +280,12 @@ export function NewCustomerDialog({
                       />
                     </div>
                     <div>
-                      <label
+                      <Label
                         className="mb-1 block text-sm font-medium"
                         htmlFor="lastName"
                       >
                         {t("lastName")}
-                      </label>
+                      </Label>
                       <Input
                         id="lastName"
                         value={form.lastName}
@@ -297,12 +303,12 @@ export function NewCustomerDialog({
                 )}
 
                 <div>
-                  <label
+                  <Label
                     className="mb-1 block text-sm font-medium"
                     htmlFor="phone"
                   >
                     {t("phone")}
-                  </label>
+                  </Label>
                   <Input
                     id="phone"
                     value={form.phone}
@@ -317,12 +323,12 @@ export function NewCustomerDialog({
                   />
                 </div>
                 <div>
-                  <label
+                  <Label
                     className="mb-1 block text-sm font-medium"
                     htmlFor="email"
                   >
                     {t("email")}
-                  </label>
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -338,12 +344,12 @@ export function NewCustomerDialog({
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label
+                  <Label
                     className="mb-1 block text-sm font-medium"
                     htmlFor="address"
                   >
                     {t("address")}
-                  </label>
+                  </Label>
                   <Input
                     id="address"
                     value={form.address}
@@ -358,13 +364,13 @@ export function NewCustomerDialog({
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label
+                  <Label
                     className="mb-1 block text-sm font-medium"
                     htmlFor="source"
                   >
                     {t("source")}
-                  </label>
-                  <select
+                  </Label>
+                  <NativeSelect
                     id="source"
                     value={form.source}
                     onChange={(event) =>
@@ -373,7 +379,7 @@ export function NewCustomerDialog({
                         source: event.target.value,
                       }))
                     }
-                    className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="w-full"
                     aria-label="Source"
                   >
                     <option value="">{t("sourcePlaceholder")}</option>
@@ -385,16 +391,16 @@ export function NewCustomerDialog({
                     </option>
                     <option value="phone">{t("sourcePhone")}</option>
                     <option value="other">{t("sourceOther")}</option>
-                  </select>
+                  </NativeSelect>
                 </div>
                 <div className="sm:col-span-2">
-                  <label
+                  <Label
                     className="mb-1 block text-sm font-medium"
                     htmlFor="notes"
                   >
                     {t("notes")}
-                  </label>
-                  <textarea
+                  </Label>
+                  <Textarea
                     id="notes"
                     value={form.notes}
                     onChange={(event) =>
@@ -404,7 +410,6 @@ export function NewCustomerDialog({
                       }))
                     }
                     rows={3}
-                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     placeholder="Preferred contact time, fleet details, or special notes"
                   />
                 </div>
@@ -418,7 +423,7 @@ export function NewCustomerDialog({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" size="lg" disabled={saving}>
+                <Button type="submit" size="default" disabled={saving}>
                   {saving ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (

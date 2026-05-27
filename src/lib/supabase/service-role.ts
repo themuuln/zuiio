@@ -1,14 +1,16 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 
 /**
  * Supabase client using the service_role key.
+ * Uses createClient (NOT @supabase/ssr) to avoid cookie-based auth
+ * interference. The SSR createServerClient reads sb-*-auth-token cookies
+ * and sends user JWT as Authorization header, which forces RLS to apply
+ * as that user — defeating the purpose of the service_role key.
+ *
  * Bypasses RLS — use ONLY in server-side contexts where the caller
- * is already authorized (e.g., public invite lookups, admin operations).
+ * is already authorized (e.g., signup bootstrap, admin operations).
  */
 export async function createServiceRoleClient() {
-  const cookieStore = await cookies();
-
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -18,20 +20,11 @@ export async function createServiceRoleClient() {
     );
   }
 
-  return createServerClient(supabaseUrl, serviceRoleKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        } catch {
-          // ignore
-        }
-      },
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
     },
   });
 }

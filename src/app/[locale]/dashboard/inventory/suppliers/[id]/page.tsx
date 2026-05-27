@@ -115,7 +115,7 @@ export default function EditSupplierPage() {
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           onClick={() => back()}
           aria-label={t("back")}
         >

@@ -58,8 +58,13 @@
     "setup": {
       "title": "Set up your organization",
       "subtitle": "Your account has been created. Let's set up your organization.",
-      "error": "Setup failed",
-      "retry": "Retry"
+      "error": "Automatic setup failed",
+      "retry": "Retry",
+      "manualSetup": "Set up manually",
+      "orgNameLabel": "Organization name",
+      "orgNamePlaceholder": "e.g. Auto Service Center",
+      "createOrg": "Create organization",
+      "manualError": "Manual setup failed. Check the name and try again."
     },
     "signIn": "Sign in",
     "signUp": "Sign up",
@@ -117,7 +122,14 @@
       "submit": "Create account",
       "haveAccount": "Already have an account?",
       "metaTitle": "Sign Up | TOLOM",
-      "metaDescription": "Create your TOLOM account and start managing your auto service shop."
+      "metaDescription": "Create your TOLOM account and start managing your auto service shop.",
+      "errors": {
+        "passwordsDoNotMatch": "Passwords do not match",
+        "passwordTooShort": "Password must be at least 8 characters",
+        "userAlreadyRegistered": "An account with this email already exists",
+        "networkError": "Unable to connect. Please check your network and try again.",
+        "generic": "Something went wrong. Please try again."
+      }
     },
     "forgotPassword": {
       "title": "Forgot your password?",
@@ -268,7 +280,6 @@
     "occupied": "Occupied",
     "available": "Available",
     "clickToAssign": "Click to assign",
-    "showSidebar": "Show sidebar",
     "assignedToBay": "Assigned to Bay",
     "failedToAssign": "Failed to assign",
     "markReady": "Mark Ready",
@@ -1388,6 +1399,13 @@
     "ctaButton": "Start Free Trial"
   },
   "subscription": {
+    "welcomeTitle": "Welcome to TOLOM",
+    "welcomeDescription": "Your account is ready. Start your free trial to explore all features.",
+    "startTrialButton": "Start 14-Day Free Trial",
+    "trialLength": "14 days free · No credit card required",
+    "trialHint": "Get started with a 14-day free trial. No credit card needed.",
+    "trialStartedTitle": "Trial started!",
+    "trialStartedDescription": "You have 14 days of full access. Enjoy TOLOM!",
     "expiredTitle": "Subscription Expired",
     "expiredDescription": "Your subscription has ended. To continue using TOLOM, please transfer the payment to the following account.",
     "selectBank": "Select Bank",

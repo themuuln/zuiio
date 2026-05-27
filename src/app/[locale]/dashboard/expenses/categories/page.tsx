@@ -188,7 +188,7 @@ export default function CategoriesPage() {
             Organize expenses into categories for better tracking
           </p>
         </div>
-        <Button onClick={openAddDialog} size="lg">
+        <Button onClick={openAddDialog} size="default">
           <Plus className="size-4" />
           Add Category
         </Button>

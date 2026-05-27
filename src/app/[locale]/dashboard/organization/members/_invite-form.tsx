@@ -39,7 +39,7 @@ export function InviteForm({
         <CardTitle className="text-base">{t("inviteNew")}</CardTitle>
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           className="size-8"
           onClick={onClose}
         >

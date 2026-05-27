@@ -270,6 +270,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "customer_communications_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       customer_notes: {
@@ -3829,6 +3836,10 @@ export type Database = {
         Args: { accepting_user_id: string; invite_token: string }
         Returns: Json
       }
+      admin_extend_subscription: {
+        Args: { target_org_id: string }
+        Returns: Json
+      }
       admin_list_organizations: { Args: never; Returns: Json }
       admin_update_subscription: {
         Args: {
@@ -3849,6 +3860,7 @@ export type Database = {
       get_current_org_id: { Args: never; Returns: string }
       get_invoice_by_token: { Args: { p_token: string }; Returns: Json }
       get_public_invoice_by_token: { Args: { p_token: string }; Returns: Json }
+      get_public_stats: { Args: never; Returns: Json }
       get_user_organization_id: { Args: never; Returns: string }
       get_user_organizations: {
         Args: never

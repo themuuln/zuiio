@@ -27,5 +27,9 @@ const BayViewV2Client = dynamic(
 );
 
 export default function BayViewV2Page() {
-  return <BayViewV2Client />;
+  return (
+    <div className="absolute inset-0">
+      <BayViewV2Client />
+    </div>
+  );
 }

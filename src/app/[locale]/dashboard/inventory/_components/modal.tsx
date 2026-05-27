@@ -19,7 +19,7 @@ export function Modal({
           <h3 className="text-lg font-semibold">{title}</h3>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             onClick={onClose}
           >
             <X className="size-5" />

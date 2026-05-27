@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowLeft, ChevronDown, ChevronRight, Pencil, Phone, Save, Trash2, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronRight,
+  Pencil,
+  Phone,
+  Save,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState, useEffect } from "react";
@@ -11,13 +20,28 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ColorSelect } from "@/components/vehicles/color-select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { WorkOrderStatus } from "@/lib/types";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { vehicleKeys } from "@/lib/queries/keys";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatMNT } from "@/lib/utils";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { ContactCard } from "@/components/sidebar-tabs/contact-card";
@@ -157,8 +181,8 @@ export default function VehicleDetailPage() {
     { key: "total", label: "Total", format: "currency" as const },
   ];
 
+  const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<VehicleFormState>(emptyForm);
 
   const syncForm = useCallback((nextVehicle: VehicleDetailResponse) => {
@@ -183,74 +207,125 @@ export default function VehicleDetailPage() {
     });
   }, []);
 
-  const handleSave = async () => {
-    if (!orgId || !vehicleId) {
-      return;
-    }
-
-    setSaving(true);
-
-    try {
+  const editMutation = useMutation({
+    mutationFn: async (formData: VehicleFormState) => {
       const response = await fetch(
         `/api/organizations/${orgId}/vehicles/${vehicleId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            plateNumber: form.plateNumber.trim(),
-            vin: form.vin.trim() || null,
-            chassisNumber: form.chassisNumber.trim() || null,
-            make: form.make.trim(),
-            model: form.model.trim(),
-            year: form.year ? Number(form.year) : null,
-            trim: form.trim.trim() || null,
-            color: form.color.trim() || null,
-            engine: form.engine.trim() || null,
-            fuelType: form.fuelType.trim() || null,
-            transmission: form.transmission.trim() || null,
-            drivetrain: form.drivetrain.trim() || null,
-            bodyType: form.bodyType.trim() || null,
-            odometer: form.odometer ? Number(form.odometer) : null,
-            licenseExpiryAt: form.licenseExpiryAt || null,
-            nextServiceAt: form.nextServiceAt || null,
-            notes: form.notes.trim() || null,
+            plateNumber: formData.plateNumber.trim(),
+            vin: formData.vin.trim() || null,
+            chassisNumber: formData.chassisNumber.trim() || null,
+            make: formData.make.trim(),
+            model: formData.model.trim(),
+            year: formData.year ? Number(formData.year) : null,
+            trim: formData.trim.trim() || null,
+            color: formData.color.trim() || null,
+            engine: formData.engine.trim() || null,
+            fuelType: formData.fuelType.trim() || null,
+            transmission: formData.transmission.trim() || null,
+            drivetrain: formData.drivetrain.trim() || null,
+            bodyType: formData.bodyType.trim() || null,
+            odometer: formData.odometer ? Number(formData.odometer) : null,
+            licenseExpiryAt: formData.licenseExpiryAt || null,
+            nextServiceAt: formData.nextServiceAt || null,
+            notes: formData.notes.trim() || null,
           }),
         },
       );
       const json = await response.json();
-
-      if (json.error) {
-        toast.error(json.error.message);
-        return;
+      if (json.error) throw new Error(json.error.message);
+      return json.data;
+    },
+    onMutate: async (formData) => {
+      await queryClient.cancelQueries({
+        queryKey: vehicleKeys.detail(orgId ?? "", vehicleId ?? ""),
+      });
+      const previous = queryClient.getQueryData<VehicleDetailResponse>(
+        vehicleKeys.detail(orgId ?? "", vehicleId ?? ""),
+      );
+      queryClient.setQueryData<VehicleDetailResponse>(
+        vehicleKeys.detail(orgId ?? "", vehicleId ?? ""),
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            plate_number: formData.plateNumber || old.plate_number,
+            vin: formData.vin || old.vin,
+            chassis_number: formData.chassisNumber || old.chassis_number,
+            make: formData.make || old.make,
+            model: formData.model || old.model,
+            year: formData.year ? Number(formData.year) : old.year,
+            trim: formData.trim || old.trim,
+            color: formData.color || old.color,
+            engine: formData.engine || old.engine,
+            fuel_type: formData.fuelType || old.fuel_type,
+            transmission: formData.transmission || old.transmission,
+            drivetrain: formData.drivetrain || old.drivetrain,
+            body_type: formData.bodyType || old.body_type,
+            odometer: formData.odometer
+              ? Number(formData.odometer)
+              : old.odometer,
+            license_expiry_at:
+              formData.licenseExpiryAt || old.license_expiry_at,
+            next_service_at: formData.nextServiceAt || old.next_service_at,
+            notes: formData.notes || old.notes,
+          };
+        },
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          vehicleKeys.detail(orgId ?? "", vehicleId ?? ""),
+          context.previous,
+        );
       }
-
-      refetch();
+      toast.error(t("failedToSave"));
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: vehicleKeys.all(orgId ?? "") });
       setEditing(false);
       toast.success(t("vehicleUpdated"));
-    } catch {
-      toast.error(t("failedToSave"));
-    } finally {
-      setSaving(false);
-    }
-  };
+    },
+  });
 
-  const handleDelete = async () => {
-    if (!orgId || !vehicleId) return;
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
       const response = await fetch(
         `/api/organizations/${orgId}/vehicles/${vehicleId}`,
         { method: "DELETE" },
       );
       const json = await response.json();
-      if (json.error) {
-        toast.error(json.error.message);
-        return;
-      }
+      if (json.error) throw new Error(json.error.message);
+      return json.data;
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: vehicleKeys.all(orgId ?? ""),
+      });
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: vehicleKeys.all(orgId ?? "") });
+      toast.error(t("failedToSave"));
+    },
+    onSettled: () => {
       toast.success(t("deleted"));
       push("/dashboard/vehicles");
-    } catch {
-      toast.error(t("failedToSave"));
-    }
+    },
+  });
+
+  const handleSave = () => {
+    if (!orgId || !vehicleId) return;
+    editMutation.mutate(form);
+  };
+
+  const handleDelete = () => {
+    if (!orgId || !vehicleId) return;
+    deleteMutation.mutate();
   };
 
   if (orgQuery.isLoading || loading) {
@@ -298,20 +373,26 @@ export default function VehicleDetailPage() {
 
   useEffect(() => {
     if (!vehicle) return;
-    const owner = vehicle.owners.find((o) => o.is_primary) ?? vehicle.owners[0] ?? null;
+    const owner =
+      vehicle.owners.find((o) => o.is_primary) ?? vehicle.owners[0] ?? null;
     if (owner) {
-      registerTab("owner", "Owner", (
+      registerTab(
+        "owner",
+        "Owner",
         <ContactCard
           title="Owner Info"
           items={[
             { label: "Name", value: owner.name, copyable: true },
             { label: "Phone", value: owner.phone, icon: Phone, copyable: true },
           ]}
-        />
-      ));
+        />,
+      );
     }
     const history = [...vehicle.service_history]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )
       .slice(0, 3)
       .map((wo) => ({
         id: wo.id,
@@ -321,13 +402,15 @@ export default function VehicleDetailPage() {
         href: `/dashboard/work-orders/${wo.id}`,
       }));
     if (history.length > 0) {
-      registerTab("history", "History", (
+      registerTab(
+        "history",
+        "History",
         <RecentList
           title="Service History"
           items={history}
           emptyMessage="No service history"
-        />
-      ));
+        />,
+      );
     }
     setOpen(true);
   }, [vehicle, registerTab, setOpen]);
@@ -338,7 +421,7 @@ export default function VehicleDetailPage() {
         <Button
           render={<Link href="/dashboard/vehicles" />}
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           aria-label={commonT("back")}
         >
           <ArrowLeft className="size-5" />
@@ -355,12 +438,25 @@ export default function VehicleDetailPage() {
         </div>
         {!editing ? (
           <>
-            <Button variant="outline" onClick={() => { syncForm(vehicle); setEditing(true); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                syncForm(vehicle);
+                setEditing(true);
+              }}
+            >
               <Pencil className="size-4" />
               {commonT("edit")}
             </Button>
             <AlertDialog>
-              <AlertDialogTrigger render={<Button variant="outline" className="text-destructive hover:text-destructive" />}>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    className="text-destructive hover:text-destructive"
+                  />
+                }
+              >
                 <Trash2 className="size-4" />
                 {commonT("delete")}
               </AlertDialogTrigger>
@@ -373,7 +469,10 @@ export default function VehicleDetailPage() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} variant="destructive">
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    variant="destructive"
+                  >
                     {commonT("delete")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -382,9 +481,9 @@ export default function VehicleDetailPage() {
           </>
         ) : (
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={editMutation.isPending}>
               <Save className="size-4" />
-              {saving ? t("saving") : commonT("save")}
+              {editMutation.isPending ? t("saving") : commonT("save")}
             </Button>
             <Button
               variant="ghost"
@@ -439,10 +538,7 @@ export default function VehicleDetailPage() {
         </CardHeader>
         <CardContent>
           {editing ? (
-            <VehicleEditForm
-              form={form}
-              onChange={setForm}
-            />
+            <VehicleEditForm form={form} onChange={setForm} />
           ) : (
             <VehicleReadView vehicle={vehicle} />
           )}
@@ -456,7 +552,9 @@ export default function VehicleDetailPage() {
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg bg-muted/50 p-3">
-              <p className="mb-1 text-xs text-muted-foreground">{t("lastVisit")}</p>
+              <p className="mb-1 text-xs text-muted-foreground">
+                {t("lastVisit")}
+              </p>
               <p className="text-sm font-medium">
                 {formatDate(vehicle.last_visit_at)}
               </p>
@@ -478,7 +576,9 @@ export default function VehicleDetailPage() {
               </p>
             </div>
             <div className="rounded-lg bg-muted/50 p-3">
-              <p className="mb-1 text-xs text-muted-foreground">{t("created")}</p>
+              <p className="mb-1 text-xs text-muted-foreground">
+                {t("created")}
+              </p>
               <p className="text-sm font-medium">
                 {formatDate(vehicle.created_at)}
               </p>
@@ -515,9 +615,7 @@ export default function VehicleDetailPage() {
               {vehicle.service_history.map((workOrder) => (
                 <Button
                   key={workOrder.id}
-                  onClick={() =>
-                    push(`/dashboard/work-orders/${workOrder.id}`)
-                  }
+                  onClick={() => push(`/dashboard/work-orders/${workOrder.id}`)}
                   variant="ghost"
                   className="w-full justify-start rounded-lg bg-muted/50 px-4 py-4"
                 >
@@ -537,7 +635,10 @@ export default function VehicleDetailPage() {
                       {workOrder.work_order_services.length > 0 && (
                         <p className="text-xs text-muted-foreground">
                           {workOrder.work_order_services
-                            .flatMap((service) => { const name = service.service_name || service.name; return name ? [name] : []; })
+                            .flatMap((service) => {
+                              const name = service.service_name || service.name;
+                              return name ? [name] : [];
+                            })
                             .join(", ")}
                         </p>
                       )}
@@ -569,7 +670,10 @@ function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
     [t("model"), vehicle.model],
     [t("year"), vehicle.year ? String(vehicle.year) : null],
     [t("vin"), vehicle.vin],
-    [t("odometer"), vehicle.odometer ? `${vehicle.odometer.toLocaleString()} km` : null],
+    [
+      t("odometer"),
+      vehicle.odometer ? `${vehicle.odometer.toLocaleString()} km` : null,
+    ],
   ];
 
   const detailFields = [
@@ -581,9 +685,24 @@ function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
     [t("transmission"), vehicle.transmission],
     [t("drivetrain"), vehicle.drivetrain],
     [t("bodyType"), vehicle.body_type],
-    [t("lastVisit"), vehicle.last_visit_at ? new Date(vehicle.last_visit_at).toLocaleDateString() : null],
-    [t("licenseExpiry"), vehicle.license_expiry_at ? new Date(vehicle.license_expiry_at).toLocaleDateString() : null],
-    [t("nextService"), vehicle.next_service_at ? new Date(vehicle.next_service_at).toLocaleDateString() : null],
+    [
+      t("lastVisit"),
+      vehicle.last_visit_at
+        ? new Date(vehicle.last_visit_at).toLocaleDateString()
+        : null,
+    ],
+    [
+      t("licenseExpiry"),
+      vehicle.license_expiry_at
+        ? new Date(vehicle.license_expiry_at).toLocaleDateString()
+        : null,
+    ],
+    [
+      t("nextService"),
+      vehicle.next_service_at
+        ? new Date(vehicle.next_service_at).toLocaleDateString()
+        : null,
+    ],
   ];
 
   return (
@@ -608,7 +727,11 @@ function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
         ) : (
           <ChevronRight className="size-4" />
         )}
-        {showMore ? t("showLess") : t("showMoreDetails", { count: detailFields.filter(([, v]) => v).length })}
+        {showMore
+          ? t("showLess")
+          : t("showMoreDetails", {
+              count: detailFields.filter(([, v]) => v).length,
+            })}
       </Button>
 
       {showMore && (
@@ -661,7 +784,10 @@ function FormField({
         type={type}
         value={form[field]}
         onChange={(e) =>
-          onFieldChange(field, uppercase ? e.target.value.toUpperCase() : e.target.value)
+          onFieldChange(
+            field,
+            uppercase ? e.target.value.toUpperCase() : e.target.value,
+          )
         }
         className="h-11"
         placeholder={placeholder}
@@ -687,12 +813,49 @@ function VehicleEditForm({
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={t("plate")} field="plateNumber" form={form} onFieldChange={setField} className="sm:col-span-2" uppercase placeholder="ABC123" />
-        <FormField label={t("make")} field="make" form={form} onFieldChange={setField} />
-        <FormField label={t("model")} field="model" form={form} onFieldChange={setField} />
-        <FormField label={t("year")} field="year" form={form} onFieldChange={setField} type="number" />
-        <FormField label={t("vin")} field="vin" form={form} onFieldChange={setField} className="font-mono" placeholder="17-character VIN" />
-        <FormField label={t("odometer")} field="odometer" form={form} onFieldChange={setField} type="number" />
+        <FormField
+          label={t("plate")}
+          field="plateNumber"
+          form={form}
+          onFieldChange={setField}
+          className="sm:col-span-2"
+          uppercase
+          placeholder="ABC123"
+        />
+        <FormField
+          label={t("make")}
+          field="make"
+          form={form}
+          onFieldChange={setField}
+        />
+        <FormField
+          label={t("model")}
+          field="model"
+          form={form}
+          onFieldChange={setField}
+        />
+        <FormField
+          label={t("year")}
+          field="year"
+          form={form}
+          onFieldChange={setField}
+          type="number"
+        />
+        <FormField
+          label={t("vin")}
+          field="vin"
+          form={form}
+          onFieldChange={setField}
+          className="font-mono"
+          placeholder="17-character VIN"
+        />
+        <FormField
+          label={t("odometer")}
+          field="odometer"
+          form={form}
+          onFieldChange={setField}
+          type="number"
+        />
       </div>
 
       <Button
@@ -711,18 +874,156 @@ function VehicleEditForm({
 
       {showMore && (
         <div className="grid gap-4 sm:grid-cols-2 animate-in fade-in slide-in-from-top-1 duration-200">
-          <FormField label={t("chassisNumber")} field="chassisNumber" form={form} onFieldChange={setField} />
-          <FormField label={t("trim")} field="trim" form={form} onFieldChange={setField} />
-          <FormField label={t("color")} field="color" form={form} onFieldChange={setField} />
-          <FormField label={t("engine")} field="engine" form={form} onFieldChange={setField} />
-          <FormField label={t("fuelType")} field="fuelType" form={form} onFieldChange={setField} placeholder="Gasoline, Diesel, Electric..." />
-          <FormField label={t("transmission")} field="transmission" form={form} onFieldChange={setField} placeholder="Manual, Automatic, CVT..." />
-          <FormField label={t("drivetrain")} field="drivetrain" form={form} onFieldChange={setField} placeholder="FWD, RWD, AWD..." />
-          <FormField label={t("bodyType")} field="bodyType" form={form} onFieldChange={setField} placeholder="Sedan, SUV, Pickup..." />
-          <FormField label={t("licenseExpiry")} field="licenseExpiryAt" form={form} onFieldChange={setField} type="date" />
-          <FormField label={t("nextService")} field="nextServiceAt" form={form} onFieldChange={setField} type="date" />
+          <FormField
+            label={t("chassisNumber")}
+            field="chassisNumber"
+            form={form}
+            onFieldChange={setField}
+          />
+          <FormField
+            label={t("trim")}
+            field="trim"
+            form={form}
+            onFieldChange={setField}
+          />
+          <div>
+            <label
+              className="mb-1 block text-sm font-medium"
+              htmlFor="color-edit"
+            >
+              {t("color")}
+            </label>
+            <ColorSelect
+              value={form.color}
+              onChange={(color) => setField("color", color)}
+              className="w-full"
+            />
+          </div>
+          <FormField
+            label={t("engine")}
+            field="engine"
+            form={form}
+            onFieldChange={setField}
+          />
+          <div>
+            <label
+              className="mb-1 block text-sm font-medium"
+              htmlFor="vehicle-fuel-edit"
+            >
+              {t("fuelType")}
+            </label>
+            <NativeSelect
+              id="vehicle-fuel-edit"
+              value={form.fuelType}
+              onChange={(e) => setField("fuelType", e.target.value)}
+              className="w-full"
+              size="default"
+            >
+              <NativeSelectOption value="">Select fuel type</NativeSelectOption>
+              <NativeSelectOption value="Gasoline">Gasoline</NativeSelectOption>
+              <NativeSelectOption value="Diesel">Diesel</NativeSelectOption>
+              <NativeSelectOption value="Electric">Electric</NativeSelectOption>
+              <NativeSelectOption value="Hybrid">Hybrid</NativeSelectOption>
+              <NativeSelectOption value="LPG">LPG</NativeSelectOption>
+            </NativeSelect>
+          </div>
+          <div>
+            <label
+              className="mb-1 block text-sm font-medium"
+              htmlFor="vehicle-transmission-edit"
+            >
+              {t("transmission")}
+            </label>
+            <NativeSelect
+              id="vehicle-transmission-edit"
+              value={form.transmission}
+              onChange={(e) => setField("transmission", e.target.value)}
+              className="w-full"
+              size="default"
+            >
+              <NativeSelectOption value="">
+                Select transmission
+              </NativeSelectOption>
+              <NativeSelectOption value="Automatic">
+                Automatic
+              </NativeSelectOption>
+              <NativeSelectOption value="Manual">Manual</NativeSelectOption>
+              <NativeSelectOption value="CVT">CVT</NativeSelectOption>
+              <NativeSelectOption value="DCT">DCT</NativeSelectOption>
+            </NativeSelect>
+          </div>
+          <div>
+            <label
+              className="mb-1 block text-sm font-medium"
+              htmlFor="vehicle-drivetrain-edit"
+            >
+              {t("drivetrain")}
+            </label>
+            <NativeSelect
+              id="vehicle-drivetrain-edit"
+              value={form.drivetrain}
+              onChange={(e) => setField("drivetrain", e.target.value)}
+              className="w-full"
+              size="default"
+            >
+              <NativeSelectOption value="">
+                Select drivetrain
+              </NativeSelectOption>
+              <NativeSelectOption value="AWD">AWD</NativeSelectOption>
+              <NativeSelectOption value="4WD">4WD</NativeSelectOption>
+              <NativeSelectOption value="FWD">FWD</NativeSelectOption>
+              <NativeSelectOption value="RWD">RWD</NativeSelectOption>
+            </NativeSelect>
+          </div>
+          <div>
+            <label
+              className="mb-1 block text-sm font-medium"
+              htmlFor="vehicle-body-edit"
+            >
+              {t("bodyType")}
+            </label>
+            <NativeSelect
+              id="vehicle-body-edit"
+              value={form.bodyType}
+              onChange={(e) => setField("bodyType", e.target.value)}
+              className="w-full"
+              size="default"
+            >
+              <NativeSelectOption value="">Select body type</NativeSelectOption>
+              <NativeSelectOption value="SUV">SUV</NativeSelectOption>
+              <NativeSelectOption value="Sedan">Sedan</NativeSelectOption>
+              <NativeSelectOption value="Hatchback">
+                Hatchback
+              </NativeSelectOption>
+              <NativeSelectOption value="Coupe">Coupe</NativeSelectOption>
+              <NativeSelectOption value="Convertible">
+                Convertible
+              </NativeSelectOption>
+              <NativeSelectOption value="Wagon">Wagon</NativeSelectOption>
+              <NativeSelectOption value="Van">Van</NativeSelectOption>
+              <NativeSelectOption value="Truck">Truck</NativeSelectOption>
+              <NativeSelectOption value="Bus">Bus</NativeSelectOption>
+            </NativeSelect>
+          </div>
+          <FormField
+            label={t("licenseExpiry")}
+            field="licenseExpiryAt"
+            form={form}
+            onFieldChange={setField}
+            type="date"
+          />
+          <FormField
+            label={t("nextService")}
+            field="nextServiceAt"
+            form={form}
+            onFieldChange={setField}
+            type="date"
+          />
           <div className="sm:col-span-2">
-            <label className="mb-1 block text-sm font-medium" htmlFor="notes-edit">
+            <label
+              className="mb-1 block text-sm font-medium"
+              htmlFor="notes-edit"
+            >
               {t("notes")}
             </label>
             <textarea

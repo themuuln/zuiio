@@ -150,7 +150,7 @@ export function PageHeader({
         </div>
 
         {tabs && tabs.length > 0 && (
-          <div className="border-t border-border/60 px-4">
+          <div className="border-t border-border/60 px-4 pt-1.5">
             <Tabs value={activeTab} onValueChange={onTabChange}>
               <TabsList variant="line">
                 {tabs.map((tab) => (

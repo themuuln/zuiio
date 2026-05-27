@@ -3,12 +3,15 @@
 import { ArrowLeft, Loader2, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import {
   useCreateExpense,
@@ -42,12 +45,7 @@ const initialForm: ExpenseFormState = {
   notes: "",
 };
 
-const PAYMENT_METHODS = [
-  "cash",
-  "card",
-  "bank_transfer",
-  "manual",
-] as const;
+const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "manual"] as const;
 
 export default function NewExpensePage() {
   const { push } = useRouter();
@@ -63,11 +61,13 @@ export default function NewExpensePage() {
     event.preventDefault();
 
     if (!orgId) {
+      toast.error("Organization not loaded. Please try again.");
       return;
     }
 
     const amount = parseFloat(form.amount);
     if (Number.isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid amount");
       return;
     }
 
@@ -110,7 +110,7 @@ export default function NewExpensePage() {
           <Button
             render={<Link href="/dashboard/expenses" />}
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             aria-label="Back"
           >
             <ArrowLeft className="size-4" />
@@ -137,7 +137,7 @@ export default function NewExpensePage() {
         <Button
           render={<Link href="/dashboard/expenses" />}
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           aria-label="Back"
         >
           <ArrowLeft className="size-4" />
@@ -229,7 +229,7 @@ export default function NewExpensePage() {
                 >
                   {t("category")}
                 </Label>
-                <select
+                <NativeSelect
                   id="category"
                   value={form.categoryId}
                   onChange={(e) =>
@@ -238,7 +238,7 @@ export default function NewExpensePage() {
                       categoryId: e.target.value,
                     }))
                   }
-                  className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="w-full"
                   aria-label={t("category")}
                 >
                   <option value="">{commonT("all")}</option>
@@ -247,7 +247,7 @@ export default function NewExpensePage() {
                       {cat.name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
 
               <div>
@@ -299,7 +299,7 @@ export default function NewExpensePage() {
                 >
                   {t("paymentMethod")}
                 </Label>
-                <select
+                <NativeSelect
                   id="paymentMethod"
                   value={form.paymentMethod}
                   onChange={(e) =>
@@ -308,7 +308,7 @@ export default function NewExpensePage() {
                       paymentMethod: e.target.value,
                     }))
                   }
-                  className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="w-full"
                   aria-label={t("paymentMethod")}
                 >
                   <option value="">{commonT("all")}</option>
@@ -317,7 +317,7 @@ export default function NewExpensePage() {
                       {t(method)}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
 
               <div>
@@ -367,14 +367,13 @@ export default function NewExpensePage() {
                 >
                   {t("notes")}
                 </Label>
-                <textarea
+                <Textarea
                   id="notes"
                   value={form.notes}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, notes: e.target.value }))
                   }
                   rows={3}
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   placeholder={t("notesPlaceholder")}
                 />
               </div>
@@ -390,7 +389,7 @@ export default function NewExpensePage() {
               </Button>
               <Button
                 type="submit"
-                size="lg"
+                size="default"
                 disabled={createExpense.isPending}
               >
                 {createExpense.isPending ? (

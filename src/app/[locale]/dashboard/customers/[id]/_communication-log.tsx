@@ -281,7 +281,7 @@ export function CommunicationLog({ orgId, customerId }: CommunicationLogProps) {
                       render={
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="icon-xs"
                           className="size-7 shrink-0 text-muted-foreground hover:text-destructive"
                         >
                           <Trash2 className="size-3.5" />

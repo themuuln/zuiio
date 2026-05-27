@@ -17,6 +17,8 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { MechanicSelect } from "@/components/mechanic-select";
+import { ContactCard } from "@/components/sidebar-tabs/contact-card";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,11 +33,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { WorkOrderPart, WorkOrderService } from "@/lib/types";
-import type { WorkOrderStatus } from "@/lib/types";
+import WorkOrderPhotoUpload from "@/components/work-order-photo-upload";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
 import { useRouter } from "@/lib/i18n/navigation";
+import { usePartsCatalog } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import {
+  useAttachments,
+  useDeleteAttachment,
+} from "@/lib/queries/use-work-order-attachments";
 import {
   fetchServicePriceHistory,
   useAddPart,
@@ -52,18 +59,14 @@ import {
   useUpdateWorkOrderStatus,
   useWorkOrderDetail,
 } from "@/lib/queries/use-work-order-detail";
-import { usePartsCatalog } from "@/lib/queries/use-inventory";
-import {
-  useAttachments,
-  useDeleteAttachment,
-} from "@/lib/queries/use-work-order-attachments";
-import WorkOrderPhotoUpload from "@/components/work-order-photo-upload";
-import type { WorkOrderAttachment } from "@/lib/types";
-import type { ServiceCatalog } from "@/lib/types";
+import type {
+  ServiceCatalog,
+  WorkOrderAttachment,
+  WorkOrderPart,
+  WorkOrderService,
+  WorkOrderStatus,
+} from "@/lib/types";
 import { cn, formatMNT } from "@/lib/utils";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { ContactCard } from "@/components/sidebar-tabs/contact-card";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
 
 const STATUSES = [
   "New",
@@ -353,7 +356,10 @@ export default function WorkOrderDetailPage() {
 
   const handlePaymentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orgId || !existingInvoiceId || paymentAmount <= 0) return;
+    if (!orgId || !existingInvoiceId || paymentAmount <= 0) {
+      toast.error("Please enter a valid payment amount");
+      return;
+    }
     recordPayment.mutate(
       {
         invoiceId: existingInvoiceId,
@@ -370,6 +376,9 @@ export default function WorkOrderDetailPage() {
           setPaymentReference("");
           setPaymentNotes("");
           toast.success("Payment recorded");
+        },
+        onError: (err: Error) => {
+          toast.error(err.message || "Failed to record payment");
         },
       },
     );
@@ -457,7 +466,7 @@ export default function WorkOrderDetailPage() {
       <div className="flex items-center gap-4 tablet:gap-6">
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-xs"
           onClick={() => back()}
           aria-label="Back"
           className="tablet:size-12"
@@ -752,7 +761,7 @@ export default function WorkOrderDetailPage() {
                   </span>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     className="size-11 text-destructive"
                     onClick={() =>
                       setDeleteConfirm({
@@ -903,7 +912,7 @@ export default function WorkOrderDetailPage() {
                   )}
                 </div>
                 <Button
-                  size="lg"
+                  size="default"
                   onClick={addPartLine}
                   disabled={!newPart.part_name.trim()}
                 >
@@ -941,7 +950,7 @@ export default function WorkOrderDetailPage() {
                   </span>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-xs"
                     className="size-11 text-destructive"
                     onClick={() =>
                       setDeleteConfirm({
@@ -1144,7 +1153,7 @@ export default function WorkOrderDetailPage() {
                 </div>
               </div>
               <Button
-                size="lg"
+                size="default"
                 onClick={generateInvoice}
                 disabled={createInvoice.isPending}
                 className="shrink-0"

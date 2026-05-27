@@ -72,7 +72,7 @@ export function PinSettingsDialog({ onClose }: Props) {
           </CardTitle>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             onClick={onClose}
             aria-label={t("close")}
           >
@@ -88,7 +88,7 @@ export function PinSettingsDialog({ onClose }: Props) {
               <p className="text-sm font-medium text-center">
                 {t("pinUpdated")}
               </p>
-              <Button onClick={onClose} size="lg">
+              <Button onClick={onClose} size="default">
                 {t("done")}
               </Button>
             </div>
@@ -159,7 +159,7 @@ export function PinSettingsDialog({ onClose }: Props) {
                 type="submit"
                 className="w-full"
                 disabled={saving || !isValid}
-                size="lg"
+                size="default"
               >
                 {saving ? (
                   <Loader2 className="size-4 animate-spin" />

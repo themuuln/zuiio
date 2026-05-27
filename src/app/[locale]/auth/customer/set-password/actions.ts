@@ -3,32 +3,41 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { ValidationError, ConflictError } from "@/lib/errors";
+import type { ActionState } from "@/lib/validation/auth-schemas";
+import {
+  customerSetPasswordSchema,
+  flattenFieldErrors,
+} from "@/lib/validation/auth-schemas";
 
-interface SetPasswordState {
-  error?: string;
+type SetPasswordState = ActionState<{ email: string }> & {
   success?: boolean;
-}
+};
 
 export async function setCustomerPassword(
   _prevState: SetPasswordState,
   formData: FormData,
 ): Promise<SetPasswordState> {
-  const token = formData.get("token") as string;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const confirmPassword = formData.get("confirmPassword") as string;
+  const token = (formData.get("token") as string) || "";
 
-  if (!token || !email || !password) {
-    return { error: "token, email, and password are required" };
+  if (!token) {
+    return {
+      formError:
+        "No access token provided. Please use the link from your email or SMS.",
+    };
   }
 
-  if (password !== confirmPassword) {
-    return { error: "Passwords do not match" };
-  }
+  const raw = {
+    email: (formData.get("email") as string) || "",
+    password: (formData.get("password") as string) || "",
+    confirmPassword: (formData.get("confirmPassword") as string) || "",
+  };
 
-  if (password.length < 6) {
-    return { error: "Password must be at least 6 characters" };
+  const parsed = customerSetPasswordSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      values: { email: raw.email },
+      fieldErrors: flattenFieldErrors(parsed.error.issues),
+    };
   }
 
   const supabase = await createClient();
@@ -40,18 +49,18 @@ export async function setCustomerPassword(
     .is("deleted_at", null)
     .maybeSingle();
 
-  if (customerError) return { error: customerError.message };
-  if (!customer) return { error: "Invalid or expired token" };
+  if (customerError) return { formError: customerError.message };
+  if (!customer) return { formError: "Invalid or expired token" };
 
   const serviceRole = await createServiceRoleClient();
 
   const { data: existingUsers, error: lookupError } =
     await serviceRole.auth.admin.listUsers();
 
-  if (lookupError) return { error: lookupError.message };
+  if (lookupError) return { formError: lookupError.message };
 
   const emailConflict = existingUsers.users.find(
-    (u) => u.email?.toLowerCase() === email.toLowerCase(),
+    (u) => u.email?.toLowerCase() === parsed.data.email.toLowerCase(),
   );
 
   if (emailConflict) {
@@ -63,25 +72,35 @@ export async function setCustomerPassword(
       .maybeSingle();
 
     if (linkedCustomer && linkedCustomer.id !== customer.id) {
-      return { error: "Email is already linked to another account" };
+      return {
+        values: { email: parsed.data.email },
+        formError: "Email is already linked to another account",
+      };
     }
   }
 
   const { data: newUser, error: createError } =
     await serviceRole.auth.admin.createUser({
-      email,
-      password,
+      email: parsed.data.email,
+      password: parsed.data.password,
       email_confirm: true,
     });
 
-  if (createError) return { error: createError.message };
+  if (createError) {
+    return {
+      values: { email: parsed.data.email },
+      formError: createError.message,
+    };
+  }
 
   const { error: updateError } = await supabase
     .from("customers")
     .update({ customer_user_id: newUser.user.id })
     .eq("id", customer.id);
 
-  if (updateError) return { error: updateError.message };
+  if (updateError) {
+    return { formError: updateError.message };
+  }
 
   redirect("/portal");
 }

@@ -1,10 +1,18 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 export interface SidebarTab {
   value: string;
   label: string;
+  icon?: ReactNode;
 }
 
 interface RightSidebarState {
@@ -19,11 +27,18 @@ interface RightSidebarContextValue {
   setOpen: (open: boolean) => void;
   toggle: () => void;
   setActiveTab: (tab: string) => void;
-  registerTab: (value: string, label: string, content: ReactNode) => void;
+  registerTab: (
+    value: string,
+    label: string,
+    content: ReactNode,
+    icon?: ReactNode,
+  ) => void;
   unregisterTab: (value: string) => void;
 }
 
-const RightSidebarContext = createContext<RightSidebarContextValue | null>(null);
+const RightSidebarContext = createContext<RightSidebarContextValue | null>(
+  null,
+);
 
 export function RightSidebarProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<RightSidebarState>({
@@ -49,12 +64,14 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
   );
 
   const registerTab = useCallback(
-    (value: string, label: string, content: ReactNode) =>
+    (value: string, label: string, content: ReactNode, icon?: ReactNode) =>
       setState((prev) => {
         const exists = prev.tabs.some((t) => t.value === value);
         const tabs = exists
-          ? prev.tabs
-          : [...prev.tabs, { value, label }];
+          ? prev.tabs.map((t) =>
+              t.value === value ? { ...t, icon: icon ?? t.icon } : t,
+            )
+          : [...prev.tabs, { value, label, icon }];
         const activeTab = prev.activeTab || value;
         return {
           ...prev,
@@ -72,16 +89,27 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
         const tabs = prev.tabs.filter((t) => t.value !== value);
         const { [value]: _, ...content } = prev.content;
         const activeTab =
-          prev.activeTab === value
-            ? tabs[0]?.value ?? ""
-            : prev.activeTab;
-        return { ...prev, tabs, content, activeTab, isOpen: tabs.length > 0 ? prev.isOpen : false };
+          prev.activeTab === value ? (tabs[0]?.value ?? "") : prev.activeTab;
+        return {
+          ...prev,
+          tabs,
+          content,
+          activeTab,
+          isOpen: tabs.length > 0 ? prev.isOpen : false,
+        };
       }),
     [],
   );
 
   const ctxValue = useMemo(
-    () => ({ state, setOpen, toggle, setActiveTab, registerTab, unregisterTab }),
+    () => ({
+      state,
+      setOpen,
+      toggle,
+      setActiveTab,
+      registerTab,
+      unregisterTab,
+    }),
     [state, setOpen, toggle, setActiveTab, registerTab, unregisterTab],
   );
 
@@ -95,7 +123,9 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
 export function useRightSidebar() {
   const ctx = useContext(RightSidebarContext);
   if (!ctx) {
-    throw new Error("useRightSidebar must be used within a RightSidebarProvider");
+    throw new Error(
+      "useRightSidebar must be used within a RightSidebarProvider",
+    );
   }
   return ctx;
 }

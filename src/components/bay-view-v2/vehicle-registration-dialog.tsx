@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   HistoryIcon,
   Loader2,
+  MessageSquarePlus,
   Search,
   User,
   Wrench,
@@ -23,13 +24,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+
+import { ColorSelect } from "@/components/vehicles/color-select";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialMode?: "register" | "lookup";
+  onQueued?: () => void;
 }
 
 interface LookupResult {
@@ -190,10 +196,24 @@ function ServiceTimeline({
   );
 }
 
+// ── Helper to resolve current vehicle/customer IDs ─────────────
+
+function resolveQueueIds(
+  savedVehicleId: string | null,
+  savedCustomerId: string | null,
+  lookupResult: LookupResult,
+): { vehicleId: string | null; customerId: string | null } {
+  return {
+    vehicleId: savedVehicleId ?? lookupResult.vehicle?.id ?? null,
+    customerId: savedCustomerId ?? lookupResult.customer?.id ?? null,
+  };
+}
+
 export function VehicleRegistrationDialog({
   open,
   onOpenChange,
   initialMode = "register",
+  onQueued,
 }: Props) {
   const t = useTranslations("bayView");
   const [mode, setMode] = useState<"register" | "lookup">(initialMode);
@@ -218,6 +238,13 @@ export function VehicleRegistrationDialog({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveMode, setSaveMode] = useState<"created" | "updated" | null>(null);
+
+  // ── Queue state ──────────────────────────────────────────────
+  const [complaint, setComplaint] = useState("");
+  const [queueSaving, setQueueSaving] = useState(false);
+  const [queueError, setQueueError] = useState<string | null>(null);
+  const [savedVehicleId, setSavedVehicleId] = useState<string | null>(null);
+  const [savedCustomerId, setSavedCustomerId] = useState<string | null>(null);
 
   const plateRef = useRef<HTMLInputElement>(null);
 
@@ -248,6 +275,11 @@ export function VehicleRegistrationDialog({
       setSaveError(null);
       setSaveSuccess(false);
       setSaveMode(null);
+      setComplaint("");
+      setQueueSaving(false);
+      setQueueError(null);
+      setSavedVehicleId(null);
+      setSavedCustomerId(null);
     }
   }, [open]);
 
@@ -325,6 +357,10 @@ export function VehicleRegistrationDialog({
         customerPhone: custPhone.trim() || undefined,
       });
 
+      // Store returned IDs for queue use
+      setSavedVehicleId(saveResult.vehicle.id);
+      setSavedCustomerId(saveResult.customerId);
+
       setSaveSuccess(true);
       setSaveMode(saveResult.isUpdate ? "updated" : "created");
 
@@ -354,6 +390,108 @@ export function VehicleRegistrationDialog({
     custPhone,
   ]);
 
+  const handleAddToQueue = useCallback(async () => {
+    const { vehicleId, customerId } = resolveQueueIds(
+      savedVehicleId,
+      savedCustomerId,
+      lookupResult,
+    );
+
+    if (!vehicleId) {
+      // Vehicle hasn't been saved yet — save first
+      if (!plate.trim() || !make.trim() || !model.trim()) {
+        setQueueError("Fill in vehicle info (plate, make, model) first.");
+        return;
+      }
+      try {
+        const { quickRegisterVehicle } = await import(
+          "@/lib/services/bay-view-actions"
+        );
+        const saveResult = await quickRegisterVehicle({
+          plateNumber: plate.trim().toUpperCase(),
+          make: make.trim(),
+          model: model.trim(),
+          year: year ? parseInt(year, 10) : undefined,
+          color: color.trim() || undefined,
+          vin: vin.trim() || undefined,
+          engine: engine.trim() || undefined,
+          odometer: odometer ? parseInt(odometer, 10) : undefined,
+          customerFirstName: custFirstName.trim() || undefined,
+          customerLastName: custLastName.trim() || undefined,
+          customerPhone: custPhone.trim() || undefined,
+        });
+        setSavedVehicleId(saveResult.vehicle.id);
+        setSavedCustomerId(saveResult.customerId);
+
+        const { addVehicleToQueue } = await import(
+          "@/lib/services/bay-view-actions"
+        );
+        await addVehicleToQueue({
+          vehicleId: saveResult.vehicle.id,
+          customerId: saveResult.customerId ?? "",
+          complaint: complaint.trim() || undefined,
+        });
+      } catch (err) {
+        setQueueError(
+          err instanceof Error ? err.message : "Failed to add to queue",
+        );
+        return;
+      }
+    } else if (!customerId) {
+      setQueueError(
+        "Customer name and phone are required to add to queue. Fill in owner info and save first.",
+      );
+      return;
+    } else {
+      // Both IDs resolved — queue directly
+      setQueueSaving(true);
+      setQueueError(null);
+      try {
+        const { addVehicleToQueue } = await import(
+          "@/lib/services/bay-view-actions"
+        );
+        await addVehicleToQueue({
+          vehicleId,
+          customerId,
+          complaint: complaint.trim() || undefined,
+        });
+      } catch (err) {
+        setQueueError(
+          err instanceof Error ? err.message : "Failed to add to queue",
+        );
+        setQueueSaving(false);
+        return;
+      }
+    }
+
+    setQueueSaving(false);
+    onQueued?.();
+  }, [
+    plate,
+    make,
+    model,
+    year,
+    color,
+    vin,
+    engine,
+    odometer,
+    custFirstName,
+    custLastName,
+    custPhone,
+    savedVehicleId,
+    savedCustomerId,
+    lookupResult,
+    complaint,
+    onQueued,
+  ]);
+
+  // Determine whether queue action is available
+  const { vehicleId: resolvedVehicleId, customerId: resolvedCustomerId } =
+    resolveQueueIds(savedVehicleId, savedCustomerId, lookupResult);
+  const canQueue = !!resolvedVehicleId && !!resolvedCustomerId;
+  const needsSave =
+    !resolvedVehicleId && plate.trim() && make.trim() && model.trim();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -365,9 +503,7 @@ export function VehicleRegistrationDialog({
               : t("vehicleRegistration")}
           </DialogTitle>
           <DialogDescription>
-            {mode === "lookup"
-              ? t("lookupSubtitle")
-              : t("registerSubtitle")}
+            {mode === "lookup" ? t("lookupSubtitle") : t("registerSubtitle")}
           </DialogDescription>
         </DialogHeader>
 
@@ -382,11 +518,10 @@ export function VehicleRegistrationDialog({
               setLookupError(null);
               setSaveSuccess(false);
               setSaveError(null);
+              setQueueError(null);
             }}
           >
-            {mode === "register"
-              ? t("switchToLookup")
-              : t("switchToRegister")}
+            {mode === "register" ? t("switchToLookup") : t("switchToRegister")}
           </Button>
         </div>
 
@@ -479,11 +614,16 @@ export function VehicleRegistrationDialog({
                     onChange={(e) => setYear(e.target.value)}
                     placeholder={t("year")}
                   />
-                  <Input
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    placeholder={t("color")}
-                  />
+                  <div>
+                    <Label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      {t("color")}
+                    </Label>
+                    <ColorSelect
+                      value={color}
+                      onChange={(val) => setColor(val)}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -539,8 +679,10 @@ export function VehicleRegistrationDialog({
               <Button
                 type="submit"
                 className="w-full"
-                disabled={saving || !plate.trim() || !make.trim() || !model.trim()}
-                size="lg"
+                disabled={
+                  saving || !plate.trim() || !make.trim() || !model.trim()
+                }
+                size="default"
               >
                 {saving ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -556,6 +698,69 @@ export function VehicleRegistrationDialog({
                     : t("registerVehicleBtn")}
               </Button>
             </form>
+
+            {/* ── Add to Queue section ───────────────────────────── */}
+            {(lookupDone || !!savedVehicleId) && (
+              <>
+                <Separator />
+                <div className="flex flex-col gap-3">
+                  <Label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                    <MessageSquarePlus className="size-3.5 text-primary" />
+                    Add to Waiting Queue
+                  </Label>
+                  <Textarea
+                    value={complaint}
+                    onChange={(e) => setComplaint(e.target.value)}
+                    placeholder="Complaint or reason for visit (optional)"
+                    className="min-h-[60px] text-xs resize-none"
+                  />
+
+                  {!canQueue && needsSave && (
+                    <p className="text-[10px] text-muted-foreground/60">
+                      Save the vehicle first, then you can add it to the queue.
+                    </p>
+                  )}
+
+                  {!canQueue && resolvedVehicleId && !resolvedCustomerId && (
+                    <p className="text-[10px] text-amber-600">
+                      Fill in owner info (name + phone) and save to add to
+                      queue.
+                    </p>
+                  )}
+
+                  {queueError && (
+                    <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
+                      {queueError}
+                    </div>
+                  )}
+
+                  <Button
+                    type="button"
+                    variant={canQueue ? "default" : "outline"}
+                    size="default"
+                    disabled={
+                      queueSaving ||
+                      (!canQueue && !needsSave) ||
+                      (!!resolvedVehicleId && !resolvedCustomerId)
+                    }
+                    onClick={handleAddToQueue}
+                  >
+                    {queueSaving ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <MessageSquarePlus className="size-4" />
+                    )}
+                    {queueSaving
+                      ? "Adding..."
+                      : canQueue
+                        ? "Add to Queue"
+                        : needsSave
+                          ? "Save & Add to Queue"
+                          : "Add to Queue"}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Right: Timeline */}
