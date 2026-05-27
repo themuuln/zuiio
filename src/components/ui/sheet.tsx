@@ -101,7 +101,7 @@ function SheetContent({
             requestAnimationFrame(() => setShowSkeleton(false));
           }
         }}
-        style={showSkeleton ? { display: "contents" } : undefined}
+        style={{ display: "contents" }}
       >
         {children}
       </div>
