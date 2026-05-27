@@ -55,12 +55,14 @@ export async function getVehicles(
       return (data ?? []).map((row: Record<string, unknown>) => {
         const owners = (row.vehicle_owners as Record<string, unknown>[]) ?? [];
         const primaryOwner = owners[0];
-        const customer = (primaryOwner?.customers as Record<string, unknown>) ?? {};
+        const customer =
+          (primaryOwner?.customers as Record<string, unknown>) ?? {};
         return {
           ...(row as unknown as Vehicle),
           owner_name:
-            [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
-            null,
+            [customer.first_name, customer.last_name]
+              .filter(Boolean)
+              .join(" ") || null,
           owner_phone: (customer.phone as string) ?? null,
         } as unknown as VehicleWithOwner;
       });
@@ -100,7 +102,9 @@ export async function getVehicle(
       const [{ data: owners }, { data: workOrders }] = await Promise.all([
         supabase
           .from("vehicle_owners")
-          .select("customer_id, is_primary, customers(first_name, last_name, phone)")
+          .select(
+            "customer_id, is_primary, customers(first_name, last_name, phone)",
+          )
           .eq("vehicle_id", id)
           .eq("organization_id", orgId)
           .is("owned_until", null),
@@ -121,7 +125,8 @@ export async function getVehicle(
           return {
             customer_id: o.customer_id as string,
             name:
-              [c.first_name, c.last_name].filter(Boolean).join(" ") || "Unknown",
+              [c.first_name, c.last_name].filter(Boolean).join(" ") ||
+              "Unknown",
             phone: (c.phone as string) ?? null,
             is_primary: o.is_primary as boolean,
           };
@@ -152,7 +157,6 @@ export async function createVehicle(
   params: CreateVehicleParams,
   userId: string,
 ): Promise<Vehicle> {
-
   const plate = normalizePlate(params.plateNumber?.trim() ?? "");
 
   if (!plate) {
@@ -217,6 +221,7 @@ export async function createVehicle(
   // Link to customer
   if (params.customerId) {
     const { error: ownerError } = await supabase.from("vehicle_owners").insert({
+      id: crypto.randomUUID(),
       organization_id: orgId,
       vehicle_id: vehicle.id,
       customer_id: params.customerId,
@@ -271,7 +276,8 @@ export async function updateVehicle(
 
   const updates: Record<string, unknown> = {};
   if (params.plateNumber !== undefined)
-    updates.plate_number = normalizePlate(params.plateNumber?.trim() ?? "") || null;
+    updates.plate_number =
+      normalizePlate(params.plateNumber?.trim() ?? "") || null;
   if (params.vin !== undefined) updates.vin = params.vin?.trim() || null;
   if (params.chassisNumber !== undefined)
     updates.chassis_number = params.chassisNumber?.trim() || null;
@@ -326,6 +332,7 @@ export async function updateVehicle(
 
     // Create new ownership
     await supabase.from("vehicle_owners").insert({
+      id: crypto.randomUUID(),
       organization_id: orgId,
       vehicle_id: id,
       customer_id: params.customerId,
@@ -478,10 +485,12 @@ export async function getCustomerVehicles(
 export async function getCustomerWorkOrders(
   orgId: string,
   customerId: string,
-): Promise<(WorkOrder & {
-  work_order_services: Record<string, unknown>[];
-  vehicles?: { plate_number: string; make: string; model: string } | null;
-})[]> {
+): Promise<
+  (WorkOrder & {
+    work_order_services: Record<string, unknown>[];
+    vehicles?: { plate_number: string; make: string; model: string } | null;
+  })[]
+> {
   const supabase = await createClient();
 
   return withCache(
@@ -489,7 +498,9 @@ export async function getCustomerWorkOrders(
     async () => {
       const { data: workOrders, error } = await supabase
         .from("work_orders")
-        .select("*, work_order_services(*), vehicles(plate_number, make, model)")
+        .select(
+          "*, work_order_services(*), vehicles(plate_number, make, model)",
+        )
         .eq("organization_id", orgId)
         .eq("customer_id", customerId)
         .is("deleted_at", null)
