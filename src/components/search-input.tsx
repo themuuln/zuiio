@@ -5,7 +5,6 @@ import {
   type ComponentProps,
   useCallback,
   useEffect,
-  useId,
   useRef,
   useState,
 } from "react";
@@ -38,12 +37,11 @@ export function SearchInput({
   focusShortcut = "k",
   ...inputProps
 }: SearchInputProps) {
+  const { onFocus, ...restInputProps } = inputProps;
   const [value, setValue] = useState(externalValue ?? "");
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const shortcutLabel = focusShortcut ? `Cmd+${focusShortcut.toUpperCase()}` : undefined;
-  const id = useId();
-
   useEffect(() => {
     if (externalValue !== undefined) {
       setValue(externalValue);
@@ -110,10 +108,11 @@ export function SearchInput({
         value={value}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
+        onFocus={onFocus}
         placeholder={placeholder}
         aria-label={placeholder}
         className="h-11 text-base"
-        {...inputProps}
+        {...restInputProps}
       />
       {shortcutLabel && !value && !loading && (
         <InputGroupAddon align="inline-end">

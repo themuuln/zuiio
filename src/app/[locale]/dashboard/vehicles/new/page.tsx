@@ -112,9 +112,17 @@ export default function NewVehiclePage() {
     }
   }, [preselectedCustomer, selectedCustomer]);
 
+  // Load all customers when no customer is selected yet
+  useEffect(() => {
+    if (!selectedCustomer) {
+      searchCustomers("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCustomer]);
+
   const searchCustomers = useCallback(
     async (query: string) => {
-      if (!orgId || !query.trim()) {
+      if (!orgId) {
         setCustomerResults([]);
         return;
       }
@@ -122,9 +130,10 @@ export default function NewVehiclePage() {
       setCustomerSearching(true);
 
       try {
-        const response = await fetch(
-          `/api/organizations/${orgId}/customers?q=${encodeURIComponent(query)}`,
-        );
+        const url = query.trim()
+          ? `/api/organizations/${orgId}/customers?q=${encodeURIComponent(query)}`
+          : `/api/organizations/${orgId}/customers`;
+        const response = await fetch(url);
         const json = await response.json();
         setCustomerResults(Array.isArray(json.data) ? json.data : []);
       } catch {
@@ -276,6 +285,7 @@ export default function NewVehiclePage() {
                   placeholder="Search customer by name, phone, or company..."
                   loading={customerSearching}
                   onSearch={searchCustomers}
+                  onFocus={() => searchCustomers("")}
                   debounceMs={400}
                 />
                 {!Array.isArray(customerResults) ||
@@ -349,7 +359,8 @@ export default function NewVehiclePage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="vin">
-                {t("vin")} <span className="text-muted-foreground">(optional)</span>
+                {t("vin")}{" "}
+                <span className="text-muted-foreground">(optional)</span>
               </label>
               <Input
                 id="vin"
