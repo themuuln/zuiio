@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { finalizeSignup } from "@/lib/services/signup-service";
 import type { ActionState } from "@/lib/validation/auth-schemas";
 import {
   flattenFieldErrors,
@@ -44,7 +45,7 @@ export async function signup(
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   try {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
@@ -68,6 +69,23 @@ export async function signup(
         },
         formError,
       };
+    }
+
+    // If signup returned an immediate session (email confirmation disabled),
+    // eagerly finalize the org setup so the user lands on select-organization
+    // with the org ready. This makes signup work without the client-side
+    // /api/auth/finalize-signup round-trip.
+    if (data.session) {
+      try {
+        await finalizeSignup(supabase, {
+          orgName: parsed.data.organizationName,
+        });
+      } catch (finalizeError) {
+        // Non-fatal: the /api/auth/finalize-signup fallback in
+        // select-organization will retry on mount
+        console.error("Eager finalizeSignup failed:", finalizeError);
+      }
+      redirect("/auth/select-organization");
     }
   } catch (error) {
     if (isSupabaseNetworkError(error)) {

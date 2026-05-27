@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Building2, Loader2, RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -25,6 +25,7 @@ export function NewUserSetup({ copy }: { copy: NewUserSetupCopy }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orgName, setOrgName] = useState("");
   const [manualError, setManualError] = useState("");
+  const setupStarted = useRef(false);
 
   const runSetup = async (name?: string) => {
     setIsSubmitting(true);
@@ -56,6 +57,8 @@ export function NewUserSetup({ copy }: { copy: NewUserSetupCopy }) {
   };
 
   useEffect(() => {
+    if (setupStarted.current) return;
+    setupStarted.current = true;
     runSetup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

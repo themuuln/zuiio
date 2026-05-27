@@ -10,6 +10,26 @@ export interface FinalizeSignupResult {
 
 // ── Helpers ───────────────────────────────────────────────────
 
+/**
+ * Generate a unique slug by appending a suffix if the base slug is taken.
+ * Checks existing AND soft-deleted orgs because the DB unique constraint is global.
+ */
+async function generateUniqueSlug(
+  adminClient: SupabaseClient,
+  baseSlug: string,
+): Promise<string> {
+  const { data: existing } = await adminClient
+    .from("organizations")
+    .select("slug")
+    .eq("slug", baseSlug)
+    .maybeSingle();
+
+  if (!existing) return baseSlug;
+
+  // Slug taken — append a suffix
+  return `${baseSlug.slice(0, 51)}-${crypto.randomUUID().slice(0, 8)}`;
+}
+
 /** Transliterate Cyrillic → Latin, then slugify. */
 const CYRILLIC_TO_LATIN: Record<string, string> = {
   а: "a",
@@ -65,9 +85,13 @@ function slugify(name: string): string {
 // ── Main Service ──────────────────────────────────────────────
 
 /**
- * Finalizes a new user's signup by creating the organization (or joining
- * an existing one) and setting up their profile, roles, branch, and
- * membership.
+ * Finalizes a new user's signup by creating a fresh organization
+ * (never joining an existing one by slug) and setting up their profile,
+ * roles, branch, and membership.
+ *
+ * Idempotent: if the user already has a profile or membership, returns
+ * `already_setup` instead of failing. Slugs are guaranteed unique via
+ * suffix generation. Organization membership uses upsert to survive retries.
  *
  * Uses the authenticated client for auth verification and the service-role
  * client for DB mutations to bypass RLS — necessary because the user is
@@ -113,61 +137,37 @@ export async function finalizeSignup(
   const userFullName =
     (meta?.full_name as string) || (meta?.name as string) || null;
 
-  const { data: existingOrg } = await adminClient
-    .from("organizations")
-    .select("id, name")
-    .eq("slug", orgSlug)
-    .is("deleted_at", null)
+  // Check for existing membership before proceeding — this covers retries
+  const { data: existingMembership } = await adminClient
+    .from("organization_users")
+    .select("organization_id")
+    .eq("user_id", user.id)
     .maybeSingle();
 
-  if (existingOrg) {
-    const [{ data: branch }, { data: adminRole }] = await Promise.all([
-      adminClient
-        .from("branches")
-        .select("id")
-        .eq("organization_id", existingOrg.id)
-        .eq("is_main", true)
-        .is("deleted_at", null)
-        .single(),
-      adminClient
-        .from("roles")
-        .select("id")
-        .eq("organization_id", existingOrg.id)
-        .eq("name", "Admin")
-        .is("deleted_at", null)
-        .single(),
-    ]);
-
-    await adminClient.from("organization_users").insert({
-      organization_id: existingOrg.id,
-      user_id: user.id,
-      role_id: adminRole?.id ?? null,
-      branch_id: branch?.id ?? null,
-      is_primary: true,
-    });
-
+  if (existingMembership) {
+    // Already a member of an org — upsert profile and return
     await adminClient.from("profiles").upsert(
       {
         id: user.id,
-        organization_id: existingOrg.id,
-        branch_id: branch?.id ?? null,
+        organization_id: existingMembership.organization_id,
         is_active: true,
         full_name: userFullName,
       },
       { onConflict: "id" },
     );
-  } else {
-    // Bootstrap org with service-role client — the createOrganization
-    // service uses the regular client and would fail RLS since the user
-    // isn't an org member yet.
-    await bootstrapOrganization(adminClient, {
-      name: orgName,
-      slug: orgSlug,
-      userId: user.id,
-      userFullName,
-    });
+    return { status: "already_setup" };
   }
 
+  // Generate a unique slug — do NOT join an existing org by slug
+  // (a new registrant should never inherit Admin of an unrelated org)
+  const finalSlug = await generateUniqueSlug(adminClient, orgSlug);
+
+  await bootstrapOrganization(adminClient, {
+    name: orgName,
+    slug: finalSlug,
+    userId: user.id,
+    userFullName,
+  });
   return { status: "created" };
 }
 
@@ -252,15 +252,19 @@ async function bootstrapOrganization(
     throw new Error(branchError?.message ?? "Failed to create default branch");
   }
 
+  // Use upsert so retries don't fail on duplicate membership
   const { error: memberError } = await adminClient
     .from("organization_users")
-    .insert({
-      organization_id: org.id,
-      user_id: userId,
-      role_id: adminRole.id,
-      branch_id: branch.id,
-      is_primary: true,
-    });
+    .upsert(
+      {
+        organization_id: org.id,
+        user_id: userId,
+        role_id: adminRole.id,
+        branch_id: branch.id,
+        is_primary: true,
+      },
+      { onConflict: "organization_id,user_id" },
+    );
 
   if (memberError) {
     throw new Error(
