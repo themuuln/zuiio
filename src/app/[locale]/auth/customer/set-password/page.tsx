@@ -78,7 +78,10 @@ export default function CustomerSetPasswordPage() {
               <input type="hidden" name="token" value={token} />
 
               <Field>
-                <FieldLabel htmlFor="email">{t("portal.email")} <span className="text-destructive">*</span></FieldLabel>
+                <FieldLabel htmlFor="email">
+                  {t("portal.email")}{" "}
+                  <span className="text-destructive">*</span>
+                </FieldLabel>
                 <Input
                   id="email"
                   name="email"
@@ -96,7 +99,8 @@ export default function CustomerSetPasswordPage() {
 
               <Field>
                 <FieldLabel htmlFor="password">
-                  {t("portal.password")} <span className="text-destructive">*</span>
+                  {t("portal.password")}{" "}
+                  <span className="text-destructive">*</span>
                 </FieldLabel>
                 <Input
                   id="password"
@@ -115,7 +119,8 @@ export default function CustomerSetPasswordPage() {
 
               <Field>
                 <FieldLabel htmlFor="confirmPassword">
-                  {t("portal.confirmPassword")} <span className="text-destructive">*</span>
+                  {t("portal.confirmPassword")}{" "}
+                  <span className="text-destructive">*</span>
                 </FieldLabel>
                 <Input
                   id="confirmPassword"

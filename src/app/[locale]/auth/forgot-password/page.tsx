@@ -61,7 +61,9 @@ export default function ForgotPasswordPage() {
       <form action={formAction} className="flex flex-col gap-4">
         {state?.formError && <FieldError>{state.formError}</FieldError>}
         <Field>
-          <FieldLabel htmlFor="email">{t("emailLabel")} <span className="text-destructive">*</span></FieldLabel>
+          <FieldLabel htmlFor="email">
+            {t("emailLabel")} <span className="text-destructive">*</span>
+          </FieldLabel>
           <Input
             id="email"
             name="email"

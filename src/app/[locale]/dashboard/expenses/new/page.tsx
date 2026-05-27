@@ -67,10 +67,12 @@ export default function NewExpensePage() {
     }
 
     const errors: Record<string, string> = {};
-    if (!form.description.trim()) errors.description = "Description is required";
+    if (!form.description.trim())
+      errors.description = "Description is required";
     const amount = parseFloat(form.amount);
     if (!form.amount.trim()) errors.amount = "Amount is required";
-    else if (Number.isNaN(amount) || amount <= 0) errors.amount = "Enter a valid amount";
+    else if (Number.isNaN(amount) || amount <= 0)
+      errors.amount = "Enter a valid amount";
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
@@ -182,7 +184,9 @@ export default function NewExpensePage() {
                   aria-invalid={!!fieldErrors.description}
                 />
                 {fieldErrors.description && (
-                  <p className="text-xs text-destructive mt-1">{fieldErrors.description}</p>
+                  <p className="text-xs text-destructive mt-1">
+                    {fieldErrors.description}
+                  </p>
                 )}
               </div>
 
@@ -191,9 +195,9 @@ export default function NewExpensePage() {
                   htmlFor="amount"
                   className="mb-1 block text-sm font-medium"
                 >
-                {t("amount")} <span className="text-destructive">*</span>
-              </Label>
-              <Input
+                  {t("amount")} <span className="text-destructive">*</span>
+                </Label>
+                <Input
                   id="amount"
                   type="number"
                   step="0.01"
@@ -208,7 +212,9 @@ export default function NewExpensePage() {
                   aria-invalid={!!fieldErrors.amount}
                 />
                 {fieldErrors.amount && (
-                  <p className="text-xs text-destructive mt-1">{fieldErrors.amount}</p>
+                  <p className="text-xs text-destructive mt-1">
+                    {fieldErrors.amount}
+                  </p>
                 )}
               </div>
 

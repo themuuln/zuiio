@@ -50,7 +50,8 @@ export default function SignupPage() {
 
           <Field>
             <FieldLabel htmlFor="organizationName">
-              {t("organizationLabel")} <span className="text-destructive">*</span>
+              {t("organizationLabel")}{" "}
+              <span className="text-destructive">*</span>
             </FieldLabel>
             <Input
               id="organizationName"
@@ -69,7 +70,9 @@ export default function SignupPage() {
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="fullName">{t("fullNameLabel")} <span className="text-destructive">*</span></FieldLabel>
+            <FieldLabel htmlFor="fullName">
+              {t("fullNameLabel")} <span className="text-destructive">*</span>
+            </FieldLabel>
             <Input
               id="fullName"
               name="fullName"
@@ -87,7 +90,9 @@ export default function SignupPage() {
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="email">{t("emailLabel")} <span className="text-destructive">*</span></FieldLabel>
+            <FieldLabel htmlFor="email">
+              {t("emailLabel")} <span className="text-destructive">*</span>
+            </FieldLabel>
             <Input
               id="email"
               name="email"
@@ -105,7 +110,9 @@ export default function SignupPage() {
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="password">{t("passwordLabel")} <span className="text-destructive">*</span></FieldLabel>
+            <FieldLabel htmlFor="password">
+              {t("passwordLabel")} <span className="text-destructive">*</span>
+            </FieldLabel>
             <Input
               id="password"
               name="password"
@@ -124,7 +131,8 @@ export default function SignupPage() {
 
           <Field>
             <FieldLabel htmlFor="confirmPassword">
-              {t("confirmPasswordLabel")} <span className="text-destructive">*</span>
+              {t("confirmPasswordLabel")}{" "}
+              <span className="text-destructive">*</span>
             </FieldLabel>
             <Input
               id="confirmPassword"

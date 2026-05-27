@@ -99,9 +99,7 @@ export default function EditSupplierPage() {
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <p className="text-muted-foreground">{t("supplierNotFound")}</p>
-            <Button
-              onClick={() => push("/dashboard/inventory/suppliers")}
-            >
+            <Button onClick={() => push("/dashboard/inventory/suppliers")}>
               {t("backToList")}
             </Button>
           </CardContent>
@@ -133,87 +131,95 @@ export default function EditSupplierPage() {
               <FieldLabel htmlFor="name">
                 {t("name")} <span className="text-destructive">*</span>
               </FieldLabel>
-              <Input id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("namePlaceholder")}
-              className="h-11"
-              required />
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t("namePlaceholder")}
+                className="h-11"
+                required
+              />
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field>
                 <FieldLabel htmlFor="contact_person">
                   {t("contactPerson")}
                 </FieldLabel>
-                <Input id="contact_person"
-                value={contactPerson}
-                onChange={(e) => setContactPerson(e.target.value)}
-                placeholder={t("contactPersonPlaceholder")}
-                className="h-11" />
+                <Input
+                  id="contact_person"
+                  value={contactPerson}
+                  onChange={(e) => setContactPerson(e.target.value)}
+                  placeholder={t("contactPersonPlaceholder")}
+                  className="h-11"
+                />
               </Field>
               <Field>
-                <FieldLabel htmlFor="phone">
-                  {t("phone")}
-                </FieldLabel>
-                <Input id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder={t("phonePlaceholder")}
-                className="h-11" />
+                <FieldLabel htmlFor="phone">{t("phone")}</FieldLabel>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder={t("phonePlaceholder")}
+                  className="h-11"
+                />
               </Field>
             </div>
             <Field>
-              <FieldLabel htmlFor="email">
-                {t("email")}
-              </FieldLabel>
-              <Input id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("emailPlaceholder")}
-              className="h-11" />
+              <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t("emailPlaceholder")}
+                className="h-11"
+              />
             </Field>
             <Field>
-              <FieldLabel htmlFor="address">
-                {t("address")}
-              </FieldLabel>
-              <Input id="address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder={t("addressPlaceholder")}
-              className="h-11" />
+              <FieldLabel htmlFor="address">{t("address")}</FieldLabel>
+              <Input
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder={t("addressPlaceholder")}
+                className="h-11"
+              />
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field>
                 <FieldLabel htmlFor="tax_id">
                   {t("taxIdPlaceholder")}
                 </FieldLabel>
-                <Input id="tax_id"
-                value={taxId}
-                onChange={(e) => setTaxId(e.target.value)}
-                placeholder={t("taxIdPlaceholder")}
-                className="h-11" />
+                <Input
+                  id="tax_id"
+                  value={taxId}
+                  onChange={(e) => setTaxId(e.target.value)}
+                  placeholder={t("taxIdPlaceholder")}
+                  className="h-11"
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="payment_terms">
                   {t("paymentTermsPlaceholder")}
                 </FieldLabel>
-                <Input id="payment_terms"
-                value={paymentTerms}
-                onChange={(e) => setPaymentTerms(e.target.value)}
-                placeholder={t("paymentTermsPlaceholder")}
-                className="h-11" />
+                <Input
+                  id="payment_terms"
+                  value={paymentTerms}
+                  onChange={(e) => setPaymentTerms(e.target.value)}
+                  placeholder={t("paymentTermsPlaceholder")}
+                  className="h-11"
+                />
               </Field>
             </div>
             <Field>
-              <FieldLabel htmlFor="notes">
-                {t("notes")}
-              </FieldLabel>
-              <Input id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder={t("notesPlaceholder")}
-              className="h-11" />
+              <FieldLabel htmlFor="notes">{t("notes")}</FieldLabel>
+              <Input
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={t("notesPlaceholder")}
+                className="h-11"
+              />
             </Field>
           </CardContent>
         </Card>

@@ -56,7 +56,11 @@ export default function NewPartsCarPage() {
   return (
     <div className="mx-auto max-w-2xl flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon-xs" render={<Link href="/dashboard/inventory/parts-cars" />}>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          render={<Link href="/dashboard/inventory/parts-cars" />}
+        >
           <ArrowLeft className="size-5" />
         </Button>
         <div>
@@ -80,81 +84,103 @@ export default function NewPartsCarPage() {
                 <FieldLabel htmlFor="make">
                   Үйлдвэрлэгч <span className="text-destructive">*</span>
                 </FieldLabel>
-                <Input id="make"
-                name="make"
-                required
-                placeholder="Toyota, Honda" />
+                <Input
+                  id="make"
+                  name="make"
+                  required
+                  placeholder="Toyota, Honda"
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="model">
                   Модель <span className="text-destructive">*</span>
                 </FieldLabel>
-                <Input id="model"
-                name="model"
-                required
-                placeholder="Camry, Civic" />
+                <Input
+                  id="model"
+                  name="model"
+                  required
+                  placeholder="Camry, Civic"
+                />
               </Field>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <Field>
                 <FieldLabel htmlFor="year">Он</FieldLabel>
-                <Input id="year"
-                name="year"
-                type="number"
-                min={1980}
-                max={2030}
-                placeholder="2018" />
+                <Input
+                  id="year"
+                  name="year"
+                  type="number"
+                  min={1980}
+                  max={2030}
+                  placeholder="2018"
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="arrival_date">Ирсэн огноо</FieldLabel>
-                <DatePicker value={arrivalDate}
-                onChange={(date) => date && setArrivalDate(date)}
-                placeholder="Огноо сонгох"
-                fromYear={2020}
-                toYear={2026} />
+                <DatePicker
+                  value={arrivalDate}
+                  onChange={(date) => date && setArrivalDate(date)}
+                  placeholder="Огноо сонгох"
+                  fromYear={2020}
+                  toYear={2026}
+                />
               </Field>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <Field>
                 <FieldLabel htmlFor="vin">VIN</FieldLabel>
-                <Input id="vin"
-                name="vin"
-                placeholder="1HGCM82633A004352"
-                className="font-mono tracking-wider uppercase"
-                onChange={(e) => {
-                  e.currentTarget.value = e.currentTarget.value.toUpperCase();
-                }} />
+                <Input
+                  id="vin"
+                  name="vin"
+                  placeholder="1HGCM82633A004352"
+                  className="font-mono tracking-wider uppercase"
+                  onChange={(e) => {
+                    e.currentTarget.value = e.currentTarget.value.toUpperCase();
+                  }}
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="license_plate">Хятадын дугаар</FieldLabel>
-                <Input id="license_plate"
-                name="license_plate"
-                placeholder="Хятадын дугаар" />
+                <Input
+                  id="license_plate"
+                  name="license_plate"
+                  placeholder="Хятадын дугаар"
+                />
               </Field>
             </div>
 
             <Field>
-              <FieldLabel htmlFor="purchase_cost">Худалдан авалтын үнэ</FieldLabel>
-              <Input id="purchase_cost"
-              name="purchase_cost"
-              type="number"
-              min={0}
-              step={10000}
-              placeholder="12,000,000" />
+              <FieldLabel htmlFor="purchase_cost">
+                Худалдан авалтын үнэ
+              </FieldLabel>
+              <Input
+                id="purchase_cost"
+                name="purchase_cost"
+                type="number"
+                min={0}
+                step={10000}
+                placeholder="12,000,000"
+              />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="notes">Тэмдэглэл</FieldLabel>
-              <Textarea id="notes"
-              name="notes"
-              placeholder="Машины тухай нэмэлт мэдээлэл..."
-              rows={3} />
+              <Textarea
+                id="notes"
+                name="notes"
+                placeholder="Машины тухай нэмэлт мэдээлэл..."
+                rows={3}
+              />
             </Field>
 
             <div className="flex items-center justify-end gap-3 pt-2">
-              <Button variant="outline" type="button" render={<Link href="/dashboard/inventory/parts-cars" />}>
+              <Button
+                variant="outline"
+                type="button"
+                render={<Link href="/dashboard/inventory/parts-cars" />}
+              >
                 Буцах
               </Button>
               <Button type="submit" disabled={saving}>
