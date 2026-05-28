@@ -19,6 +19,15 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+} from "@/components/ui/combobox";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { useCarBrands, useCarModels } from "@/lib/queries/use-car-catalog";
 import { useRouter } from "@/lib/i18n/navigation";
