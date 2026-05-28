@@ -24,7 +24,6 @@ import {
   CommandList,
   CommandShortcut,
 } from "@/components/ui/command";
-import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -116,7 +115,7 @@ export function PageHeader({
             <SidebarTrigger className="-ml-1 rounded-xl" />
           </div>
 
-          <div className="hidden min-w-0 flex-1 lg:flex">
+          <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
             <Button
               variant="outline"
               size="sm"
@@ -238,7 +237,6 @@ export function PageHeader({
     </>
   );
 }
-
 
 function QuickCreateActions() {
   const t = useTranslations();
