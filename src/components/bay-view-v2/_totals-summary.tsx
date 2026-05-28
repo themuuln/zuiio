@@ -10,22 +10,23 @@ interface TotalsSummaryProps {
   t: (key: string) => string;
 }
 
-export function TotalsSummary({ servicesTotal, partsTotal, grandTotal, t }: TotalsSummaryProps) {
+export function TotalsSummary({
+  servicesTotal,
+  partsTotal,
+  grandTotal,
+  t,
+}: TotalsSummaryProps) {
   return (
-    <section className="rounded-lg bg-gradient-to-br from-primary/5 to-primary/[0.02] border border-primary/10 p-3 mt-3">
+    <section className="shrink-0 rounded-lg bg-gradient-to-br from-primary/5 to-primary/[0.02] border border-primary/10 p-3">
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between text-xs">
-          <span className="text-muted-foreground">
-            {t("services")}
-          </span>
+          <span className="text-muted-foreground">{t("services")}</span>
           <span className="font-medium tabular-nums">
             {formatMNT(servicesTotal)}
           </span>
         </div>
         <div className="flex justify-between text-xs">
-          <span className="text-muted-foreground">
-            {t("parts")}
-          </span>
+          <span className="text-muted-foreground">{t("parts")}</span>
           <span className="font-medium tabular-nums">
             {formatMNT(partsTotal)}
           </span>

@@ -2,8 +2,8 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { NextRequest, NextResponse } from "next/server";
 import {
   ForbiddenError,
-  handleApiError,
   UnauthorizedError,
+  toApiErrorResponse,
 } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 
@@ -77,7 +77,8 @@ export function createRouteHandler(
 
       return await handler({ request, params, orgId, user, supabase });
     } catch (error) {
-      return handleApiError(error);
+      const { status, body, headers } = toApiErrorResponse(error);
+      return NextResponse.json(body, { status, headers });
     }
   };
 }
@@ -114,7 +115,8 @@ export function createSimpleRouteHandler(handler: SimpleRouteHandler) {
 
       return await handler({ request, user, supabase });
     } catch (error) {
-      return handleApiError(error);
+      const { status, body, headers } = toApiErrorResponse(error);
+      return NextResponse.json(body, { status, headers });
     }
   };
 }

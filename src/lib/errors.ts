@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
-
 /**
  * Base custom error for the application.
  * Extends Error with a machine-readable code and HTTP status code.
+ *
+ * Framework-agnostic — no Next.js imports. Use toApiErrorResponse() to
+ * convert to a wire format, or let api-handler.ts construct the NextResponse.
  */
 export class AppError extends Error {
   public readonly code: string;
@@ -58,49 +59,57 @@ export class ConflictError extends AppError {
   }
 }
 
+// ── Framework-agnostic error response ─────────────────────────
+
+export interface ApiErrorResponse {
+  status: number;
+  body: {
+    error: {
+      code: string;
+      message: string;
+      details?: unknown;
+    };
+  };
+  headers?: Record<string, string>;
+}
+
 /**
- * Handles an unknown error and returns a proper NextResponse.
- * AppError instances use their own statusCode and code.
- * Everything else becomes a generic 500.
- * Never leaks raw error details in production.
+ * Convert any error into a serializable API error response.
+ * Framework-agnostic — returns a plain object, not a NextResponse.
  */
-export function handleApiError(error: unknown): NextResponse {
+export function toApiErrorResponse(error: unknown): ApiErrorResponse {
   if (error instanceof AppError) {
-    return NextResponse.json(
-      {
+    return {
+      status: error.statusCode,
+      body: {
         error: {
           code: error.code,
           message: error.message,
-          details: error.details,
+          ...(error.details !== undefined ? { details: error.details } : {}),
         },
       },
-      {
-        status: error.statusCode,
-        headers: {
-          ...(error instanceof UnauthorizedError
-            ? { "X-Auth-Required": "true" }
-            : {}),
-        },
-      },
-    );
+      headers:
+        error instanceof UnauthorizedError
+          ? { "X-Auth-Required": "true" }
+          : undefined,
+    };
   }
 
   // Log the unexpected error server-side but never expose internals
   console.error("Unhandled API error:", error);
 
-  // In development, expose the error message for debugging
   const message =
     process.env.NODE_ENV === "development" && error instanceof Error
       ? error.message
       : "An unexpected error occurred";
 
-  return NextResponse.json(
-    {
+  return {
+    status: 500,
+    body: {
       error: {
         code: "INTERNAL_ERROR",
         message,
       },
     },
-    { status: 500 },
-  );
+  };
 }

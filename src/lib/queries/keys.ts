@@ -163,6 +163,12 @@ export const commissionKeys = {
   list: (orgId: string) => [...commissionKeys.all(orgId), "list"] as const,
 };
 
+export const globalCatalogKeys = {
+  all: ["global-catalog"] as const,
+  services: () => [...globalCatalogKeys.all, "services"] as const,
+  parts: () => [...globalCatalogKeys.all, "parts"] as const,
+};
+
 export const diagnosisLabelKeys = {
   all: (orgId: string) => ["diagnosis-labels", orgId] as const,
   list: (orgId: string) => [...diagnosisLabelKeys.all(orgId), "list"] as const,

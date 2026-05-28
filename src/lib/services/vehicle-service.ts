@@ -2,6 +2,7 @@ import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { buildUpdates, type FieldMap } from "./build-updates";
 import {
   isValidMongolianPlate,
   normalizeMongolianPlate,
@@ -275,7 +276,8 @@ export async function updateVehicle(
     throw new NotFoundError("Vehicle not found");
   }
 
-  const updates: Record<string, unknown> = {};
+  // Plate has special validation — handle separately
+  const plateUpdates: Record<string, unknown> = {};
   if (params.plateNumber !== undefined) {
     const normalized = normalizeMongolianPlate(
       params.plateNumber?.trim() ?? "",
@@ -285,33 +287,45 @@ export async function updateVehicle(
         "Plate must be 4 digits followed by 3 Cyrillic letters (e.g. 4444УНА)",
       );
     }
-    updates.plate_number = normalized || null;
+    plateUpdates.plate_number = normalized || null;
   }
-  if (params.vin !== undefined) updates.vin = params.vin?.trim() || null;
-  if (params.chassisNumber !== undefined)
-    updates.chassis_number = params.chassisNumber?.trim() || null;
-  if (params.make !== undefined) updates.make = params.make.trim();
-  if (params.model !== undefined) updates.model = params.model.trim();
-  if (params.year !== undefined) updates.year = params.year;
-  if (params.trim !== undefined) updates.trim = params.trim?.trim() || null;
-  if (params.color !== undefined) updates.color = params.color?.trim() || null;
-  if (params.engine !== undefined)
-    updates.engine = params.engine?.trim() || null;
-  if (params.fuelType !== undefined)
-    updates.fuel_type = params.fuelType || null;
-  if (params.transmission !== undefined)
-    updates.transmission = params.transmission || null;
-  if (params.drivetrain !== undefined)
-    updates.drivetrain = params.drivetrain || null;
-  if (params.bodyType !== undefined)
-    updates.body_type = params.bodyType || null;
-  if (params.odometer !== undefined) updates.odometer = params.odometer;
-  if (params.notes !== undefined) updates.notes = params.notes?.trim() || null;
-  if (params.licenseExpiryAt !== undefined)
-    updates.license_expiry_at = params.licenseExpiryAt || null;
-  if (params.nextServiceAt !== undefined)
-    updates.next_service_at = params.nextServiceAt || null;
-  updates.updated_by = userId;
+
+  const trim = (v: unknown) => (v as string).trim() || null;
+  const vehicleFieldMap: FieldMap<UpdateVehicleParams> = {
+    columns: {
+      vin: "vin",
+      chassisNumber: "chassis_number",
+      make: "make",
+      model: "model",
+      year: "year",
+      trim: "trim",
+      color: "color",
+      engine: "engine",
+      fuelType: "fuel_type",
+      transmission: "transmission",
+      drivetrain: "drivetrain",
+      bodyType: "body_type",
+      odometer: "odometer",
+      notes: "notes",
+      licenseExpiryAt: "license_expiry_at",
+      nextServiceAt: "next_service_at",
+    },
+    transforms: {
+      vin: trim,
+      chassisNumber: trim,
+      make: (v) => (v as string).trim(),
+      model: (v) => (v as string).trim(),
+      trim: trim,
+      color: trim,
+      engine: trim,
+      notes: trim,
+    },
+  };
+  const updates = {
+    ...plateUpdates,
+    ...buildUpdates(params, vehicleFieldMap),
+    updated_by: userId,
+  };
 
   if (Object.keys(updates).length <= 1) {
     throw new ValidationError("No fields to update");

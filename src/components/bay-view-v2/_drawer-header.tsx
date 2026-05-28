@@ -3,10 +3,7 @@
 import { Car, Loader2, User, Wrench, X } from "lucide-react";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { Button } from "@/components/ui/button";
-import {
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import type { WorkOrderDetail } from "@/lib/types";
 import { StatusPill } from "./status-pill";
 
@@ -29,6 +26,18 @@ export function DrawerHeaderSection({
   onClose,
   t,
 }: DrawerHeaderProps) {
+  // Ensure the assigned mechanic is always in the list, even if they
+  // don't have the "mechanic" role in organization_users.
+  const effectiveMechanics = (() => {
+    if (!wo?.mechanic_id || !wo.mechanic) return mechanics;
+    const alreadyIncluded = mechanics.some((m) => m.id === wo.mechanic_id);
+    if (alreadyIncluded) return mechanics;
+    return [
+      { id: wo.mechanic.id, full_name: wo.mechanic.full_name ?? "Unknown" },
+      ...mechanics,
+    ];
+  })();
+
   return (
     <DrawerHeader className="border-b border-border px-4 py-3 text-left shrink-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -56,9 +65,7 @@ export function DrawerHeaderSection({
                 {wo.created_at && (
                   <>
                     <span className="text-muted-foreground/30">·</span>
-                    <span>
-                      {new Date(wo.created_at).toLocaleDateString()}
-                    </span>
+                    <span>{new Date(wo.created_at).toLocaleDateString()}</span>
                   </>
                 )}
               </div>
@@ -96,7 +103,7 @@ export function DrawerHeaderSection({
               <MechanicSelect
                 value={wo.mechanic_id ?? ""}
                 onChange={onAssignMechanic}
-                mechanics={mechanics}
+                mechanics={effectiveMechanics}
                 disabled={saving}
                 size="sm"
               />

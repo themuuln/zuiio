@@ -1,13 +1,9 @@
 "use client";
 
-
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import {
-  Drawer,
-  DrawerContent,
-} from "@/components/ui/drawer";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useRouter } from "@/lib/i18n/navigation";
 import {
   getWorkOrderServicesWithIntervals,
@@ -675,8 +671,7 @@ export function WorkOrderDetailDrawer({
 
   // ── Computed ────────────────────────────────────────────
 
-  const isDirty =
-    (showAddPart && newPartName.trim() !== "") || showAddService;
+  const isDirty = (showAddPart && newPartName.trim() !== "") || showAddService;
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
@@ -759,7 +754,9 @@ export function WorkOrderDetailDrawer({
                               editingPriceId={editingServicePriceId}
                               editingPriceVal={editingServicePriceVal}
                               onServiceSearchChange={setServiceSearch}
-                              onToggleAddService={() => setShowAddService(!showAddService)}
+                              onToggleAddService={() =>
+                                setShowAddService(!showAddService)
+                              }
                               onAddService={addService}
                               onRemoveService={removeService}
                               onEditPriceStart={(id, val) => {
@@ -768,7 +765,9 @@ export function WorkOrderDetailDrawer({
                               }}
                               onEditPriceChange={setEditingServicePriceVal}
                               onEditPriceSave={handleServicePriceSave}
-                              onEditPriceCancel={() => setEditingServicePriceId(null)}
+                              onEditPriceCancel={() =>
+                                setEditingServicePriceId(null)
+                              }
                               t={t}
                             />
 
@@ -785,7 +784,9 @@ export function WorkOrderDetailDrawer({
                               onNewPartNameChange={setNewPartName}
                               onNewPartQtyChange={setNewPartQty}
                               onNewPartPriceChange={setNewPartPrice}
-                              onToggleAddPart={() => setShowAddPart(!showAddPart)}
+                              onToggleAddPart={() =>
+                                setShowAddPart(!showAddPart)
+                              }
                               onAddPart={addPartLine}
                               onRemovePart={removePart}
                               onEditPriceStart={(id, val) => {
@@ -794,7 +795,9 @@ export function WorkOrderDetailDrawer({
                               }}
                               onEditPriceChange={setEditingPartPriceVal}
                               onEditPriceSave={handlePartPriceSave}
-                              onEditPriceCancel={() => setEditingPartPriceId(null)}
+                              onEditPriceCancel={() =>
+                                setEditingPartPriceId(null)
+                              }
                               t={t}
                             />
 
@@ -805,15 +808,6 @@ export function WorkOrderDetailDrawer({
                               t={t}
                             />
                           </div>
-
-                          <TotalsSummary
-                            servicesTotal={servicesTotal}
-                            partsTotal={partsTotal}
-                            grandTotal={Number(wo.total)}
-                            t={t}
-                          />
-
-                          <div className="h-2" />
                         </div>
 
                         <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start">
@@ -825,6 +819,13 @@ export function WorkOrderDetailDrawer({
                       </div>
                     </div>
                   </div>
+
+                  <TotalsSummary
+                    servicesTotal={servicesTotal}
+                    partsTotal={partsTotal}
+                    grandTotal={Number(wo.total)}
+                    t={t}
+                  />
 
                   <DrawerFooter
                     wo={wo}
@@ -890,10 +891,7 @@ export function WorkOrderDetailDrawer({
           onKeepEditing={() => setShowUnsavedWarning(false)}
         />
 
-        <DrawerCelebration
-          show={showCelebration}
-          message="Completed!"
-        />
+        <DrawerCelebration show={showCelebration} message="Completed!" />
       </DrawerContent>
     </Drawer>
   );

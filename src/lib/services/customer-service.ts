@@ -4,6 +4,7 @@ import { cacheTags } from "@/lib/cache/keys";
 import type { Customer } from "@/lib/types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import { buildUpdates, type FieldMap } from "./build-updates";
 import type {
   CreateCustomerParams,
   CustomerWithVehicleCount,
@@ -430,24 +431,36 @@ export async function updateCustomer(
     }
   }
 
-  const updates: Record<string, unknown> = {};
-  if (params.type !== undefined) updates.type = params.type;
-  if (params.firstName !== undefined)
-    updates.first_name = params.firstName?.trim() || null;
-  if (params.lastName !== undefined)
-    updates.last_name = params.lastName?.trim() || null;
-  if (params.companyName !== undefined)
-    updates.company_name = params.companyName?.trim() || null;
-  if (params.contactPerson !== undefined)
-    updates.contact_person = params.contactPerson?.trim() || null;
-  if (params.phone !== undefined) updates.phone = params.phone?.trim() || null;
-  if (params.email !== undefined) updates.email = params.email?.trim() || null;
-  if (params.address !== undefined)
-    updates.address = params.address?.trim() || null;
-  if (params.notes !== undefined) updates.notes = params.notes?.trim() || null;
-  if (params.source !== undefined)
-    updates.source = params.source?.trim() || null;
-  updates.updated_by = userId;
+  const trim = (v: unknown) => (v as string).trim() || null;
+  const customerFieldMap: FieldMap<UpdateCustomerParams> = {
+    columns: {
+      type: "type",
+      firstName: "first_name",
+      lastName: "last_name",
+      companyName: "company_name",
+      contactPerson: "contact_person",
+      phone: "phone",
+      email: "email",
+      address: "address",
+      notes: "notes",
+      source: "source",
+    },
+    transforms: {
+      firstName: trim,
+      lastName: trim,
+      companyName: trim,
+      contactPerson: trim,
+      phone: trim,
+      email: trim,
+      address: trim,
+      notes: trim,
+      source: trim,
+    },
+  };
+  const updates = {
+    ...buildUpdates(params, customerFieldMap),
+    updated_by: userId,
+  };
 
   if (Object.keys(updates).length <= 1) {
     throw new ValidationError("No fields to update");
