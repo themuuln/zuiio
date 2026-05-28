@@ -30,10 +30,10 @@ export type AuditLogInsert = TablesInsert<"audit_logs">;
 
 // ── Org Theme Types ──────────────────────────────────────────────
 export interface OrgTheme {
-  primaryColor: string;    // oklch value, e.g. "oklch(0.55 0.15 250)"
-  accentColor: string;     // oklch value
-  radius: string;          // CSS value, e.g. "0px", "0.5rem"
-  fontFamily: string;      // CSS font-family stack
+  primaryColor: string; // oklch value, e.g. "oklch(0.55 0.15 250)"
+  accentColor: string; // oklch value
+  radius: string; // CSS value, e.g. "0px", "0.5rem"
+  fontFamily: string; // CSS font-family stack
 }
 
 export const DEFAULT_ORG_THEME: OrgTheme = {
@@ -627,6 +627,10 @@ export interface CreateVehicleParams {
   notes?: string;
   licenseExpiryAt?: string;
   nextServiceAt?: string;
+  importDate?: string;
+  countryOfOrigin?: string;
+  category?: string;
+  seats?: number;
 }
 
 export interface UpdateVehicleParams {
@@ -918,6 +922,6 @@ export interface WorkOrderRow extends WorkOrder {
 // ── Global Reference Catalog Types ─────────────────────────────
 // Shared across all organizations. No prices — each org sets its own.
 
-export type GlobalPartCatalog = Tables<'global_parts_catalog'>;
-export type GlobalServiceCatalog = Tables<'global_services_catalog'>;
-export type GlobalPartsVehicleModel = Tables<'global_parts_vehicle_models'>;
+export type GlobalPartCatalog = Tables<"global_parts_catalog">;
+export type GlobalServiceCatalog = Tables<"global_services_catalog">;
+export type GlobalPartsVehicleModel = Tables<"global_parts_vehicle_models">;
