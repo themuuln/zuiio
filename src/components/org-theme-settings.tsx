@@ -368,7 +368,9 @@ export function OrgThemeSettings() {
     setHasChanges(false);
   };
 
-  const handlePresetClick = (preset: { light: { primary: string; accent: string } }) => {
+  const handlePresetClick = (preset: {
+    light: { primary: string; accent: string };
+  }) => {
     updateTheme({
       primaryColor: preset.light.primary,
       accentColor: preset.light.accent,
@@ -413,9 +415,7 @@ export function OrgThemeSettings() {
 
     // Rough approximation
     const l = 0.299 * r + 0.587 * g + 0.114 * b;
-    const c = Math.sqrt(
-      Math.pow(r - l, 2) + Math.pow(g - l, 2) + Math.pow(b - l, 2),
-    );
+    const c = Math.sqrt((r - l) ** 2 + (g - l) ** 2 + (b - l) ** 2);
     const h = Math.atan2(g - b, r - l) * (180 / Math.PI);
 
     return `oklch(${l.toFixed(3)} ${c.toFixed(3)} ${h.toFixed(3)})`;
@@ -569,7 +569,7 @@ export function OrgThemeSettings() {
             <div className="flex gap-2">
               <Button>Primary</Button>
               <Button variant="secondary">Secondary</Button>
-              <Button variant="accent">Accent</Button>
+              <Button variant="outline">Outline</Button>
             </div>
 
             {/* Card */}
