@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { transliterateMongolianPlate } from "@/lib/form-validation";
 import type { Customer } from "@/lib/types";
 
 export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
   const url = new URL(request.url);
-  const plate = url.searchParams.get("plate")?.trim();
+  const plate = url.searchParams.get("plate")?.trim()
+    ? transliterateMongolianPlate(url.searchParams.get("plate")!.trim())
+    : undefined;
 
   if (!plate) return NextResponse.json({ data: [] });
 

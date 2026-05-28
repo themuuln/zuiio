@@ -56,7 +56,6 @@ export default function AlertsPage() {
     const lowStock = alerts.filter((a) => (a.quantity_on_hand ?? 0) > 0).length;
     const outOfStock = alerts.filter((a) => (a.quantity_on_hand ?? 0) === 0).length;
 
-    sidebar.setOpen(true);
     sidebar.setActiveTab("summary");
 
     sidebar.registerTab(
@@ -79,7 +78,6 @@ export default function AlertsPage() {
     return () => {
       sidebar.unregisterTab("summary");
       sidebar.unregisterTab("suppliers");
-      sidebar.setOpen(false);
     };
   }, [alerts]);
 

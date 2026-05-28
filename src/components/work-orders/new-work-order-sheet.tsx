@@ -25,77 +25,73 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/utils";
 
-function SheetSummarySection({ onClose }: { onClose: () => void }) {
+function SheetSummarySection() {
   const ctx = useWizardContext();
   const t = useTranslations("workOrderWizard");
 
   return (
-    <>
-      <Card className="border-primary/20">
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                {t("servicesTotal")}
-              </span>
-              <span className="font-medium tabular-nums">
-                {formatCurrency(ctx.servicesTotal)}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t("partsTotal")}</span>
-              <span className="font-medium tabular-nums">
-                {formatCurrency(ctx.partsTotal)}
-              </span>
-            </div>
-            <Separator />
-            <div className="flex justify-between text-xl font-semibold">
-              <span>{t("grandTotal")}</span>
-              <span className="tabular-nums">
-                {formatCurrency(ctx.grandTotal)}
-              </span>
-            </div>
+    <Card className="border-primary/20">
+      <CardContent className="p-6">
+        <div className="flex flex-col gap-3">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t("servicesTotal")}</span>
+            <span className="font-medium tabular-nums">
+              {formatCurrency(ctx.servicesTotal)}
+            </span>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              size="default"
-              onClick={onClose}
-              className="min-h-[48px]"
-            >
-              {t("cancel")}
-            </Button>
-            <Button
-              size="default"
-              onClick={ctx.handleCreate}
-              disabled={!ctx.isFormValid}
-              className="min-h-[48px] gap-2"
-            >
-              <Wrench className="size-5" />
-              {ctx.saving
-                ? t("creating")
-                : t("createWorkOrder", {
-                    total: formatCurrency(ctx.grandTotal),
-                  })}
-            </Button>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t("partsTotal")}</span>
+            <span className="font-medium tabular-nums">
+              {formatCurrency(ctx.partsTotal)}
+            </span>
           </div>
-          {(!ctx.selectedCustomer || !ctx.selectedVehicle) && (
-            <p className="text-sm text-muted-foreground text-center mt-4">
-              {t("createDisabledHint")}
-            </p>
-          )}
-        </CardContent>
-      </Card>
-    </>
+          <Separator />
+          <div className="flex justify-between text-xl font-semibold">
+            <span>{t("grandTotal")}</span>
+            <span className="tabular-nums">
+              {formatCurrency(ctx.grandTotal)}
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
-function NewWorkOrderSheetForm({ onClose }: { onClose: () => void }) {
+function SheetBottomBar({ onClose }: { onClose: () => void }) {
+  const ctx = useWizardContext();
+  const t = useTranslations("workOrderWizard");
+
+  return (
+    <div className="sticky bottom-0 border-t bg-background p-4">
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button
+          variant="outline"
+          size="default"
+          onClick={onClose}
+          className="min-h-[48px] sm:w-1/3"
+        >
+          {t("cancel")}
+        </Button>
+        <Button
+          size="default"
+          onClick={ctx.handleCreate}
+          disabled={!ctx.isFormValid}
+          className="min-h-[48px] gap-2 flex-1"
+        >
+          <Wrench className="size-5" />
+          {ctx.saving
+            ? t("creating")
+            : t("createWorkOrder", {
+                total: formatCurrency(ctx.grandTotal),
+              })}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function NewWorkOrderSheetForm({ onClose: _onClose }: { onClose: () => void }) {
   const { loading } = useWizardContext();
 
   if (loading) {
@@ -116,7 +112,7 @@ function NewWorkOrderSheetForm({ onClose }: { onClose: () => void }) {
       <ServicesSection />
       <PartsSection />
       <MechanicSection />
-      <SheetSummarySection onClose={onClose} />
+      <SheetSummarySection />
     </div>
   );
 }
@@ -136,16 +132,17 @@ export function NewWorkOrderSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-lg md:max-w-xl"
+        className="flex w-full flex-col gap-0 p-0 sm:max-w-lg md:max-w-xl"
         showCloseButton
       >
-        <SheetHeader>
+        <SheetHeader className="px-4 pt-4">
           <SheetTitle>{t("newWorkOrder")}</SheetTitle>
         </SheetHeader>
         <WizardProvider>
           <ScrollArea className="flex-1">
             <NewWorkOrderSheetForm onClose={() => onOpenChange(false)} />
           </ScrollArea>
+          <SheetBottomBar onClose={() => onOpenChange(false)} />
         </WizardProvider>
       </SheetContent>
     </Sheet>

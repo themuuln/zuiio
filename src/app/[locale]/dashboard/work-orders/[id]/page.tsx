@@ -176,7 +176,6 @@ export default function WorkOrderDetailPage() {
   useEffect(() => {
     if (!wo) return;
 
-    sidebar.setOpen(true);
     sidebar.setActiveTab("vehicle");
 
     sidebar.registerTab(
@@ -250,7 +249,6 @@ export default function WorkOrderDetailPage() {
       sidebar.unregisterTab("vehicle");
       sidebar.unregisterTab("customer");
       sidebar.unregisterTab("timeline");
-      sidebar.setOpen(false);
     };
   }, [wo]);
 

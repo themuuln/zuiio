@@ -296,7 +296,11 @@ export function SuppliersTab({
                 <Input
                   id="inv-supplier-phone"
                   name="phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   defaultValue={editingSupplier?.phone ?? ""}
+                  placeholder="99112233"
                   className="h-11"
                 />
               </div>

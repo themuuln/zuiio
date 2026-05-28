@@ -90,7 +90,10 @@ export default function OrganizationPage() {
       const res = await fetch(`/api/organizations/${orgId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, logoUrl: form.logoUrl || null }),
+        body: JSON.stringify({
+          name: form.name,
+          logoUrl: form.logoUrl || null,
+        }),
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
@@ -98,7 +101,9 @@ export default function OrganizationPage() {
       await refetchOrg();
       setEditing(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update organization");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update organization",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -113,7 +118,11 @@ export default function OrganizationPage() {
   };
 
   const loading = orgInfoQuery.isLoading || orgLoading || subLoading;
-  const error = orgInfoQuery.error?.message ?? orgError?.message ?? subError?.message ?? null;
+  const error =
+    orgInfoQuery.error?.message ??
+    orgError?.message ??
+    subError?.message ??
+    null;
 
   const formatPlanType = (planType: string) => {
     const map: Record<string, string> = {
@@ -130,7 +139,7 @@ export default function OrganizationPage() {
     return new Date(dateStr).toLocaleDateString();
   };
 
-  const { registerTab, setOpen, unregisterTab } = useRightSidebar();
+  const { registerTab, unregisterTab } = useRightSidebar();
 
   useEffect(() => {
     registerTab(
@@ -141,25 +150,35 @@ export default function OrganizationPage() {
           <>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
               <p className="text-[10px] text-muted-foreground">Plan</p>
-              <p className="text-xs font-medium">{formatPlanType(subscription.planType)}</p>
+              <p className="text-xs font-medium">
+                {formatPlanType(subscription.planType)}
+              </p>
             </div>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
               <p className="text-[10px] text-muted-foreground">Status</p>
-              <p className="text-xs font-medium capitalize">{subscription.status}</p>
+              <p className="text-xs font-medium capitalize">
+                {subscription.status}
+              </p>
             </div>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
               <p className="text-[10px] text-muted-foreground">Started</p>
-              <p className="text-xs font-medium">{formatDate(subscription.startedAt)}</p>
+              <p className="text-xs font-medium">
+                {formatDate(subscription.startedAt)}
+              </p>
             </div>
             {subscription.trial && subscription.expiresAt && (
               <div className="rounded-md border border-amber-200/50 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/20 px-2.5 py-1.5">
                 <p className="text-[10px] text-muted-foreground">Trial ends</p>
-                <p className="text-xs font-medium">{formatDate(subscription.expiresAt)}</p>
+                <p className="text-xs font-medium">
+                  {formatDate(subscription.expiresAt)}
+                </p>
               </div>
             )}
           </>
         ) : (
-          <p className="text-xs text-muted-foreground">No active subscription</p>
+          <p className="text-xs text-muted-foreground">
+            No active subscription
+          </p>
         )}
       </div>,
     );
@@ -170,12 +189,11 @@ export default function OrganizationPage() {
         Manage team members via the Members page
       </p>,
     );
-    setOpen(true);
     return () => {
       unregisterTab("subscription");
       unregisterTab("team");
     };
-  }, [registerTab, setOpen, subscription, unregisterTab]);
+  }, [registerTab, subscription, unregisterTab]);
 
   if (loading) {
     return (
@@ -261,19 +279,25 @@ export default function OrganizationPage() {
                   <p className="text-sm text-muted-foreground">Name</p>
                   <Input
                     value={form.name}
-                    onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, name: e.target.value }))
+                    }
                     placeholder="Organization name"
                   />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Slug</p>
-                  <p className="font-medium">{organization?.slug ?? "\u2014"}</p>
+                  <p className="font-medium">
+                    {organization?.slug ?? "\u2014"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Logo URL</p>
                   <Input
                     value={form.logoUrl}
-                    onChange={(e) => setForm(prev => ({ ...prev, logoUrl: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, logoUrl: e.target.value }))
+                    }
                     placeholder="https://example.com/logo.png"
                   />
                   {form.logoUrl && (
@@ -286,7 +310,8 @@ export default function OrganizationPage() {
                         className="max-h-20 rounded"
                         unoptimized
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                          (e.currentTarget as HTMLImageElement).style.display =
+                            "none";
                         }}
                       />
                     </div>
@@ -312,11 +337,15 @@ export default function OrganizationPage() {
               <>
                 <div>
                   <p className="text-sm text-muted-foreground">Name</p>
-                  <p className="font-medium">{organization?.name ?? "\u2014"}</p>
+                  <p className="font-medium">
+                    {organization?.name ?? "\u2014"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Slug</p>
-                  <p className="font-medium">{organization?.slug ?? "\u2014"}</p>
+                  <p className="font-medium">
+                    {organization?.slug ?? "\u2014"}
+                  </p>
                 </div>
               </>
             )}
@@ -347,11 +376,15 @@ export default function OrganizationPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <p className="font-medium capitalize">{subscription.status}</p>
+                  <p className="font-medium capitalize">
+                    {subscription.status}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Started</p>
-                  <p className="font-medium">{formatDate(subscription.startedAt)}</p>
+                  <p className="font-medium">
+                    {formatDate(subscription.startedAt)}
+                  </p>
                 </div>
                 {subscription.expiresAt && (
                   <div>
@@ -359,7 +392,9 @@ export default function OrganizationPage() {
                       <CalendarClock className="size-3" />
                       Trial ends
                     </p>
-                    <p className="font-medium">{formatDate(subscription.expiresAt)}</p>
+                    <p className="font-medium">
+                      {formatDate(subscription.expiresAt)}
+                    </p>
                   </div>
                 )}
               </>

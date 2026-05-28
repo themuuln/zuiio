@@ -21,6 +21,11 @@ import {
 } from "@/components/ui/native-select";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { useRouter } from "@/lib/i18n/navigation";
+import {
+  isValidMongolianPlate,
+  transliterateMongolianPlate,
+} from "@/lib/form-validation";
+import { inputProps } from "@/lib/form-ux";
 import { vehicleKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Customer } from "@/lib/types";
@@ -150,6 +155,8 @@ export function NewVehicleDialog({
     const errors: Record<string, string> = {};
     if (!form.plateNumber.trim())
       errors.plateNumber = "Plate number is required";
+    else if (!isValidMongolianPlate(form.plateNumber))
+      errors.plateNumber = "Must be 4 digits + 3 letters (e.g. 4444УНА)";
     if (!form.make.trim()) errors.make = "Make is required";
     if (!form.model.trim()) errors.model = "Model is required";
     setFieldErrors(errors);
@@ -311,12 +318,15 @@ export function NewVehicleDialog({
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,
-                      plateNumber: event.target.value.toUpperCase(),
+                      plateNumber: transliterateMongolianPlate(
+                        event.target.value,
+                      ),
                     }))
                   }
                   className={`h-11 font-mono ${fieldErrors.plateNumber ? "border-destructive" : ""}`}
                   placeholder="1234 UBA"
                   aria-invalid={!!fieldErrors.plateNumber}
+                  {...inputProps("plate")}
                 />
                 {fieldErrors.plateNumber && (
                   <p className="mt-1 text-xs text-destructive">
@@ -342,6 +352,7 @@ export function NewVehicleDialog({
                   }
                   className="h-11 font-mono"
                   placeholder="JTJHK31U..."
+                  {...inputProps("vin")}
                 />
               </div>
               <div>
@@ -363,6 +374,7 @@ export function NewVehicleDialog({
                   className={`h-11 ${fieldErrors.make ? "border-destructive" : ""}`}
                   placeholder="Toyota"
                   aria-invalid={!!fieldErrors.make}
+                  {...inputProps("make")}
                 />
                 {fieldErrors.make && (
                   <p className="mt-1 text-xs text-destructive">
@@ -389,6 +401,7 @@ export function NewVehicleDialog({
                   className={`h-11 ${fieldErrors.model ? "border-destructive" : ""}`}
                   placeholder="Prius"
                   aria-invalid={!!fieldErrors.model}
+                  {...inputProps("model")}
                 />
                 {fieldErrors.model && (
                   <p className="mt-1 text-xs text-destructive">
@@ -415,6 +428,7 @@ export function NewVehicleDialog({
                   }
                   className="h-11"
                   placeholder="2020"
+                  {...inputProps("year")}
                 />
               </div>
               <div>
@@ -436,6 +450,7 @@ export function NewVehicleDialog({
                   }
                   className="h-11"
                   placeholder="120000"
+                  {...inputProps("odometer")}
                 />
               </div>
               <div>
@@ -455,6 +470,7 @@ export function NewVehicleDialog({
                     }))
                   }
                   className="h-11"
+                  {...inputProps("trim")}
                 />
               </div>
               <div>
@@ -489,6 +505,7 @@ export function NewVehicleDialog({
                     }))
                   }
                   className="h-11"
+                  {...inputProps("engine")}
                 />
               </div>
               <div>

@@ -22,6 +22,7 @@
     "saving": "Хадгалж байна...",
     "add": "Нэмэх",
     "createNew": "Шинээр үүсгэх",
+    "quickCreate": "Түргэн үүсгэх",
     "all": "Бүгд",
     "total": "Нийт",
     "refresh": "Шинэчлэх",
@@ -602,7 +603,6 @@
     "descriptionOrNotes": "Тайлбар / Тэмдэглэл (заавар биш)",
     "grandTotal": "Нийт дүн",
     "createWorkOrder": "Захиалга үүсгэх — {total}",
-    "createDisabledHint": "Захиалга үүсгэхийн тулд харилцагч болон тээврийн хэрэгсэл сонгоно уу",
     "lastSold": "Сүүлийн үнэ: {price}",
     "discount": "Хөнгөлөлт ₮",
     "addPart": "Сэлбэг нэмэх",
@@ -619,6 +619,13 @@
     "complaint": "Гомдол / Оношлогоо",
     "complaintPlaceholder": "Үйлчлүүлэгчийн гомдлыг бичнэ үү...",
     "diagnosisLabelPlaceholder": "Оношлогооны шошго сонгох...",
+    "firstName": "Нэр",
+    "lastName": "Овог",
+    "phone": "Утас",
+    "createCustomer": "Харилцагч үүсгэх",
+    "createVehicle": "Тээврийн хэрэгсэл үүсгэх",
+    "quickCreateCustomerDescription": "Системд шинэ харилцагч нэмэх",
+    "quickCreateVehicleDescription": "Системд шинэ тээврийн хэрэгсэл нэмэх",
     "cancel": "Цуцлах"
   },
   "inventory": {
@@ -1255,7 +1262,9 @@
     "unnamedCompany": "Нэргүй байгууллага",
     "unnamedVehicle": "Нэргүй тээврийн хэрэгсэл",
     "cancel": "Цуцлах",
-    "createVehicle": "Тээврийн хэрэгсэл үүсгэх"
+    "createVehicle": "Тээврийн хэрэгсэл үүсгэх",
+    "plateRequired": "Улсын дугаар шаардлагатай",
+    "plateInvalid": "4 оронтой тоо + 3 үсэг байх ёстой (жишээ: 4444УНА)"
   },
   "vehicleModels": {
     "title": "Машины загварууд",

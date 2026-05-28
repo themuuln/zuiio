@@ -35,7 +35,7 @@ export function FilterChips({ items, className }: FilterChipsProps) {
           data-slot="filter-chip"
           onClick={chip.onClick}
           className={cn(
-            "rounded-full px-4 py-2.5 text-sm font-medium",
+            "px-4 py-2.5 text-sm font-medium",
             "min-h-[var(--ui-touch-target)]",
           )}
         >
@@ -48,7 +48,10 @@ export function FilterChips({ items, className }: FilterChipsProps) {
           {chip.icon}
           {chip.label}
           {chip.count !== undefined && (
-            <Badge variant={chip.active ? "secondary" : "outline"} className="tabular-nums ml-0.5">
+            <Badge
+              variant={chip.active ? "secondary" : "outline"}
+              className="tabular-nums ml-0.5"
+            >
               {chip.count}
             </Badge>
           )}

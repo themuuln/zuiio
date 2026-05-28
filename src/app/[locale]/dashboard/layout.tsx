@@ -5,6 +5,10 @@ import { AppSidebar } from "@/components/app-sidebar";
 import BrandThemeProvider from "@/components/brand-theme-provider";
 import { NewCustomerDialog } from "@/components/new-customer-dialog";
 import { NewVehicleDialog } from "@/components/new-vehicle-dialog";
+import { NewCustomerSheet } from "@/components/customers/new-customer-sheet";
+import { NewVehicleSheet } from "@/components/vehicles/new-vehicle-sheet";
+import { NewExpenseSheet } from "@/components/expenses/new-expense-sheet";
+import { NewWorkOrderSheet } from "@/components/work-orders/new-work-order-sheet";
 import { PageHeader } from "@/components/page-header";
 import { RightSidebar } from "@/components/right-sidebar";
 import { SubscriptionGuard } from "@/components/subscription-guard";
@@ -33,6 +37,10 @@ function GlobalDialogs() {
     setNewCustomerDialogOpen,
     isNewVehicleDialogOpen,
     setNewVehicleDialogOpen,
+    isNewExpenseSheetOpen,
+    setNewExpenseSheetOpen,
+    isNewWorkOrderSheetOpen,
+    setNewWorkOrderSheetOpen,
   } = usePageHeader();
 
   return (
@@ -44,6 +52,22 @@ function GlobalDialogs() {
       <NewVehicleDialog
         open={isNewVehicleDialogOpen}
         onOpenChange={setNewVehicleDialogOpen}
+      />
+      <NewCustomerSheet
+        open={isNewCustomerDialogOpen}
+        onOpenChange={setNewCustomerDialogOpen}
+      />
+      <NewVehicleSheet
+        open={isNewVehicleDialogOpen}
+        onOpenChange={setNewVehicleDialogOpen}
+      />
+      <NewExpenseSheet
+        open={isNewExpenseSheetOpen}
+        onOpenChange={setNewExpenseSheetOpen}
+      />
+      <NewWorkOrderSheet
+        open={isNewWorkOrderSheetOpen}
+        onOpenChange={setNewWorkOrderSheetOpen}
       />
     </>
   );

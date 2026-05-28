@@ -2,10 +2,26 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
-import { createVehicleModel, getVehicleModels } from "@/lib/services/vehicle-models-service";
+import {
+  createVehicleModel,
+  getDistinctMakes,
+  getVehicleModels,
+} from "@/lib/services/vehicle-models-service";
 
-export const GET = createRouteHandler(async ({ orgId }) => {
-  const models = await getVehicleModels(orgId);
+export const GET = createRouteHandler(async ({ request, orgId }) => {
+  const make = request.nextUrl.searchParams.get("make") ?? undefined;
+  const mode = request.nextUrl.searchParams.get("mode");
+
+  if (mode === "makes") {
+    const makes = await getDistinctMakes(orgId);
+    return NextResponse.json({ data: makes });
+  }
+
+  const models = make
+    ? (await getVehicleModels(orgId)).filter(
+        (m) => m.make.toLowerCase() === make.toLowerCase(),
+      )
+    : await getVehicleModels(orgId);
   return NextResponse.json({ data: models });
 });
 
@@ -16,7 +32,14 @@ export const POST = createRouteHandler(async ({ request, orgId }) => {
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
     );
   }
   const body = await request.json();

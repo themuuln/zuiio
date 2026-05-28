@@ -158,11 +158,7 @@ const invoiceStatusConfig: Record<
 
 function InvoiceStatusBadge({ status }: { status: string }) {
   const cfg = invoiceStatusConfig[status] ?? invoiceStatusConfig.draft;
-  return (
-    <Badge variant="outline">
-      {cfg.label}
-    </Badge>
-  );
+  return <Badge variant="outline">{cfg.label}</Badge>;
 }
 
 interface InvoiceListItem {
@@ -244,7 +240,9 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
       dispatchInvoice({ type: "FETCH_START" });
       try {
         const [statsJson, listJson] = await Promise.all([
-          fetch(`/api/organizations/${oid}/invoices?type=stats`).then((r) => r.json()),
+          fetch(`/api/organizations/${oid}/invoices?type=stats`).then((r) =>
+            r.json(),
+          ),
           fetch(
             `/api/organizations/${oid}/invoices${statusFilter ? `?status=${statusFilter}` : ""}`,
           ).then((r) => r.json()),
@@ -463,7 +461,11 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
                       <TableCell className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           {inv.email_sent_at && (
-                            <Badge variant="outline" className="gap-1 text-[11px]" title={`Sent ${new Date(inv.email_sent_at).toLocaleDateString()}`}>
+                            <Badge
+                              variant="outline"
+                              className="gap-1 text-[11px]"
+                              title={`Sent ${new Date(inv.email_sent_at).toLocaleDateString()}`}
+                            >
                               <Mail className="size-3" />
                               Sent
                             </Badge>
@@ -516,8 +518,12 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
 // ── Expenses Tab ──────────────────────────────────
 function ExpensesTab({ orgId }: { orgId: string | null }) {
   const t = useTranslations();
-  const { data: expenses, isLoading: expLoading } = useExpenses(orgId ?? undefined);
-  const { data: stats, isLoading: statsLoading } = useExpenseStats(orgId ?? undefined);
+  const { data: expenses, isLoading: expLoading } = useExpenses(
+    orgId ?? undefined,
+  );
+  const { data: stats, isLoading: statsLoading } = useExpenseStats(
+    orgId ?? undefined,
+  );
   const isLoading = statsLoading || (expLoading && !expenses);
   const loading = isLoading && !stats;
 
@@ -548,7 +554,11 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
           label="Unpaid"
           value={loading ? "\u2014" : formatMNT(stats?.unpaidAmount ?? 0)}
           icon={Clock}
-          subtitle={stats ? `${stats.unpaidAmount > 0 ? `${((stats.unpaidAmount / stats.totalAmount) * 100).toFixed(0)}% of total` : "All paid"}` : undefined}
+          subtitle={
+            stats
+              ? `${stats.unpaidAmount > 0 ? `${((stats.unpaidAmount / stats.totalAmount) * 100).toFixed(0)}% of total` : "All paid"}`
+              : undefined
+          }
           loading={loading}
         />
       </div>
@@ -596,27 +606,51 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">Date</TableHead>
-                    <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">Description</TableHead>
-                    <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">Category</TableHead>
-                    <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">Amount</TableHead>
-                    <TableHead className="px-5 py-3.5 text-center font-medium text-muted-foreground">Status</TableHead>
+                    <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                      Date
+                    </TableHead>
+                    <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                      Description
+                    </TableHead>
+                    <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
+                      Category
+                    </TableHead>
+                    <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
+                      Amount
+                    </TableHead>
+                    <TableHead className="px-5 py-3.5 text-center font-medium text-muted-foreground">
+                      Status
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recentExpenses.map((exp) => (
-                    <TableRow key={exp.id} className="border-b border-border transition-colors hover:bg-muted/30">
+                    <TableRow
+                      key={exp.id}
+                      className="border-b border-border transition-colors hover:bg-muted/30"
+                    >
                       <TableCell className="px-5 py-3.5 text-muted-foreground">
-                        {new Date(exp.expense_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        {new Date(exp.expense_date).toLocaleDateString(
+                          "en-US",
+                          { month: "short", day: "numeric" },
+                        )}
                       </TableCell>
-                      <TableCell className="px-5 py-3.5 font-medium">{exp.description}</TableCell>
+                      <TableCell className="px-5 py-3.5 font-medium">
+                        {exp.description}
+                      </TableCell>
                       <TableCell className="px-5 py-3.5">
                         {exp.category ? (
                           <span
                             className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
-                            style={{ backgroundColor: `${exp.category.color}20`, color: exp.category.color }}
+                            style={{
+                              backgroundColor: `${exp.category.color}20`,
+                              color: exp.category.color,
+                            }}
                           >
-                            <span className="size-1.5 rounded-full" style={{ backgroundColor: exp.category.color }} />
+                            <span
+                              className="size-1.5 rounded-full"
+                              style={{ backgroundColor: exp.category.color }}
+                            />
                             {exp.category.name}
                           </span>
                         ) : (
@@ -628,13 +662,9 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
                       </TableCell>
                       <TableCell className="px-5 py-3.5 text-center">
                         {exp.paid_at ? (
-                          <Badge variant="outline">
-                            Paid
-                          </Badge>
+                          <Badge variant="outline">Paid</Badge>
                         ) : (
-                          <Badge variant="outline">
-                            Unpaid
-                          </Badge>
+                          <Badge variant="outline">Unpaid</Badge>
                         )}
                       </TableCell>
                     </TableRow>
@@ -686,7 +716,7 @@ export default function FinancePage() {
     data: null,
   } satisfies FinanceDataState);
   const { data } = financeData;
-  const { registerTab, setOpen } = useRightSidebar();
+  const { registerTab } = useRightSidebar();
   const [period, setPeriod] = useState<Period>("all");
   const [tab, setTab] = useState<Tab>("overview");
   const [search, setSearch] = useState("");
@@ -760,8 +790,7 @@ export default function FinancePage() {
         }))}
       />,
     );
-    setOpen(true);
-  }, [data, registerTab, setOpen]);
+  }, [data, registerTab]);
 
   const summary = data?.summary;
   const hasRevenue = (summary?.totalRevenue ?? 0) > 0;
@@ -776,7 +805,10 @@ export default function FinancePage() {
     const avg = summary.avgRepairOrderValue;
     const profit = summary.grossProfit;
     const margin = summary.marginPercent;
-    const profitPart = profit >= 0 ? `${formatCurrency(profit)} profit` : `-${formatCurrency(Math.abs(profit))} loss`;
+    const profitPart =
+      profit >= 0
+        ? `${formatCurrency(profit)} profit`
+        : `-${formatCurrency(Math.abs(profit))} loss`;
     return `${formatCurrency(rev)} revenue · ${profitPart} (${margin.toFixed(1)}%) · ${summary.completedToday} completed · ${wo} active · avg ${formatCurrency(avg)}/WO`;
   }, [summary, loading, hasRevenue]);
 
@@ -785,7 +817,9 @@ export default function FinancePage() {
     if (!search) return data.recentWorkOrders;
     const q = search.toLowerCase();
     return data.recentWorkOrders.filter((wo) => {
-      const woAny = wo as { customer?: { first_name?: string | null; last_name?: string | null } };
+      const woAny = wo as {
+        customer?: { first_name?: string | null; last_name?: string | null };
+      };
       const customerName =
         `${woAny.customer?.first_name ?? ""} ${woAny.customer?.last_name ?? ""}`.toLowerCase();
       return (

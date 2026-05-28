@@ -20,6 +20,14 @@ function Sheet({
   );
 }
 
+function SheetNestedRoot({
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.NestedRoot> & {
+  direction?: "top" | "bottom" | "left" | "right";
+}) {
+  return <SheetPrimitive.NestedRoot data-slot="sheet-nested-root" {...props} />;
+}
+
 function SheetTrigger({
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
@@ -60,8 +68,8 @@ function SheetContentSkeleton() {
       <Skeleton className="h-5 w-1/2" />
       <Skeleton className="h-4 w-3/4" />
       <div className="flex flex-col gap-3 pt-2">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
       </div>
       <Skeleton className="h-20 w-full" />
     </div>
@@ -169,7 +177,7 @@ function SheetTitle({
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn("text-sm font-medium text-foreground", className)}
+      className={cn("text-xs font-medium text-foreground", className)}
       {...props}
     />
   );
@@ -190,6 +198,7 @@ function SheetDescription({
 
 export {
   Sheet,
+  SheetNestedRoot,
   SheetTrigger,
   SheetClose,
   SheetContent,

@@ -5,12 +5,36 @@ import { useTranslations } from "next-intl";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useWizardContext } from "./wizard-context";
+import { QuickCreateVehicleSheet } from "./quick-create-vehicle-sheet";
 
 export function VehicleSection() {
   const ctx = useWizardContext();
   const t = useTranslations("workOrderWizard");
+
+  if (ctx.isRestoringFromDraft) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Car className="size-4" />
+            {t("vehicle")}
+            <span className="text-destructive">*</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3">
+            <Skeleton className="size-5 rounded-none" />
+            <div className="flex flex-col gap-1.5">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-36" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -18,6 +42,7 @@ export function VehicleSection() {
         <CardTitle className="text-base flex items-center gap-2">
           <Car className="size-4" />
           {t("vehicle")}
+          <span className="text-destructive">*</span>
           {ctx.selectedVehicle && (
             <span className="ml-auto text-sm font-normal text-muted-foreground">
               {ctx.selectedVehicle.plate_number}
@@ -47,13 +72,16 @@ export function VehicleSection() {
                 </span>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => ctx.setSelectedVehicle(null)}
-            >
-              {t("change")}
-            </Button>
+            <div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => ctx.setSelectedVehicle(null)}
+              >
+                <Car className="size-4" />
+                {t("change")}
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -85,77 +113,18 @@ export function VehicleSection() {
                 ))}
               </div>
             )}
-            {!ctx.showQuickVehicle && (
-              <Button
-                variant="outline"
-                onClick={() => ctx.setShowQuickVehicle(true)}
-                className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
-              >
-                <Plus className="size-4" />
-                {t("quickCreateVehicle")}
-              </Button>
-            )}
-            {ctx.showQuickVehicle && (
-              <div className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/20">
-                <p className="text-sm font-medium">{t("newVehicle")}</p>
-                <Input
-                  placeholder={t("plateRequired")}
-                  value={ctx.quickPlate}
-                  onChange={(e) => ctx.setQuickPlate(e.target.value)}
-                  className="h-11"
-                />
-                <div className="grid grid-cols-3 gap-3">
-                  <Input
-                    placeholder={t("make")}
-                    value={ctx.quickMake}
-                    onChange={(e) => ctx.setQuickMake(e.target.value)}
-                    className="h-11"
-                  />
-                  <Input
-                    placeholder={t("model")}
-                    value={ctx.quickModel}
-                    onChange={(e) => ctx.setQuickModel(e.target.value)}
-                    className="h-11"
-                  />
-                  <Input
-                    placeholder={t("year")}
-                    type="number"
-                    value={ctx.quickYear}
-                    onChange={(e) => ctx.setQuickYear(e.target.value)}
-                    className="h-11"
-                  />
-                </div>
-                {ctx.vehicleCreateError && (
-                  <p className="text-sm text-destructive">
-                    {ctx.vehicleCreateError}
-                  </p>
-                )}
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      ctx.setShowQuickVehicle(false);
-                      ctx.setQuickPlate("");
-                      ctx.setQuickMake("");
-                      ctx.setQuickModel("");
-                      ctx.setQuickYear("");
-                    }}
-                  >
-                    {t("cancel")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled={ctx.creatingVehicle || !ctx.quickPlate.trim()}
-                    onClick={ctx.handleQuickCreateVehicle}
-                  >
-                    {ctx.creatingVehicle
-                      ? t("creating")
-                      : t("createAndSelectVehicle")}
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Button
+              variant="outline"
+              onClick={() => ctx.setShowQuickVehicle(true)}
+              className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
+            >
+              <Plus className="size-4" />
+              {t("quickCreateVehicle")}
+            </Button>
+            <QuickCreateVehicleSheet
+              open={ctx.showQuickVehicle}
+              onOpenChange={ctx.setShowQuickVehicle}
+            />
           </div>
         )}
       </CardContent>

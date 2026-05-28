@@ -2,6 +2,7 @@
 
 import { ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { createCustomer } from "./customer-service";
 import { createVehicle, updateVehicle } from "./vehicle-service";
 import { createWorkOrder } from "./work-order-service";
@@ -387,28 +388,45 @@ export async function registerMechanic(params: {
   if (!user) throw new Error("Not authenticated");
 
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const adminClient = await createServiceRoleClient();
 
-  // Check if user exists and create profile entry in parallel
-  const [{ data: _existingUser }, { data: profile, error }] = await Promise.all(
-    [
-      supabase
-        .from("profiles")
-        .select("id, is_active")
-        .eq("id", params.email.trim()) // profiles.id = auth.users.id
-        .maybeSingle(),
-      supabase
-        .from("profiles")
-        .upsert({
-          id: params.email.trim(),
-          organization_id: orgId,
-          full_name: params.fullName.trim(),
-          phone: params.phone?.trim() ?? null,
-          is_active: true,
-        })
-        .select("id, full_name, phone, is_active")
-        .single(),
-    ],
-  );
+  // Find existing auth user by email, or create one
+  const {
+    data: { users },
+  } = await adminClient.auth.admin.listUsers({
+    filter: params.email.trim(),
+    perPage: 1,
+  });
+  const existingAuthUser = users?.find((u) => u.email === params.email.trim());
+
+  let authUserId: string;
+  if (existingAuthUser) {
+    authUserId = existingAuthUser.id;
+  } else {
+    const { data: newUser, error: createError } =
+      await adminClient.auth.admin.createUser({
+        email: params.email.trim(),
+        email_confirm: true,
+        user_metadata: { full_name: params.fullName.trim() },
+      });
+    if (createError)
+      throw new Error(createError.message ?? "Failed to create auth user");
+    if (!newUser?.user) throw new Error("Auth user creation returned no user");
+    authUserId = newUser.user.id;
+  }
+
+  // Upsert profile with the correct UUID
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .upsert({
+      id: authUserId,
+      organization_id: orgId,
+      full_name: params.fullName.trim(),
+      phone: params.phone?.trim() ?? null,
+      is_active: true,
+    })
+    .select("id, full_name, phone, is_active")
+    .single();
 
   if (error) throw new Error(error.message ?? "Failed to register mechanic");
 

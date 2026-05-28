@@ -22,6 +22,10 @@ interface PageHeaderContextValue {
   setNewCustomerDialogOpen: (open: boolean) => void;
   isNewVehicleDialogOpen: boolean;
   setNewVehicleDialogOpen: (open: boolean) => void;
+  isNewExpenseSheetOpen: boolean;
+  setNewExpenseSheetOpen: (open: boolean) => void;
+  isNewWorkOrderSheetOpen: boolean;
+  setNewWorkOrderSheetOpen: (open: boolean) => void;
 }
 
 const PageHeaderContext = createContext<PageHeaderContextValue | null>(null);
@@ -34,6 +38,8 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
   });
   const [isNewCustomerDialogOpen, setNewCustomerDialogOpen] = useState(false);
   const [isNewVehicleDialogOpen, setNewVehicleDialogOpen] = useState(false);
+  const [isNewExpenseSheetOpen, setNewExpenseSheetOpen] = useState(false);
+  const [isNewWorkOrderSheetOpen, setNewWorkOrderSheetOpen] = useState(false);
 
   const setTabs = (tabs: PageTab[]) =>
     setState((prev) => ({ ...prev, tabs, activeTab: tabs[0]?.value ?? "" }));
@@ -53,6 +59,10 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
           setNewCustomerDialogOpen,
           isNewVehicleDialogOpen,
           setNewVehicleDialogOpen,
+          isNewExpenseSheetOpen,
+          setNewExpenseSheetOpen,
+          isNewWorkOrderSheetOpen,
+          setNewWorkOrderSheetOpen,
         }}
       >
       {children}

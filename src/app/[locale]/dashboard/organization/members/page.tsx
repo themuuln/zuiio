@@ -68,7 +68,14 @@ export default function MembersPage() {
     invites: [],
     roles: [],
   } satisfies PageDataState);
-  const { loadingMembers, loadingInvites, loadingRoles, members, invites, roles } = pageData;
+  const {
+    loadingMembers,
+    loadingInvites,
+    loadingRoles,
+    members,
+    invites,
+    roles,
+  } = pageData;
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [selectedRoleId, setSelectedRoleId] = useState("");
@@ -133,7 +140,8 @@ export default function MembersPage() {
     try {
       const profileRes = await fetch("/api/profile");
       const profile = await profileRes.json();
-      const orgId = profile.organizationId ?? profile.data?.organizationId ?? "";
+      const orgId =
+        profile.organizationId ?? profile.data?.organizationId ?? "";
       if (!orgId) {
         dispatchPageData({ type: "SET_ROLES", roles: [] });
         return;
@@ -143,7 +151,8 @@ export default function MembersPage() {
       if (body.data) {
         dispatchPageData({ type: "SET_ROLES", roles: body.data });
         // Default to first non-admin role, fallback to first role
-        const defaultRole = body.data.find((r) => r.name === "Mechanic") ?? body.data[0];
+        const defaultRole =
+          body.data.find((r) => r.name === "Mechanic") ?? body.data[0];
         if (defaultRole) setSelectedRoleId(defaultRole.id);
       }
     } catch {
@@ -175,7 +184,10 @@ export default function MembersPage() {
       const res = await fetch(`/api/organizations/${orgId}/invites`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: inviteEmail.trim(), roleId: selectedRoleId || undefined }),
+        body: JSON.stringify({
+          email: inviteEmail.trim(),
+          roleId: selectedRoleId || undefined,
+        }),
       });
 
       const body = (await res.json()) as ApiResponse<unknown>;
@@ -197,14 +209,11 @@ export default function MembersPage() {
   const handleRoleChange = async (userId: string, roleId: string) => {
     try {
       const orgId = await getOrgIdFromProfile();
-      const res = await fetch(
-        `/api/organizations/${orgId}/users/${userId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ roleId }),
-        },
-      );
+      const res = await fetch(`/api/organizations/${orgId}/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roleId }),
+      });
       if (!res.ok) {
         const body = (await res.json()) as ApiResponse<unknown>;
         throw new Error(body.error?.message ?? "Failed to update role");
@@ -212,9 +221,7 @@ export default function MembersPage() {
       toast.success(t("roleUpdated"));
       loadMembers();
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to update role",
-      );
+      toast.error(err instanceof Error ? err.message : "Failed to update role");
     }
   };
 
@@ -294,7 +301,7 @@ export default function MembersPage() {
     [invites],
   );
 
-  const { registerTab, setOpen, unregisterTab } = useRightSidebar();
+  const { registerTab, unregisterTab } = useRightSidebar();
 
   useEffect(() => {
     const roleCounts = members.reduce<Record<string, number>>((acc, m) => {
@@ -330,18 +337,19 @@ export default function MembersPage() {
         emptyMessage="No pending invites"
       />,
     );
-    setOpen(true);
     return () => {
       unregisterTab("roles");
       unregisterTab("pending");
     };
-  }, [loadingInvites, members, pendingInvites, registerTab, setOpen, unregisterTab]);
+  }, [loadingInvites, members, pendingInvites, registerTab, unregisterTab]);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {t("title")}
+          </h1>
           <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Button onClick={() => setShowInviteForm(true)}>

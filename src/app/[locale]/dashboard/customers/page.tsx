@@ -72,7 +72,7 @@ export default function CustomersPage() {
   } = useCustomers(org?.orgId, search);
   const customers = Array.isArray(rawCustomers) ? rawCustomers : [];
 
-  const { registerTab, setOpen } = useRightSidebar();
+  const { registerTab } = useRightSidebar();
 
   useEffect(() => {
     if (!rawCustomers) return;
@@ -120,9 +120,7 @@ export default function CustomersPage() {
       <RecentList items={recent} title="Recent Customers" />,
       <Clock className="size-4" />,
     );
-
-    setOpen(true);
-  }, [rawCustomers, customers, registerTab, setOpen]);
+  }, [rawCustomers, customers, registerTab]);
 
   const isFirstLoad = rawCustomers === undefined && !search;
   const showLoadingScreen = orgLoading || (customersLoading && isFirstLoad);

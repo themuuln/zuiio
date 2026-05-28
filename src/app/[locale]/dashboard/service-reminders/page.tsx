@@ -146,7 +146,11 @@ function ScheduleRow({
           <Button variant="ghost" size="icon-xs" onClick={() => onEdit(item)}>
             <Pencil className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon-xs" onClick={() => onDelete(item.id)}>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => onDelete(item.id)}
+          >
             <Trash2 className="size-4 text-destructive" />
           </Button>
         </div>
@@ -171,7 +175,7 @@ export default function ServiceRemindersPage() {
   const deleteSchedule = useDeleteServiceSchedule(orgId);
   const updateSchedule = useUpdateServiceSchedule(orgId);
   const reminderLogs = useReminderLogs(orgId);
-  const { registerTab, setOpen } = useRightSidebar();
+  const { registerTab } = useRightSidebar();
 
   const [showAdd, setShowAdd] = useState(false);
   const [newSchedule, setNewSchedule] = useState({
@@ -373,9 +377,7 @@ export default function ServiceRemindersPage() {
         emptyMessage="No reminder history yet"
       />,
     );
-
-    setOpen(true);
-  }, [schedules, reminderLogs.data, registerTab, setOpen]);
+  }, [schedules, reminderLogs.data, registerTab]);
 
   return (
     <div className="flex flex-col gap-4 p-4">

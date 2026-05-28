@@ -70,11 +70,6 @@ export function SummarySection() {
                   })}
             </Button>
           </div>
-          {(!ctx.selectedCustomer || !ctx.selectedVehicle) && (
-            <p className="text-sm text-muted-foreground text-center mt-4">
-              {t("createDisabledHint")}
-            </p>
-          )}
         </CardContent>
       </Card>
     </>

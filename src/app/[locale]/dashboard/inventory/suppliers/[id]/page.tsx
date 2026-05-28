@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "@/lib/i18n/navigation";
 import { useSuppliers, useUpdateSupplier } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
 
 export default function EditSupplierPage() {
   const t = useTranslations("inventory");
@@ -157,10 +158,14 @@ export default function EditSupplierPage() {
                 <FieldLabel htmlFor="phone">{t("phone")}</FieldLabel>
                 <Input
                   id="phone"
+                  type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) =>
+                    setPhone(formatMongolianPhone(e.target.value))
+                  }
                   placeholder={t("phonePlaceholder")}
                   className="h-11"
+                  {...inputProps("phone")}
                 />
               </Field>
             </div>
@@ -187,9 +192,7 @@ export default function EditSupplierPage() {
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field>
-                <FieldLabel htmlFor="tax_id">
-                  {t("taxIdPlaceholder")}
-                </FieldLabel>
+                <FieldLabel htmlFor="tax_id">Tax ID</FieldLabel>
                 <Input
                   id="tax_id"
                   value={taxId}
@@ -199,9 +202,7 @@ export default function EditSupplierPage() {
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="payment_terms">
-                  {t("paymentTermsPlaceholder")}
-                </FieldLabel>
+                <FieldLabel htmlFor="payment_terms">Payment Terms</FieldLabel>
                 <Input
                   id="payment_terms"
                   value={paymentTerms}

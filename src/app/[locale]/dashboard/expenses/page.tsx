@@ -127,7 +127,6 @@ export default function ExpensesPage() {
   useEffect(() => {
     if (!stats || !categories) return;
 
-    sidebar.setOpen(true);
     sidebar.setActiveTab("summary");
 
     sidebar.registerTab(
@@ -159,7 +158,6 @@ export default function ExpensesPage() {
     return () => {
       sidebar.unregisterTab("summary");
       sidebar.unregisterTab("categories");
-      sidebar.setOpen(false);
     };
   }, [stats, categories]);
 

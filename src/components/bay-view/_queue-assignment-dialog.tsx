@@ -7,13 +7,18 @@ import {
   Loader2,
   User,
   Wrench,
-  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn, formatPlateNumber } from "@/lib/utils";
 
 interface QueueAssignmentDialogProps {
@@ -53,12 +58,14 @@ export function QueueAssignmentDialog({
   const firstEmpty = useMemo(() => bays.find((b) => !b.occupied), [bays]);
   const availableBays = useMemo(() => bays.filter((b) => !b.occupied), [bays]);
 
-  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (firstEmpty && !selectedBay) {
+      setSelectedBay(firstEmpty.bayNumber);
+    }
+  }, [firstEmpty, selectedBay]);
 
   useEffect(() => {
-    dialogRef.current?.focus();
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
       // Keyboard shortcut: press 1-9 to select a bay
       const num = parseInt(e.key, 10);
       if (num >= 1 && num <= 9) {
@@ -68,29 +75,17 @@ export function QueueAssignmentDialog({
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, bays]);
-
-  useEffect(() => {
-    if (firstEmpty && !selectedBay) {
-      setSelectedBay(firstEmpty.bayNumber);
-    }
-  }, [firstEmpty, selectedBay]);
+  }, [bays]);
 
   const handleConfirm = async () => {
     if (!selectedBay) return;
     setSaving(true);
     setError(null);
     try {
-      await onAssign(
-        workOrder.id,
-        selectedBay,
-        selectedMechanic ?? undefined,
-      );
+      await onAssign(workOrder.id, selectedBay, selectedMechanic ?? undefined);
       onClose();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to assign vehicle",
-      );
+      setError(err instanceof Error ? err.message : "Failed to assign vehicle");
     } finally {
       setSaving(false);
     }
@@ -99,19 +94,13 @@ export function QueueAssignmentDialog({
   const serviceDesc = workOrder.complaint ?? workOrder.description ?? null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-      onClick={onClose}
-      role="presentation"
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
     >
-      <div
-        ref={dialogRef}
-        tabIndex={-1}
-        role="dialog"
-        className="mx-4 w-full max-w-xl rounded-2xl border border-border bg-card shadow-2xl outline-none"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={() => {}}
-      >
+      <DialogContent className="sm:max-w-xl p-0 gap-0" showCloseButton={false}>
         {/* ── Header: vehicle summary card ── */}
         <div className="border-b border-border px-6 py-5">
           <div className="flex items-start justify-between gap-4">
@@ -132,7 +121,8 @@ export function QueueAssignmentDialog({
                     : ""}
                   {v?.color && (
                     <span className="text-muted-foreground/50">
-                      {" "}· {v.color}
+                      {" "}
+                      · {v.color}
                     </span>
                   )}
                 </p>
@@ -144,14 +134,6 @@ export function QueueAssignmentDialog({
                 )}
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={onClose}
-              aria-label={t("close")}
-            >
-              <X className="size-5" />
-            </Button>
           </div>
         </div>
 
@@ -193,8 +175,16 @@ export function QueueAssignmentDialog({
                     return (
                       <Button
                         key={bay.bayNumber}
-                        variant={isSelected ? "default" : isAvailable ? "outline" : "outline"}
-                        onClick={() => isAvailable && setSelectedBay(bay.bayNumber)}
+                        variant={
+                          isSelected
+                            ? "default"
+                            : isAvailable
+                              ? "outline"
+                              : "outline"
+                        }
+                        onClick={() =>
+                          isAvailable && setSelectedBay(bay.bayNumber)
+                        }
                         disabled={!isAvailable}
                         className={cn(
                           "flex flex-col items-center gap-1.5 p-3.5 h-auto",
@@ -234,7 +224,15 @@ export function QueueAssignmentDialog({
                 </div>
               )}
               <p className="text-[10px] text-muted-foreground/50 mt-2">
-                Press <kbd className="rounded border border-border bg-muted px-1 py-0.5 text-[9px] font-mono">1</kbd>–<kbd className="rounded border border-border bg-muted px-1 py-0.5 text-[9px] font-mono">9</kbd> to quick-select a bay
+                Press{" "}
+                <kbd className="rounded border border-border bg-muted px-1 py-0.5 text-[9px] font-mono">
+                  1
+                </kbd>
+                –
+                <kbd className="rounded border border-border bg-muted px-1 py-0.5 text-[9px] font-mono">
+                  9
+                </kbd>{" "}
+                to quick-select a bay
               </p>
             </div>
 
@@ -285,7 +283,12 @@ export function QueueAssignmentDialog({
                     {mechanics.map((m) => {
                       const isSelected = selectedMechanic === m.id;
                       const initials = m.full_name
-                        ? m.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+                        ? m.full_name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                            .slice(0, 2)
                         : "?";
                       return (
                         <Button
@@ -334,16 +337,15 @@ export function QueueAssignmentDialog({
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground/60">
             <Clock className="size-3.5" />
             <span>
-              {workOrder.vehicle ? formatPlateNumber(workOrder.vehicle.plate_number) : "Vehicle"} → Bay{" "}
-              {selectedBay ?? "?"}
+              {workOrder.vehicle
+                ? formatPlateNumber(workOrder.vehicle.plate_number)
+                : "Vehicle"}{" "}
+              → Bay {selectedBay ?? "?"}
               {selectedMechanic && " + mechanic"}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={onClose}
-            >
+            <Button variant="outline" onClick={onClose}>
               {t("cancel")}
             </Button>
             <Button
@@ -364,7 +366,7 @@ export function QueueAssignmentDialog({
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

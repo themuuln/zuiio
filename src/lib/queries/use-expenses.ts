@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { toastRetry } from "@/lib/toast-utils";
 import { expenseKeys } from "@/lib/queries/keys";
 import type {
   ExpenseWithCategory,
@@ -20,7 +21,10 @@ interface ExpenseListParams {
 }
 
 // ── List expenses ──
-export function useExpenses(orgId: string | undefined, params?: ExpenseListParams) {
+export function useExpenses(
+  orgId: string | undefined,
+  params?: ExpenseListParams,
+) {
   const filters: Record<string, string> = {};
   if (params?.q) filters.q = params.q;
   if (params?.categoryId) filters.categoryId = params.categoryId;
@@ -32,7 +36,9 @@ export function useExpenses(orgId: string | undefined, params?: ExpenseListParam
   return useQuery({
     queryKey: expenseKeys.list(orgId ?? "", filters),
     queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/expenses${searchParams ? `?${searchParams}` : ""}`);
+      const res = await fetch(
+        `/api/organizations/${orgId}/expenses${searchParams ? `?${searchParams}` : ""}`,
+      );
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
       return json.data as ExpenseWithCategory[];
@@ -42,11 +48,16 @@ export function useExpenses(orgId: string | undefined, params?: ExpenseListParam
 }
 
 // ── Get single expense ──
-export function useExpense(orgId: string | undefined, expenseId: string | undefined) {
+export function useExpense(
+  orgId: string | undefined,
+  expenseId: string | undefined,
+) {
   return useQuery({
     queryKey: expenseKeys.detail(orgId ?? "", expenseId ?? ""),
     queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/expenses/${expenseId}`);
+      const res = await fetch(
+        `/api/organizations/${orgId}/expenses/${expenseId}`,
+      );
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
       return json.data as ExpenseWithCategory;
@@ -60,7 +71,9 @@ export function useExpenseStats(orgId: string | undefined) {
   return useQuery({
     queryKey: expenseKeys.stats(orgId ?? ""),
     queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/expenses?type=stats`);
+      const res = await fetch(
+        `/api/organizations/${orgId}/expenses?type=stats`,
+      );
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
       return json.data as ExpenseStats;
@@ -87,7 +100,7 @@ export function useExpenseCategories(orgId: string | undefined) {
 export function useCreateExpense(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (params: CreateExpenseParams) => {
       const res = await fetch(`/api/organizations/${orgId}/expenses`, {
         method: "POST",
@@ -105,18 +118,24 @@ export function useCreateExpense(orgId: string | undefined) {
       }
       toast.success("Expense created");
     },
-    onError: (error: Error) => {
-      toast.error(error.message ?? "Failed to create expense");
+    onError: (err: Error, variables) => {
+      toastRetry(err.message ?? "Failed to create expense", () =>
+        mutation.mutateAsync(variables),
+      );
     },
   });
+  return mutation;
 }
 
 // ── Update expense ──
 export function useUpdateExpense(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({ id, ...params }: UpdateExpenseParams & { id: string }) => {
+  const mutation = useMutation({
+    mutationFn: async ({
+      id,
+      ...params
+    }: UpdateExpenseParams & { id: string }) => {
       const res = await fetch(`/api/organizations/${orgId}/expenses/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -129,22 +148,27 @@ export function useUpdateExpense(orgId: string | undefined) {
     onSuccess: (_, variables) => {
       if (orgId) {
         queryClient.invalidateQueries({ queryKey: expenseKeys.all(orgId) });
-        queryClient.invalidateQueries({ queryKey: expenseKeys.detail(orgId, variables.id) });
+        queryClient.invalidateQueries({
+          queryKey: expenseKeys.detail(orgId, variables.id),
+        });
         queryClient.invalidateQueries({ queryKey: expenseKeys.stats(orgId) });
       }
       toast.success("Expense updated");
     },
-    onError: (error: Error) => {
-      toast.error(error.message ?? "Failed to update expense");
+    onError: (err: Error, variables) => {
+      toastRetry(err.message ?? "Failed to update expense", () =>
+        mutation.mutateAsync(variables),
+      );
     },
   });
+  return mutation;
 }
 
 // ── Delete expense ──
 export function useDeleteExpense(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/organizations/${orgId}/expenses/${id}`, {
         method: "DELETE",
@@ -153,83 +177,190 @@ export function useDeleteExpense(orgId: string | undefined) {
       if (json.error) throw new Error(json.error.message);
     },
     onSuccess: () => {
-      if (orgId) queryClient.invalidateQueries({ queryKey: expenseKeys.all(orgId) });
+      if (orgId)
+        queryClient.invalidateQueries({ queryKey: expenseKeys.all(orgId) });
       toast.success("Expense deleted");
     },
-    onError: (error: Error) => {
-      toast.error(error.message ?? "Failed to delete expense");
+    onError: (err: Error, variables) => {
+      toastRetry(err.message ?? "Failed to delete expense", () =>
+        mutation.mutateAsync(variables),
+      );
     },
   });
+  return mutation;
 }
 
-// ── Create category ──
+// ── Create category (optimistic) ──
 export function useCreateExpenseCategory(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (params: CreateExpenseCategoryParams) => {
-      const res = await fetch(`/api/organizations/${orgId}/expense-categories`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
-      });
+      const res = await fetch(
+        `/api/organizations/${orgId}/expense-categories`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params),
+        },
+      );
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
       return json.data;
     },
+    onMutate: async (params) => {
+      const key = expenseKeys.categories(orgId ?? "");
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<ExpenseCategory[]>(key);
+      if (previous) {
+        const optimistic: ExpenseCategory = {
+          id: `temp-${Date.now()}`,
+          organization_id: orgId ?? "",
+          name: params.name,
+          description: params.description ?? null,
+          color: "",
+          icon: "",
+          sort_order: 0,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        queryClient.setQueryData<ExpenseCategory[]>(key, [
+          ...previous,
+          optimistic,
+        ]);
+      }
+      return { previous };
+    },
+    onError: (err: Error, variables, context) => {
+      if (context?.previous)
+        queryClient.setQueryData<ExpenseCategory[]>(
+          expenseKeys.categories(orgId ?? ""),
+          context.previous,
+        );
+      toastRetry(err.message ?? "Failed to create category", () =>
+        mutation.mutateAsync(variables),
+      );
+    },
     onSuccess: () => {
-      if (orgId) queryClient.invalidateQueries({ queryKey: expenseKeys.categories(orgId) });
       toast.success("Category created");
     },
-    onError: (error: Error) => {
-      toast.error(error.message ?? "Failed to create category");
+    onSettled: () => {
+      if (orgId)
+        queryClient.invalidateQueries({
+          queryKey: expenseKeys.categories(orgId),
+        });
     },
   });
+  return mutation;
 }
 
-// ── Update category ──
+// ── Update category (optimistic) ──
 export function useUpdateExpenseCategory(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({ id, ...params }: UpdateExpenseCategoryParams & { id: string }) => {
-      const res = await fetch(`/api/organizations/${orgId}/expense-categories/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
-      });
+  const mutation = useMutation({
+    mutationFn: async ({
+      id,
+      ...params
+    }: UpdateExpenseCategoryParams & { id: string }) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/expense-categories/${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params),
+        },
+      );
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
       return json.data;
     },
+    onMutate: async ({ id, ...params }) => {
+      const key = expenseKeys.categories(orgId ?? "");
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<ExpenseCategory[]>(key);
+      if (previous) {
+        queryClient.setQueryData<ExpenseCategory[]>(
+          key,
+          previous.map((c) =>
+            c.id === id
+              ? { ...c, ...params, updated_at: new Date().toISOString() }
+              : c,
+          ),
+        );
+      }
+      return { previous };
+    },
+    onError: (err: Error, variables, context) => {
+      if (context?.previous)
+        queryClient.setQueryData<ExpenseCategory[]>(
+          expenseKeys.categories(orgId ?? ""),
+          context.previous,
+        );
+      toastRetry(err.message ?? "Failed to update category", () =>
+        mutation.mutateAsync(variables),
+      );
+    },
     onSuccess: () => {
-      if (orgId) queryClient.invalidateQueries({ queryKey: expenseKeys.categories(orgId) });
       toast.success("Category updated");
     },
-    onError: (error: Error) => {
-      toast.error(error.message ?? "Failed to update category");
+    onSettled: () => {
+      if (orgId)
+        queryClient.invalidateQueries({
+          queryKey: expenseKeys.categories(orgId),
+        });
     },
   });
+  return mutation;
 }
 
-// ── Delete category ──
+// ── Delete category (optimistic) ──
 export function useDeleteExpenseCategory(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/organizations/${orgId}/expense-categories/${id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/organizations/${orgId}/expense-categories/${id}`,
+        {
+          method: "DELETE",
+        },
+      );
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
     },
+    onMutate: async (id) => {
+      const key = expenseKeys.categories(orgId ?? "");
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<ExpenseCategory[]>(key);
+      if (previous) {
+        queryClient.setQueryData<ExpenseCategory[]>(
+          key,
+          previous.filter((c) => c.id !== id),
+        );
+      }
+      return { previous };
+    },
+    onError: (err: Error, variables, context) => {
+      if (context?.previous)
+        queryClient.setQueryData<ExpenseCategory[]>(
+          expenseKeys.categories(orgId ?? ""),
+          context.previous,
+        );
+      toastRetry(err.message ?? "Failed to delete category", () =>
+        mutation.mutateAsync(variables),
+      );
+    },
     onSuccess: () => {
-      if (orgId) queryClient.invalidateQueries({ queryKey: expenseKeys.categories(orgId) });
       toast.success("Category deleted");
     },
-    onError: (error: Error) => {
-      toast.error(error.message ?? "Failed to delete category");
+    onSettled: () => {
+      if (orgId)
+        queryClient.invalidateQueries({
+          queryKey: expenseKeys.categories(orgId),
+        });
     },
   });
+  return mutation;
 }

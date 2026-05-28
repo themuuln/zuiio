@@ -2,6 +2,7 @@
 
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { transliterateMongolianPlate } from "@/lib/form-validation";
 import { useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreatePartsCar } from "@/lib/queries/use-inventory";
@@ -35,7 +36,10 @@ export default function NewPartsCarPage() {
         model: form.get("model") as string,
         year: form.get("year") ? Number(form.get("year")) : undefined,
         vin: (form.get("vin") as string)?.toUpperCase() || undefined,
-        license_plate: (form.get("license_plate") as string) || undefined,
+        license_plate:
+          transliterateMongolianPlate(
+            (form.get("license_plate") as string) || "",
+          ) || undefined,
         purchase_cost: form.get("purchase_cost")
           ? Number(form.get("purchase_cost"))
           : 0,

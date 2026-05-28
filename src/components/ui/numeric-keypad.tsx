@@ -81,7 +81,7 @@ export function NumericKeypad({
         className="w-[300px] sm:w-[340px] gap-0 p-4 [&>button:last-child]:hidden"
       >
         {/* Value display */}
-        <div className="mb-4 flex items-center justify-end rounded-xl bg-muted px-4 py-3.5">
+        <div className="mb-4 flex items-center justify-end rounded-none bg-muted px-4 py-3.5">
           <span className="text-2xl font-semibold tabular-nums tracking-tight">
             {buffer || "0"}
           </span>

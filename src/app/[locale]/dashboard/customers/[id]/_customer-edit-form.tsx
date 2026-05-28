@@ -2,6 +2,7 @@
 
 import type { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
+import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
 
 type CustomerType = "individual" | "company";
 
@@ -137,14 +138,16 @@ export function CustomerEditForm({ form, setForm, t }: CustomerEditFormProps) {
         </label>
         <Input
           id="phone"
+          type="tel"
           value={form.phone}
           onChange={(event) =>
             setForm((current) => ({
               ...current,
-              phone: event.target.value,
+              phone: formatMongolianPhone(event.target.value),
             }))
           }
           className="h-11"
+          {...inputProps("phone")}
         />
       </div>
       <div>

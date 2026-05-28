@@ -2,7 +2,9 @@
 
 import {
   Car,
+  ClipboardList,
   Command,
+  DollarSign,
   PanelRightClose,
   PanelRightOpen,
   Plus,
@@ -33,14 +35,18 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+
 import { useNavigation } from "@/hooks/use-navigation";
 import { usePageHeader } from "@/hooks/use-page-header";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 
 export interface PageTab {
@@ -65,6 +71,13 @@ export function PageHeader({
   const { push } = useRouter();
   const { searchItems } = useNavigation();
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const {
+    setNewCustomerDialogOpen,
+    setNewVehicleDialogOpen,
+    setNewExpenseSheetOpen,
+    setNewWorkOrderSheetOpen,
+  } = usePageHeader();
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
 
@@ -172,6 +185,50 @@ export function PageHeader({
         <CommandInput placeholder={t("common.search")} />
         <CommandList>
           <CommandEmpty>{t("common.noResults")}</CommandEmpty>
+          <CommandGroup heading={t("common.quickCreate")}>
+            {[
+              {
+                icon: ClipboardList,
+                label: t("dashboard.newWorkOrder"),
+                onSelect: () => {
+                  setSearchOpen(false);
+                  setNewWorkOrderSheetOpen(true);
+                },
+              },
+              {
+                icon: UserPlus,
+                label: t("dashboard.newCustomer"),
+                onSelect: () => {
+                  setSearchOpen(false);
+                  setNewCustomerDialogOpen(true);
+                },
+              },
+              {
+                icon: Car,
+                label: t("dashboard.newVehicle"),
+                onSelect: () => {
+                  setSearchOpen(false);
+                  setNewVehicleDialogOpen(true);
+                },
+              },
+              {
+                icon: DollarSign,
+                label: t("expenses.addExpense"),
+                onSelect: () => {
+                  setSearchOpen(false);
+                  setNewExpenseSheetOpen(true);
+                },
+              },
+            ].map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <CommandItem key={`create-${i}`} onSelect={item.onSelect}>
+                  <Icon className="size-4" />
+                  <span>{item.label}</span>
+                </CommandItem>
+              );
+            })}
+          </CommandGroup>
           <CommandGroup heading={t("nav.dashboard")}>
             {commandItems.map((item) => {
               const Icon = item.icon;
@@ -226,15 +283,18 @@ function HeaderBreadcrumbs() {
 
 function QuickCreateActions() {
   const t = useTranslations();
-  const { push } = useRouter();
-  const { setNewCustomerDialogOpen, setNewVehicleDialogOpen } =
-    usePageHeader();
+  const {
+    setNewCustomerDialogOpen,
+    setNewVehicleDialogOpen,
+    setNewExpenseSheetOpen,
+    setNewWorkOrderSheetOpen,
+  } = usePageHeader();
 
-  const items = [
+  const createItems = [
     {
-      href: "/dashboard/work-orders/new",
       label: t("dashboard.newWorkOrder"),
-      icon: Plus,
+      icon: ClipboardList,
+      onClick: () => setNewWorkOrderSheetOpen(true),
     },
     {
       label: t("dashboard.newCustomer"),
@@ -246,40 +306,40 @@ function QuickCreateActions() {
       icon: Car,
       onClick: () => setNewVehicleDialogOpen(true),
     },
+    {
+      label: t("expenses.addExpense"),
+      icon: DollarSign,
+      onClick: () => setNewExpenseSheetOpen(true),
+    },
   ];
 
   return (
-    <div className="hidden items-center gap-2 xl:flex">
-      {items.map((item, index) => {
-        const Icon = item.icon;
-        const key =
-          "href" in item && item.href ? item.href : `action-${index}`;
-        return (
-          <Tooltip key={key}>
-            <TooltipTrigger
-              render={
-                <Button
-                  size="sm"
-                  variant={index === 0 ? "default" : "outline"}
-                  className="size-9 rounded-xl p-0"
-                  onClick={() => {
-                    if ("onClick" in item && item.onClick) {
-                      item.onClick();
-                    } else if ("href" in item && item.href) {
-                      push(item.href);
-                    }
-                  }}
-                  aria-label={item.label}
-                >
-                  <Icon className="size-4" />
-                </Button>
-              }
-            />
-            <TooltipContent>{item.label}</TooltipContent>
-          </Tooltip>
-        );
-      })}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            size="sm"
+            className="size-9 rounded-xl"
+            aria-label={t("common.create")}
+          >
+            <Plus className="size-4" />
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuLabel>{t("common.create")}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {createItems.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <DropdownMenuItem key={index} onClick={item.onClick}>
+              <Icon className="mr-2 size-4" />
+              {item.label}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

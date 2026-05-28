@@ -3,8 +3,10 @@ import { createAuditLog } from "@/lib/audit";
 import { cacheTags, cacheDurations } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { isValidMongolianPlate } from "@/lib/form-validation";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { createClient } from "@/lib/supabase/server";
+import { ensureVehicleModel } from "./vehicle-models-service";
 import type {
   CreateVehicleParams,
   UpdateVehicleParams,
@@ -162,6 +164,11 @@ export async function createVehicle(
   if (!plate) {
     throw new ValidationError("Plate number is required");
   }
+  if (!isValidMongolianPlate(plate)) {
+    throw new ValidationError(
+      "Plate must be 4 digits followed by 3 Cyrillic letters (e.g. 4444УНА)",
+    );
+  }
   if (!params.make?.trim()) {
     throw new ValidationError("Make is required");
   }
@@ -236,6 +243,11 @@ export async function createVehicle(
     }
   }
 
+  // Auto-learn make+model into catalog (fire-and-forget)
+  ensureVehicleModel(orgId, params.make, params.model).catch(() => {
+    // Silently ignore — catalog learning must never block vehicle creation
+  });
+
   await createAuditLog({
     supabase,
     action: "create",
@@ -275,9 +287,15 @@ export async function updateVehicle(
   }
 
   const updates: Record<string, unknown> = {};
-  if (params.plateNumber !== undefined)
-    updates.plate_number =
-      normalizePlate(params.plateNumber?.trim() ?? "") || null;
+  if (params.plateNumber !== undefined) {
+    const normalized = normalizePlate(params.plateNumber?.trim() ?? "");
+    if (normalized && !isValidMongolianPlate(normalized)) {
+      throw new ValidationError(
+        "Plate must be 4 digits followed by 3 Cyrillic letters (e.g. 4444УНА)",
+      );
+    }
+    updates.plate_number = normalized || null;
+  }
   if (params.vin !== undefined) updates.vin = params.vin?.trim() || null;
   if (params.chassisNumber !== undefined)
     updates.chassis_number = params.chassisNumber?.trim() || null;

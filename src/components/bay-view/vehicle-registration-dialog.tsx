@@ -14,6 +14,8 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { transliterateMongolianPlate } from "@/lib/form-validation";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { formatMNT } from "@/lib/utils";
 
@@ -330,15 +332,15 @@ export function VehicleRegistrationDialog({
   ]);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm pt-8 pb-8 overflow-y-auto"
-      onClick={onClose}
-      role="presentation"
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
     >
-      <div
-        className="relative mx-4 w-full max-w-4xl bg-background rounded-2xl shadow-2xl border border-border overflow-hidden"
-        role="dialog"
-        onClick={(e) => e.stopPropagation()}
+      <DialogContent
+        className="sm:max-w-4xl p-0 gap-0 max-h-[90vh] overflow-y-auto"
+        showCloseButton={false}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
@@ -399,7 +401,9 @@ export function VehicleRegistrationDialog({
                   ref={plateRef}
                   type="text"
                   value={plate}
-                  onChange={(e) => setPlate(e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    setPlate(transliterateMongolianPlate(e.target.value))
+                  }
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleLookup();
                   }}
@@ -467,7 +471,7 @@ export function VehicleRegistrationDialog({
                     type="text"
                     value={make}
                     onChange={(e) => setMake(e.target.value)}
-                    placeholder={t("makeRequired")}
+                    placeholder="e.g. Toyota"
                     required
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
@@ -475,7 +479,7 @@ export function VehicleRegistrationDialog({
                     type="text"
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
-                    placeholder={t("modelRequired")}
+                    placeholder="e.g. Prius"
                     required
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
@@ -483,7 +487,7 @@ export function VehicleRegistrationDialog({
                     type="number"
                     value={year}
                     onChange={(e) => setYear(e.target.value)}
-                    placeholder={t("year")}
+                    placeholder="e.g. 2020"
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                   <div>
@@ -509,21 +513,21 @@ export function VehicleRegistrationDialog({
                     type="text"
                     value={vin}
                     onChange={(e) => setVin(e.target.value)}
-                    placeholder={t("vin")}
+                    placeholder="17-character VIN"
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                   <input
                     type="text"
                     value={engine}
                     onChange={(e) => setEngine(e.target.value)}
-                    placeholder={t("engine")}
+                    placeholder="e.g. 2ZR-FE"
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                   <input
                     type="number"
                     value={odometer}
                     onChange={(e) => setOdometer(e.target.value)}
-                    placeholder={t("odometer")}
+                    placeholder="e.g. 120000"
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                 </div>
@@ -540,21 +544,27 @@ export function VehicleRegistrationDialog({
                     type="text"
                     value={custFirstName}
                     onChange={(e) => setCustFirstName(e.target.value)}
-                    placeholder={t("firstName")}
+                    placeholder="e.g. Bat"
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                   <input
                     type="text"
                     value={custLastName}
                     onChange={(e) => setCustLastName(e.target.value)}
-                    placeholder={t("lastName")}
+                    placeholder="e.g. Erdene"
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                   <input
                     type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
                     value={custPhone}
-                    onChange={(e) => setCustPhone(e.target.value)}
-                    placeholder={t("phone")}
+                    onChange={(e) =>
+                      setCustPhone(
+                        e.target.value.replace(/\D/g, "").slice(0, 8),
+                      )
+                    }
+                    placeholder="e.g. 99112233"
                     className="h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                 </div>
@@ -658,7 +668,7 @@ export function VehicleRegistrationDialog({
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

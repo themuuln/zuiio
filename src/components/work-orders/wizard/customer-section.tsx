@@ -1,16 +1,40 @@
 "use client";
 
-import { AlertTriangle, Plus, User } from "lucide-react";
+import { Plus, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useWizardContext } from "./wizard-context";
+import { QuickCreateCustomerSheet } from "./quick-create-customer-sheet";
 
 export function CustomerSection() {
   const ctx = useWizardContext();
   const t = useTranslations("workOrderWizard");
+
+  if (ctx.isRestoringFromDraft) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <User className="size-4" />
+            {t("customer")}
+            <span className="text-destructive">*</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3">
+            <Skeleton className="size-5 rounded-none" />
+            <div className="flex flex-col gap-1.5">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -18,6 +42,7 @@ export function CustomerSection() {
         <CardTitle className="text-base flex items-center gap-2">
           <User className="size-4" />
           {t("customer")}
+          <span className="text-destructive">*</span>
           {ctx.selectedCustomer && (
             <span className="ml-auto text-sm font-normal text-muted-foreground">
               {[ctx.selectedCustomer.first_name, ctx.selectedCustomer.last_name]
@@ -49,13 +74,19 @@ export function CustomerSection() {
                 )}
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => ctx.setSelectedCustomer(null)}
-            >
-              {t("change")}
-            </Button>
+            <div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  ctx.setSelectedCustomer(null);
+                  ctx.setSelectedVehicle(null);
+                }}
+              >
+                <User className="size-4" />
+                {t("change")}
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -91,76 +122,18 @@ export function CustomerSection() {
                 ))}
               </div>
             )}
-            {!ctx.showQuickCustomer && (
-              <Button
-                variant="outline"
-                onClick={() => ctx.setShowQuickCustomer(true)}
-                className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
-              >
-                <Plus className="size-4" />
-                {t("quickCreateCustomer")}
-              </Button>
-            )}
-            {ctx.showQuickCustomer && (
-              <div className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/20">
-                <p className="text-sm font-medium">{t("newCustomer")}</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <Input
-                    placeholder="First name *"
-                    value={ctx.quickFirstName}
-                    onChange={(e) => ctx.setQuickFirstName(e.target.value)}
-                    className="h-11"
-                  />
-                  <Input
-                    placeholder="Last name"
-                    value={ctx.quickLastName}
-                    onChange={(e) => ctx.setQuickLastName(e.target.value)}
-                    className="h-11"
-                  />
-                </div>
-                <Input
-                  placeholder="Phone"
-                  value={ctx.quickPhone}
-                  onChange={(e) => ctx.setQuickPhone(e.target.value)}
-                  className="h-11"
-                />
-                {ctx.customerCreateConflict ? (
-                  <div className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/20 dark:text-amber-300">
-                    <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
-                    <span>{ctx.customerCreateError}</span>
-                  </div>
-                ) : ctx.customerCreateError ? (
-                  <p className="text-sm text-destructive">
-                    {ctx.customerCreateError}
-                  </p>
-                ) : null}
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      ctx.setShowQuickCustomer(false);
-                      ctx.setQuickFirstName("");
-                      ctx.setQuickLastName("");
-                      ctx.setQuickPhone("");
-                    }}
-                  >
-                    {t("cancel")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled={
-                      ctx.creatingCustomer || !ctx.quickFirstName.trim()
-                    }
-                    onClick={ctx.handleQuickCreateCustomer}
-                  >
-                    {ctx.creatingCustomer
-                      ? t("creating")
-                      : t("createAndSelectCustomer")}
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Button
+              variant="outline"
+              onClick={() => ctx.setShowQuickCustomer(true)}
+              className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
+            >
+              <Plus className="size-4" />
+              {t("quickCreateCustomer")}
+            </Button>
+            <QuickCreateCustomerSheet
+              open={ctx.showQuickCustomer}
+              onOpenChange={ctx.setShowQuickCustomer}
+            />
           </div>
         )}
       </CardContent>

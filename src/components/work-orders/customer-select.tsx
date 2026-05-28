@@ -6,6 +6,7 @@ import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
 import type { Customer } from "@/lib/types";
 
 interface CustomerSelectProps {
@@ -39,9 +40,7 @@ export function CustomerSelect({
       return;
     }
     setSearching(true);
-    fetch(
-      `/api/organizations/${orgId}/customers?q=${encodeURIComponent(q)}`,
-    )
+    fetch(`/api/organizations/${orgId}/customers?q=${encodeURIComponent(q)}`)
       .then((r) => r.json())
       .then((d) => setCustomers(d.data ?? []))
       .catch(() => setCustomers([]))
@@ -173,27 +172,62 @@ export function CustomerSelect({
               </Button>
             )}
             {showQuick && (
-              <div className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/20">
+              <form
+                className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/20"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleQuickCreate();
+                }}
+              >
                 <p className="text-sm font-medium">New Customer</p>
                 <div className="grid grid-cols-2 gap-3">
                   <Input
-                    placeholder="First name *"
+                    placeholder="e.g. Bat"
                     value={quickFirstName}
                     onChange={(e) => setQuickFirstName(e.target.value)}
                     className="h-11"
+                    {...inputProps("firstName")}
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        // Focus last name
+                        const form = e.currentTarget.closest("form");
+                        if (form) {
+                          const inputs = form.querySelectorAll("input");
+                          inputs[1]?.focus();
+                        }
+                      }
+                    }}
                   />
                   <Input
-                    placeholder="Last name"
+                    placeholder="e.g. Erdene"
                     value={quickLastName}
                     onChange={(e) => setQuickLastName(e.target.value)}
                     className="h-11"
+                    {...inputProps("lastName")}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        // Focus phone
+                        const form = e.currentTarget.closest("form");
+                        if (form) {
+                          const inputs = form.querySelectorAll("input");
+                          inputs[2]?.focus();
+                        }
+                      }
+                    }}
                   />
                 </div>
                 <Input
-                  placeholder="Phone"
+                  placeholder="e.g. 99112233"
+                  type="tel"
                   value={quickPhone}
-                  onChange={(e) => setQuickPhone(e.target.value)}
+                  onChange={(e) =>
+                    setQuickPhone(formatMongolianPhone(e.target.value))
+                  }
                   className="h-11"
+                  {...inputProps("phone")}
                 />
                 {createError && createError.includes("belongs to") ? (
                   <div className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/20 dark:text-amber-300">
@@ -205,6 +239,7 @@ export function CustomerSelect({
                 ) : null}
                 <div className="flex gap-2">
                   <Button
+                    type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => {
@@ -215,14 +250,14 @@ export function CustomerSelect({
                     Cancel
                   </Button>
                   <Button
+                    type="submit"
                     size="sm"
                     disabled={creating || !quickFirstName.trim()}
-                    onClick={handleQuickCreate}
                   >
                     {creating ? "Creating..." : "Create & Select"}
                   </Button>
                 </div>
-              </div>
+              </form>
             )}
           </div>
         )}

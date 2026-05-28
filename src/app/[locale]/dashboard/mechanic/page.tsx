@@ -444,7 +444,7 @@ function MechanicDashboard({
   const t = useTranslations();
   const now = useClientNow();
   const { push } = useRouter();
-  const { registerTab, unregisterTab, setOpen } = useRightSidebar();
+  const { registerTab, unregisterTab } = useRightSidebar();
   const [eod, setEod] = useState<MechanicEodSummary | null>(null);
   const [assignedWos, setAssignedWos] = useState<WorkOrderRow[]>([]);
   const [trend, setTrend] = useState<{
@@ -534,7 +534,6 @@ function MechanicDashboard({
   useEffect(() => {
     registerTab("stats", "Stats", null, <BarChart3 className="size-4" />);
     registerTab("jobs", "Jobs", null, <Wrench className="size-4" />);
-    setOpen(true);
     return () => {
       unregisterTab("stats");
       unregisterTab("jobs");

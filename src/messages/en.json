@@ -22,6 +22,7 @@
     "saving": "Saving...",
     "add": "Add",
     "createNew": "Create New",
+    "quickCreate": "Quick Create",
     "all": "All",
     "total": "Total",
     "refresh": "Refresh",
@@ -602,7 +603,6 @@
     "descriptionOrNotes": "Description / Notes (optional)",
     "grandTotal": "Grand Total",
     "createWorkOrder": "Create Work Order — {total}",
-    "createDisabledHint": "Select a customer and vehicle to enable creation",
     "lastSold": "Last sold: {price}",
     "discount": "Disc ₮",
     "addPart": "Add Part",
@@ -1255,7 +1255,9 @@
     "unnamedCompany": "Unnamed company",
     "unnamedVehicle": "Unnamed vehicle",
     "cancel": "Cancel",
-    "createVehicle": "Create vehicle"
+    "createVehicle": "Create vehicle",
+    "plateRequired": "Plate number is required",
+    "plateInvalid": "Must be 4 digits + 3 letters (e.g. 4444УНА)"
   },
   "vehicleModels": {
     "title": "Vehicle Models",

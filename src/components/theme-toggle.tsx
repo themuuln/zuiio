@@ -6,11 +6,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export default function ThemeToggle({
-  collapsed,
-}: {
-  collapsed?: boolean;
-}) {
+export default function ThemeToggle({ collapsed }: { collapsed?: boolean }) {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 

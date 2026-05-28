@@ -177,7 +177,7 @@ export default function WorkOrdersPage() {
     }
   }, [orders]);
 
-  const { registerTab, setOpen } = useRightSidebar();
+  const { registerTab } = useRightSidebar();
 
   const updateStatus = useUpdateWorkOrderStatus(org?.orgId);
 
@@ -259,8 +259,7 @@ export default function WorkOrdersPage() {
       />,
       <Activity className="size-4" />,
     );
-    setOpen(true);
-  }, [registerTab, setOpen, statusCounts, todayWOs]);
+  }, [registerTab, statusCounts, todayWOs]);
 
   const handleSearch = (value: string) => {
     setSearch(value);

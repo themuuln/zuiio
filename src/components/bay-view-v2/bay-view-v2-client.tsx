@@ -174,7 +174,7 @@ export function BayViewV2Client() {
     totalCost: number;
   } | null>(null);
 
-  const { registerTab, unregisterTab, setOpen } = useRightSidebar();
+  const { registerTab, unregisterTab } = useRightSidebar();
   const [toast, setToast] = useState<ToastState | null>(null);
   const bayCountValueRef = useRef(data?.bayCount ?? 0);
 
@@ -528,7 +528,6 @@ export function BayViewV2Client() {
       <MechanicPanel mechanics={data.mechanics} />,
       <Users className="size-4" />,
     );
-    setOpen(true);
     return () => {
       unregisterTab("queue");
       unregisterTab("mechanics");
@@ -1105,6 +1104,29 @@ export function BayViewV2Client() {
       <MechanicRegistrationDialog
         open={showMechanicReg}
         onOpenChange={setShowMechanicReg}
+        onRegistered={async (email, fullName, phone) => {
+          setShowMechanicReg(false);
+          try {
+            const { registerMechanic } = await import(
+              "@/lib/services/bay-view-actions"
+            );
+            await registerMechanic({ email, fullName, phone });
+            // Refetch to pick up the new mechanic with full shape
+            void fetchData(false);
+            setToast({
+              message: t("mechanicRegistered", { name: fullName }),
+              variant: "info",
+            });
+          } catch (err) {
+            setToast({
+              message:
+                err instanceof Error
+                  ? err.message
+                  : "Failed to register mechanic",
+              variant: "error",
+            });
+          }
+        }}
       />
 
       {toast && (

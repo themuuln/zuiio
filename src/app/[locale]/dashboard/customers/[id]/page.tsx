@@ -145,7 +145,6 @@ export default function CustomerDetailPage() {
   useEffect(() => {
     if (!customer) return;
 
-    sidebar.setOpen(true);
     sidebar.setActiveTab("contact");
 
     sidebar.registerTab(
@@ -184,7 +183,6 @@ export default function CustomerDetailPage() {
     return () => {
       sidebar.unregisterTab("contact");
       sidebar.unregisterTab("vehicles");
-      sidebar.setOpen(false);
     };
   }, [customer]);
 

@@ -18,11 +18,20 @@ export interface PartLine {
 interface PartLinesProps {
   lines: PartLine[];
   onAdd: () => void;
-  onUpdate: (idx: number, field: keyof PartLine, value: string | number) => void;
+  onUpdate: (
+    idx: number,
+    field: keyof PartLine,
+    value: string | number,
+  ) => void;
   onRemove: (idx: number) => void;
 }
 
-export function PartLines({ lines, onAdd, onUpdate, onRemove }: PartLinesProps) {
+export function PartLines({
+  lines,
+  onAdd,
+  onUpdate,
+  onRemove,
+}: PartLinesProps) {
   return (
     <Card>
       <CardHeader>
@@ -46,13 +55,13 @@ export function PartLines({ lines, onAdd, onUpdate, onRemove }: PartLinesProps) 
                   className="flex items-center gap-2 p-3 hover:bg-muted/20"
                 >
                   <Input
-                    placeholder="Part name"
+                    placeholder="e.g. Oil filter"
                     value={part.part_name}
                     onChange={(e) => onUpdate(idx, "part_name", e.target.value)}
                     className="flex-1 h-10 min-w-[120px]"
                   />
                   <Input
-                    placeholder="Part #"
+                    placeholder="e.g. OF-101"
                     value={part.part_number}
                     onChange={(e) =>
                       onUpdate(idx, "part_number", e.target.value)

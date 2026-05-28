@@ -13,7 +13,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Clock } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   type LastVisitInfo,
@@ -77,6 +77,7 @@ interface WizardState {
   orgId: string | null;
   loading: boolean;
   saving: boolean;
+  isRestoringFromDraft: boolean;
 
   customerSearch: string;
   customers: Customer[];
@@ -143,6 +144,7 @@ interface WizardActions {
   setQuickPhone: (v: string) => void;
   handleSelectCustomer: (c: Customer) => void;
   handleQuickCreateCustomer: () => Promise<void>;
+  resetQuickCustomerForm: () => void;
 
   setVehicleSearch: (v: string) => void;
   setSelectedVehicle: (v: Vehicle | null) => void;
@@ -153,6 +155,7 @@ interface WizardActions {
   setQuickModel: (v: string) => void;
   setQuickYear: (v: string) => void;
   handleQuickCreateVehicle: () => Promise<void>;
+  resetQuickVehicleForm: () => void;
 
   setServiceSearch: (v: string) => void;
   addService: (svc: ServiceCatalog) => void;
@@ -225,7 +228,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [quickPlate, setQuickPlate] = useState("");
   const [quickMake, setQuickMake] = useState("");
   const [quickModel, setQuickModel] = useState("");
-  const [quickYear, setQuickYear] = useState("");
+  const [quickYear, setQuickYear] = useState("20");
   const [vehicleCreateError, setVehicleCreateError] = useState<string | null>(
     null,
   );
@@ -360,6 +363,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     mechanicsLoading ||
     priceHistoryLoading;
   const saving = createWorkOrderMutation.isPending;
+  const isRestoringFromDraft =
+    draftRestored && !selectedCustomer && !selectedVehicle && !!draftData;
   const customerSearching = customerSearchFetching || plateSearchFetching;
   const creatingCustomer = createCustomerMutation.isPending;
   const vehicleSearching = vehicleSearchFetching;
@@ -619,7 +624,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       setQuickPlate("");
       setQuickMake("");
       setQuickModel("");
-      setQuickYear("");
+      setQuickYear("20");
       setShowQuickVehicle(false);
     } catch (err: unknown) {
       const message =
@@ -926,12 +931,29 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setDraftRestored(true);
   }, [draftData]);
 
+  const resetQuickCustomerForm = useCallback(() => {
+    setQuickFirstName("");
+    setQuickLastName("");
+    setQuickPhone("");
+    setCustomerCreateError(null);
+    setCustomerCreateConflict(false);
+  }, []);
+
+  const resetQuickVehicleForm = useCallback(() => {
+    setQuickPlate("");
+    setQuickMake("");
+    setQuickModel("");
+    setQuickYear("20");
+    setVehicleCreateError(null);
+  }, []);
+
   const customerRef = useRef<HTMLDivElement>(null);
 
   const value: WizardContextType = {
     orgId,
     loading,
     saving,
+    isRestoringFromDraft,
     customerSearch,
     customers,
     selectedCustomer,
@@ -979,16 +1001,13 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setCustomerSearch,
     setSelectedCustomer: (c) => {
       setSelectedCustomer(c);
-      if (!c) {
-        setVehicles([]);
-        setSelectedVehicle(null);
-        setLastVisitData(null);
-        setShowLastVisitSuggestions(false);
-      }
     },
     setShowQuickCustomer: (v) => {
       setShowQuickCustomer(v);
       if (!v) {
+        setQuickFirstName("");
+        setQuickLastName("");
+        setQuickPhone("");
         setCustomerCreateError(null);
         setCustomerCreateConflict(false);
       }
@@ -998,16 +1017,27 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setQuickPhone,
     handleSelectCustomer,
     handleQuickCreateCustomer,
+    resetQuickCustomerForm,
 
     setVehicleSearch,
     setSelectedVehicle,
     handleSelectVehicle,
-    setShowQuickVehicle,
+    setShowQuickVehicle: (v) => {
+      setShowQuickVehicle(v);
+      if (!v) {
+        setQuickPlate("");
+        setQuickMake("");
+        setQuickModel("");
+        setQuickYear("20");
+        setVehicleCreateError(null);
+      }
+    },
     setQuickPlate,
     setQuickMake,
     setQuickModel,
     setQuickYear,
     handleQuickCreateVehicle,
+    resetQuickVehicleForm,
 
     setServiceSearch,
     addService,
@@ -1038,10 +1068,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   return (
     <>
       {showDraftBanner && draftData && (
-        <div className="max-w-3xl mx-auto mb-4 px-1">
-          <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
-            <Clock className="size-4 shrink-0 text-amber-600" />
-            <p className="flex-1 text-amber-800">
+        <div className="mb-4 px-1">
+          <div className="flex items-center gap-3 rounded-sm border bg-muted/50 px-4 py-3">
+            <FileText className="size-4 shrink-0 text-muted-foreground" />
+            <p className="flex-1 text-sm text-muted-foreground">
               Unsaved draft found from{" "}
               {format(draftData.savedAt, "MMM d, HH:mm")}.
             </p>

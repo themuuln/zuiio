@@ -91,7 +91,10 @@ export function BayViewClient() {
 
   const setToast = useCallback(
     (
-      value: ToastState | null | ((prev: ToastState | null) => ToastState | null),
+      value:
+        | ToastState
+        | null
+        | ((prev: ToastState | null) => ToastState | null),
     ) => {
       if (typeof value === "function") return;
       if (value) {
@@ -234,7 +237,8 @@ export function BayViewClient() {
         }
       })
       .catch((err) => {
-        if (!abort.signal.aborted) console.error("Failed to fetch profile:", err);
+        if (!abort.signal.aborted)
+          console.error("Failed to fetch profile:", err);
       });
 
     refreshIntervalRef.current = setInterval(() => fetchData(false), 30000);
@@ -296,9 +300,7 @@ export function BayViewClient() {
     }
   }
 
-  function handleQueueItemClick(
-    wo: WorkOrder & { vehicle: Vehicle | null },
-  ) {
+  function handleQueueItemClick(wo: WorkOrder & { vehicle: Vehicle | null }) {
     setAssignWo(wo);
   }
 
@@ -428,7 +430,9 @@ export function BayViewClient() {
             const invJson = await invRes.json();
             if (invJson.data) {
               invoiceId = invJson.data.id;
-              invoiceTotal = Number(invJson.data.total ?? pickupCompleteData.totalCost);
+              invoiceTotal = Number(
+                invJson.data.total ?? pickupCompleteData.totalCost,
+              );
               invoiceStatus = invJson.data.status ?? "pending";
             }
           }
@@ -447,15 +451,24 @@ export function BayViewClient() {
         invoiceId,
         invoiceTotal,
         invoiceStatus,
-        recommendations: recs.map((r: { service_name: string; next_due_date: string | null; next_due_km: number | null; priority: string }) => ({
-          serviceName: r.service_name,
-          nextDueDate: r.next_due_date,
-          nextDueKm: r.next_due_km,
-          priority: r.priority as "standard" | "important" | "urgent",
-        })),
+        recommendations: recs.map(
+          (r: {
+            service_name: string;
+            next_due_date: string | null;
+            next_due_km: number | null;
+            priority: string;
+          }) => ({
+            serviceName: r.service_name,
+            nextDueDate: r.next_due_date,
+            nextDueKm: r.next_due_km,
+            priority: r.priority as "standard" | "important" | "urgent",
+          }),
+        ),
       });
     } catch (err) {
-      toast.error(`Failed to complete: ${err instanceof Error ? err.message : "Error"}`);
+      toast.error(
+        `Failed to complete: ${err instanceof Error ? err.message : "Error"}`,
+      );
     }
   }
 
@@ -559,7 +572,9 @@ export function BayViewClient() {
               }
               fetchData(true);
             } catch (err) {
-              toast.error(`Failed: ${err instanceof Error ? err.message : "error"}`);
+              toast.error(
+                `Failed: ${err instanceof Error ? err.message : "error"}`,
+              );
             } finally {
               setSeeding(false);
             }
@@ -646,7 +661,9 @@ export function BayViewClient() {
               });
               toast.success("Appointment saved");
             } catch (err) {
-              toast.error(`Failed to save: ${err instanceof Error ? err.message : "Error"}`);
+              toast.error(
+                `Failed to save: ${err instanceof Error ? err.message : "Error"}`,
+              );
             }
           }}
         />
@@ -683,7 +700,26 @@ export function BayViewClient() {
         <VehicleRegistrationDialog onClose={() => setShowVehicleReg(false)} />
       )}
       {showMechanicReg && (
-        <MechanicRegistrationDialog onClose={() => setShowMechanicReg(false)} />
+        <MechanicRegistrationDialog
+          onClose={() => setShowMechanicReg(false)}
+          onRegistered={async (email, fullName, phone) => {
+            setShowMechanicReg(false);
+            try {
+              const { registerMechanic } = await import(
+                "@/lib/services/bay-view-actions"
+              );
+              await registerMechanic({ email, fullName, phone });
+              fetchData(false);
+              toast.success(t("mechanicRegistered", { name: fullName }));
+            } catch (err) {
+              toast.error(
+                err instanceof Error
+                  ? err.message
+                  : "Failed to register mechanic",
+              );
+            }
+          }}
+        />
       )}
       {showServiceLookup && (
         <VehicleRegistrationDialog

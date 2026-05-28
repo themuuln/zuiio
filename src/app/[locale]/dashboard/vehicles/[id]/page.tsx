@@ -20,11 +20,16 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { inputProps } from "@/lib/form-ux";
 import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  isValidMongolianPlate,
+  transliterateMongolianPlate,
+} from "@/lib/form-validation";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import {
   AlertDialog,
@@ -320,6 +325,14 @@ export default function VehicleDetailPage() {
 
   const handleSave = () => {
     if (!orgId || !vehicleId) return;
+    if (form.plateNumber.trim() && !isValidMongolianPlate(form.plateNumber)) {
+      toast.error(
+        t("plateInvalid", {
+          fallback: "Must be 4 digits + 3 letters (e.g. 4444УНА)",
+        }),
+      );
+      return;
+    }
     editMutation.mutate(form);
   };
 
@@ -369,7 +382,7 @@ export default function VehicleDetailPage() {
     vehicle.owners[0] ??
     null;
 
-  const { registerTab, setOpen } = useRightSidebar();
+  const { registerTab } = useRightSidebar();
 
   useEffect(() => {
     if (!vehicle) return;
@@ -412,8 +425,7 @@ export default function VehicleDetailPage() {
         />,
       );
     }
-    setOpen(true);
-  }, [vehicle, registerTab, setOpen]);
+  }, [vehicle, registerTab]);
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -791,6 +803,7 @@ function FormField({
         }
         className="h-11"
         placeholder={placeholder}
+        {...inputProps(field)}
       />
     </div>
   );
@@ -807,7 +820,9 @@ function VehicleEditForm({
   const [showMore, setShowMore] = useState(false);
 
   const setField = (field: keyof VehicleFormState, value: string) => {
-    onChange((prev) => ({ ...prev, [field]: value }));
+    const processed =
+      field === "plateNumber" ? transliterateMongolianPlate(value) : value;
+    onChange((prev) => ({ ...prev, [field]: processed }));
   };
 
   return (
@@ -827,12 +842,14 @@ function VehicleEditForm({
           field="make"
           form={form}
           onFieldChange={setField}
+          placeholder="e.g. Toyota"
         />
         <FormField
           label={t("model")}
           field="model"
           form={form}
           onFieldChange={setField}
+          placeholder="e.g. Prius"
         />
         <FormField
           label={t("year")}
@@ -840,6 +857,7 @@ function VehicleEditForm({
           form={form}
           onFieldChange={setField}
           type="number"
+          placeholder="e.g. 2020"
         />
         <FormField
           label={t("vin")}
@@ -855,6 +873,7 @@ function VehicleEditForm({
           form={form}
           onFieldChange={setField}
           type="number"
+          placeholder="e.g. 120000"
         />
       </div>
 
@@ -879,12 +898,14 @@ function VehicleEditForm({
             field="chassisNumber"
             form={form}
             onFieldChange={setField}
+            placeholder="e.g. NCP20-0123456"
           />
           <FormField
             label={t("trim")}
             field="trim"
             form={form}
             onFieldChange={setField}
+            placeholder="e.g. G Touring"
           />
           <div>
             <label
@@ -904,6 +925,7 @@ function VehicleEditForm({
             field="engine"
             form={form}
             onFieldChange={setField}
+            placeholder="e.g. 2ZR-FE, 1NZ-FE"
           />
           <div>
             <label

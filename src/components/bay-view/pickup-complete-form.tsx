@@ -1,26 +1,18 @@
 "use client";
 
-import {
-  CalendarIcon,
-  CheckCircle2,
-  Loader2,
-  MessageSquare,
-  Star,
-  X,
-} from "lucide-react";
+import { CalendarIcon, Loader2, MessageSquare, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────
@@ -119,41 +111,23 @@ export function PickupCompleteForm({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm py-4"
-      onClick={onCancel}
-      onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
-      role="dialog"
-      aria-modal="true"
-      aria-label={t("pickupCompleteTitle")}
-      tabIndex={-1}
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onCancel();
+      }}
     >
-      <Card
-        className="mx-4 w-full max-w-md shadow-2xl my-auto"
-        onClick={(e) => e.stopPropagation()}
-        role="presentation"
-      >
-        {/* Header */}
-        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
-          <CardTitle className="text-base flex items-center gap-2">
-            <CheckCircle2 className="size-4 text-emerald-500" />
+      <DialogContent className="sm:max-w-md" showCloseButton={false}>
+        <DialogHeader className="flex flex-row items-center justify-between">
+          <DialogTitle className="flex items-center gap-2">
             {t("pickupCompleteTitle")}
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-1">
-              {vehiclePlate}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={onCancel}
-            >
-              <X className="size-4" />
-            </Button>
-          </div>
-        </CardHeader>
+          </DialogTitle>
+          <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-1">
+            {vehiclePlate}
+          </span>
+        </DialogHeader>
 
-        <CardContent className="flex flex-col gap-5 pt-4">
+        <div className="flex flex-col gap-5 pt-1">
           {/* Satisfaction */}
           <div className="flex flex-col gap-2">
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
@@ -201,7 +175,12 @@ export function PickupCompleteForm({
 
           {/* Actions */}
           <div className="flex gap-2 justify-end pt-2 border-t">
-            <Button variant="outline" onClick={onCancel} size="default" disabled={saving}>
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              size="default"
+              disabled={saving}
+            >
               {t("cancel")}
             </Button>
             <Button onClick={handleSubmit} size="default" disabled={saving}>
@@ -209,8 +188,8 @@ export function PickupCompleteForm({
               {saving ? t("saving") : t("complete")}
             </Button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

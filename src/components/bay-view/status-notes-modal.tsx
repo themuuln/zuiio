@@ -1,10 +1,15 @@
 "use client";
 
-import { MessageSquare, X } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
 interface StatusNotesModalProps {
@@ -27,13 +32,7 @@ export function StatusNotesModal({
   useEffect(() => {
     // Focus the input on mount
     inputRef.current?.focus();
-    // Close on Escape
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onCancel();
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onCancel]);
+  }, []);
 
   const handleSubmit = () => {
     onConfirm(woId, newStatus, notes.trim() || undefined);
@@ -48,54 +47,42 @@ export function StatusNotesModal({
     LABEL_MAP[newStatus] ?? t("statusNotesGenericTitle", { status: newStatus });
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-      onClick={onCancel}
-      role="presentation"
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onCancel();
+      }}
     >
-      <Card
-        className="mx-4 w-full max-w-sm shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
+      <DialogContent className="sm:max-w-sm" showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="size-4 text-muted-foreground" />
             {title}
-          </CardTitle>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={onCancel}
-            aria-label={t("cancel")}
-          >
-            <X className="size-4" />
+          </DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">{t("addNotePrompt")}</p>
+        <Input
+          ref={inputRef}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder={t("notePlaceholder")}
+          className="h-11"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit();
+            }
+          }}
+        />
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" onClick={onCancel} size="default">
+            {t("cancel")}
           </Button>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">{t("addNotePrompt")}</p>
-          <Input
-            ref={inputRef}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder={t("notePlaceholder")}
-            className="h-11"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit();
-              }
-            }}
-          />
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={onCancel} size="default">
-              {t("cancel")}
-            </Button>
-            <Button onClick={handleSubmit} size="default">
-              {title}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          <Button onClick={handleSubmit} size="default">
+            {title}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

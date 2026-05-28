@@ -1,4 +1,11 @@
-import { type UseQueryResult, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  type UseQueryResult,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { toast } from "sonner";
+import { toastRetry } from "@/lib/toast-utils";
 import type { CustomerNote, CustomerNoteType } from "@/lib/types";
 import { customerNoteKeys } from "./keys";
 
@@ -38,8 +45,7 @@ export function useCreateCustomerNote(
   customerId: string | undefined,
 ) {
   const queryClient = useQueryClient();
-
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (variables: CreateNoteVariables) => {
       const url = `/api/organizations/${orgId}/customers/${customerId}/notes`;
       const res = await fetch(url, {
@@ -54,16 +60,55 @@ export function useCreateCustomerNote(
       const json = await res.json();
       return json.data as CustomerNote;
     },
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({
+        queryKey: customerNoteKeys.all(orgId ?? ""),
+      });
+      const previous = queryClient.getQueryData<CustomerNote[]>(
+        customerNoteKeys.list(orgId ?? "", customerId ?? ""),
+      );
+      if (previous) {
+        const optimistic: CustomerNote = {
+          id: `temp-${Date.now()}`,
+          organization_id: orgId ?? "",
+          customer_id: customerId ?? "",
+          content: variables.content,
+          type: variables.type ?? "general",
+          created_by: "",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          deleted_at: null,
+        };
+        queryClient.setQueryData<CustomerNote[]>(
+          customerNoteKeys.list(orgId ?? "", customerId ?? ""),
+          [...previous, optimistic],
+        );
+      }
+      return { previous };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData<CustomerNote[]>(
+          customerNoteKeys.list(orgId ?? "", customerId ?? ""),
+          context.previous,
+        );
+      }
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
+    },
     onSuccess: () => {
+      toast.success("Note created");
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({
         queryKey: customerNoteKeys.all(orgId ?? ""),
       });
     },
   });
+  return mutation;
 }
 
 /**
- * Deletes a customer note and invalidates the notes query.
+ * Deletes a customer note with optimistic UI.
  */
 export function useDeleteCustomerNote(
   orgId: string | undefined,
@@ -71,7 +116,7 @@ export function useDeleteCustomerNote(
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (noteId: string) => {
       const url = `/api/organizations/${orgId}/customers/${customerId}/notes/${noteId}`;
       const res = await fetch(url, { method: "DELETE" });
@@ -82,10 +127,38 @@ export function useDeleteCustomerNote(
       const json = await res.json();
       return json.data;
     },
+    onMutate: async (noteId) => {
+      await queryClient.cancelQueries({
+        queryKey: customerNoteKeys.all(orgId ?? ""),
+      });
+      const previous = queryClient.getQueryData<CustomerNote[]>(
+        customerNoteKeys.list(orgId ?? "", customerId ?? ""),
+      );
+      if (previous) {
+        queryClient.setQueryData<CustomerNote[]>(
+          customerNoteKeys.list(orgId ?? "", customerId ?? ""),
+          previous.filter((n) => n.id !== noteId),
+        );
+      }
+      return { previous };
+    },
+    onError: (err, noteId, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData<CustomerNote[]>(
+          customerNoteKeys.list(orgId ?? "", customerId ?? ""),
+          context.previous,
+        );
+      }
+      toastRetry(err.message, () => mutation.mutateAsync(noteId));
+    },
     onSuccess: () => {
+      toast.success("Note deleted");
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({
         queryKey: customerNoteKeys.all(orgId ?? ""),
       });
     },
   });
+  return mutation;
 }

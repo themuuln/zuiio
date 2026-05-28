@@ -305,7 +305,6 @@ export default function ServicesPage() {
       .sort((a, b) => b.default_price - a.default_price)
       .slice(0, 5);
 
-    sidebar.setOpen(true);
     sidebar.setActiveTab("categories");
 
     sidebar.registerTab(
@@ -335,7 +334,6 @@ export default function ServicesPage() {
     return () => {
       sidebar.unregisterTab("categories");
       sidebar.unregisterTab("popular");
-      sidebar.setOpen(false);
     };
   }, [services]);
 

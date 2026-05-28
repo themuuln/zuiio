@@ -20,6 +20,11 @@ import { Link, useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { customerKeys } from "@/lib/queries/keys";
 import { useQuery } from "@tanstack/react-query";
+import { inputProps } from "@/lib/form-ux";
+import {
+  isValidMongolianPlate,
+  transliterateMongolianPlate,
+} from "@/lib/form-validation";
 import type { Customer } from "@/lib/types";
 
 type VehicleFormState = {
@@ -172,6 +177,10 @@ export default function NewVehiclePage() {
     if (!form.plateNumber.trim())
       errors.plateNumber = t("plateRequired", {
         fallback: "Plate number is required",
+      });
+    else if (!isValidMongolianPlate(form.plateNumber))
+      errors.plateNumber = t("plateInvalid", {
+        fallback: "Must be 4 digits + 3 letters (e.g. 4444УНА)",
       });
     if (!form.make.trim())
       errors.make = t("makeRequired", { fallback: "Make is required" });
@@ -344,12 +353,15 @@ export default function NewVehiclePage() {
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    plateNumber: event.target.value.toUpperCase(),
+                    plateNumber: transliterateMongolianPlate(
+                      event.target.value,
+                    ),
                   }))
                 }
                 className={`h-11 font-mono ${fieldErrors.plateNumber ? "border-destructive" : ""}`}
                 placeholder="1234 UBA"
                 aria-invalid={!!fieldErrors.plateNumber}
+                {...inputProps("plate")}
               />
               {fieldErrors.plateNumber && (
                 <p className="mt-1 text-xs text-destructive">
@@ -373,6 +385,7 @@ export default function NewVehiclePage() {
                 }
                 className="h-11 font-mono"
                 placeholder="JTJHK31U..."
+                {...inputProps("vin")}
               />
             </div>
             <div>
@@ -391,6 +404,7 @@ export default function NewVehiclePage() {
                 className={`h-11 ${fieldErrors.make ? "border-destructive" : ""}`}
                 aria-invalid={!!fieldErrors.make}
                 placeholder="Toyota"
+                {...inputProps("make")}
               />
               {fieldErrors.make && (
                 <p className="mt-1 text-xs text-destructive">
@@ -414,6 +428,7 @@ export default function NewVehiclePage() {
                 className={`h-11 ${fieldErrors.model ? "border-destructive" : ""}`}
                 aria-invalid={!!fieldErrors.model}
                 placeholder="Prius"
+                {...inputProps("model")}
               />
               {fieldErrors.model && (
                 <p className="mt-1 text-xs text-destructive">
@@ -437,6 +452,7 @@ export default function NewVehiclePage() {
                 }
                 className="h-11"
                 placeholder="2020"
+                {...inputProps("year")}
               />
             </div>
             <div>
@@ -458,6 +474,7 @@ export default function NewVehiclePage() {
                 }
                 className="h-11"
                 placeholder="120000"
+                {...inputProps("odometer")}
               />
             </div>
             <div>
@@ -474,6 +491,7 @@ export default function NewVehiclePage() {
                   }))
                 }
                 className="h-11"
+                {...inputProps("trim")}
               />
             </div>
             <div>
@@ -505,6 +523,7 @@ export default function NewVehiclePage() {
                   }))
                 }
                 className="h-11"
+                {...inputProps("engine")}
               />
             </div>
             <div>
@@ -524,6 +543,7 @@ export default function NewVehiclePage() {
                   }))
                 }
                 className="h-11"
+                {...inputProps("chassis")}
               />
             </div>
             <div>

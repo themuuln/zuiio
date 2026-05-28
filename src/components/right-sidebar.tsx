@@ -10,16 +10,19 @@ import { cn } from "@/lib/utils";
 function RightSidebarRail({
   activeTab,
   tabs,
+  content,
   onSelect,
 }: {
   activeTab: string;
   tabs: SidebarTab[];
+  content: Record<string, ReactNode>;
   onSelect: (value: string) => void;
 }) {
+  const validTabs = tabs.filter((tab) => content[tab.value] != null);
   return (
     <div className="flex h-full w-12 shrink-0 flex-col items-center gap-2 border-l border-border/60 bg-background py-3">
       <div className="flex flex-1 flex-col items-center gap-2">
-        {tabs.map((tab) => (
+        {validTabs.map((tab) => (
           <Button
             key={tab.value}
             variant="ghost"
@@ -53,6 +56,8 @@ function RightSidebarPanel({
   content: Record<string, ReactNode>;
   onSelect: (value: string) => void;
 }) {
+  const validTabs = tabs.filter((tab) => content[tab.value] != null);
+
   return (
     <div data-no-dnd="true" className="flex min-h-0 flex-1 flex-col">
       <Tabs
@@ -60,25 +65,27 @@ function RightSidebarPanel({
         onValueChange={onSelect}
         className="min-h-0 flex-1"
       >
-        <TabsList
-          variant="line"
-          className="sticky top-0 z-10 mt-3 h-auto w-full justify-start gap-1 rounded-2xl bg-background p-1"
-        >
-          {tabs.map((tab) => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              title={tab.label}
-              className="min-w-0 flex-1 rounded-xl px-1.5 py-1 text-xs leading-none"
-            >
-              <span className="truncate">{tab.label}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        {validTabs.length > 0 && (
+          <TabsList
+            variant="line"
+            className="sticky top-0 z-10 mt-3 h-auto w-full justify-start gap-1 rounded-2xl bg-background p-1"
+          >
+            {validTabs.map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                title={tab.label}
+                className="min-w-0 flex-1 rounded-xl px-1.5 py-1 text-xs leading-none"
+              >
+                <span className="truncate">{tab.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        )}
 
         <ScrollArea className="min-h-0 flex-1">
           <div className="flex h-full min-h-0 flex-col p-3">
-            {tabs.map((tab) => (
+            {validTabs.map((tab) => (
               <TabsContent
                 key={tab.value}
                 value={tab.value}
@@ -109,6 +116,7 @@ export function RightSidebar() {
       <RightSidebarRail
         activeTab={state.activeTab}
         tabs={state.tabs}
+        content={state.content}
         onSelect={handleSelect}
       />
       {/* Animated panel: always mounted, width transitions smoothly */}

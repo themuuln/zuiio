@@ -16,7 +16,9 @@ export async function getVehicleModels(
     async () => {
       let query = supabase
         .from("vehicle_models")
-        .select("id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_at, updated_at, deleted_at")
+        .select(
+          "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_at, updated_at, deleted_at",
+        )
         .eq("organization_id", orgId)
         .is("deleted_at", null)
         .order("make")
@@ -27,7 +29,8 @@ export async function getVehicleModels(
       }
 
       const { data, error } = await query;
-      if (error) throw new Error(error.message ?? "Failed to fetch vehicle models");
+      if (error)
+        throw new Error(error.message ?? "Failed to fetch vehicle models");
       return (data ?? []) as unknown as VehicleModel[];
     },
     {
@@ -45,7 +48,9 @@ export async function getVehicleModel(id: string): Promise<VehicleModel> {
     async () => {
       const { data, error } = await supabase
         .from("vehicle_models")
-        .select("id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at, deleted_at")
+        .select(
+          "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at, deleted_at",
+        )
         .eq("id", id)
         .is("deleted_at", null)
         .single();
@@ -118,7 +123,9 @@ export async function createVehicleModel(
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data)
@@ -163,7 +170,9 @@ export async function updateVehicleModel(
     .from("vehicle_models")
     .update(updates)
     .eq("id", id)
-    .select("id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data) throw new NotFoundError("Vehicle model not found");
@@ -190,4 +199,43 @@ export async function deleteVehicleModel(
     throw new NotFoundError("Vehicle model not found or already deleted");
 
   revalidateTag(cacheTags.vehicleModels(orgId), "max");
+}
+
+/**
+ * Ensures a make+model pair exists in the vehicle_models catalog.
+ * Creates it if missing. Safe to call on every vehicle creation.
+ */
+export async function ensureVehicleModel(
+  orgId: string,
+  make: string,
+  model: string,
+): Promise<void> {
+  const normalizedMake = make.trim();
+  const normalizedModel = model.trim();
+  if (!normalizedMake || !normalizedModel) return;
+
+  const supabase = await createClient();
+
+  const { count, error } = await supabase
+    .from("vehicle_models")
+    .select("*", { count: "exact", head: true })
+    .eq("organization_id", orgId)
+    .eq("make", normalizedMake)
+    .eq("model", normalizedModel)
+    .is("deleted_at", null);
+
+  if (error) return;
+
+  if (count === 0) {
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    await supabase.from("vehicle_models").insert({
+      organization_id: orgId,
+      make: normalizedMake,
+      model: normalizedModel,
+      is_active: true,
+      created_by: userId,
+      updated_by: userId,
+    });
+    revalidateTag(cacheTags.vehicleModels(orgId), "max");
+  }
 }

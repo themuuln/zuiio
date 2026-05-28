@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
+import { inputProps, formatMongolianPhone } from "@/lib/form-ux";
 import { useRouter } from "@/lib/i18n/navigation";
 import { customerKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -365,11 +366,13 @@ export function NewCustomerDialog({
                     onChange={(event) =>
                       setForm((current) => ({
                         ...current,
-                        phone: event.target.value,
+                        phone: formatMongolianPhone(event.target.value),
                       }))
                     }
                     className="h-11"
                     placeholder="99112233"
+                    {...inputProps("phone")}
+                    type="tel"
                   />
                 </div>
                 <div>

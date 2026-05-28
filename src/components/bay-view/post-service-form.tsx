@@ -8,18 +8,18 @@ import {
   Gauge,
   Loader2,
   MessageSquare,
-  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -162,10 +162,7 @@ export function PostServiceForm({
   );
   const hasEntries = entries.length > 0;
 
-  function updateEntry(
-    index: number,
-    updates: Partial<ServiceFormEntry>,
-  ) {
+  function updateEntry(index: number, updates: Partial<ServiceFormEntry>) {
     setEntries((prev) =>
       prev.map((e, i) => (i === index ? { ...e, ...updates } : e)),
     );
@@ -204,46 +201,35 @@ export function PostServiceForm({
   const isComplete = newStatus === "Completed";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm py-4 animate-in fade-in duration-200"
-      onClick={onCancel}
-      role="presentation"
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onCancel();
+      }}
     >
-      <Card
-        className="mx-4 w-full max-w-lg shadow-2xl my-auto animate-in fade-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
-        tabIndex={-1}
+      <DialogContent
+        className="sm:max-w-lg max-h-[90vh] overflow-y-auto"
+        showCloseButton={false}
       >
-        {/* Header */}
-        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
-          <CardTitle className="text-base flex items-center gap-2">
+        <DialogHeader className="flex flex-row items-center justify-between">
+          <DialogTitle className="flex items-center gap-2">
             <Car className="size-4 text-muted-foreground" />
-            {isComplete
-              ? t("postServiceCompleteTitle")
-              : t("postServiceTitle")}
-          </CardTitle>
+            {isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
+          </DialogTitle>
           <div className="flex items-center gap-2">
             <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-1">
               {vehiclePlate}
             </span>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={onCancel}
-              aria-label={t("cancel")}
-            >
-              <X className="size-4" />
-            </Button>
           </div>
-        </CardHeader>
+        </DialogHeader>
 
-        <CardContent className="flex flex-col gap-4 pt-4 max-h-[70vh] overflow-y-auto">
+        <div className="flex flex-col gap-4">
           {/* Odometer */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="post-service-odometer" className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+            <label
+              htmlFor="post-service-odometer"
+              className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5"
+            >
               <Gauge className="size-3.5" />
               {t("postServiceOdometer")}
             </label>
@@ -271,9 +257,7 @@ export function PostServiceForm({
               <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
                 <MessageSquare className="size-3.5" />
                 {t("postServiceServicesTitle")}
-                <Badge variant="secondary">
-                  {entries.length}
-                </Badge>
+                <Badge variant="secondary">{entries.length}</Badge>
               </span>
               <Button
                 variant="ghost"
@@ -310,7 +294,10 @@ export function PostServiceForm({
 
           {/* Mechanic notes */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="mechanic-notes" className="text-xs font-semibold text-muted-foreground">
+            <label
+              htmlFor="mechanic-notes"
+              className="text-xs font-semibold text-muted-foreground"
+            >
               Mechanic Notes
             </label>
             <Input
@@ -326,25 +313,32 @@ export function PostServiceForm({
           {error && (
             <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
               <AlertTriangle className="mt-0.5 size-4 shrink-0 text-red-500" />
-              <p className="text-xs text-red-700 dark:text-red-400">
-                {error}
-              </p>
+              <p className="text-xs text-red-700 dark:text-red-400">{error}</p>
             </div>
           )}
 
           {/* Actions */}
           <div className="flex gap-2 justify-end pt-2 border-t">
-            <Button variant="outline" onClick={onCancel} size="default" disabled={saving}>
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              size="default"
+              disabled={saving}
+            >
               {t("cancel")}
             </Button>
             <Button onClick={handleSubmit} size="default" disabled={saving}>
               {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
-              {saving ? t("postServiceSaving") : isComplete ? t("complete") : t("markReady")}
+              {saving
+                ? t("postServiceSaving")
+                : isComplete
+                  ? t("complete")
+                  : t("markReady")}
             </Button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -388,9 +382,7 @@ function ServiceCard({
           </span>
           {/* Priority badge */}
           {entry.priority !== "standard" && (
-            <Badge variant="outline">
-              {entry.priority}
-            </Badge>
+            <Badge variant="outline">{entry.priority}</Badge>
           )}
         </div>
         {entry.expanded ? (
@@ -405,7 +397,10 @@ function ServiceCard({
           {/* Intervals row */}
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <label htmlFor={`post-service-interval-months-${entry.workOrderServiceId}`} className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
+              <label
+                htmlFor={`post-service-interval-months-${entry.workOrderServiceId}`}
+                className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider"
+              >
                 {t("postServiceIntervalMonths")}
               </label>
               <Input
@@ -425,7 +420,10 @@ function ServiceCard({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label htmlFor={`post-service-interval-km-${entry.workOrderServiceId}`} className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
+              <label
+                htmlFor={`post-service-interval-km-${entry.workOrderServiceId}`}
+                className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider"
+              >
                 {t("postServiceIntervalKm")}
               </label>
               <Input
@@ -459,16 +457,25 @@ function ServiceCard({
           {/* Priority + Notes row */}
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <label htmlFor={`post-service-priority-${entry.workOrderServiceId}`} className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
+              <label
+                htmlFor={`post-service-priority-${entry.workOrderServiceId}`}
+                className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider"
+              >
                 {t("postServicePriority")}
               </label>
               <Select
                 value={entry.priority}
                 onValueChange={(val) => {
-                  if (val) onChange({ priority: val as "standard" | "important" | "urgent" });
+                  if (val)
+                    onChange({
+                      priority: val as "standard" | "important" | "urgent",
+                    });
                 }}
               >
-                <SelectTrigger id={`post-service-priority-${entry.workOrderServiceId}`} className="h-8 text-xs">
+                <SelectTrigger
+                  id={`post-service-priority-${entry.workOrderServiceId}`}
+                  className="h-8 text-xs"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -485,7 +492,10 @@ function ServiceCard({
               </Select>
             </div>
             <div className="flex flex-col gap-1">
-              <label htmlFor={`entry-notes-${entry.workOrderServiceId}`} className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
+              <label
+                htmlFor={`entry-notes-${entry.workOrderServiceId}`}
+                className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider"
+              >
                 Notes
               </label>
               <Input

@@ -13,6 +13,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatMNT } from "@/lib/utils";
+import { transliterateMongolianPlate } from "@/lib/form-validation";
 
 import {
   Dialog,
@@ -535,7 +536,9 @@ export function VehicleRegistrationDialog({
                 <Input
                   ref={plateRef}
                   value={plate}
-                  onChange={(e) => setPlate(e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    setPlate(transliterateMongolianPlate(e.target.value))
+                  }
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleLookup();
                   }}
@@ -599,20 +602,20 @@ export function VehicleRegistrationDialog({
                   <Input
                     value={make}
                     onChange={(e) => setMake(e.target.value)}
-                    placeholder={t("makeRequired")}
+                    placeholder="e.g. Toyota"
                     required
                   />
                   <Input
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
-                    placeholder={t("modelRequired")}
+                    placeholder="e.g. Prius"
                     required
                   />
                   <Input
                     type="number"
                     value={year}
                     onChange={(e) => setYear(e.target.value)}
-                    placeholder={t("year")}
+                    placeholder="e.g. 2020"
                   />
                   <div>
                     <Label className="mb-1 block text-xs font-medium text-muted-foreground">
@@ -635,18 +638,18 @@ export function VehicleRegistrationDialog({
                   <Input
                     value={vin}
                     onChange={(e) => setVin(e.target.value)}
-                    placeholder={t("vin")}
+                    placeholder="17-character VIN"
                   />
                   <Input
                     value={engine}
                     onChange={(e) => setEngine(e.target.value)}
-                    placeholder={t("engine")}
+                    placeholder="e.g. 2ZR-FE"
                   />
                   <Input
                     type="number"
                     value={odometer}
                     onChange={(e) => setOdometer(e.target.value)}
-                    placeholder={t("odometer")}
+                    placeholder="e.g. 120000"
                   />
                 </div>
               </div>
@@ -660,18 +663,24 @@ export function VehicleRegistrationDialog({
                   <Input
                     value={custFirstName}
                     onChange={(e) => setCustFirstName(e.target.value)}
-                    placeholder={t("firstName")}
+                    placeholder="e.g. Bat"
                   />
                   <Input
                     value={custLastName}
                     onChange={(e) => setCustLastName(e.target.value)}
-                    placeholder={t("lastName")}
+                    placeholder="e.g. Erdene"
                   />
                   <Input
                     type="tel"
                     value={custPhone}
-                    onChange={(e) => setCustPhone(e.target.value)}
-                    placeholder={t("phone")}
+                    onChange={(e) =>
+                      setCustPhone(
+                        e.target.value.replace(/\D/g, "").slice(0, 8),
+                      )
+                    }
+                    placeholder="e.g. 99112233"
+                    inputMode="tel"
+                    autoComplete="tel"
                   />
                 </div>
               </div>

@@ -28,7 +28,7 @@ export default function InventoryPage() {
   const t = useTranslations("inventory");
   const { data: org, isLoading: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId ?? null;
-  const { registerTab, setOpen } = useRightSidebar();
+  const { registerTab } = useRightSidebar();
   const [tab, setTab] = useState<Tab>("parts");
   const [search, setSearch] = useState("");
   const [movementFilter, setMovementFilter] = useState("all");
@@ -88,9 +88,7 @@ export default function InventoryPage() {
       />,
       <Package className="size-4" />,
     );
-
-    setOpen(true);
-  }, [parts, balanceMap, thresholdMap, registerTab, setOpen]);
+  }, [parts, balanceMap, thresholdMap, registerTab]);
 
   // ── Loading state ──────────────────────────────────
   if (orgLoading && !orgId) {

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { toastRetry } from "@/lib/toast-utils";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
 import { mechanicKeys, serviceKeys, workOrderKeys } from "./keys";
 
@@ -148,7 +149,7 @@ export function usePartPriceHistory(
 export function useUpdateWorkOrderStatus(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({
       woId,
       status,
@@ -171,9 +172,18 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
       return json.data as WorkOrderDetail;
     },
     onMutate: async (variables) => {
-      await queryClient.cancelQueries({
-        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
-      });
+      const detailKey = workOrderKeys.detail(orgId ?? "", variables.woId);
+      await queryClient.cancelQueries({ queryKey: detailKey });
+      const previous = queryClient.getQueryData<WorkOrderDetail>(detailKey);
+      if (previous) {
+        queryClient.setQueryData<WorkOrderDetail>(detailKey, {
+          ...previous,
+          status: variables.status,
+          notes: variables.notes ?? previous.notes,
+          updated_at: new Date().toISOString(),
+        });
+      }
+      return { previous };
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
@@ -184,16 +194,23 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
       });
       toast.success(`Status changed to ${variables.status}`);
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err: Error, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          workOrderKeys.detail(orgId ?? "", variables.woId),
+          context.previous,
+        );
+      }
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
     },
   });
+  return mutation;
 }
 
 export function useAssignMechanic(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({
       woId,
       mechanicId,
@@ -214,9 +231,17 @@ export function useAssignMechanic(orgId: string | undefined) {
       return json.data as WorkOrderDetail;
     },
     onMutate: async (variables) => {
-      await queryClient.cancelQueries({
-        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
-      });
+      const detailKey = workOrderKeys.detail(orgId ?? "", variables.woId);
+      await queryClient.cancelQueries({ queryKey: detailKey });
+      const previous = queryClient.getQueryData<WorkOrderDetail>(detailKey);
+      if (previous) {
+        queryClient.setQueryData<WorkOrderDetail>(detailKey, {
+          ...previous,
+          mechanic_id: variables.mechanicId,
+          updated_at: new Date().toISOString(),
+        });
+      }
+      return { previous };
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
@@ -227,16 +252,23 @@ export function useAssignMechanic(orgId: string | undefined) {
       });
       toast.success("Mechanic assigned");
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err: Error, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          workOrderKeys.detail(orgId ?? "", variables.woId),
+          context.previous,
+        );
+      }
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
     },
   });
+  return mutation;
 }
 
 export function useAddService(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({
       woId,
       body,
@@ -276,16 +308,17 @@ export function useAddService(orgId: string | undefined) {
       });
       toast.success("Service added");
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err: Error, variables) => {
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
     },
   });
+  return mutation;
 }
 
 export function useRemoveService(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({
       woId,
       serviceId,
@@ -319,16 +352,17 @@ export function useRemoveService(orgId: string | undefined) {
       });
       toast.success("Service removed");
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err: Error, variables) => {
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
     },
   });
+  return mutation;
 }
 
 export function useAddPart(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({
       woId,
       body,
@@ -367,16 +401,17 @@ export function useAddPart(orgId: string | undefined) {
       });
       toast.success("Part added");
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err: Error, variables) => {
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
     },
   });
+  return mutation;
 }
 
 export function useRemovePart(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({ woId, partId }: { woId: string; partId: string }) => {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${woId}/parts`,
@@ -404,16 +439,17 @@ export function useRemovePart(orgId: string | undefined) {
       });
       toast.success("Part removed");
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err: Error, variables) => {
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
     },
   });
+  return mutation;
 }
 
 export function useCreateInvoice(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({ woId }: { woId: string }) => {
       const res = await fetch(`/api/organizations/${orgId}/invoices`, {
         method: "POST",
@@ -436,10 +472,11 @@ export function useCreateInvoice(orgId: string | undefined) {
         queryKey: workOrderKeys.all(orgId ?? ""),
       });
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err: Error, variables) => {
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
     },
   });
+  return mutation;
 }
 
 export function useInvoicePayments(
@@ -467,7 +504,7 @@ export function useInvoicePayments(
 
 export function useRecordPayment(orgId: string | undefined) {
   const qc = useQueryClient();
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({
       invoiceId,
       ...body
@@ -494,8 +531,9 @@ export function useRecordPayment(orgId: string | undefined) {
         queryKey: ["invoice-payments", orgId, variables.invoiceId],
       });
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err: Error, variables) => {
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
     },
   });
+  return mutation;
 }

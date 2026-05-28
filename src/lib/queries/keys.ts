@@ -5,7 +5,8 @@ export const orgKeys = {
   current: () => [...orgKeys.all, "current"] as const,
   detail: (id: string) => [...orgKeys.all, id] as const,
   settings: (id: string) => [...orgKeys.all, id, "settings"] as const,
-  subscription: (id: string) => [...orgKeys.detail(id), "subscription"] as const,
+  subscription: (id: string) =>
+    [...orgKeys.detail(id), "subscription"] as const,
 };
 
 export const customerKeys = {
@@ -90,13 +91,22 @@ export const wizardKeys = {
 export const vehicleModelKeys = {
   all: (orgId: string) => ["organizations", orgId, "vehicle-models"] as const,
   list: (orgId: string) => [...vehicleModelKeys.all(orgId), "list"] as const,
+  makes: (orgId: string) => [...vehicleModelKeys.all(orgId), "makes"] as const,
+  modelsByMake: (orgId: string, make: string) =>
+    [...vehicleModelKeys.all(orgId), "models", make] as const,
   detail: (orgId: string, id: string) =>
     [...vehicleModelKeys.all(orgId), "detail", id] as const,
 };
 
 export const customerCommunicationKeys = {
   all: (orgId: string, customerId: string) =>
-    ["organizations", orgId, "customers", customerId, "communications"] as const,
+    [
+      "organizations",
+      orgId,
+      "customers",
+      customerId,
+      "communications",
+    ] as const,
   list: (orgId: string, customerId: string) =>
     [...customerCommunicationKeys.all(orgId, customerId), "list"] as const,
 };
@@ -138,7 +148,8 @@ export const inventoryKeys = {
 };
 
 export const serviceReminderKeys = {
-  all: (orgId: string) => ["organizations", orgId, "service-reminders"] as const,
+  all: (orgId: string) =>
+    ["organizations", orgId, "service-reminders"] as const,
   list: (orgId: string, vehicleId?: string) =>
     [...serviceReminderKeys.all(orgId), "list", vehicleId ?? ""] as const,
   detail: (orgId: string, id: string) =>
@@ -158,8 +169,10 @@ export const diagnosisLabelKeys = {
 };
 
 export const attachmentKeys = {
-  all: (orgId: string, woId: string) => ["organizations", orgId, "work-orders", woId, "attachments"] as const,
-  list: (orgId: string, woId: string) => [...attachmentKeys.all(orgId, woId), "list"] as const,
+  all: (orgId: string, woId: string) =>
+    ["organizations", orgId, "work-orders", woId, "attachments"] as const,
+  list: (orgId: string, woId: string) =>
+    [...attachmentKeys.all(orgId, woId), "list"] as const,
 };
 
 export const expenseKeys = {

@@ -172,7 +172,7 @@ export function DataTable<TData, TValue>({
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={`skel-${i}`}
-            className="flex items-center gap-4 rounded-lg border border-border p-4"
+            className="flex items-center gap-4 rounded-none border border-border p-4"
           >
             {columns
               .filter((_, ci) => {
@@ -240,7 +240,7 @@ export function DataTable<TData, TValue>({
                       ?.setFilterValue(event.target.value);
                   }
                 }}
-                className="h-9 pl-9"
+                className="h-8 pl-9"
               />
             </div>
           )}
@@ -250,7 +250,7 @@ export function DataTable<TData, TValue>({
       )}
 
       {/* ── Table ──────────────────────────────────────────── */}
-      <div className="overflow-hidden rounded-lg border">
+      <div className="overflow-hidden rounded-none border">
         <Table>
           <TableHeader className="bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (

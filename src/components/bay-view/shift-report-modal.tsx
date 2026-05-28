@@ -1,18 +1,22 @@
 "use client";
 
-import { Car, Clock, DollarSign, Gauge, Loader2, Users, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Car, Clock, DollarSign, Gauge, Loader2, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import type { ShiftReport } from "@/lib/services/bay-view-service";
+import { formatMNT } from "@/lib/utils";
 
 interface Props {
   onClose: () => void;
 }
-
-import { formatMNT } from "@/lib/utils";
 
 export function ShiftReportModal({ onClose }: Props) {
   const t = useTranslations("bayView");
@@ -40,115 +44,102 @@ export function ShiftReportModal({ onClose }: Props) {
   }, []);
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: backdrop overlay for modal
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-      onClick={onClose}
-      role="presentation"
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
     >
-      <Card
-        className="mx-4 w-full max-w-md shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
+      <DialogContent className="sm:max-w-md" showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             <Gauge className="size-4 text-emerald-500" />
             {t("shiftReport")}
-          </CardTitle>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={onClose}
-            aria-label={t("close")}
-          >
-            <X className="size-4" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {loading && (
-            <div className="flex items-center justify-center py-10">
-              <Loader2 className="size-6 animate-spin text-muted-foreground" />
-            </div>
-          )}
+          </DialogTitle>
+        </DialogHeader>
+        {loading && (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
 
-          {error && (
-            <div className="flex flex-col items-center gap-3 py-8">
-              <p className="text-sm text-muted-foreground">{error}</p>
-              <Button variant="outline" size="sm" onClick={onClose}>
-                {t("close")}
-              </Button>
-            </div>
-          )}
+        {error && (
+          <div className="flex flex-col items-center gap-3 py-8">
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <Button variant="outline" size="sm" onClick={onClose}>
+              {t("close")}
+            </Button>
+          </div>
+        )}
 
-          {report && (
-            <div className="flex flex-col gap-5">
-              {/* Key metrics */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg bg-green-50/50 dark:bg-green-950/10 border border-green-200/50 dark:border-green-800/30 p-3 text-center">
-                  <div className="flex items-center justify-center size-8 rounded-full bg-green-500/10 mx-auto mb-1.5">
-                    <Car className="size-4 text-green-600" />
-                  </div>
-                  <div className="text-2xl font-semibold tabular-nums text-green-700 dark:text-green-300">
-                    {report.completedToday}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">
-                    {t("completedToday")}
-                  </div>
+        {report && (
+          <div className="flex flex-col gap-5 mt-2">
+            {/* Key metrics */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg bg-green-50/50 dark:bg-green-950/10 border border-green-200/50 dark:border-green-800/30 p-3 text-center">
+                <div className="flex items-center justify-center size-8 rounded-full bg-green-500/10 mx-auto mb-1.5">
+                  <Car className="size-4 text-green-600" />
                 </div>
-                <div className="rounded-lg bg-blue-50/50 dark:bg-blue-950/10 border border-blue-200/50 dark:border-blue-800/30 p-3 text-center">
-                  <div className="flex items-center justify-center size-8 rounded-full bg-blue-500/10 mx-auto mb-1.5">
-                    <DollarSign className="size-4 text-blue-600" />
-                  </div>
-                  <div className="text-xl font-semibold tabular-nums text-blue-700 dark:text-blue-300 truncate">
-                    {formatMNT(report.revenueToday)}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">
-                    {t("revenueToday")}
-                  </div>
+                <div className="text-2xl font-semibold tabular-nums text-green-700 dark:text-green-300">
+                  {report.completedToday}
+                </div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">
+                  {t("completedToday")}
                 </div>
               </div>
-
-              {/* Detail stats */}
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1.5 text-muted-foreground">
-                    <Clock className="size-3.5" />
-                    {t("avgJobDuration")}
-                  </span>
-                  <span className="font-semibold tabular-nums">
-                    {report.avgDurationMinutes > 0
-                      ? `${Math.floor(report.avgDurationMinutes / 60)}h ${report.avgDurationMinutes % 60}m`
-                      : "—"}
-                  </span>
+              <div className="rounded-lg bg-blue-50/50 dark:bg-blue-950/10 border border-blue-200/50 dark:border-blue-800/30 p-3 text-center">
+                <div className="flex items-center justify-center size-8 rounded-full bg-blue-500/10 mx-auto mb-1.5">
+                  <DollarSign className="size-4 text-blue-600" />
                 </div>
-                <Separator />
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1.5 text-muted-foreground">
-                    <Gauge className="size-3.5" />
-                    {t("bayUtilization")}
-                  </span>
-                  <span className="font-semibold tabular-nums">
-                    {report.bayUtilization}%
-                    <span className="text-xs text-muted-foreground font-normal ml-1">
-                      ({report.bayCount} {t("bays")})
-                    </span>
-                  </span>
+                <div className="text-xl font-semibold tabular-nums text-blue-700 dark:text-blue-300 truncate">
+                  {formatMNT(report.revenueToday)}
                 </div>
-                <Separator />
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1.5 text-muted-foreground">
-                    <Users className="size-3.5" />
-                    {t("activeJobs")}
-                  </span>
-                  <span className="font-semibold tabular-nums">
-                    {report.activeJobs}
-                  </span>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">
+                  {t("revenueToday")}
                 </div>
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+
+            {/* Detail stats */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <Clock className="size-3.5" />
+                  {t("avgJobDuration")}
+                </span>
+                <span className="font-semibold tabular-nums">
+                  {report.avgDurationMinutes > 0
+                    ? `${Math.floor(report.avgDurationMinutes / 60)}h ${report.avgDurationMinutes % 60}m`
+                    : "—"}
+                </span>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <Gauge className="size-3.5" />
+                  {t("bayUtilization")}
+                </span>
+                <span className="font-semibold tabular-nums">
+                  {report.bayUtilization}%
+                  <span className="text-xs text-muted-foreground font-normal ml-1">
+                    ({report.bayCount} {t("bays")})
+                  </span>
+                </span>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <Users className="size-3.5" />
+                  {t("activeJobs")}
+                </span>
+                <span className="font-semibold tabular-nums">
+                  {report.activeJobs}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -49,7 +49,7 @@ function Calendar({
       {...(props as Record<string, unknown>)}
       showOutsideDays={showOutsideDays}
       className={cn(
-        "group/calendar bg-background p-2 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(7)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
+        "group/calendar bg-background p-2 [--cell-radius:0px] [--cell-size:--spacing(7)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className,
@@ -90,7 +90,7 @@ function Calendar({
             defaultClassNames.month_caption,
           ),
           dropdowns: cn(
-            "flex h-(--cell-size) w-full items-center justify-center gap-1.5 text-sm font-medium",
+            "flex h-(--cell-size) w-full items-center justify-center gap-1.5 text-xs font-medium",
             defaultClassNames.dropdowns,
           ),
           dropdown_root: cn(
@@ -104,8 +104,8 @@ function Calendar({
           caption_label: cn(
             "font-medium select-none",
             captionLayout === "label"
-              ? "text-sm"
-              : "flex items-center gap-1 rounded-(--cell-radius) text-sm [&>svg]:size-3.5 [&>svg]:text-muted-foreground",
+              ? "text-xs"
+              : "flex items-center gap-1 rounded-(--cell-radius) text-xs [&>svg]:size-3.5 [&>svg]:text-muted-foreground",
             defaultClassNames.caption_label,
           ),
           table: "w-full border-collapse",

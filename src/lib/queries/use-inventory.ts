@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { toastRetry } from "@/lib/toast-utils";
 import type {
   InventoryBalanceWithAvgCost,
   InventoryMovement,
@@ -75,11 +77,14 @@ export function useCreateMovement(orgId: string | undefined) {
       reference_id?: string;
       notes?: string;
     }) => {
-      const res = await fetch(`/api/organizations/${orgId}/inventory/movements`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/movements`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
       return json.data as InventoryMovement;
@@ -96,7 +101,9 @@ export function useSuppliers(orgId: string | undefined) {
   return useQuery({
     queryKey: inventoryKeys.suppliers(orgId ?? ""),
     queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/inventory/suppliers`);
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/suppliers`,
+      );
       if (!res.ok) throw new Error("Failed to load suppliers");
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
@@ -109,7 +116,7 @@ export function useSuppliers(orgId: string | undefined) {
 
 export function useCreateSupplier(orgId: string | undefined) {
   const qc = useQueryClient();
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (body: {
       name: string;
       contact_person?: string;
@@ -120,24 +127,65 @@ export function useCreateSupplier(orgId: string | undefined) {
       payment_terms?: string;
       notes?: string;
     }) => {
-      const res = await fetch(`/api/organizations/${orgId}/inventory/suppliers`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/suppliers`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
       return json.data as Supplier;
     },
-    onSuccess: () => {
+    onMutate: async (body) => {
+      const key = inventoryKeys.suppliers(orgId ?? "");
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<Supplier[]>(key);
+      if (previous) {
+        const optimistic: Supplier = {
+          id: `temp-${Date.now()}`,
+          organization_id: orgId ?? "",
+          branch_id: null,
+          name: body.name,
+          contact_person: body.contact_person ?? null,
+          phone: body.phone ?? null,
+          email: body.email ?? null,
+          address: body.address ?? null,
+          tax_id: body.tax_id ?? null,
+          payment_terms: body.payment_terms ?? null,
+          notes: body.notes ?? null,
+          is_active: true,
+          created_by: null,
+          updated_by: null,
+          deleted_at: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        qc.setQueryData<Supplier[]>(key, [...previous, optimistic]);
+      }
+      return { previous };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previous)
+        qc.setQueryData<Supplier[]>(
+          inventoryKeys.suppliers(orgId ?? ""),
+          context.previous,
+        );
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
+    },
+    onSuccess: () => toast.success("Supplier created"),
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: inventoryKeys.suppliers(orgId ?? "") });
     },
   });
+  return mutation;
 }
 
 export function useUpdateSupplier(orgId: string | undefined) {
   const qc = useQueryClient();
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({
       id,
       body,
@@ -157,15 +205,41 @@ export function useUpdateSupplier(orgId: string | undefined) {
       if (json.error) throw new Error(json.error.message);
       return json.data as Supplier;
     },
-    onSuccess: () => {
+    onMutate: async ({ id, body }) => {
+      const key = inventoryKeys.suppliers(orgId ?? "");
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<Supplier[]>(key);
+      if (previous) {
+        qc.setQueryData<Supplier[]>(
+          key,
+          previous.map((s) =>
+            s.id === id
+              ? { ...s, ...body, updated_at: new Date().toISOString() }
+              : s,
+          ),
+        );
+      }
+      return { previous };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previous)
+        qc.setQueryData<Supplier[]>(
+          inventoryKeys.suppliers(orgId ?? ""),
+          context.previous,
+        );
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
+    },
+    onSuccess: () => toast.success("Supplier updated"),
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: inventoryKeys.suppliers(orgId ?? "") });
     },
   });
+  return mutation;
 }
 
 export function useDeleteSupplier(orgId: string | undefined) {
   const qc = useQueryClient();
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(
         `/api/organizations/${orgId}/inventory/suppliers?supplierId=${id}`,
@@ -177,10 +251,32 @@ export function useDeleteSupplier(orgId: string | undefined) {
       if (json.error) throw new Error(json.error.message);
       return json.data;
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      const key = inventoryKeys.suppliers(orgId ?? "");
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<Supplier[]>(key);
+      if (previous) {
+        qc.setQueryData<Supplier[]>(
+          key,
+          previous.filter((s) => s.id !== id),
+        );
+      }
+      return { previous };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previous)
+        qc.setQueryData<Supplier[]>(
+          inventoryKeys.suppliers(orgId ?? ""),
+          context.previous,
+        );
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
+    },
+    onSuccess: () => toast.success("Supplier deleted"),
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: inventoryKeys.suppliers(orgId ?? "") });
     },
   });
+  return mutation;
 }
 
 export type PurchaseOrderWithSupplier = PurchaseOrder & {
@@ -198,14 +294,19 @@ export function usePurchaseOrders(orgId: string | undefined) {
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
       // API returns { data: PaginatedResponse<PurchaseOrder> }, unwrap .data.data
-      return (json.data?.data ?? json.data ?? []) as PurchaseOrderWithSupplier[];
+      return (json.data?.data ??
+        json.data ??
+        []) as PurchaseOrderWithSupplier[];
     },
     enabled: !!orgId,
     staleTime: 30_000,
   });
 }
 
-export function usePurchaseOrderItems(orgId: string | undefined, poId: string | undefined) {
+export function usePurchaseOrderItems(
+  orgId: string | undefined,
+  poId: string | undefined,
+) {
   return useQuery({
     queryKey: inventoryKeys.purchaseOrderItems(poId ?? ""),
     queryFn: async () => {
@@ -348,7 +449,10 @@ export function usePartsCars(orgId: string | undefined) {
   });
 }
 
-export function usePartsCar(orgId: string | undefined, carId: string | undefined) {
+export function usePartsCar(
+  orgId: string | undefined,
+  carId: string | undefined,
+) {
   return useQuery({
     queryKey: inventoryKeys.partsCar(orgId ?? "", carId ?? ""),
     queryFn: async () => {
@@ -364,7 +468,10 @@ export function usePartsCar(orgId: string | undefined, carId: string | undefined
   });
 }
 
-export function usePartsCarParts(orgId: string | undefined, carId: string | undefined) {
+export function usePartsCarParts(
+  orgId: string | undefined,
+  carId: string | undefined,
+) {
   return useQuery({
     queryKey: inventoryKeys.partsCarParts(orgId ?? "", carId ?? ""),
     queryFn: async () => {
@@ -450,14 +557,18 @@ export function useCompleteDisassembly(orgId: string | undefined) {
       );
       if (!res.ok) {
         const json = await res.json();
-        throw new Error(json.error?.message ?? "Failed to complete disassembly");
+        throw new Error(
+          json.error?.message ?? "Failed to complete disassembly",
+        );
       }
       const json = await res.json();
       return json.data as PartsCars;
     },
     onSuccess: (_data, carId) => {
       qc.invalidateQueries({ queryKey: inventoryKeys.partsCars(orgId ?? "") });
-      qc.invalidateQueries({ queryKey: inventoryKeys.partsCar(orgId ?? "", carId) });
+      qc.invalidateQueries({
+        queryKey: inventoryKeys.partsCar(orgId ?? "", carId),
+      });
     },
   });
 }
@@ -472,15 +583,21 @@ export function usePublishPartsCarToCatalog(orgId: string | undefined) {
       );
       if (!res.ok) {
         const json = await res.json();
-        throw new Error(json.error?.message ?? "Failed to publish parts to catalog");
+        throw new Error(
+          json.error?.message ?? "Failed to publish parts to catalog",
+        );
       }
       const json = await res.json();
       return json.data as { publishedCount: number; catalogIds: string[] };
     },
     onSuccess: (_data, carId) => {
       qc.invalidateQueries({ queryKey: inventoryKeys.partsCars(orgId ?? "") });
-      qc.invalidateQueries({ queryKey: inventoryKeys.partsCar(orgId ?? "", carId) });
-      qc.invalidateQueries({ queryKey: inventoryKeys.partsCarParts(orgId ?? "", carId) });
+      qc.invalidateQueries({
+        queryKey: inventoryKeys.partsCar(orgId ?? "", carId),
+      });
+      qc.invalidateQueries({
+        queryKey: inventoryKeys.partsCarParts(orgId ?? "", carId),
+      });
       qc.invalidateQueries({ queryKey: inventoryKeys.parts(orgId ?? "") });
       qc.invalidateQueries({ queryKey: inventoryKeys.balances(orgId ?? "") });
     },
@@ -556,12 +673,18 @@ export function useRemovePartsCarPart(orgId: string | undefined) {
 export function useUpdatePartsCar(orgId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: string } & Record<string, unknown>) => {
-      const res = await fetch(`/api/organizations/${orgId}/inventory/parts-cars/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+    mutationFn: async ({
+      id,
+      ...data
+    }: { id: string } & Record<string, unknown>) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts-cars/${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        },
+      );
       if (!res.ok) {
         const json = await res.json();
         throw new Error(json.error?.message ?? "Failed to update parts car");
@@ -578,9 +701,12 @@ export function useDeletePartsCar(orgId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/organizations/${orgId}/inventory/parts-cars/${id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts-cars/${id}`,
+        {
+          method: "DELETE",
+        },
+      );
       if (!res.ok) {
         const json = await res.json();
         throw new Error(json.error?.message ?? "Failed to delete parts car");

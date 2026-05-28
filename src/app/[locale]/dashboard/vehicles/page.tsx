@@ -60,7 +60,7 @@ export default function VehiclesPage() {
 
   const list: Array<Vehicle & { owner_name?: string }> = vehicles ?? [];
 
-  const { registerTab, setOpen } = useRightSidebar();
+  const { registerTab } = useRightSidebar();
 
   useEffect(() => {
     if (!list.length) return;
@@ -101,8 +101,7 @@ export default function VehiclesPage() {
       />,
       <Clock className="size-4" />,
     );
-    setOpen(true);
-  }, [list, registerTab, setOpen]);
+  }, [list, registerTab]);
 
   if (isLoading && !vehicles) {
     return (
@@ -133,7 +132,10 @@ export default function VehiclesPage() {
             </h1>
             <p className="text-muted-foreground">{t("subtitle")}</p>
           </div>
-          <Button render={<Link href="/dashboard/vehicles/new" />} size="default">
+          <Button
+            render={<Link href="/dashboard/vehicles/new" />}
+            size="default"
+          >
             <Plus className="size-4" />
             {t("addVehicle")}
           </Button>
@@ -196,7 +198,10 @@ export default function VehiclesPage() {
               filename={`vehicles-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Vehicles"
             />
-            <Button render={<Link href="/dashboard/vehicles/new" />} size="default">
+            <Button
+              render={<Link href="/dashboard/vehicles/new" />}
+              size="default"
+            >
               <Plus className="size-4" />
               {t("addVehicle")}
             </Button>

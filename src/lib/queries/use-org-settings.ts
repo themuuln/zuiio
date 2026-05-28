@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { toastRetry } from "@/lib/toast-utils";
 import { orgKeys } from "./keys";
 
 interface OrgSettings {
@@ -17,9 +18,7 @@ interface OrgSettings {
  * Fetches organization settings from the API.
  * Returns the `settings` object from the organization record.
  */
-export function useOrgSettings(
-  orgId: string | undefined,
-): {
+export function useOrgSettings(orgId: string | undefined): {
   settings: OrgSettings | null;
   isLoading: boolean;
   error: Error | null;
@@ -48,7 +47,7 @@ export function useOrgSettings(
 export function useUpdateOrgSettings(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (settings: Partial<OrgSettings>) => {
       if (!orgId) throw new Error("No organization ID");
       const res = await fetch(`/api/organizations/${orgId}`, {
@@ -70,8 +69,9 @@ export function useUpdateOrgSettings(orgId: string | undefined) {
       }
       toast.success("Settings saved");
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err: Error, variables) => {
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
     },
   });
+  return mutation;
 }
