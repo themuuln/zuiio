@@ -217,42 +217,61 @@ The rule: pages use hooks, hooks call API routes, API routes call services, serv
 
 ## Supabase CLI & MCP Usage
 
-### CLI vs MCP — When to Use What
+### MCP First — CLI Only When MCP Can't
+
+**Default: Use Supabase MCP tools.** Only fall back to CLI when MCP has no equivalent.
 
 | Operation | Preferred Tool | Notes |
 |-----------|---------------|-------|
-| Create migration file | **CLI** `supabase migration new <name>` | MCP has no equivalent |
-| Apply migration to remote | **CLI** `supabase db push --linked` | Pushes directly to linked Supabase project. No Docker needed. |
-| Apply ad-hoc SQL | **CLI** `supabase db push --linked --db-url <url>` or Management API | For running SQL without migration tracking |
-| Generate TS types | **CLI** `supabase gen types typescript --linked` | Use `2>/dev/null > src/lib/database.types.ts` to strip CLI status output |
-| Execute ad-hoc SQL query | **Management API** `POST /v1/projects/{ref}/database/query` | CLI `db query` requires local Postgres — use Management API or Supabase Studio instead |
-| Deploy edge function | **CLI** `supabase functions deploy <name>` | Works remotely via Supabase API |
-| Check security/performance | **CLI** `supabase db advisors --linked` | Runs against linked project |
+| Create migration file | **CLI** `supabase migration new <name>` | MCP has no equivalent — only CLI use case |
+| Apply migration to remote | **MCP** `supabase_apply_migration` | Name + SQL. If migration already exists, use `supabase_execute_sql` |
+| Apply ad-hoc SQL | **MCP** `supabase_execute_sql` | Direct SQL execution, no migration tracking |
+| Execute ad-hoc SQL query | **MCP** `supabase_execute_sql` | SELECT, INSERT, UPDATE, etc. |
+| Generate TS types | **MCP** `supabase_generate_typescript_types` | Direct output, no `2>/dev/null` needed |
+| List/inspect tables | **MCP** `supabase_list_tables` | Schema introspection |
+| List migrations | **MCP** `supabase_list_migrations` | Check applied migrations |
+| Check security/performance | **MCP** `supabase_get_advisors` | Advisory notices |
+| Get logs | **MCP** `supabase_get_logs` | Edge function, auth, API logs |
+| Deploy edge function | **MCP** `supabase_deploy_edge_function` | Upload and deploy |
+| Search docs | **MCP** `supabase_search_docs` | GraphQL-based doc search |
 
-### Applying Migrations
-
-**The only workflow: `supabase db push --linked`**
+### Applying Migrations (MCP Workflow)
 
 ```bash
-supabase migration new <name>                          # Create migration file
-# write SQL in the migration file
-supabase db push --linked                              # Push directly to remote
-supabase gen types typescript --linked 2>/dev/null > src/lib/database.types.ts   # Regenerate types
-npm run build                                          # Verify
+# 1. Create migration file locally (CLI — only CLI step)
+supabase migration new <name>
+
+# 2. Write SQL in the migration file
+
+# 3. Apply via MCP (preferred)
+# Use supabase_apply_migration with name + SQL content
+# OR supabase_execute_sql for ad-hoc data changes
+
+# 4. Regenerate types via MCP
+# Use supabase_generate_typescript_types
+
+# 5. Verify
+npm run build
 ```
 
-**Caveat**: If the remote's `schema_migrations` history is out of sync with local (e.g., SQL was applied via Management API or Supabase Studio), you may get version conflicts. Fix:
-```bash
-# Mark remote-only migrations as applied in local
-supabase migration repair --status applied --linked <version>
-```
+### When CLI Is Still Needed
 
-### Regenerating TypeScript Types
+- `supabase migration new <name>` — create migration file (MCP has no equivalent)
+- `supabase db push --linked` — only if MCP `apply_migration` fails or for batch migration pushes
+- `supabase gen types typescript --linked` — only if MCP `generate_typescript_types` fails
 
-Always use `2>/dev/null` to strip CLI status output from the generated file:
-```bash
-supabase gen types typescript --linked 2>/dev/null > src/lib/database.types.ts
-```
+### MCP Tool Quick Reference
+
+| Tool | Purpose |
+|------|---------|
+| `supabase_apply_migration` | Apply SQL migration by name |
+| `supabase_execute_sql` | Run raw SQL (SELECT, INSERT, UPDATE, DDL) |
+| `supabase_generate_typescript_types` | Generate TypeScript types |
+| `supabase_list_tables` | List tables in schema |
+| `supabase_list_migrations` | List applied migrations |
+| `supabase_get_advisors` | Security/performance advisories |
+| `supabase_get_logs` | Project logs by service type |
+| `supabase_search_docs` | Search Supabase documentation |
 
 ### Type Sync Rule
 
