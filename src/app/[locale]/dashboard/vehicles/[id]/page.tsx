@@ -22,9 +22,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { formatPlateInput, inputProps } from "@/lib/form-ux";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   isValidMongolianPlate,
@@ -955,20 +958,22 @@ function VehicleEditForm({
             >
               {t("fuelType")}
             </label>
-            <NativeSelect
+            <Select
               id="vehicle-fuel-edit"
-              value={form.fuelType}
-              onChange={(e) => setField("fuelType", e.target.value)}
-              className="w-full"
-              size="default"
+              value={form.fuelType || null}
+              onValueChange={(val) => setField("fuelType", val ?? "")}
             >
-              <NativeSelectOption value="">Select fuel type</NativeSelectOption>
-              <NativeSelectOption value="Gasoline">Gasoline</NativeSelectOption>
-              <NativeSelectOption value="Diesel">Diesel</NativeSelectOption>
-              <NativeSelectOption value="Electric">Electric</NativeSelectOption>
-              <NativeSelectOption value="Hybrid">Hybrid</NativeSelectOption>
-              <NativeSelectOption value="LPG">LPG</NativeSelectOption>
-            </NativeSelect>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select fuel type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Gasoline">Gasoline</SelectItem>
+                <SelectItem value="Diesel">Diesel</SelectItem>
+                <SelectItem value="Electric">Electric</SelectItem>
+                <SelectItem value="Hybrid">Hybrid</SelectItem>
+                <SelectItem value="LPG">LPG</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label
@@ -977,23 +982,21 @@ function VehicleEditForm({
             >
               {t("transmission")}
             </label>
-            <NativeSelect
+            <Select
               id="vehicle-transmission-edit"
-              value={form.transmission}
-              onChange={(e) => setField("transmission", e.target.value)}
-              className="w-full"
-              size="default"
+              value={form.transmission || null}
+              onValueChange={(val) => setField("transmission", val ?? "")}
             >
-              <NativeSelectOption value="">
-                Select transmission
-              </NativeSelectOption>
-              <NativeSelectOption value="Automatic">
-                Automatic
-              </NativeSelectOption>
-              <NativeSelectOption value="Manual">Manual</NativeSelectOption>
-              <NativeSelectOption value="CVT">CVT</NativeSelectOption>
-              <NativeSelectOption value="DCT">DCT</NativeSelectOption>
-            </NativeSelect>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select transmission" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Automatic">Automatic</SelectItem>
+                <SelectItem value="Manual">Manual</SelectItem>
+                <SelectItem value="CVT">CVT</SelectItem>
+                <SelectItem value="DCT">DCT</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label
@@ -1002,21 +1005,21 @@ function VehicleEditForm({
             >
               {t("drivetrain")}
             </label>
-            <NativeSelect
+            <Select
               id="vehicle-drivetrain-edit"
-              value={form.drivetrain}
-              onChange={(e) => setField("drivetrain", e.target.value)}
-              className="w-full"
-              size="default"
+              value={form.drivetrain || null}
+              onValueChange={(val) => setField("drivetrain", val ?? "")}
             >
-              <NativeSelectOption value="">
-                Select drivetrain
-              </NativeSelectOption>
-              <NativeSelectOption value="AWD">AWD</NativeSelectOption>
-              <NativeSelectOption value="4WD">4WD</NativeSelectOption>
-              <NativeSelectOption value="FWD">FWD</NativeSelectOption>
-              <NativeSelectOption value="RWD">RWD</NativeSelectOption>
-            </NativeSelect>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select drivetrain" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="AWD">AWD</SelectItem>
+                <SelectItem value="4WD">4WD</SelectItem>
+                <SelectItem value="FWD">FWD</SelectItem>
+                <SelectItem value="RWD">RWD</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label
@@ -1025,28 +1028,26 @@ function VehicleEditForm({
             >
               {t("bodyType")}
             </label>
-            <NativeSelect
+            <Select
               id="vehicle-body-edit"
-              value={form.bodyType}
-              onChange={(e) => setField("bodyType", e.target.value)}
-              className="w-full"
-              size="default"
+              value={form.bodyType || null}
+              onValueChange={(val) => setField("bodyType", val ?? "")}
             >
-              <NativeSelectOption value="">Select body type</NativeSelectOption>
-              <NativeSelectOption value="SUV">SUV</NativeSelectOption>
-              <NativeSelectOption value="Sedan">Sedan</NativeSelectOption>
-              <NativeSelectOption value="Hatchback">
-                Hatchback
-              </NativeSelectOption>
-              <NativeSelectOption value="Coupe">Coupe</NativeSelectOption>
-              <NativeSelectOption value="Convertible">
-                Convertible
-              </NativeSelectOption>
-              <NativeSelectOption value="Wagon">Wagon</NativeSelectOption>
-              <NativeSelectOption value="Van">Van</NativeSelectOption>
-              <NativeSelectOption value="Truck">Truck</NativeSelectOption>
-              <NativeSelectOption value="Bus">Bus</NativeSelectOption>
-            </NativeSelect>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select body type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="SUV">SUV</SelectItem>
+                <SelectItem value="Sedan">Sedan</SelectItem>
+                <SelectItem value="Hatchback">Hatchback</SelectItem>
+                <SelectItem value="Coupe">Coupe</SelectItem>
+                <SelectItem value="Convertible">Convertible</SelectItem>
+                <SelectItem value="Wagon">Wagon</SelectItem>
+                <SelectItem value="Van">Van</SelectItem>
+                <SelectItem value="Truck">Truck</SelectItem>
+                <SelectItem value="Bus">Bus</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <FormField
             label={t("licenseExpiry")}

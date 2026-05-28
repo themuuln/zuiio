@@ -1,7 +1,14 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { CarFront, Loader2, Search, User } from "lucide-react";
+import {
+  CarFront,
+  Check,
+  ChevronDown,
+  Loader2,
+  Search,
+  User,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/search-input";
@@ -16,18 +23,17 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-  ComboboxValue,
-} from "@/components/ui/combobox";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { useCarBrands, useCarModels } from "@/lib/queries/use-car-catalog";
 import { useRouter } from "@/lib/i18n/navigation";
@@ -58,6 +64,7 @@ type VehicleFormState = {
   odometer: string;
   licenseExpiryAt: string;
   nextServiceAt: string;
+  importDate: string;
   notes: string;
 };
 
@@ -78,6 +85,7 @@ const initialForm: VehicleFormState = {
   odometer: "",
   licenseExpiryAt: "",
   nextServiceAt: "",
+  importDate: "",
   notes: "",
 };
 
@@ -117,6 +125,17 @@ export function NewVehicleDialog({
     (b) => b.name.toLowerCase() === form.make.toLowerCase(),
   );
   const { data: models = [] } = useCarModels(selectedBrand?.id ?? null);
+  const selectedModel = models.find(
+    (m) => m.name.toLowerCase() === form.model.toLowerCase(),
+  );
+  const [brandSearch, setBrandSearch] = useState("");
+  const [modelSearch, setModelSearch] = useState("");
+  const filteredBrands = brands.filter((b) =>
+    b.name.toLowerCase().includes(brandSearch.toLowerCase()),
+  );
+  const filteredModels = models.filter((m) =>
+    m.name.toLowerCase().includes(modelSearch.toLowerCase()),
+  );
 
   // SmartCar plate lookup
   const handlePlateLookup = async () => {
@@ -147,6 +166,7 @@ export function NewVehicleDialog({
         transmission: d.transmission || current.transmission,
         bodyType: d.bodyType || current.bodyType,
         color: d.color || current.color,
+        importDate: d.importDate || current.importDate,
       }));
       toast.success(`Found: ${d.make} ${d.model} (${d.year})`);
     } catch {
@@ -211,7 +231,8 @@ export function NewVehicleDialog({
           `/api/organizations/${orgId}/customers?q=${encodeURIComponent(query)}`,
         );
         const json = await response.json();
-        setCustomerResults(Array.isArray(json.data) ? json.data : []);
+        const customers = json.data?.data ?? json.data;
+        setCustomerResults(Array.isArray(customers) ? customers : []);
       } catch {
         setError("Failed to search customers");
       } finally {
@@ -473,29 +494,79 @@ export function NewVehicleDialog({
                 >
                   Make
                 </label>
-                <NativeSelect
-                  id="vehicle-make"
-                  value={form.make}
-                  onChange={(event) => {
-                    const newMake = event.target.value;
-                    setForm((current) => ({
-                      ...current,
-                      make: newMake,
-                      // Reset model when brand changes
-                      model: "",
-                    }));
-                  }}
-                  className={`w-full ${fieldErrors.make ? "border-destructive" : ""}`}
-                  size="default"
-                  aria-invalid={!!fieldErrors.make}
-                >
-                  <NativeSelectOption value="">Select brand</NativeSelectOption>
-                  {brands.map((brand) => (
-                    <NativeSelectOption key={brand.id} value={brand.name}>
-                      {brand.name}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
+                <Popover>
+                  <PopoverTrigger
+                    render={
+                      <button
+                        type="button"
+                        id="vehicle-make"
+                        className={`flex h-11 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${fieldErrors.make ? "border-destructive" : ""}`}
+                        aria-invalid={!!fieldErrors.make}
+                      />
+                    }
+                  >
+                    <span className={form.make ? "" : "text-muted-foreground"}>
+                      {form.make || "Select brand"}
+                    </span>
+                    <ChevronDown className="size-4 opacity-50" />
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[--radix-popover-trigger-width] p-0"
+                    align="start"
+                  >
+                    <div className="border-b border-border p-2">
+                      <Input
+                        placeholder="Search..."
+                        value={brandSearch}
+                        onChange={(e) => setBrandSearch(e.target.value)}
+                        className="h-8"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {filteredBrands.map((brand) => (
+                        <button
+                          key={brand.id}
+                          type="button"
+                          className={`flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground ${selectedBrand?.id === brand.id ? "bg-accent" : ""}`}
+                          onClick={() => {
+                            setForm((current) => ({
+                              ...current,
+                              make: brand.name,
+                              model: "",
+                            }));
+                            setBrandSearch("");
+                          }}
+                        >
+                          {selectedBrand?.id === brand.id && (
+                            <Check className="size-4" />
+                          )}
+                          {brand.name}
+                        </button>
+                      ))}
+                      {brandSearch &&
+                        !filteredBrands.some(
+                          (b) =>
+                            b.name.toLowerCase() === brandSearch.toLowerCase(),
+                        ) && (
+                          <button
+                            type="button"
+                            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                            onClick={() => {
+                              setForm((current) => ({
+                                ...current,
+                                make: brandSearch,
+                                model: "",
+                              }));
+                              setBrandSearch("");
+                            }}
+                          >
+                            Use \"{brandSearch}\"
+                          </button>
+                        )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 {fieldErrors.make && (
                   <Typography.Text className="mt-1 text-xs text-destructive">
                     {fieldErrors.make}
@@ -509,27 +580,75 @@ export function NewVehicleDialog({
                 >
                   Model
                 </label>
-                <NativeSelect
-                  id="vehicle-model"
-                  value={form.model}
-                  onChange={(event) => handleModelSelect(event.target.value)}
-                  className={`w-full ${fieldErrors.model ? "border-destructive" : ""}`}
-                  size="default"
-                  disabled={!selectedBrand}
-                  aria-invalid={!!fieldErrors.model}
-                >
-                  <NativeSelectOption value="">
-                    {selectedBrand ? "Select model" : "Select brand first"}
-                  </NativeSelectOption>
-                  {models.map((model) => (
-                    <NativeSelectOption key={model.id} value={model.name}>
-                      {model.name}
-                      {model.year_start
-                        ? ` (${model.year_start}${model.year_end ? "-" + model.year_end : "+"})`
-                        : ""}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
+                <Popover>
+                  <PopoverTrigger
+                    render={
+                      <button
+                        type="button"
+                        id="vehicle-model"
+                        disabled={!selectedBrand && !form.make}
+                        className={`flex h-11 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${fieldErrors.model ? "border-destructive" : ""}`}
+                        aria-invalid={!!fieldErrors.model}
+                      />
+                    }
+                  >
+                    <span className={form.model ? "" : "text-muted-foreground"}>
+                      {form.model || "Select model"}
+                    </span>
+                    <ChevronDown className="size-4 opacity-50" />
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[--radix-popover-trigger-width] p-0"
+                    align="start"
+                  >
+                    <div className="border-b border-border p-2">
+                      <Input
+                        placeholder="Search..."
+                        value={modelSearch}
+                        onChange={(e) => setModelSearch(e.target.value)}
+                        className="h-8"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {filteredModels.map((model) => (
+                        <button
+                          key={model.id}
+                          type="button"
+                          className={`flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground ${selectedModel?.id === model.id ? "bg-accent" : ""}`}
+                          onClick={() => {
+                            handleModelSelect(model.name);
+                            setModelSearch("");
+                          }}
+                        >
+                          {selectedModel?.id === model.id && (
+                            <Check className="size-4" />
+                          )}
+                          {model.name}
+                          {model.year_start
+                            ? ` (${model.year_start}${model.year_end ? "-" + model.year_end : "+"})`
+                            : ""}
+                        </button>
+                      ))}
+                      {modelSearch &&
+                        !filteredModels.some(
+                          (m) =>
+                            m.name.toLowerCase() === modelSearch.toLowerCase(),
+                        ) && (
+                          <button
+                            type="button"
+                            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                            onClick={() => {
+                              handleModelSelect(modelSearch);
+                              setModelSearch("");
+                            }}
+                          >
+                            Use \"{modelSearch}\"
+                          </button>
+                        )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 {fieldErrors.model && (
                   <Typography.Text className="mt-1 text-xs text-destructive">
                     {fieldErrors.model}
@@ -661,31 +780,27 @@ export function NewVehicleDialog({
                 >
                   Fuel Type
                 </label>
-                <NativeSelect
+                <Select
                   id="vehicle-fuel"
-                  value={form.fuelType}
-                  onChange={(event) =>
+                  value={form.fuelType || null}
+                  onValueChange={(val) =>
                     setForm((current) => ({
                       ...current,
-                      fuelType: event.target.value,
+                      fuelType: val ?? "",
                     }))
                   }
-                  className="w-full"
-                  size="default"
                 >
-                  <NativeSelectOption value="">
-                    Select fuel type
-                  </NativeSelectOption>
-                  <NativeSelectOption value="Gasoline">
-                    Gasoline
-                  </NativeSelectOption>
-                  <NativeSelectOption value="Diesel">Diesel</NativeSelectOption>
-                  <NativeSelectOption value="Electric">
-                    Electric
-                  </NativeSelectOption>
-                  <NativeSelectOption value="Hybrid">Hybrid</NativeSelectOption>
-                  <NativeSelectOption value="LPG">LPG</NativeSelectOption>
-                </NativeSelect>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select fuel type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Gasoline">Gasoline</SelectItem>
+                    <SelectItem value="Diesel">Diesel</SelectItem>
+                    <SelectItem value="Electric">Electric</SelectItem>
+                    <SelectItem value="Hybrid">Hybrid</SelectItem>
+                    <SelectItem value="LPG">LPG</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label
@@ -694,28 +809,26 @@ export function NewVehicleDialog({
                 >
                   Transmission
                 </label>
-                <NativeSelect
+                <Select
                   id="vehicle-transmission"
-                  value={form.transmission}
-                  onChange={(event) =>
+                  value={form.transmission || null}
+                  onValueChange={(val) =>
                     setForm((current) => ({
                       ...current,
-                      transmission: event.target.value,
+                      transmission: val ?? "",
                     }))
                   }
-                  className="w-full"
-                  size="default"
                 >
-                  <NativeSelectOption value="">
-                    Select transmission
-                  </NativeSelectOption>
-                  <NativeSelectOption value="Automatic">
-                    Automatic
-                  </NativeSelectOption>
-                  <NativeSelectOption value="Manual">Manual</NativeSelectOption>
-                  <NativeSelectOption value="CVT">CVT</NativeSelectOption>
-                  <NativeSelectOption value="DCT">DCT</NativeSelectOption>
-                </NativeSelect>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select transmission" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Automatic">Automatic</SelectItem>
+                    <SelectItem value="Manual">Manual</SelectItem>
+                    <SelectItem value="CVT">CVT</SelectItem>
+                    <SelectItem value="DCT">DCT</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label
@@ -724,26 +837,26 @@ export function NewVehicleDialog({
                 >
                   Drivetrain
                 </label>
-                <NativeSelect
+                <Select
                   id="vehicle-drivetrain"
-                  value={form.drivetrain}
-                  onChange={(event) =>
+                  value={form.drivetrain || null}
+                  onValueChange={(val) =>
                     setForm((current) => ({
                       ...current,
-                      drivetrain: event.target.value,
+                      drivetrain: val ?? "",
                     }))
                   }
-                  className="w-full"
-                  size="default"
                 >
-                  <NativeSelectOption value="">
-                    Select drivetrain
-                  </NativeSelectOption>
-                  <NativeSelectOption value="AWD">AWD</NativeSelectOption>
-                  <NativeSelectOption value="4WD">4WD</NativeSelectOption>
-                  <NativeSelectOption value="FWD">FWD</NativeSelectOption>
-                  <NativeSelectOption value="RWD">RWD</NativeSelectOption>
-                </NativeSelect>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select drivetrain" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AWD">AWD</SelectItem>
+                    <SelectItem value="4WD">4WD</SelectItem>
+                    <SelectItem value="FWD">FWD</SelectItem>
+                    <SelectItem value="RWD">RWD</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label
@@ -752,35 +865,31 @@ export function NewVehicleDialog({
                 >
                   Body Type
                 </label>
-                <NativeSelect
+                <Select
                   id="vehicle-body"
-                  value={form.bodyType}
-                  onChange={(event) =>
+                  value={form.bodyType || null}
+                  onValueChange={(val) =>
                     setForm((current) => ({
                       ...current,
-                      bodyType: event.target.value,
+                      bodyType: val ?? "",
                     }))
                   }
-                  className="w-full"
-                  size="default"
                 >
-                  <NativeSelectOption value="">
-                    Select body type
-                  </NativeSelectOption>
-                  <NativeSelectOption value="SUV">SUV</NativeSelectOption>
-                  <NativeSelectOption value="Sedan">Sedan</NativeSelectOption>
-                  <NativeSelectOption value="Hatchback">
-                    Hatchback
-                  </NativeSelectOption>
-                  <NativeSelectOption value="Coupe">Coupe</NativeSelectOption>
-                  <NativeSelectOption value="Convertible">
-                    Convertible
-                  </NativeSelectOption>
-                  <NativeSelectOption value="Wagon">Wagon</NativeSelectOption>
-                  <NativeSelectOption value="Van">Van</NativeSelectOption>
-                  <NativeSelectOption value="Truck">Truck</NativeSelectOption>
-                  <NativeSelectOption value="Bus">Bus</NativeSelectOption>
-                </NativeSelect>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select body type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SUV">SUV</SelectItem>
+                    <SelectItem value="Sedan">Sedan</SelectItem>
+                    <SelectItem value="Hatchback">Hatchback</SelectItem>
+                    <SelectItem value="Coupe">Coupe</SelectItem>
+                    <SelectItem value="Convertible">Convertible</SelectItem>
+                    <SelectItem value="Wagon">Wagon</SelectItem>
+                    <SelectItem value="Van">Van</SelectItem>
+                    <SelectItem value="Truck">Truck</SelectItem>
+                    <SelectItem value="Bus">Bus</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label
@@ -817,6 +926,26 @@ export function NewVehicleDialog({
                     setForm((current) => ({
                       ...current,
                       nextServiceAt: event.target.value,
+                    }))
+                  }
+                  className="h-11"
+                />
+              </div>
+              <div>
+                <label
+                  className="mb-1 block text-sm font-medium"
+                  htmlFor="vehicle-import-date"
+                >
+                  Import Date
+                </label>
+                <Input
+                  id="vehicle-import-date"
+                  type="date"
+                  value={form.importDate}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      importDate: event.target.value,
                     }))
                   }
                   className="h-11"

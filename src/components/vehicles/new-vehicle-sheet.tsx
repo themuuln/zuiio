@@ -1,13 +1,14 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { CarFront, Loader2, Search, User } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { CarFront, Loader2, Plus, Search, User } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
   Combobox,
@@ -16,12 +17,14 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
-  ComboboxValue,
 } from "@/components/ui/combobox";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -31,7 +34,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ColorSelect } from "@/components/vehicles/color-select";
-import { useCarBrands, useCarModels } from "@/lib/queries/use-car-catalog";
+import {
+  carCatalogKeys,
+  useCarBrands,
+  useCarModels,
+} from "@/lib/queries/use-car-catalog";
+import { useCustomerSearch } from "@/lib/queries/use-wizard-data";
+import { QuickCreateCustomerSheet } from "@/components/customers/quick-create-customer-sheet";
 import {
   isValidMongolianPlate,
   transliterateMongolianPlate,
@@ -56,9 +65,14 @@ type VehicleFormState = {
   transmission: string;
   drivetrain: string;
   bodyType: string;
+  steering: string;
+  seats: string;
+  category: string;
+  countryOfOrigin: string;
   odometer: string;
   licenseExpiryAt: string;
   nextServiceAt: string;
+  importDate: string;
   notes: string;
 };
 
@@ -76,9 +90,14 @@ const initialForm: VehicleFormState = {
   transmission: "",
   drivetrain: "",
   bodyType: "",
+  steering: "",
+  seats: "",
+  category: "",
+  countryOfOrigin: "",
   odometer: "",
   licenseExpiryAt: "",
   nextServiceAt: "",
+  importDate: "",
   notes: "",
 };
 
@@ -113,13 +132,20 @@ export function NewVehicleSheet({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [looking, setLooking] = useState(false);
+  const [newBrandName, setNewBrandName] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<VehicleFormState>(initialForm);
-  const [customerResults, setCustomerResults] = useState<Customer[]>([]);
-  const [customerSearching, setCustomerSearching] = useState(false);
+
+  // Customer search via React Query
+  const [customerSearch, setCustomerSearch] = useState("");
+  const { data: customerResults = [], isFetching: customerSearching } =
+    useCustomerSearch(orgId ?? undefined, customerSearch);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
   );
+
+  // Quick create customer
+  const [showQuickCustomer, setShowQuickCustomer] = useState(false);
 
   // Car catalog dropdowns
   const { data: brands = [] } = useCarBrands();
@@ -185,6 +211,11 @@ export function NewVehicleSheet({
         transmission: d.transmission || current.transmission,
         bodyType: d.bodyType || current.bodyType,
         color: d.color || current.color,
+        importDate: d.importDate || current.importDate,
+        steering: d.steering || current.steering,
+        seats: d.seats ? String(d.seats) : current.seats,
+        category: d.category || current.category,
+        countryOfOrigin: d.country || current.countryOfOrigin,
       }));
       toast.success(`Found: ${d.make} ${d.model} (${d.year})`);
     } catch {
@@ -194,38 +225,69 @@ export function NewVehicleSheet({
     }
   };
 
-  const searchCustomers = useCallback(
-    async (query: string) => {
-      if (!orgId || !query.trim()) {
-        setCustomerResults([]);
+  const handleCreateBrand = async () => {
+    const name = newBrandName.trim();
+    if (!name) return;
+
+    try {
+      const res = await fetch("/api/car-brands", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message);
         return;
       }
-
-      setCustomerSearching(true);
-
-      try {
-        const response = await fetch(
-          `/api/organizations/${orgId}/customers?q=${encodeURIComponent(query)}`,
-        );
-        const json = await response.json();
-        setCustomerResults(Array.isArray(json.data) ? json.data : []);
-      } catch {
-        setError("Failed to search customers");
-      } finally {
-        setCustomerSearching(false);
-      }
-    },
-    [orgId],
-  );
-
-  // Clear errors on any input change
-  useEffect(() => {
-    if (error || Object.keys(fieldErrors).length > 0) {
-      setError(null);
-      setFieldErrors({});
+      const newBrand = json.data;
+      await queryClient.invalidateQueries({
+        queryKey: carCatalogKeys.brands(),
+      });
+      setForm((current) => ({ ...current, make: newBrand.name, model: "" }));
+      setNewBrandName("");
+      toast.success(`Brand "${name}" created`);
+    } catch {
+      toast.error("Failed to create brand");
     }
+  };
+
+  // Clear global error on form change (keep field errors until blur)
+  useEffect(() => {
+    if (error) setError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form]);
+
+  const validateField = (field: string, value: string) => {
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      if (field === "plateNumber") {
+        if (!value.trim()) next.plateNumber = "Plate number is required";
+        else if (!isValidMongolianPlate(value))
+          next.plateNumber = "Must be 4 digits + 3 letters (e.g. 4444УНА)";
+      } else if (field === "make") {
+        if (!value.trim()) next.make = "Brand is required";
+      } else if (field === "model") {
+        if (!value.trim()) next.model = "Model is required";
+      } else if (field === "year") {
+        if (
+          value &&
+          (Number(value) < 1900 || Number(value) > new Date().getFullYear() + 1)
+        )
+          next.year = "Invalid year";
+      } else if (field === "odometer") {
+        if (value && Number(value) < 0) next.odometer = "Must be positive";
+      } else if (field === "vin") {
+        if (value && value.length !== 17)
+          next.vin = "VIN must be 17 characters";
+      } else if (field === "seats") {
+        if (value && (Number(value) < 1 || Number(value) > 50))
+          next.seats = "Must be 1–50";
+      }
+      return next;
+    });
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -246,8 +308,20 @@ export function NewVehicleSheet({
       errors.plateNumber = "Plate number is required";
     else if (!isValidMongolianPlate(form.plateNumber))
       errors.plateNumber = "Must be 4 digits + 3 letters (e.g. 4444УНА)";
-    if (!form.make.trim()) errors.make = "Make is required";
+    if (!form.make.trim()) errors.make = "Brand is required";
     if (!form.model.trim()) errors.model = "Model is required";
+    if (
+      form.year &&
+      (Number(form.year) < 1900 ||
+        Number(form.year) > new Date().getFullYear() + 1)
+    )
+      errors.year = "Invalid year";
+    if (form.odometer && Number(form.odometer) < 0)
+      errors.odometer = "Must be positive";
+    if (form.vin && form.vin.length !== 17)
+      errors.vin = "VIN must be 17 characters";
+    if (form.seats && (Number(form.seats) < 1 || Number(form.seats) > 50))
+      errors.seats = "Must be 1–50";
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
@@ -278,7 +352,7 @@ export function NewVehicleSheet({
       });
       setForm(initialForm);
       setSelectedCustomer(null);
-      setCustomerResults([]);
+      setCustomerSearch("");
       onSuccess?.(json.data.id);
       onOpenChange(false);
     } catch {
@@ -294,7 +368,8 @@ export function NewVehicleSheet({
       setError(null);
       setFieldErrors({});
       setSelectedCustomer(null);
-      setCustomerResults([]);
+      setCustomerSearch("");
+      setShowQuickCustomer(false);
     }
     onOpenChange(open);
   };
@@ -335,77 +410,99 @@ export function NewVehicleSheet({
               {/* ── Owner Section ── */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Owner</CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <User className="size-4" />
+                    Owner
+                    <span className="text-destructive">*</span>
+                    {selectedCustomer && (
+                      <span className="ml-auto text-sm font-normal text-muted-foreground">
+                        {getCustomerLabel(selectedCustomer)}
+                        {selectedCustomer.phone &&
+                          ` · ${selectedCustomer.phone}`}
+                      </span>
+                    )}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
                   {selectedCustomer ? (
-                    <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50/30 dark:border-green-800/30 dark:bg-green-950/10 p-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                          <User className="size-4" />
-                        </div>
+                        <User className="size-5 text-green-600" />
                         <div>
-                          <Typography.Text className="font-medium">
+                          <span className="font-medium">
                             {getCustomerLabel(selectedCustomer)}
-                          </Typography.Text>
-                          <Typography.Muted className="text-sm text-muted-foreground">
-                            {selectedCustomer.phone ||
-                              selectedCustomer.email ||
-                              "No contact info"}
-                          </Typography.Muted>
+                          </span>
+                          {selectedCustomer.phone && (
+                            <span className="ml-2 text-sm text-muted-foreground">
+                              {selectedCustomer.phone}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setSelectedCustomer(null)}
                       >
                         Change
                       </Button>
                     </div>
                   ) : (
-                    <>
+                    <div className="flex flex-col gap-3">
                       <SearchInput
-                        placeholder="Search customer by name, phone, or company..."
+                        placeholder="Search by name or phone..."
                         loading={customerSearching}
-                        onSearch={searchCustomers}
+                        onSearch={setCustomerSearch}
                         debounceMs={400}
                       />
-                      {!customerResults || customerResults.length === 0 ? (
-                        <Typography.Muted className="text-sm text-muted-foreground">
-                          Search for an existing customer before adding the
-                          vehicle.
-                        </Typography.Muted>
-                      ) : (
-                        <div className="flex flex-col gap-2">
-                          {customerResults.map((customer) => (
-                            <button
-                              key={customer.id}
+                      {customerSearch && customerResults.length > 0 && (
+                        <div className="flex flex-col gap-1 border rounded-lg overflow-hidden">
+                          {customerResults.map((c) => (
+                            <Button
+                              variant="ghost"
+                              key={c.id}
                               type="button"
-                              onClick={() => setSelectedCustomer(customer)}
-                              className="flex items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/50"
+                              onClick={() => setSelectedCustomer(c)}
+                              className="w-full justify-start gap-3 p-3 min-h-[52px] h-auto"
                             >
-                              <div className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                                <User className="size-4" />
-                              </div>
+                              <User className="size-5 shrink-0 text-muted-foreground" />
                               <div>
-                                <Typography.Text className="font-medium">
-                                  {getCustomerLabel(customer)}
-                                </Typography.Text>
-                                <Typography.Muted className="text-sm text-muted-foreground">
-                                  {customer.phone ||
-                                    customer.email ||
-                                    "No contact info"}
-                                </Typography.Muted>
+                                <span className="font-medium">
+                                  {getCustomerLabel(c)}
+                                </span>
+                                {c.phone && (
+                                  <span className="ml-2 text-sm text-muted-foreground">
+                                    {c.phone}
+                                  </span>
+                                )}
                               </div>
-                            </button>
+                            </Button>
                           ))}
                         </div>
                       )}
-                    </>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowQuickCustomer(true)}
+                        className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
+                      >
+                        <Plus className="size-4" />
+                        Quick add customer
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </Card>
+
+              {orgId && (
+                <QuickCreateCustomerSheet
+                  open={showQuickCustomer}
+                  onOpenChange={setShowQuickCustomer}
+                  orgId={orgId}
+                  onCreated={(customer) => setSelectedCustomer(customer)}
+                />
+              )}
 
               {/* ── Vehicle Information Section ── */}
               <Card className="mt-6">
@@ -420,7 +517,7 @@ export function NewVehicleSheet({
                       className="mb-1 block text-sm font-medium"
                       htmlFor="sheet-vehicle-plate"
                     >
-                      Plate Number
+                      Plate Number <span className="text-destructive">*</span>
                     </label>
                     <div className="flex gap-2">
                       <Input
@@ -433,6 +530,9 @@ export function NewVehicleSheet({
                               transliterateMongolianPlate(event.target.value),
                             ),
                           }))
+                        }
+                        onBlur={() =>
+                          validateField("plateNumber", form.plateNumber)
                         }
                         className={`h-11 flex-1 font-mono ${fieldErrors.plateNumber ? "border-destructive" : ""}`}
                         placeholder="1234 UBA"
@@ -477,17 +577,24 @@ export function NewVehicleSheet({
                           vin: event.target.value,
                         }))
                       }
-                      className="h-11 font-mono"
+                      onBlur={() => validateField("vin", form.vin)}
+                      className={`h-11 font-mono ${fieldErrors.vin ? "border-destructive" : ""}`}
                       placeholder="JTJHK31U..."
+                      aria-invalid={!!fieldErrors.vin}
                       {...inputProps("vin")}
                     />
+                    {fieldErrors.vin && (
+                      <Typography.Text className="mt-1 text-xs text-destructive">
+                        {fieldErrors.vin}
+                      </Typography.Text>
+                    )}
                   </div>
                   <div>
                     <label
                       className="mb-1 block text-sm font-medium"
                       htmlFor="sheet-vehicle-make"
                     >
-                      Make
+                      Make <span className="text-destructive">*</span>
                     </label>
                     <Combobox
                       items={brands}
@@ -499,17 +606,17 @@ export function NewVehicleSheet({
                           model: "",
                         }));
                       }}
+                      onInputValueChange={(inputValue) =>
+                        setNewBrandName(inputValue)
+                      }
                       isItemEqualToValue={(a, b) => a.id === b.id}
+                      itemToStringLabel={(brand) => brand.name}
                     >
                       <ComboboxInput
                         placeholder="Search brand..."
                         className={`h-11 ${fieldErrors.make ? "border-destructive" : ""}`}
                         aria-invalid={!!fieldErrors.make}
-                      >
-                        <ComboboxValue>
-                          {selectedBrand?.name ?? "Search brand..."}
-                        </ComboboxValue>
-                      </ComboboxInput>
+                      />
                       <ComboboxContent>
                         <ComboboxList>
                           {(brand: (typeof brands)[number]) => (
@@ -518,7 +625,19 @@ export function NewVehicleSheet({
                             </ComboboxItem>
                           )}
                         </ComboboxList>
-                        <ComboboxEmpty>No brand found</ComboboxEmpty>
+                        <ComboboxEmpty>
+                          <button
+                            type="button"
+                            className="flex w-full items-center gap-2 px-2 py-2 text-xs hover:bg-accent"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              handleCreateBrand();
+                            }}
+                          >
+                            <Plus className="size-4" />
+                            Add "{newBrandName}"
+                          </button>
+                        </ComboboxEmpty>
                       </ComboboxContent>
                     </Combobox>
                     {fieldErrors.make && (
@@ -532,7 +651,7 @@ export function NewVehicleSheet({
                       className="mb-1 block text-sm font-medium"
                       htmlFor="sheet-vehicle-model"
                     >
-                      Model
+                      Model <span className="text-destructive">*</span>
                     </label>
                     <Combobox
                       items={models}
@@ -542,6 +661,7 @@ export function NewVehicleSheet({
                       }}
                       disabled={!selectedBrand}
                       isItemEqualToValue={(a, b) => a.id === b.id}
+                      itemToStringLabel={(model) => model.name}
                     >
                       <ComboboxInput
                         placeholder={
@@ -551,14 +671,7 @@ export function NewVehicleSheet({
                         }
                         className={`h-11 ${fieldErrors.model ? "border-destructive" : ""}`}
                         aria-invalid={!!fieldErrors.model}
-                      >
-                        <ComboboxValue>
-                          {form.model ||
-                            (selectedBrand
-                              ? "Search model..."
-                              : "Select brand first")}
-                        </ComboboxValue>
-                      </ComboboxInput>
+                      />
                       <ComboboxContent>
                         <ComboboxList>
                           {(model: (typeof models)[number]) => (
@@ -598,10 +711,17 @@ export function NewVehicleSheet({
                           year: event.target.value,
                         }))
                       }
-                      className="h-11"
+                      onBlur={() => validateField("year", form.year)}
+                      className={`h-11 ${fieldErrors.year ? "border-destructive" : ""}`}
                       placeholder="2020"
+                      aria-invalid={!!fieldErrors.year}
                       {...inputProps("year")}
                     />
+                    {fieldErrors.year && (
+                      <Typography.Text className="mt-1 text-xs text-destructive">
+                        {fieldErrors.year}
+                      </Typography.Text>
+                    )}
                   </div>
                   <div>
                     <label
@@ -620,10 +740,17 @@ export function NewVehicleSheet({
                           odometer: event.target.value,
                         }))
                       }
-                      className="h-11"
+                      onBlur={() => validateField("odometer", form.odometer)}
+                      className={`h-11 ${fieldErrors.odometer ? "border-destructive" : ""}`}
                       placeholder="120000"
+                      aria-invalid={!!fieldErrors.odometer}
                       {...inputProps("odometer")}
                     />
+                    {fieldErrors.odometer && (
+                      <Typography.Text className="mt-1 text-xs text-destructive">
+                        {fieldErrors.odometer}
+                      </Typography.Text>
+                    )}
                   </div>
                   <div>
                     <label
@@ -706,35 +833,27 @@ export function NewVehicleSheet({
                     >
                       Fuel Type
                     </label>
-                    <NativeSelect
+                    <Select
                       id="sheet-vehicle-fuel"
-                      value={form.fuelType}
-                      onChange={(event) =>
+                      value={form.fuelType || null}
+                      onValueChange={(val) =>
                         setForm((current) => ({
                           ...current,
-                          fuelType: event.target.value,
+                          fuelType: val ?? "",
                         }))
                       }
-                      className="w-full"
-                      size="default"
                     >
-                      <NativeSelectOption value="">
-                        Select fuel type
-                      </NativeSelectOption>
-                      <NativeSelectOption value="Gasoline">
-                        Gasoline
-                      </NativeSelectOption>
-                      <NativeSelectOption value="Diesel">
-                        Diesel
-                      </NativeSelectOption>
-                      <NativeSelectOption value="Electric">
-                        Electric
-                      </NativeSelectOption>
-                      <NativeSelectOption value="Hybrid">
-                        Hybrid
-                      </NativeSelectOption>
-                      <NativeSelectOption value="LPG">LPG</NativeSelectOption>
-                    </NativeSelect>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select fuel type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Gasoline">Gasoline</SelectItem>
+                        <SelectItem value="Diesel">Diesel</SelectItem>
+                        <SelectItem value="Electric">Electric</SelectItem>
+                        <SelectItem value="Hybrid">Hybrid</SelectItem>
+                        <SelectItem value="LPG">LPG</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label
@@ -743,30 +862,26 @@ export function NewVehicleSheet({
                     >
                       Transmission
                     </label>
-                    <NativeSelect
+                    <Select
                       id="sheet-vehicle-transmission"
-                      value={form.transmission}
-                      onChange={(event) =>
+                      value={form.transmission || null}
+                      onValueChange={(val) =>
                         setForm((current) => ({
                           ...current,
-                          transmission: event.target.value,
+                          transmission: val ?? "",
                         }))
                       }
-                      className="w-full"
-                      size="default"
                     >
-                      <NativeSelectOption value="">
-                        Select transmission
-                      </NativeSelectOption>
-                      <NativeSelectOption value="Automatic">
-                        Automatic
-                      </NativeSelectOption>
-                      <NativeSelectOption value="Manual">
-                        Manual
-                      </NativeSelectOption>
-                      <NativeSelectOption value="CVT">CVT</NativeSelectOption>
-                      <NativeSelectOption value="DCT">DCT</NativeSelectOption>
-                    </NativeSelect>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select transmission" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Automatic">Automatic</SelectItem>
+                        <SelectItem value="Manual">Manual</SelectItem>
+                        <SelectItem value="CVT">CVT</SelectItem>
+                        <SelectItem value="DCT">DCT</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label
@@ -775,26 +890,26 @@ export function NewVehicleSheet({
                     >
                       Drivetrain
                     </label>
-                    <NativeSelect
+                    <Select
                       id="sheet-vehicle-drivetrain"
-                      value={form.drivetrain}
-                      onChange={(event) =>
+                      value={form.drivetrain || null}
+                      onValueChange={(val) =>
                         setForm((current) => ({
                           ...current,
-                          drivetrain: event.target.value,
+                          drivetrain: val ?? "",
                         }))
                       }
-                      className="w-full"
-                      size="default"
                     >
-                      <NativeSelectOption value="">
-                        Select drivetrain
-                      </NativeSelectOption>
-                      <NativeSelectOption value="AWD">AWD</NativeSelectOption>
-                      <NativeSelectOption value="4WD">4WD</NativeSelectOption>
-                      <NativeSelectOption value="FWD">FWD</NativeSelectOption>
-                      <NativeSelectOption value="RWD">RWD</NativeSelectOption>
-                    </NativeSelect>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select drivetrain" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="AWD">AWD</SelectItem>
+                        <SelectItem value="4WD">4WD</SelectItem>
+                        <SelectItem value="FWD">FWD</SelectItem>
+                        <SelectItem value="RWD">RWD</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label
@@ -803,43 +918,154 @@ export function NewVehicleSheet({
                     >
                       Body Type
                     </label>
-                    <NativeSelect
+                    <Select
                       id="sheet-vehicle-body"
-                      value={form.bodyType}
+                      value={form.bodyType || null}
+                      onValueChange={(val) =>
+                        setForm((current) => ({
+                          ...current,
+                          bodyType: val ?? "",
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select body type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SUV">SUV</SelectItem>
+                        <SelectItem value="Sedan">Sedan</SelectItem>
+                        <SelectItem value="Hatchback">Hatchback</SelectItem>
+                        <SelectItem value="Coupe">Coupe</SelectItem>
+                        <SelectItem value="Convertible">Convertible</SelectItem>
+                        <SelectItem value="Wagon">Wagon</SelectItem>
+                        <SelectItem value="Van">Van</SelectItem>
+                        <SelectItem value="Truck">Truck</SelectItem>
+                        <SelectItem value="Bus">Bus</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label
+                      className="mb-1 block text-sm font-medium"
+                      htmlFor="sheet-vehicle-steering"
+                    >
+                      Steering
+                    </label>
+                    <Select
+                      id="sheet-vehicle-steering"
+                      value={form.steering || null}
+                      onValueChange={(val) =>
+                        setForm((current) => ({
+                          ...current,
+                          steering: val ?? "",
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select steering side" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Left">Left (Лев)</SelectItem>
+                        <SelectItem value="Right">Right (Баруун)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label
+                      className="mb-1 block text-sm font-medium"
+                      htmlFor="sheet-vehicle-seats"
+                    >
+                      Seats
+                    </label>
+                    <Input
+                      id="sheet-vehicle-seats"
+                      type="number"
+                      value={form.seats}
                       onChange={(event) =>
                         setForm((current) => ({
                           ...current,
-                          bodyType: event.target.value,
+                          seats: event.target.value,
                         }))
                       }
-                      className="w-full"
-                      size="default"
+                      onBlur={() => validateField("seats", form.seats)}
+                      className={`h-11 ${fieldErrors.seats ? "border-destructive" : ""}`}
+                      placeholder="8"
+                      min="1"
+                      max="50"
+                      aria-invalid={!!fieldErrors.seats}
+                    />
+                    {fieldErrors.seats && (
+                      <Typography.Text className="mt-1 text-xs text-destructive">
+                        {fieldErrors.seats}
+                      </Typography.Text>
+                    )}
+                  </div>
+                  <div>
+                    <label
+                      className="mb-1 block text-sm font-medium"
+                      htmlFor="sheet-vehicle-category"
                     >
-                      <NativeSelectOption value="">
-                        Select body type
-                      </NativeSelectOption>
-                      <NativeSelectOption value="SUV">SUV</NativeSelectOption>
-                      <NativeSelectOption value="Sedan">
-                        Sedan
-                      </NativeSelectOption>
-                      <NativeSelectOption value="Hatchback">
-                        Hatchback
-                      </NativeSelectOption>
-                      <NativeSelectOption value="Coupe">
-                        Coupe
-                      </NativeSelectOption>
-                      <NativeSelectOption value="Convertible">
-                        Convertible
-                      </NativeSelectOption>
-                      <NativeSelectOption value="Wagon">
-                        Wagon
-                      </NativeSelectOption>
-                      <NativeSelectOption value="Van">Van</NativeSelectOption>
-                      <NativeSelectOption value="Truck">
-                        Truck
-                      </NativeSelectOption>
-                      <NativeSelectOption value="Bus">Bus</NativeSelectOption>
-                    </NativeSelect>
+                      Category
+                    </label>
+                    <Select
+                      id="sheet-vehicle-category"
+                      value={form.category || null}
+                      onValueChange={(val) =>
+                        setForm((current) => ({
+                          ...current,
+                          category: val ?? "",
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Family">
+                          Гэр бүлийн (Family)
+                        </SelectItem>
+                        <SelectItem value="Business">
+                          Бизнес (Business)
+                        </SelectItem>
+                        <SelectItem value="Commercial">
+                          Ачины (Commercial)
+                        </SelectItem>
+                        <SelectItem value="Sports">Спорт (Sports)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label
+                      className="mb-1 block text-sm font-medium"
+                      htmlFor="sheet-vehicle-country"
+                    >
+                      Country of Origin
+                    </label>
+                    <Select
+                      id="sheet-vehicle-country"
+                      value={form.countryOfOrigin || null}
+                      onValueChange={(val) =>
+                        setForm((current) => ({
+                          ...current,
+                          countryOfOrigin: val ?? "",
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Japan">Япон (Japan)</SelectItem>
+                        <SelectItem value="Korea">Солонгос (Korea)</SelectItem>
+                        <SelectItem value="Germany">
+                          Герман (Germany)
+                        </SelectItem>
+                        <SelectItem value="USA">АНУ (USA)</SelectItem>
+                        <SelectItem value="China">Хятад (China)</SelectItem>
+                        <SelectItem value="Russia">Орос (Russia)</SelectItem>
+                        <SelectItem value="Other">Бусад (Other)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label
@@ -888,7 +1114,7 @@ export function NewVehicleSheet({
                     >
                       Notes
                     </label>
-                    <textarea
+                    <Textarea
                       id="sheet-vehicle-notes"
                       value={form.notes}
                       onChange={(event) =>
@@ -898,7 +1124,6 @@ export function NewVehicleSheet({
                         }))
                       }
                       rows={3}
-                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       placeholder="Condition notes, accessories, or customer requests"
                     />
                   </div>

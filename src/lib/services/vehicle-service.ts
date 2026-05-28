@@ -28,52 +28,41 @@ export async function getVehicles(
 ): Promise<VehicleWithOwner[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getVehicles", orgId, JSON.stringify(options ?? {})],
-    async () => {
-      let query = supabase
-        .from("vehicles")
-        .select(
-          "*, vehicle_owners!inner(customer_id, customers!inner(first_name, last_name, phone))",
-        )
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .is("vehicle_owners.owned_until", null)
-        .order("created_at", { ascending: false });
+  let query = supabase
+    .from("vehicles")
+    .select(
+      "*, vehicle_owners!inner(customer_id, customers!inner(first_name, last_name, phone))",
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .is("vehicle_owners.owned_until", null)
+    .order("created_at", { ascending: false });
 
-      if (options?.search?.trim()) {
-        const term = `%${options.search.trim()}%`;
-        query = query.or(`plate_number.ilike.${term},vin.ilike.${term}`);
-      }
+  if (options?.search?.trim()) {
+    const term = `%${options.search.trim()}%`;
+    query = query.or(`plate_number.ilike.${term},vin.ilike.${term}`);
+  }
 
-      if (options?.customerId) {
-        query = query.eq("vehicle_owners.customer_id", options.customerId);
-      }
+  if (options?.customerId) {
+    query = query.eq("vehicle_owners.customer_id", options.customerId);
+  }
 
-      const { data, error } = await query.limit((options?.limit ?? 50) + 1);
+  const { data, error } = await query.limit((options?.limit ?? 50) + 1);
 
-      if (error) throw new Error(error.message);
+  if (error) throw new Error(error.message);
 
-      return (data ?? []).map((row: Record<string, unknown>) => {
-        const owners = (row.vehicle_owners as Record<string, unknown>[]) ?? [];
-        const primaryOwner = owners[0];
-        const customer =
-          (primaryOwner?.customers as Record<string, unknown>) ?? {};
-        return {
-          ...(row as unknown as Vehicle),
-          owner_name:
-            [customer.first_name, customer.last_name]
-              .filter(Boolean)
-              .join(" ") || null,
-          owner_phone: (customer.phone as string) ?? null,
-        } as unknown as VehicleWithOwner;
-      });
-    },
-    {
-      tags: [cacheTags.vehicles(orgId)],
-      revalidate: cacheDurations.vehicles,
-    },
-  );
+  return (data ?? []).map((row: Record<string, unknown>) => {
+    const owners = (row.vehicle_owners as Record<string, unknown>[]) ?? [];
+    const primaryOwner = owners[0];
+    const customer = (primaryOwner?.customers as Record<string, unknown>) ?? {};
+    return {
+      ...(row as unknown as Vehicle),
+      owner_name:
+        [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
+        null,
+      owner_phone: (customer.phone as string) ?? null,
+    } as unknown as VehicleWithOwner;
+  });
 }
 
 /**
@@ -215,6 +204,10 @@ export async function createVehicle(
       notes: params.notes?.trim() || null,
       license_expiry_at: params.licenseExpiryAt || null,
       next_service_at: params.nextServiceAt || null,
+      import_date: params.importDate || null,
+      country_of_origin: params.countryOfOrigin?.trim() || null,
+      category: params.category?.trim() || null,
+      seats: params.seats ?? null,
       created_by: userId,
       updated_by: userId,
     })

@@ -1,10 +1,13 @@
 "use client";
 
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const COMMON_CAR_COLORS = [
   { label: "White", hex: "#ffffff" },
@@ -55,18 +58,21 @@ export function ColorSelect({
           aria-hidden="true"
         />
       )}
-      <NativeSelect
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={cn(hex && "pl-8")}
+      <Select
+        value={value || null}
+        onValueChange={(val) => onChange(val ?? "")}
       >
-        <NativeSelectOption value="">{placeholder}</NativeSelectOption>
-        {COMMON_CAR_COLORS.map((color) => (
-          <NativeSelectOption key={color.label} value={color.label}>
-            {color.label}
-          </NativeSelectOption>
-        ))}
-      </NativeSelect>
+        <SelectTrigger className={cn(hex && "pl-8")}>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {COMMON_CAR_COLORS.map((color) => (
+            <SelectItem key={color.label} value={color.label}>
+              {color.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
