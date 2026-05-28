@@ -914,3 +914,10 @@ export interface InvoiceWithItems extends Invoice {
 export interface WorkOrderRow extends WorkOrder {
   mechanic_name: string | null;
 }
+
+// ── Global Reference Catalog Types ─────────────────────────────
+// Shared across all organizations. No prices — each org sets its own.
+
+export type GlobalPartCatalog = Tables<'global_parts_catalog'>;
+export type GlobalServiceCatalog = Tables<'global_services_catalog'>;
+export type GlobalPartsVehicleModel = Tables<'global_parts_vehicle_models'>;

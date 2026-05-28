@@ -3791,6 +3791,123 @@ export type Database = {
           },
         ]
       }
+      global_parts_catalog: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          name_mn: string | null
+          part_number: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          name_mn?: string | null
+          part_number?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_mn?: string | null
+          part_number?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      global_services_catalog: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          estimated_duration_minutes: number | null
+          id: string
+          interval_km: number | null
+          interval_months: number | null
+          is_active: boolean
+          name: string
+          name_mn: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          interval_km?: number | null
+          interval_months?: number | null
+          is_active?: boolean
+          name: string
+          name_mn?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          interval_km?: number | null
+          interval_months?: number | null
+          is_active?: boolean
+          name?: string
+          name_mn?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      global_parts_vehicle_models: {
+        Row: {
+          created_at: string
+          global_part_id: string
+          id: string
+          vehicle_model_id: string
+        }
+        Insert: {
+          created_at?: string
+          global_part_id: string
+          id?: string
+          vehicle_model_id: string
+        }
+        Update: {
+          created_at?: string
+          global_part_id?: string
+          id?: string
+          vehicle_model_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "global_parts_vehicle_models_global_part_id_fkey"
+            columns: ["global_part_id"]
+            isOneToOne: false
+            referencedRelation: "global_parts_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "global_parts_vehicle_models_vehicle_model_id_fkey"
+            columns: ["vehicle_model_id"]
+            isOneToOne: false
+            referencedRelation: "car_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       inventory_balances: {

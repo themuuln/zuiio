@@ -5,6 +5,7 @@ const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  serverExternalPackages: ["playwright"],
 
   // ── Security Headers ──────────────────────────────────────────
   async headers() {

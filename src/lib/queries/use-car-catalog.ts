@@ -57,3 +57,44 @@ export function useCarModels(brandId: string | null) {
     staleTime: 1000 * 60 * 60 * 24,
   });
 }
+
+// ---------------------------------------------------------------------------
+// SmartCar plate lookup
+// ---------------------------------------------------------------------------
+
+export type SmartCarLookupData = {
+  plateNumber: string;
+  make: string;
+  model: string;
+  year: number | null;
+  vin: string;
+  category: string;
+  engineCc: number | null;
+  transmission: string;
+  fuelType: string;
+  steering: string;
+  seats: number | null;
+  bodyType: string;
+  country: string;
+  color: string;
+  height: string;
+  width: string;
+  length: string;
+  weight: string;
+  importDate: string;
+};
+
+export function useSmartCarLookup(plateNumber: string | null) {
+  return useQuery({
+    queryKey: ["smartcar-lookup", plateNumber],
+    queryFn: async (): Promise<SmartCarLookupData> => {
+      const res = await fetch(`/api/smartcar/lookup?plate=${encodeURIComponent(plateNumber!)}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Lookup failed");
+      return json.data;
+    },
+    enabled: !!plateNumber && plateNumber.length >= 7,
+    staleTime: 1000 * 60 * 60 * 24,
+    retry: 1,
+  });
+}

@@ -962,6 +962,27 @@ export default function MechanicPage() {
             />
           </div>
         ) : null}
+        <NewMechanicSheet
+          open={showAddMechanic}
+          onOpenChange={(open) => {
+            setShowAddMechanic(open);
+            if (!open) {
+              const orgId = profile?.organizationId;
+              if (orgId) {
+                fetch(`/api/organizations/${orgId}/reports?type=mechanics`)
+                  .then((r) => r.json())
+                  .then((json) => {
+                    const list: MechanicItem[] = json.data ?? [];
+                    setMechanics(list);
+                    if (list.length > 0 && !selectedMechanicId) {
+                      setSelectedMechanicId(list[0].id);
+                    }
+                  })
+                  .catch(() => {});
+              }
+            }
+          }}
+        />
       </>
     );
   }

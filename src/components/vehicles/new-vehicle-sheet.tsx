@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { CarFront, Loader2, User } from "lucide-react";
+import { CarFront, Loader2, Search, User } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -112,6 +112,7 @@ export function NewVehicleSheet({
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [looking, setLooking] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<VehicleFormState>(initialForm);
   const [customerResults, setCustomerResults] = useState<Customer[]>([]);
@@ -153,6 +154,44 @@ export function NewVehicleSheet({
       }
       return next;
     });
+  };
+
+  // SmartCar plate lookup
+  const handlePlateLookup = async () => {
+    const plate = form.plateNumber.trim();
+    if (!plate || plate.length < 7) {
+      toast.error("Enter a valid plate number first");
+      return;
+    }
+    setLooking(true);
+    try {
+      const res = await fetch(
+        `/api/smartcar/lookup?plate=${encodeURIComponent(plate)}`,
+      );
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error ?? "Lookup failed");
+        return;
+      }
+      const d = json.data;
+      setForm((current) => ({
+        ...current,
+        make: d.make || current.make,
+        model: d.model || current.model,
+        year: d.year ? String(d.year) : current.year,
+        vin: d.vin || current.vin,
+        engine: d.engineCc ? String(d.engineCc) : current.engine,
+        fuelType: d.fuelType || current.fuelType,
+        transmission: d.transmission || current.transmission,
+        bodyType: d.bodyType || current.bodyType,
+        color: d.color || current.color,
+      }));
+      toast.success(`Found: ${d.make} ${d.model} (${d.year})`);
+    } catch {
+      toast.error("Lookup failed — try again");
+    } finally {
+      setLooking(false);
+    }
   };
 
   const searchCustomers = useCallback(
@@ -383,22 +422,39 @@ export function NewVehicleSheet({
                     >
                       Plate Number
                     </label>
-                    <Input
-                      id="sheet-vehicle-plate"
-                      value={form.plateNumber}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          plateNumber: formatPlateInput(
-                            transliterateMongolianPlate(event.target.value),
-                          ),
-                        }))
-                      }
-                      className={`h-11 font-mono ${fieldErrors.plateNumber ? "border-destructive" : ""}`}
-                      placeholder="1234 UBA"
-                      aria-invalid={!!fieldErrors.plateNumber}
-                      {...inputProps("plate")}
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        id="sheet-vehicle-plate"
+                        value={form.plateNumber}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            plateNumber: formatPlateInput(
+                              transliterateMongolianPlate(event.target.value),
+                            ),
+                          }))
+                        }
+                        className={`h-11 flex-1 font-mono ${fieldErrors.plateNumber ? "border-destructive" : ""}`}
+                        placeholder="1234 UBA"
+                        aria-invalid={!!fieldErrors.plateNumber}
+                        {...inputProps("plate")}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-11 shrink-0"
+                        onClick={handlePlateLookup}
+                        disabled={looking || !form.plateNumber.trim()}
+                        title="Lookup plate on SmartCar.mn"
+                      >
+                        {looking ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Search className="size-4" />
+                        )}
+                      </Button>
+                    </div>
                     {fieldErrors.plateNumber && (
                       <Typography.Text className="mt-1 text-xs text-destructive">
                         {fieldErrors.plateNumber}
@@ -488,12 +544,19 @@ export function NewVehicleSheet({
                       isItemEqualToValue={(a, b) => a.id === b.id}
                     >
                       <ComboboxInput
-                        placeholder={selectedBrand ? "Search model..." : "Select brand first"}
+                        placeholder={
+                          selectedBrand
+                            ? "Search model..."
+                            : "Select brand first"
+                        }
                         className={`h-11 ${fieldErrors.model ? "border-destructive" : ""}`}
                         aria-invalid={!!fieldErrors.model}
                       >
                         <ComboboxValue>
-                          {form.model || (selectedBrand ? "Search model..." : "Select brand first")}
+                          {form.model ||
+                            (selectedBrand
+                              ? "Search model..."
+                              : "Select brand first")}
                         </ComboboxValue>
                       </ComboboxInput>
                       <ComboboxContent>
@@ -504,8 +567,7 @@ export function NewVehicleSheet({
                                 {model.name}
                                 {model.year_start
                                   ? ` (${model.year_start}${model.year_end ? "-" + model.year_end : "+"})`
-                                  : ""
-                                }
+                                  : ""}
                               </span>
                             </ComboboxItem>
                           )}

@@ -78,14 +78,23 @@ async function getBrowser(): Promise<Browser> {
 // DOM scraping
 // ---------------------------------------------------------------------------
 
-function parseVehicleFromDOM(page: Page): SmartCarVehicle {
+async function parseVehicleFromDOM(page: Page): Promise<SmartCarVehicle> {
   // The sidebar card always shows plate, make+model, year
   const plate =
-    page.locator(".vehicleComponentInfoCard__value").first().textContent() ?? "";
+    (await page
+      .locator(".vehicleComponentInfoCard__value")
+      .first()
+      .textContent()) ?? "";
   const makeModel =
-    page.locator(".vehicleComponentInfoCard__value").nth(1).textContent() ?? "";
+    (await page
+      .locator(".vehicleComponentInfoCard__value")
+      .nth(1)
+      .textContent()) ?? "";
   const yearRaw =
-    page.locator(".vehicleComponentInfoCard__value").nth(2).textContent() ?? "";
+    (await page
+      .locator(".vehicleComponentInfoCard__value")
+      .nth(2)
+      .textContent()) ?? "";
 
   // Split "HONDA Insight" → make + model
   const parts = makeModel.trim().split(/\s+/);
@@ -94,28 +103,30 @@ function parseVehicleFromDOM(page: Page): SmartCarVehicle {
 
   // Certificate section: label→value pairs inside vehicleGeneral__row
   const rows = page.locator(".vehicleGeneral__row");
-  const count = rows.count();
+  const count = await rows.count();
   const fields: Record<string, string> = {};
 
   for (let i = 0; i < count; i++) {
     const row = rows.nth(i);
     const label =
-      row.locator(".vehicleGeneral__label").textContent()?.trim() ?? "";
+      (await row.locator(".vehicleGeneral__label").textContent())?.trim() ?? "";
     // Value is the text node after the label, not inside a child
-    const fullText = row.textContent() ?? "";
+    const fullText = (await row.textContent()) ?? "";
     const value = fullText.replace(label, "").trim();
     if (label) fields[label] = value;
   }
 
   // Also grab the dimension values from the blue card
   const dimItems = page.locator(".vehicleGeneral__item");
-  const dimCount = dimItems.count();
+  const dimCount = await dimItems.count();
   for (let i = 0; i < dimCount; i++) {
     const item = dimItems.nth(i);
     const label =
-      item.locator(".vehicleGeneral__label").textContent()?.trim() ?? "";
+      (await item.locator(".vehicleGeneral__label").textContent())?.trim() ??
+      "";
     const value =
-      item.locator(".vehicleGeneral__value").textContent()?.trim() ?? "";
+      (await item.locator(".vehicleGeneral__value").textContent())?.trim() ??
+      "";
     if (label) fields[label] = value;
   }
 
@@ -167,13 +178,25 @@ export async function lookupPlate(
     page = await browser.newPage();
 
     // Block heavy resources to speed up load
-    await page.route("**/*.{png,jpg,jpeg,gif,svg,woff,woff2,ttf}", (route: { abort: () => Promise<unknown> }) =>
+    await page.route(
+      "**/*.{png,jpg,jpeg,gif,svg,woff,woff2,ttf}",
+      (route: { abort: () => Promise<unknown> }) => route.abort(),
+    );
+    await page.route(
+      "**/analytics**",
+      (route: { abort: () => Promise<unknown> }) => route.abort(),
+    );
+    await page.route("**/gtag**", (route: { abort: () => Promise<unknown> }) =>
       route.abort(),
     );
-    await page.route("**/analytics**", (route: { abort: () => Promise<unknown> }) => route.abort());
-    await page.route("**/gtag**", (route: { abort: () => Promise<unknown> }) => route.abort());
-    await page.route("**/facebook**", (route: { abort: () => Promise<unknown> }) => route.abort());
-    await page.route("**/socket**", (route: { abort: () => Promise<unknown> }) => route.abort());
+    await page.route(
+      "**/facebook**",
+      (route: { abort: () => Promise<unknown> }) => route.abort(),
+    );
+    await page.route(
+      "**/socket**",
+      (route: { abort: () => Promise<unknown> }) => route.abort(),
+    );
 
     // Navigate to home
     await page.goto("https://smartcar.mn/home", {
@@ -197,7 +220,7 @@ export async function lookupPlate(
     // Extra settle time for SPA data fetch
     await page.waitForTimeout(1500);
 
-    const data = parseVehicleFromDOM(page);
+    const data = await parseVehicleFromDOM(page);
 
     // Validate we got something meaningful
     if (!data.make && !data.model) {
