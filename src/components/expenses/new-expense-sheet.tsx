@@ -9,7 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -237,25 +243,30 @@ export function NewExpenseSheet({ open, onOpenChange }: NewExpenseSheetProps) {
                       >
                         {t("category")}
                       </Label>
-                      <NativeSelect
+                      <Select
                         id="sheet-expense-category"
-                        value={form.categoryId}
-                        onChange={(e) =>
+                        value={form.categoryId || null}
+                        onValueChange={(val) =>
                           setForm((prev) => ({
                             ...prev,
-                            categoryId: e.target.value,
+                            categoryId: val ?? "",
                           }))
                         }
-                        className="w-full"
-                        aria-label={t("category")}
                       >
-                        <option value="">{commonT("all")}</option>
-                        {categories?.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </NativeSelect>
+                        <SelectTrigger
+                          className="w-full"
+                          aria-label={t("category")}
+                        >
+                          <SelectValue placeholder={commonT("all")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories?.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div>
@@ -310,24 +321,30 @@ export function NewExpenseSheet({ open, onOpenChange }: NewExpenseSheetProps) {
                       >
                         {t("paymentMethod")}
                       </Label>
-                      <NativeSelect
+                      <Select
                         id="sheet-expense-payment-method"
                         value={form.paymentMethod}
-                        onChange={(e) =>
+                        onValueChange={(val) =>
                           setForm((prev) => ({
                             ...prev,
-                            paymentMethod: e.target.value,
+                            paymentMethod: val ?? "",
                           }))
                         }
-                        className="w-full"
-                        aria-label={t("paymentMethod")}
                       >
-                        {PAYMENT_METHODS.map((method) => (
-                          <option key={method} value={method}>
-                            {t(method)}
-                          </option>
-                        ))}
-                      </NativeSelect>
+                        <SelectTrigger
+                          className="w-full"
+                          aria-label={t("paymentMethod")}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PAYMENT_METHODS.map((method) => (
+                            <SelectItem key={method} value={method}>
+                              {t(method)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div>

@@ -9,7 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useRouter } from "@/lib/i18n/navigation";
@@ -125,12 +131,16 @@ export default function NewExpensePage() {
             <Typography.H1 className="text-2xl font-semibold tracking-tight">
               {t("addExpense")}
             </Typography.H1>
-            <Typography.Muted className="text-sm text-muted-foreground">{t("subtitle")}</Typography.Muted>
+            <Typography.Muted className="text-sm text-muted-foreground">
+              {t("subtitle")}
+            </Typography.Muted>
           </div>
         </div>
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
-            <Typography.Text className="text-sm text-destructive">{orgQuery.error.message}</Typography.Text>
+            <Typography.Text className="text-sm text-destructive">
+              {orgQuery.error.message}
+            </Typography.Text>
           </CardContent>
         </Card>
       </div>
@@ -152,7 +162,9 @@ export default function NewExpensePage() {
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("addExpense")}
           </Typography.H1>
-          <Typography.Muted className="text-sm text-muted-foreground">{t("subtitle")}</Typography.Muted>
+          <Typography.Muted className="text-sm text-muted-foreground">
+            {t("subtitle")}
+          </Typography.Muted>
         </div>
       </div>
 
@@ -247,25 +259,27 @@ export default function NewExpensePage() {
                 >
                   {t("category")}
                 </Label>
-                <NativeSelect
+                <Select
                   id="category"
-                  value={form.categoryId}
-                  onChange={(e) =>
+                  value={form.categoryId || null}
+                  onValueChange={(val) =>
                     setForm((prev) => ({
                       ...prev,
-                      categoryId: e.target.value,
+                      categoryId: val ?? "",
                     }))
                   }
-                  className="w-full"
-                  aria-label={t("category")}
                 >
-                  <option value="">{commonT("all")}</option>
-                  {categories?.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </NativeSelect>
+                  <SelectTrigger className="w-full" aria-label={t("category")}>
+                    <SelectValue placeholder={commonT("all")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories?.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -317,25 +331,30 @@ export default function NewExpensePage() {
                 >
                   {t("paymentMethod")}
                 </Label>
-                <NativeSelect
+                <Select
                   id="paymentMethod"
                   value={form.paymentMethod}
-                  onChange={(e) =>
+                  onValueChange={(val) =>
                     setForm((prev) => ({
                       ...prev,
-                      paymentMethod: e.target.value,
+                      paymentMethod: val ?? "",
                     }))
                   }
-                  className="w-full"
-                  aria-label={t("paymentMethod")}
                 >
-                  <option value="">{commonT("all")}</option>
-                  {PAYMENT_METHODS.map((method) => (
-                    <option key={method} value={method}>
-                      {t(method)}
-                    </option>
-                  ))}
-                </NativeSelect>
+                  <SelectTrigger
+                    className="w-full"
+                    aria-label={t("paymentMethod")}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAYMENT_METHODS.map((method) => (
+                      <SelectItem key={method} value={method}>
+                        {t(method)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>

@@ -16,7 +16,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { inputProps, formatMongolianPhone } from "@/lib/form-ux";
 import { useRouter } from "@/lib/i18n/navigation";
@@ -214,7 +220,9 @@ export function NewCustomerDialog({
         {error && !conflictInfo && (
           <Card className="border-destructive/50 bg-destructive/5">
             <CardContent className="p-4">
-              <Typography.Text className="text-sm text-destructive">{error}</Typography.Text>
+              <Typography.Text className="text-sm text-destructive">
+                {error}
+              </Typography.Text>
             </CardContent>
           </Card>
         )}
@@ -233,21 +241,29 @@ export function NewCustomerDialog({
                   >
                     {t("type")} <span className="text-destructive">*</span>
                   </Label>
-                  <NativeSelect
+                  <Select
                     id="type"
                     value={form.type}
-                    onChange={(event) =>
+                    onValueChange={(val) =>
                       setForm((current) => ({
                         ...current,
-                        type: event.target.value as CustomerType,
+                        type: (val ?? "individual") as CustomerType,
                       }))
                     }
-                    className="w-full"
-                    aria-label="Customer type"
                   >
-                    <option value="individual">{t("individual")}</option>
-                    <option value="company">{t("company")}</option>
-                  </NativeSelect>
+                    <SelectTrigger
+                      className="w-full"
+                      aria-label="Customer type"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">
+                        {t("individual")}
+                      </SelectItem>
+                      <SelectItem value="company">{t("company")}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {form.type === "company" ? (
@@ -424,28 +440,36 @@ export function NewCustomerDialog({
                   >
                     {t("source")}
                   </Label>
-                  <NativeSelect
+                  <Select
                     id="source"
-                    value={form.source}
-                    onChange={(event) =>
+                    value={form.source || null}
+                    onValueChange={(val) =>
                       setForm((current) => ({
                         ...current,
-                        source: event.target.value,
+                        source: val ?? "",
                       }))
                     }
-                    className="w-full"
-                    aria-label="Source"
                   >
-                    <option value="">{t("sourcePlaceholder")}</option>
-                    <option value="referral">{t("sourceReferral")}</option>
-                    <option value="website">{t("sourceWebsite")}</option>
-                    <option value="walk-in">{t("sourceWalkIn")}</option>
-                    <option value="social_media">
-                      {t("sourceSocialMedia")}
-                    </option>
-                    <option value="phone">{t("sourcePhone")}</option>
-                    <option value="other">{t("sourceOther")}</option>
-                  </NativeSelect>
+                    <SelectTrigger className="w-full" aria-label="Source">
+                      <SelectValue placeholder={t("sourcePlaceholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="referral">
+                        {t("sourceReferral")}
+                      </SelectItem>
+                      <SelectItem value="website">
+                        {t("sourceWebsite")}
+                      </SelectItem>
+                      <SelectItem value="walk-in">
+                        {t("sourceWalkIn")}
+                      </SelectItem>
+                      <SelectItem value="social_media">
+                        {t("sourceSocialMedia")}
+                      </SelectItem>
+                      <SelectItem value="phone">{t("sourcePhone")}</SelectItem>
+                      <SelectItem value="other">{t("sourceOther")}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="sm:col-span-2">
                   <Label

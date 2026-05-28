@@ -7,7 +7,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import {
@@ -213,18 +219,22 @@ export function NewPurchaseOrderSheet({
                       <FieldLabel htmlFor="po-supplier">
                         {t("supplier")}
                       </FieldLabel>
-                      <NativeSelect
+                      <Select
                         id="po-supplier"
-                        value={supplierId}
-                        onChange={(e) => setSupplierId(e.target.value)}
+                        value={supplierId || null}
+                        onValueChange={(val) => setSupplierId(val ?? "")}
                       >
-                        <option value="">—</option>
-                        {suppliers.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.name}
-                          </option>
-                        ))}
-                      </NativeSelect>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="—" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {suppliers.map((s) => (
+                            <SelectItem key={s.id} value={s.id}>
+                              {s.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </Field>
                   </div>
 
@@ -277,19 +287,23 @@ export function NewPurchaseOrderSheet({
                           className="flex items-end gap-2 p-2.5 rounded-lg border border-border/60 bg-card/40"
                         >
                           <div className="flex-1 min-w-0">
-                            <NativeSelect
-                              value={item.part_id}
-                              onChange={(e) =>
-                                updateItem(item.id, { part_id: e.target.value })
+                            <Select
+                              value={item.part_id || null}
+                              onValueChange={(val) =>
+                                updateItem(item.id, { part_id: val ?? "" })
                               }
                             >
-                              <option value="">{t("selectPart")}</option>
-                              {parts.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                  {p.name}
-                                </option>
-                              ))}
-                            </NativeSelect>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder={t("selectPart")} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {parts.map((p) => (
+                                  <SelectItem key={p.id} value={p.id}>
+                                    {p.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div className="w-20">
                             <Input
