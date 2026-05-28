@@ -2,7 +2,10 @@ import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
-import { isValidMongolianPlate, normalizeMongolianPlate } from "@/lib/form-validation";
+import {
+  isValidMongolianPlate,
+  normalizeMongolianPlate,
+} from "@/lib/form-validation";
 import { createClient } from "@/lib/supabase/server";
 import type {
   CreateVehicleParams,
@@ -274,7 +277,9 @@ export async function updateVehicle(
 
   const updates: Record<string, unknown> = {};
   if (params.plateNumber !== undefined) {
-    const normalized = normalizeMongolianPlate(params.plateNumber?.trim() ?? "");
+    const normalized = normalizeMongolianPlate(
+      params.plateNumber?.trim() ?? "",
+    );
     if (normalized && !isValidMongolianPlate(normalized)) {
       throw new ValidationError(
         "Plate must be 4 digits followed by 3 Cyrillic letters (e.g. 4444УНА)",
