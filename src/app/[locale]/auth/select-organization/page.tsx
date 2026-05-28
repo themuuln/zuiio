@@ -5,6 +5,8 @@ import { OrganizationSelectionForm } from "@/components/auth/organization-select
 import { completeOrganizationLogin } from "@/lib/actions/complete-organization-login";
 import { UnauthorizedError } from "@/lib/errors";
 import { listUserOrganizations } from "@/lib/services/organization-access-service";
+import { createClient } from "@/lib/supabase/server";
+import { finalizeSignup } from "@/lib/services/signup-service";
 
 export async function generateMetadata({
   params,
@@ -27,14 +29,23 @@ export default async function SelectOrganizationPage({
 }: {
   searchParams: Promise<{ redirectTo?: string }>;
 }) {
-  const [t, setupT] = await Promise.all([
-    getTranslations("auth.selectOrganization"),
-    getTranslations("auth.setup"),
-  ]);
+  const t = await getTranslations("auth.selectOrganization");
+  const setupT = await getTranslations("auth.setup");
   const { redirectTo } = await searchParams;
 
   try {
-    const organizations = await listUserOrganizations();
+    let organizations = await listUserOrganizations();
+
+    // Auto-create org from user metadata if none exist
+    if (organizations.length === 0) {
+      try {
+        const supabase = await createClient();
+        await finalizeSignup(supabase);
+        organizations = await listUserOrganizations();
+      } catch (setupError) {
+        console.error("Auto organization setup failed:", setupError);
+      }
+    }
 
     if (organizations.length === 0) {
       return (
@@ -44,14 +55,29 @@ export default async function SelectOrganizationPage({
             subtitle: setupT("subtitle"),
             error: setupT("error"),
             retry: setupT("retry"),
-            manualSetup: setupT("manualSetup"),
-            orgNameLabel: setupT("orgNameLabel"),
-            orgNamePlaceholder: setupT("orgNamePlaceholder"),
-            createOrg: setupT("createOrg"),
-            manualError: setupT("manualError"),
           }}
         />
       );
+    }
+
+    const isSingleOrg = organizations.length === 1;
+    const singleOrgHasPin = organizations[0]?.hasBayViewPin ?? false;
+
+    // Determine contextual title/subtitle based on user state
+    let title: string;
+    let subtitle: string;
+    if (isSingleOrg && !singleOrgHasPin) {
+      // New user, single org — "Set up your PIN"
+      title = t("setupTitle");
+      subtitle = t("setupSubtitle");
+    } else if (isSingleOrg && singleOrgHasPin) {
+      // Returning user, single org — "Enter your PIN"
+      title = t("verifyTitle");
+      subtitle = t("verifySubtitle");
+    } else {
+      // Multi-org — show chooser
+      title = t("title");
+      subtitle = t("subtitle");
     }
 
     return (
@@ -59,9 +85,11 @@ export default async function SelectOrganizationPage({
         organizations={organizations}
         action={completeOrganizationLogin}
         redirectTo={redirectTo}
+        singleOrgMode={isSingleOrg}
         copy={{
-          title: t("title"),
-          subtitle: t("subtitle"),
+          title,
+          subtitle,
+          pinExplanation: t("pinExplanation"),
           organizationLabel: t("organizationLabel"),
           organizationPlaceholder: t("organizationPlaceholder"),
           pinLabel: t("pinLabel"),

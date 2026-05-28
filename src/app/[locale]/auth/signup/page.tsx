@@ -40,14 +40,38 @@ export default function SignupPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="text-center">
-        <Typography.H2 className="text-lg font-semibold text-foreground">{t("title")}</Typography.H2>
-        <Typography.Muted className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</Typography.Muted>
+        <Typography.H2 className="text-lg font-semibold text-foreground">
+          {t("title")}
+        </Typography.H2>
+        <Typography.Muted className="mt-1 text-sm text-muted-foreground">
+          {t("subtitle")}
+        </Typography.Muted>
       </div>
       <form action={formAction}>
         <FieldGroup>
           {state?.formError && (
             <FieldError key={state.formError}>{state.formError}</FieldError>
           )}
+
+          <Field>
+            <FieldLabel htmlFor="fullName">
+              {t("fullNameLabel")} <span className="text-destructive">*</span>
+            </FieldLabel>
+            <Input
+              id="fullName"
+              name="fullName"
+              type="text"
+              autoComplete="name"
+              required
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder={t("fullNamePlaceholder")}
+              aria-invalid={"fullName" in fieldErrors || undefined}
+            />
+            {"fullName" in fieldErrors && (
+              <FieldError>{fieldErrors.fullName}</FieldError>
+            )}
+          </Field>
 
           <Field>
             <FieldLabel htmlFor="organizationName">
@@ -67,26 +91,6 @@ export default function SignupPage() {
             />
             {"organizationName" in fieldErrors && (
               <FieldError>{fieldErrors.organizationName}</FieldError>
-            )}
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="fullName">
-              {t("fullNameLabel")} <span className="text-destructive">*</span>
-            </FieldLabel>
-            <Input
-              id="fullName"
-              name="fullName"
-              type="text"
-              autoComplete="name"
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder={t("fullNamePlaceholder")}
-              aria-invalid={"fullName" in fieldErrors || undefined}
-            />
-            {"fullName" in fieldErrors && (
-              <FieldError>{fieldErrors.fullName}</FieldError>
             )}
           </Field>
 

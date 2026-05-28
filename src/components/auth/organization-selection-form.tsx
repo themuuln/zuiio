@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, KeyRound, Loader2 } from "lucide-react";
+import { Building2, Info, KeyRound, Loader2 } from "lucide-react";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,12 @@ interface OrganizationSelectionFormProps {
     formData: FormData,
   ) => Promise<CompleteOrganizationLoginState>;
   redirectTo?: string;
+  /** When true, hides the org selector and shows contextual copy (single-org mode). */
+  singleOrgMode?: boolean;
   copy: {
     title: string;
     subtitle: string;
+    pinExplanation: string;
     organizationLabel: string;
     organizationPlaceholder: string;
     pinLabel: string;
@@ -35,6 +38,7 @@ export function OrganizationSelectionForm({
   organizations,
   action,
   redirectTo,
+  singleOrgMode = false,
   copy,
 }: OrganizationSelectionFormProps) {
   const [state, formAction, isPending] = useActionState(action, {});
@@ -76,8 +80,12 @@ export function OrganizationSelectionForm({
   if (organizations.length === 0) {
     return (
       <div className="flex flex-col gap-3 text-center">
-        <Typography.H2 className="text-lg font-semibold text-foreground">{copy.title}</Typography.H2>
-        <Typography.Muted className="text-sm text-muted-foreground">{copy.noOrganizations}</Typography.Muted>
+        <Typography.H2 className="text-lg font-semibold text-foreground">
+          {copy.title}
+        </Typography.H2>
+        <Typography.Muted className="text-sm text-muted-foreground">
+          {copy.noOrganizations}
+        </Typography.Muted>
       </div>
     );
   }
@@ -85,8 +93,12 @@ export function OrganizationSelectionForm({
   return (
     <div>
       <div className="mb-6 text-center">
-        <Typography.H2 className="text-lg font-semibold text-foreground">{copy.title}</Typography.H2>
-        <Typography.Muted className="mt-1 text-sm text-muted-foreground">{copy.subtitle}</Typography.Muted>
+        <Typography.H2 className="text-lg font-semibold text-foreground">
+          {copy.title}
+        </Typography.H2>
+        <Typography.Muted className="mt-1 text-sm text-muted-foreground">
+          {copy.subtitle}
+        </Typography.Muted>
       </div>
 
       <form
@@ -108,42 +120,60 @@ export function OrganizationSelectionForm({
           </div>
         )}
 
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="organizationId"
-            className="text-sm font-medium text-foreground"
-          >
-            {copy.organizationLabel}
-          </label>
-          <div className="relative">
-            <Building2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <select
-              id="organizationId"
-              name="organizationId"
-              value={organizationId}
-              onChange={(event) => setOrganizationId(event.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && e.stopPropagation()}
-              className={`h-10 w-full rounded-md border bg-background py-2 pr-3 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${"organizationId" in fieldErrors ? "border-destructive ring-1 ring-destructive/20" : "border-input"}`}
-              aria-invalid={"organizationId" in fieldErrors || undefined}
+        {/* Org selector — hidden in single-org mode */}
+        {!singleOrgMode && (
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="organizationId"
+              className="text-sm font-medium text-foreground"
             >
-              {organizations.map((organization) => (
-                <option
-                  key={organization.organizationId}
-                  value={organization.organizationId}
-                >
-                  {organization.name}
-                </option>
-              ))}
-            </select>
+              {copy.organizationLabel}
+            </label>
+            <div className="relative">
+              <Building2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <select
+                id="organizationId"
+                name="organizationId"
+                value={organizationId}
+                onChange={(event) => setOrganizationId(event.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && e.stopPropagation()}
+                className={`h-10 w-full rounded-md border bg-background py-2 pr-3 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${
+                  "organizationId" in fieldErrors
+                    ? "border-destructive ring-1 ring-destructive/20"
+                    : "border-input"
+                }`}
+                aria-invalid={"organizationId" in fieldErrors || undefined}
+              >
+                {organizations.map((organization) => (
+                  <option
+                    key={organization.organizationId}
+                    value={organization.organizationId}
+                  >
+                    {organization.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {"organizationId" in fieldErrors && (
+              <Typography.Text className="text-sm text-destructive">
+                {fieldErrors.organizationId}
+              </Typography.Text>
+            )}
+            <Typography.Muted className="text-xs text-muted-foreground">
+              {selectedOrganization?.slug ?? copy.organizationPlaceholder}
+            </Typography.Muted>
           </div>
-          {"organizationId" in fieldErrors && (
-            <Typography.Text className="text-sm text-destructive">
-              {fieldErrors.organizationId}
-            </Typography.Text>
-          )}
-          <Typography.Muted className="text-xs text-muted-foreground">
-            {selectedOrganization?.slug ?? copy.organizationPlaceholder}
-          </Typography.Muted>
+        )}
+
+        {/* Hidden input for single-org mode to still submit the org ID */}
+        {singleOrgMode && (
+          <input type="hidden" name="organizationId" value={organizationId} />
+        )}
+
+        {/* PIN explanation banner */}
+        <div className="flex items-start gap-2 rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+          <Info className="mt-0.5 size-3.5 shrink-0" />
+          <span>{copy.pinExplanation}</span>
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -163,13 +193,19 @@ export function OrganizationSelectionForm({
               required
               value={pin}
               onChange={(e) => setPin(e.target.value)}
-              className={`w-full rounded-md border bg-background px-3 py-2 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${"pin" in fieldErrors || hasFormError ? "border-destructive ring-1 ring-destructive/20" : "border-input"}`}
+              className={`w-full rounded-md border bg-background px-3 py-2 pl-9 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${
+                "pin" in fieldErrors || hasFormError
+                  ? "border-destructive ring-1 ring-destructive/20"
+                  : "border-input"
+              }`}
               placeholder={copy.pinPlaceholder}
               aria-invalid={"pin" in fieldErrors || hasFormError || undefined}
             />
           </div>
           {"pin" in fieldErrors && (
-            <Typography.Text className="text-sm text-destructive">{fieldErrors.pin}</Typography.Text>
+            <Typography.Text className="text-sm text-destructive">
+              {fieldErrors.pin}
+            </Typography.Text>
           )}
           <Typography.Muted className="text-xs text-muted-foreground">
             {selectedOrganization?.hasBayViewPin
@@ -197,7 +233,11 @@ export function OrganizationSelectionForm({
               required
               value={confirmPin}
               onChange={(e) => setConfirmPin(e.target.value)}
-              className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${"confirmPin" in fieldErrors || hasFormError ? "border-destructive ring-1 ring-destructive/20" : "border-input"}`}
+              className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${
+                "confirmPin" in fieldErrors || hasFormError
+                  ? "border-destructive ring-1 ring-destructive/20"
+                  : "border-input"
+              }`}
               placeholder={copy.pinPlaceholder}
               aria-invalid={
                 "confirmPin" in fieldErrors || hasFormError || undefined

@@ -117,16 +117,6 @@ export async function finalizeSignup(
   // Use service-role client for DB mutations to bypass RLS
   const adminClient = await createServiceRoleClient();
 
-  const { data: existingProfile } = await adminClient
-    .from("profiles")
-    .select("id")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (existingProfile) {
-    return { status: "already_setup" };
-  }
-
   const meta = (user.user_metadata ?? {}) as unknown as Record<string, unknown>;
   const orgName =
     options?.orgName?.trim() ||
