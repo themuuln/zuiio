@@ -28,7 +28,11 @@ interface ServiceLinesProps {
   priceHistory: Record<string, number>;
   lines: ServiceLine[];
   onAdd: (svc: ServiceCatalog) => void;
-  onUpdate: (idx: number, field: keyof ServiceLine, value: number | string) => void;
+  onUpdate: (
+    idx: number,
+    field: keyof ServiceLine,
+    value: number | string,
+  ) => void;
   onRemove: (idx: number) => void;
 }
 
@@ -63,67 +67,69 @@ export function ServiceLines({
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {/* Service search */}
-        <div className="relative">
-          <SearchInput
-            placeholder="Search services to add..."
-            loading={false}
-            onSearch={setServiceSearch}
-            debounceMs={300}
-          />
-          {serviceSearch && (
-            <div className="absolute top-full left-0 right-0 z-10 mt-1 border rounded-lg bg-background shadow-lg max-h-60 overflow-y-auto">
-              {filteredCatalog.slice(0, 12).map((svc) => {
-                const last =
-                  priceHistory[svc.name] ?? Number(svc.default_price);
-                const isAdded = lines.some(
-                  (s) => s.service_catalog_id === svc.id,
-                );
-                return (
-                  <Button
-                    variant="ghost"
-                    key={svc.id}
-                    onClick={() => {
-                      if (!isAdded) {
-                        onAdd(svc);
-                        setServiceSearch("");
-                      }
-                    }}
-                    disabled={isAdded}
-                    className={`w-full justify-between p-3 min-h-[48px] h-auto ${
-                      isAdded ? "opacity-40" : ""
-                    }`}
-                  >
-                    <div>
-                      <span className="text-sm font-medium">
-                        <HighlightText text={svc.name} query={serviceSearch} />
+        <SearchInput
+          placeholder="Search services to add..."
+          loading={false}
+          onSearch={setServiceSearch}
+          debounceMs={300}
+        />
+        {serviceSearch && (
+          <div className="flex flex-col gap-1 border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+            {filteredCatalog.slice(0, 12).map((svc) => {
+              const last = priceHistory[svc.name] ?? Number(svc.default_price);
+              const isAdded = lines.some(
+                (s) => s.service_catalog_id === svc.id,
+              );
+              return (
+                <Button
+                  variant="ghost"
+                  key={svc.id}
+                  onClick={() => {
+                    if (!isAdded) {
+                      onAdd(svc);
+                      setServiceSearch("");
+                    }
+                  }}
+                  disabled={isAdded}
+                  className={`w-full justify-between p-3 min-h-[48px] h-auto ${
+                    isAdded ? "opacity-40" : ""
+                  }`}
+                >
+                  <div>
+                    <span className="text-sm font-medium">
+                      <HighlightText text={svc.name} query={serviceSearch} />
+                    </span>
+                    {svc.category && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        <HighlightText
+                          text={svc.category}
+                          query={serviceSearch}
+                        />
                       </span>
-                      {svc.category && (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          <HighlightText text={svc.category} query={serviceSearch} />
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-semibold tabular-nums">
-                        {formatCurrency(Number(svc.default_price))}
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm font-semibold tabular-nums">
+                      {formatCurrency(Number(svc.default_price))}
+                    </span>
+                    {last !== Number(svc.default_price) && last > 0 && (
+                      <span
+                        className={`ml-2 text-xs ${Number(svc.default_price) <= last ? "text-green-600" : "text-amber-600"}`}
+                      >
+                        last: {formatCurrency(last)}
                       </span>
-                      {last !== Number(svc.default_price) && last > 0 && (
-                        <span className={`ml-2 text-xs ${Number(svc.default_price) <= last ? 'text-green-600' : 'text-amber-600'}`}>
-                          last: {formatCurrency(last)}
-                        </span>
-                      )}
-                    </div>
-                  </Button>
-                );
-              })}
-              {filteredCatalog.length === 0 && (
-                <div className="p-4 text-sm text-muted-foreground text-center">
-                  No services found
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+                    )}
+                  </div>
+                </Button>
+              );
+            })}
+            {filteredCatalog.length === 0 && (
+              <div className="p-4 text-sm text-muted-foreground text-center">
+                No services found
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Service lines */}
         {lines.length > 0 && (
@@ -135,10 +141,15 @@ export function ServiceLines({
                   className="flex items-center gap-2 p-3 hover:bg-muted/20"
                 >
                   <div className="flex-1 min-w-0">
-                    <Typography.Text className="text-sm font-medium truncate">{svc.name}</Typography.Text>
+                    <Typography.Text className="text-sm font-medium truncate">
+                      {svc.name}
+                    </Typography.Text>
                     {svc.last_price && (
-                      <Typography.Text className={`text-[11px] ${svc.base_price <= svc.last_price ? 'text-green-600' : 'text-amber-600'}`}>
-                        {svc.base_price <= svc.last_price ? '✓' : '↑'} Last: {formatCurrency(svc.last_price)}
+                      <Typography.Text
+                        className={`text-[11px] ${svc.base_price <= svc.last_price ? "text-green-600" : "text-amber-600"}`}
+                      >
+                        {svc.base_price <= svc.last_price ? "✓" : "↑"} Last:{" "}
+                        {formatCurrency(svc.last_price)}
                       </Typography.Text>
                     )}
                   </div>

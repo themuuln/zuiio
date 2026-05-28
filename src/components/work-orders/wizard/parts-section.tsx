@@ -20,7 +20,9 @@ export function PartsSection() {
         (p) =>
           p.name.toLowerCase().includes(ctx.partSearch.toLowerCase()) ||
           (p.part_number &&
-            p.part_number.toLowerCase().includes(ctx.partSearch.toLowerCase())) ||
+            p.part_number
+              .toLowerCase()
+              .includes(ctx.partSearch.toLowerCase())) ||
           (p.category &&
             p.category.toLowerCase().includes(ctx.partSearch.toLowerCase())),
       )
@@ -91,64 +93,62 @@ export function PartsSection() {
           )}
 
         {/* Parts catalog search */}
-        <div className="relative">
-          <SearchInput
-            placeholder={t("searchPartsToAdd")}
-            loading={false}
-            onSearch={ctx.setPartSearch}
-            debounceMs={300}
-          />
-          {ctx.partSearch && (
-            <div className="absolute top-full left-0 right-0 z-10 mt-1 border rounded-lg bg-background shadow-lg max-h-60 overflow-y-auto">
-              {filteredParts.slice(0, 12).map((part) => {
-                const isAdded = ctx.partLines.some(
-                  (p) =>
-                    p.part_name.toLowerCase() === part.name.toLowerCase() &&
-                    part.name,
-                );
-                return (
-                  <Button
-                    variant="ghost"
-                    key={part.id}
-                    onClick={() => {
-                      if (!isAdded) {
-                        ctx.addPartFromCatalog(part);
-                      }
-                    }}
-                    disabled={isAdded}
-                    className={`w-full justify-between p-3 min-h-[48px] h-auto ${
-                      isAdded ? "opacity-40" : ""
-                    }`}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <span className="text-sm font-medium">{part.name}</span>
-                      {part.part_number && (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          #{part.part_number}
-                        </span>
-                      )}
-                      {part.category && (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          {part.category}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-right shrink-0 ml-2">
-                      <span className="text-sm font-semibold tabular-nums">
-                        {formatCurrency(part.default_price ?? 0)}
+        <SearchInput
+          placeholder={t("searchPartsToAdd")}
+          loading={false}
+          onSearch={ctx.setPartSearch}
+          debounceMs={300}
+        />
+        {ctx.partSearch && (
+          <div className="flex flex-col gap-1 border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+            {filteredParts.slice(0, 12).map((part) => {
+              const isAdded = ctx.partLines.some(
+                (p) =>
+                  p.part_name.toLowerCase() === part.name.toLowerCase() &&
+                  part.name,
+              );
+              return (
+                <Button
+                  variant="ghost"
+                  key={part.id}
+                  onClick={() => {
+                    if (!isAdded) {
+                      ctx.addPartFromCatalog(part);
+                    }
+                  }}
+                  disabled={isAdded}
+                  className={`w-full justify-between p-3 min-h-[48px] h-auto ${
+                    isAdded ? "opacity-40" : ""
+                  }`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <span className="text-sm font-medium">{part.name}</span>
+                    {part.part_number && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        #{part.part_number}
                       </span>
-                    </div>
-                  </Button>
-                );
-              })}
-              {filteredParts.length === 0 && (
-                <div className="p-4 text-sm text-muted-foreground text-center">
-                  {t("noPartsMatch")}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+                    )}
+                    {part.category && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {part.category}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0 ml-2">
+                    <span className="text-sm font-semibold tabular-nums">
+                      {formatCurrency(part.default_price ?? 0)}
+                    </span>
+                  </div>
+                </Button>
+              );
+            })}
+            {filteredParts.length === 0 && (
+              <div className="p-4 text-sm text-muted-foreground text-center">
+                {t("noPartsMatch")}
+              </div>
+            )}
+          </div>
+        )}
 
         {ctx.partLines.length === 0 && !ctx.showLastVisitSuggestions ? (
           <Typography.Muted className="text-sm text-muted-foreground text-center py-3">
@@ -179,8 +179,10 @@ export function PartsSection() {
                         aria-label="Part name"
                       />
                       {partLast && (
-                        <Typography.Text className={`mt-1 text-[11px] ${part.unit_price <= partLast ? 'text-green-600' : 'text-amber-600'}`}>
-                          {part.unit_price <= partLast ? '✓ ' : '↑ '}
+                        <Typography.Text
+                          className={`mt-1 text-[11px] ${part.unit_price <= partLast ? "text-green-600" : "text-amber-600"}`}
+                        >
+                          {part.unit_price <= partLast ? "✓ " : "↑ "}
                           {t("lastSoldShort", {
                             price: formatCurrency(partLast),
                           })}
@@ -190,11 +192,7 @@ export function PartsSection() {
                     <NumericKeypad
                       value={part.quantity}
                       onChange={(val) =>
-                        ctx.updatePart(
-                          idx,
-                          "quantity",
-                          Math.round(val) || 1,
-                        )
+                        ctx.updatePart(idx, "quantity", Math.round(val) || 1)
                       }
                     >
                       <Input
@@ -206,9 +204,7 @@ export function PartsSection() {
                     </NumericKeypad>
                     <NumericKeypad
                       value={part.unit_price}
-                      onChange={(val) =>
-                        ctx.updatePart(idx, "unit_price", val)
-                      }
+                      onChange={(val) => ctx.updatePart(idx, "unit_price", val)}
                     >
                       <Input
                         value={part.unit_price || ""}

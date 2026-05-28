@@ -20,7 +20,6 @@ import {
   type MechanicOption,
   fetchVehiclePartPrice,
   fetchVehicleServicePrice,
-  useCreateCustomer,
   useCreateVehicle,
   useCreateWorkOrder,
   useCustomerSearch,
@@ -84,13 +83,7 @@ interface WizardState {
   customers: Customer[];
   selectedCustomer: Customer | null;
   showQuickCustomer: boolean;
-  quickFirstName: string;
-  quickLastName: string;
-  quickPhone: string;
   customerSearching: boolean;
-  creatingCustomer: boolean;
-  customerCreateError: string | null;
-  customerCreateConflict: boolean;
 
   vehicleSearch: string;
   vehicles: Vehicle[];
@@ -140,12 +133,7 @@ interface WizardActions {
   setCustomerSearch: (v: string) => void;
   setSelectedCustomer: (c: Customer | null) => void;
   setShowQuickCustomer: (v: boolean) => void;
-  setQuickFirstName: (v: string) => void;
-  setQuickLastName: (v: string) => void;
-  setQuickPhone: (v: string) => void;
   handleSelectCustomer: (c: Customer) => void;
-  handleQuickCreateCustomer: () => Promise<void>;
-  resetQuickCustomerForm: () => void;
 
   setVehicleSearch: (v: string) => void;
   setSelectedVehicle: (v: Vehicle | null) => void;
@@ -214,13 +202,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     null,
   );
   const [showQuickCustomer, setShowQuickCustomer] = useState(false);
-  const [quickFirstName, setQuickFirstName] = useState("");
-  const [quickLastName, setQuickLastName] = useState("");
-  const [quickPhone, setQuickPhone] = useState("");
-  const [customerCreateError, setCustomerCreateError] = useState<string | null>(
-    null,
-  );
-  const [customerCreateConflict, setCustomerCreateConflict] = useState(false);
 
   const [vehicleSearch, setVehicleSearch] = useState("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -353,7 +334,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     selectedVehicle?.id,
   );
 
-  const createCustomerMutation = useCreateCustomer(orgId);
   const createVehicleMutation = useCreateVehicle(orgId);
   const createWorkOrderMutation = useCreateWorkOrder(orgId);
 
@@ -367,7 +347,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const isRestoringFromDraft =
     draftRestored && !selectedCustomer && !selectedVehicle && !!draftData;
   const customerSearching = customerSearchFetching || plateSearchFetching;
-  const creatingCustomer = createCustomerMutation.isPending;
   const vehicleSearching = vehicleSearchFetching;
   const creatingVehicle = createVehicleMutation.isPending;
 
@@ -559,41 +538,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setLastVisitData(null);
     setShowLastVisitSuggestions(false);
   }, []);
-
-  const handleQuickCreateCustomer = async () => {
-    if (!orgId || !quickFirstName.trim()) {
-      setCustomerCreateError("First name is required");
-      return;
-    }
-    setCustomerCreateError(null);
-    setCustomerCreateConflict(false);
-    try {
-      const customer = await createCustomerMutation.mutateAsync({
-        first_name: quickFirstName.trim(),
-        last_name: quickLastName.trim() || null,
-        phone: quickPhone.trim() || null,
-      });
-      handleSelectCustomer(customer);
-      setQuickFirstName("");
-      setQuickLastName("");
-      setQuickPhone("");
-      setShowQuickCustomer(false);
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to create customer";
-      const code =
-        err instanceof Error ? (err as { code?: string }).code : undefined;
-      if (code === "CONFLICT") {
-        setCustomerCreateConflict(true);
-        setCustomerCreateError(
-          "This phone number belongs to an existing customer. Search for them instead.",
-        );
-      } else {
-        setCustomerCreateConflict(false);
-        setCustomerCreateError(message);
-      }
-    }
-  };
 
   const handleSelectVehicle = useCallback(async (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
@@ -932,14 +876,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setDraftRestored(true);
   }, [draftData]);
 
-  const resetQuickCustomerForm = useCallback(() => {
-    setQuickFirstName("");
-    setQuickLastName("");
-    setQuickPhone("");
-    setCustomerCreateError(null);
-    setCustomerCreateConflict(false);
-  }, []);
-
   const resetQuickVehicleForm = useCallback(() => {
     setQuickPlate("");
     setQuickMake("");
@@ -959,13 +895,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     customers,
     selectedCustomer,
     showQuickCustomer,
-    quickFirstName,
-    quickLastName,
-    quickPhone,
     customerSearching,
-    creatingCustomer,
-    customerCreateError,
-    customerCreateConflict,
     vehicleSearch,
     vehicles,
     selectedVehicle,
@@ -1003,22 +933,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setSelectedCustomer: (c) => {
       setSelectedCustomer(c);
     },
-    setShowQuickCustomer: (v) => {
-      setShowQuickCustomer(v);
-      if (!v) {
-        setQuickFirstName("");
-        setQuickLastName("");
-        setQuickPhone("");
-        setCustomerCreateError(null);
-        setCustomerCreateConflict(false);
-      }
-    },
-    setQuickFirstName,
-    setQuickLastName,
-    setQuickPhone,
+    setShowQuickCustomer,
     handleSelectCustomer,
-    handleQuickCreateCustomer,
-    resetQuickCustomerForm,
 
     setVehicleSearch,
     setSelectedVehicle,

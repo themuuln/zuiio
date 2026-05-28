@@ -26,7 +26,10 @@ export function QuickCreateCustomerSheet({
   const lastNameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
 
-  const canSubmit = !ctx.creatingCustomer && ctx.quickFirstName.trim();
+  const phoneDigits = ctx.quickPhone.replace(/\D/g, "");
+  const phoneValid = phoneDigits.length === 8;
+  const canSubmit =
+    !ctx.creatingCustomer && ctx.quickFirstName.trim() && phoneValid;
 
   const handleSubmit = useCallback(() => {
     if (!canSubmit) return;
@@ -93,7 +96,7 @@ export function QuickCreateCustomerSheet({
 
         <div>
           <label className="mb-1 block text-xs text-muted-foreground">
-            {t("phone")}
+            {t("phone")} <span className="text-destructive">*</span>
           </label>
           <Input
             ref={phoneRef}
@@ -107,6 +110,11 @@ export function QuickCreateCustomerSheet({
             autoComplete="tel"
             type="tel"
           />
+          {!phoneValid && phoneDigits.length > 0 && (
+            <Typography.Text className="mt-1 text-xs text-destructive">
+              {t("phoneValidation")}
+            </Typography.Text>
+          )}
         </div>
 
         {ctx.customerCreateConflict ? (

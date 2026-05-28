@@ -235,7 +235,6 @@ export function QuickCreateVehicleSheet({
                 showTrigger
                 showClear={!!ctx.quickMake}
                 className="h-11 text-sm"
-                value={ctx.quickMake}
               />
               <ComboboxContent>
                 <ComboboxList>
@@ -266,7 +265,6 @@ export function QuickCreateVehicleSheet({
                 showClear={!!ctx.quickModel}
                 className="h-11 text-sm"
                 disabled={!ctx.quickMake.trim()}
-                value={ctx.quickModel}
               />
               <ComboboxContent>
                 <ComboboxList>

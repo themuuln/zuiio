@@ -96,71 +96,16 @@ export function ServicesSection() {
           )}
 
         {/* Service search */}
-        <div className="relative">
-          <SearchInput
-            placeholder={t("searchServicesToAdd")}
-            loading={false}
-            onSearch={ctx.setServiceSearch}
-            debounceMs={300}
-          />
-          {ctx.serviceSearch && (
-            <div className="absolute top-full left-0 right-0 z-10 mt-1 border rounded-lg bg-background shadow-lg max-h-60 overflow-y-auto">
-              {ctx.catalog
-                .filter(
-                  (s) =>
-                    s.name
-                      .toLowerCase()
-                      .includes(ctx.serviceSearch.toLowerCase()) ||
-                    s.category
-                      ?.toLowerCase()
-                      .includes(ctx.serviceSearch.toLowerCase()),
-                )
-                .slice(0, 12)
-                .map((svc) => {
-                  const vehiclePrice = ctx.vehicleServicePrices[svc.id];
-                  const history = ctx.priceHistory[svc.id];
-                  const last = vehiclePrice ?? history?.last_price ?? Number(svc.default_price);
-                  const isAdded = ctx.serviceLines.some(
-                    (s) => s.service_catalog_id === svc.id,
-                  );
-                  return (
-                    <Button
-                      variant="ghost"
-                      key={svc.id}
-                      onClick={() => {
-                        if (!isAdded) {
-                          ctx.addService(svc);
-                          ctx.setServiceSearch("");
-                        }
-                      }}
-                      disabled={isAdded}
-                      className={`w-full justify-between p-3 min-h-[48px] h-auto ${
-                        isAdded ? "opacity-40" : ""
-                      }`}
-                    >
-                      <div>
-                        <span className="text-sm font-medium">{svc.name}</span>
-                        {svc.category && (
-                          <span className="ml-2 text-xs text-muted-foreground">
-                            {svc.category}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm font-semibold tabular-nums">
-                          {formatCurrency(Number(svc.default_price))}
-                        </span>
-                        {last !== Number(svc.default_price) && last > 0 && (
-                          <span className={`ml-2 text-xs ${Number(svc.default_price) <= last ? 'text-green-600' : 'text-amber-600'}`}>
-                            {Number(svc.default_price) <= last ? '✓ ' : '↑ '}
-                            {t("lastSold", { price: formatCurrency(last) })}
-                          </span>
-                        )}
-                    </div>
-                  </Button>
-                );
-                })}
-              {ctx.catalog.filter(
+        <SearchInput
+          placeholder={t("searchServicesToAdd")}
+          loading={false}
+          onSearch={ctx.setServiceSearch}
+          debounceMs={300}
+        />
+        {ctx.serviceSearch && (
+          <div className="flex flex-col gap-1 border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+            {ctx.catalog
+              .filter(
                 (s) =>
                   s.name
                     .toLowerCase()
@@ -168,14 +113,72 @@ export function ServicesSection() {
                   s.category
                     ?.toLowerCase()
                     .includes(ctx.serviceSearch.toLowerCase()),
-              ).length === 0 && (
-                <div className="p-4 text-sm text-muted-foreground text-center">
-                  {t("noServicesMatch")}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+              )
+              .slice(0, 12)
+              .map((svc) => {
+                const vehiclePrice = ctx.vehicleServicePrices[svc.id];
+                const history = ctx.priceHistory[svc.id];
+                const last =
+                  vehiclePrice ??
+                  history?.last_price ??
+                  Number(svc.default_price);
+                const isAdded = ctx.serviceLines.some(
+                  (s) => s.service_catalog_id === svc.id,
+                );
+                return (
+                  <Button
+                    variant="ghost"
+                    key={svc.id}
+                    onClick={() => {
+                      if (!isAdded) {
+                        ctx.addService(svc);
+                        ctx.setServiceSearch("");
+                      }
+                    }}
+                    disabled={isAdded}
+                    className={`w-full justify-between p-3 min-h-[48px] h-auto ${
+                      isAdded ? "opacity-40" : ""
+                    }`}
+                  >
+                    <div>
+                      <span className="text-sm font-medium">{svc.name}</span>
+                      {svc.category && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {svc.category}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-semibold tabular-nums">
+                        {formatCurrency(Number(svc.default_price))}
+                      </span>
+                      {last !== Number(svc.default_price) && last > 0 && (
+                        <span
+                          className={`ml-2 text-xs ${Number(svc.default_price) <= last ? "text-green-600" : "text-amber-600"}`}
+                        >
+                          {Number(svc.default_price) <= last ? "✓ " : "↑ "}
+                          {t("lastSold", { price: formatCurrency(last) })}
+                        </span>
+                      )}
+                    </div>
+                  </Button>
+                );
+              })}
+            {ctx.catalog.filter(
+              (s) =>
+                s.name
+                  .toLowerCase()
+                  .includes(ctx.serviceSearch.toLowerCase()) ||
+                s.category
+                  ?.toLowerCase()
+                  .includes(ctx.serviceSearch.toLowerCase()),
+            ).length === 0 && (
+              <div className="p-4 text-sm text-muted-foreground text-center">
+                {t("noServicesMatch")}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Service lines */}
         {ctx.serviceLines.length > 0 && (
@@ -187,10 +190,14 @@ export function ServicesSection() {
                   className="flex flex-wrap items-center gap-2 p-3 hover:bg-muted/20"
                 >
                   <div className="flex-1 min-w-[120px]">
-                    <Typography.Text className="text-sm font-medium truncate">{svc.name}</Typography.Text>
+                    <Typography.Text className="text-sm font-medium truncate">
+                      {svc.name}
+                    </Typography.Text>
                     {svc.last_price && (
-                      <Typography.Text className={`text-[11px] ${svc.base_price <= svc.last_price ? 'text-green-600' : 'text-amber-600'}`}>
-                        {svc.base_price <= svc.last_price ? '✓ ' : '↑ '}
+                      <Typography.Text
+                        className={`text-[11px] ${svc.base_price <= svc.last_price ? "text-green-600" : "text-amber-600"}`}
+                      >
+                        {svc.base_price <= svc.last_price ? "✓ " : "↑ "}
                         {t("lastSoldShort", {
                           price: formatCurrency(svc.last_price),
                         })}
@@ -200,11 +207,7 @@ export function ServicesSection() {
                   <NumericKeypad
                     value={svc.quantity}
                     onChange={(val) =>
-                      ctx.updateService(
-                        idx,
-                        "quantity",
-                        Math.round(val) || 1,
-                      )
+                      ctx.updateService(idx, "quantity", Math.round(val) || 1)
                     }
                   >
                     <Input
@@ -230,11 +233,7 @@ export function ServicesSection() {
                     <NumericKeypad
                       value={svc.discount_amount_mnt}
                       onChange={(val) =>
-                        ctx.updateService(
-                          idx,
-                          "discount_amount_mnt",
-                          val,
-                        )
+                        ctx.updateService(idx, "discount_amount_mnt", val)
                       }
                     >
                       <Input

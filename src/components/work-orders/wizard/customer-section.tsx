@@ -6,8 +6,8 @@ import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { QuickCreateCustomerSheet } from "@/components/customers/quick-create-customer-sheet";
 import { useWizardContext } from "./wizard-context";
-import { QuickCreateCustomerSheet } from "./quick-create-customer-sheet";
 
 export function CustomerSection() {
   const ctx = useWizardContext();
@@ -130,10 +130,14 @@ export function CustomerSection() {
               <Plus className="size-4" />
               {t("quickCreateCustomer")}
             </Button>
-            <QuickCreateCustomerSheet
-              open={ctx.showQuickCustomer}
-              onOpenChange={ctx.setShowQuickCustomer}
-            />
+            {ctx.orgId && (
+              <QuickCreateCustomerSheet
+                open={ctx.showQuickCustomer}
+                onOpenChange={ctx.setShowQuickCustomer}
+                orgId={ctx.orgId}
+                onCreated={(customer) => ctx.handleSelectCustomer(customer)}
+              />
+            )}
           </div>
         )}
       </CardContent>
