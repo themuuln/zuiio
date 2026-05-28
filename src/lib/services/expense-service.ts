@@ -1,7 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags, cacheDurations } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import type {
@@ -16,15 +15,35 @@ import type {
 } from "@/lib/types";
 
 const DEFAULT_CATEGORIES = [
-  { name: "Rent & Utilities", color: "#3b82f6", icon: "building2", sortOrder: 1 },
+  {
+    name: "Rent & Utilities",
+    color: "#3b82f6",
+    icon: "building2",
+    sortOrder: 1,
+  },
   { name: "Salaries & Wages", color: "#8b5cf6", icon: "users", sortOrder: 2 },
   { name: "Parts & Supplies", color: "#f59e0b", icon: "package", sortOrder: 3 },
   { name: "Equipment & Tools", color: "#10b981", icon: "wrench", sortOrder: 4 },
-  { name: "Marketing & Advertising", color: "#ec4899", icon: "megaphone", sortOrder: 5 },
+  {
+    name: "Marketing & Advertising",
+    color: "#ec4899",
+    icon: "megaphone",
+    sortOrder: 5,
+  },
   { name: "Insurance", color: "#06b6d4", icon: "shield", sortOrder: 6 },
   { name: "Taxes & Licenses", color: "#ef4444", icon: "receipt", sortOrder: 7 },
-  { name: "Transportation & Fuel", color: "#f97316", icon: "truck", sortOrder: 8 },
-  { name: "Office Expenses", color: "#6366f1", icon: "notebook-pen", sortOrder: 9 },
+  {
+    name: "Transportation & Fuel",
+    color: "#f97316",
+    icon: "truck",
+    sortOrder: 8,
+  },
+  {
+    name: "Office Expenses",
+    color: "#6366f1",
+    icon: "notebook-pen",
+    sortOrder: 9,
+  },
   { name: "Other", color: "#6b7280", icon: "ellipsis", sortOrder: 10 },
 ];
 
@@ -76,69 +95,65 @@ export async function getExpenses(
 ): Promise<ExpenseWithCategory[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getExpenses", orgId, JSON.stringify(options ?? {})],
-    async () => {
-      let query = supabase
-        .from("expenses")
-        .select("id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_at, updated_at, deleted_at, category:expense_categories(id, name, color, icon)")
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("expense_date", { ascending: false });
+  let query = supabase
+    .from("expenses")
+    .select(
+      "id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_at, updated_at, deleted_at, category:expense_categories(id, name, color, icon)",
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("expense_date", { ascending: false });
 
-      if (options?.categoryId) {
-        query = query.eq("category_id", options.categoryId);
-      }
+  if (options?.categoryId) {
+    query = query.eq("category_id", options.categoryId);
+  }
 
-      if (options?.startDate) {
-        query = query.gte("expense_date", options.startDate);
-      }
+  if (options?.startDate) {
+    query = query.gte("expense_date", options.startDate);
+  }
 
-      if (options?.endDate) {
-        query = query.lte("expense_date", options.endDate);
-      }
+  if (options?.endDate) {
+    query = query.lte("expense_date", options.endDate);
+  }
 
-      if (options?.paid !== undefined) {
-        if (options.paid) {
-          query = query.not("paid_at", "is", null);
-        } else {
-          query = query.is("paid_at", null);
-        }
-      }
+  if (options?.paid !== undefined) {
+    if (options.paid) {
+      query = query.not("paid_at", "is", null);
+    } else {
+      query = query.is("paid_at", null);
+    }
+  }
 
-      if (options?.search?.trim()) {
-        const term = `%${options.search.trim()}%`;
-        query = query.or(
-          `description.ilike.${term},vendor_name.ilike.${term},reference_number.ilike.${term}`,
-        );
-      }
+  if (options?.search?.trim()) {
+    const term = `%${options.search.trim()}%`;
+    query = query.or(
+      `description.ilike.${term},vendor_name.ilike.${term},reference_number.ilike.${term}`,
+    );
+  }
 
-      if (options?.limit) {
-        query = query.limit(options.limit);
-      }
+  if (options?.limit) {
+    query = query.limit(options.limit);
+  }
 
-      if (options?.offset !== undefined && options?.limit) {
-        query = query.range(options.offset, options.offset + options.limit - 1);
-      }
+  if (options?.offset !== undefined && options?.limit) {
+    query = query.range(options.offset, options.offset + options.limit - 1);
+  }
 
-      const { data, error } = await query;
+  const { data, error } = await query;
 
-      if (error) throw new Error(error.message ?? "Failed to fetch expenses");
+  if (error) throw new Error(error.message ?? "Failed to fetch expenses");
 
-      return (data ?? []).map((row: Record<string, unknown>) => {
-        const cat = row.expense_categories as unknown as Record<string, unknown> | null;
-        const { expense_categories: _, ...expense } = row;
-        return {
-          ...expense,
-          category: cat ?? null,
-        } as unknown as ExpenseWithCategory;
-      });
-    },
-    {
-      tags: [cacheTags.expenses(orgId)],
-      revalidate: cacheDurations.expenses,
-    },
-  );
+  return (data ?? []).map((row: Record<string, unknown>) => {
+    const cat = row.expense_categories as unknown as Record<
+      string,
+      unknown
+    > | null;
+    const { expense_categories: _, ...expense } = row;
+    return {
+      ...expense,
+      category: cat ?? null,
+    } as unknown as ExpenseWithCategory;
+  });
 }
 
 // ── Get single expense ─────────────────────────────
@@ -148,28 +163,25 @@ export async function getExpense(
 ): Promise<ExpenseWithCategory> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getExpense", id],
-    async () => {
-      const { data, error } = await supabase
-        .from("expenses")
-        .select("*, expense_categories(*)")
-        .eq("id", id)
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .single();
+  const { data, error } = await supabase
+    .from("expenses")
+    .select("*, expense_categories(*)")
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .single();
 
-      if (error || !data) throw new NotFoundError("Expense not found");
+  if (error || !data) throw new NotFoundError("Expense not found");
 
-      const cat = data.expense_categories as unknown as Record<string, unknown> | null;
-      const { expense_categories: _, ...expense } = data;
-      return { ...expense, category: cat ?? null } as unknown as ExpenseWithCategory;
-    },
-    {
-      tags: [cacheTags.expense(id)],
-      revalidate: cacheDurations.expenses,
-    },
-  );
+  const cat = data.expense_categories as unknown as Record<
+    string,
+    unknown
+  > | null;
+  const { expense_categories: _, ...expense } = data;
+  return {
+    ...expense,
+    category: cat ?? null,
+  } as unknown as ExpenseWithCategory;
 }
 
 // ── Get expense stats ──────────────────────────────
@@ -178,17 +190,29 @@ export async function getExpenseStats(orgId: string): Promise<ExpenseStats> {
 
   const { data: allExpenses } = await supabase
     .from("expenses")
-    .select("id, amount, tax_amount, paid_at, expense_date, category_id, expense_categories(name)")
+    .select(
+      "id, amount, tax_amount, paid_at, expense_date, category_id, expense_categories(name)",
+    )
     .eq("organization_id", orgId)
     .is("deleted_at", null);
 
-  const expenses = (allExpenses ?? []) as unknown as Array<Record<string, unknown>>;
+  const expenses = (allExpenses ?? []) as unknown as Array<
+    Record<string, unknown>
+  >;
   const now = new Date();
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, "0")}`;
 
-  const byCategoryMap = new Map<string, { category_id: string | null; category_name: string; total: number; count: number }>();
+  const byCategoryMap = new Map<
+    string,
+    {
+      category_id: string | null;
+      category_name: string;
+      total: number;
+      count: number;
+    }
+  >();
 
   let totalAmount = 0;
   let totalTax = 0;
@@ -200,7 +224,9 @@ export async function getExpenseStats(orgId: string): Promise<ExpenseStats> {
     const amount = Number(exp.amount ?? 0);
     const tax = Number(exp.tax_amount ?? 0);
     const catId = (exp.category_id as string) ?? "__uncategorized__";
-    const catName = ((exp.expense_categories as Record<string, unknown>)?.name as string) ?? "Uncategorized";
+    const catName =
+      ((exp.expense_categories as Record<string, unknown>)?.name as string) ??
+      "Uncategorized";
 
     totalAmount += amount;
     totalTax += tax;
@@ -228,7 +254,9 @@ export async function getExpenseStats(orgId: string): Promise<ExpenseStats> {
     totalTax,
     paidAmount,
     unpaidAmount: totalAmount - paidAmount,
-    byCategory: Array.from(byCategoryMap.values()).sort((a, b) => b.total - a.total),
+    byCategory: Array.from(byCategoryMap.values()).sort(
+      (a, b) => b.total - a.total,
+    ),
     thisMonth: thisMonthTotal,
     lastMonth: lastMonthTotal,
   };
@@ -240,7 +268,6 @@ export async function createExpense(
   params: CreateExpenseParams,
   userId: string,
 ): Promise<Expense> {
-
   if (!params.description?.trim()) {
     throw new ValidationError("Description is required");
   }
@@ -273,7 +300,9 @@ export async function createExpense(
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data) {
@@ -306,7 +335,9 @@ export async function updateExpense(
 
   const { data: existing, error: fetchError } = await supabase
     .from("expenses")
-    .select("id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_by, updated_by, created_at, updated_at",
+    )
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
@@ -318,19 +349,26 @@ export async function updateExpense(
 
   const updates: Record<string, unknown> = {};
   if (params.categoryId !== undefined) updates.category_id = params.categoryId;
-  if (params.vendorName !== undefined) updates.vendor_name = params.vendorName?.trim() || null;
-  if (params.description !== undefined) updates.description = params.description.trim();
+  if (params.vendorName !== undefined)
+    updates.vendor_name = params.vendorName?.trim() || null;
+  if (params.description !== undefined)
+    updates.description = params.description.trim();
   if (params.amount !== undefined) updates.amount = params.amount;
   if (params.taxAmount !== undefined) updates.tax_amount = params.taxAmount;
-  if (params.expenseDate !== undefined) updates.expense_date = params.expenseDate;
+  if (params.expenseDate !== undefined)
+    updates.expense_date = params.expenseDate;
   if (params.dueDate !== undefined) updates.due_date = params.dueDate;
   if (params.paidAt !== undefined) updates.paid_at = params.paidAt;
-  if (params.paymentMethod !== undefined) updates.payment_method = params.paymentMethod || null;
-  if (params.referenceNumber !== undefined) updates.reference_number = params.referenceNumber?.trim() || null;
+  if (params.paymentMethod !== undefined)
+    updates.payment_method = params.paymentMethod || null;
+  if (params.referenceNumber !== undefined)
+    updates.reference_number = params.referenceNumber?.trim() || null;
   if (params.receiptUrl !== undefined) updates.receipt_url = params.receiptUrl;
   if (params.notes !== undefined) updates.notes = params.notes?.trim() || null;
-  if (params.isRecurring !== undefined) updates.is_recurring = params.isRecurring;
-  if (params.recurrenceInterval !== undefined) updates.recurrence_interval = params.recurrenceInterval || null;
+  if (params.isRecurring !== undefined)
+    updates.is_recurring = params.isRecurring;
+  if (params.recurrenceInterval !== undefined)
+    updates.recurrence_interval = params.recurrenceInterval || null;
   updates.updated_by = userId;
 
   if (Object.keys(updates).length <= 1) {
@@ -343,7 +381,9 @@ export async function updateExpense(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data) {
@@ -411,24 +451,17 @@ export async function getExpenseCategories(
 ): Promise<ExpenseCategory[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getExpenseCategories", orgId],
-    async () => {
-      const { data, error } = await supabase
-        .from("expense_categories")
-        .select("id, organization_id, name, description, color, icon, sort_order, is_active, created_at, updated_at, deleted_at")
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("sort_order", { ascending: true });
+  const { data, error } = await supabase
+    .from("expense_categories")
+    .select(
+      "id, organization_id, name, description, color, icon, sort_order, is_active, created_at, updated_at, deleted_at",
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("sort_order", { ascending: true });
 
-      if (error) throw new Error(error.message);
-      return (data ?? []) as unknown as ExpenseCategory[];
-    },
-    {
-      tags: [cacheTags.expenseCategories(orgId)],
-      revalidate: cacheDurations.expenseCategories,
-    },
-  );
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as ExpenseCategory[];
 }
 
 // ── Create expense category ────────────────────────
@@ -437,7 +470,6 @@ export async function createExpenseCategory(
   params: CreateExpenseCategoryParams,
   userId: string,
 ): Promise<ExpenseCategory> {
-
   if (!params.name?.trim()) {
     throw new ValidationError("Category name is required");
   }
@@ -469,7 +501,9 @@ export async function createExpenseCategory(
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, organization_id, name, description, color, icon, sort_order, is_active, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, name, description, color, icon, sort_order, is_active, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data) {
@@ -492,7 +526,8 @@ export async function updateExpenseCategory(
 
   const updates: Record<string, unknown> = {};
   if (params.name !== undefined) updates.name = params.name.trim();
-  if (params.description !== undefined) updates.description = params.description?.trim() || null;
+  if (params.description !== undefined)
+    updates.description = params.description?.trim() || null;
   if (params.color !== undefined) updates.color = params.color;
   if (params.icon !== undefined) updates.icon = params.icon;
   if (params.sortOrder !== undefined) updates.sort_order = params.sortOrder;
@@ -509,7 +544,9 @@ export async function updateExpenseCategory(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("id, organization_id, name, description, color, icon, sort_order, is_active, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, name, description, color, icon, sort_order, is_active, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data) {

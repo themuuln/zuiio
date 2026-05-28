@@ -16,23 +16,18 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Link } from "@/lib/i18n/navigation";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { usePartsCars } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatMNT } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
-
-const STATUS_STYLES: Record<string, string> = {
-  arrived: "bg-blue-100 text-blue-700",
-  disassembling: "bg-amber-100 text-amber-700",
-  completed: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
-};
 
 export default function PartsCarsListPage() {
   const t = useTranslations("partsCars");
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const { data: cars = [], isLoading } = usePartsCars(orgId);
+  const { setDetailPartsCarId } = usePageHeader();
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -94,9 +89,10 @@ export default function PartsCarsListPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((car) => (
-            <Link
+            <button
               key={car.id}
-              href={`/dashboard/inventory/parts-cars/${car.id}`}
+              onClick={() => setDetailPartsCarId(car.id)}
+              className="text-left"
             >
               <Card className="transition-colors hover:bg-muted/50 cursor-pointer h-full">
                 <CardContent className="p-5">
@@ -177,7 +173,7 @@ export default function PartsCarsListPage() {
                   </div>
                 </CardContent>
               </Card>
-            </Link>
+            </button>
           ))}
         </div>
       )}

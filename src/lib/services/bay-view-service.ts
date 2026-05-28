@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
-import { cacheDurations, cacheTags } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
+import { cacheTags } from "@/lib/cache/keys";
 import type { Profile, Vehicle, WorkOrder } from "@/lib/types";
 import {
   NotFoundError,
@@ -168,10 +167,7 @@ export async function getBayViewData(): Promise<BayViewData> {
   if (!user) throw new UnauthorizedError();
   const orgId = await getOrgId();
 
-  return withCache(["getBayViewData", orgId], () => fetchBayViewData(orgId), {
-    tags: [cacheTags.bayView(orgId, orgId)],
-    revalidate: cacheDurations.bayView,
-  });
+  return fetchBayViewData(orgId);
 }
 
 /**

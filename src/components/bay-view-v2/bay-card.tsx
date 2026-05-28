@@ -13,7 +13,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { MechanicBadge } from "../bay-view/mechanic-badge";
+import { MechanicBadge } from "./mechanic-badge";
 import { Typography } from "@/components/ui/typography";
 
 function formatDuration(ms: number): string {

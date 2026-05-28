@@ -305,7 +305,7 @@ function QuickCreateActions() {
 function RightSidebarToggle() {
   const { state, toggle } = useRightSidebar();
 
-  if (state.tabs.length === 0) return null;
+  if (!state.hasSidebar || state.tabs.length === 0) return null;
 
   return (
     <Button

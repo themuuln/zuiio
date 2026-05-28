@@ -376,6 +376,8 @@
     "modelRequired": "Загвар *",
     "year": "Он",
     "color": "Өнгө",
+    "brand": "Бренд",
+    "model": "Загвар",
     "additionalDetails": "Нэмэлт мэдээлэл",
     "vin": "VIN код",
     "engine": "Хөдөлгүүр",

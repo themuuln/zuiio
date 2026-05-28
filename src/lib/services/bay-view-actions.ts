@@ -372,6 +372,89 @@ export async function searchMechanics(search?: string) {
   return data ?? [];
 }
 
+// ── Search Vehicles (for autocomplete) ──────────────────────────
+
+export async function searchVehicles(search?: string) {
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+
+  let query = supabase
+    .from("vehicles")
+    .select("id, plate_number, make, model, year, color")
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("plate_number")
+    .limit(20);
+
+  if (search?.trim()) {
+    const term = search.trim();
+    query = query.or(
+      `plate_number.ilike.%${term}%,make.ilike.%${term}%,model.ilike.%${term}%`,
+    );
+  }
+
+  const { data } = await query;
+  return data ?? [];
+}
+
+// ── Search Vehicles with Customers (for assign dialog) ─────────
+
+export async function searchVehiclesWithCustomers(search?: string) {
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+
+  let query = supabase
+    .from("vehicles")
+    .select(`
+      id, plate_number, make, model, year, color,
+      vehicle_owners!inner(
+        customer_id,
+        customers!inner(id, first_name, last_name, phone)
+      )
+    `)
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .is("vehicle_owners.owned_until", null)
+    .order("plate_number")
+    .limit(20);
+
+  if (search?.trim()) {
+    const term = search.trim();
+    query = query.or(
+      `plate_number.ilike.%${term}%,make.ilike.%${term}%,model.ilike.%${term}%`,
+    );
+  }
+
+  const { data } = await query;
+
+  // Flatten the nested structure
+  return (data ?? []).map((v) => {
+    const owner = (v as any).vehicle_owners?.[0]?.customers;
+    return {
+      id: v.id,
+      plate_number: v.plate_number,
+      make: v.make,
+      model: v.model,
+      year: v.year,
+      color: v.color,
+      customer: owner
+        ? {
+            id: owner.id,
+            first_name: owner.first_name,
+            last_name: owner.last_name,
+            phone: owner.phone,
+          }
+        : null,
+    };
+  });
+}
+
 // ── Register Mechanic (create profile / update role) ────────────
 
 export async function registerMechanic(params: {

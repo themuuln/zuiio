@@ -1,6 +1,5 @@
 import { revalidateTag } from "next/cache";
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
+import { cacheTags } from "@/lib/cache/keys";
 import type { Branch } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -32,7 +31,9 @@ export async function createBranch(
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, organization_id, name, address, phone, email, is_main, settings, is_active, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, name, address, phone, email, is_main, settings, is_active, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data) {
@@ -50,27 +51,20 @@ export async function createBranch(
 export async function getBranches(orgId: string): Promise<Branch[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getBranches", orgId],
-    async () => {
-      const { data, error } = await supabase
-        .from("branches")
-        .select("id, organization_id, name, address, phone, email, is_main, settings, is_active, created_at, updated_at, deleted_at")
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: true });
+  const { data, error } = await supabase
+    .from("branches")
+    .select(
+      "id, organization_id, name, address, phone, email, is_main, settings, is_active, created_at, updated_at, deleted_at",
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true });
 
-      if (error) {
-        throw new Error(error.message ?? "Failed to fetch branches");
-      }
+  if (error) {
+    throw new Error(error.message ?? "Failed to fetch branches");
+  }
 
-      return (data ?? []) as unknown as Branch[];
-    },
-    {
-      tags: [cacheTags.branches(orgId)],
-      revalidate: cacheDurations.branches,
-    },
-  );
+  return (data ?? []) as unknown as Branch[];
 }
 
 /**
@@ -103,7 +97,9 @@ export async function updateBranch(
     .eq("id", branchId)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("id, organization_id, name, address, phone, email, is_main, settings, is_active, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, name, address, phone, email, is_main, settings, is_active, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data) {

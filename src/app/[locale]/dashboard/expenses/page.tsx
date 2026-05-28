@@ -18,7 +18,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import type { ExportColumn } from "@/lib/export";
-import { useRouter } from "@/lib/i18n/navigation";
 import {
   useExpenseCategories,
   useExpenseStats,
@@ -50,14 +49,18 @@ function KpiCard({
   return (
     <Card>
       <CardHeader className="pb-2">
-        <Typography.Muted className="text-xs font-medium text-muted-foreground">{label}</Typography.Muted>
+        <Typography.Muted className="text-xs font-medium text-muted-foreground">
+          {label}
+        </Typography.Muted>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-2">
           {loading ? (
             <Skeleton className="h-8 w-24" />
           ) : (
-            <Typography.Text className="text-2xl font-semibold tabular-nums">{value}</Typography.Text>
+            <Typography.Text className="text-2xl font-semibold tabular-nums">
+              {value}
+            </Typography.Text>
           )}
           <Icon className="ml-auto size-5 text-muted-foreground/40" />
         </div>
@@ -93,10 +96,9 @@ const PAID_FILTER_OPTIONS: { key: PaidFilter; label: string }[] = [
 export default function ExpensesPage() {
   const t = useTranslations();
   const now = useClientNow();
-  const { push } = useRouter();
 
   const [search, setSearch] = useState("");
-  const { setNewExpenseSheetOpen } = usePageHeader();
+  const { setNewExpenseSheetOpen, setDetailExpenseId } = usePageHeader();
   const [categoryId, setCategoryId] = useState("");
   const [paidFilter, setPaidFilter] = useState<PaidFilter>("all");
   const [startDate, setStartDate] = useState("");
@@ -392,7 +394,7 @@ export default function ExpensesPage() {
               data={expenses}
               getRowId={(row) => row.id}
               pageSize={20}
-              onRowClick={(row) => push(`/dashboard/expenses/${row.id}`)}
+              onRowClick={(row) => setDetailExpenseId(row.id)}
             />
           )}
         </CardContent>

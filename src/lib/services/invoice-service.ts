@@ -1,6 +1,5 @@
 import { revalidateTag } from "next/cache";
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
+import { cacheTags } from "@/lib/cache/keys";
 import type {
   Invoice,
   InvoiceWithItems,
@@ -12,9 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { sendInvoiceEmail } from "@/lib/services/email-service";
 
 // ── Generate the next invoice number for an org ───
-export async function generateInvoiceNumber(
-  orgId: string,
-): Promise<string> {
+export async function generateInvoiceNumber(orgId: string): Promise<string> {
   const supabase = await createClient();
 
   // Get org settings for prefix
@@ -59,80 +56,71 @@ export async function getInvoices(
 ): Promise<InvoiceWithItems[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getInvoices", orgId, JSON.stringify(options ?? {})],
-    async () => {
-      let query = supabase
-        .from("invoices")
-        .select("id, organization_id, invoice_number, status, subtotal, total, amount_paid, balance_due, issued_at, due_at, customer_name, customer_phone, vehicle_plate, public_token, created_at, updated_at, deleted_at")
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+  let query = supabase
+    .from("invoices")
+    .select(
+      "id, organization_id, invoice_number, status, subtotal, total, amount_paid, balance_due, issued_at, due_at, customer_name, customer_phone, vehicle_plate, public_token, created_at, updated_at, deleted_at",
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
 
-      if (options?.status) {
-        query = query.eq("status", options.status);
-      }
-      if (options?.limit) {
-        query = query.limit(options.limit);
-      }
-      if (options?.offset) {
-        query = query.range(options.offset, options.offset + (options.limit ?? 20) - 1);
-      }
+  if (options?.status) {
+    query = query.eq("status", options.status);
+  }
+  if (options?.limit) {
+    query = query.limit(options.limit);
+  }
+  if (options?.offset) {
+    query = query.range(
+      options.offset,
+      options.offset + (options.limit ?? 20) - 1,
+    );
+  }
 
-      const { data, error } = await query;
+  const { data, error } = await query;
 
-      if (error) throw new Error(error.message ?? "Failed to fetch invoices");
-      return (data ?? []) as unknown as unknown as InvoiceWithItems[];
-    },
-    {
-      tags: [cacheTags.invoices(orgId)],
-      revalidate: cacheDurations.invoices,
-    },
-  );
+  if (error) throw new Error(error.message ?? "Failed to fetch invoices");
+  return (data ?? []) as unknown as unknown as InvoiceWithItems[];
 }
 
 // ── Get a single invoice by ID ────────────────────
-export async function getInvoice(
-  id: string,
-): Promise<InvoiceWithItems> {
+export async function getInvoice(id: string): Promise<InvoiceWithItems> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getInvoice", id],
-    async () => {
-      const { data: invoice, error } = await supabase
-        .from("invoices")
-        .select("id, organization_id, branch_id, invoice_number, status, subtotal, discount_total, tax_total, total, amount_paid, balance_due, issued_at, due_at, customer_id, customer_name, customer_phone, customer_email, customer_address, vehicle_id, vehicle_plate, vehicle_details, work_order_id, notes, terms, footer, public_token, email_sent_at, paid_at, created_at, updated_at, created_by, updated_by, deleted_at")
-        .eq("id", id)
-        .is("deleted_at", null)
-        .single();
+  const { data: invoice, error } = await supabase
+    .from("invoices")
+    .select(
+      "id, organization_id, branch_id, invoice_number, status, subtotal, discount_total, tax_total, total, amount_paid, balance_due, issued_at, due_at, customer_id, customer_name, customer_phone, customer_email, customer_address, vehicle_id, vehicle_plate, vehicle_details, work_order_id, notes, terms, footer, public_token, email_sent_at, paid_at, created_at, updated_at, created_by, updated_by, deleted_at",
+    )
+    .eq("id", id)
+    .is("deleted_at", null)
+    .single();
 
-      if (error || !invoice) throw new NotFoundError("Invoice not found");
+  if (error || !invoice) throw new NotFoundError("Invoice not found");
 
-      const [{ data: items }, { data: payments }] = await Promise.all([
-        supabase
-          .from("invoice_items")
-          .select("id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at")
-          .eq("invoice_id", id)
-          .order("sort_order", { ascending: true }),
-        supabase
-          .from("invoice_payments")
-          .select("id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by")
-          .eq("invoice_id", id)
-          .order("paid_at", { ascending: false }),
-      ]);
+  const [{ data: items }, { data: payments }] = await Promise.all([
+    supabase
+      .from("invoice_items")
+      .select(
+        "id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at",
+      )
+      .eq("invoice_id", id)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("invoice_payments")
+      .select(
+        "id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by",
+      )
+      .eq("invoice_id", id)
+      .order("paid_at", { ascending: false }),
+  ]);
 
-      return {
-        ...invoice,
-        items: (items ?? []) as unknown as InvoiceItem[],
-        payments: (payments ?? []) as unknown as InvoicePayment[],
-      } as unknown as unknown as InvoiceWithItems;
-    },
-    {
-      tags: [cacheTags.invoice(id)],
-      revalidate: cacheDurations.invoice,
-    },
-  );
+  return {
+    ...invoice,
+    items: (items ?? []) as unknown as InvoiceItem[],
+    payments: (payments ?? []) as unknown as InvoicePayment[],
+  } as unknown as unknown as InvoiceWithItems;
 }
 
 // ── Get invoice by public token (no auth needed) ──
@@ -141,42 +129,39 @@ export async function getInvoiceByPublicToken(
 ): Promise<InvoiceWithItems> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getInvoiceByPublicToken", token],
-    async () => {
-      const { data: invoice, error } = await supabase
-        .from("invoices")
-        .select("id, organization_id, branch_id, invoice_number, status, subtotal, discount_total, tax_total, total, amount_paid, balance_due, issued_at, due_at, customer_id, customer_name, customer_phone, customer_email, customer_address, vehicle_id, vehicle_plate, vehicle_details, work_order_id, notes, terms, footer, public_token, email_sent_at, paid_at, created_at, updated_at, created_by, updated_by, deleted_at")
-        .eq("public_token", token)
-        .is("deleted_at", null)
-        .single();
+  const { data: invoice, error } = await supabase
+    .from("invoices")
+    .select(
+      "id, organization_id, branch_id, invoice_number, status, subtotal, discount_total, tax_total, total, amount_paid, balance_due, issued_at, due_at, customer_id, customer_name, customer_phone, customer_email, customer_address, vehicle_id, vehicle_plate, vehicle_details, work_order_id, notes, terms, footer, public_token, email_sent_at, paid_at, created_at, updated_at, created_by, updated_by, deleted_at",
+    )
+    .eq("public_token", token)
+    .is("deleted_at", null)
+    .single();
 
-      if (error || !invoice) throw new NotFoundError("Invoice not found");
+  if (error || !invoice) throw new NotFoundError("Invoice not found");
 
-      const [{ data: items }, { data: payments }] = await Promise.all([
-        supabase
-          .from("invoice_items")
-          .select("id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at")
-          .eq("invoice_id", invoice.id)
-          .order("sort_order", { ascending: true }),
-        supabase
-          .from("invoice_payments")
-          .select("id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by")
-          .eq("invoice_id", invoice.id)
-          .order("paid_at", { ascending: false }),
-      ]);
+  const [{ data: items }, { data: payments }] = await Promise.all([
+    supabase
+      .from("invoice_items")
+      .select(
+        "id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at",
+      )
+      .eq("invoice_id", invoice.id)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("invoice_payments")
+      .select(
+        "id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by",
+      )
+      .eq("invoice_id", invoice.id)
+      .order("paid_at", { ascending: false }),
+  ]);
 
-      return {
-        ...invoice,
-        items: (items ?? []) as unknown as InvoiceItem[],
-        payments: (payments ?? []) as unknown as InvoicePayment[],
-      } as unknown as unknown as InvoiceWithItems;
-    },
-    {
-      tags: [cacheTags.invoice(token)],
-      revalidate: cacheDurations.invoice,
-    },
-  );
+  return {
+    ...invoice,
+    items: (items ?? []) as unknown as InvoiceItem[],
+    payments: (payments ?? []) as unknown as InvoicePayment[],
+  } as unknown as unknown as InvoiceWithItems;
 }
 
 // ── Create invoice from a work order ──────────────
@@ -195,7 +180,9 @@ export async function createInvoiceFromWorkOrder(
   // Fetch work order with all dependencies
   const { data: wo } = await supabase
     .from("work_orders")
-    .select("id, organization_id, status, customer_id, vehicle_id, discount_amount")
+    .select(
+      "id, organization_id, status, customer_id, vehicle_id, discount_amount",
+    )
     .eq("id", workOrderId)
     .is("deleted_at", null)
     .single();
@@ -227,18 +214,32 @@ export async function createInvoiceFromWorkOrder(
     { data: parts },
   ] = await Promise.all([
     wo.customer_id
-      ? supabase.from("customers").select("id, first_name, last_name, company_name, phone, email, address").eq("id", wo.customer_id).single()
+      ? supabase
+          .from("customers")
+          .select(
+            "id, first_name, last_name, company_name, phone, email, address",
+          )
+          .eq("id", wo.customer_id)
+          .single()
       : { data: null },
     wo.vehicle_id
-      ? supabase.from("vehicles").select("id, make, model, year, plate_number").eq("id", wo.vehicle_id).single()
+      ? supabase
+          .from("vehicles")
+          .select("id, make, model, year, plate_number")
+          .eq("id", wo.vehicle_id)
+          .single()
       : { data: null },
     supabase
       .from("work_order_services")
-      .select("id, service_name, quantity, unit_price, discount_amount, final_price")
+      .select(
+        "id, service_name, quantity, unit_price, discount_amount, final_price",
+      )
       .eq("work_order_id", workOrderId),
     supabase
       .from("work_order_parts")
-      .select("id, part_name, quantity, unit_price, discount_amount, final_price")
+      .select(
+        "id, part_name, quantity, unit_price, discount_amount, final_price",
+      )
       .eq("work_order_id", workOrderId),
   ]);
 
@@ -252,15 +253,13 @@ export async function createInvoiceFromWorkOrder(
     0,
   );
   const subtotal = svcTotal + partsTotal;
-  const discountTotal = Number(wo.discount_amount ?? 0) +
+  const discountTotal =
+    Number(wo.discount_amount ?? 0) +
     (services ?? []).reduce(
       (sum, s) => sum + Number(s.discount_amount ?? 0),
       0,
     ) +
-    (parts ?? []).reduce(
-      (sum, p) => sum + Number(p.discount_amount ?? 0),
-      0,
-    );
+    (parts ?? []).reduce((sum, p) => sum + Number(p.discount_amount ?? 0), 0);
   const total = Math.max(0, subtotal - discountTotal);
 
   // Generate invoice number
@@ -396,7 +395,6 @@ export async function createStandaloneInvoice(
   params: CreateStandaloneInvoiceParams,
   userId?: string,
 ): Promise<InvoiceWithItems> {
-
   if (!params.items || params.items.length === 0) {
     throw new ValidationError("At least one invoice item is required");
   }
@@ -510,13 +508,9 @@ export async function updateInvoiceStatus(
 
   if (status === "paid") {
     updateData.paid_at = new Date().toISOString();
-    updateData.amount_paid = (
-      await supabase
-        .from("invoices")
-        .select("total")
-        .eq("id", id)
-        .single()
-    ).data?.total ?? 0;
+    updateData.amount_paid =
+      (await supabase.from("invoices").select("total").eq("id", id).single())
+        .data?.total ?? 0;
     updateData.balance_due = 0;
   }
 
@@ -535,7 +529,9 @@ export async function updateInvoiceStatus(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("id, organization_id, invoice_number, status, subtotal, total, amount_paid, balance_due, issued_at, due_at, customer_name, customer_phone, vehicle_plate, public_token, paid_at, created_at, updated_at, deleted_at")
+    .select(
+      "id, organization_id, invoice_number, status, subtotal, total, amount_paid, balance_due, issued_at, due_at, customer_name, customer_phone, vehicle_plate, public_token, paid_at, created_at, updated_at, deleted_at",
+    )
     .single();
 
   if (error || !data) throw new NotFoundError("Invoice not found");
@@ -561,7 +557,9 @@ export async function markInvoiceEmailed(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("id, organization_id, invoice_number, status, subtotal, total, amount_paid, balance_due, issued_at, due_at, customer_name, customer_phone, vehicle_plate, public_token, paid_at, email_sent_at, created_at, updated_at, deleted_at")
+    .select(
+      "id, organization_id, invoice_number, status, subtotal, total, amount_paid, balance_due, issued_at, due_at, customer_name, customer_phone, vehicle_plate, public_token, paid_at, email_sent_at, created_at, updated_at, deleted_at",
+    )
     .single();
 
   if (error || !data) throw new NotFoundError("Invoice not found");
@@ -585,11 +583,7 @@ export async function sendInvoiceAndMarkEmailed(
   }
 
   const [{ data: org }, { data: branch }] = await Promise.all([
-    supabase
-      .from("organizations")
-      .select("name")
-      .eq("id", orgId)
-      .single(),
+    supabase.from("organizations").select("name").eq("id", orgId).single(),
     supabase
       .from("branches")
       .select("email")
@@ -601,8 +595,7 @@ export async function sendInvoiceAndMarkEmailed(
   const orgName = org?.name ?? "Your Mechanic Shop";
   const bccEmail = branch?.email ?? undefined;
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const publicInvoiceUrl = `${siteUrl}/invoice/${invoice.public_token}`;
 
   await sendInvoiceEmail({
@@ -686,7 +679,9 @@ export async function recordPayment(
   // Return updated payments
   const { data: updatedPayments } = await supabase
     .from("invoice_payments")
-    .select("id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by")
+    .select(
+      "id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by",
+    )
     .eq("invoice_id", invoiceId)
     .order("paid_at", { ascending: false });
 
@@ -694,9 +689,7 @@ export async function recordPayment(
 }
 
 // ── Get invoice count by status ───────────────────
-export async function getInvoiceStats(
-  orgId: string,
-): Promise<{
+export async function getInvoiceStats(orgId: string): Promise<{
   total: number;
   draft: number;
   sent: number;
@@ -707,36 +700,27 @@ export async function getInvoiceStats(
 }> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getInvoiceStats", orgId],
-    async () => {
-      const { data: invoices } = await supabase
-        .from("invoices")
-        .select("status, total, balance_due")
-        .eq("organization_id", orgId)
-        .is("deleted_at", null);
+  const { data: invoices } = await supabase
+    .from("invoices")
+    .select("status, total, balance_due")
+    .eq("organization_id", orgId)
+    .is("deleted_at", null);
 
-      const all = invoices ?? [];
+  const all = invoices ?? [];
 
-      return {
-        total: all.length,
-        draft: all.filter((i) => i.status === "draft").length,
-        sent: all.filter((i) => i.status === "sent").length,
-        paid: all.filter((i) => i.status === "paid").length,
-        overdue: all.filter((i) => i.status === "overdue").length,
-        totalRevenue: all
-          .filter((i) => i.status === "paid")
-          .reduce((sum, i) => sum + Number(i.total), 0),
-        outstanding: all
-          .filter((i) => i.status !== "paid" && i.status !== "cancelled")
-          .reduce((sum, i) => sum + Number(i.balance_due), 0),
-      };
-    },
-    {
-      tags: [cacheTags.invoices(orgId)],
-      revalidate: cacheDurations.invoices,
-    },
-  );
+  return {
+    total: all.length,
+    draft: all.filter((i) => i.status === "draft").length,
+    sent: all.filter((i) => i.status === "sent").length,
+    paid: all.filter((i) => i.status === "paid").length,
+    overdue: all.filter((i) => i.status === "overdue").length,
+    totalRevenue: all
+      .filter((i) => i.status === "paid")
+      .reduce((sum, i) => sum + Number(i.total), 0),
+    outstanding: all
+      .filter((i) => i.status !== "paid" && i.status !== "cancelled")
+      .reduce((sum, i) => sum + Number(i.balance_due), 0),
+  };
 }
 
 // ── Invoice Item CRUD ─────────────────────────────
@@ -759,7 +743,6 @@ export async function addInvoiceItem(
   orgId: string,
   params: AddInvoiceItemParams,
 ): Promise<InvoiceItem> {
-
   if (!params.description?.trim()) {
     throw new ValidationError("Item description is required");
   }
@@ -783,7 +766,9 @@ export async function addInvoiceItem(
       total_price: Math.max(0, totalPrice),
       sort_order: params.sort_order ?? 0,
     })
-    .select("id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at")
+    .select(
+      "id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at",
+    )
     .single();
 
   if (error || !data) {
@@ -822,7 +807,8 @@ export async function updateInvoiceItem(
   if (params.item_type !== undefined) updates.item_type = params.item_type;
   if (params.quantity !== undefined) updates.quantity = params.quantity;
   if (params.unit_price !== undefined) updates.unit_price = params.unit_price;
-  if (params.discount_amount !== undefined) updates.discount_amount = params.discount_amount;
+  if (params.discount_amount !== undefined)
+    updates.discount_amount = params.discount_amount;
   if (params.sort_order !== undefined) updates.sort_order = params.sort_order;
 
   if (Object.keys(updates).length === 0) {
@@ -830,10 +816,16 @@ export async function updateInvoiceItem(
   }
 
   // If quantity, unit_price, or discount changed, recalculate total_price
-  if (params.quantity !== undefined || params.unit_price !== undefined || params.discount_amount !== undefined) {
+  if (
+    params.quantity !== undefined ||
+    params.unit_price !== undefined ||
+    params.discount_amount !== undefined
+  ) {
     const { data: current } = await supabase
       .from("invoice_items")
-      .select("id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at")
+      .select(
+        "id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at",
+      )
       .eq("id", itemId)
       .single();
 
@@ -849,7 +841,9 @@ export async function updateInvoiceItem(
     .from("invoice_items")
     .update(updates)
     .eq("id", itemId)
-    .select("id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at")
+    .select(
+      "id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at",
+    )
     .single();
 
   if (error || !data) {
@@ -940,10 +934,7 @@ async function recalculateInvoiceTotals(
 }
 
 // ── Delete (soft) an invoice ──────────────────────
-export async function deleteInvoice(
-  id: string,
-  orgId: string,
-): Promise<void> {
+export async function deleteInvoice(id: string, orgId: string): Promise<void> {
   const supabase = await createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
 

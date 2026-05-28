@@ -7,6 +7,7 @@ import { DataTableColumnHeader } from "@/components/ui/data-table";
 import type { Supplier } from "@/lib/types";
 
 interface ColumnCallbacks {
+  onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
@@ -20,13 +21,15 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Building2 className="size-4 text-muted-foreground/60" />
-          <a
-            href={`/dashboard/inventory/suppliers/${row.original.id}`}
-            className="font-medium hover:underline"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            className="font-medium hover:underline text-left"
+            onClick={(e) => {
+              e.stopPropagation();
+              cb.onEdit(row.original.id);
+            }}
           >
             {row.original.name}
-          </a>
+          </button>
         </div>
       ),
     },
@@ -68,12 +71,13 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
           className="flex items-center justify-center gap-1"
           onClick={(e) => e.stopPropagation()}
         >
-          <a
-            href={`/dashboard/inventory/suppliers/${row.original.id}`}
-            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-8 px-3"
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => cb.onEdit(row.original.id)}
           >
             Edit
-          </a>
+          </Button>
           <Button
             variant="ghost"
             size="sm"

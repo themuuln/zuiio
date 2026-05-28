@@ -1,7 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
 import type { CustomerCommunication } from "@/lib/types";
 import { NotFoundError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -22,33 +21,25 @@ export async function getCustomerCommunications(
 ): Promise<CustomerCommunicationWithStaff[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getCustomerCommunications", orgId, customerId],
-    async () => {
-      const { data, error } = await supabase
-        .from("customer_communications")
-        .select("*, profiles:staff_id ( full_name )")
-        .eq("organization_id", orgId)
-        .eq("customer_id", customerId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("customer_communications")
+    .select("*, profiles:staff_id ( full_name )")
+    .eq("organization_id", orgId)
+    .eq("customer_id", customerId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
 
-      if (error) throw new Error(error.message);
+  if (error) throw new Error(error.message);
 
-      return (data ?? []).map((row) => {
-        const profiles = row as {
-          profiles: { full_name: string | null } | null;
-        } & CustomerCommunication;
-        return {
-          ...profiles,
-          staff_name: profiles.profiles?.full_name ?? null,
-        };
-      });
-    },
-    {
-      tags: [cacheTags.customerCommunications(orgId, customerId)],
-    },
-  );
+  return (data ?? []).map((row) => {
+    const profiles = row as {
+      profiles: { full_name: string | null } | null;
+    } & CustomerCommunication;
+    return {
+      ...profiles,
+      staff_name: profiles.profiles?.full_name ?? null,
+    };
+  });
 }
 
 /**
@@ -73,11 +64,15 @@ export async function createCustomerCommunication(
       content: params.content.trim(),
       staff_id: userId,
     })
-    .select("id, organization_id, customer_id, type, direction, subject, content, staff_id, created_at")
+    .select(
+      "id, organization_id, customer_id, type, direction, subject, content, staff_id, created_at",
+    )
     .single();
 
   if (error || !data) {
-    throw new Error(error?.message ?? "Failed to create customer communication");
+    throw new Error(
+      error?.message ?? "Failed to create customer communication",
+    );
   }
 
   // Audit log

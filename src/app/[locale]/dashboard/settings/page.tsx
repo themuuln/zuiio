@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
   Database,
+  Globe,
   Palette,
   Percent,
   Settings2,
@@ -33,6 +34,7 @@ import { AppearanceCustomization } from "./_appearance-customization";
 import { DataExportSection } from "./_data-export-section";
 import { OrganizationCard } from "./_organization-card";
 import { CommissionRulesSection } from "./_commission-rules-section";
+import { DataSharingForm } from "./_data-sharing-form";
 import { DiagnosisLabelsSection } from "./_diagnosis-labels-section";
 import { Typography } from "@/components/ui/typography";
 
@@ -51,8 +53,12 @@ function SectionHeading({
         <Icon className="size-5 text-muted-foreground" />
       </div>
       <div>
-        <Typography.H2 className="text-base font-semibold tracking-tight">{title}</Typography.H2>
-        <Typography.Muted className="text-sm text-muted-foreground">{description}</Typography.Muted>
+        <Typography.H2 className="text-base font-semibold tracking-tight">
+          {title}
+        </Typography.H2>
+        <Typography.Muted className="text-sm text-muted-foreground">
+          {description}
+        </Typography.Muted>
       </div>
     </div>
   );
@@ -114,8 +120,12 @@ function ErrorState({
             <Settings2 className="size-5 text-destructive" />
           </div>
           <div>
-            <Typography.Text className="font-semibold text-sm">Failed to load settings</Typography.Text>
-            <Typography.Muted className="text-sm text-muted-foreground">{message}</Typography.Muted>
+            <Typography.Text className="font-semibold text-sm">
+              Failed to load settings
+            </Typography.Text>
+            <Typography.Muted className="text-sm text-muted-foreground">
+              {message}
+            </Typography.Muted>
           </div>
         </div>
         <Button onClick={onRetry} variant="outline">
@@ -163,14 +173,11 @@ export default function SettingsPage() {
     }
   }, [organization]);
 
-  const preview = useCallback(
-    (color: string) => {
-      applyBrandThemePreview({
-        brand_color: color || undefined,
-      });
-    },
-    [],
-  );
+  const preview = useCallback((color: string) => {
+    applyBrandThemePreview({
+      brand_color: color || undefined,
+    });
+  }, []);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -320,6 +327,19 @@ export default function SettingsPage() {
             description="Manage reusable labels for work order complaints (e.g., engine, brake, electrical)."
           />
           <DiagnosisLabelsSection orgId={orgId ?? ""} />
+        </section>
+      )}
+
+      {activeTab === "sharing" && (
+        <section>
+          <SectionHeading
+            icon={Globe}
+            title="Data Sharing"
+            description="Control whether other organizations can view your customer and vehicle data."
+          />
+          <div className="mt-4">
+            <DataSharingForm organization={organization} onRefetch={refetch} />
+          </div>
         </section>
       )}
 

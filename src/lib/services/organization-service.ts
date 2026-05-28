@@ -1,6 +1,5 @@
 import { revalidateTag } from "next/cache";
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
+import { cacheTags } from "@/lib/cache/keys";
 import type { Organization } from "@/lib/types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -41,7 +40,9 @@ export async function createOrganization(
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, name, slug, logo_url, settings, is_active, branch_limit, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, name, slug, logo_url, settings, is_active, branch_limit, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (orgError || !org) {
@@ -141,27 +142,20 @@ export async function createOrganization(
 export async function getOrganization(orgId: string): Promise<Organization> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getOrganization", orgId],
-    async () => {
-      const { data, error } = await supabase
-        .from("organizations")
-        .select("id, name, slug, logo_url, settings, is_active, branch_limit, created_by, updated_by, created_at, updated_at, deleted_at")
-        .eq("id", orgId)
-        .is("deleted_at", null)
-        .single();
+  const { data, error } = await supabase
+    .from("organizations")
+    .select(
+      "id, name, slug, logo_url, settings, is_active, branch_limit, created_by, updated_by, created_at, updated_at, deleted_at",
+    )
+    .eq("id", orgId)
+    .is("deleted_at", null)
+    .single();
 
-      if (error || !data) {
-        throw new NotFoundError("Organization not found");
-      }
+  if (error || !data) {
+    throw new NotFoundError("Organization not found");
+  }
 
-      return data as unknown as Organization;
-    },
-    {
-      tags: [cacheTags.branches(orgId)],
-      revalidate: cacheDurations.branches,
-    },
-  );
+  return data as unknown as Organization;
 }
 
 export async function getUserOrganization(
@@ -169,31 +163,24 @@ export async function getUserOrganization(
 ): Promise<Organization | null> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getUserOrganization", userId],
-    async () => {
-      const { data: membership } = await supabase
-        .from("organization_users")
-        .select("organization_id")
-        .eq("user_id", userId)
-        .maybeSingle();
+  const { data: membership } = await supabase
+    .from("organization_users")
+    .select("organization_id")
+    .eq("user_id", userId)
+    .maybeSingle();
 
-      if (!membership) return null;
+  if (!membership) return null;
 
-      const { data: org } = await supabase
-        .from("organizations")
-        .select("id, name, slug, logo_url, settings, is_active, branch_limit, created_at")
-        .eq("id", membership.organization_id)
-        .is("deleted_at", null)
-        .single();
+  const { data: org } = await supabase
+    .from("organizations")
+    .select(
+      "id, name, slug, logo_url, settings, is_active, branch_limit, created_at",
+    )
+    .eq("id", membership.organization_id)
+    .is("deleted_at", null)
+    .single();
 
-      return (org ?? null) as unknown as Organization | null;
-    },
-    {
-      tags: [cacheTags.organizationUsers(userId)],
-      revalidate: cacheDurations.organizationUsers,
-    },
-  );
+  return (org ?? null) as unknown as Organization | null;
 }
 
 export async function updateOrganization(
@@ -206,6 +193,8 @@ export async function updateOrganization(
   if (params.name !== undefined) updates.name = params.name.trim();
   if (params.logoUrl !== undefined) updates.logo_url = params.logoUrl;
   if (params.settings !== undefined) updates.settings = params.settings;
+  if (params.sharingEnabled !== undefined)
+    updates.sharing_enabled = params.sharingEnabled;
 
   updates.updated_by = (await supabase.auth.getUser()).data.user?.id;
 
@@ -218,7 +207,9 @@ export async function updateOrganization(
     .update(updates)
     .eq("id", orgId)
     .is("deleted_at", null)
-    .select("id, name, slug, logo_url, settings, is_active, branch_limit, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, name, slug, logo_url, settings, is_active, sharing_enabled, branch_limit, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data) {

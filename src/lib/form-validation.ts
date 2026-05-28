@@ -98,13 +98,3 @@ export function isValidMongolianPlate(plate: string): boolean {
   return /^\d{4}[А-ЯӨҮ]{3}$/.test(normalized);
 }
 
-/** Field error map helper — type-safe set of errors keyed by field name */
-export type FieldErrors = Record<string, string>;
-
-/** Merge new errors into existing errors */
-export function mergeFieldErrors(
-  existing: FieldErrors,
-  updates: FieldErrors,
-): FieldErrors {
-  return { ...existing, ...updates };
-}

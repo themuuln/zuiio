@@ -1377,6 +1377,7 @@ export type Database = {
           logo_url: string | null;
           name: string;
           settings: Json | null;
+          sharing_enabled: boolean;
           slug: string;
           updated_at: string;
           updated_by: string | null;
@@ -1391,6 +1392,7 @@ export type Database = {
           logo_url?: string | null;
           name: string;
           settings?: Json | null;
+          sharing_enabled?: boolean;
           slug: string;
           updated_at?: string;
           updated_by?: string | null;
@@ -1405,6 +1407,7 @@ export type Database = {
           logo_url?: string | null;
           name?: string;
           settings?: Json | null;
+          sharing_enabled?: boolean;
           slug?: string;
           updated_at?: string;
           updated_by?: string | null;

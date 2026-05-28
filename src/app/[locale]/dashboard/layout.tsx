@@ -7,18 +7,35 @@ import { NewCustomerSheet } from "@/components/customers/new-customer-sheet";
 import { NewVehicleSheet } from "@/components/vehicles/new-vehicle-sheet";
 import { NewExpenseSheet } from "@/components/expenses/new-expense-sheet";
 import { NewWorkOrderSheet } from "@/components/work-orders/new-work-order-sheet";
+import { SupplierDetailSheet } from "@/components/inventory/supplier-detail-sheet";
+import { ExpenseDetailSheet } from "@/components/expenses/expense-detail-sheet";
+import { PurchaseOrderDetailSheet } from "@/components/inventory/purchase-order-detail-sheet";
+import { VehicleDetailSheet } from "@/components/vehicles/vehicle-detail-sheet";
+import { CustomerDetailSheet } from "@/components/customers/customer-detail-sheet";
+import { PartsCarDetailSheet } from "@/components/inventory/parts-car-detail-sheet";
 import { PageHeader } from "@/components/page-header";
 import { RightSidebar } from "@/components/right-sidebar";
 import { SubscriptionGuard } from "@/components/subscription-guard";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { PageHeaderProvider, usePageHeader } from "@/hooks/use-page-header";
 import { useRequireAuth } from "@/hooks/use-require-auth";
-import { RightSidebarProvider } from "@/hooks/use-right-sidebar";
+import {
+  RightSidebarProvider,
+  useRightSidebar,
+} from "@/hooks/use-right-sidebar";
+import { useEffect } from "react";
 import { usePathname } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 function DashboardHeader() {
   const { state, setActiveTab } = usePageHeader();
+  const sidebar = useRightSidebar();
+  const pathname = usePathname();
+  const isBayView = pathname.includes("/bay-view");
+
+  useEffect(() => {
+    sidebar.setHasSidebar(isBayView);
+  }, [isBayView, sidebar.setHasSidebar]);
 
   return (
     <PageHeader
@@ -40,6 +57,18 @@ function GlobalDialogs() {
     setNewExpenseSheetOpen,
     isNewWorkOrderSheetOpen,
     setNewWorkOrderSheetOpen,
+    detailSupplierId,
+    setDetailSupplierId,
+    detailExpenseId,
+    setDetailExpenseId,
+    detailPOId,
+    setDetailPOId,
+    detailVehicleId,
+    setDetailVehicleId,
+    detailCustomerId,
+    setDetailCustomerId,
+    detailPartsCarId,
+    setDetailPartsCarId,
   } = usePageHeader();
 
   return (
@@ -59,6 +88,42 @@ function GlobalDialogs() {
       <NewWorkOrderSheet
         open={isNewWorkOrderSheetOpen}
         onOpenChange={setNewWorkOrderSheetOpen}
+      />
+      <SupplierDetailSheet
+        open={detailSupplierId !== null}
+        onOpenChange={(open) =>
+          setDetailSupplierId(open ? detailSupplierId : null)
+        }
+        supplierId={detailSupplierId}
+      />
+      <ExpenseDetailSheet
+        open={detailExpenseId !== null}
+        onOpenChange={(open) =>
+          setDetailExpenseId(open ? detailExpenseId : null)
+        }
+        expenseId={detailExpenseId}
+      />
+      <PurchaseOrderDetailSheet
+        open={detailPOId !== null}
+        onOpenChange={(open) => setDetailPOId(open ? detailPOId : null)}
+        poId={detailPOId}
+      />
+      <VehicleDetailSheet
+        open={detailVehicleId !== null}
+        onOpenChange={(open) =>
+          setDetailVehicleId(open ? detailVehicleId : null)
+        }
+        vehicleId={detailVehicleId}
+      />
+      <CustomerDetailSheet
+        open={detailCustomerId !== null}
+        onOpenChange={(open) => setDetailCustomerId(open ? detailCustomerId : null)}
+        customerId={detailCustomerId}
+      />
+      <PartsCarDetailSheet
+        open={detailPartsCarId !== null}
+        onOpenChange={(open) => setDetailPartsCarId(open ? detailPartsCarId : null)}
+        carId={detailPartsCarId}
       />
     </>
   );

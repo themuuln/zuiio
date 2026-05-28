@@ -20,18 +20,11 @@ import {
 } from "@/components/ui/empty";
 import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { usePurchaseOrders } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { PurchaseOrder } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
-
-const PO_STATUS_COLORS: Record<string, string> = {
-  draft: "bg-gray-100 text-gray-700",
-  ordered: "bg-blue-100 text-blue-700",
-  partial: "bg-amber-100 text-amber-700",
-  received: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
-};
 
 const PO_STATUS_KEYS: Record<string, string> = {
   draft: "poStatusDraft",
@@ -56,6 +49,7 @@ export default function PurchaseOrdersPage() {
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const { data: purchaseOrders = [], isLoading } = usePurchaseOrders(orgId);
+  const { setDetailPOId } = usePageHeader();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
@@ -108,7 +102,9 @@ export default function PurchaseOrdersPage() {
         <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("purchaseOrdersTitle")}
         </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">{t("purchaseOrdersSubtitle")}</Typography.Muted>
+        <Typography.Muted className="text-muted-foreground">
+          {t("purchaseOrdersSubtitle")}
+        </Typography.Muted>
       </div>
 
       <ListToolbar
@@ -170,10 +166,10 @@ export default function PurchaseOrdersPage() {
           ) : (
             <div className="divide-y divide-border">
               {filtered.map((po) => (
-                <Link
+                <button
                   key={po.id}
-                  href={`/dashboard/inventory/purchase-orders/${po.id}`}
-                  className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/50 cursor-pointer min-h-[64px]"
+                  onClick={() => setDetailPOId(po.id)}
+                  className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/50 cursor-pointer min-h-[64px] w-full text-left"
                 >
                   <span className="font-medium text-sm w-28 shrink-0">
                     {po.order_number}
@@ -190,7 +186,7 @@ export default function PurchaseOrdersPage() {
                   <span className="text-xs text-muted-foreground shrink-0 hidden sm:block">
                     {new Date(po.order_date).toLocaleDateString("mn-MN")}
                   </span>
-                </Link>
+                </button>
               ))}
             </div>
           )}

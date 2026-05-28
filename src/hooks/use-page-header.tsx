@@ -26,6 +26,18 @@ interface PageHeaderContextValue {
   setNewExpenseSheetOpen: (open: boolean) => void;
   isNewWorkOrderSheetOpen: boolean;
   setNewWorkOrderSheetOpen: (open: boolean) => void;
+  detailSupplierId: string | null;
+  setDetailSupplierId: (id: string | null) => void;
+  detailExpenseId: string | null;
+  setDetailExpenseId: (id: string | null) => void;
+  detailPOId: string | null;
+  setDetailPOId: (id: string | null) => void;
+  detailVehicleId: string | null;
+  setDetailVehicleId: (id: string | null) => void;
+  detailCustomerId: string | null;
+  setDetailCustomerId: (id: string | null) => void;
+  detailPartsCarId: string | null;
+  setDetailPartsCarId: (id: string | null) => void;
 }
 
 const PageHeaderContext = createContext<PageHeaderContextValue | null>(null);
@@ -40,6 +52,12 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
   const [isNewVehicleDialogOpen, setNewVehicleDialogOpen] = useState(false);
   const [isNewExpenseSheetOpen, setNewExpenseSheetOpen] = useState(false);
   const [isNewWorkOrderSheetOpen, setNewWorkOrderSheetOpen] = useState(false);
+  const [detailSupplierId, setDetailSupplierId] = useState<string | null>(null);
+  const [detailExpenseId, setDetailExpenseId] = useState<string | null>(null);
+  const [detailPOId, setDetailPOId] = useState<string | null>(null);
+  const [detailVehicleId, setDetailVehicleId] = useState<string | null>(null);
+  const [detailCustomerId, setDetailCustomerId] = useState<string | null>(null);
+  const [detailPartsCarId, setDetailPartsCarId] = useState<string | null>(null);
 
   const setTabs = (tabs: PageTab[]) =>
     setState((prev) => ({ ...prev, tabs, activeTab: tabs[0]?.value ?? "" }));
@@ -63,6 +81,18 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
         setNewExpenseSheetOpen,
         isNewWorkOrderSheetOpen,
         setNewWorkOrderSheetOpen,
+        detailSupplierId,
+        setDetailSupplierId,
+        detailExpenseId,
+        setDetailExpenseId,
+        detailPOId,
+        setDetailPOId,
+        detailVehicleId,
+        setDetailVehicleId,
+        detailCustomerId,
+        setDetailCustomerId,
+        detailPartsCarId,
+        setDetailPartsCarId,
       }}
     >
       {children}

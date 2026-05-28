@@ -246,6 +246,21 @@ export function VehicleRegistrationDialog({
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveMode, setSaveMode] = useState<"created" | "updated" | null>(null);
 
+  // ── Vehicle search state ─────────────────────────────────────
+  const [searchResults, setSearchResults] = useState<
+    {
+      id: string;
+      plate_number: string;
+      make: string;
+      model: string;
+      year: number | null;
+      color: string | null;
+    }[]
+  >([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // ── Queue state ──────────────────────────────────────────────
   const [complaint, setComplaint] = useState("");
   const [queueSaving, setQueueSaving] = useState(false);
@@ -287,6 +302,8 @@ export function VehicleRegistrationDialog({
       setQueueError(null);
       setSavedVehicleId(null);
       setSavedCustomerId(null);
+      setSearchResults([]);
+      setShowDropdown(false);
     }
   }, [open]);
 
@@ -339,6 +356,42 @@ export function VehicleRegistrationDialog({
       setLookupLoading(false);
     }
   }, [plate]);
+
+  // ── Vehicle search (debounced) ────────────────────────────────
+  const handleSearch = useCallback((term: string) => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+
+    if (!term.trim()) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    searchTimerRef.current = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const { searchVehicles } = await import(
+          "@/lib/services/bay-view-actions"
+        );
+        const results = await searchVehicles(term);
+        setSearchResults(results);
+        setShowDropdown(results.length > 0);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+  }, []);
+
+  const handleSelectVehicle = useCallback(
+    (vehicle: (typeof searchResults)[0]) => {
+      setPlate(vehicle.plate_number);
+      setShowDropdown(false);
+      handleLookup();
+    },
+    [handleLookup],
+  );
 
   const handleSave = useCallback(async () => {
     if (!plate.trim() || !make.trim() || !model.trim()) return;
@@ -535,26 +588,73 @@ export function VehicleRegistrationDialog({
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left: Registration Form */}
           <div className="flex-1 flex flex-col gap-4">
-            {/* Plate lookup */}
+            {/* Plate search with autocomplete */}
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
                   ref={plateRef}
                   value={plate}
-                  onChange={(e) =>
-                    setPlate(
-                      formatPlateInput(
-                        transliterateMongolianPlate(e.target.value),
-                      ),
-                    )
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleLookup();
+                  onChange={(e) => {
+                    const val = formatPlateInput(
+                      transliterateMongolianPlate(e.target.value),
+                    );
+                    setPlate(val);
+                    handleSearch(val);
                   }}
-                  placeholder={t("enterPlate")}
-                  className="pl-10"
+                  onFocus={() => {
+                    if (searchResults.length > 0) setShowDropdown(true);
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => setShowDropdown(false), 200);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setShowDropdown(false);
+                      handleLookup();
+                    }
+                  }}
+                  placeholder={`${t("enterPlate")} — ${t("lookupSubtitle")}`}
+                  className="pl-10 pr-8"
                 />
+                {searchLoading && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground animate-spin" />
+                )}
+                {/* Autocomplete dropdown */}
+                {showDropdown && searchResults.length > 0 && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-60 overflow-auto">
+                    {searchResults.map((v) => (
+                      <button
+                        key={v.id}
+                        type="button"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-accent text-left transition-colors first:rounded-t-lg last:rounded-b-lg"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSelectVehicle(v);
+                        }}
+                      >
+                        <div className="size-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                          <Car className="size-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm">
+                              {v.plate_number}
+                            </span>
+                            {v.year && (
+                              <span className="text-xs text-muted-foreground">
+                                {v.year}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {v.make} {v.model}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <Button
                 type="button"
@@ -604,95 +704,114 @@ export function VehicleRegistrationDialog({
               }}
               className="flex flex-col gap-4"
             >
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  {t("vehicleInfo")}
-                </Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    value={make}
-                    onChange={(e) => setMake(e.target.value)}
-                    placeholder="e.g. Toyota"
-                    required
-                  />
-                  <Input
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                    placeholder="e.g. Prius"
-                    required
-                  />
+              {/* ── Primary: Brand, Model ── */}
+              <div className="flex flex-col gap-2">
+                <Input
+                  value={make}
+                  onChange={(e) => setMake(e.target.value)}
+                  placeholder={`${t("brand")} (e.g. Toyota)`}
+                  required
+                  className="font-medium"
+                />
+                <Input
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  placeholder={`${t("model")} (e.g. Prius)`}
+                  required
+                  className="font-medium"
+                />
+              </div>
+
+              {/* ── Secondary: Year, Color ── */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    {t("year")}
+                  </Label>
                   <Input
                     type="number"
                     value={year}
                     onChange={(e) => setYear(e.target.value)}
                     placeholder="e.g. 2020"
                   />
-                  <div>
-                    <Label className="mb-1 block text-xs font-medium text-muted-foreground">
-                      {t("color")}
-                    </Label>
-                    <ColorSelect
-                      value={color}
-                      onChange={(val) => setColor(val)}
-                      className="w-full"
-                    />
-                  </div>
+                </div>
+                <div>
+                  <Label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    {t("color")}
+                  </Label>
+                  <ColorSelect
+                    value={color}
+                    onChange={(val) => setColor(val)}
+                    className="w-full"
+                  />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">
+              {/* ── Separator ── */}
+              <div className="border-t border-border/50" />
+
+              {/* ── Less Important: VIN, Engine, Odometer ── */}
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-medium text-muted-foreground/70">
                   {t("additionalDetails")}
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
                   <Input
                     value={vin}
                     onChange={(e) => setVin(e.target.value)}
-                    placeholder="17-character VIN"
+                    placeholder="VIN / Chassis"
+                    className="text-xs"
                   />
                   <Input
                     value={engine}
                     onChange={(e) => setEngine(e.target.value)}
-                    placeholder="e.g. 2ZR-FE"
-                  />
-                  <Input
-                    type="number"
-                    value={odometer}
-                    onChange={(e) => setOdometer(e.target.value)}
-                    placeholder="e.g. 120000"
+                    placeholder={`${t("engine")} (e.g. 2ZR-FE)`}
+                    className="text-xs"
                   />
                 </div>
+                <Input
+                  type="number"
+                  value={odometer}
+                  onChange={(e) => setOdometer(e.target.value)}
+                  placeholder={`${t("odometer")} (e.g. 120000)`}
+                  className="text-xs"
+                />
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">
+              {/* ── Separator ── */}
+              <div className="border-t border-border/50" />
+
+              {/* ── Owner Info (Optional) ── */}
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-medium text-muted-foreground/70">
                   {t("ownerInfo")}{" "}
-                  <span className="text-muted-foreground/60">(optional)</span>
+                  <span className="text-muted-foreground/50">(optional)</span>
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
                   <Input
                     value={custFirstName}
                     onChange={(e) => setCustFirstName(e.target.value)}
                     placeholder="e.g. Bat"
+                    className="text-xs"
                   />
                   <Input
                     value={custLastName}
                     onChange={(e) => setCustLastName(e.target.value)}
                     placeholder="e.g. Erdene"
-                  />
-                  <Input
-                    type="tel"
-                    value={custPhone}
-                    onChange={(e) =>
-                      setCustPhone(
-                        e.target.value.replace(/\D/g, "").slice(0, 8),
-                      )
-                    }
-                    placeholder="e.g. 99112233"
-                    inputMode="tel"
-                    autoComplete="tel"
+                    className="text-xs"
                   />
                 </div>
+                <Input
+                  type="tel"
+                  value={custPhone}
+                  onChange={(e) =>
+                    setCustPhone(e.target.value.replace(/\D/g, "").slice(0, 8))
+                  }
+                  placeholder="e.g. 99112233"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  className="text-xs"
+                />
               </div>
 
               <Button

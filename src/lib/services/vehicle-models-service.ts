@@ -1,6 +1,5 @@
 import { revalidateTag } from "next/cache";
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
+import { cacheTags } from "@/lib/cache/keys";
 import type { VehicleModel } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -11,83 +10,55 @@ export async function getVehicleModels(
 ): Promise<VehicleModel[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getVehicleModels", orgId, make ?? ""],
-    async () => {
-      let query = supabase
-        .from("vehicle_models")
-        .select(
-          "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_at, updated_at, deleted_at",
-        )
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("make")
-        .order("model");
+  let query = supabase
+    .from("vehicle_models")
+    .select(
+      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_at, updated_at, deleted_at",
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("make")
+    .order("model");
 
-      if (make) {
-        query = query.eq("make", make);
-      }
+  if (make) {
+    query = query.eq("make", make);
+  }
 
-      const { data, error } = await query;
-      if (error)
-        throw new Error(error.message ?? "Failed to fetch vehicle models");
-      return (data ?? []) as unknown as VehicleModel[];
-    },
-    {
-      tags: [cacheTags.vehicleModels(orgId)],
-      revalidate: cacheDurations.vehicleModels,
-    },
-  );
+  const { data, error } = await query;
+  if (error) throw new Error(error.message ?? "Failed to fetch vehicle models");
+  return (data ?? []) as unknown as VehicleModel[];
 }
 
 export async function getVehicleModel(id: string): Promise<VehicleModel> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getVehicleModel", id],
-    async () => {
-      const { data, error } = await supabase
-        .from("vehicle_models")
-        .select(
-          "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at, deleted_at",
-        )
-        .eq("id", id)
-        .is("deleted_at", null)
-        .single();
+  const { data, error } = await supabase
+    .from("vehicle_models")
+    .select(
+      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at, deleted_at",
+    )
+    .eq("id", id)
+    .is("deleted_at", null)
+    .single();
 
-      if (error || !data) throw new NotFoundError("Vehicle model not found");
-      return data;
-    },
-    {
-      tags: [cacheTags.vehicleModels(id)],
-      revalidate: cacheDurations.vehicleModels,
-    },
-  );
+  if (error || !data) throw new NotFoundError("Vehicle model not found");
+  return data;
 }
 
 export async function getDistinctMakes(orgId: string): Promise<string[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getDistinctMakes", orgId],
-    async () => {
-      const { data, error } = await supabase
-        .from("vehicle_models")
-        .select("make")
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("make");
+  const { data, error } = await supabase
+    .from("vehicle_models")
+    .select("make")
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("make");
 
-      if (error) throw new Error(error.message ?? "Failed to fetch makes");
+  if (error) throw new Error(error.message ?? "Failed to fetch makes");
 
-      const makes = [...new Set(data.map((r) => r.make))];
-      return makes;
-    },
-    {
-      tags: [cacheTags.vehicleModels(orgId)],
-      revalidate: cacheDurations.vehicleModels,
-    },
-  );
+  const makes = [...new Set(data.map((r) => r.make))];
+  return makes;
 }
 
 export async function createVehicleModel(

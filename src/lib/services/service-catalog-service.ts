@@ -1,6 +1,5 @@
 import { revalidateTag } from "next/cache";
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
+import { cacheTags } from "@/lib/cache/keys";
 import type { ServiceCatalog, ServicePriceHistory } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -12,53 +11,39 @@ export async function getServices(
 ): Promise<ServiceCatalog[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getServices", orgId, category ?? ""],
-    async () => {
-      let query = supabase
-        .from("service_catalog")
-        .select("id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, created_at, updated_at, deleted_at")
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("name");
+  let query = supabase
+    .from("service_catalog")
+    .select(
+      "id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, created_at, updated_at, deleted_at",
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("name");
 
-      if (category) {
-        query = query.eq("category", category);
-      }
+  if (category) {
+    query = query.eq("category", category);
+  }
 
-      const { data, error } = await query.limit(limit + 1);
+  const { data, error } = await query.limit(limit + 1);
 
-      if (error) throw new Error(error.message ?? "Failed to fetch services");
-      return (data ?? []) as unknown as ServiceCatalog[];
-    },
-    {
-      tags: [cacheTags.serviceCatalog(orgId)],
-      revalidate: cacheDurations.serviceCatalog,
-    },
-  );
+  if (error) throw new Error(error.message ?? "Failed to fetch services");
+  return (data ?? []) as unknown as ServiceCatalog[];
 }
 
 export async function getService(id: string): Promise<ServiceCatalog> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getService", id],
-    async () => {
-      const { data, error } = await supabase
-        .from("service_catalog")
-        .select("id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at, deleted_at")
-        .eq("id", id)
-        .is("deleted_at", null)
-        .single();
+  const { data, error } = await supabase
+    .from("service_catalog")
+    .select(
+      "id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at, deleted_at",
+    )
+    .eq("id", id)
+    .is("deleted_at", null)
+    .single();
 
-      if (error || !data) throw new NotFoundError("Service not found");
-      return data;
-    },
-    {
-      tags: [cacheTags.serviceCatalog(id)],
-      revalidate: cacheDurations.serviceCatalog,
-    },
-  );
+  if (error || !data) throw new NotFoundError("Service not found");
+  return data;
 }
 
 export async function createService(
@@ -88,7 +73,9 @@ export async function createService(
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data)
@@ -129,7 +116,9 @@ export async function updateService(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data) throw new NotFoundError("Service not found");
@@ -164,7 +153,9 @@ export async function getLastSoldPrice(
 
   let query = supabase
     .from("service_price_history")
-    .select("id, organization_id, service_catalog_id, vehicle_make, vehicle_model, unit_price, discount_amount, discount_percentage, quantity, final_price, work_order_id, mechanic_id, vehicle_id, service_name, created_at")
+    .select(
+      "id, organization_id, service_catalog_id, vehicle_make, vehicle_model, unit_price, discount_amount, discount_percentage, quantity, final_price, work_order_id, mechanic_id, vehicle_id, service_name, created_at",
+    )
     .eq("organization_id", orgId)
     .eq("service_catalog_id", serviceCatalogId)
     .order("created_at", { ascending: false })
@@ -191,7 +182,9 @@ export async function getServicePriceHistory(
 
   const { data, error } = await supabase
     .from("service_price_history")
-    .select("id, organization_id, service_catalog_id, vehicle_make, vehicle_model, unit_price, discount_amount, discount_percentage, quantity, final_price, work_order_id, mechanic_id, vehicle_id, service_name, created_at")
+    .select(
+      "id, organization_id, service_catalog_id, vehicle_make, vehicle_model, unit_price, discount_amount, discount_percentage, quantity, final_price, work_order_id, mechanic_id, vehicle_id, service_name, created_at",
+    )
     .eq("organization_id", orgId)
     .eq("service_catalog_id", serviceCatalogId)
     .order("created_at", { ascending: false })

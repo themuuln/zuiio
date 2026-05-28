@@ -1,7 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
 import type { CustomerNote } from "@/lib/types";
 import { NotFoundError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -16,24 +15,18 @@ export async function getCustomerNotes(
 ): Promise<CustomerNote[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getCustomerNotes", orgId, customerId],
-    async () => {
-      const { data, error } = await supabase
-        .from("customer_notes")
-        .select("id, organization_id, customer_id, content, type, created_by, created_at, updated_at, deleted_at")
-        .eq("organization_id", orgId)
-        .eq("customer_id", customerId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("customer_notes")
+    .select(
+      "id, organization_id, customer_id, content, type, created_by, created_at, updated_at, deleted_at",
+    )
+    .eq("organization_id", orgId)
+    .eq("customer_id", customerId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
 
-      if (error) throw new Error(error.message);
-      return data ?? [];
-    },
-    {
-      tags: [cacheTags.customerNotes(orgId, customerId)],
-    },
-  );
+  if (error) throw new Error(error.message);
+  return data ?? [];
 }
 
 /**
@@ -56,7 +49,9 @@ export async function createCustomerNote(
       type: params.type ?? "general",
       created_by: userId,
     })
-    .select("id, organization_id, customer_id, content, type, created_by, created_at, updated_at")
+    .select(
+      "id, organization_id, customer_id, content, type, created_by, created_at, updated_at",
+    )
     .single();
 
   if (error || !data) {

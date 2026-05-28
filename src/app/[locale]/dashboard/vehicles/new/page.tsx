@@ -20,6 +20,7 @@ import { ColorSelect } from "@/components/vehicles/color-select";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useRouter } from "@/lib/i18n/navigation";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { customerKeys } from "@/lib/queries/keys";
 import { useQuery } from "@tanstack/react-query";
@@ -85,6 +86,7 @@ function getCustomerLabel(customer: Customer, t?: (key: string) => string) {
 export default function NewVehiclePage() {
   const t = useTranslations("vehicles");
   const { replace } = useRouter();
+  const { setDetailVehicleId } = usePageHeader();
   const searchParams = useSearchParams();
   const preselectedCustomerId = searchParams.get("customerId");
 
@@ -216,7 +218,8 @@ export default function NewVehiclePage() {
       }
 
       toast.success(t("vehicleCreated"));
-      replace(`/dashboard/vehicles/${json.data.id}`);
+      replace("/dashboard/vehicles");
+      setDetailVehicleId(json.data.id);
     } catch {
       toast.error(t("failedToCreate"));
       setError(t("failedToCreate"));

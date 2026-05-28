@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/empty";
 import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { useDeleteSupplier, useSuppliers } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Supplier } from "@/lib/types";
@@ -34,6 +35,7 @@ export default function SuppliersPage() {
   const { data: rawSuppliers, isLoading } = useSuppliers(orgId);
   const suppliers = Array.isArray(rawSuppliers) ? rawSuppliers : [];
   const deleteSupplier = useDeleteSupplier(orgId);
+  const { setDetailSupplierId } = usePageHeader();
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -67,8 +69,12 @@ export default function SuppliersPage() {
   };
 
   const columns = useMemo(
-    () => createColumns({ onDelete: handleDelete }),
-    [handleDelete],
+    () =>
+      createColumns({
+        onEdit: (id) => setDetailSupplierId(id),
+        onDelete: handleDelete,
+      }),
+    [handleDelete, setDetailSupplierId],
   );
 
   return (
@@ -77,7 +83,9 @@ export default function SuppliersPage() {
         <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("suppliersTitle")}
         </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">{t("suppliersSubtitle")}</Typography.Muted>
+        <Typography.Muted className="text-muted-foreground">
+          {t("suppliersSubtitle")}
+        </Typography.Muted>
       </div>
 
       <ListToolbar

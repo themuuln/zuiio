@@ -1,6 +1,5 @@
 import { revalidateTag } from "next/cache";
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
+import { cacheTags } from "@/lib/cache/keys";
 import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";
 import type {
   Customer,
@@ -80,18 +79,10 @@ export async function getWorkOrders(
   const effectivePage = usePagination ? page : 1;
   const effectivePageSize = usePagination ? (pageSize ?? 50) : limit;
 
-  return withCache(
-    [
-      "getWorkOrders",
-      orgId,
-      JSON.stringify(filters ?? {}),
-      usePagination ? `p${effectivePage}s${effectivePageSize}` : `l${limit}`,
-    ],
-    async () => {
-      let query = supabase
-        .from("work_orders")
-        .select(
-          `
+  let query = supabase
+    .from("work_orders")
+    .select(
+      `
         id, organization_id, branch_id, customer_id, vehicle_id, status,
         complaint, description, bay_number, created_at, updated_at,
         mechanic_id, total, subtotal, discount_total, discount_amount,
@@ -100,142 +91,134 @@ export async function getWorkOrders(
         customer:customers(first_name, last_name, phone),
         vehicle:vehicles(plate_number, make, model)
       `,
-          usePagination ? { count: "exact" } : undefined,
-        )
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+      usePagination ? { count: "exact" } : undefined,
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
 
-      if (filters?.status) query = query.eq("status", filters.status);
-      if (filters?.mechanic_id)
-        query = query.eq("mechanic_id", filters.mechanic_id);
-      if (filters?.date) {
-        const dayStart = `${filters.date}T00:00:00`;
-        const dayEnd = `${filters.date}T23:59:59`;
-        query = query.gte("created_at", dayStart).lte("created_at", dayEnd);
-      }
-      if (filters?.search?.trim()) {
-        const term = `%${filters.search.trim()}%`;
-        query = query.or(
-          `id::text.ilike.${term},customer.full_name.ilike.${term},vehicle.plate_number.ilike.${term}`,
-        );
-      }
+  if (filters?.status) query = query.eq("status", filters.status);
+  if (filters?.mechanic_id)
+    query = query.eq("mechanic_id", filters.mechanic_id);
+  if (filters?.date) {
+    const dayStart = `${filters.date}T00:00:00`;
+    const dayEnd = `${filters.date}T23:59:59`;
+    query = query.gte("created_at", dayStart).lte("created_at", dayEnd);
+  }
+  if (filters?.search?.trim()) {
+    const term = `%${filters.search.trim()}%`;
+    query = query.or(
+      `id::text.ilike.${term},customer.full_name.ilike.${term},vehicle.plate_number.ilike.${term}`,
+    );
+  }
 
-      if (usePagination) {
-        const from = (effectivePage - 1) * effectivePageSize;
-        const to = from + effectivePageSize - 1;
-        query = query.range(from, to);
-      } else {
-        query = query.limit(limit + 1);
-      }
+  if (usePagination) {
+    const from = (effectivePage - 1) * effectivePageSize;
+    const to = from + effectivePageSize - 1;
+    query = query.range(from, to);
+  } else {
+    query = query.limit(limit + 1);
+  }
 
-      const { data, error } = await query;
+  const { data, error } = await query;
 
-      if (error)
-        throw new Error(error.message ?? "Failed to fetch work orders");
+  if (error) throw new Error(error.message ?? "Failed to fetch work orders");
 
-      // ── Enrich with mechanic names ─────────────────────────
-      const rows = (data ?? []) as unknown as Array<
-        WorkOrderWithRefs & { mechanic_id: string | null }
-      >;
-      const mechanicIds = [
-        ...new Set(rows.flatMap((r) => (r.mechanic_id ? [r.mechanic_id] : []))),
-      ] as string[];
-      const mechanicMap = new Map<string, string | null>();
-      if (mechanicIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", mechanicIds);
-        for (const p of profiles ?? []) {
-          mechanicMap.set(p.id, p.full_name);
-        }
-      }
+  // ── Enrich with mechanic names ─────────────────────────
+  const rows = (data ?? []) as unknown as Array<
+    WorkOrderWithRefs & { mechanic_id: string | null }
+  >;
+  const mechanicIds = [
+    ...new Set(rows.flatMap((r) => (r.mechanic_id ? [r.mechanic_id] : []))),
+  ] as string[];
+  const mechanicMap = new Map<string, string | null>();
+  if (mechanicIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", mechanicIds);
+    for (const p of profiles ?? []) {
+      mechanicMap.set(p.id, p.full_name);
+    }
+  }
 
-      // ── Calculate profit/cost for each work order ──────
-      const workOrderIds = rows.map((r) => r.id);
-      const costMap = new Map<
-        string,
-        {
-          services_cost: number;
-          parts_cost: number;
-          services_revenue: number;
-          parts_revenue: number;
-        }
-      >();
-
-      if (workOrderIds.length > 0) {
-        // Batch query services
-        const { data: servicesData } = await supabase
-          .from("work_order_services")
-          .select("work_order_id, unit_cost, quantity, final_price")
-          .in("work_order_id", workOrderIds);
-
-        // Batch query parts
-        const { data: partsData } = await supabase
-          .from("work_order_parts")
-          .select("work_order_id, unit_cost, quantity, final_price")
-          .in("work_order_id", workOrderIds);
-
-        // Initialize defaults for all work orders
-        for (const id of workOrderIds) {
-          costMap.set(id, {
-            services_cost: 0,
-            parts_cost: 0,
-            services_revenue: 0,
-            parts_revenue: 0,
-          });
-        }
-
-        // Aggregate services
-        for (const s of servicesData ?? []) {
-          const entry = costMap.get(s.work_order_id);
-          if (entry) {
-            entry.services_cost += Number(s.unit_cost) * s.quantity;
-            entry.services_revenue += Number(s.final_price);
-          }
-        }
-
-        // Aggregate parts
-        for (const p of partsData ?? []) {
-          const entry = costMap.get(p.work_order_id);
-          if (entry) {
-            entry.parts_cost += Number(p.unit_cost) * p.quantity;
-            entry.parts_revenue += Number(p.final_price);
-          }
-        }
-      }
-
-      return rows.map((r) => {
-        const costs = costMap.get(r.id);
-        const services_revenue = costs?.services_revenue ?? 0;
-        const parts_revenue = costs?.parts_revenue ?? 0;
-        const total_revenue = services_revenue + parts_revenue;
-        const total_cost =
-          (costs?.services_cost ?? 0) + (costs?.parts_cost ?? 0);
-        const gross_profit = total_revenue - total_cost;
-        const margin_percent =
-          total_revenue > 0 ? (gross_profit / total_revenue) * 100 : 0;
-
-        return {
-          ...r,
-          services_cost: costs?.services_cost ?? 0,
-          parts_cost: costs?.parts_cost ?? 0,
-          services_revenue,
-          parts_revenue,
-          gross_profit,
-          margin_percent: Math.round(margin_percent * 100) / 100,
-          mechanic: r.mechanic_id
-            ? { full_name: mechanicMap.get(r.mechanic_id) ?? null }
-            : null,
-        };
-      }) as unknown as unknown as WorkOrderWithRefs[];
-    },
+  // ── Calculate profit/cost for each work order ──────
+  const workOrderIds = rows.map((r) => r.id);
+  const costMap = new Map<
+    string,
     {
-      tags: [cacheTags.workOrders(orgId)],
-      revalidate: cacheDurations.workOrders,
-    },
-  );
+      services_cost: number;
+      parts_cost: number;
+      services_revenue: number;
+      parts_revenue: number;
+    }
+  >();
+
+  if (workOrderIds.length > 0) {
+    // Batch query services
+    const { data: servicesData } = await supabase
+      .from("work_order_services")
+      .select("work_order_id, unit_cost, quantity, final_price")
+      .in("work_order_id", workOrderIds);
+
+    // Batch query parts
+    const { data: partsData } = await supabase
+      .from("work_order_parts")
+      .select("work_order_id, unit_cost, quantity, final_price")
+      .in("work_order_id", workOrderIds);
+
+    // Initialize defaults for all work orders
+    for (const id of workOrderIds) {
+      costMap.set(id, {
+        services_cost: 0,
+        parts_cost: 0,
+        services_revenue: 0,
+        parts_revenue: 0,
+      });
+    }
+
+    // Aggregate services
+    for (const s of servicesData ?? []) {
+      const entry = costMap.get(s.work_order_id);
+      if (entry) {
+        entry.services_cost += Number(s.unit_cost) * s.quantity;
+        entry.services_revenue += Number(s.final_price);
+      }
+    }
+
+    // Aggregate parts
+    for (const p of partsData ?? []) {
+      const entry = costMap.get(p.work_order_id);
+      if (entry) {
+        entry.parts_cost += Number(p.unit_cost) * p.quantity;
+        entry.parts_revenue += Number(p.final_price);
+      }
+    }
+  }
+
+  return rows.map((r) => {
+    const costs = costMap.get(r.id);
+    const services_revenue = costs?.services_revenue ?? 0;
+    const parts_revenue = costs?.parts_revenue ?? 0;
+    const total_revenue = services_revenue + parts_revenue;
+    const total_cost = (costs?.services_cost ?? 0) + (costs?.parts_cost ?? 0);
+    const gross_profit = total_revenue - total_cost;
+    const margin_percent =
+      total_revenue > 0 ? (gross_profit / total_revenue) * 100 : 0;
+
+    return {
+      ...r,
+      services_cost: costs?.services_cost ?? 0,
+      parts_cost: costs?.parts_cost ?? 0,
+      services_revenue,
+      parts_revenue,
+      gross_profit,
+      margin_percent: Math.round(margin_percent * 100) / 100,
+      mechanic: r.mechanic_id
+        ? { full_name: mechanicMap.get(r.mechanic_id) ?? null }
+        : null,
+    };
+  }) as unknown as unknown as WorkOrderWithRefs[];
 }
 
 // ── Get Single Work Order (with detail) ───────────────────────
@@ -825,29 +808,20 @@ export async function getDailyWorkOrders(
 
   const targetDate = date ?? new Date().toISOString().split("T")[0];
 
-  return withCache(
-    ["getDailyWorkOrders", orgId, targetDate],
-    async () => {
-      const { data, error } = await supabase
-        .from("work_orders")
-        .select(
-          "id, organization_id, branch_id, customer_id, vehicle_id, status, complaint, description, bay_number, created_at, updated_at, mechanic_id, total, subtotal, discount_total, discount_amount, discount_percentage, odometer_at_service, queue_order, notes, completed_at, started_at",
-        )
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .gte("created_at", `${targetDate}T00:00:00`)
-        .lte("created_at", `${targetDate}T23:59:59`)
-        .order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("work_orders")
+    .select(
+      "id, organization_id, branch_id, customer_id, vehicle_id, status, complaint, description, bay_number, created_at, updated_at, mechanic_id, total, subtotal, discount_total, discount_amount, discount_percentage, odometer_at_service, queue_order, notes, completed_at, started_at",
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .gte("created_at", `${targetDate}T00:00:00`)
+    .lte("created_at", `${targetDate}T23:59:59`)
+    .order("created_at", { ascending: false });
 
-      if (error)
-        throw new Error(error.message ?? "Failed to fetch daily work orders");
-      return (data ?? []) as unknown as WorkOrder[];
-    },
-    {
-      tags: [cacheTags.dailyWorkOrders(orgId, targetDate)],
-      revalidate: cacheDurations.workOrders,
-    },
-  );
+  if (error)
+    throw new Error(error.message ?? "Failed to fetch daily work orders");
+  return (data ?? []) as unknown as WorkOrder[];
 }
 
 // ── Soft Delete Work Order ─────────────────────────────────────

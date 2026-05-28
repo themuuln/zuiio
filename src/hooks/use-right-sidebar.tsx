@@ -20,6 +20,7 @@ interface RightSidebarState {
   activeTab: string;
   tabs: SidebarTab[];
   content: Record<string, ReactNode>;
+  hasSidebar: boolean;
 }
 
 interface RightSidebarContextValue {
@@ -27,6 +28,7 @@ interface RightSidebarContextValue {
   setOpen: (open: boolean) => void;
   toggle: () => void;
   setActiveTab: (tab: string) => void;
+  setHasSidebar: (has: boolean) => void;
   registerTab: (
     value: string,
     label: string,
@@ -46,6 +48,7 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
     activeTab: "",
     tabs: [],
     content: {},
+    hasSidebar: true,
   });
 
   const setOpen = useCallback(
@@ -58,6 +61,14 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
 
   const toggle = useCallback(
     () => setState((prev) => ({ ...prev, isOpen: !prev.isOpen })),
+    [],
+  );
+
+  const setHasSidebar = useCallback(
+    (has: boolean) =>
+      setState((prev) =>
+        prev.hasSidebar === has ? prev : { ...prev, hasSidebar: has },
+      ),
     [],
   );
 
@@ -110,10 +121,19 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
       setOpen,
       toggle,
       setActiveTab,
+      setHasSidebar,
       registerTab,
       unregisterTab,
     }),
-    [state, setOpen, toggle, setActiveTab, registerTab, unregisterTab],
+    [
+      state,
+      setOpen,
+      toggle,
+      setActiveTab,
+      setHasSidebar,
+      registerTab,
+      unregisterTab,
+    ],
   );
 
   return (

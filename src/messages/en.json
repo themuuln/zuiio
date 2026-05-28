@@ -376,6 +376,8 @@
     "modelRequired": "Model *",
     "year": "Year",
     "color": "Color",
+    "brand": "Brand",
+    "model": "Model",
     "additionalDetails": "Additional Details",
     "vin": "VIN",
     "engine": "Engine",

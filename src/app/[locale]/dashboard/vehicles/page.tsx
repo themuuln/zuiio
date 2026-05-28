@@ -2,13 +2,24 @@
 
 import { BarChart3, Car, Clock, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable } from "@/components/ui/data-table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Empty,
   EmptyContent,
@@ -18,28 +29,16 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import type { ExportColumn } from "@/lib/export";
-import { Link } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useVehicles } from "@/lib/queries/use-vehicles";
+import { useVehicles, useDeleteVehicle } from "@/lib/queries/use-vehicles";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { usePageHeader } from "@/hooks/use-page-header";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import type { Vehicle } from "@/lib/types";
+import { VehicleDetailDrawer } from "@/components/vehicles/vehicle-detail-drawer";
+import { VehicleEditSheet } from "@/components/vehicles/vehicle-edit-sheet";
 import { Typography } from "@/components/ui/typography";
-
-function VehicleRowSkeleton() {
-  return (
-    <div className="flex items-center gap-4 border-b border-border p-4">
-      <Skeleton className="size-10 rounded-lg bg-muted" />
-      <div className="flex flex-1 flex-col gap-1.5">
-        <Skeleton className="h-5 w-24" />
-        <Skeleton className="size-40" />
-      </div>
-      <Skeleton className="h-4 w-20" />
-    </div>
-  );
-}
+import { createColumns, type VehicleRow } from "./_columns";
 
 export default function VehiclesPage() {
   const [search, setSearch] = useState("");
@@ -56,10 +55,38 @@ export default function VehiclesPage() {
     error,
     refetch,
   } = useVehicles(org?.orgId, search);
+  const deleteVehicle = useDeleteVehicle(org?.orgId);
 
-  const list: Array<Vehicle & { owner_name?: string }> = vehicles ?? [];
+  const list: VehicleRow[] = vehicles ?? [];
 
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(
+    null,
+  );
+  const [vehicleToDelete, setVehicleToDelete] = useState<VehicleRow | null>(
+    null,
+  );
+  const [vehicleToEditId, setVehicleToEditId] = useState<string | null>(null);
   const { registerTab } = useRightSidebar();
+
+  const handleEdit = useCallback((vehicle: VehicleRow) => {
+    setVehicleToEditId(vehicle.id);
+  }, []);
+
+  const handleDelete = useCallback((vehicle: VehicleRow) => {
+    setVehicleToDelete(vehicle);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (!vehicleToDelete) return;
+    deleteVehicle.mutate(vehicleToDelete.id, {
+      onSettled: () => setVehicleToDelete(null),
+    });
+  }, [vehicleToDelete, deleteVehicle]);
+
+  const columns = useMemo(
+    () => createColumns({ onEdit: handleEdit, onDelete: handleDelete }),
+    [handleEdit, handleDelete],
+  );
 
   useEffect(() => {
     if (!list.length) return;
@@ -110,13 +137,7 @@ export default function VehiclesPage() {
           <Skeleton className="h-10 w-32" />
         </div>
         <Skeleton className="h-12 w-full rounded-xl" />
-        <Card>
-          <CardContent className="p-0">
-            {[1, 2, 3].map((i) => (
-              <VehicleRowSkeleton key={`skeleton-${i}`} />
-            ))}
-          </CardContent>
-        </Card>
+        <DataTable columns={[]} data={[]} loading />
       </div>
     );
   }
@@ -154,7 +175,7 @@ export default function VehiclesPage() {
     );
   }
 
-  const exportColumns: ExportColumn<Vehicle & { owner_name?: string }>[] = [
+  const exportColumns: ExportColumn<VehicleRow>[] = [
     { key: "plate_number", label: "Plate" },
     { key: "year", label: "Year" },
     { key: "make", label: "Make" },
@@ -203,7 +224,7 @@ export default function VehiclesPage() {
         }
       />
 
-      <Card>
+      <Card className="py-0">
         <CardContent className="p-0">
           {list.length === 0 ? (
             <Empty>
@@ -228,42 +249,64 @@ export default function VehiclesPage() {
               )}
             </Empty>
           ) : (
-            <div className="divide-y divide-border">
-              {list.map((vehicle) => (
-                <Link
-                  key={vehicle.id}
-                  href={`/dashboard/vehicles/${vehicle.id}`}
-                  className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/50 min-h-[72px]"
-                >
-                  <div className="flex size-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                    <Car className="size-5" />
-                  </div>
-                  <div className="flex flex-1 flex-col gap-1">
-                    <span className="text-base font-semibold font-mono tracking-wide">
-                      {vehicle.plate_number}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {[vehicle.year, vehicle.make, vehicle.model]
-                        .filter(Boolean)
-                        .join(" ")}
-                    </span>
-                    {vehicle.vin && (
-                      <span className="text-xs font-mono text-muted-foreground">
-                        {t("vinLabel", { vin: vehicle.vin })}
-                      </span>
-                    )}
-                  </div>
-                  {vehicle.owner_name && (
-                    <span className="text-sm text-muted-foreground text-right">
-                      {vehicle.owner_name}
-                    </span>
-                  )}
-                </Link>
-              ))}
-            </div>
+            <DataTable
+              columns={columns}
+              data={list}
+              getRowId={(row) => row.id}
+              pageSize={20}
+              onRowClick={(row) => setSelectedVehicleId(row.id)}
+            />
           )}
         </CardContent>
       </Card>
+
+      <VehicleDetailDrawer
+        open={!!selectedVehicleId}
+        onOpenChange={(open) => {
+          if (!open) setSelectedVehicleId(null);
+        }}
+        vehicleId={selectedVehicleId}
+      />
+
+      <VehicleEditSheet
+        open={!!vehicleToEditId}
+        onOpenChange={(open) => {
+          if (!open) setVehicleToEditId(null);
+        }}
+        vehicleId={vehicleToEditId}
+      />
+
+      <AlertDialog
+        open={!!vehicleToDelete}
+        onOpenChange={(open) => {
+          if (!open) setVehicleToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete vehicle</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                {vehicleToDelete?.plate_number}
+              </span>
+              ? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteVehicle.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteVehicle.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteVehicle.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -2,7 +2,6 @@ import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { cacheTags } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
 import type {
   PartsCars,
   PartsCarsInsert,
@@ -15,19 +14,16 @@ import type {
 
 export async function getPartsCars(orgId: string): Promise<PartsCars[]> {
   const supabase = await createClient();
-  return withCache(
-    ["getPartsCars", orgId],
-    async () => {
-      const { data, error } = await supabase
-        .from("parts_cars")
-        .select("id, organization_id, branch_id, make, model, year, vin, license_plate, purchase_cost, currency, arrival_date, status, total_parts_actual, total_estimated_value, notes, created_at, updated_at, deleted_at")
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
-      if (error) throw new Error(error.message);
-      return (data ?? []) as unknown as PartsCars[];
-    },
-  );
+  const { data, error } = await supabase
+    .from("parts_cars")
+    .select(
+      "id, organization_id, branch_id, make, model, year, vin, license_plate, purchase_cost, currency, arrival_date, status, total_parts_actual, total_estimated_value, notes, created_at, updated_at, deleted_at",
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as PartsCars[];
 }
 
 export async function getPartsCar(
@@ -37,7 +33,9 @@ export async function getPartsCar(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("parts_cars")
-    .select("id, organization_id, branch_id, make, model, year, vin, license_plate, purchase_cost, currency, arrival_date, status, total_parts_actual, total_estimated_value, notes, created_by, updated_by, created_at, updated_at, deleted_at")
+    .select(
+      "id, organization_id, branch_id, make, model, year, vin, license_plate, purchase_cost, currency, arrival_date, status, total_parts_actual, total_estimated_value, notes, created_by, updated_by, created_at, updated_at, deleted_at",
+    )
     .eq("id", carId)
     .eq("organization_id", orgId)
     .single();
@@ -65,13 +63,16 @@ export async function createPartsCar(
       license_plate: params.license_plate ?? null,
       purchase_cost: params.purchase_cost ?? 0,
       currency: params.currency ?? "MNT",
-      arrival_date: params.arrival_date ?? new Date().toISOString().split("T")[0],
+      arrival_date:
+        params.arrival_date ?? new Date().toISOString().split("T")[0],
       status: "arrived",
       notes: params.notes ?? null,
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, organization_id, branch_id, make, model, year, vin, license_plate, purchase_cost, currency, arrival_date, status, total_parts_actual, total_estimated_value, notes, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, branch_id, make, model, year, vin, license_plate, purchase_cost, currency, arrival_date, status, total_parts_actual, total_estimated_value, notes, created_by, updated_by, created_at, updated_at",
+    )
     .single();
   if (error) throw new Error(error.message);
   revalidateTag(cacheTags.partsCars(orgId), "max");
@@ -86,10 +87,15 @@ export async function updatePartsCar(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("parts_cars")
-    .update({ ...params, updated_by: (await supabase.auth.getUser()).data.user?.id })
+    .update({
+      ...params,
+      updated_by: (await supabase.auth.getUser()).data.user?.id,
+    })
     .eq("id", carId)
     .eq("organization_id", orgId)
-    .select("id, organization_id, branch_id, make, model, year, vin, license_plate, purchase_cost, currency, arrival_date, status, total_parts_actual, total_estimated_value, notes, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, branch_id, make, model, year, vin, license_plate, purchase_cost, currency, arrival_date, status, total_parts_actual, total_estimated_value, notes, created_by, updated_by, created_at, updated_at",
+    )
     .single();
   if (error || !data) throw new Error(error?.message ?? "Failed to update");
   revalidateTag(cacheTags.partsCars(orgId), "max");
@@ -122,7 +128,9 @@ export async function getPartsCarParts(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("parts_car_parts")
-    .select("id, organization_id, parts_car_id, part_id, name, location_group, quantity, condition, estimated_price, notes, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, parts_car_id, part_id, name, location_group, quantity, condition, estimated_price, notes, created_by, updated_by, created_at, updated_at",
+    )
     .eq("parts_car_id", carId)
     .eq("organization_id", orgId)
     .order("created_at", { ascending: true });
@@ -153,7 +161,9 @@ export async function addPartsCarPart(
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, organization_id, parts_car_id, part_id, name, location_group, quantity, condition, estimated_price, notes, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, parts_car_id, part_id, name, location_group, quantity, condition, estimated_price, notes, created_by, updated_by, created_at, updated_at",
+    )
     .single();
   if (error) throw new Error(error.message);
   revalidateTag(cacheTags.partsCarParts(carId), "max");
@@ -189,7 +199,9 @@ export async function completeDisassembly(
     getPartsCar(orgId, carId),
     supabase
       .from("parts_car_parts")
-      .select("id, organization_id, parts_car_id, part_id, name, location_group, quantity, condition, estimated_price, notes, created_by, updated_by, created_at, updated_at")
+      .select(
+        "id, organization_id, parts_car_id, part_id, name, location_group, quantity, condition, estimated_price, notes, created_by, updated_by, created_at, updated_at",
+      )
       .eq("parts_car_id", carId)
       .eq("organization_id", orgId),
   ]);
@@ -199,7 +211,10 @@ export async function completeDisassembly(
 
   const totalParts = parts?.length ?? 0;
   const totalValue =
-    parts?.reduce((sum, p) => sum + (p.estimated_price ?? 0) * (p.quantity ?? 1), 0) ?? 0;
+    parts?.reduce(
+      (sum, p) => sum + (p.estimated_price ?? 0) * (p.quantity ?? 1),
+      0,
+    ) ?? 0;
 
   const { data, error } = await supabase
     .from("parts_cars")
@@ -211,7 +226,9 @@ export async function completeDisassembly(
     })
     .eq("id", carId)
     .eq("organization_id", orgId)
-    .select("id, organization_id, branch_id, make, model, year, vin, license_plate, purchase_cost, currency, arrival_date, status, total_parts_actual, total_estimated_value, notes, created_by, updated_by, created_at, updated_at")
+    .select(
+      "id, organization_id, branch_id, make, model, year, vin, license_plate, purchase_cost, currency, arrival_date, status, total_parts_actual, total_estimated_value, notes, created_by, updated_by, created_at, updated_at",
+    )
     .single();
   if (error || !data) throw new Error(error?.message ?? "Failed to complete");
   revalidateTag(cacheTags.partsCars(orgId), "max");
@@ -231,7 +248,9 @@ export async function publishPartsCarPartsToCatalog(
   // Get all parts from this car that don't have a linked catalog entry
   const { data: parts, error: partsError } = await supabase
     .from("parts_car_parts")
-    .select("id, name, quantity, estimated_price, location_group, condition, notes")
+    .select(
+      "id, name, quantity, estimated_price, location_group, condition, notes",
+    )
     .eq("parts_car_id", carId)
     .eq("organization_id", orgId)
     .is("part_id", null);
@@ -264,7 +283,10 @@ export async function publishPartsCarPartsToCatalog(
       .single();
 
     if (catalogError) {
-      console.error(`Failed to create catalog entry for part ${part.id}:`, catalogError);
+      console.error(
+        `Failed to create catalog entry for part ${part.id}:`,
+        catalogError,
+      );
       continue;
     }
 
@@ -298,7 +320,10 @@ export async function publishPartsCarPartsToCatalog(
       });
 
     if (movementError) {
-      console.error(`Failed to create inventory movement for part ${catalogItem.id}:`, movementError);
+      console.error(
+        `Failed to create inventory movement for part ${catalogItem.id}:`,
+        movementError,
+      );
     }
   }
 

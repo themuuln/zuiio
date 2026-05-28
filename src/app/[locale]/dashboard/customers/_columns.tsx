@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Building2, Car, ChevronRight, Clock, User } from "lucide-react";
+import { Building2, Car, ChevronRight, Clock, Globe, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import type { Customer } from "@/lib/types";
@@ -9,6 +9,7 @@ import { Typography } from "@/components/ui/typography";
 
 export interface CustomerRow extends Customer {
   vehicle_count?: number;
+  organization_name?: string;
 }
 
 function getCustomerDisplayName(customer: CustomerRow): string {
@@ -79,7 +80,9 @@ export const columns: ColumnDef<CustomerRow>[] = [
       return (
         <div className="min-w-0 max-w-44">
           {customer.phone ? (
-            <Typography.Text className="truncate text-sm">{customer.phone}</Typography.Text>
+            <Typography.Text className="truncate text-sm">
+              {customer.phone}
+            </Typography.Text>
           ) : customer.email ? (
             <Typography.Muted className="truncate text-sm text-muted-foreground">
               {customer.email}
@@ -112,6 +115,111 @@ export const columns: ColumnDef<CustomerRow>[] = [
     ),
     cell: ({ row }) => (
       <span className="text-sm tabular-nums">{row.original.total_visits}</span>
+    ),
+  },
+  {
+    id: "last_visit",
+    accessorKey: "last_visit_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Last Visit" />
+    ),
+    cell: ({ row }) => {
+      const lastVisit = formatDate(row.original.last_visit_at);
+      return lastVisit ? (
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Clock className="size-3.5 shrink-0 text-muted-foreground/50" />
+          <span>{lastVisit}</span>
+        </div>
+      ) : (
+        <span className="text-sm text-muted-foreground/50">Never</span>
+      );
+    },
+  },
+  {
+    id: "chevron",
+    header: "",
+    enableSorting: false,
+    cell: () => <ChevronRight className="size-4 text-muted-foreground/40" />,
+  },
+];
+
+/** Columns for shared (cross-org) customers — includes org attribution badge */
+export const sharedColumns: ColumnDef<CustomerRow>[] = [
+  {
+    id: "name",
+    accessorFn: (row) => getCustomerDisplayName(row),
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
+    cell: ({ row }) => {
+      const customer = row.original;
+      return (
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 ring-1 ring-border">
+            {customer.type === "company" ? (
+              <Building2 className="size-4 text-muted-foreground/70" />
+            ) : (
+              <User className="size-4 text-muted-foreground/70" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <Typography.Text className="truncate text-sm font-medium">
+              {getCustomerDisplayName(customer)}
+            </Typography.Text>
+            <div className="flex items-center gap-1">
+              <Typography.Muted className="text-xs text-muted-foreground capitalize">
+                {customer.type}
+              </Typography.Muted>
+              {customer.organization_name && (
+                <Badge
+                  variant="outline"
+                  className="gap-1 text-[10px] px-1.5 py-0"
+                >
+                  <Globe className="size-2.5" />
+                  {customer.organization_name}
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    },
+  },
+  {
+    id: "contact",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Contact" />
+    ),
+    cell: ({ row }) => {
+      const customer = row.original;
+      return (
+        <div className="min-w-0 max-w-44">
+          {customer.phone ? (
+            <Typography.Text className="truncate text-sm">
+              {customer.phone}
+            </Typography.Text>
+          ) : customer.email ? (
+            <Typography.Muted className="truncate text-sm text-muted-foreground">
+              {customer.email}
+            </Typography.Muted>
+          ) : (
+            <span className="text-sm text-muted-foreground/50">&mdash;</span>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    id: "vehicles",
+    accessorKey: "vehicle_count",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Vehicles" />
+    ),
+    cell: ({ row }) => (
+      <Badge variant="secondary" className="gap-1 tabular-nums">
+        <Car className="size-3 text-muted-foreground/60" />
+        {row.original.vehicle_count ?? 0}
+      </Badge>
     ),
   },
   {

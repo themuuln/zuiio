@@ -1,6 +1,5 @@
 import { revalidateTag } from "next/cache";
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
+import { cacheTags } from "@/lib/cache/keys";
 import { createClient } from "@/lib/supabase/server";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import type {
@@ -37,90 +36,77 @@ export async function getPartsCatalog(
   const effectivePage = usePagination ? page : 1;
   const effectivePageSize = usePagination ? (pageSize ?? 50) : limit;
 
-  return withCache(
-    ["getPartsCatalog", orgId, usePagination ? `p${effectivePage}s${effectivePageSize}` : `l${limit}`],
-    async () => {
-      let query = supabase
-        .from("parts_catalog")
-        .select("id, organization_id, name, part_number, category, unit, default_price, is_active, purchase_price, created_at, deleted_at", usePagination ? { count: "exact" } : undefined)
-        .eq("organization_id", orgId)
-        .is("deleted_at", null);
+  let query = supabase
+    .from("parts_catalog")
+    .select(
+      "id, organization_id, name, part_number, category, unit, default_price, is_active, purchase_price, created_at, deleted_at",
+      usePagination ? { count: "exact" } : undefined,
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null);
 
-      if (usePagination) {
-        const from = (effectivePage - 1) * effectivePageSize;
-        const to = from + effectivePageSize - 1;
-        query = query.range(from, to);
-      } else {
-        query = query.limit(limit + 1);
-      }
+  if (usePagination) {
+    const from = (effectivePage - 1) * effectivePageSize;
+    const to = from + effectivePageSize - 1;
+    query = query.range(from, to);
+  } else {
+    query = query.limit(limit + 1);
+  }
 
-      const { data: parts, error, count } = await query;
-      if (error) throw new Error(error.message);
+  const { data: parts, error, count } = await query;
+  if (error) throw new Error(error.message);
 
-      const { data: assignments } = await supabase
-        .from("vehicle_model_parts")
-        .select("part_id, count")
-        .eq("organization_id", orgId);
+  const { data: assignments } = await supabase
+    .from("vehicle_model_parts")
+    .select("part_id, count")
+    .eq("organization_id", orgId);
 
-      const popularityMap: Record<string, number> = {};
-      if (assignments) {
-        const countMap: Record<string, number> = {};
-        for (const a of assignments) {
-          const pid = a.part_id as string;
-          countMap[pid] = (countMap[pid] || 0) + 1;
-        }
-        const maxModels = 26;
-        for (const [pid, count] of Object.entries(countMap)) {
-          popularityMap[pid] = Math.round((count / maxModels) * 100);
-        }
-      }
+  const popularityMap: Record<string, number> = {};
+  if (assignments) {
+    const countMap: Record<string, number> = {};
+    for (const a of assignments) {
+      const pid = a.part_id as string;
+      countMap[pid] = (countMap[pid] || 0) + 1;
+    }
+    const maxModels = 26;
+    for (const [pid, count] of Object.entries(countMap)) {
+      popularityMap[pid] = Math.round((count / maxModels) * 100);
+    }
+  }
 
-      const result = (parts ?? []).map((p) => ({
-        ...p,
-        popularity_score: popularityMap[p.id] ?? 0,
-      }));
+  const result = (parts ?? []).map((p) => ({
+    ...p,
+    popularity_score: popularityMap[p.id] ?? 0,
+  }));
 
-      result.sort((a, b) => (b.popularity_score ?? 0) - (a.popularity_score ?? 0));
+  result.sort((a, b) => (b.popularity_score ?? 0) - (a.popularity_score ?? 0));
 
-      if (usePagination) {
-        return {
-          data: result,
-          total: count ?? 0,
-          page: effectivePage,
-          pageSize: effectivePageSize,
-          totalPages: Math.ceil((count ?? 0) / effectivePageSize),
-        } as unknown as PaginatedResponse<PartsCatalogItem>;
-      }
+  if (usePagination) {
+    return {
+      data: result,
+      total: count ?? 0,
+      page: effectivePage,
+      pageSize: effectivePageSize,
+      totalPages: Math.ceil((count ?? 0) / effectivePageSize),
+    } as unknown as PaginatedResponse<PartsCatalogItem>;
+  }
 
-      return result as unknown as PartsCatalogItem[];
-    },
-    {
-      tags: [cacheTags.partsCatalog(orgId)],
-      revalidate: cacheDurations.partsCatalog,
-    },
-  );
+  return result as unknown as PartsCatalogItem[];
 }
 
 export async function getPart(id: string): Promise<PartsCatalogItem> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getPart", id],
-    async () => {
-      const { data, error } = await supabase
-        .from("parts_catalog")
-        .select("id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by")
-        .eq("id", id)
-        .is("deleted_at", null)
-        .single();
-      if (error || !data) throw new NotFoundError("Part not found");
-      return data;
-    },
-    {
-      tags: [cacheTags.partsCatalog(id)],
-      revalidate: cacheDurations.partsCatalog,
-    },
-  );
+  const { data, error } = await supabase
+    .from("parts_catalog")
+    .select(
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by",
+    )
+    .eq("id", id)
+    .is("deleted_at", null)
+    .single();
+  if (error || !data) throw new NotFoundError("Part not found");
+  return data;
 }
 
 export async function createPart(
@@ -144,9 +130,12 @@ export async function createPart(
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, is_active, created_at, updated_at, created_by, updated_by")
+    .select(
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, is_active, created_at, updated_at, created_by, updated_by",
+    )
     .single();
-  if (error || !data) throw new Error(error?.message ?? "Failed to create part");
+  if (error || !data)
+    throw new Error(error?.message ?? "Failed to create part");
   revalidateTag(cacheTags.partsCatalog(orgId), "max");
   return data;
 }
@@ -160,12 +149,16 @@ export async function updatePart(
   const userId = (await supabase.auth.getUser()).data.user?.id;
   const updates: Record<string, unknown> = { updated_by: userId };
   if (params.name !== undefined) updates.name = params.name.trim();
-  if (params.name_mn !== undefined) updates.name_mn = params.name_mn?.trim() || null;
-  if (params.part_number !== undefined) updates.part_number = params.part_number || null;
+  if (params.name_mn !== undefined)
+    updates.name_mn = params.name_mn?.trim() || null;
+  if (params.part_number !== undefined)
+    updates.part_number = params.part_number || null;
   if (params.category !== undefined) updates.category = params.category || null;
-  if (params.description !== undefined) updates.description = params.description || null;
+  if (params.description !== undefined)
+    updates.description = params.description || null;
   if (params.unit !== undefined) updates.unit = params.unit;
-  if (params.default_price !== undefined) updates.default_price = params.default_price;
+  if (params.default_price !== undefined)
+    updates.default_price = params.default_price;
   if (params.is_active !== undefined) updates.is_active = params.is_active;
 
   const { data, error } = await supabase
@@ -173,7 +166,9 @@ export async function updatePart(
     .update(updates)
     .eq("id", id)
     .eq("organization_id", orgId)
-    .select("id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by")
+    .select(
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by",
+    )
     .single();
   if (error || !data) throw new NotFoundError("Part not found");
   revalidateTag(cacheTags.partsCatalog(orgId), "max");
@@ -199,21 +194,14 @@ export async function getInventoryBalances(
 ): Promise<InventoryBalance[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getInventoryBalances", orgId],
-    async () => {
-      const { data, error } = await supabase
-        .from("inventory_balances")
-        .select("part_id, part_name, part_number, category, unit, default_price, quantity_on_hand, last_movement_at, organization_id, branch_id")
-        .eq("organization_id", orgId);
-      if (error) throw new Error(error.message);
-      return data ?? [];
-    },
-    {
-      tags: [cacheTags.inventoryBalances(orgId)],
-      revalidate: cacheDurations.inventoryBalances,
-    },
-  );
+  const { data, error } = await supabase
+    .from("inventory_balances")
+    .select(
+      "part_id, part_name, part_number, category, unit, default_price, quantity_on_hand, last_movement_at, organization_id, branch_id",
+    )
+    .eq("organization_id", orgId);
+  if (error) throw new Error(error.message);
+  return data ?? [];
 }
 
 // ── Weighted Average Cost ─────────────────────────────────────
@@ -262,50 +250,44 @@ export async function getInventoryMovements(
   const effectivePage = usePagination ? page : 1;
   const effectivePageSize = usePagination ? (pageSize ?? 50) : limit;
 
-  return withCache(
-    ["getInventoryMovements", orgId, type ?? "", usePagination ? `p${effectivePage}s${effectivePageSize}` : `l${limit}`],
-    async () => {
-      let query = supabase
-        .from("inventory_movements")
-        .select("*, part:parts_catalog(name, part_number)", usePagination ? { count: "exact" } : undefined)
-        .eq("organization_id", orgId)
-        .order("created_at", { ascending: false });
+  let query = supabase
+    .from("inventory_movements")
+    .select(
+      "*, part:parts_catalog(name, part_number)",
+      usePagination ? { count: "exact" } : undefined,
+    )
+    .eq("organization_id", orgId)
+    .order("created_at", { ascending: false });
 
-      if (usePagination) {
-        const from = (effectivePage - 1) * effectivePageSize;
-        const to = from + effectivePageSize - 1;
-        query = query.range(from, to);
-      } else {
-        query = query.limit(limit);
-      }
+  if (usePagination) {
+    const from = (effectivePage - 1) * effectivePageSize;
+    const to = from + effectivePageSize - 1;
+    query = query.range(from, to);
+  } else {
+    query = query.limit(limit);
+  }
 
-      if (type) query = query.eq("movement_type", type);
-      const { data, error, count } = await query;
-      if (error) throw new Error(error.message);
+  if (type) query = query.eq("movement_type", type);
+  const { data, error, count } = await query;
+  if (error) throw new Error(error.message);
 
-      const mapped = (data ?? []).map((m: Record<string, unknown>) => ({
-        ...m,
-        part_name: ((m.part as { name: string } | null)?.name) ?? "Unknown",
-        part: undefined,
-      })) as unknown as unknown as unknown as InventoryMovement[];
+  const mapped = (data ?? []).map((m: Record<string, unknown>) => ({
+    ...m,
+    part_name: (m.part as { name: string } | null)?.name ?? "Unknown",
+    part: undefined,
+  })) as unknown as InventoryMovement[];
 
-      if (usePagination) {
-        return {
-          data: mapped,
-          total: count ?? 0,
-          page: effectivePage,
-          pageSize: effectivePageSize,
-          totalPages: Math.ceil((count ?? 0) / effectivePageSize),
-        } as unknown as unknown as unknown as InventoryMovement[];
-      }
+  if (usePagination) {
+    return {
+      data: mapped,
+      total: count ?? 0,
+      page: effectivePage,
+      pageSize: effectivePageSize,
+      totalPages: Math.ceil((count ?? 0) / effectivePageSize),
+    } as unknown as PaginatedResponse<InventoryMovement>;
+  }
 
-      return mapped;
-    },
-    {
-      tags: [cacheTags.inventoryMovements(orgId)],
-      revalidate: cacheDurations.inventoryMovements,
-    },
-  );
+  return mapped;
 }
 
 export async function createMovement(
@@ -314,7 +296,8 @@ export async function createMovement(
   userId: string,
 ): Promise<InventoryMovement> {
   if (!params.part_id) throw new ValidationError("Part is required");
-  if (!params.movement_type) throw new ValidationError("Movement type is required");
+  if (!params.movement_type)
+    throw new ValidationError("Movement type is required");
   if (!params.quantity || params.quantity === 0)
     throw new ValidationError("Quantity must be non-zero");
 
@@ -343,9 +326,12 @@ export async function createMovement(
       notes: params.notes ?? null,
       created_by: userId,
     })
-    .select("id, organization_id, part_id, movement_type, quantity, unit_cost, unit_price, reference_type, reference_id, notes, created_at, created_by, branch_id")
+    .select(
+      "id, organization_id, part_id, movement_type, quantity, unit_cost, unit_price, reference_type, reference_id, notes, created_at, created_by, branch_id",
+    )
     .single();
-  if (error || !data) throw new Error(error?.message ?? "Failed to record movement");
+  if (error || !data)
+    throw new Error(error?.message ?? "Failed to record movement");
   revalidateTag(cacheTags.inventoryMovements(orgId), "max");
   revalidateTag(cacheTags.inventoryBalances(orgId), "max");
   return data;
@@ -353,27 +339,23 @@ export async function createMovement(
 
 // ── Suppliers ─────────────────────────────────────────────────
 
-export async function getSupplier(id: string, orgId: string): Promise<Supplier> {
+export async function getSupplier(
+  id: string,
+  orgId: string,
+): Promise<Supplier> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getSupplier", id],
-    async () => {
-      const { data, error } = await supabase
-        .from("suppliers")
-        .select("id, organization_id, name, contact_person, phone, email, address, tax_id, payment_terms, notes, is_active, created_at, updated_at, created_by, updated_by")
-        .eq("id", id)
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .single();
-      if (error || !data) throw new NotFoundError("Supplier not found");
-      return data as unknown as Supplier;
-    },
-    {
-      tags: [cacheTags.suppliers(orgId)],
-      revalidate: cacheDurations.suppliers,
-    },
-  );
+  const { data, error } = await supabase
+    .from("suppliers")
+    .select(
+      "id, organization_id, name, contact_person, phone, email, address, tax_id, payment_terms, notes, is_active, created_at, updated_at, created_by, updated_by",
+    )
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .single();
+  if (error || !data) throw new NotFoundError("Supplier not found");
+  return data as unknown as Supplier;
 }
 
 export async function getSuppliers(
@@ -387,30 +369,21 @@ export async function getSuppliers(
   const from = (effectivePage - 1) * effectivePageSize;
   const to = from + effectivePageSize - 1;
 
-  return withCache(
-    ["getSuppliers", orgId, `p${effectivePage}s${effectivePageSize}`],
-    async () => {
-      const { data, error, count } = await supabase
-        .from("suppliers")
-        .select("*", { count: "exact" })
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("name")
-        .range(from, to);
-      if (error) throw new Error(error.message);
-      return {
-        data: data ?? [],
-        total: count ?? 0,
-        page: effectivePage,
-        pageSize: effectivePageSize,
-        totalPages: Math.ceil((count ?? 0) / effectivePageSize),
-      } as unknown as PaginatedResponse<Supplier>;
-    },
-    {
-      tags: [cacheTags.suppliers(orgId)],
-      revalidate: cacheDurations.suppliers,
-    },
-  );
+  const { data, error, count } = await supabase
+    .from("suppliers")
+    .select("*", { count: "exact" })
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("name")
+    .range(from, to);
+  if (error) throw new Error(error.message);
+  return {
+    data: data ?? [],
+    total: count ?? 0,
+    page: effectivePage,
+    pageSize: effectivePageSize,
+    totalPages: Math.ceil((count ?? 0) / effectivePageSize),
+  } as unknown as PaginatedResponse<Supplier>;
 }
 
 export async function createSupplier(
@@ -418,7 +391,8 @@ export async function createSupplier(
   params: CreateSupplierParams,
   userId: string,
 ): Promise<Supplier> {
-  if (!params.name?.trim()) throw new ValidationError("Supplier name is required");
+  if (!params.name?.trim())
+    throw new ValidationError("Supplier name is required");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("suppliers")
@@ -435,9 +409,12 @@ export async function createSupplier(
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, organization_id, name, contact_person, phone, email, address, tax_id, payment_terms, notes, is_active, created_at, updated_at, created_by, updated_by")
+    .select(
+      "id, organization_id, name, contact_person, phone, email, address, tax_id, payment_terms, notes, is_active, created_at, updated_at, created_by, updated_by",
+    )
     .single();
-  if (error || !data) throw new Error(error?.message ?? "Failed to create supplier");
+  if (error || !data)
+    throw new Error(error?.message ?? "Failed to create supplier");
   revalidateTag(cacheTags.suppliers(orgId), "max");
   return data as unknown as Supplier;
 }
@@ -451,12 +428,14 @@ export async function updateSupplier(
   const userId = (await supabase.auth.getUser()).data.user?.id;
   const updates: Record<string, unknown> = { updated_by: userId };
   if (params.name !== undefined) updates.name = params.name.trim();
-  if (params.contact_person !== undefined) updates.contact_person = params.contact_person || null;
+  if (params.contact_person !== undefined)
+    updates.contact_person = params.contact_person || null;
   if (params.phone !== undefined) updates.phone = params.phone || null;
   if (params.email !== undefined) updates.email = params.email || null;
   if (params.address !== undefined) updates.address = params.address || null;
   if (params.tax_id !== undefined) updates.tax_id = params.tax_id || null;
-  if (params.payment_terms !== undefined) updates.payment_terms = params.payment_terms || null;
+  if (params.payment_terms !== undefined)
+    updates.payment_terms = params.payment_terms || null;
   if (params.notes !== undefined) updates.notes = params.notes || null;
   if (params.is_active !== undefined) updates.is_active = params.is_active;
 
@@ -465,7 +444,9 @@ export async function updateSupplier(
     .update(updates)
     .eq("id", id)
     .eq("organization_id", orgId)
-    .select("id, organization_id, name, contact_person, phone, email, address, tax_id, payment_terms, notes, is_active, created_at, updated_at, created_by, updated_by")
+    .select(
+      "id, organization_id, name, contact_person, phone, email, address, tax_id, payment_terms, notes, is_active, created_at, updated_at, created_by, updated_by",
+    )
     .single();
   if (error || !data) throw new NotFoundError("Supplier not found");
   revalidateTag(cacheTags.suppliers(orgId), "max");
@@ -497,30 +478,21 @@ export async function getPurchaseOrders(
   const from = (effectivePage - 1) * effectivePageSize;
   const to = from + effectivePageSize - 1;
 
-  return withCache(
-    ["getPurchaseOrders", orgId, `p${effectivePage}s${effectivePageSize}`],
-    async () => {
-      const { data, error, count } = await supabase
-        .from("purchase_orders")
-        .select("*, supplier:suppliers(name)", { count: "exact" })
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .range(from, to);
-      if (error) throw new Error(error.message);
-      return {
-        data: (data ?? []) as unknown as unknown as PurchaseOrder[],
-        total: count ?? 0,
-        page: effectivePage,
-        pageSize: effectivePageSize,
-        totalPages: Math.ceil((count ?? 0) / effectivePageSize),
-      };
-    },
-    {
-      tags: [cacheTags.purchaseOrders(orgId)],
-      revalidate: cacheDurations.purchaseOrders,
-    },
-  );
+  const { data, error, count } = await supabase
+    .from("purchase_orders")
+    .select("*, supplier:suppliers(name)", { count: "exact" })
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .range(from, to);
+  if (error) throw new Error(error.message);
+  return {
+    data: (data ?? []) as unknown as PurchaseOrder[],
+    total: count ?? 0,
+    page: effectivePage,
+    pageSize: effectivePageSize,
+    totalPages: Math.ceil((count ?? 0) / effectivePageSize),
+  };
 }
 
 export async function getPurchaseOrderItems(
@@ -528,25 +500,18 @@ export async function getPurchaseOrderItems(
 ): Promise<(PurchaseOrderItem & { part_name: string })[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getPurchaseOrderItems", poId],
-    async () => {
-      const { data, error } = await supabase
-        .from("purchase_order_items")
-        .select("id, purchase_order_id, organization_id, part_id, quantity_ordered, quantity_received, unit_cost, notes, created_at, updated_at, created_by, updated_by, part:parts_catalog(name)")
-        .eq("purchase_order_id", poId)
-        .order("created_at");
-      if (error) throw new Error(error.message);
-      return (data ?? []).map((item: Record<string, unknown>) => ({
-        ...item,
-        part_name: ((item.part as { name: string } | null)?.name) ?? "Unknown",
-      })) as (PurchaseOrderItem & { part_name: string })[];
-    },
-    {
-      tags: [cacheTags.purchaseOrders(poId)],
-      revalidate: cacheDurations.purchaseOrders,
-    },
-  );
+  const { data, error } = await supabase
+    .from("purchase_order_items")
+    .select(
+      "id, purchase_order_id, organization_id, part_id, quantity_ordered, quantity_received, unit_cost, notes, created_at, updated_at, created_by, updated_by, part:parts_catalog(name)",
+    )
+    .eq("purchase_order_id", poId)
+    .order("created_at");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((item: Record<string, unknown>) => ({
+    ...item,
+    part_name: (item.part as { name: string } | null)?.name ?? "Unknown",
+  })) as (PurchaseOrderItem & { part_name: string })[];
 }
 
 export async function createPurchaseOrder(
@@ -554,8 +519,10 @@ export async function createPurchaseOrder(
   params: CreatePurchaseOrderParams,
   userId: string,
 ): Promise<PurchaseOrder> {
-  if (!params.items?.length) throw new ValidationError("At least one item is required");
-  if (!params.order_number?.trim()) throw new ValidationError("Order number is required");
+  if (!params.items?.length)
+    throw new ValidationError("At least one item is required");
+  if (!params.order_number?.trim())
+    throw new ValidationError("Order number is required");
 
   const supabase = await createClient();
   const totalAmount = params.items.reduce(
@@ -578,7 +545,8 @@ export async function createPurchaseOrder(
     .select("id")
     .single();
 
-  if (poError || !po) throw new Error(poError?.message ?? "Failed to create PO");
+  if (poError || !po)
+    throw new Error(poError?.message ?? "Failed to create PO");
 
   // Insert items
   const items = params.items.map((item) => ({
@@ -597,7 +565,8 @@ export async function createPurchaseOrder(
     .from("purchase_order_items")
     .insert(items);
 
-  if (itemsError) throw new Error(itemsError?.message ?? "Failed to add PO item");
+  if (itemsError)
+    throw new Error(itemsError?.message ?? "Failed to add PO item");
 
   revalidateTag(cacheTags.purchaseOrders(orgId), "max");
   return po as unknown as PurchaseOrder;
@@ -613,15 +582,19 @@ export async function updatePurchaseOrder(
   const updates: Record<string, unknown> = { updated_by: userId };
   if (params.status !== undefined) updates.status = params.status;
   if (params.notes !== undefined) updates.notes = params.notes;
-  if (params.expected_at !== undefined) updates.expected_at = params.expected_at;
-  if (params.received_at !== undefined) updates.received_at = params.received_at;
+  if (params.expected_at !== undefined)
+    updates.expected_at = params.expected_at;
+  if (params.received_at !== undefined)
+    updates.received_at = params.received_at;
 
   const { data, error } = await supabase
     .from("purchase_orders")
     .update(updates)
     .eq("id", id)
     .eq("organization_id", orgId)
-    .select("id, organization_id, supplier_id, order_number, order_date, status, total_amount, notes, expected_at, received_at, created_at, updated_at, created_by, updated_by")
+    .select(
+      "id, organization_id, supplier_id, order_number, order_date, status, total_amount, notes, expected_at, received_at, created_at, updated_at, created_by, updated_by",
+    )
     .single();
   if (error || !data) throw new NotFoundError("Purchase order not found");
   revalidateTag(cacheTags.purchaseOrders(orgId), "max");
@@ -686,7 +659,9 @@ export async function receivePurchaseOrder(
   }
 
   // Determine new status
-  const allReceived = items.every((i) => i.quantity_received >= i.quantity_ordered);
+  const allReceived = items.every(
+    (i) => i.quantity_received >= i.quantity_ordered,
+  );
   const newStatus: PurchaseOrderStatus = allReceived ? "received" : "partial";
 
   const { data, error } = await supabase
@@ -698,7 +673,9 @@ export async function receivePurchaseOrder(
     })
     .eq("id", id)
     .eq("organization_id", orgId)
-    .select("id, organization_id, supplier_id, order_number, order_date, status, total_amount, notes, expected_at, received_at, created_at, updated_at, created_by, updated_by")
+    .select(
+      "id, organization_id, supplier_id, order_number, order_date, status, total_amount, notes, expected_at, received_at, created_at, updated_at, created_by, updated_by",
+    )
     .single();
 
   if (error || !data) throw new NotFoundError("Purchase order not found");
@@ -709,24 +686,19 @@ export async function receivePurchaseOrder(
 
 // ── Stock Thresholds ──────────────────────────────────────────
 
-export async function getStockThresholds(orgId: string): Promise<StockThreshold[]> {
+export async function getStockThresholds(
+  orgId: string,
+): Promise<StockThreshold[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getStockThresholds", orgId],
-    async () => {
-      const { data, error } = await supabase
-        .from("stock_thresholds")
-        .select("id, organization_id, branch_id, part_id, minimum_quantity, maximum_quantity, notes, created_at, updated_at")
-        .eq("organization_id", orgId);
-      if (error) throw new Error(error.message);
-      return (data ?? []) as unknown as StockThreshold[];
-    },
-    {
-      tags: [cacheTags.stockThresholds(orgId)],
-      revalidate: cacheDurations.stockThresholds,
-    },
-  );
+  const { data, error } = await supabase
+    .from("stock_thresholds")
+    .select(
+      "id, organization_id, branch_id, part_id, minimum_quantity, maximum_quantity, notes, created_at, updated_at",
+    )
+    .eq("organization_id", orgId);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as StockThreshold[];
 }
 
 export async function setStockThreshold(
@@ -750,9 +722,12 @@ export async function setStockThreshold(
       },
       { onConflict: "organization_id, branch_id, part_id" },
     )
-    .select("id, organization_id, branch_id, part_id, minimum_quantity, maximum_quantity, notes, created_at, updated_at, created_by, updated_by")
+    .select(
+      "id, organization_id, branch_id, part_id, minimum_quantity, maximum_quantity, notes, created_at, updated_at, created_by, updated_by",
+    )
     .single();
-  if (error || !data) throw new Error(error?.message ?? "Failed to set threshold");
+  if (error || !data)
+    throw new Error(error?.message ?? "Failed to set threshold");
   revalidateTag(cacheTags.stockThresholds(orgId), "max");
   return data;
 }

@@ -48,7 +48,7 @@ import {
 import { formatPlateInput, inputProps } from "@/lib/form-ux";
 import { vehicleKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import type { Customer } from "@/lib/types";
+import type { Customer, VehicleWithOwner } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
 
 type VehicleFormState = {
@@ -347,6 +347,25 @@ export function NewVehicleSheet({
       }
 
       toast.success("Vehicle created");
+
+      // Optimistic cache update — add the new vehicle to the list immediately
+      const ownerName =
+        [selectedCustomer.first_name, selectedCustomer.last_name]
+          .filter(Boolean)
+          .join(" ") || null;
+      const optimisticVehicle: VehicleWithOwner = {
+        ...json.data,
+        owner_name: ownerName,
+        owner_phone: selectedCustomer.phone ?? null,
+      };
+      queryClient.setQueryData(
+        vehicleKeys.list(orgId, ""),
+        (old: VehicleWithOwner[] | undefined) => [
+          optimisticVehicle,
+          ...(old ?? []),
+        ],
+      );
+      // Background sync — refetch from server to stay consistent
       queryClient.invalidateQueries({
         queryKey: vehicleKeys.all(orgId),
       });

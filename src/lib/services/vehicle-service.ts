@@ -1,7 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
+import { cacheTags } from "@/lib/cache/keys";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { isValidMongolianPlate } from "@/lib/form-validation";
 import type { Vehicle, WorkOrder } from "@/lib/types";
@@ -28,6 +27,9 @@ export async function getVehicles(
 ): Promise<VehicleWithOwner[]> {
   const supabase = await createClient();
 
+  // Not wrapped with withCache — revalidateTag doesn't reliably invalidate
+  // unstable_cache in Next.js 16, causing stale reads after mutations.
+  // Client-side caching is handled by React Query (staleTime 30s).
   let query = supabase
     .from("vehicles")
     .select(
@@ -74,70 +76,61 @@ export async function getVehicle(
 ): Promise<VehicleDetail> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getVehicle", id],
-    async () => {
-      const { data: vehicle, error } = await supabase
-        .from("vehicles")
-        .select("*")
-        .eq("id", id)
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .single();
+  const { data: vehicle, error } = await supabase
+    .from("vehicles")
+    .select("*")
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .single();
 
-      if (error || !vehicle) {
-        throw new NotFoundError("Vehicle not found");
-      }
+  if (error || !vehicle) {
+    throw new NotFoundError("Vehicle not found");
+  }
 
-      // Get owners and recent work orders in parallel
-      const [{ data: owners }, { data: workOrders }] = await Promise.all([
-        supabase
-          .from("vehicle_owners")
-          .select(
-            "customer_id, is_primary, customers(first_name, last_name, phone)",
-          )
-          .eq("vehicle_id", id)
-          .eq("organization_id", orgId)
-          .is("owned_until", null),
-        supabase
-          .from("work_orders")
-          .select("id, status, complaint, total, created_at")
-          .eq("vehicle_id", id)
-          .eq("organization_id", orgId)
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false })
-          .limit(10),
-      ]);
+  // Get owners and recent work orders in parallel
+  const [{ data: owners }, { data: workOrders }] = await Promise.all([
+    supabase
+      .from("vehicle_owners")
+      .select(
+        "customer_id, is_primary, customers(first_name, last_name, phone)",
+      )
+      .eq("vehicle_id", id)
+      .eq("organization_id", orgId)
+      .is("owned_until", null),
+    supabase
+      .from("work_orders")
+      .select("id, status, complaint, total, created_at")
+      .eq("vehicle_id", id)
+      .eq("organization_id", orgId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
 
+  return {
+    ...vehicle,
+    owners: (owners ?? []).map((o: Record<string, unknown>) => {
+      const c = (o.customers as Record<string, unknown>) ?? {};
       return {
-        ...vehicle,
-        owners: (owners ?? []).map((o: Record<string, unknown>) => {
-          const c = (o.customers as Record<string, unknown>) ?? {};
-          return {
-            customer_id: o.customer_id as string,
-            name:
-              [c.first_name, c.last_name].filter(Boolean).join(" ") ||
-              "Unknown",
-            phone: (c.phone as string) ?? null,
-            is_primary: o.is_primary as boolean,
-          };
-        }),
-        recent_work_orders: (workOrders ?? []).map(
-          (wo: Record<string, unknown>) => ({
-            id: wo.id as string,
-            status: wo.status as string,
-            complaint: (wo.complaint as string) ?? null,
-            total: wo.total as number,
-            created_at: wo.created_at as string,
-          }),
-        ),
+        customer_id: o.customer_id as string,
+        name:
+          [c.first_name, c.last_name].filter(Boolean).join(" ") ||
+          "Unknown",
+        phone: (c.phone as string) ?? null,
+        is_primary: o.is_primary as boolean,
       };
-    },
-    {
-      tags: [cacheTags.vehicles(orgId)],
-      revalidate: cacheDurations.vehicles,
-    },
-  );
+    }),
+    recent_work_orders: (workOrders ?? []).map(
+      (wo: Record<string, unknown>) => ({
+        id: wo.id as string,
+        status: wo.status as string,
+        complaint: (wo.complaint as string) ?? null,
+        total: wo.total as number,
+        created_at: wo.created_at as string,
+      }),
+    ),
+  };
 }
 
 /**
@@ -429,28 +422,19 @@ export async function getVehicleServiceHistory(
 ): Promise<(WorkOrder & { work_order_services: Record<string, unknown>[] })[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getVehicleServiceHistory", orgId, vehicleId],
-    async () => {
-      const { data: workOrders, error } = await supabase
-        .from("work_orders")
-        .select("*, work_order_services(*)")
-        .eq("organization_id", orgId)
-        .eq("vehicle_id", vehicleId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+  const { data: workOrders, error } = await supabase
+    .from("work_orders")
+    .select("*, work_order_services(*)")
+    .eq("organization_id", orgId)
+    .eq("vehicle_id", vehicleId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
 
-      if (error) throw new Error(error.message);
+  if (error) throw new Error(error.message);
 
-      return (workOrders ?? []) as (WorkOrder & {
-        work_order_services: Record<string, unknown>[];
-      })[];
-    },
-    {
-      tags: [cacheTags.vehicles(orgId)],
-      revalidate: cacheDurations.vehicles,
-    },
-  );
+  return (workOrders ?? []) as (WorkOrder & {
+    work_order_services: Record<string, unknown>[];
+  })[];
 }
 
 /**
@@ -462,32 +446,23 @@ export async function getCustomerVehicles(
 ): Promise<VehicleWithOwner[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getCustomerVehicles", orgId, customerId],
-    async () => {
-      const { data: owners, error } = await supabase
-        .from("vehicle_owners")
-        .select("vehicle_id, vehicles(*)")
-        .eq("organization_id", orgId)
-        .eq("customer_id", customerId)
-        .is("owned_until", null);
+  const { data: owners, error } = await supabase
+    .from("vehicle_owners")
+    .select("vehicle_id, vehicles(*)")
+    .eq("organization_id", orgId)
+    .eq("customer_id", customerId)
+    .is("owned_until", null);
 
       if (error) throw new Error(error.message);
 
-      return (owners ?? []).map((o: Record<string, unknown>) => {
-        const v = (o.vehicles as Record<string, unknown>) ?? {};
-        return {
-          ...(v as unknown as Vehicle),
-          owner_name: null,
-          owner_phone: null,
-        } as unknown as VehicleWithOwner;
-      });
-    },
-    {
-      tags: [cacheTags.vehicles(orgId)],
-      revalidate: cacheDurations.vehicles,
-    },
-  );
+  return (owners ?? []).map((o: Record<string, unknown>) => {
+    const v = (o.vehicles as Record<string, unknown>) ?? {};
+    return {
+      ...(v as unknown as Vehicle),
+      owner_name: null,
+      owner_phone: null,
+    } as unknown as VehicleWithOwner;
+  });
 }
 
 /**
@@ -504,30 +479,21 @@ export async function getCustomerWorkOrders(
 > {
   const supabase = await createClient();
 
-  return withCache(
-    ["getCustomerWorkOrders", orgId, customerId],
-    async () => {
-      const { data: workOrders, error } = await supabase
-        .from("work_orders")
-        .select(
-          "*, work_order_services(*), vehicles(plate_number, make, model)",
-        )
-        .eq("organization_id", orgId)
-        .eq("customer_id", customerId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .limit(20);
+  const { data: workOrders, error } = await supabase
+    .from("work_orders")
+    .select(
+      "*, work_order_services(*), vehicles(plate_number, make, model)",
+    )
+    .eq("organization_id", orgId)
+    .eq("customer_id", customerId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(20);
 
-      if (error) throw new Error(error.message);
+  if (error) throw new Error(error.message);
 
-      return (workOrders ?? []) as (WorkOrder & {
-        work_order_services: Record<string, unknown>[];
-        vehicles?: { plate_number: string; make: string; model: string } | null;
-      })[];
-    },
-    {
-      tags: [cacheTags.vehicles(orgId)],
-      revalidate: cacheDurations.vehicles,
-    },
-  );
+  return (workOrders ?? []) as (WorkOrder & {
+    work_order_services: Record<string, unknown>[];
+    vehicles?: { plate_number: string; make: string; model: string } | null;
+  })[];
 }

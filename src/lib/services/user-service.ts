@@ -1,6 +1,5 @@
 import { revalidateTag } from "next/cache";
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
+import { cacheTags } from "@/lib/cache/keys";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import type { UserProfile } from "@/lib/types";
@@ -14,72 +13,63 @@ export async function getOrganizationUsers(
 ): Promise<UserProfile[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getOrganizationUsers", orgId],
-    async () => {
-      const { data: members, error } = await supabase
-        .from("organization_users")
-        .select(`
-        user_id,
-        role_id,
-        branch_id,
-        roles (
-          id,
-          name
-        )
-      `)
-        .eq("organization_id", orgId);
+  const { data: members, error } = await supabase
+    .from("organization_users")
+    .select(`
+      user_id,
+      role_id,
+      branch_id,
+      roles (
+        id,
+        name
+      )
+    `)
+    .eq("organization_id", orgId);
 
-      if (error) {
-        throw new Error(error.message ?? "Failed to fetch organization users");
-      }
+  if (error) {
+    throw new Error(error.message ?? "Failed to fetch organization users");
+  }
 
-      if (!members?.length) return [];
+  if (!members?.length) return [];
 
-      // Fetch profiles separately — no direct FK from organization_users to profiles
-      const userIds = members.map((m) => m.user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name, phone, avatar_url")
-        .in("id", userIds);
+  // Fetch profiles separately — no direct FK from organization_users to profiles
+  const userIds = members.map((m) => m.user_id);
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, phone, avatar_url")
+    .in("id", userIds);
 
-      const profileMap = new Map(
-        (profiles ?? []).map((p) => [
-          p.id,
-          {
-            full_name: p.full_name,
-            phone: p.phone,
-            avatar_url: p.avatar_url,
-          },
-        ]),
-      );
-
-      return members.map((m) => {
-        const role = Array.isArray(m.roles)
-          ? m.roles[0]
-          : (m.roles as unknown as { id: string; name: string } | null);
-        const profile = profileMap.get(m.user_id);
-
-        return {
-          id: m.user_id,
-          email: "",
-          phone: profile?.phone ?? null,
-          fullName: profile?.full_name ?? null,
-          avatarUrl: profile?.avatar_url ?? null,
-          organizationId: orgId,
-          organizationName: null,
-          organizationLogoUrl: null,
-          branchId: m.branch_id ?? null,
-          roleId: m.role_id ?? null,
-          roleName: role?.name ?? null,
-        };
-      });
-    },
-    {
-      tags: [cacheTags.organizationUsers(orgId)],
-      revalidate: cacheDurations.organizationUsers,
-    },
+  const profileMap = new Map(
+    (profiles ?? []).map((p) => [
+      p.id,
+      {
+        full_name: p.full_name,
+        phone: p.phone,
+        avatar_url: p.avatar_url,
+      },
+    ]),
   );
+
+  return members.map((m) => {
+    const role = Array.isArray(m.roles)
+      ? m.roles[0]
+      : (m.roles as unknown as { id: string; name: string } | null);
+    const profile = profileMap.get(m.user_id);
+
+    return {
+      id: m.user_id,
+      email: "",
+      phone: profile?.phone ?? null,
+      fullName: profile?.full_name ?? null,
+      avatarUrl: profile?.avatar_url ?? null,
+      organizationId: orgId,
+      organizationName: null,
+      organizationLogoUrl: null,
+      branchId: m.branch_id ?? null,
+      roleId: m.role_id ?? null,
+      roleName: role?.name ?? null,
+    };
+  });
 }
 
 /**

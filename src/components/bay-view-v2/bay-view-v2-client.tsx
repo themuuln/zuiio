@@ -25,11 +25,11 @@ import {
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useBayActionHandlers } from "@/components/bay-view/_bay-action-handlers";
-import { useBayDragHandlers } from "@/components/bay-view/_bay-drag-handlers";
-import { StatusNotesModal } from "@/components/bay-view/status-notes-modal";
-import { ToastMessage } from "@/components/bay-view/toast-message";
-import { WorkOrderDetailDrawer } from "@/components/bay-view/work-order-detail-drawer";
+import { useBayActionHandlers } from "./_bay-action-handlers";
+import { useBayDragHandlers } from "./_bay-drag-handlers";
+import { StatusNotesModal } from "./status-notes-modal";
+import { ToastMessage } from "./toast-message";
+import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -562,7 +562,9 @@ export function BayViewV2Client() {
   if (error || !data) {
     return (
       <div className="flex flex-col items-center justify-center py-6 gap-2">
-        <Typography.Muted className="text-sm text-muted-foreground">{error ?? t("noData")}</Typography.Muted>
+        <Typography.Muted className="text-sm text-muted-foreground">
+          {error ?? t("noData")}
+        </Typography.Muted>
         <Button variant="outline" size="sm" onClick={() => fetchData(true)}>
           {t("retry")}
         </Button>

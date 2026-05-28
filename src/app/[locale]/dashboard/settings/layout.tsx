@@ -7,6 +7,7 @@ import { usePageHeader, type PageTab } from "@/hooks/use-page-header";
 const SETTINGS_TABS: PageTab[] = [
   { value: "general", label: "General" },
   { value: "appearance", label: "Appearance" },
+  { value: "sharing", label: "Data Sharing" },
   { value: "commission", label: "Commission Rules" },
   { value: "diagnosis", label: "Diagnosis Labels" },
   { value: "export", label: "Data & Export" },
@@ -22,8 +23,6 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
   }, [setTabs, setActiveTab]);
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
-      {children}
-    </div>
+    <div className="mx-auto flex max-w-4xl flex-col gap-6">{children}</div>
   );
 }

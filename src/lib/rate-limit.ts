@@ -79,9 +79,3 @@ export const apiRateLimiter = createRateLimiter({ windowMs: 60_000, maxRequests:
 /** 60 req / 60s — mutation-heavy endpoints (parts, services, etc.) */
 export const mutationRateLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 60 });
 
-// ── Backward Compatible Export ────────────────────────────────
-
-/** @deprecated Use `authRateLimiter.check(ip)` instead. */
-export function checkRateLimit(ip: string): RateLimiterResult {
-  return authRateLimiter.check(ip);
-}

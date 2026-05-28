@@ -84,7 +84,7 @@ export function createMockVehicle(
     updated_by: null,
     deleted_at: null,
     ...overrides,
-  };
+  } as VehicleRow;
 }
 
 export function createMockWorkOrder(
@@ -153,7 +153,7 @@ export function createMockOrganization(
     deleted_at: null,
     branch_limit: 1,
     ...overrides,
-  };
+  } as OrganizationRow & { branch_limit: number };
 }
 
 export function createMockCustomerList(

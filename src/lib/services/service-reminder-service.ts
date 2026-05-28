@@ -1,6 +1,5 @@
 import { revalidateTag } from "next/cache";
-import { cacheDurations, cacheTags } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
+import { cacheTags } from "@/lib/cache/keys";
 import type { VehicleServiceSchedule, ReminderLog } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -15,33 +14,24 @@ export async function getServiceSchedules(
 ): Promise<VehicleServiceSchedule[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getServiceSchedules", orgId, vehicleId ?? ""],
-    async () => {
-      let query = supabase
-        .from("vehicle_service_schedules")
-        .select(
-          "*, vehicle:vehicles(plate_number, make, model, year), service:service_catalog(name)",
-        )
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("next_due_date", { ascending: true, nullsFirst: false });
+  let query = supabase
+    .from("vehicle_service_schedules")
+    .select(
+      "*, vehicle:vehicles(plate_number, make, model, year), service:service_catalog(name)",
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("next_due_date", { ascending: true, nullsFirst: false });
 
-      if (vehicleId) {
-        query = query.eq("vehicle_id", vehicleId);
-      }
+  if (vehicleId) {
+    query = query.eq("vehicle_id", vehicleId);
+  }
 
-      const { data, error } = await query;
+  const { data, error } = await query;
 
-      if (error)
-        throw new Error(error.message ?? "Failed to fetch service schedules");
-      return data ?? [];
-    },
-    {
-      tags: [cacheTags.serviceSchedules(orgId)],
-      revalidate: cacheDurations.serviceSchedules,
-    },
-  );
+  if (error)
+    throw new Error(error.message ?? "Failed to fetch service schedules");
+  return data ?? [];
 }
 
 export async function getServiceSchedule(
@@ -49,26 +39,17 @@ export async function getServiceSchedule(
 ): Promise<VehicleServiceSchedule> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getServiceSchedule", id],
-    async () => {
-      const { data, error } = await supabase
-        .from("vehicle_service_schedules")
-        .select(
-          "*, vehicle:vehicles!inner(plate_number, make, model, year, customer_id), service:service_catalog!left(name)",
-        )
-        .eq("id", id)
-        .is("deleted_at", null)
-        .single();
+  const { data, error } = await supabase
+    .from("vehicle_service_schedules")
+    .select(
+      "*, vehicle:vehicles!inner(plate_number, make, model, year, customer_id), service:service_catalog!left(name)",
+    )
+    .eq("id", id)
+    .is("deleted_at", null)
+    .single();
 
-      if (error || !data) throw new NotFoundError("Service schedule not found");
-      return data;
-    },
-    {
-      tags: [cacheTags.serviceSchedule(id)],
-      revalidate: cacheDurations.serviceSchedules,
-    },
-  );
+  if (error || !data) throw new NotFoundError("Service schedule not found");
+  return data;
 }
 
 export async function createServiceSchedule(
@@ -354,33 +335,23 @@ export async function getReminderLogs(
 ): Promise<ReminderLog[]> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getReminderLogs", orgId, vehicleId ?? ""],
-    async () => {
-      let query = supabase
-        .from("reminder_logs")
-        .select(
-          "*, vehicle:vehicles!inner(plate_number, make, model), customer:customers!left(first_name, last_name, phone)",
-        )
-        .eq("organization_id", orgId)
-        .order("created_at", { ascending: false })
-        .limit(100);
+  let query = supabase
+    .from("reminder_logs")
+    .select(
+      "*, vehicle:vehicles!inner(plate_number, make, model), customer:customers!left(first_name, last_name, phone)",
+    )
+    .eq("organization_id", orgId)
+    .order("created_at", { ascending: false })
+    .limit(100);
 
-      if (vehicleId) {
-        query = query.eq("vehicle_id", vehicleId);
-      }
+  if (vehicleId) {
+    query = query.eq("vehicle_id", vehicleId);
+  }
 
-      const { data, error } = await query;
+  const { data, error } = await query;
 
-      if (error)
-        throw new Error(error.message ?? "Failed to fetch reminder logs");
-      return data ?? [];
-    },
-    {
-      tags: [cacheTags.reminderLogs(orgId)],
-      revalidate: cacheDurations.reminderLogs,
-    },
-  );
+  if (error) throw new Error(error.message ?? "Failed to fetch reminder logs");
+  return data ?? [];
 }
 
 // ----------------------------------------------------------

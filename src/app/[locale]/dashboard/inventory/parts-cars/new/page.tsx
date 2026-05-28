@@ -3,6 +3,7 @@
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { transliterateMongolianPlate } from "@/lib/form-validation";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreatePartsCar } from "@/lib/queries/use-inventory";
@@ -20,6 +21,7 @@ import { Typography } from "@/components/ui/typography";
 export default function NewPartsCarPage() {
   const t = useTranslations("inventory");
   const { push } = useRouter();
+  const { setDetailPartsCarId } = usePageHeader();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const create = useCreatePartsCar(orgId);
@@ -50,7 +52,8 @@ export default function NewPartsCarPage() {
         notes: (form.get("notes") as string) || undefined,
       });
       toast.success("Машин бүртгэгдлээ");
-      push(`/dashboard/inventory/parts-cars/${car.id}`);
+      push("/dashboard/inventory/parts-cars");
+      setDetailPartsCarId(car.id);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Амжилтгүй боллоо");
     } finally {

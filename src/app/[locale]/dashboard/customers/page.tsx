@@ -1,10 +1,9 @@
 "use client";
 
-import { BarChart3, Clock, Plus, Users } from "lucide-react";
+import { BarChart3, Clock, Globe, Plus, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useClientNow } from "@/hooks/use-client-now";
-import { CustomerDetailDrawer } from "@/components/customer-detail-drawer";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
@@ -20,12 +19,12 @@ import {
 } from "@/components/ui/empty";
 import type { ExportColumn } from "@/lib/export";
 import { usePageHeader } from "@/hooks/use-page-header";
-import { useCustomers } from "@/lib/queries/use-customers";
+import { useCustomers, useSharedCustomers } from "@/lib/queries/use-customers";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { columns } from "./_columns";
+import { columns, sharedColumns } from "./_columns";
 import type { CustomerRow } from "./_columns";
 import { Typography } from "@/components/ui/typography";
 
@@ -33,8 +32,8 @@ export default function CustomersPage() {
   const t = useTranslations("customers");
   const now = useClientNow();
   const [search, setSearch] = useState("");
-  const [detailCustomerId, setDetailCustomerId] = useState<string | null>(null);
-  const { setNewCustomerDialogOpen } = usePageHeader();
+  const [view, setView] = useState<"my" | "shared">("my");
+  const { setNewCustomerDialogOpen, setDetailCustomerId } = usePageHeader();
 
   const exportColumns: ExportColumn<CustomerRow>[] = useMemo(
     () => [
@@ -70,8 +69,20 @@ export default function CustomersPage() {
     isError,
     error,
     refetch,
-  } = useCustomers(org?.orgId, search);
-  const customers = Array.isArray(rawCustomers) ? rawCustomers : [];
+  } = useCustomers(org?.orgId, view === "my" ? search : "");
+
+  const { data: rawSharedCustomers, isFetching: sharedFetching } =
+    useSharedCustomers(org?.orgId, view === "shared" ? search : "");
+
+  const customers =
+    view === "my"
+      ? Array.isArray(rawCustomers)
+        ? rawCustomers
+        : []
+      : Array.isArray(rawSharedCustomers)
+        ? rawSharedCustomers
+        : [];
+  const activeFetching = view === "my" ? customersFetching : sharedFetching;
 
   const { registerTab } = useRightSidebar();
 
@@ -183,12 +194,40 @@ export default function CustomersPage() {
         </Button>
       </div>
 
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setView("my")}
+          className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            view === "my"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
+        >
+          <Users className="size-3.5" />
+          My Customers
+        </button>
+        <button
+          onClick={() => setView("shared")}
+          className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            view === "shared"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
+        >
+          <Globe className="size-3.5" />
+          Shared
+        </button>
+      </div>
+
       <ListToolbar
         search={{
-          placeholder: t("searchPlaceholder"),
+          placeholder:
+            view === "my"
+              ? t("searchPlaceholder")
+              : "Search shared customers...",
           value: search,
           onChange: setSearch,
-          loading: customersFetching,
+          loading: activeFetching,
         }}
         stats={
           <span>
@@ -196,12 +235,14 @@ export default function CustomersPage() {
           </span>
         }
         actions={
-          <ExportButton
-            data={customers}
-            columns={exportColumns}
-            filename={`customers-${now.toISOString().split("T")[0]}.xlsx`}
-            sheetName="Customers"
-          />
+          view === "my" ? (
+            <ExportButton
+              data={customers}
+              columns={exportColumns}
+              filename={`customers-${now.toISOString().split("T")[0]}.xlsx`}
+              sheetName="Customers"
+            />
+          ) : undefined
         }
       />
 
@@ -226,7 +267,7 @@ export default function CustomersPage() {
             </Empty>
           ) : (
             <DataTable
-              columns={columns}
+              columns={view === "shared" ? sharedColumns : columns}
               data={customers}
               getRowId={(row) => row.id}
               pageSize={20}
@@ -236,13 +277,6 @@ export default function CustomersPage() {
         </CardContent>
       </Card>
 
-      <CustomerDetailDrawer
-        customerId={detailCustomerId}
-        open={detailCustomerId !== null}
-        onOpenChange={(open) => {
-          if (!open) setDetailCustomerId(null);
-        }}
-      />
     </div>
   );
 }

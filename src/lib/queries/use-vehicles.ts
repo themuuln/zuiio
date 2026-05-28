@@ -1,4 +1,11 @@
-import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  type UseQueryResult,
+  useQuery,
+} from "@tanstack/react-query";
+import { toast } from "sonner";
+import { toastRetry } from "@/lib/toast-utils";
 import type { Vehicle } from "@/lib/types";
 import { vehicleKeys } from "./keys";
 
@@ -28,7 +35,9 @@ export function useVehicle(
   return useQuery({
     queryKey: vehicleKeys.detail(orgId ?? "", vehicleId ?? ""),
     queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/vehicles/${vehicleId}`);
+      const res = await fetch(
+        `/api/organizations/${orgId}/vehicles/${vehicleId}`,
+      );
       if (!res.ok) throw new Error("Failed to load vehicle");
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
@@ -37,4 +46,29 @@ export function useVehicle(
     enabled: !!orgId && !!vehicleId,
     staleTime: 30_000,
   });
+}
+
+export function useDeleteVehicle(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/organizations/${orgId}/vehicles/${id}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+    },
+    onSuccess: () => {
+      if (orgId)
+        queryClient.invalidateQueries({ queryKey: vehicleKeys.all(orgId) });
+      toast.success("Vehicle deleted");
+    },
+    onError: (err: Error, variables) => {
+      toastRetry(err.message ?? "Failed to delete vehicle", () =>
+        mutation.mutateAsync(variables),
+      );
+    },
+  });
+  return mutation;
 }

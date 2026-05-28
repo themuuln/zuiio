@@ -1,7 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
-import { withCache } from "@/lib/cache/with-cache";
+import { cacheTags } from "@/lib/cache/keys";
 import type { Customer } from "@/lib/types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
@@ -26,67 +25,158 @@ export async function getCustomers(
   const pageSize = Math.min(100, Math.max(1, options?.pageSize ?? 50));
   const offset = (page - 1) * pageSize;
 
-  return withCache(
-    ["getCustomers", orgId, search ?? "", `p${page}s${pageSize}`],
-    async () => {
-      let query = supabase
-        .from("customers")
-        .select("id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, total_visits, last_visit_at, source, tags, created_at, updated_at", { count: "exact" })
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+  let query = supabase
+    .from("customers")
+    .select(
+      "id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, total_visits, last_visit_at, source, tags, created_at, updated_at",
+      { count: "exact" },
+    )
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
 
-      if (search?.trim()) {
-        const term = `%${search.trim()}%`;
-        query = query.or(
-          `first_name.ilike.${term},last_name.ilike.${term},full_name.ilike.${term},company_name.ilike.${term},contact_person.ilike.${term},phone.ilike.${term},email.ilike.${term}`,
-        );
+  if (search?.trim()) {
+    const term = `%${search.trim()}%`;
+    query = query.or(
+      `first_name.ilike.${term},last_name.ilike.${term},full_name.ilike.${term},company_name.ilike.${term},contact_person.ilike.${term},phone.ilike.${term},email.ilike.${term}`,
+    );
+  }
+
+  const {
+    data: customers,
+    count: total,
+    error,
+  } = await query.range(offset, offset + pageSize - 1);
+
+  if (error) throw new Error(error.message);
+
+  // Batch fetch vehicle counts for all customers
+  const customerIds = (customers ?? []).map((c) => c.id);
+  let vehicleCounts = new Map<string, number>();
+
+  if (customerIds.length > 0) {
+    const { data: counts } = await supabase
+      .from("vehicle_owners")
+      .select("customer_id", { count: "exact" })
+      .in("customer_id", customerIds)
+      .is("owned_until", null);
+
+    if (counts) {
+      const countMap = new Map<string, number>();
+      for (const row of counts) {
+        const cid = row.customer_id as string;
+        countMap.set(cid, (countMap.get(cid) ?? 0) + 1);
       }
+      vehicleCounts = countMap;
+    }
+  }
 
-      const { data: customers, count: total, error } = await query
-        .range(offset, offset + pageSize - 1);
+  const data = (customers ?? []).map((customer) => ({
+    ...customer,
+    vehicle_count: vehicleCounts.get(customer.id) ?? 0,
+  }));
 
-      if (error) throw new Error(error.message);
+  return {
+    data,
+    total: total ?? 0,
+    page,
+    pageSize,
+    totalPages: Math.ceil((total ?? 0) / pageSize),
+  } as unknown as PaginatedResponse<CustomerWithVehicleCount>;
+}
 
-      // Batch fetch vehicle counts for all customers
-      const customerIds = (customers ?? []).map((c) => c.id);
-      let vehicleCounts = new Map<string, number>();
+/**
+ * Lists customers from other organizations that have sharing enabled.
+ * These are read-only — the current org can view but not modify them.
+ */
+export async function getSharedCustomers(
+  orgId: string,
+  options?: { search?: string; page?: number; pageSize?: number },
+): Promise<PaginatedResponse<CustomerWithVehicleCount>> {
+  const supabase = await createClient();
 
-      if (customerIds.length > 0) {
-        const { data: counts } = await supabase
-          .from("vehicle_owners")
-          .select("customer_id", { count: "exact" })
-          .in("customer_id", customerIds)
-          .is("owned_until", null);
+  const search = options?.search;
+  const page = Math.max(1, options?.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, options?.pageSize ?? 50));
+  const offset = (page - 1) * pageSize;
 
-        if (counts) {
-          const countMap = new Map<string, number>();
-          for (const row of counts) {
-            const cid = row.customer_id as string;
-            countMap.set(cid, (countMap.get(cid) ?? 0) + 1);
-          }
-          vehicleCounts = countMap;
-        }
+  let query = supabase
+    .from("customers")
+    .select(
+      "id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, total_visits, last_visit_at, source, tags, created_at, updated_at",
+      { count: "exact" },
+    )
+    .neq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+
+  // RLS handles the sharing_enabled check — we just filter out own org
+  if (search?.trim()) {
+    const term = `%${search.trim()}%`;
+    query = query.or(
+      `first_name.ilike.${term},last_name.ilike.${term},full_name.ilike.${term},company_name.ilike.${term},contact_person.ilike.${term},phone.ilike.${term},email.ilike.${term}`,
+    );
+  }
+
+  const {
+    data: customers,
+    count: total,
+    error,
+  } = await query.range(offset, offset + pageSize - 1);
+
+  if (error) throw new Error(error.message);
+
+  // Batch fetch vehicle counts
+  const customerIds = (customers ?? []).map((c) => c.id);
+  let vehicleCounts = new Map<string, number>();
+
+  if (customerIds.length > 0) {
+    const { data: counts } = await supabase
+      .from("vehicle_owners")
+      .select("customer_id", { count: "exact" })
+      .in("customer_id", customerIds)
+      .is("owned_until", null);
+
+    if (counts) {
+      const countMap = new Map<string, number>();
+      for (const row of counts) {
+        const cid = row.customer_id as string;
+        countMap.set(cid, (countMap.get(cid) ?? 0) + 1);
       }
+      vehicleCounts = countMap;
+    }
+  }
 
-      const data = (customers ?? []).map((customer) => ({
-        ...customer,
-        vehicle_count: vehicleCounts.get(customer.id) ?? 0,
-      }));
+  // Fetch org names for attribution badges
+  const orgIds = [...new Set((customers ?? []).map((c) => c.organization_id))];
+  const orgNames = new Map<string, string>();
 
-      return {
-        data,
-        total: total ?? 0,
-        page,
-        pageSize,
-        totalPages: Math.ceil((total ?? 0) / pageSize),
-      } as unknown as PaginatedResponse<CustomerWithVehicleCount>;
-    },
-    {
-      tags: [cacheTags.customers(orgId)],
-      revalidate: cacheDurations.customers,
-    },
-  );
+  if (orgIds.length > 0) {
+    const { data: orgs } = await supabase
+      .from("organizations")
+      .select("id, name")
+      .in("id", orgIds);
+
+    if (orgs) {
+      for (const org of orgs) {
+        orgNames.set(org.id, org.name);
+      }
+    }
+  }
+
+  const data = (customers ?? []).map((customer) => ({
+    ...customer,
+    vehicle_count: vehicleCounts.get(customer.id) ?? 0,
+    organization_name: orgNames.get(customer.organization_id) ?? "Unknown",
+  }));
+
+  return {
+    data,
+    total: total ?? 0,
+    page,
+    pageSize,
+    totalPages: Math.ceil((total ?? 0) / pageSize),
+  } as unknown as PaginatedResponse<CustomerWithVehicleCount>;
 }
 
 /**
@@ -98,28 +188,86 @@ export async function getCustomer(
 ): Promise<Customer> {
   const supabase = await createClient();
 
-  return withCache(
-    ["getCustomer", id],
-    async () => {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, portal_token, customer_user_id, created_at, updated_at, created_by, updated_by")
-        .eq("id", id)
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .single();
+  const { data, error } = await supabase
+    .from("customers")
+    .select(
+      "id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, portal_token, customer_user_id, created_at, updated_at, created_by, updated_by",
+    )
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .single();
 
-      if (error || !data) {
-        throw new NotFoundError("Customer not found");
-      }
+  if (error || !data) {
+    throw new NotFoundError("Customer not found");
+  }
 
-      return data as unknown as Customer;
-    },
-    {
-      tags: [cacheTags.customers(orgId)],
-      revalidate: cacheDurations.customers,
-    },
-  );
+  return data as unknown as Customer;
+}
+
+/**
+ * Returns a single customer from a sharing-enabled org (read-only).
+ * Used by the shared customer detail drawer.
+ */
+export async function getSharedCustomer(
+  id: string,
+  viewerOrgId: string,
+): Promise<Customer> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("customers")
+    .select(
+      "id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, created_at, updated_at",
+    )
+    .eq("id", id)
+    .neq("organization_id", viewerOrgId)
+    .is("deleted_at", null)
+    .single();
+
+  if (error || !data) {
+    throw new NotFoundError("Customer not found");
+  }
+
+  // Verify the owning org has sharing enabled
+  const { data: ownerOrg } = await supabase
+    .from("organizations")
+    .select("id, sharing_enabled, name")
+    .eq("id", data.organization_id)
+    .single();
+
+  if (!ownerOrg?.sharing_enabled) {
+    throw new NotFoundError("Customer not found");
+  }
+
+  return { ...data, organization_name: ownerOrg.name } as unknown as Customer;
+}
+
+/**
+ * Returns vehicles for a shared customer (read-only).
+ */
+export async function getSharedCustomerVehicles(
+  customerId: string,
+  viewerOrgId: string,
+): Promise<
+  {
+    id: string;
+    plate_number: string;
+    make: string;
+    model: string;
+    year: number | null;
+  }[]
+> {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("vehicles")
+    .select("id, plate_number, make, model, year")
+    .eq("customer_id", customerId)
+    .neq("organization_id", viewerOrgId)
+    .is("deleted_at", null);
+
+  return data ?? [];
 }
 
 /**
@@ -130,7 +278,6 @@ export async function createCustomer(
   params: CreateCustomerParams,
   userId: string,
 ): Promise<Customer> {
-
   if (
     !params.phone?.trim() &&
     !params.email?.trim() &&
@@ -172,10 +319,9 @@ export async function createCustomer(
       .maybeSingle();
 
     if (existing) {
-      throw new ConflictError(
-        "A customer with this email already exists",
-        { existingCustomerId: existing.id },
-      );
+      throw new ConflictError("A customer with this email already exists", {
+        existingCustomerId: existing.id,
+      });
     }
   }
 
@@ -196,7 +342,9 @@ export async function createCustomer(
       created_by: userId,
       updated_by: userId,
     })
-    .select("id, organization_id, type, first_name, last_name, full_name, company_name, contact_person, phone, email, address, notes, source, tags, total_visits, last_visit_at, created_at, updated_at, created_by, updated_by")
+    .select(
+      "id, organization_id, type, first_name, last_name, full_name, company_name, contact_person, phone, email, address, notes, source, tags, total_visits, last_visit_at, created_at, updated_at, created_by, updated_by",
+    )
     .single();
 
   if (error || !data) {
@@ -233,7 +381,9 @@ export async function updateCustomer(
   // Get existing customer
   const { data: existing, error: fetchError } = await supabase
     .from("customers")
-    .select("id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, portal_token, customer_user_id, created_at, updated_at, created_by, updated_by")
+    .select(
+      "id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, portal_token, customer_user_id, created_at, updated_at, created_by, updated_by",
+    )
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
@@ -274,10 +424,9 @@ export async function updateCustomer(
       .maybeSingle();
 
     if (emailDup) {
-      throw new ConflictError(
-        "A customer with this email already exists",
-        { existingCustomerId: emailDup.id },
-      );
+      throw new ConflictError("A customer with this email already exists", {
+        existingCustomerId: emailDup.id,
+      });
     }
   }
 
@@ -296,7 +445,8 @@ export async function updateCustomer(
   if (params.address !== undefined)
     updates.address = params.address?.trim() || null;
   if (params.notes !== undefined) updates.notes = params.notes?.trim() || null;
-  if (params.source !== undefined) updates.source = params.source?.trim() || null;
+  if (params.source !== undefined)
+    updates.source = params.source?.trim() || null;
   updates.updated_by = userId;
 
   if (Object.keys(updates).length <= 1) {
@@ -309,7 +459,9 @@ export async function updateCustomer(
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select("id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, portal_token, customer_user_id, created_at, updated_at, created_by, updated_by")
+    .select(
+      "id, organization_id, branch_id, first_name, last_name, full_name, phone, email, type, company_name, contact_person, address, notes, source, tags, total_visits, last_visit_at, portal_token, customer_user_id, created_at, updated_at, created_by, updated_by",
+    )
     .single();
 
   if (error || !data) {
