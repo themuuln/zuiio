@@ -393,10 +393,7 @@ export async function registerMechanic(params: {
   // Find existing auth user by email, or create one
   const {
     data: { users },
-  } = await adminClient.auth.admin.listUsers({
-    filter: params.email.trim(),
-    perPage: 1,
-  });
+  } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
   const existingAuthUser = users?.find((u) => u.email === params.email.trim());
 
   let authUserId: string;
