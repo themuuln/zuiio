@@ -12,16 +12,8 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { NavUser } from "@/components/app-sidebar/_nav-user";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
   CommandDialog,
@@ -48,7 +40,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link, useRouter } from "@/lib/i18n/navigation";
+import { useRouter } from "@/lib/i18n/navigation";
 
 export interface PageTab {
   value: string;
@@ -122,11 +114,6 @@ export function PageHeader({
         <div className="flex min-h-14 items-center gap-3 px-4">
           <div className="flex min-w-0 items-center gap-3 self-stretch">
             <SidebarTrigger className="-ml-1 rounded-xl" />
-            <Separator
-              orientation="vertical"
-              className="hidden self-stretch sm:block"
-            />
-            <HeaderBreadcrumbs />
           </div>
 
           <div className="hidden min-w-0 flex-1 lg:flex">
@@ -252,35 +239,6 @@ export function PageHeader({
   );
 }
 
-function HeaderBreadcrumbs() {
-  const t = useTranslations();
-  const { breadcrumbs } = useNavigation();
-
-  return (
-    <Breadcrumb>
-      <BreadcrumbList>
-        {breadcrumbs.map((crumb, index) => {
-          const isLast = index === breadcrumbs.length - 1;
-
-          return (
-            <Fragment key={`${crumb.labelKey}-${index}`}>
-              <BreadcrumbItem className={index === 0 ? "" : "hidden sm:block"}>
-                {isLast || !crumb.href ? (
-                  <BreadcrumbPage>{t(crumb.labelKey)}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink render={<Link href={crumb.href} />}>
-                    {t(crumb.labelKey)}
-                  </BreadcrumbLink>
-                )}
-              </BreadcrumbItem>
-              {!isLast && <BreadcrumbSeparator className="hidden sm:block" />}
-            </Fragment>
-          );
-        })}
-      </BreadcrumbList>
-    </Breadcrumb>
-  );
-}
 
 function QuickCreateActions() {
   const t = useTranslations();
