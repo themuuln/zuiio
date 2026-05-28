@@ -77,7 +77,9 @@ export function DrawerFooter({
               </Button>
               <Button
                 size="sm"
-                variant={confirmStatus === "Cancelled" ? "destructive" : "default"}
+                variant={
+                  confirmStatus === "Cancelled" ? "destructive" : "default"
+                }
                 disabled={saving}
                 onClick={() => onChangeStatus(confirmStatus)}
                 className="h-7 text-xs min-w-[90px]"
@@ -89,8 +91,8 @@ export function DrawerFooter({
         </Alert>
       )}
 
-      {/* Primary status flow action */}
-      <div className="flex gap-1.5">
+      {/* Primary status flow + secondary actions */}
+      <div className="flex items-center gap-1.5">
         {wo.status === "New" && (
           <Button
             className="flex-1 h-9 text-xs font-semibold"
@@ -142,10 +144,7 @@ export function DrawerFooter({
             {t("complete")}
           </Button>
         )}
-      </div>
 
-      {/* Secondary actions */}
-      <div className="flex items-center gap-1.5">
         {/* Cancel */}
         {canCancel && (
           <Button

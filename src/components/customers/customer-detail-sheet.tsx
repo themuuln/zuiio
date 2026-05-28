@@ -1,7 +1,16 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, Loader2, Mail, MapPin, Phone, Pencil, Save, Trash2 } from "lucide-react";
+import {
+  Building2,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+  Pencil,
+  Save,
+  Trash2,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -31,7 +40,10 @@ import { customerKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { WorkOrderStatus } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
-import { CustomerEditForm, type CustomerFormState } from "@/app/[locale]/dashboard/customers/[id]/_customer-edit-form";
+import {
+  CustomerEditForm,
+  type CustomerFormState,
+} from "@/app/[locale]/dashboard/customers/[id]/_customer-edit-form";
 import { Typography } from "@/components/ui/typography";
 
 type CustomerType = "individual" | "company";
@@ -223,7 +235,9 @@ export function CustomerDetailSheet({
       toast.error(t("failedToSave"));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: customerKeys.all(orgId ?? "") });
+      queryClient.invalidateQueries({
+        queryKey: customerKeys.all(orgId ?? ""),
+      });
       setEditing(false);
     },
   });
@@ -315,7 +329,9 @@ export function CustomerDetailSheet({
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => deleteMutation.mutate()}>
+                      <AlertDialogAction
+                        onClick={() => deleteMutation.mutate()}
+                      >
                         {commonT("delete")}
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -356,9 +372,22 @@ export function CustomerDetailSheet({
                   Contact
                 </span>
                 <div className="mt-2 grid gap-2 grid-cols-2">
-                  <InfoRow icon={Phone} label={t("phone")} value={customer.phone} />
-                  <InfoRow icon={Mail} label={t("email")} value={customer.email} />
-                  <InfoRow icon={MapPin} label={t("address")} value={customer.address} className="col-span-2" />
+                  <InfoRow
+                    icon={Phone}
+                    label={t("phone")}
+                    value={customer.phone}
+                  />
+                  <InfoRow
+                    icon={Mail}
+                    label={t("email")}
+                    value={customer.email}
+                  />
+                  <InfoRow
+                    icon={MapPin}
+                    label={t("address")}
+                    value={customer.address}
+                    className="col-span-2"
+                  />
                   {customer.type === "company" && (
                     <InfoRow
                       icon={Building2}
@@ -368,13 +397,21 @@ export function CustomerDetailSheet({
                     />
                   )}
                   {customer.contact_person && (
-                    <InfoRow icon={Phone} label={t("contactPerson")} value={customer.contact_person} />
+                    <InfoRow
+                      icon={Phone}
+                      label={t("contactPerson")}
+                      value={customer.contact_person}
+                    />
                   )}
                 </div>
                 {customer.notes && (
                   <div className="mt-2 rounded-lg bg-muted/50 px-3 py-2">
-                    <div className="text-xs text-muted-foreground">{t("notes")}</div>
-                    <div className="text-sm whitespace-pre-wrap">{customer.notes}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {t("notes")}
+                    </div>
+                    <div className="text-sm whitespace-pre-wrap">
+                      {customer.notes}
+                    </div>
                   </div>
                 )}
               </div>
@@ -416,7 +453,9 @@ export function CustomerDetailSheet({
                       }}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-sm font-medium truncate">{v.plate_number}</span>
+                        <span className="text-sm font-medium truncate">
+                          {v.plate_number}
+                        </span>
                         <span className="text-xs text-muted-foreground truncate">
                           {[v.year, v.make, v.model].filter(Boolean).join(" ")}
                         </span>
@@ -485,7 +524,9 @@ export function CustomerDetailSheet({
                     ) : (
                       <Save className="size-4" />
                     )}
-                    {editMutation.isPending ? commonT("saving") : commonT("save")}
+                    {editMutation.isPending
+                      ? commonT("saving")
+                      : commonT("save")}
                   </Button>
                 </div>
               </div>

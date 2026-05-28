@@ -3,11 +3,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import type { ActionState } from "@/lib/validation/auth-schemas";
-import {
-  customerSetPasswordSchema,
-  flattenFieldErrors,
-} from "@/lib/validation/auth-schemas";
+import type { ActionState } from "@/lib/form-validation";
+import { flattenFieldErrors } from "@/lib/form-validation";
+import { customerSetPasswordSchema } from "@/lib/validation/auth-schemas";
 
 type SetPasswordState = ActionState<{ email: string }> & {
   success?: boolean;

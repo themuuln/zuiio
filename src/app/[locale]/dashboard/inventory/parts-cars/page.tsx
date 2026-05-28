@@ -48,24 +48,27 @@ export default function PartsCarsListPage() {
     <div className="flex flex-col gap-6">
       <div>
         <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          {t('title')}
+          {t("title")}
         </Typography.H1>
         <Typography.Muted className="text-muted-foreground">
-          {t('subtitle')}
+          {t("subtitle")}
         </Typography.Muted>
       </div>
 
       <ListToolbar
         search={{
-          placeholder: t('searchPlaceholder'),
+          placeholder: t("searchPlaceholder"),
           value: search,
           onChange: setSearch,
         }}
-        stats={<span>{t('count', { count: filtered.length })}</span>}
+        stats={<span>{t("count", { count: filtered.length })}</span>}
         actions={
-          <Button size="default" render={<Link href="/dashboard/inventory/parts-cars/new" />}>
+          <Button
+            size="default"
+            render={<Link href="/dashboard/inventory/parts-cars/new" />}
+          >
             <Plus className="size-4" />
-            {t('newCar')}
+            {t("newCar")}
           </Button>
         }
       />
@@ -78,11 +81,14 @@ export default function PartsCarsListPage() {
             <EmptyMedia variant="icon">
               <Truck />
             </EmptyMedia>
-            <EmptyTitle>{t('empty')}</EmptyTitle>
+            <EmptyTitle>{t("empty")}</EmptyTitle>
           </EmptyHeader>
           <EmptyContent>
-            <Button variant="outline" render={<Link href="/dashboard/inventory/parts-cars/new" />}>
-              {t('emptyAction')}
+            <Button
+              variant="outline"
+              render={<Link href="/dashboard/inventory/parts-cars/new" />}
+            >
+              {t("emptyAction")}
             </Button>
           </EmptyContent>
         </Empty>
@@ -108,7 +114,7 @@ export default function PartsCarsListPage() {
                       )}
                     </div>
                     <Badge variant="outline" className="shrink-0">
-                      {t('status.' + car.status)}
+                      {t("status." + car.status)}
                     </Badge>
                   </div>
 
@@ -124,8 +130,7 @@ export default function PartsCarsListPage() {
                       </Typography.Muted>
                     )}
                     <Typography.Muted className="text-muted-foreground">
-                      {t('fields.cost')}:
-                       {" "}
+                      {t("fields.cost")}:{" "}
                       <span className="font-semibold text-foreground">
                         {formatMNT(car.purchase_cost)}
                       </span>
@@ -133,19 +138,21 @@ export default function PartsCarsListPage() {
                     {car.status === "completed" && (
                       <>
                         <Typography.Muted className="text-muted-foreground">
-                          {t('fields.parts')}:{" "}
+                          {t("fields.parts")}:{" "}
                           <span className="font-semibold text-foreground">
-                            {t('fields.partsCount', { count: car.total_parts_actual })}
+                            {t("fields.partsCount", {
+                              count: car.total_parts_actual,
+                            })}
                           </span>
                         </Typography.Muted>
                         <Typography.Muted className="text-muted-foreground">
-                          {t('fields.value')}:{" "}
+                          {t("fields.value")}:{" "}
                           <span className="font-semibold text-green-600">
                             {formatMNT(car.total_estimated_value)}
                           </span>
                         </Typography.Muted>
                         <Typography.Muted className="text-muted-foreground">
-                          {t('fields.profit')}:{" "}
+                          {t("fields.profit")}:{" "}
                           <span
                             className={`font-semibold ${
                               car.total_estimated_value - car.purchase_cost > 0
@@ -162,12 +169,12 @@ export default function PartsCarsListPage() {
                     )}
                     {car.status === "disassembling" && (
                       <Typography.Text className="text-xs text-amber-600 font-medium">
-                        {t('fields.disassemblingLabel')}
+                        {t("fields.disassemblingLabel")}
                       </Typography.Text>
                     )}
                     {car.status === "arrived" && (
                       <Typography.Text className="text-xs text-blue-600 font-medium">
-                        {t('fields.notDisassembled')}
+                        {t("fields.notDisassembled")}
                       </Typography.Text>
                     )}
                   </div>

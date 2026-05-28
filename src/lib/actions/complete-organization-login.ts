@@ -3,11 +3,9 @@
 import { AppError, UnauthorizedError } from "@/lib/errors";
 import { activateOrganizationAccess } from "@/lib/services/organization-access-service";
 import { createClient } from "@/lib/supabase/server";
-import type { ActionState } from "@/lib/validation/auth-schemas";
-import {
-  flattenFieldErrors,
-  organizationPinSchema,
-} from "@/lib/validation/auth-schemas";
+import type { ActionState } from "@/lib/form-validation";
+import { flattenFieldErrors } from "@/lib/form-validation";
+import { organizationPinSchema } from "@/lib/validation/auth-schemas";
 
 export type CompleteOrganizationLoginState = ActionState & {
   redirectTo?: string;

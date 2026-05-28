@@ -67,10 +67,7 @@ export function PartsCarDetailSheet({
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 
-  const { data: car, isLoading: carLoading } = usePartsCar(
-    orgId,
-    carId ?? "",
-  );
+  const { data: car, isLoading: carLoading } = usePartsCar(orgId, carId ?? "");
   const { data: parts = [], isLoading: partsLoading } = usePartsCarParts(
     orgId,
     carId ?? "",
@@ -224,9 +221,7 @@ export function PartsCarDetailSheet({
                   <Button
                     size="sm"
                     onClick={handleComplete}
-                    disabled={
-                      completeDisassembly.isPending || partsCount === 0
-                    }
+                    disabled={completeDisassembly.isPending || partsCount === 0}
                   >
                     {completeDisassembly.isPending
                       ? t("actions.completing")
@@ -246,7 +241,9 @@ export function PartsCarDetailSheet({
 
         {notFound && (
           <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
-            <Typography.Muted className="text-sm">{t("notFound")}</Typography.Muted>
+            <Typography.Muted className="text-sm">
+              {t("notFound")}
+            </Typography.Muted>
             <Button
               variant="outline"
               size="sm"
@@ -296,7 +293,10 @@ export function PartsCarDetailSheet({
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Add Part
                 </span>
-                <form onSubmit={handleAddPart} className="mt-2 flex flex-col gap-2">
+                <form
+                  onSubmit={handleAddPart}
+                  className="mt-2 flex flex-col gap-2"
+                >
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       ref={nameInputRef}
@@ -308,9 +308,7 @@ export function PartsCarDetailSheet({
                     <select
                       value={partLocation}
                       onChange={(e) =>
-                        setPartLocation(
-                          e.target.value as PartsCarLocationGroup,
-                        )
+                        setPartLocation(e.target.value as PartsCarLocationGroup)
                       }
                       className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                     >

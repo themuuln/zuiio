@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { env } from "./env";
 
 /**
  * If using Fluid compute: Don't put this client in a global variable. Always create a new client within each
@@ -30,10 +31,4 @@ export async function createClient() {
       },
     },
   );
-}
-
-function env(key: string): string {
-  const value = process.env[key];
-  if (!value) throw new Error(`Missing env var: ${key}`);
-  return value;
 }

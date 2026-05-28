@@ -2,11 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { ActionState } from "@/lib/validation/auth-schemas";
-import {
-  customerLoginSchema,
-  flattenFieldErrors,
-} from "@/lib/validation/auth-schemas";
+import type { ActionState } from "@/lib/form-validation";
+import { flattenFieldErrors } from "@/lib/form-validation";
+import { customerLoginSchema } from "@/lib/validation/auth-schemas";
 
 type CustomerLoginState = ActionState<{ email: string }>;
 

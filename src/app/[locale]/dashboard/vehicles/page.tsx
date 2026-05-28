@@ -35,14 +35,12 @@ import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { usePageHeader } from "@/hooks/use-page-header";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { VehicleDetailDrawer } from "@/components/vehicles/vehicle-detail-drawer";
-import { VehicleEditSheet } from "@/components/vehicles/vehicle-edit-sheet";
 import { Typography } from "@/components/ui/typography";
 import { createColumns, type VehicleRow } from "./_columns";
 
 export default function VehiclesPage() {
   const [search, setSearch] = useState("");
-  const { setNewVehicleDialogOpen } = usePageHeader();
+  const { setNewVehicleDialogOpen, setDetailVehicleId } = usePageHeader();
   const t = useTranslations("vehicles");
   const now = useClientNow();
 
@@ -59,18 +57,17 @@ export default function VehiclesPage() {
 
   const list: VehicleRow[] = vehicles ?? [];
 
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(
-    null,
-  );
   const [vehicleToDelete, setVehicleToDelete] = useState<VehicleRow | null>(
     null,
   );
-  const [vehicleToEditId, setVehicleToEditId] = useState<string | null>(null);
   const { registerTab } = useRightSidebar();
 
-  const handleEdit = useCallback((vehicle: VehicleRow) => {
-    setVehicleToEditId(vehicle.id);
-  }, []);
+  const handleEdit = useCallback(
+    (vehicle: VehicleRow) => {
+      setDetailVehicleId(vehicle.id);
+    },
+    [setDetailVehicleId],
+  );
 
   const handleDelete = useCallback((vehicle: VehicleRow) => {
     setVehicleToDelete(vehicle);
@@ -254,27 +251,11 @@ export default function VehiclesPage() {
               data={list}
               getRowId={(row) => row.id}
               pageSize={20}
-              onRowClick={(row) => setSelectedVehicleId(row.id)}
+              onRowClick={(row) => setDetailVehicleId(row.id)}
             />
           )}
         </CardContent>
       </Card>
-
-      <VehicleDetailDrawer
-        open={!!selectedVehicleId}
-        onOpenChange={(open) => {
-          if (!open) setSelectedVehicleId(null);
-        }}
-        vehicleId={selectedVehicleId}
-      />
-
-      <VehicleEditSheet
-        open={!!vehicleToEditId}
-        onOpenChange={(open) => {
-          if (!open) setVehicleToEditId(null);
-        }}
-        vehicleId={vehicleToEditId}
-      />
 
       <AlertDialog
         open={!!vehicleToDelete}

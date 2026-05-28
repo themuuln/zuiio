@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, CornerDownRight, Loader2, User, UserPlus } from "lucide-react";
+import { Car, CornerDownRight, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Vehicle, WorkOrder } from "@/lib/types";
-import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { cn, formatPlateNumber } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
 
@@ -51,7 +50,8 @@ export function AssignDialog({
   onAssign,
 }: AssignDialogProps) {
   const [selectedWoId, setSelectedWoId] = useState<string | null>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState<VehicleSearchResult | null>(null);
+  const [selectedVehicle, setSelectedVehicle] =
+    useState<VehicleSearchResult | null>(null);
   const [selectedMechId, setSelectedMechId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
@@ -139,7 +139,9 @@ export function AssignDialog({
           );
           const customerId = vehicle.customer?.id;
           if (!customerId) {
-            throw new Error("Vehicle owner is required to assign to queue");
+            // No customer — can't create work order, but still show the vehicle
+            setSelectedWoId(null);
+            return;
           }
           const result = await addVehicleToQueue({
             vehicleId: vehicle.id,
@@ -200,7 +202,7 @@ export function AssignDialog({
             <Typography.Muted className="text-xs font-medium text-muted-foreground mb-2">
               Vehicle
             </Typography.Muted>
-            
+
             {/* Search input */}
             <div className="relative">
               <Input
@@ -276,7 +278,11 @@ export function AssignDialog({
                           <Typography.Muted className="text-[10px] text-muted-foreground truncate">
                             {vehicle.make} {vehicle.model}
                             {vehicle.customer && (
-                              <> · {vehicle.customer.first_name} {vehicle.customer.last_name}</>
+                              <>
+                                {" "}
+                                · {vehicle.customer.first_name}{" "}
+                                {vehicle.customer.last_name}
+                              </>
                             )}
                           </Typography.Muted>
                         </div>
@@ -288,11 +294,14 @@ export function AssignDialog({
             )}
 
             {/* No results */}
-            {searchFocused && search.trim() && !searchLoading && searchResults.length === 0 && (
-              <Typography.Muted className="text-xs text-muted-foreground/60 text-center py-4">
-                No vehicles found
-              </Typography.Muted>
-            )}
+            {searchFocused &&
+              search.trim() &&
+              !searchLoading &&
+              searchResults.length === 0 && (
+                <Typography.Muted className="text-xs text-muted-foreground/60 text-center py-4">
+                  No vehicles found
+                </Typography.Muted>
+              )}
 
             {/* Selected vehicle display */}
             {!search && selectedVehicle && (
@@ -312,6 +321,14 @@ export function AssignDialog({
                   <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
                 )}
               </div>
+            )}
+
+            {/* Warning for vehicle without customer */}
+            {!search && selectedVehicle && !selectedVehicle.customer && (
+              <Typography.Muted className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+                Vehicle needs owner info. Register the vehicle first to add
+                owner details.
+              </Typography.Muted>
             )}
 
             {/* Empty state - show queue count */}

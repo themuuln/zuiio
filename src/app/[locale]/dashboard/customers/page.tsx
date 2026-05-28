@@ -276,7 +276,6 @@ export default function CustomersPage() {
           )}
         </CardContent>
       </Card>
-
     </div>
   );
 }

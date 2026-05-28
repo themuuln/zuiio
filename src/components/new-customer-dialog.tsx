@@ -26,6 +26,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { inputProps, formatMongolianPhone } from "@/lib/form-ux";
 import { useRouter } from "@/lib/i18n/navigation";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { customerKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { Typography } from "@/components/ui/typography";
@@ -68,6 +69,7 @@ export function NewCustomerDialog({
   onOpenChange,
 }: NewCustomerDialogProps) {
   const { replace } = useRouter();
+  const { setDetailCustomerId } = usePageHeader();
   const queryClient = useQueryClient();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? null;
@@ -156,7 +158,8 @@ export function NewCustomerDialog({
         queryKey: customerKeys.all(orgId),
       });
       onOpenChange(false);
-      replace(`/dashboard/customers/${json.data.id}`);
+      replace("/dashboard/customers");
+      setDetailCustomerId(json.data.id);
     } catch {
       toast.error("Failed to create customer");
       setError("Failed to create customer");
@@ -200,9 +203,7 @@ export function NewCustomerDialog({
                     className="font-medium text-amber-700 underline hover:cursor-pointer hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300"
                     onClick={() => {
                       onOpenChange(false);
-                      replace(
-                        `/dashboard/customers/${conflictInfo.existingCustomerId}`,
-                      );
+                      setDetailCustomerId(conflictInfo.existingCustomerId!);
                     }}
                   >
                     View existing customer

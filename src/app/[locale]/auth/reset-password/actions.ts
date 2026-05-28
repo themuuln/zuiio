@@ -2,11 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { ActionState } from "@/lib/validation/auth-schemas";
-import {
-  flattenFieldErrors,
-  resetPasswordSchema,
-} from "@/lib/validation/auth-schemas";
+import type { ActionState } from "@/lib/form-validation";
+import { flattenFieldErrors } from "@/lib/form-validation";
+import { resetPasswordSchema } from "@/lib/validation/auth-schemas";
 
 type ResetPasswordState = ActionState;
 

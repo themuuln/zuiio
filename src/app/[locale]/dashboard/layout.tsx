@@ -117,12 +117,16 @@ function GlobalDialogs() {
       />
       <CustomerDetailSheet
         open={detailCustomerId !== null}
-        onOpenChange={(open) => setDetailCustomerId(open ? detailCustomerId : null)}
+        onOpenChange={(open) =>
+          setDetailCustomerId(open ? detailCustomerId : null)
+        }
         customerId={detailCustomerId}
       />
       <PartsCarDetailSheet
         open={detailPartsCarId !== null}
-        onOpenChange={(open) => setDetailPartsCarId(open ? detailPartsCarId : null)}
+        onOpenChange={(open) =>
+          setDetailPartsCarId(open ? detailPartsCarId : null)
+        }
         carId={detailPartsCarId}
       />
     </>

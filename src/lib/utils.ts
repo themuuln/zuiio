@@ -5,16 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/**
- * Normalize a plate string: strip whitespace/dashes, uppercase.
- */
-export function normalizePlate(plate: string): string {
-  return plate.replace(/[\s\-–—._/\\]/g, "").toUpperCase()
-}
-
 export function formatPlateNumber(plate: string | null | undefined): string {
   if (!plate) return "—"
-  return normalizePlate(plate)
+  return plate.replace(/[\s\-–—._/\\]/g, "").toUpperCase()
 }
 
 /**

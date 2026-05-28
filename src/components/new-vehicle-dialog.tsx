@@ -37,6 +37,7 @@ import {
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { useCarBrands, useCarModels } from "@/lib/queries/use-car-catalog";
 import { useRouter } from "@/lib/i18n/navigation";
+import { usePageHeader } from "@/hooks/use-page-header";
 import {
   isValidMongolianPlate,
   transliterateMongolianPlate,
@@ -110,6 +111,7 @@ export function NewVehicleDialog({
   onOpenChange,
 }: NewVehicleDialogProps) {
   const { replace } = useRouter();
+  const { setDetailVehicleId } = usePageHeader();
   const queryClient = useQueryClient();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? null;
@@ -319,7 +321,8 @@ export function NewVehicleDialog({
         queryKey: vehicleKeys.all(orgId),
       });
       onOpenChange(false);
-      replace(`/dashboard/vehicles/${json.data.id}`);
+      replace("/dashboard/vehicles");
+      setDetailVehicleId(json.data.id);
     } catch {
       toast.error("Failed to create vehicle");
     } finally {

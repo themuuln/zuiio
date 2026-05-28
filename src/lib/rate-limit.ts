@@ -49,7 +49,11 @@ export function createRateLimiter(config?: RateLimiterConfig): RateLimiter {
 
     if (!entry || now > entry.resetAt) {
       store.set(ip, { count: 1, resetAt: now + windowMs });
-      return { allowed: true, remaining: maxRequests - 1, resetAt: now + windowMs };
+      return {
+        allowed: true,
+        remaining: maxRequests - 1,
+        resetAt: now + windowMs,
+      };
     }
 
     entry.count++;
@@ -74,8 +78,13 @@ export function createRateLimiter(config?: RateLimiterConfig): RateLimiter {
 export const authRateLimiter = createRateLimiter();
 
 /** 30 req / 60s — general API */
-export const apiRateLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 30 });
+export const apiRateLimiter = createRateLimiter({
+  windowMs: 60_000,
+  maxRequests: 30,
+});
 
 /** 60 req / 60s — mutation-heavy endpoints (parts, services, etc.) */
-export const mutationRateLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 60 });
-
+export const mutationRateLimiter = createRateLimiter({
+  windowMs: 60_000,
+  maxRequests: 60,
+});

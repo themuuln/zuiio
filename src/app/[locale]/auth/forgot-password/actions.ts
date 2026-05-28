@@ -1,11 +1,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import type { ActionState } from "@/lib/validation/auth-schemas";
-import {
-  flattenFieldErrors,
-  forgotPasswordSchema,
-} from "@/lib/validation/auth-schemas";
+import type { ActionState } from "@/lib/form-validation";
+import { flattenFieldErrors } from "@/lib/form-validation";
+import { forgotPasswordSchema } from "@/lib/validation/auth-schemas";
 
 type ForgotPasswordState = ActionState<{ email: string }> & {
   success?: boolean;

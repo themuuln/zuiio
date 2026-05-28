@@ -3,11 +3,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { finalizeSignup } from "@/lib/services/signup-service";
-import type { ActionState } from "@/lib/validation/auth-schemas";
-import {
-  flattenFieldErrors,
-  signupSchema,
-} from "@/lib/validation/auth-schemas";
+import type { ActionState } from "@/lib/form-validation";
+import { flattenFieldErrors } from "@/lib/form-validation";
+import { signupSchema } from "@/lib/validation/auth-schemas";
 
 type SignupState = ActionState<{
   organizationName: string;

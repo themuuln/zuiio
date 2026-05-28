@@ -2,17 +2,18 @@ import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
-import { isValidMongolianPlate } from "@/lib/form-validation";
-import type { Vehicle, WorkOrder } from "@/lib/types";
+import { isValidMongolianPlate, normalizeMongolianPlate } from "@/lib/form-validation";
 import { createClient } from "@/lib/supabase/server";
-import { ensureVehicleModel } from "./vehicle-models-service";
 import type {
   CreateVehicleParams,
   UpdateVehicleParams,
+  Vehicle,
   VehicleDetail,
   VehicleWithOwner,
+  WorkOrder,
 } from "@/lib/types";
-import { normalizePlate } from "@/lib/utils";
+
+import { ensureVehicleModel } from "./vehicle-models-service";
 
 /**
  * Lists all vehicles for an organization with optional filtering.
@@ -115,8 +116,7 @@ export async function getVehicle(
       return {
         customer_id: o.customer_id as string,
         name:
-          [c.first_name, c.last_name].filter(Boolean).join(" ") ||
-          "Unknown",
+          [c.first_name, c.last_name].filter(Boolean).join(" ") || "Unknown",
         phone: (c.phone as string) ?? null,
         is_primary: o.is_primary as boolean,
       };
@@ -141,7 +141,7 @@ export async function createVehicle(
   params: CreateVehicleParams,
   userId: string,
 ): Promise<Vehicle> {
-  const plate = normalizePlate(params.plateNumber?.trim() ?? "");
+  const plate = normalizeMongolianPlate(params.plateNumber?.trim() ?? "");
 
   if (!plate) {
     throw new ValidationError("Plate number is required");
@@ -274,7 +274,7 @@ export async function updateVehicle(
 
   const updates: Record<string, unknown> = {};
   if (params.plateNumber !== undefined) {
-    const normalized = normalizePlate(params.plateNumber?.trim() ?? "");
+    const normalized = normalizeMongolianPlate(params.plateNumber?.trim() ?? "");
     if (normalized && !isValidMongolianPlate(normalized)) {
       throw new ValidationError(
         "Plate must be 4 digits followed by 3 Cyrillic letters (e.g. 4444УНА)",
@@ -453,7 +453,7 @@ export async function getCustomerVehicles(
     .eq("customer_id", customerId)
     .is("owned_until", null);
 
-      if (error) throw new Error(error.message);
+  if (error) throw new Error(error.message);
 
   return (owners ?? []).map((o: Record<string, unknown>) => {
     const v = (o.vehicles as Record<string, unknown>) ?? {};
@@ -481,9 +481,7 @@ export async function getCustomerWorkOrders(
 
   const { data: workOrders, error } = await supabase
     .from("work_orders")
-    .select(
-      "*, work_order_services(*), vehicles(plate_number, make, model)",
-    )
+    .select("*, work_order_services(*), vehicles(plate_number, make, model)")
     .eq("organization_id", orgId)
     .eq("customer_id", customerId)
     .is("deleted_at", null)

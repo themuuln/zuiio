@@ -133,6 +133,7 @@ export function NewVehicleSheet({
   const [error, setError] = useState<string | null>(null);
   const [looking, setLooking] = useState(false);
   const [newBrandName, setNewBrandName] = useState("");
+  const [newModelName, setNewModelName] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<VehicleFormState>(initialForm);
 
@@ -249,6 +250,33 @@ export function NewVehicleSheet({
       toast.success(`Brand "${name}" created`);
     } catch {
       toast.error("Failed to create brand");
+    }
+  };
+
+  const handleCreateModel = async () => {
+    const name = newModelName.trim();
+    if (!name || !selectedBrand) return;
+
+    try {
+      const res = await fetch(`/api/car-brands/${selectedBrand.id}/models`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message);
+        return;
+      }
+      const newModel = json.data;
+      await queryClient.invalidateQueries({
+        queryKey: carCatalogKeys.models(selectedBrand.id),
+      });
+      setForm((current) => ({ ...current, model: newModel.name }));
+      setNewModelName("");
+      toast.success(`Model "${name}" created`);
+    } catch {
+      toast.error("Failed to create model");
     }
   };
 
@@ -678,6 +706,9 @@ export function NewVehicleSheet({
                       onValueChange={(model) => {
                         if (model) handleModelSelect(model.name);
                       }}
+                      onInputValueChange={(inputValue) =>
+                        setNewModelName(inputValue)
+                      }
                       disabled={!selectedBrand}
                       isItemEqualToValue={(a, b) => a.id === b.id}
                       itemToStringLabel={(model) => model.name}
@@ -704,7 +735,19 @@ export function NewVehicleSheet({
                             </ComboboxItem>
                           )}
                         </ComboboxList>
-                        <ComboboxEmpty>No model found</ComboboxEmpty>
+                        <ComboboxEmpty>
+                          <button
+                            type="button"
+                            className="flex w-full items-center gap-2 px-2 py-2 text-xs hover:bg-accent"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              handleCreateModel();
+                            }}
+                          >
+                            <Plus className="size-4" />
+                            Add "{newModelName}"
+                          </button>
+                        </ComboboxEmpty>
                       </ComboboxContent>
                     </Combobox>
                     {fieldErrors.model && (
