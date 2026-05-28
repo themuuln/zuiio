@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
+import { Typography } from "@/components/ui/typography";
 
 export default function PortalSettingsPage() {
   const t = useTranslations();
@@ -32,12 +33,12 @@ export default function PortalSettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("portal.settings")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        </Typography.H1>
+        <Typography.Muted className="text-sm text-muted-foreground mt-1">
           {t("portal.settingsDesc")}
-        </p>
+        </Typography.Muted>
       </div>
 
       {/* Contact info */}
@@ -79,14 +80,14 @@ export default function PortalSettingsPage() {
               {t("portal.passwordSet")}
             </div>
           ) : hasPassword ? (
-            <p className="text-sm text-muted-foreground">
+            <Typography.Muted className="text-sm text-muted-foreground">
               Password already set. You can log in with your email.
-            </p>
+            </Typography.Muted>
           ) : (
             <div className="flex flex-col gap-3">
-              <p className="text-sm text-muted-foreground">
+              <Typography.Muted className="text-sm text-muted-foreground">
                 {t("portal.setPasswordDesc")}
-              </p>
+              </Typography.Muted>
               <Button
                 size="sm"
                 onClick={() =>

@@ -185,6 +185,21 @@ function List({
   );
 }
 
+function Text({
+  children,
+  className,
+  ...props
+}: {
+  children: ReactNode;
+  className?: string;
+} & React.ComponentProps<"p">) {
+  return (
+    <p className={cn(className)} {...props}>
+      {children}
+    </p>
+  );
+}
+
 function Blockquote({
   children,
   className,
@@ -218,6 +233,7 @@ export const Typography = {
   Muted,
   InlineCode,
   List,
+  Text,
   Blockquote,
 };
 

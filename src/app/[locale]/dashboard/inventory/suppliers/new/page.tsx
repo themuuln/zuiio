@@ -12,6 +12,7 @@ import { useRouter } from "@/lib/i18n/navigation";
 import { useCreateSupplier } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
+import { Typography } from "@/components/ui/typography";
 
 export default function NewSupplierPage() {
   const t = useTranslations("inventory");
@@ -64,9 +65,9 @@ export default function NewSupplierPage() {
         >
           <ArrowLeft className="size-5" />
         </Button>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("newSupplier")}
-        </h1>
+        </Typography.H1>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">

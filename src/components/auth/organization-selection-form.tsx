@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { CompleteOrganizationLoginState } from "@/lib/actions/complete-organization-login";
 import type { UserOrganizationAccessOption } from "@/lib/services/organization-access-service";
+import { Typography } from "@/components/ui/typography";
 
 interface OrganizationSelectionFormProps {
   organizations: UserOrganizationAccessOption[];
@@ -75,8 +76,8 @@ export function OrganizationSelectionForm({
   if (organizations.length === 0) {
     return (
       <div className="flex flex-col gap-3 text-center">
-        <h2 className="text-lg font-semibold text-foreground">{copy.title}</h2>
-        <p className="text-sm text-muted-foreground">{copy.noOrganizations}</p>
+        <Typography.H2 className="text-lg font-semibold text-foreground">{copy.title}</Typography.H2>
+        <Typography.Muted className="text-sm text-muted-foreground">{copy.noOrganizations}</Typography.Muted>
       </div>
     );
   }
@@ -84,8 +85,8 @@ export function OrganizationSelectionForm({
   return (
     <div>
       <div className="mb-6 text-center">
-        <h2 className="text-lg font-semibold text-foreground">{copy.title}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{copy.subtitle}</p>
+        <Typography.H2 className="text-lg font-semibold text-foreground">{copy.title}</Typography.H2>
+        <Typography.Muted className="mt-1 text-sm text-muted-foreground">{copy.subtitle}</Typography.Muted>
       </div>
 
       <form
@@ -136,13 +137,13 @@ export function OrganizationSelectionForm({
             </select>
           </div>
           {"organizationId" in fieldErrors && (
-            <p className="text-sm text-destructive">
+            <Typography.Text className="text-sm text-destructive">
               {fieldErrors.organizationId}
-            </p>
+            </Typography.Text>
           )}
-          <p className="text-xs text-muted-foreground">
+          <Typography.Muted className="text-xs text-muted-foreground">
             {selectedOrganization?.slug ?? copy.organizationPlaceholder}
-          </p>
+          </Typography.Muted>
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -168,13 +169,13 @@ export function OrganizationSelectionForm({
             />
           </div>
           {"pin" in fieldErrors && (
-            <p className="text-sm text-destructive">{fieldErrors.pin}</p>
+            <Typography.Text className="text-sm text-destructive">{fieldErrors.pin}</Typography.Text>
           )}
-          <p className="text-xs text-muted-foreground">
+          <Typography.Muted className="text-xs text-muted-foreground">
             {selectedOrganization?.hasBayViewPin
               ? copy.verifyHint
               : copy.setupHint}
-          </p>
+          </Typography.Muted>
         </div>
 
         {!selectedOrganization?.hasBayViewPin && (
@@ -203,9 +204,9 @@ export function OrganizationSelectionForm({
               }
             />
             {"confirmPin" in fieldErrors && (
-              <p className="text-sm text-destructive">
+              <Typography.Text className="text-sm text-destructive">
                 {fieldErrors.confirmPin}
-              </p>
+              </Typography.Text>
             )}
           </div>
         )}

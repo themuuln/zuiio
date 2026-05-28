@@ -15,6 +15,7 @@ import {
   useSuppliers,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { Typography } from "@/components/ui/typography";
 
 interface LineItem {
   id: string;
@@ -108,9 +109,9 @@ export default function NewPurchaseOrderPage() {
         >
           <ArrowLeft className="size-5" />
         </Button>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("newPurchaseOrder")}
-        </h1>
+        </Typography.H1>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -163,7 +164,7 @@ export default function NewPurchaseOrderPage() {
         <Card>
           <CardContent className="p-6 flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{t("items")}</h2>
+              <Typography.H2 className="text-lg font-semibold">{t("items")}</Typography.H2>
               <Button
                 type="button"
                 variant="outline"
@@ -175,9 +176,9 @@ export default function NewPurchaseOrderPage() {
             </div>
 
             {items.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
+              <Typography.Muted className="text-sm text-muted-foreground py-4 text-center">
                 {t("noItems")}
-              </p>
+              </Typography.Muted>
             ) : (
               <div className="flex flex-col gap-3">
                 {items.map((item) => (

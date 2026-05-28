@@ -49,22 +49,22 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, actions }));
 
   return (
-      <PageHeaderContext.Provider
-        value={{
-          state,
-          setTabs,
-          setActiveTab,
-          setActions,
-          isNewCustomerDialogOpen,
-          setNewCustomerDialogOpen,
-          isNewVehicleDialogOpen,
-          setNewVehicleDialogOpen,
-          isNewExpenseSheetOpen,
-          setNewExpenseSheetOpen,
-          isNewWorkOrderSheetOpen,
-          setNewWorkOrderSheetOpen,
-        }}
-      >
+    <PageHeaderContext.Provider
+      value={{
+        state,
+        setTabs,
+        setActiveTab,
+        setActions,
+        isNewCustomerDialogOpen,
+        setNewCustomerDialogOpen,
+        isNewVehicleDialogOpen,
+        setNewVehicleDialogOpen,
+        isNewExpenseSheetOpen,
+        setNewExpenseSheetOpen,
+        isNewWorkOrderSheetOpen,
+        setNewWorkOrderSheetOpen,
+      }}
+    >
       {children}
     </PageHeaderContext.Provider>
   );

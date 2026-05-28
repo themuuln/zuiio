@@ -25,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { SubscriptionStatus } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 interface BankOption {
   id: string;
@@ -198,9 +199,9 @@ export function SubscriptionExpiredDialog({
 
         <CardFooter className="flex-col gap-3 pb-6">
           {renewError && (
-            <p className="text-center text-xs font-medium text-destructive">
+            <Typography.Text className="text-center text-xs font-medium text-destructive">
               {renewError}
-            </p>
+            </Typography.Text>
           )}
           <Button
             variant="default"
@@ -211,9 +212,9 @@ export function SubscriptionExpiredDialog({
             {renewing ? <Spinner /> : <Sparkles className="size-4" />}
             {t("startTrialButton")}
           </Button>
-          <p className="text-xs text-muted-foreground/60">
+          <Typography.Muted className="text-xs text-muted-foreground/60">
             {appT("name")} &middot; {appT("tagline")}
-          </p>
+          </Typography.Muted>
         </CardFooter>
       </Card>,
     );
@@ -329,9 +330,9 @@ export function SubscriptionExpiredDialog({
 
       <CardFooter className="flex-col gap-3 pb-6">
         {renewError && (
-          <p className="text-center text-xs font-medium text-destructive">
+          <Typography.Text className="text-center text-xs font-medium text-destructive">
             {renewError}
-          </p>
+          </Typography.Text>
         )}
         <Button
           variant="default"
@@ -342,12 +343,12 @@ export function SubscriptionExpiredDialog({
           {renewing ? <Spinner /> : <Landmark className="size-4" />}
           {t("renewButton")}
         </Button>
-        <p className="text-balance text-center text-xs leading-relaxed text-muted-foreground">
+        <Typography.Muted className="text-balance text-center text-xs leading-relaxed text-muted-foreground">
           {t("afterPayment")}
-        </p>
-        <p className="text-xs text-muted-foreground/60">
+        </Typography.Muted>
+        <Typography.Muted className="text-xs text-muted-foreground/60">
           {appT("name")} &middot; {appT("tagline")}
-        </p>
+        </Typography.Muted>
       </CardFooter>
     </Card>,
   );

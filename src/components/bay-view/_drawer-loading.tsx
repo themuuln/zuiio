@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 
 interface DrawerLoadingProps {
   loading: boolean;
@@ -22,7 +23,7 @@ export function DrawerLoading({ loading, hasLoadedOnce, error, onRetry }: Drawer
   if (error && !loading && !hasLoadedOnce) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
-        <p className="text-sm text-muted-foreground">{error}</p>
+        <Typography.Muted className="text-sm text-muted-foreground">{error}</Typography.Muted>
         <Button variant="outline" size="sm" onClick={onRetry}>
           Retry
         </Button>
@@ -63,7 +64,7 @@ export function DrawerSkeleton({ loading, error, children, onRetry }: DrawerSkel
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
-        <p className="text-sm text-muted-foreground">{error}</p>
+        <Typography.Muted className="text-sm text-muted-foreground">{error}</Typography.Muted>
         <Button variant="outline" size="sm" onClick={onRetry}>
           Retry
         </Button>

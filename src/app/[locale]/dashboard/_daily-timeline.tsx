@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { TimelineEvent } from "@/lib/services/report-service";
+import { Typography } from "@/components/ui/typography";
 
 const STATUS_DOT: Record<string, string> = {
   New: "bg-blue-500",
@@ -131,9 +132,9 @@ export function DailyTimeline({ orgId }: { orgId: string }) {
                   )}
                 </div>
                 {event.notes && (
-                  <p className="text-[10px] text-muted-foreground line-clamp-1">
+                  <Typography.Muted className="text-[10px] text-muted-foreground line-clamp-1">
                     {event.notes}
-                  </p>
+                  </Typography.Muted>
                 )}
               </div>
             </div>

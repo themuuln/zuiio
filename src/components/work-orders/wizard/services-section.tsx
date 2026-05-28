@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { NumericKeypad } from "@/components/ui/numeric-keypad";
 import { formatCurrency } from "@/lib/utils";
 import { useWizardContext } from "./wizard-context";
+import { Typography } from "@/components/ui/typography";
 
 export function ServicesSection() {
   const ctx = useWizardContext();
@@ -186,14 +187,14 @@ export function ServicesSection() {
                   className="flex flex-wrap items-center gap-2 p-3 hover:bg-muted/20"
                 >
                   <div className="flex-1 min-w-[120px]">
-                    <p className="text-sm font-medium truncate">{svc.name}</p>
+                    <Typography.Text className="text-sm font-medium truncate">{svc.name}</Typography.Text>
                     {svc.last_price && (
-                      <p className={`text-[11px] ${svc.base_price <= svc.last_price ? 'text-green-600' : 'text-amber-600'}`}>
+                      <Typography.Text className={`text-[11px] ${svc.base_price <= svc.last_price ? 'text-green-600' : 'text-amber-600'}`}>
                         {svc.base_price <= svc.last_price ? '✓ ' : '↑ '}
                         {t("lastSoldShort", {
                           price: formatCurrency(svc.last_price),
                         })}
-                      </p>
+                      </Typography.Text>
                     )}
                   </div>
                   <NumericKeypad
@@ -264,9 +265,9 @@ export function ServicesSection() {
         )}
 
         {ctx.serviceLines.length === 0 && !ctx.showLastVisitSuggestions && (
-          <p className="text-sm text-muted-foreground text-center py-3">
+          <Typography.Muted className="text-sm text-muted-foreground text-center py-3">
             {t("noServicesFound")}
-          </p>
+          </Typography.Muted>
         )}
       </CardContent>
     </Card>

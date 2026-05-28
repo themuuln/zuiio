@@ -6,7 +6,7 @@ import {
   isValidMongolianPlate,
   transliterateMongolianPlate,
 } from "@/lib/form-validation";
-import { inputProps } from "@/lib/form-ux";
+import { formatPlateInput, inputProps } from "@/lib/form-ux";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useMakes, useModelsByMake } from "@/lib/queries/use-vehicle-models";
 import type { Vehicle } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 interface VehicleSelectProps {
   orgId: string;
@@ -288,12 +289,18 @@ export function VehicleSelect({
                   handleQuickCreate();
                 }}
               >
-                <p className="text-sm font-medium">New Vehicle</p>
+                <Typography.Text className="text-sm font-medium">
+                  New Vehicle
+                </Typography.Text>
                 <Input
                   placeholder="e.g. 4444УНА"
                   value={quickPlate}
                   onChange={(e) =>
-                    setQuickPlate(transliterateMongolianPlate(e.target.value))
+                    setQuickPlate(
+                      formatPlateInput(
+                        transliterateMongolianPlate(e.target.value),
+                      ),
+                    )
                   }
                   className="h-11"
                   {...inputProps("plate")}
@@ -383,7 +390,9 @@ export function VehicleSelect({
                   </div>
                 </div>
                 {createError && (
-                  <p className="text-sm text-destructive">{createError}</p>
+                  <Typography.Text className="text-sm text-destructive">
+                    {createError}
+                  </Typography.Text>
                 )}
                 <div className="flex gap-2">
                   <Button

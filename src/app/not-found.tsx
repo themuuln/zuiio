@@ -1,5 +1,6 @@
 import { cookies, headers } from "next/headers";
 import Link from "next/link";
+import { Typography } from "@/components/ui/typography";
 
 export default async function RootNotFoundPage() {
   const cookieStore = await cookies();
@@ -15,15 +16,15 @@ export default async function RootNotFoundPage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-4">
       <div className="text-center">
-        <h1 className="text-6xl font-semibold text-muted-foreground/30">404</h1>
-        <h2 className="mt-4 text-xl font-semibold">
+        <Typography.H1 className="text-6xl font-semibold text-muted-foreground/30">404</Typography.H1>
+        <Typography.H2 className="mt-4 text-xl font-semibold">
           {isMn ? "Хуудас олдсонгүй" : "Page Not Found"}
-        </h2>
-        <p className="mt-2 text-muted-foreground">
+        </Typography.H2>
+        <Typography.Muted className="mt-2 text-muted-foreground">
           {isMn
             ? "Таны хайсан хуудас байхгүй эсвэл зөвшөөрөлгүй байна."
             : "The page you're looking for doesn't exist or is unavailable."}
-        </p>
+        </Typography.Muted>
         <Link
           href="/dashboard"
           className="mt-6 inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background hover:bg-foreground/90"

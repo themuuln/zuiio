@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
 import type { Customer } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 interface CustomerSelectProps {
   orgId: string;
@@ -179,7 +180,7 @@ export function CustomerSelect({
                   handleQuickCreate();
                 }}
               >
-                <p className="text-sm font-medium">New Customer</p>
+                <Typography.Text className="text-sm font-medium">New Customer</Typography.Text>
                 <div className="grid grid-cols-2 gap-3">
                   <Input
                     placeholder="e.g. Bat"
@@ -235,7 +236,7 @@ export function CustomerSelect({
                     <span>{createError}</span>
                   </div>
                 ) : createError ? (
-                  <p className="text-sm text-destructive">{createError}</p>
+                  <Typography.Text className="text-sm text-destructive">{createError}</Typography.Text>
                 ) : null}
                 <div className="flex gap-2">
                   <Button

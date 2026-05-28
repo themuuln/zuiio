@@ -16,6 +16,7 @@ import {
   WizardProvider,
 } from "@/components/work-orders/wizard";
 import { Link } from "@/lib/i18n/navigation";
+import { Typography } from "@/components/ui/typography";
 
 function NewWorkOrderForm() {
   const t = useTranslations("workOrders");
@@ -42,10 +43,10 @@ function NewWorkOrderForm() {
           <ArrowLeft className="size-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("newWorkOrder")}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t("createSubtitle")}</p>
+          </Typography.H1>
+          <Typography.Muted className="text-sm text-muted-foreground">{t("createSubtitle")}</Typography.Muted>
         </div>
       </div>
 

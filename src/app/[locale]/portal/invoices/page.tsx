@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 const STATUS_VARIANTS: Record<
   string,
@@ -112,21 +113,21 @@ export default function PortalInvoicesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("portal.invoices")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        </Typography.H1>
+        <Typography.Muted className="text-sm text-muted-foreground mt-1">
           {t("portal.invoicesDesc")}
-        </p>
+        </Typography.Muted>
       </div>
 
       {!invoices || invoices.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="size-10 text-muted-foreground/40 mb-3" />
-            <p className="text-sm text-muted-foreground">
+            <Typography.Muted className="text-sm text-muted-foreground">
               {t("portal.noInvoices")}
-            </p>
+            </Typography.Muted>
           </CardContent>
         </Card>
       ) : (
@@ -147,12 +148,12 @@ export default function PortalInvoicesPage() {
                       {inv.status as string}
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground/60 mt-0.5">
+                  <Typography.Muted className="text-xs text-muted-foreground/60 mt-0.5">
                     {inv.issued_at
                       ? new Date(inv.issued_at as string).toLocaleDateString()
                       : ""}
                     {inv.vehicle_plate ? ` · ${inv.vehicle_plate}` : ""}
-                  </p>
+                  </Typography.Muted>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 self-start sm:shrink-0 sm:self-center">
                   <span className="text-sm font-semibold tabular-nums">
@@ -205,20 +206,20 @@ export default function PortalInvoicesPage() {
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="rounded-lg bg-muted p-4 flex flex-col gap-2">
-              <p className="text-sm font-medium">
+              <Typography.Text className="text-sm font-medium">
                 {t("portal.bankTransferInfo")}
-              </p>
+              </Typography.Text>
               <div className="text-xs text-muted-foreground flex flex-col gap-1">
-                <p className="font-medium text-foreground text-sm">
+                <Typography.Text className="font-medium text-foreground text-sm">
                   {t("portal.payInvoice")}:{" "}
                   {formatMNT(Number(payingInvoice?.total ?? 0))}
-                </p>
+                </Typography.Text>
               </div>
             </div>
             <div className="rounded-lg border border-border bg-muted p-3">
-              <p className="text-xs text-muted-foreground">
+              <Typography.Muted className="text-xs text-muted-foreground">
                 {t("portal.paymentNote")}
-              </p>
+              </Typography.Muted>
             </div>
           </div>
           <Button

@@ -9,6 +9,7 @@ import {
   Coins,
   Play,
   Square,
+  UserPlus,
   Users,
   Wrench,
   X,
@@ -29,7 +30,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
-import { cn, formatCurrency, formatMNT } from "@/lib/utils";
+import { cn, formatMNT } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
@@ -38,10 +39,13 @@ import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
+import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
 
 const MechanicTrendChart = dynamic(
   () => import("../_charts").then((m) => m.MechanicTrendChart),
@@ -213,20 +217,20 @@ function KpiCard({
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+        <Typography.Muted className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
           {label}
-        </p>
+        </Typography.Muted>
         {loading ? (
           <Skeleton className="mt-1.5 h-7 w-20" />
         ) : (
-          <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight [font-feature-settings:'tnum']">
+          <Typography.Text className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight [font-feature-settings:'tnum']">
             {value}
-          </p>
+          </Typography.Text>
         )}
         {subtext && !loading && (
-          <p className="mt-0.5 text-[11px] text-muted-foreground/60">
+          <Typography.Muted className="mt-0.5 text-[11px] text-muted-foreground/60">
             {subtext}
-          </p>
+          </Typography.Muted>
         )}
       </div>
     </div>
@@ -330,28 +334,30 @@ function WorkOrderRow({
               <ChevronDown className="size-3 text-muted-foreground/50 shrink-0" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={4}>
-              {nextStatuses.map((status) => {
-                const sc = getStatusCfg(status);
-                return (
-                  <DropdownMenuItem
-                    key={status}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onStatusChange(status);
-                    }}
-                    className="gap-2"
-                  >
-                    {status === "Cancelled" ? (
-                      <X className="size-3.5 text-destructive" />
-                    ) : (
-                      <span
-                        className={cn("size-2 shrink-0 rounded-full", sc.dot)}
-                      />
-                    )}
-                    <span className="text-xs">{status}</span>
-                  </DropdownMenuItem>
-                );
-              })}
+              <DropdownMenuGroup>
+                {nextStatuses.map((status) => {
+                  const sc = getStatusCfg(status);
+                  return (
+                    <DropdownMenuItem
+                      key={status}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onStatusChange(status);
+                      }}
+                      className="gap-2"
+                    >
+                      {status === "Cancelled" ? (
+                        <X className="size-3.5 text-destructive" />
+                      ) : (
+                        <span
+                          className={cn("size-2 shrink-0 rounded-full", sc.dot)}
+                        />
+                      )}
+                      <span className="text-xs">{status}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
@@ -373,13 +379,11 @@ function WorkOrderRow({
 // ── Clock In/Out Button ────────────────────────────
 
 function ClockInOutButton({
-  orgId,
   clockedIn,
   since,
   onToggle,
   loading,
 }: {
-  orgId: string;
   clockedIn: boolean;
   since: string | null;
   onToggle: () => void;
@@ -632,24 +636,23 @@ function MechanicDashboard({
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-xl font-semibold tracking-tight">
+              <Typography.H1 className="text-xl font-semibold tracking-tight">
                 {mechanicName ?? t("nav.mechanic")}
-              </h1>
+              </Typography.H1>
               <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-50/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
                 <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px] shadow-emerald-500/60" />
                 Live
               </span>
             </div>
-            <p className="mt-0.5 text-xs text-muted-foreground/60">
+            <Typography.Muted className="mt-0.5 text-xs text-muted-foreground/60">
               {now.toLocaleDateString("mn-MN", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
               })}
-            </p>
+            </Typography.Muted>
           </div>
           <ClockInOutButton
-            orgId={orgId}
             clockedIn={clockStatus.clockedIn}
             since={clockStatus.since}
             onToggle={handleClockToggle}
@@ -804,6 +807,7 @@ export default function MechanicPage() {
     null,
   );
   const [mechanicsLoading, setMechanicsLoading] = useState(true);
+  const [showAddMechanic, setShowAddMechanic] = useState(false);
 
   useEffect(() => {
     if (!profile?.organizationId) return;
@@ -861,12 +865,14 @@ export default function MechanicPage() {
         <div className="flex size-14 items-center justify-center rounded-2xl bg-muted/50">
           <Wrench className="size-7 text-muted-foreground" />
         </div>
-        <h2 className="text-lg font-semibold">Mechanic Dashboard</h2>
-        <p className="text-sm text-muted-foreground text-center max-w-md">
+        <Typography.H2 className="text-lg font-semibold">
+          Mechanic Dashboard
+        </Typography.H2>
+        <Typography.Muted className="text-sm text-muted-foreground text-center max-w-md">
           This view is for mechanics. Your current role is{" "}
           <strong>{profile?.roleName ?? "unknown"}</strong>.{"\n"}
           Ask your admin to assign you the Mechanic role to access this page.
-        </p>
+        </Typography.Muted>
       </div>
     );
   }
@@ -904,6 +910,10 @@ export default function MechanicPage() {
                 {t("mechanic.noMechanicsDesc")}
               </EmptyDescription>
             </EmptyHeader>
+            <Button onClick={() => setShowAddMechanic(true)} className="mt-4">
+              <UserPlus className="mr-2 size-4" />
+              Invite mechanic
+            </Button>
           </Empty>
         ) : selectedMechanicId ? (
           <div className="tablet-touch flex flex-col gap-6">
@@ -911,22 +921,22 @@ export default function MechanicPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2.5">
-                  <h1 className="text-xl font-semibold tracking-tight">
+                  <Typography.H1 className="text-xl font-semibold tracking-tight">
                     {mechanics.find((m) => m.id === selectedMechanicId)
                       ?.full_name ?? t("nav.mechanic")}
-                  </h1>
+                  </Typography.H1>
                   <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-50/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
                     <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px] shadow-emerald-500/60" />
                     Live
                   </span>
                 </div>
-                <p className="mt-0.5 text-xs text-muted-foreground/60">
+                <Typography.Muted className="mt-0.5 text-xs text-muted-foreground/60">
                   {now.toLocaleDateString("mn-MN", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
                   })}
-                </p>
+                </Typography.Muted>
               </div>
 
               <div className="flex items-center gap-2">
@@ -957,11 +967,35 @@ export default function MechanicPage() {
   }
 
   return (
-    <MechanicDashboard
-      userId={profile?.id!}
-      orgId={profile?.organizationId!}
-      mechanicName={profile?.fullName}
-      isAdminView={false}
-    />
+    <>
+      <MechanicDashboard
+        userId={profile?.id!}
+        orgId={profile?.organizationId!}
+        mechanicName={profile?.fullName}
+        isAdminView={false}
+      />
+      <NewMechanicSheet
+        open={showAddMechanic}
+        onOpenChange={(open) => {
+          setShowAddMechanic(open);
+          if (!open) {
+            // Refresh mechanics list
+            const orgId = profile?.organizationId;
+            if (orgId) {
+              fetch(`/api/organizations/${orgId}/reports?type=mechanics`)
+                .then((r) => r.json())
+                .then((json) => {
+                  const list: MechanicItem[] = json.data ?? [];
+                  setMechanics(list);
+                  if (list.length > 0 && !selectedMechanicId) {
+                    setSelectedMechanicId(list[0].id);
+                  }
+                })
+                .catch(() => {});
+            }
+          }
+        }}
+      />
+    </>
   );
 }

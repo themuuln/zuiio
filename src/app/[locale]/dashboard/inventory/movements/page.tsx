@@ -35,6 +35,7 @@ import {
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { InventoryMovement } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 const MOVEMENT_TYPES = [
   "",
@@ -141,10 +142,10 @@ export default function MovementsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("movementsTitle")}
-        </h1>
-        <p className="text-muted-foreground">{t("movementsSubtitle")}</p>
+        </Typography.H1>
+        <Typography.Muted className="text-muted-foreground">{t("movementsSubtitle")}</Typography.Muted>
       </div>
 
       <ListToolbar

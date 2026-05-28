@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import type { WorkOrderPart } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 interface PartsSectionProps {
   parts: WorkOrderPart[];
@@ -103,13 +104,13 @@ export function PartsSection({
                 className="group flex items-center gap-2 rounded-md p-1.5 hover:bg-muted/40 transition-colors"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
+                  <Typography.Text className="text-sm font-medium truncate">
                     {part.part_name}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground/60">
+                  </Typography.Text>
+                  <Typography.Muted className="text-[10px] text-muted-foreground/60">
                     {formatMNT(Number(part.unit_price))}
                     {t("perUnit")}
-                  </p>
+                  </Typography.Muted>
                 </div>
                 <div className="w-14 text-right text-xs text-muted-foreground tabular-nums">
                   {part.quantity}
@@ -163,12 +164,12 @@ export function PartsSection({
             {pendingPartPreview && (
               <div className="flex items-center gap-2 rounded-md border border-dashed border-amber-500/30 bg-amber-500/5 p-1.5">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
+                  <Typography.Text className="text-sm font-medium truncate">
                     {pendingPartPreview.name}
-                  </p>
-                  <p className="text-[10px] text-amber-700 dark:text-amber-400">
+                  </Typography.Text>
+                  <Typography.Text className="text-[10px] text-amber-700 dark:text-amber-400">
                     Adding part...
-                  </p>
+                  </Typography.Text>
                 </div>
                 <div className="w-14 text-right text-xs text-muted-foreground tabular-nums">
                   {pendingPartPreview.quantity}

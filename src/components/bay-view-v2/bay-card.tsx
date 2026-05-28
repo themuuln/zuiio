@@ -14,6 +14,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { MechanicBadge } from "../bay-view/mechanic-badge";
+import { Typography } from "@/components/ui/typography";
 
 function formatDuration(ms: number): string {
   const minutes = Math.floor(ms / 60000);
@@ -197,15 +198,15 @@ export function BayCard({
                           startedAt={wo.started_at ?? wo.created_at}
                         />
                       </div>
-                      <p className="text-[9px] text-muted-foreground/60 truncate leading-none">
+                      <Typography.Muted className="text-[9px] text-muted-foreground/60 truncate leading-none">
                         {v.make} {v.model}
                         {v.year ? ` · ${v.year}` : ""}
-                      </p>
+                      </Typography.Muted>
                     </>
                   ) : (
-                    <p className="text-[9px] text-muted-foreground italic leading-none">
+                    <Typography.Muted className="text-[9px] text-muted-foreground italic leading-none">
                       No vehicle data
-                    </p>
+                    </Typography.Muted>
                   )}
                 </div>
               </DraggableVehicleWrapper>

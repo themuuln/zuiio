@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -109,15 +110,19 @@ export default function UserMenu({ collapsed }: UserMenuProps) {
         align="start"
         className="w-56 max-w-[calc(100vw-2rem)]"
       >
-        <div className="px-2 py-1.5 text-xs text-muted-foreground">
-          {t("signedInAs")}{" "}
-          <span className="font-medium text-foreground">{displayName}</span>
-        </div>
+        <DropdownMenuGroup>
+          <div className="px-2 py-1.5 text-xs text-muted-foreground">
+            {t("signedInAs")}{" "}
+            <span className="font-medium text-foreground">{displayName}</span>
+          </div>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
-          <LogOut className="size-4" />
-          {t("signOut")}
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={handleSignOut}>
+            <LogOut className="size-4" />
+            {t("signOut")}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

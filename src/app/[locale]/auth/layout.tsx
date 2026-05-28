@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { AuthShowcase } from "@/components/auth/auth-showcase";
 import { Toaster } from "@/components/ui/sonner";
+import { Typography } from "@/components/ui/typography";
 
 export const metadata: Metadata = {
   title: "Auth",
@@ -43,12 +44,12 @@ export default async function AuthLayout({
                 T
               </span>
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground">
+            <Typography.H1 className="text-xl font-bold tracking-tight text-foreground">
               {t("name")}
-            </h1>
-            <p className="mt-1.5 text-xs text-muted-foreground">
+            </Typography.H1>
+            <Typography.Muted className="mt-1.5 text-xs text-muted-foreground">
               {t("tagline")}
-            </p>
+            </Typography.Muted>
           </div>
 
           {/* Form wrapper */}

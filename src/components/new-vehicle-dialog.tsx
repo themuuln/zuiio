@@ -20,6 +20,7 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { ColorSelect } from "@/components/vehicles/color-select";
+import { useCarBrands, useCarModels } from "@/lib/queries/use-car-catalog";
 import { useRouter } from "@/lib/i18n/navigation";
 import {
   isValidMongolianPlate,
@@ -29,6 +30,7 @@ import { inputProps } from "@/lib/form-ux";
 import { vehicleKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Customer } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 type VehicleFormState = {
   plateNumber: string;
@@ -97,8 +99,50 @@ export function NewVehicleDialog({
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<VehicleFormState>(initialForm);
+
+  // Car catalog dropdowns
+  const { data: brands = [] } = useCarBrands();
+  const selectedBrand = brands.find(
+    (b) => b.name.toLowerCase() === form.make.toLowerCase(),
+  );
+  const { data: models = [] } = useCarModels(selectedBrand?.id ?? null);
+
+  // When a model is selected, auto-fill related fields from the catalog
+  const handleModelSelect = (modelName: string) => {
+    setForm((current) => {
+      const next = { ...current, model: modelName };
+      const matched = models.find(
+        (m) => m.name.toLowerCase() === modelName.toLowerCase(),
+      );
+      if (matched) {
+        if (matched.body_type && !current.bodyType) {
+          // Capitalize first letter for display
+          next.bodyType = matched.body_type
+            .split(",")[0]
+            .replace(/^\w/, (c) => c.toUpperCase());
+        }
+        if (matched.fuel_type && !current.fuelType) {
+          next.fuelType = matched.fuel_type
+            .split(",")[0]
+            .replace(/^\w/, (c) => c.toUpperCase());
+        }
+        if (matched.transmission && !current.transmission) {
+          next.transmission = matched.transmission
+            .split(",")[0]
+            .replace(/^\w/, (c) => c.toUpperCase());
+        }
+        if (matched.drivetrain && !current.drivetrain) {
+          next.drivetrain = matched.drivetrain.split(",")[0].toUpperCase();
+        }
+        if (matched.engine_options && !current.engine) {
+          next.engine = matched.engine_options.split(",")[0].trim();
+        }
+      }
+      return next;
+    });
+  };
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [customerResults, setCustomerResults] = useState<Customer[]>([]);
   const [customerSearching, setCustomerSearching] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
@@ -220,7 +264,9 @@ export function NewVehicleDialog({
         {error && (
           <Card className="border-destructive/50 bg-destructive/5">
             <CardContent className="p-4">
-              <p className="text-sm text-destructive">{error}</p>
+              <Typography.Text className="text-sm text-destructive">
+                {error}
+              </Typography.Text>
             </CardContent>
           </Card>
         )}
@@ -238,14 +284,14 @@ export function NewVehicleDialog({
                       <User className="size-4" />
                     </div>
                     <div>
-                      <p className="font-medium">
+                      <Typography.Text className="font-medium">
                         {getCustomerLabel(selectedCustomer)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
+                      </Typography.Text>
+                      <Typography.Muted className="text-sm text-muted-foreground">
                         {selectedCustomer.phone ||
                           selectedCustomer.email ||
                           "No contact info"}
-                      </p>
+                      </Typography.Muted>
                     </div>
                   </div>
                   <Button
@@ -266,9 +312,9 @@ export function NewVehicleDialog({
                   />
                   {!Array.isArray(customerResults) ||
                   customerResults.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
+                    <Typography.Muted className="text-sm text-muted-foreground">
                       Search for an existing customer before adding the vehicle.
-                    </p>
+                    </Typography.Muted>
                   ) : (
                     <div className="flex flex-col gap-2">
                       {customerResults.map((customer) => (
@@ -282,14 +328,14 @@ export function NewVehicleDialog({
                             <User className="size-4" />
                           </div>
                           <div>
-                            <p className="font-medium">
+                            <Typography.Text className="font-medium">
                               {getCustomerLabel(customer)}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
+                            </Typography.Text>
+                            <Typography.Muted className="text-sm text-muted-foreground">
                               {customer.phone ||
                                 customer.email ||
                                 "No contact info"}
-                            </p>
+                            </Typography.Muted>
                           </div>
                         </button>
                       ))}
@@ -329,9 +375,9 @@ export function NewVehicleDialog({
                   {...inputProps("plate")}
                 />
                 {fieldErrors.plateNumber && (
-                  <p className="mt-1 text-xs text-destructive">
+                  <Typography.Text className="mt-1 text-xs text-destructive">
                     {fieldErrors.plateNumber}
-                  </p>
+                  </Typography.Text>
                 )}
               </div>
               <div>
@@ -362,24 +408,33 @@ export function NewVehicleDialog({
                 >
                   Make
                 </label>
-                <Input
+                <NativeSelect
                   id="vehicle-make"
                   value={form.make}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const newMake = event.target.value;
                     setForm((current) => ({
                       ...current,
-                      make: event.target.value,
-                    }))
-                  }
-                  className={`h-11 ${fieldErrors.make ? "border-destructive" : ""}`}
-                  placeholder="Toyota"
+                      make: newMake,
+                      // Reset model when brand changes
+                      model: "",
+                    }));
+                  }}
+                  className={`w-full ${fieldErrors.make ? "border-destructive" : ""}`}
+                  size="default"
                   aria-invalid={!!fieldErrors.make}
-                  {...inputProps("make")}
-                />
+                >
+                  <NativeSelectOption value="">Select brand</NativeSelectOption>
+                  {brands.map((brand) => (
+                    <NativeSelectOption key={brand.id} value={brand.name}>
+                      {brand.name}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
                 {fieldErrors.make && (
-                  <p className="mt-1 text-xs text-destructive">
+                  <Typography.Text className="mt-1 text-xs text-destructive">
                     {fieldErrors.make}
-                  </p>
+                  </Typography.Text>
                 )}
               </div>
               <div>
@@ -389,24 +444,31 @@ export function NewVehicleDialog({
                 >
                   Model
                 </label>
-                <Input
+                <NativeSelect
                   id="vehicle-model"
                   value={form.model}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      model: event.target.value,
-                    }))
-                  }
-                  className={`h-11 ${fieldErrors.model ? "border-destructive" : ""}`}
-                  placeholder="Prius"
+                  onChange={(event) => handleModelSelect(event.target.value)}
+                  className={`w-full ${fieldErrors.model ? "border-destructive" : ""}`}
+                  size="default"
+                  disabled={!selectedBrand}
                   aria-invalid={!!fieldErrors.model}
-                  {...inputProps("model")}
-                />
+                >
+                  <NativeSelectOption value="">
+                    {selectedBrand ? "Select model" : "Select brand first"}
+                  </NativeSelectOption>
+                  {models.map((model) => (
+                    <NativeSelectOption key={model.id} value={model.name}>
+                      {model.name}
+                      {model.year_start
+                        ? ` (${model.year_start}${model.year_end ? "-" + model.year_end : "+"})`
+                        : ""}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
                 {fieldErrors.model && (
-                  <p className="mt-1 text-xs text-destructive">
+                  <Typography.Text className="mt-1 text-xs text-destructive">
                     {fieldErrors.model}
-                  </p>
+                  </Typography.Text>
                 )}
               </div>
               <div>

@@ -13,6 +13,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { UserProfile } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 interface Role {
   id: string;
@@ -67,9 +69,9 @@ export function MemberList({
             ))}
           </div>
         ) : members.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted-foreground">
+          <Typography.Muted className="py-4 text-center text-sm text-muted-foreground">
             {t("noMembers")}
-          </p>
+          </Typography.Muted>
         ) : (
           <div className="divide-y">
             {members.map((member) => (
@@ -82,12 +84,12 @@ export function MemberList({
                     {(member.fullName ?? member.email ?? "?").slice(0, 2)}
                   </div>
                   <div>
-                    <p className="text-sm font-medium">
+                    <Typography.Text className="text-sm font-medium">
                       {member.fullName ?? t("unnamed")}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
+                    </Typography.Text>
+                    <Typography.Muted className="text-xs text-muted-foreground">
                       {member.roleName ?? t("noRole")}
-                    </p>
+                    </Typography.Muted>
                   </div>
                 </div>
                 <DropdownMenu>
@@ -97,29 +99,31 @@ export function MemberList({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <Shield className="mr-2 size-4" />
-                        {t("changeRole")}
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent>
-                        {roles.map((role) => (
-                          <DropdownMenuItem
-                            key={role.id}
-                            onClick={() => onRoleChange(member.id, role.id)}
-                          >
-                            {role.name}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={() => onRemove(member.id)}
-                    >
-                      <UserMinus className="mr-2 size-4" />
-                      {t("removeMember")}
-                    </DropdownMenuItem>
+                    <DropdownMenuGroup>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          <Shield className="mr-2 size-4" />
+                          {t("changeRole")}
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                          {roles.map((role) => (
+                            <DropdownMenuItem
+                              key={role.id}
+                              onClick={() => onRoleChange(member.id, role.id)}
+                            >
+                              {role.name}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={() => onRemove(member.id)}
+                      >
+                        <UserMinus className="mr-2 size-4" />
+                        {t("removeMember")}
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

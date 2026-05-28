@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Typography } from "@/components/ui/typography";
 
 const ARTICLES = [1, 2, 3, 4, 5, 6].map((n) => ({
   id: n,
@@ -42,12 +43,12 @@ export default function BlogPage() {
               <BookOpen className="mr-1 size-3" />
               {t("pageTitle")}
             </Badge>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+            <Typography.H1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
               {t("pageTitle")}
-            </h1>
-            <p className="mt-3 text-base text-muted-foreground sm:text-lg">
+            </Typography.H1>
+            <Typography.Muted className="mt-3 text-base text-muted-foreground sm:text-lg">
               {t("pageDescription")}
-            </p>
+            </Typography.Muted>
           </div>
         </section>
         <section className="px-4 pt-12 sm:px-6 sm:pt-16">
@@ -86,9 +87,9 @@ export default function BlogPage() {
         </section>
         <section className="px-4 pt-10 sm:px-6">
           <div className="mx-auto max-w-5xl">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Typography.Muted className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t("categories")}
-            </p>
+            </Typography.Muted>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((cat) => (
                 <Button
@@ -109,7 +110,7 @@ export default function BlogPage() {
         {/* ═══ Article Grid ────────────────────────────────── */}
         <section className="px-4 py-10 sm:px-6 sm:py-14">
           <div className="mx-auto max-w-5xl">
-            <h2 className="mb-8 text-lg font-semibold">{t("latestTitle")}</h2>
+            <Typography.H2 className="mb-8 text-lg font-semibold">{t("latestTitle")}</Typography.H2>
 
             {ARTICLES.filter((a) => {
               if (activeCategory === "all") return true;
@@ -120,9 +121,9 @@ export default function BlogPage() {
               return catKey === filterKey;
             }).length === 0 && (
               <div className="rounded-lg border bg-muted/20 px-6 py-12 text-center">
-                <p className="text-sm text-muted-foreground">
+                <Typography.Muted className="text-sm text-muted-foreground">
                   {t("noArticles")}
-                </p>
+                </Typography.Muted>
               </div>
             )}
 
@@ -172,10 +173,10 @@ export default function BlogPage() {
         </section>
         <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
           <div className="mx-auto max-w-2xl">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("ctaTitle")}
-            </h2>
-            <p className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</p>
+            </Typography.H2>
+            <Typography.Muted className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</Typography.Muted>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"
@@ -205,7 +206,7 @@ export default function BlogPage() {
               {appT("name")}
             </span>
           </div>
-          <p className="mt-2">{appT("tagline")}</p>
+          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
         </div>
       </footer>
     </div>

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Typography } from "@/components/ui/typography";
 
 type SetupState = "loading" | "error" | "manual";
 
@@ -70,9 +71,9 @@ export function NewUserSetup({ copy }: { copy: NewUserSetupCopy }) {
           <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10">
             <Building2 className="size-6 text-primary" />
           </div>
-          <h2 className="mt-3 text-lg font-semibold text-foreground">
+          <Typography.H2 className="mt-3 text-lg font-semibold text-foreground">
             {copy.manualSetup}
-          </h2>
+          </Typography.H2>
         </div>
 
         {manualError && (
@@ -133,10 +134,10 @@ export function NewUserSetup({ copy }: { copy: NewUserSetupCopy }) {
           <AlertCircle className="size-6 text-destructive" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-foreground">
+          <Typography.H2 className="text-lg font-semibold text-foreground">
             {copy.title}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">{copy.error}</p>
+          </Typography.H2>
+          <Typography.Muted className="mt-1 text-sm text-muted-foreground">{copy.error}</Typography.Muted>
         </div>
 
         <div className="flex flex-col gap-3">
@@ -166,8 +167,8 @@ export function NewUserSetup({ copy }: { copy: NewUserSetupCopy }) {
         <Loader2 className="size-6 animate-spin text-primary" />
       </div>
       <div>
-        <h2 className="text-lg font-semibold text-foreground">{copy.title}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{copy.subtitle}</p>
+        <Typography.H2 className="text-lg font-semibold text-foreground">{copy.title}</Typography.H2>
+        <Typography.Muted className="mt-1 text-sm text-muted-foreground">{copy.subtitle}</Typography.Muted>
       </div>
     </div>
   );

@@ -20,12 +20,13 @@ import { Link, useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { customerKeys } from "@/lib/queries/keys";
 import { useQuery } from "@tanstack/react-query";
-import { inputProps } from "@/lib/form-ux";
+import { formatPlateInput, inputProps } from "@/lib/form-ux";
 import {
   isValidMongolianPlate,
   transliterateMongolianPlate,
 } from "@/lib/form-validation";
 import type { Customer } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 type VehicleFormState = {
   plateNumber: string;
@@ -242,17 +243,21 @@ export default function NewVehiclePage() {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">New Vehicle</h1>
-          <p className="text-sm text-muted-foreground">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
+            New Vehicle
+          </Typography.H1>
+          <Typography.Muted className="text-sm text-muted-foreground">
             Register a vehicle and link it to its current owner.
-          </p>
+          </Typography.Muted>
         </div>
       </div>
 
       {error && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
-            <p className="text-sm text-destructive">{error}</p>
+            <Typography.Text className="text-sm text-destructive">
+              {error}
+            </Typography.Text>
           </CardContent>
         </Card>
       )}
@@ -270,14 +275,14 @@ export default function NewVehiclePage() {
                     <User className="size-4" />
                   </div>
                   <div>
-                    <p className="font-medium">
+                    <Typography.Text className="font-medium">
                       {getCustomerLabel(selectedCustomer, t)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
+                    </Typography.Text>
+                    <Typography.Muted className="text-sm text-muted-foreground">
                       {selectedCustomer.phone ||
                         selectedCustomer.email ||
                         t("noContactInfo")}
-                    </p>
+                    </Typography.Muted>
                   </div>
                 </div>
                 <Button
@@ -299,9 +304,9 @@ export default function NewVehiclePage() {
                 />
                 {!Array.isArray(customerResults) ||
                 customerResults.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
+                  <Typography.Muted className="text-sm text-muted-foreground">
                     Search for an existing customer before adding the vehicle.
-                  </p>
+                  </Typography.Muted>
                 ) : (
                   <div className="flex flex-col gap-2">
                     {customerResults.map((customer) => (
@@ -315,14 +320,14 @@ export default function NewVehiclePage() {
                           <User className="size-4" />
                         </div>
                         <div>
-                          <p className="font-medium">
+                          <Typography.Text className="font-medium">
                             {getCustomerLabel(customer, t)}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
+                          </Typography.Text>
+                          <Typography.Muted className="text-sm text-muted-foreground">
                             {customer.phone ||
                               customer.email ||
                               t("noContactInfo")}
-                          </p>
+                          </Typography.Muted>
                         </div>
                       </button>
                     ))}
@@ -353,8 +358,8 @@ export default function NewVehiclePage() {
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    plateNumber: transliterateMongolianPlate(
-                      event.target.value,
+                    plateNumber: formatPlateInput(
+                      transliterateMongolianPlate(event.target.value),
                     ),
                   }))
                 }
@@ -364,9 +369,9 @@ export default function NewVehiclePage() {
                 {...inputProps("plate")}
               />
               {fieldErrors.plateNumber && (
-                <p className="mt-1 text-xs text-destructive">
+                <Typography.Text className="mt-1 text-xs text-destructive">
                   {fieldErrors.plateNumber}
-                </p>
+                </Typography.Text>
               )}
             </div>
             <div>
@@ -407,9 +412,9 @@ export default function NewVehiclePage() {
                 {...inputProps("make")}
               />
               {fieldErrors.make && (
-                <p className="mt-1 text-xs text-destructive">
+                <Typography.Text className="mt-1 text-xs text-destructive">
                   {fieldErrors.make}
-                </p>
+                </Typography.Text>
               )}
             </div>
             <div>
@@ -431,9 +436,9 @@ export default function NewVehiclePage() {
                 {...inputProps("model")}
               />
               {fieldErrors.model && (
-                <p className="mt-1 text-xs text-destructive">
+                <Typography.Text className="mt-1 text-xs text-destructive">
                   {fieldErrors.model}
-                </p>
+                </Typography.Text>
               )}
             </div>
             <div>

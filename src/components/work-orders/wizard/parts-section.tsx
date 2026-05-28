@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { NumericKeypad } from "@/components/ui/numeric-keypad";
 import { formatCurrency } from "@/lib/utils";
 import { useWizardContext } from "./wizard-context";
+import { Typography } from "@/components/ui/typography";
 
 export function PartsSection() {
   const ctx = useWizardContext();
@@ -150,9 +151,9 @@ export function PartsSection() {
         </div>
 
         {ctx.partLines.length === 0 && !ctx.showLastVisitSuggestions ? (
-          <p className="text-sm text-muted-foreground text-center py-3">
+          <Typography.Muted className="text-sm text-muted-foreground text-center py-3">
             {t("noPartsAdded")}
-          </p>
+          </Typography.Muted>
         ) : (
           <div className="border rounded-lg overflow-hidden">
             <div className="divide-y">
@@ -178,12 +179,12 @@ export function PartsSection() {
                         aria-label="Part name"
                       />
                       {partLast && (
-                        <p className={`mt-1 text-[11px] ${part.unit_price <= partLast ? 'text-green-600' : 'text-amber-600'}`}>
+                        <Typography.Text className={`mt-1 text-[11px] ${part.unit_price <= partLast ? 'text-green-600' : 'text-amber-600'}`}>
                           {part.unit_price <= partLast ? '✓ ' : '↑ '}
                           {t("lastSoldShort", {
                             price: formatCurrency(partLast),
                           })}
-                        </p>
+                        </Typography.Text>
                       )}
                     </div>
                     <NumericKeypad

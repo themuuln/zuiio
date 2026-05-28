@@ -9,6 +9,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 interface RecentItem {
   id: string;
@@ -33,9 +34,9 @@ export function RecentList({
     return (
       <div className="flex flex-col gap-1.5">
         {title && (
-          <p className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+          <Typography.Muted className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
             {title}
-          </p>
+          </Typography.Muted>
         )}
         {[1, 2, 3].map((i) => (
           <div
@@ -63,9 +64,9 @@ export function RecentList({
   return (
     <div className="flex flex-col gap-1">
       {title && (
-        <p className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+        <Typography.Muted className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
           {title}
-        </p>
+        </Typography.Muted>
       )}
       {items.map((item) => (
         <div
@@ -79,13 +80,13 @@ export function RecentList({
           }}
         >
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium truncate text-foreground/90">
+            <Typography.Text className="text-xs font-medium truncate text-foreground/90">
               {item.primary}
-            </p>
+            </Typography.Text>
             {item.secondary && (
-              <p className="text-[10px] text-muted-foreground/60 truncate leading-tight">
+              <Typography.Muted className="text-[10px] text-muted-foreground/60 truncate leading-tight">
                 {item.secondary}
-              </p>
+              </Typography.Muted>
             )}
           </div>
           {item.timestamp && (

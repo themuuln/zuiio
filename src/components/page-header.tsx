@@ -42,6 +42,7 @@ import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -327,17 +328,19 @@ function QuickCreateActions() {
         }
       />
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>{t("common.create")}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {createItems.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <DropdownMenuItem key={index} onClick={item.onClick}>
-              <Icon className="mr-2 size-4" />
-              {item.label}
-            </DropdownMenuItem>
-          );
-        })}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("common.create")}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {createItems.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <DropdownMenuItem key={index} onClick={item.onClick}>
+                <Icon className="mr-2 size-4" />
+                {item.label}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

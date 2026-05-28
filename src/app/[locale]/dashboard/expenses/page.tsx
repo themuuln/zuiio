@@ -18,7 +18,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import type { ExportColumn } from "@/lib/export";
-import { Link, useRouter } from "@/lib/i18n/navigation";
+import { useRouter } from "@/lib/i18n/navigation";
 import {
   useExpenseCategories,
   useExpenseStats,
@@ -26,11 +26,13 @@ import {
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import type { ExpenseWithCategory } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 import { columns } from "./_columns";
+import { Typography } from "@/components/ui/typography";
 
 // ── Inline KPI Card ──
 
@@ -48,14 +50,14 @@ function KpiCard({
   return (
     <Card>
       <CardHeader className="pb-2">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <Typography.Muted className="text-xs font-medium text-muted-foreground">{label}</Typography.Muted>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-2">
           {loading ? (
             <Skeleton className="h-8 w-24" />
           ) : (
-            <p className="text-2xl font-semibold tabular-nums">{value}</p>
+            <Typography.Text className="text-2xl font-semibold tabular-nums">{value}</Typography.Text>
           )}
           <Icon className="ml-auto size-5 text-muted-foreground/40" />
         </div>
@@ -94,6 +96,7 @@ export default function ExpensesPage() {
   const { push } = useRouter();
 
   const [search, setSearch] = useState("");
+  const { setNewExpenseSheetOpen } = usePageHeader();
   const [categoryId, setCategoryId] = useState("");
   const [paidFilter, setPaidFilter] = useState<PaidFilter>("all");
   const [startDate, setStartDate] = useState("");
@@ -226,13 +229,13 @@ export default function ExpensesPage() {
     return (
       <div className="flex flex-col gap-6 tablet:px-2">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("nav.expenses")}
-          </h1>
+          </Typography.H1>
         </div>
-        <p className="text-destructive">
+        <Typography.Text className="text-destructive">
           {error?.message ?? "No organization found"}
-        </p>
+        </Typography.Text>
         <Button onClick={() => refetch()} variant="outline" className="w-fit">
           Retry
         </Button>
@@ -247,15 +250,15 @@ export default function ExpensesPage() {
       {/* ── Header ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("nav.expenses")}
-          </h1>
-          <p className="text-muted-foreground">
+          </Typography.H1>
+          <Typography.Muted className="text-muted-foreground">
             {expenses?.length ?? 0}{" "}
             {(expenses?.length ?? 0) === 1 ? "expense" : "expenses"}
-          </p>
+          </Typography.Muted>
         </div>
-        <Button render={<Link href="/dashboard/expenses/new" />} size="default">
+        <Button onClick={() => setNewExpenseSheetOpen(true)} size="default">
           <Plus className="size-4" />
           Add Expense
         </Button>
@@ -376,7 +379,7 @@ export default function ExpensesPage() {
               </EmptyHeader>
               <EmptyContent>
                 <Button
-                  render={<Link href="/dashboard/expenses/new" />}
+                  onClick={() => setNewExpenseSheetOpen(true)}
                   variant="outline"
                 >
                   Record Your First Expense

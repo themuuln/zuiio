@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
 
 interface KpiCardProps {
   label: string;
@@ -35,7 +36,7 @@ export function KpiCard({
               {value}
             </div>
             {subtitle && (
-              <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
+              <Typography.Muted className="mt-1 text-xs text-muted-foreground">{subtitle}</Typography.Muted>
             )}
           </>
         )}

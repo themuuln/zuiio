@@ -16,6 +16,7 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 import { columns } from "./_columns";
 import type { ValuationRow } from "./_columns";
+import { Typography } from "@/components/ui/typography";
 
 export default function ValuationPage() {
   const t = useTranslations("inventory");
@@ -70,22 +71,22 @@ export default function ValuationPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("valuationTitle")}
-        </h1>
-        <p className="text-muted-foreground">{t("valuationSubtitle")}</p>
+        </Typography.H1>
+        <Typography.Muted className="text-muted-foreground">{t("valuationSubtitle")}</Typography.Muted>
       </div>
 
       <Card className="bg-primary/5 border-primary/10">
         <CardContent className="flex items-center gap-4 py-6">
           <TrendingUp className="size-8 text-primary" />
           <div>
-            <p className="text-sm text-muted-foreground">
+            <Typography.Muted className="text-sm text-muted-foreground">
               {t("totalInventoryValue")}
-            </p>
-            <p className="text-2xl font-semibold tabular-nums">
+            </Typography.Muted>
+            <Typography.Text className="text-2xl font-semibold tabular-nums">
               {totalValue.toLocaleString("mn-MN")} ₮
-            </p>
+            </Typography.Text>
           </div>
         </CardContent>
       </Card>
@@ -147,7 +148,7 @@ export default function ValuationPage() {
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-12">
               <TrendingUp className="size-10 text-muted-foreground/40" />
-              <p className="text-muted-foreground">{t("noValuationData")}</p>
+              <Typography.Muted className="text-muted-foreground">{t("noValuationData")}</Typography.Muted>
             </div>
           ) : (
             <DataTable

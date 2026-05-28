@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { ServiceCatalog } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 export interface ServiceLine {
   service_catalog_id: string | null;
@@ -134,11 +135,11 @@ export function ServiceLines({
                   className="flex items-center gap-2 p-3 hover:bg-muted/20"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{svc.name}</p>
+                    <Typography.Text className="text-sm font-medium truncate">{svc.name}</Typography.Text>
                     {svc.last_price && (
-                      <p className={`text-[11px] ${svc.base_price <= svc.last_price ? 'text-green-600' : 'text-amber-600'}`}>
+                      <Typography.Text className={`text-[11px] ${svc.base_price <= svc.last_price ? 'text-green-600' : 'text-amber-600'}`}>
                         {svc.base_price <= svc.last_price ? '✓' : '↑'} Last: {formatCurrency(svc.last_price)}
-                      </p>
+                      </Typography.Text>
                     )}
                   </div>
                   <Input

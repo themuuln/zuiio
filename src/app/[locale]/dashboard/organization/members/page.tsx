@@ -13,6 +13,7 @@ import type { InviteWithEmail } from "./types";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { Typography } from "@/components/ui/typography";
 
 // ── Page data state (useReducer to batch related loading/data updates) ──
 
@@ -347,10 +348,10 @@ export default function MembersPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("title")}
-          </h1>
-          <p className="text-muted-foreground">{t("subtitle")}</p>
+          </Typography.H1>
+          <Typography.Muted className="text-muted-foreground">{t("subtitle")}</Typography.Muted>
         </div>
         <Button onClick={() => setShowInviteForm(true)}>
           <UserPlus className="mr-2 size-4" />

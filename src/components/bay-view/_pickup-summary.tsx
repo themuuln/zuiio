@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn, formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 interface RecommendationDisplay {
   serviceName: string;
@@ -143,10 +144,10 @@ export function PickupSummary({
                   {vehiclePlate}
                 </span>
               </div>
-              <p className="mt-2 text-2xl font-semibold tabular-nums">
+              <Typography.Text className="mt-2 text-2xl font-semibold tabular-nums">
                 {formatMNT(totalCost)}
-              </p>
-              <p className="text-xs text-muted-foreground/60">Total</p>
+              </Typography.Text>
+              <Typography.Muted className="text-xs text-muted-foreground/60">Total</Typography.Muted>
             </div>
 
             {/* Invoice / Payment Status — only when invoice exists */}
@@ -214,9 +215,9 @@ export function PickupSummary({
             {/* Recommendations */}
             {hasRecommendations && (
               <div className="flex flex-col gap-2">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <Typography.H3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {t("pickupSummaryNextService")}
-                </h3>
+                </Typography.H3>
                 <div className="flex flex-col gap-1.5">
                   {recommendations.map((r) => (
                     <div
@@ -233,8 +234,8 @@ export function PickupSummary({
                         )}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{r.serviceName}</p>
-                        <p className="text-xs text-muted-foreground/70 mt-0.5">
+                        <Typography.Text className="text-sm font-medium">{r.serviceName}</Typography.Text>
+                        <Typography.Muted className="text-xs text-muted-foreground/70 mt-0.5">
                           {r.nextDueDate && r.nextDueKm
                             ? t("pickupSummaryNextDueDate", {
                                 date: formatDate(r.nextDueDate),
@@ -245,7 +246,7 @@ export function PickupSummary({
                               : r.nextDueKm
                                 ? `${r.nextDueKm.toLocaleString()} km`
                                 : "No schedule set"}
-                        </p>
+                        </Typography.Muted>
                       </div>
                       {r.priority !== "standard" && (
                         <Badge variant="outline">{r.priority}</Badge>
@@ -385,7 +386,7 @@ export function PickupSummary({
                 className="h-10"
               />
             </div>
-            {error && <p className="text-xs text-red-500">{error}</p>}
+            {error && <Typography.Text className="text-xs text-red-500">{error}</Typography.Text>}
             <div className="flex gap-2 justify-end pt-1">
               <Button
                 variant="outline"

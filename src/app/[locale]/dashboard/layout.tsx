@@ -3,8 +3,6 @@
 import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import BrandThemeProvider from "@/components/brand-theme-provider";
-import { NewCustomerDialog } from "@/components/new-customer-dialog";
-import { NewVehicleDialog } from "@/components/new-vehicle-dialog";
 import { NewCustomerSheet } from "@/components/customers/new-customer-sheet";
 import { NewVehicleSheet } from "@/components/vehicles/new-vehicle-sheet";
 import { NewExpenseSheet } from "@/components/expenses/new-expense-sheet";
@@ -16,6 +14,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { PageHeaderProvider, usePageHeader } from "@/hooks/use-page-header";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { RightSidebarProvider } from "@/hooks/use-right-sidebar";
+import { usePathname } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 function DashboardHeader() {
@@ -45,14 +44,6 @@ function GlobalDialogs() {
 
   return (
     <>
-      <NewCustomerDialog
-        open={isNewCustomerDialogOpen}
-        onOpenChange={setNewCustomerDialogOpen}
-      />
-      <NewVehicleDialog
-        open={isNewVehicleDialogOpen}
-        onOpenChange={setNewVehicleDialogOpen}
-      />
       <NewCustomerSheet
         open={isNewCustomerDialogOpen}
         onOpenChange={setNewCustomerDialogOpen}
@@ -76,6 +67,8 @@ function GlobalDialogs() {
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   useRequireAuth();
   const { data: orgInfo } = useCurrentOrg();
+  const pathname = usePathname();
+  const isBayView = pathname.includes("/bay-view");
 
   const wrapped = (
     <BrandThemeProvider>
@@ -90,7 +83,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-6 pt-4 md:px-6 relative">
                   {children}
                 </div>
-                <RightSidebar />
+                {isBayView && <RightSidebar />}
               </div>
             </SidebarInset>
           </SidebarProvider>

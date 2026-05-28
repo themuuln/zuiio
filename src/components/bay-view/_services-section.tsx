@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import type { ServiceCatalog } from "@/lib/types";
 import type { WorkOrderService } from "@/lib/types";
 import { cn, formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 interface ServicesSectionProps {
   services: WorkOrderService[];
@@ -99,9 +100,9 @@ export function ServicesSection({
                 className="group flex items-center gap-2 rounded-md p-1.5 hover:bg-muted/40 transition-colors"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
+                  <Typography.Text className="text-sm font-medium truncate">
                     {svc.service_name}
-                  </p>
+                  </Typography.Text>
                 </div>
                 <div className="w-14 text-right text-xs text-muted-foreground tabular-nums">
                   {svc.quantity}
@@ -155,12 +156,12 @@ export function ServicesSection({
             {pendingServicePreview && (
               <div className="flex items-center gap-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-1.5">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
+                  <Typography.Text className="text-sm font-medium truncate">
                     {pendingServicePreview.name}
-                  </p>
-                  <p className="text-[10px] text-primary/80">
+                  </Typography.Text>
+                  <Typography.Text className="text-[10px] text-primary/80">
                     Adding service...
-                  </p>
+                  </Typography.Text>
                 </div>
                 <div className="w-14 text-right text-xs text-muted-foreground tabular-nums">
                   1

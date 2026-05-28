@@ -32,6 +32,7 @@ import {
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { ExpenseWithCategory } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 interface ExpenseFormState {
   description: string;
@@ -164,7 +165,7 @@ export default function ExpenseDetailPage() {
         </Button>
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
-            <p className="text-muted-foreground">{error}</p>
+            <Typography.Muted className="text-muted-foreground">{error}</Typography.Muted>
             <Button onClick={() => refetch()} variant="outline">
               {commonT("retry")}
             </Button>
@@ -193,11 +194,11 @@ export default function ExpenseDetailPage() {
           <ArrowLeft className="size-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{expenseTitle}</h1>
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">{expenseTitle}</Typography.H1>
           {expense.created_at && (
-            <p className="text-sm text-muted-foreground">
+            <Typography.Muted className="text-sm text-muted-foreground">
               {t("created")} {new Date(expense.created_at).toLocaleDateString()}
-            </p>
+            </Typography.Muted>
           )}
         </div>
         {!editing ? (
@@ -263,7 +264,7 @@ export default function ExpenseDetailPage() {
       {error && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
-            <p className="text-sm text-destructive">{error}</p>
+            <Typography.Text className="text-sm text-destructive">{error}</Typography.Text>
           </CardContent>
         </Card>
       )}
@@ -508,32 +509,32 @@ export default function ExpenseDetailPage() {
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-lg bg-muted/50 p-3">
-                  <p className="mb-1 text-xs text-muted-foreground">
+                  <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                     {t("description")}
-                  </p>
-                  <p className="text-sm font-medium">{expense.description}</p>
+                  </Typography.Muted>
+                  <Typography.Text className="text-sm font-medium">{expense.description}</Typography.Text>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3">
-                  <p className="mb-1 text-xs text-muted-foreground">
+                  <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                     {t("amount")}
-                  </p>
-                  <p className="text-sm font-medium">
+                  </Typography.Muted>
+                  <Typography.Text className="text-sm font-medium">
                     {formatMNT(expense.amount)}
-                  </p>
+                  </Typography.Text>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3">
-                  <p className="mb-1 text-xs text-muted-foreground">
+                  <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                     {t("taxAmount")}
-                  </p>
-                  <p className="text-sm font-medium">
+                  </Typography.Muted>
+                  <Typography.Text className="text-sm font-medium">
                     {formatMNT(expense.tax_amount ?? 0)}
-                  </p>
+                  </Typography.Text>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3 sm:col-span-3">
-                  <p className="mb-1 text-xs text-muted-foreground">
+                  <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                     {commonT("total")}
-                  </p>
-                  <p className="text-lg font-semibold">{formatMNT(totalAmount)}</p>
+                  </Typography.Muted>
+                  <Typography.Text className="text-lg font-semibold">{formatMNT(totalAmount)}</Typography.Text>
                 </div>
               </div>
             </CardContent>
@@ -556,7 +557,7 @@ export default function ExpenseDetailPage() {
                     </span>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">–</p>
+                  <Typography.Muted className="text-sm text-muted-foreground">–</Typography.Muted>
                 )}
               </CardContent>
             </Card>
@@ -567,20 +568,20 @@ export default function ExpenseDetailPage() {
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
                 <div>
-                  <p className="mb-1 text-xs text-muted-foreground">
+                  <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                     {t("vendor")}
-                  </p>
-                  <p className="text-sm font-medium">
+                  </Typography.Muted>
+                  <Typography.Text className="text-sm font-medium">
                     {expense.vendor_name || "—"}
-                  </p>
+                  </Typography.Text>
                 </div>
                 <div>
-                  <p className="mb-1 text-xs text-muted-foreground">
+                  <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                     {t("referenceNumber")}
-                  </p>
-                  <p className="text-sm font-medium">
+                  </Typography.Muted>
+                  <Typography.Text className="text-sm font-medium">
                     {expense.reference_number || "—"}
-                  </p>
+                  </Typography.Text>
                 </div>
               </CardContent>
             </Card>
@@ -594,27 +595,27 @@ export default function ExpenseDetailPage() {
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="rounded-lg bg-muted/50 p-3">
-                    <p className="mb-1 text-xs text-muted-foreground">
+                    <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                       {t("paymentMethod")}
-                    </p>
-                    <p className="text-sm font-medium capitalize">
+                    </Typography.Muted>
+                    <Typography.Text className="text-sm font-medium capitalize">
                       {expense.payment_method ? t(expense.payment_method) : "—"}
-                    </p>
+                    </Typography.Text>
                   </div>
                   <div className="rounded-lg bg-muted/50 p-3">
-                    <p className="mb-1 text-xs text-muted-foreground">
+                    <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                       {t("expenseDate")}
-                    </p>
-                    <p className="text-sm font-medium">
+                    </Typography.Muted>
+                    <Typography.Text className="text-sm font-medium">
                       {expense.expense_date
                         ? new Date(expense.expense_date).toLocaleDateString()
                         : "—"}
-                    </p>
+                    </Typography.Text>
                   </div>
                   <div className="rounded-lg bg-muted/50 p-3">
-                    <p className="mb-1 text-xs text-muted-foreground">
+                    <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                       {commonT("status")}
-                    </p>
+                    </Typography.Muted>
                     <Badge
                       variant="default"
                       className={
@@ -637,7 +638,7 @@ export default function ExpenseDetailPage() {
                 <CardTitle className="text-base">{t("notes")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-wrap text-sm">{expense.notes}</p>
+                <Typography.Text className="whitespace-pre-wrap text-sm">{expense.notes}</Typography.Text>
               </CardContent>
             </Card>
           )}

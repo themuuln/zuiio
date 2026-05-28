@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { setCustomerPassword } from "./actions";
+import { Typography } from "@/components/ui/typography";
 
 export default function CustomerSetPasswordPage() {
   const t = useTranslations();
@@ -61,17 +62,17 @@ export default function CustomerSetPasswordPage() {
               ? t("portal.accountCreated")
               : t("portal.createAccount")}
           </CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">
+          <Typography.Muted className="text-xs text-muted-foreground mt-1">
             {state?.success ? "" : t("portal.createAccountDesc")}
-          </p>
+          </Typography.Muted>
         </CardHeader>
         <CardContent>
           {state?.success ? (
             <div className="flex flex-col items-center gap-3 py-4">
               <CheckCircle2 className="size-10 text-emerald-500" />
-              <p className="text-sm text-muted-foreground text-center">
+              <Typography.Muted className="text-sm text-muted-foreground text-center">
                 {t("portal.passwordSet")}
-              </p>
+              </Typography.Muted>
             </div>
           ) : (
             <form action={formAction} className="flex flex-col gap-4">

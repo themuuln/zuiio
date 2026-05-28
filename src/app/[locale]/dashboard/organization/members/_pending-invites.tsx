@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { InviteWithEmail } from "./types";
+import { Typography } from "@/components/ui/typography";
 
 interface PendingInvitesProps {
   loading: boolean;
@@ -58,9 +59,9 @@ export function PendingInvites({
             ))}
           </div>
         ) : invites.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted-foreground">
+          <Typography.Muted className="py-4 text-center text-sm text-muted-foreground">
             {t("noPendingInvites")}
-          </p>
+          </Typography.Muted>
         ) : (
           <div className="divide-y">
             {invites.map((invite) => (
@@ -73,11 +74,11 @@ export function PendingInvites({
                     <Mail className="size-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{invite.email}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <Typography.Text className="text-sm font-medium">{invite.email}</Typography.Text>
+                    <Typography.Muted className="text-xs text-muted-foreground">
                       {t("pending")} &middot;{" "}
                       {new Date(invite.expires_at).toLocaleDateString()}
-                    </p>
+                    </Typography.Muted>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">

@@ -4,6 +4,7 @@ import { CheckCircle2, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WorkOrderStatusHistory } from "@/lib/types";
 import { StatusPill } from "./status-pill";
+import { Typography } from "@/components/ui/typography";
 
 interface StatusTimelineProps {
   statusHistory: WorkOrderStatusHistory[];
@@ -25,7 +26,7 @@ export function StatusTimeline({ statusHistory, t }: StatusTimelineProps) {
       {(statusHistory ?? []).length === 0 ? (
         <div className="flex flex-col items-center justify-center py-4 text-muted-foreground/50">
           <History className="size-5 mb-1.5 opacity-60" />
-          <p className="text-xs">{t("noHistoryYet")}</p>
+          <Typography.Text className="text-xs">{t("noHistoryYet")}</Typography.Text>
         </div>
       ) : (
         <div className="flex flex-col gap-0">
@@ -81,9 +82,9 @@ export function StatusTimeline({ statusHistory, t }: StatusTimelineProps) {
                     </span>
                   </div>
                   {h.notes && (
-                    <p className="text-xs text-muted-foreground mt-1 bg-muted/30 rounded-md px-2 py-1 border border-border/40">
+                    <Typography.Muted className="text-xs text-muted-foreground mt-1 bg-muted/30 rounded-md px-2 py-1 border border-border/40">
                       {h.notes}
-                    </p>
+                    </Typography.Muted>
                   )}
                 </div>
               </div>

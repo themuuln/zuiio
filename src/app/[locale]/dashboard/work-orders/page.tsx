@@ -8,7 +8,7 @@ import { useClientNow } from "@/hooks/use-client-now";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { NewWorkOrderSheet } from "@/components/work-orders/new-work-order-sheet";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
@@ -45,6 +45,7 @@ import {
   type WorkOrderListItem,
 } from "@/lib/queries/use-work-orders";
 import { createColumns } from "./_columns";
+import { Typography } from "@/components/ui/typography";
 
 // ── Status helpers ────────────────────────────────────────────
 
@@ -159,7 +160,7 @@ export default function WorkOrdersPage() {
   const [search, setSearch] = useState("");
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  const [showNewSheet, setShowNewSheet] = useState(false);
+  const { setNewWorkOrderSheetOpen } = usePageHeader();
 
   const { data: org } = useCurrentOrg();
   const status = statusIdx > 0 ? STATUS_KEYS[statusIdx] : "";
@@ -306,10 +307,10 @@ export default function WorkOrdersPage() {
     return (
       <div className="tablet-touch flex flex-col gap-3 tablet:gap-4 tablet:px-1">
         <div className="flex flex-col gap-0.5">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("workOrders.title")}
-          </h1>
-          <p className="text-muted-foreground">{t("workOrders.subtitle")}</p>
+          </Typography.H1>
+          <Typography.Muted className="text-muted-foreground">{t("workOrders.subtitle")}</Typography.Muted>
         </div>
         <ListToolbar
           search={{
@@ -372,10 +373,10 @@ export default function WorkOrdersPage() {
 
       {/* ── Header ───────────────────────────────────────────── */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("workOrders.title")}
-        </h1>
-        <p className="text-muted-foreground">{t("workOrders.subtitle")}</p>
+        </Typography.H1>
+        <Typography.Muted className="text-muted-foreground">{t("workOrders.subtitle")}</Typography.Muted>
       </div>
 
       {/* ── Toolbar ──────────────────────────────────────────── */}
@@ -405,7 +406,7 @@ export default function WorkOrdersPage() {
               filename={`work-orders-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Work Orders"
             />
-            <Button onClick={() => setShowNewSheet(true)}>
+            <Button onClick={() => setNewWorkOrderSheetOpen(true)}>
               <Plus className="size-4" /> {t("workOrders.newWorkOrder")}
             </Button>
           </div>
@@ -416,7 +417,7 @@ export default function WorkOrdersPage() {
       {error ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-8">
-            <p className="text-destructive">{error.message}</p>
+            <Typography.Text className="text-destructive">{error.message}</Typography.Text>
             <Button variant="outline" onClick={() => refetch()}>
               {t("common.retry")}
             </Button>
@@ -432,7 +433,7 @@ export default function WorkOrdersPage() {
             <EmptyDescription>{t("workOrders.subtitle")}</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button onClick={() => setShowNewSheet(true)}>
+            <Button onClick={() => setNewWorkOrderSheetOpen(true)}>
               {t("workOrders.createFirst")}
             </Button>
           </EmptyContent>
@@ -452,8 +453,6 @@ export default function WorkOrdersPage() {
           </CardContent>
         </Card>
       )}
-
-      <NewWorkOrderSheet open={showNewSheet} onOpenChange={setShowNewSheet} />
     </div>
   );
 }

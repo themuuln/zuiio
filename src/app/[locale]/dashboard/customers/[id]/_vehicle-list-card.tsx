@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ExportColumn } from "@/lib/export";
 import type { useRouter } from "@/lib/i18n/navigation";
+import { Typography } from "@/components/ui/typography";
 
 export interface CustomerVehicleSummary {
   id: string;
@@ -61,9 +62,9 @@ export function VehicleListCard({
       </CardHeader>
       <CardContent>
         {vehicles.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
+          <Typography.Muted className="py-6 text-center text-sm text-muted-foreground">
             {t("noVehicles")}
-          </p>
+          </Typography.Muted>
         ) : (
           <div className="flex flex-col gap-2">
             {vehicles.map((vehicle) => (
@@ -75,12 +76,12 @@ export function VehicleListCard({
               >
                 <Car className="size-5 shrink-0 text-muted-foreground" />
                 <div className="flex-1 text-left">
-                  <p className="font-medium">{vehicle.plate_number}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <Typography.Text className="font-medium">{vehicle.plate_number}</Typography.Text>
+                  <Typography.Muted className="text-xs text-muted-foreground">
                     {[vehicle.year, vehicle.make, vehicle.model]
                       .filter(Boolean)
                       .join(" ")}
-                  </p>
+                  </Typography.Muted>
                 </div>
                 <ArrowLeft className="size-4 rotate-180 text-muted-foreground" />
               </Button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Typography } from "@/components/ui/typography";
 
 const PARTNERS = Array.from({ length: 12 }, (_, i) => `partner_${i + 1}`);
 
@@ -10,9 +11,9 @@ export function PartnersSlider() {
   return (
     <section className="overflow-hidden border-b bg-muted/30 px-4 py-12 sm:px-6 sm:py-14">
       <div className="mx-auto max-w-6xl">
-        <p className="mb-8 text-center text-xs font-medium uppercase tracking-widest text-muted-foreground">
+        <Typography.Muted className="mb-8 text-center text-xs font-medium uppercase tracking-widest text-muted-foreground">
           {t("partnersTitle")}
-        </p>
+        </Typography.Muted>
 
         {/* Sliding track — two copies for seamless infinite loop */}
         <div className="relative mx-auto max-w-5xl overflow-hidden">

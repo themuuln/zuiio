@@ -27,6 +27,7 @@ import { serviceKeys } from "@/lib/queries/keys";
 import { useServiceLastUsedPrices } from "@/lib/queries/use-price-memory";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 interface ServiceItem {
   id: string;
@@ -340,8 +341,8 @@ export default function ServicesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Service Catalog</h1>
-        <p className="text-muted-foreground">Manage your service prices</p>
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">Service Catalog</Typography.H1>
+        <Typography.Muted className="text-muted-foreground">Manage your service prices</Typography.Muted>
       </div>
 
       <ListToolbar
@@ -443,7 +444,7 @@ export default function ServicesPage() {
             </div>
           ) : error ? (
             <div className="flex flex-col items-center gap-4 py-12">
-              <p className="text-destructive">{error}</p>
+              <Typography.Text className="text-destructive">{error}</Typography.Text>
               <Button onClick={() => refetch()}>Retry</Button>
             </div>
           ) : filtered.length === 0 ? (
@@ -523,10 +524,10 @@ export default function ServicesPage() {
                   ) : (
                     <>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{s.name}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <Typography.Text className="font-medium truncate">{s.name}</Typography.Text>
+                        <Typography.Muted className="text-sm text-muted-foreground">
                           {s.category ?? t("services.uncategorized")}
-                        </p>
+                        </Typography.Muted>
                       </div>
                       <span className="font-medium text-lg tabular-nums shrink-0">
                         {formatMNT(Number(s.default_price))}

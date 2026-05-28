@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -14,6 +15,7 @@ import {
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import type { WorkOrderListItem } from "@/lib/queries/use-work-orders";
 import { formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 // ── Status helpers ────────────────────────────────────────────
 
@@ -93,13 +95,13 @@ export function createColumns(
         const wo = row.original;
         return (
           <div className="flex flex-col gap-0.5">
-            <p className="font-medium truncate max-w-[200px]">
+            <Typography.Text className="font-medium truncate max-w-[200px]">
               {getCustomerName(wo)}
-            </p>
+            </Typography.Text>
             {wo.vehicle?.plate_number && (
-              <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+              <Typography.Muted className="text-xs text-muted-foreground truncate max-w-[200px]">
                 {getVehicleDisplay(wo)}
-              </p>
+              </Typography.Muted>
             )}
           </div>
         );
@@ -149,27 +151,31 @@ export function createColumns(
               }
             />
             <DropdownMenuContent align="start" className="min-w-[160px]">
-              {STATUS_OPTIONS.flatMap((s) =>
-                s !== wo.status
-                  ? [
-                      <DropdownMenuItem
-                        key={s}
-                        onClick={() => cb.onStatusChange(wo.id, s)}
-                        disabled={cb.updatePending}
-                      >
-                        {s}
-                      </DropdownMenuItem>,
-                    ]
-                  : [],
-              )}
+              <DropdownMenuGroup>
+                {STATUS_OPTIONS.flatMap((s) =>
+                  s !== wo.status
+                    ? [
+                        <DropdownMenuItem
+                          key={s}
+                          onClick={() => cb.onStatusChange(wo.id, s)}
+                          disabled={cb.updatePending}
+                        >
+                          {s}
+                        </DropdownMenuItem>,
+                      ]
+                    : [],
+                )}
+              </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => cb.onCancel(wo.id)}
-              >
-                <Trash2 className="size-3.5 mr-2" />
-                Cancel Work Order
-              </DropdownMenuItem>
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => cb.onCancel(wo.id)}
+                >
+                  <Trash2 className="size-3.5 mr-2" />
+                  Cancel Work Order
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -293,22 +299,24 @@ export function createColumns(
               }
             />
             <DropdownMenuContent align="end" className="min-w-[140px]">
-              <DropdownMenuItem
-                onClick={() =>
-                  (window.location.href = `/dashboard/work-orders/${wo.id}`)
-                }
-              >
-                View Details
-              </DropdownMenuItem>
-              {wo.status !== "Cancelled" && (
+              <DropdownMenuGroup>
                 <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => cb.onCancel(wo.id)}
+                  onClick={() =>
+                    (window.location.href = `/dashboard/work-orders/${wo.id}`)
+                  }
                 >
-                  <Trash2 className="size-3.5 mr-2" />
-                  Cancel
+                  View Details
                 </DropdownMenuItem>
-              )}
+                {wo.status !== "Cancelled" && (
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={() => cb.onCancel(wo.id)}
+                  >
+                    <Trash2 className="size-3.5 mr-2" />
+                    Cancel
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         );

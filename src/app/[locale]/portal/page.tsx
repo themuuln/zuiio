@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { PageErrorState, PageShellSkeleton } from "@/components/page-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
+import { Typography } from "@/components/ui/typography";
 
 export default function PortalDashboardPage() {
   const t = useTranslations();
@@ -50,12 +51,12 @@ export default function PortalDashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("portal.welcome", { name: customer?.first_name ?? "" })}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        </Typography.H1>
+        <Typography.Muted className="text-sm text-muted-foreground mt-1">
           {t("portal.dashboardDesc")}
-        </p>
+        </Typography.Muted>
       </div>
 
       {/* Stats */}
@@ -68,7 +69,7 @@ export default function PortalDashboardPage() {
             <Car className="size-4 text-muted-foreground/60" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{vehicles?.length ?? 0}</p>
+            <Typography.Text className="text-2xl font-semibold">{vehicles?.length ?? 0}</Typography.Text>
           </CardContent>
         </Card>
         <Card>
@@ -79,9 +80,9 @@ export default function PortalDashboardPage() {
             <Wrench className="size-4 text-muted-foreground/60" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">
+            <Typography.Text className="text-2xl font-semibold">
               {customer?.total_visits ?? 0}
-            </p>
+            </Typography.Text>
           </CardContent>
         </Card>
         <Card>
@@ -92,11 +93,11 @@ export default function PortalDashboardPage() {
             <CalendarClock className="size-4 text-muted-foreground/60" />
           </CardHeader>
           <CardContent>
-            <p className="text-sm font-medium">
+            <Typography.Text className="text-sm font-medium">
               {customer?.last_visit_at
                 ? new Date(customer.last_visit_at).toLocaleDateString()
                 : "—"}
-            </p>
+            </Typography.Text>
           </CardContent>
         </Card>
       </div>
@@ -116,9 +117,9 @@ export default function PortalDashboardPage() {
         </CardHeader>
         <CardContent>
           {!vehicles || vehicles.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
+            <Typography.Muted className="text-sm text-muted-foreground py-4 text-center">
               {t("portal.noVehicles")}
-            </p>
+            </Typography.Muted>
           ) : (
             <div className="flex flex-col gap-2">
               {vehicles.slice(0, 5).map((v: Record<string, unknown>) => (
@@ -130,13 +131,13 @@ export default function PortalDashboardPage() {
                   <div className="flex min-w-0 items-center gap-3">
                     <Car className="size-4 text-muted-foreground/60" />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
+                      <Typography.Text className="truncate text-sm font-medium">
                         {v.plate_number as string}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground/70">
+                      </Typography.Text>
+                      <Typography.Muted className="truncate text-xs text-muted-foreground/70">
                         {v.make as string} {v.model as string}
                         {v.year ? ` · ${v.year}` : ""}
-                      </p>
+                      </Typography.Muted>
                     </div>
                   </div>
                   <ArrowRight className="size-3.5 text-muted-foreground/40" />

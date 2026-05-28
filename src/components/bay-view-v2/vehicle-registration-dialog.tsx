@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatMNT } from "@/lib/utils";
 import { transliterateMongolianPlate } from "@/lib/form-validation";
+import { formatPlateInput } from "@/lib/form-ux";
 
 import {
   Dialog,
@@ -31,6 +32,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 
 import { ColorSelect } from "@/components/vehicles/color-select";
+import { Typography } from "@/components/ui/typography";
 
 interface Props {
   open: boolean;
@@ -116,8 +118,12 @@ function ServiceTimeline({
     return (
       <div className="flex flex-col items-center justify-center py-10 text-muted-foreground/50">
         <HistoryIcon className="size-10 mb-2" />
-        <p className="text-sm">{t("noServiceHistory")}</p>
-        <p className="text-xs mt-1">{t("serviceRecordsHere")}</p>
+        <Typography.Text className="text-sm">
+          {t("noServiceHistory")}
+        </Typography.Text>
+        <Typography.Text className="text-xs mt-1">
+          {t("serviceRecordsHere")}
+        </Typography.Text>
       </div>
     );
   }
@@ -157,9 +163,9 @@ function ServiceTimeline({
               </div>
 
               {entry.complaint && (
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                <Typography.Muted className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                   {entry.complaint}
-                </p>
+                </Typography.Muted>
               )}
 
               {entry.services.length > 0 && (
@@ -537,7 +543,11 @@ export function VehicleRegistrationDialog({
                   ref={plateRef}
                   value={plate}
                   onChange={(e) =>
-                    setPlate(transliterateMongolianPlate(e.target.value))
+                    setPlate(
+                      formatPlateInput(
+                        transliterateMongolianPlate(e.target.value),
+                      ),
+                    )
                   }
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleLookup();
@@ -725,16 +735,16 @@ export function VehicleRegistrationDialog({
                   />
 
                   {!canQueue && needsSave && (
-                    <p className="text-[10px] text-muted-foreground/60">
+                    <Typography.Muted className="text-[10px] text-muted-foreground/60">
                       Save the vehicle first, then you can add it to the queue.
-                    </p>
+                    </Typography.Muted>
                   )}
 
                   {!canQueue && resolvedVehicleId && !resolvedCustomerId && (
-                    <p className="text-[10px] text-amber-600">
+                    <Typography.Text className="text-[10px] text-amber-600">
                       Fill in owner info (name + phone) and save to add to
                       queue.
-                    </p>
+                    </Typography.Text>
                   )}
 
                   {queueError && (
@@ -835,8 +845,12 @@ export function VehicleRegistrationDialog({
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/40">
                 <Car className="size-12 mb-3" />
-                <p className="text-sm font-medium">{t("enterPlateAbove")}</p>
-                <p className="text-xs mt-1">{t("timelineWillAppear")}</p>
+                <Typography.Text className="text-sm font-medium">
+                  {t("enterPlateAbove")}
+                </Typography.Text>
+                <Typography.Text className="text-xs mt-1">
+                  {t("timelineWillAppear")}
+                </Typography.Text>
               </div>
             )}
           </div>

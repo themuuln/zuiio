@@ -22,6 +22,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Link } from "@/lib/i18n/navigation";
+import { Typography } from "@/components/ui/typography";
 
 type CustomerType = "individual" | "company";
 
@@ -193,7 +194,7 @@ export function CustomerDetailDrawer({
         {/* Error state */}
         {error && !loading && (
           <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
-            <p className="text-sm text-muted-foreground">{error}</p>
+            <Typography.Muted className="text-sm text-muted-foreground">{error}</Typography.Muted>
             <Button
               variant="outline"
               size="sm"
@@ -257,9 +258,9 @@ export function CustomerDetailDrawer({
               {!customer.phone &&
                 !customer.email &&
                 !customer.address && (
-                  <p className="text-xs text-muted-foreground/60 italic">
+                  <Typography.Muted className="text-xs text-muted-foreground/60 italic">
                     No contact information
-                  </p>
+                  </Typography.Muted>
                 )}
             </section>
 
@@ -269,9 +270,9 @@ export function CustomerDetailDrawer({
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Notes
                 </span>
-                <p className="mt-1.5 text-sm whitespace-pre-wrap">
+                <Typography.Text className="mt-1.5 text-sm whitespace-pre-wrap">
                   {customer.notes}
-                </p>
+                </Typography.Text>
               </section>
             )}
 
@@ -291,9 +292,9 @@ export function CustomerDetailDrawer({
                 )}
               </div>
               {customer.vehicles.length === 0 ? (
-                <p className="text-xs text-muted-foreground/60 italic py-2">
+                <Typography.Muted className="text-xs text-muted-foreground/60 italic py-2">
                   No vehicles registered
-                </p>
+                </Typography.Muted>
               ) : (
                 <div className="flex flex-col gap-1.5">
                   {customer.vehicles.map((vehicle) => (
@@ -303,14 +304,14 @@ export function CustomerDetailDrawer({
                     >
                       <Car className="size-4 shrink-0 text-muted-foreground/50" />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium">
+                        <Typography.Text className="text-sm font-medium">
                           {vehicle.plate_number}
-                        </p>
-                        <p className="text-xs text-muted-foreground/70">
+                        </Typography.Text>
+                        <Typography.Muted className="text-xs text-muted-foreground/70">
                           {[vehicle.year, vehicle.make, vehicle.model]
                             .filter(Boolean)
                             .join(" ")}
-                        </p>
+                        </Typography.Muted>
                       </div>
                     </div>
                   ))}

@@ -25,6 +25,7 @@ import type { Vehicle, WorkOrder } from "@/lib/types";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { cn, formatPlateNumber } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
+import { Typography } from "@/components/ui/typography";
 
 interface QueueItemProps {
   workOrder: WorkOrder & { vehicle: Vehicle | null };
@@ -145,10 +146,10 @@ function QueueItem({
           </>
         ) : (
           <div>
-            <p className="text-[11px] font-medium truncate">
+            <Typography.Text className="text-[11px] font-medium truncate">
               {workOrder.complaint || `WO ${workOrder.id.slice(0, 8)}`}
-            </p>
-            <p className="text-[9px] text-muted-foreground">No vehicle</p>
+            </Typography.Text>
+            <Typography.Muted className="text-[9px] text-muted-foreground">No vehicle</Typography.Muted>
           </div>
         )}
       </div>

@@ -41,6 +41,7 @@ import {
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { PartsCarLocationGroup } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 const _STATUS_BADGE_COLORS: Record<string, string> = {
   arrived: "bg-blue-100 text-blue-700",
@@ -201,7 +202,9 @@ export default function PartsCarDetailPage() {
     return (
       <div className="flex flex-col items-center gap-4 py-16">
         <Package className="size-10 text-muted-foreground/40" />
-        <p className="text-muted-foreground">{t("notFound")}</p>
+        <Typography.Muted className="text-muted-foreground">
+          {t("notFound")}
+        </Typography.Muted>
         <Button
           variant="outline"
           render={<Link href="/dashboard/inventory/parts-cars" />}
@@ -229,16 +232,16 @@ export default function PartsCarDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold tracking-tight">
+              <Typography.H1 className="text-2xl font-semibold tracking-tight">
                 {car.make} {car.model}
-              </h1>
+              </Typography.H1>
               <Badge variant="outline">{t(`status.${car.status}`)}</Badge>
             </div>
-            <p className="text-muted-foreground text-sm mt-0.5">
+            <Typography.Muted className="text-muted-foreground text-sm mt-0.5">
               {car.year && `${car.year} · `}
               {t("fields.cost")}: {formatMNT(car.purchase_cost)}
               {car.vin && ` · VIN: ${car.vin}`}
-            </p>
+            </Typography.Muted>
           </div>
         </div>
 
@@ -267,35 +270,37 @@ export default function PartsCarDetailPage() {
       <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">
+            <Typography.Muted className="text-xs text-muted-foreground mb-1">
               {t("fields.partCount")}
-            </p>
-            <p className="text-2xl font-semibold">{partsCount}</p>
+            </Typography.Muted>
+            <Typography.Text className="text-2xl font-semibold">
+              {partsCount}
+            </Typography.Text>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">
+            <Typography.Muted className="text-xs text-muted-foreground mb-1">
               {t("fields.totalValue")}
-            </p>
-            <p className="text-2xl font-semibold text-blue-600">
+            </Typography.Muted>
+            <Typography.Text className="text-2xl font-semibold text-blue-600">
               {formatMNT(totalValue)}
-            </p>
+            </Typography.Text>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">
+            <Typography.Muted className="text-xs text-muted-foreground mb-1">
               {t("fields.profit")}
-            </p>
-            <p
+            </Typography.Muted>
+            <Typography.Text
               className={`text-2xl font-semibold ${
                 profit >= 0 ? "text-green-600" : "text-red-600"
               }`}
             >
               {profit >= 0 ? "+" : ""}
               {formatMNT(profit)}
-            </p>
+            </Typography.Text>
           </CardContent>
         </Card>
       </div>
@@ -381,14 +386,14 @@ export default function PartsCarDetailPage() {
 
       {/* Parts List Grouped by Location */}
       <div className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">
+        <Typography.H2 className="text-lg font-semibold">
           {t("partsSection.title")}
           {partsCount > 0 && (
             <span className="text-muted-foreground font-normal text-sm ml-2">
               {t("partsSection.count", { count: partsCount })}
             </span>
           )}
-        </h2>
+        </Typography.H2>
 
         {partsLoading ? (
           <Skeleton className="h-48 w-full rounded-xl" />
@@ -396,11 +401,11 @@ export default function PartsCarDetailPage() {
           <Card>
             <CardContent className="flex flex-col items-center gap-3 py-12">
               <Package className="size-10 text-muted-foreground/40" />
-              <p className="text-muted-foreground text-sm">
+              <Typography.Muted className="text-muted-foreground text-sm">
                 {canAddParts
                   ? t("partsSection.emptyCanAdd")
                   : t("partsSection.emptyNoParts")}
-              </p>
+              </Typography.Muted>
             </CardContent>
           </Card>
         ) : (
@@ -436,16 +441,16 @@ export default function PartsCarDetailPage() {
                         className="flex items-center justify-between gap-4 px-5 py-3"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-sm truncate">
+                          <Typography.Text className="font-medium text-sm truncate">
                             {p.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
+                          </Typography.Text>
+                          <Typography.Muted className="text-xs text-muted-foreground">
                             {p.condition === "good"
                               ? t("conditions.good")
                               : p.condition === "fair"
                                 ? t("conditions.fair")
                                 : t("conditions.damaged")}
-                          </p>
+                          </Typography.Muted>
                         </div>
                         <span className="text-sm font-semibold tabular-nums shrink-0">
                           ×{p.quantity}
@@ -488,15 +493,15 @@ export default function PartsCarDetailPage() {
             <div className="flex items-center gap-3">
               <CheckCircle2 className="size-5 text-green-600" />
               <div>
-                <p className="font-medium text-sm text-green-800">
+                <Typography.Text className="font-medium text-sm text-green-800">
                   {t("completed.title")}
-                </p>
-                <p className="text-xs text-green-600">
+                </Typography.Text>
+                <Typography.Text className="text-xs text-green-600">
                   {t("completed.description", {
                     count: car.total_parts_actual,
                     value: formatMNT(car.total_estimated_value),
                   })}
-                </p>
+                </Typography.Text>
               </div>
             </div>
             <Button

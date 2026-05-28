@@ -15,6 +15,7 @@ import { Link } from "@/lib/i18n/navigation";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
 import { useState } from "react";
+import { Typography } from "@/components/ui/typography";
 
 export default function NewPartsCarPage() {
   const t = useTranslations("inventory");
@@ -68,12 +69,12 @@ export default function NewPartsCarPage() {
           <ArrowLeft className="size-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             Шинэ задаргааны машин
-          </h1>
-          <p className="text-muted-foreground">
+          </Typography.H1>
+          <Typography.Muted className="text-muted-foreground">
             Хятадаас ирсэн машины мэдээллийг бүртгэх
-          </p>
+          </Typography.Muted>
         </div>
       </div>
 

@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Link } from "@/lib/i18n/navigation";
 import { signup } from "./actions";
+import { Typography } from "@/components/ui/typography";
 
 export default function SignupPage() {
   const t = useTranslations("auth.signup");
@@ -39,8 +40,8 @@ export default function SignupPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="text-center">
-        <h2 className="text-lg font-semibold text-foreground">{t("title")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
+        <Typography.H2 className="text-lg font-semibold text-foreground">{t("title")}</Typography.H2>
+        <Typography.Muted className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</Typography.Muted>
       </div>
       <form action={formAction}>
         <FieldGroup>
@@ -155,7 +156,7 @@ export default function SignupPage() {
               {isPending ? <Loader2 className="animate-spin" /> : <UserPlus />}
               {t("submit")}
             </Button>
-            <p className="mt-4 text-center text-sm text-muted-foreground">
+            <Typography.Muted className="mt-4 text-center text-sm text-muted-foreground">
               {t("haveAccount")}{" "}
               <Link
                 href="/auth/login"
@@ -163,7 +164,7 @@ export default function SignupPage() {
               >
                 {authT("signIn")}
               </Link>
-            </p>
+            </Typography.Muted>
           </Field>
         </FieldGroup>
       </form>

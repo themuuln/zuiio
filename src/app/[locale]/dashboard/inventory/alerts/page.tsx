@@ -21,6 +21,7 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { Typography } from "@/components/ui/typography";
 
 export default function AlertsPage() {
   const t = useTranslations("inventory");
@@ -84,10 +85,10 @@ export default function AlertsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("alertsTitle")}
-        </h1>
-        <p className="text-muted-foreground">{t("alertsSubtitle")}</p>
+        </Typography.H1>
+        <Typography.Muted className="text-muted-foreground">{t("alertsSubtitle")}</Typography.Muted>
       </div>
 
       <Card>
@@ -121,12 +122,12 @@ export default function AlertsPage() {
                 >
                   <AlertTriangle className="size-5 text-red-500 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">
+                    <Typography.Text className="font-medium text-sm truncate">
                       {a.part_name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
+                    </Typography.Text>
+                    <Typography.Muted className="text-xs text-muted-foreground">
                       {a.category ?? "—"} · {a.part_number ?? "—"}
-                    </p>
+                    </Typography.Muted>
                   </div>
                   <span className="text-sm tabular-nums">
                     {a.quantity_on_hand} / {a.min} {a.unit}

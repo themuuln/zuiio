@@ -34,6 +34,7 @@ import { DataExportSection } from "./_data-export-section";
 import { OrganizationCard } from "./_organization-card";
 import { CommissionRulesSection } from "./_commission-rules-section";
 import { DiagnosisLabelsSection } from "./_diagnosis-labels-section";
+import { Typography } from "@/components/ui/typography";
 
 function SectionHeading({
   icon: Icon,
@@ -50,8 +51,8 @@ function SectionHeading({
         <Icon className="size-5 text-muted-foreground" />
       </div>
       <div>
-        <h2 className="text-base font-semibold tracking-tight">{title}</h2>
-        <p className="text-sm text-muted-foreground">{description}</p>
+        <Typography.H2 className="text-base font-semibold tracking-tight">{title}</Typography.H2>
+        <Typography.Muted className="text-sm text-muted-foreground">{description}</Typography.Muted>
       </div>
     </div>
   );
@@ -113,8 +114,8 @@ function ErrorState({
             <Settings2 className="size-5 text-destructive" />
           </div>
           <div>
-            <p className="font-semibold text-sm">Failed to load settings</p>
-            <p className="text-sm text-muted-foreground">{message}</p>
+            <Typography.Text className="font-semibold text-sm">Failed to load settings</Typography.Text>
+            <Typography.Muted className="text-sm text-muted-foreground">{message}</Typography.Muted>
           </div>
         </div>
         <Button onClick={onRetry} variant="outline">

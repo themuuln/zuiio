@@ -18,6 +18,7 @@ import {
   useExpenseCategories,
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { Typography } from "@/components/ui/typography";
 
 interface ExpenseFormState {
   description: string;
@@ -121,15 +122,15 @@ export default function NewExpensePage() {
             <ArrowLeft className="size-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <Typography.H1 className="text-2xl font-semibold tracking-tight">
               {t("addExpense")}
-            </h1>
-            <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+            </Typography.H1>
+            <Typography.Muted className="text-sm text-muted-foreground">{t("subtitle")}</Typography.Muted>
           </div>
         </div>
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
-            <p className="text-sm text-destructive">{orgQuery.error.message}</p>
+            <Typography.Text className="text-sm text-destructive">{orgQuery.error.message}</Typography.Text>
           </CardContent>
         </Card>
       </div>
@@ -148,10 +149,10 @@ export default function NewExpensePage() {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("addExpense")}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+          </Typography.H1>
+          <Typography.Muted className="text-sm text-muted-foreground">{t("subtitle")}</Typography.Muted>
         </div>
       </div>
 
@@ -184,9 +185,9 @@ export default function NewExpensePage() {
                   aria-invalid={!!fieldErrors.description}
                 />
                 {fieldErrors.description && (
-                  <p className="text-xs text-destructive mt-1">
+                  <Typography.Text className="text-xs text-destructive mt-1">
                     {fieldErrors.description}
-                  </p>
+                  </Typography.Text>
                 )}
               </div>
 
@@ -212,9 +213,9 @@ export default function NewExpensePage() {
                   aria-invalid={!!fieldErrors.amount}
                 />
                 {fieldErrors.amount && (
-                  <p className="text-xs text-destructive mt-1">
+                  <Typography.Text className="text-xs text-destructive mt-1">
                     {fieldErrors.amount}
-                  </p>
+                  </Typography.Text>
                 )}
               </div>
 

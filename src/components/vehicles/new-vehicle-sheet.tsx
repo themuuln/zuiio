@@ -10,6 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+} from "@/components/ui/combobox";
+import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
@@ -22,14 +31,16 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ColorSelect } from "@/components/vehicles/color-select";
+import { useCarBrands, useCarModels } from "@/lib/queries/use-car-catalog";
 import {
   isValidMongolianPlate,
   transliterateMongolianPlate,
 } from "@/lib/form-validation";
-import { inputProps } from "@/lib/form-ux";
+import { formatPlateInput, inputProps } from "@/lib/form-ux";
 import { vehicleKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Customer } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 type VehicleFormState = {
   plateNumber: string;
@@ -108,6 +119,41 @@ export function NewVehicleSheet({
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
   );
+
+  // Car catalog dropdowns
+  const { data: brands = [] } = useCarBrands();
+  const selectedBrand = brands.find(
+    (b) => b.name.toLowerCase() === form.make.toLowerCase(),
+  );
+  const { data: models = [] } = useCarModels(selectedBrand?.id ?? null);
+
+  const handleModelSelect = (modelName: string) => {
+    setForm((current) => {
+      const next = { ...current, model: modelName };
+      const matched = models.find(
+        (m) => m.name.toLowerCase() === modelName.toLowerCase(),
+      );
+      if (matched) {
+        if (matched.body_type && !current.bodyType)
+          next.bodyType = matched.body_type
+            .split(",")[0]
+            .replace(/^\w/, (c) => c.toUpperCase());
+        if (matched.fuel_type && !current.fuelType)
+          next.fuelType = matched.fuel_type
+            .split(",")[0]
+            .replace(/^\w/, (c) => c.toUpperCase());
+        if (matched.transmission && !current.transmission)
+          next.transmission = matched.transmission
+            .split(",")[0]
+            .replace(/^\w/, (c) => c.toUpperCase());
+        if (matched.drivetrain && !current.drivetrain)
+          next.drivetrain = matched.drivetrain.split(",")[0].toUpperCase();
+        if (matched.engine_options && !current.engine)
+          next.engine = matched.engine_options.split(",")[0].trim();
+      }
+      return next;
+    });
+  };
 
   const searchCustomers = useCallback(
     async (query: string) => {
@@ -233,7 +279,9 @@ export function NewVehicleSheet({
             {error && (
               <Card className="border-destructive/50 bg-destructive/5">
                 <CardContent className="p-4">
-                  <p className="text-sm text-destructive">{error}</p>
+                  <Typography.Text className="text-sm text-destructive">
+                    {error}
+                  </Typography.Text>
                 </CardContent>
               </Card>
             )}
@@ -258,14 +306,14 @@ export function NewVehicleSheet({
                           <User className="size-4" />
                         </div>
                         <div>
-                          <p className="font-medium">
+                          <Typography.Text className="font-medium">
                             {getCustomerLabel(selectedCustomer)}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
+                          </Typography.Text>
+                          <Typography.Muted className="text-sm text-muted-foreground">
                             {selectedCustomer.phone ||
                               selectedCustomer.email ||
                               "No contact info"}
-                          </p>
+                          </Typography.Muted>
                         </div>
                       </div>
                       <Button
@@ -284,12 +332,11 @@ export function NewVehicleSheet({
                         onSearch={searchCustomers}
                         debounceMs={400}
                       />
-                      {!customerResults ||
-                      customerResults.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
+                      {!customerResults || customerResults.length === 0 ? (
+                        <Typography.Muted className="text-sm text-muted-foreground">
                           Search for an existing customer before adding the
                           vehicle.
-                        </p>
+                        </Typography.Muted>
                       ) : (
                         <div className="flex flex-col gap-2">
                           {customerResults.map((customer) => (
@@ -303,14 +350,14 @@ export function NewVehicleSheet({
                                 <User className="size-4" />
                               </div>
                               <div>
-                                <p className="font-medium">
+                                <Typography.Text className="font-medium">
                                   {getCustomerLabel(customer)}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
+                                </Typography.Text>
+                                <Typography.Muted className="text-sm text-muted-foreground">
                                   {customer.phone ||
                                     customer.email ||
                                     "No contact info"}
-                                </p>
+                                </Typography.Muted>
                               </div>
                             </button>
                           ))}
@@ -342,8 +389,8 @@ export function NewVehicleSheet({
                       onChange={(event) =>
                         setForm((current) => ({
                           ...current,
-                          plateNumber: transliterateMongolianPlate(
-                            event.target.value,
+                          plateNumber: formatPlateInput(
+                            transliterateMongolianPlate(event.target.value),
                           ),
                         }))
                       }
@@ -353,9 +400,9 @@ export function NewVehicleSheet({
                       {...inputProps("plate")}
                     />
                     {fieldErrors.plateNumber && (
-                      <p className="mt-1 text-xs text-destructive">
+                      <Typography.Text className="mt-1 text-xs text-destructive">
                         {fieldErrors.plateNumber}
-                      </p>
+                      </Typography.Text>
                     )}
                   </div>
                   <div>
@@ -386,24 +433,42 @@ export function NewVehicleSheet({
                     >
                       Make
                     </label>
-                    <Input
-                      id="sheet-vehicle-make"
-                      value={form.make}
-                      onChange={(event) =>
+                    <Combobox
+                      items={brands}
+                      value={selectedBrand ?? null}
+                      onValueChange={(brand) => {
                         setForm((current) => ({
                           ...current,
-                          make: event.target.value,
-                        }))
-                      }
-                      className={`h-11 ${fieldErrors.make ? "border-destructive" : ""}`}
-                      placeholder="Toyota"
-                      aria-invalid={!!fieldErrors.make}
-                      {...inputProps("make")}
-                    />
+                          make: brand?.name ?? "",
+                          model: "",
+                        }));
+                      }}
+                      isItemEqualToValue={(a, b) => a.id === b.id}
+                    >
+                      <ComboboxInput
+                        placeholder="Search brand..."
+                        className={`h-11 ${fieldErrors.make ? "border-destructive" : ""}`}
+                        aria-invalid={!!fieldErrors.make}
+                      >
+                        <ComboboxValue>
+                          {selectedBrand?.name ?? "Search brand..."}
+                        </ComboboxValue>
+                      </ComboboxInput>
+                      <ComboboxContent>
+                        <ComboboxList>
+                          {(brand: (typeof brands)[number]) => (
+                            <ComboboxItem key={brand.id} value={brand}>
+                              {brand.name}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                        <ComboboxEmpty>No brand found</ComboboxEmpty>
+                      </ComboboxContent>
+                    </Combobox>
                     {fieldErrors.make && (
-                      <p className="mt-1 text-xs text-destructive">
+                      <Typography.Text className="mt-1 text-xs text-destructive">
                         {fieldErrors.make}
-                      </p>
+                      </Typography.Text>
                     )}
                   </div>
                   <div>
@@ -413,24 +478,45 @@ export function NewVehicleSheet({
                     >
                       Model
                     </label>
-                    <Input
-                      id="sheet-vehicle-model"
-                      value={form.model}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          model: event.target.value,
-                        }))
-                      }
-                      className={`h-11 ${fieldErrors.model ? "border-destructive" : ""}`}
-                      placeholder="Prius"
-                      aria-invalid={!!fieldErrors.model}
-                      {...inputProps("model")}
-                    />
+                    <Combobox
+                      items={models}
+                      value={models.find((m) => m.name === form.model) ?? null}
+                      onValueChange={(model) => {
+                        if (model) handleModelSelect(model.name);
+                      }}
+                      disabled={!selectedBrand}
+                      isItemEqualToValue={(a, b) => a.id === b.id}
+                    >
+                      <ComboboxInput
+                        placeholder={selectedBrand ? "Search model..." : "Select brand first"}
+                        className={`h-11 ${fieldErrors.model ? "border-destructive" : ""}`}
+                        aria-invalid={!!fieldErrors.model}
+                      >
+                        <ComboboxValue>
+                          {form.model || (selectedBrand ? "Search model..." : "Select brand first")}
+                        </ComboboxValue>
+                      </ComboboxInput>
+                      <ComboboxContent>
+                        <ComboboxList>
+                          {(model: (typeof models)[number]) => (
+                            <ComboboxItem key={model.id} value={model}>
+                              <span>
+                                {model.name}
+                                {model.year_start
+                                  ? ` (${model.year_start}${model.year_end ? "-" + model.year_end : "+"})`
+                                  : ""
+                                }
+                              </span>
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                        <ComboboxEmpty>No model found</ComboboxEmpty>
+                      </ComboboxContent>
+                    </Combobox>
                     {fieldErrors.model && (
-                      <p className="mt-1 text-xs text-destructive">
+                      <Typography.Text className="mt-1 text-xs text-destructive">
                         {fieldErrors.model}
-                      </p>
+                      </Typography.Text>
                     )}
                   </div>
                   <div>

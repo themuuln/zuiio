@@ -28,6 +28,21 @@ export type VehicleServiceSchedule = Tables<"vehicle_service_schedules">;
 export type ReminderLog = Tables<"reminder_logs">;
 export type AuditLogInsert = TablesInsert<"audit_logs">;
 
+// ── Org Theme Types ──────────────────────────────────────────────
+export interface OrgTheme {
+  primaryColor: string;    // oklch value, e.g. "oklch(0.55 0.15 250)"
+  accentColor: string;     // oklch value
+  radius: string;          // CSS value, e.g. "0px", "0.5rem"
+  fontFamily: string;      // CSS font-family stack
+}
+
+export const DEFAULT_ORG_THEME: OrgTheme = {
+  primaryColor: "oklch(0.205 0 0)",
+  accentColor: "oklch(0.97 0 0)",
+  radius: "0px",
+  fontFamily: "Inter, sans-serif",
+};
+
 // ── Re-exports from database.types.ts ────────────────────────────
 // Domain types are defined in @/lib/database.types.ts.
 // This file adds API-level and convenience types used across routes and services.

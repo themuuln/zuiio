@@ -49,6 +49,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
 import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { Typography } from "@/components/ui/typography";
 
 function shouldIgnoreDragActivation(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
@@ -507,7 +508,7 @@ export function BayViewClient() {
   if (error || !data) {
     return (
       <div className="flex flex-col items-center justify-center py-8 gap-2">
-        <p className="text-sm text-muted-foreground">{error ?? t("noData")}</p>
+        <Typography.Muted className="text-sm text-muted-foreground">{error ?? t("noData")}</Typography.Muted>
         <Button
           variant="link"
           onClick={() => fetchData(true)}

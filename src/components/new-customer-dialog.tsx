@@ -22,6 +22,7 @@ import { inputProps, formatMongolianPhone } from "@/lib/form-ux";
 import { useRouter } from "@/lib/i18n/navigation";
 import { customerKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { Typography } from "@/components/ui/typography";
 
 type CustomerType = "individual" | "company";
 
@@ -213,7 +214,7 @@ export function NewCustomerDialog({
         {error && !conflictInfo && (
           <Card className="border-destructive/50 bg-destructive/5">
             <CardContent className="p-4">
-              <p className="text-sm text-destructive">{error}</p>
+              <Typography.Text className="text-sm text-destructive">{error}</Typography.Text>
             </CardContent>
           </Card>
         )}
@@ -275,9 +276,9 @@ export function NewCustomerDialog({
                         aria-invalid={!!fieldErrors.companyName}
                       />
                       {fieldErrors.companyName && (
-                        <p className="text-xs text-destructive mt-1">
+                        <Typography.Text className="text-xs text-destructive mt-1">
                           {fieldErrors.companyName}
-                        </p>
+                        </Typography.Text>
                       )}
                     </div>
                     <div>
@@ -325,9 +326,9 @@ export function NewCustomerDialog({
                         aria-invalid={!!fieldErrors.firstName}
                       />
                       {fieldErrors.firstName && (
-                        <p className="text-xs text-destructive mt-1">
+                        <Typography.Text className="text-xs text-destructive mt-1">
                           {fieldErrors.firstName}
-                        </p>
+                        </Typography.Text>
                       )}
                     </div>
                     <div>

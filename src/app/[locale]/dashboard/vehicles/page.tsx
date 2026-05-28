@@ -22,13 +22,11 @@ import { Link } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useVehicles } from "@/lib/queries/use-vehicles";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import type { Vehicle } from "@/lib/types";
-
-interface VehicleWithOwner extends Vehicle {
-  owner_name?: string;
-}
+import { Typography } from "@/components/ui/typography";
 
 function VehicleRowSkeleton() {
   return (
@@ -45,6 +43,7 @@ function VehicleRowSkeleton() {
 
 export default function VehiclesPage() {
   const [search, setSearch] = useState("");
+  const { setNewVehicleDialogOpen } = usePageHeader();
   const t = useTranslations("vehicles");
   const now = useClientNow();
 
@@ -127,15 +126,14 @@ export default function VehiclesPage() {
       <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <Typography.H1 className="text-2xl font-semibold tracking-tight">
               {t("title")}
-            </h1>
-            <p className="text-muted-foreground">{t("subtitle")}</p>
+            </Typography.H1>
+            <Typography.Muted className="text-muted-foreground">
+              {t("subtitle")}
+            </Typography.Muted>
           </div>
-          <Button
-            render={<Link href="/dashboard/vehicles/new" />}
-            size="default"
-          >
+          <Button onClick={() => setNewVehicleDialogOpen(true)} size="default">
             <Plus className="size-4" />
             {t("addVehicle")}
           </Button>
@@ -143,9 +141,9 @@ export default function VehiclesPage() {
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-destructive">
+              <Typography.Text className="text-sm text-destructive">
                 {error?.message ?? t("noOrganization")}
-              </p>
+              </Typography.Text>
               <Button variant="outline" size="sm" onClick={() => refetch()}>
                 {t("retry")}
               </Button>
@@ -169,17 +167,13 @@ export default function VehiclesPage() {
     <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("title")}
-          </h1>
-          <p className="text-muted-foreground">
+          </Typography.H1>
+          <Typography.Muted className="text-muted-foreground">
             {t("searchResults", { count: list.length })}
-          </p>
+          </Typography.Muted>
         </div>
-        <Button render={<Link href="/dashboard/vehicles/new" />} size="default">
-          <Plus className="size-4" />
-          {t("addVehicle")}
-        </Button>
       </div>
 
       <ListToolbar
@@ -199,7 +193,7 @@ export default function VehiclesPage() {
               sheetName="Vehicles"
             />
             <Button
-              render={<Link href="/dashboard/vehicles/new" />}
+              onClick={() => setNewVehicleDialogOpen(true)}
               size="default"
             >
               <Plus className="size-4" />
@@ -225,7 +219,7 @@ export default function VehiclesPage() {
               {!search && (
                 <EmptyContent>
                   <Button
-                    render={<Link href="/dashboard/vehicles/new" />}
+                    onClick={() => setNewVehicleDialogOpen(true)}
                     variant="outline"
                   >
                     {t("addFirstVehicle")}

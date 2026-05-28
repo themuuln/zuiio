@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -275,9 +276,9 @@ export function PostServiceForm({
             </div>
 
             {!hasEntries && (
-              <p className="text-xs text-muted-foreground/60 italic py-2">
+              <Typography.Muted className="text-xs text-muted-foreground/60 italic py-2">
                 No services recorded on this work order.
-              </p>
+              </Typography.Muted>
             )}
 
             <div className="flex flex-col gap-2">
@@ -313,7 +314,7 @@ export function PostServiceForm({
           {error && (
             <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
               <AlertTriangle className="mt-0.5 size-4 shrink-0 text-red-500" />
-              <p className="text-xs text-red-700 dark:text-red-400">{error}</p>
+              <Typography.Text className="text-xs text-red-700 dark:text-red-400">{error}</Typography.Text>
             </div>
           )}
 

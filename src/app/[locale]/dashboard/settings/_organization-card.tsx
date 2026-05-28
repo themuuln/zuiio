@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { Organization } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 interface OrganizationCardProps {
   orgId: string;
@@ -40,16 +41,16 @@ export function OrganizationCard({
           onLogoChange={() => onRefetch()}
         />
         <div className="rounded-lg bg-muted/50 px-3 py-2.5">
-          <p className="text-xs font-medium text-muted-foreground">Name</p>
-          <p className="mt-0.5 text-sm font-medium">
+          <Typography.Muted className="text-xs font-medium text-muted-foreground">Name</Typography.Muted>
+          <Typography.Text className="mt-0.5 text-sm font-medium">
             {organization?.name ?? "\u2014"}
-          </p>
+          </Typography.Text>
         </div>
         <div className="rounded-lg bg-muted/50 px-3 py-2.5">
-          <p className="text-xs font-medium text-muted-foreground">Slug</p>
-          <p className="mt-0.5 text-sm font-mono text-muted-foreground">
+          <Typography.Muted className="text-xs font-medium text-muted-foreground">Slug</Typography.Muted>
+          <Typography.Muted className="mt-0.5 text-sm font-mono text-muted-foreground">
             {organization?.slug ?? "\u2014"}
-          </p>
+          </Typography.Muted>
         </div>
       </CardContent>
     </Card>

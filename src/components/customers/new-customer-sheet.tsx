@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { inputProps, formatMongolianPhone } from "@/lib/form-ux";
 import { customerKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { Typography } from "@/components/ui/typography";
 
 type CustomerType = "individual" | "company";
 
@@ -194,7 +195,9 @@ export function NewCustomerSheet({
                   <div className="text-sm">
                     <span className="font-medium text-amber-800 dark:text-amber-300">
                       A customer with this{" "}
-                      {conflictInfo.field === "phone" ? "phone number" : "email"}{" "}
+                      {conflictInfo.field === "phone"
+                        ? "phone number"
+                        : "email"}{" "}
                       already exists.
                     </span>
                   </div>
@@ -205,7 +208,7 @@ export function NewCustomerSheet({
             {error && !conflictInfo && (
               <Card className="border-destructive/50 bg-destructive/5">
                 <CardContent className="p-4">
-                  <p className="text-sm text-destructive">{error}</p>
+                  <Typography.Text className="text-sm text-destructive">{error}</Typography.Text>
                 </CardContent>
               </Card>
             )}
@@ -267,9 +270,9 @@ export function NewCustomerSheet({
                             aria-invalid={!!fieldErrors.companyName}
                           />
                           {fieldErrors.companyName && (
-                            <p className="text-xs text-destructive mt-1">
+                            <Typography.Text className="text-xs text-destructive mt-1">
                               {fieldErrors.companyName}
-                            </p>
+                            </Typography.Text>
                           )}
                         </div>
                         <div>
@@ -317,9 +320,9 @@ export function NewCustomerSheet({
                             aria-invalid={!!fieldErrors.firstName}
                           />
                           {fieldErrors.firstName && (
-                            <p className="text-xs text-destructive mt-1">
+                            <Typography.Text className="text-xs text-destructive mt-1">
                               {fieldErrors.firstName}
-                            </p>
+                            </Typography.Text>
                           )}
                         </div>
                         <div>

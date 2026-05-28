@@ -23,6 +23,7 @@ import type { Vehicle, WorkOrder } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, formatPlateNumber } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 function getWaitTime(createdAt: string): { text: string; urgent: boolean } {
   const minutes = Math.floor(
@@ -155,12 +156,12 @@ export function QueuedVehicleCard({
           </>
         ) : (
           <div className="min-w-0">
-            <p className="truncate text-xs font-medium">
+            <Typography.Text className="truncate text-xs font-medium">
               {workOrder.complaint || `WO ${workOrder.id.slice(0, 8)}`}
-            </p>
-            <p className="text-[11px] text-muted-foreground">
+            </Typography.Text>
+            <Typography.Muted className="text-[11px] text-muted-foreground">
               {t("noVehicle")}
-            </p>
+            </Typography.Muted>
           </div>
         )}
       </div>
@@ -309,12 +310,12 @@ export function WaitingQueue({
           {items.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-4 gap-1.5 text-muted-foreground/70">
               <Car className="size-4 text-amber-500/60" />
-              <p className="text-[11px] font-medium">{t("noVehiclesWaiting")}</p>
+              <Typography.Text className="text-[11px] font-medium">{t("noVehiclesWaiting")}</Typography.Text>
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-4 gap-1.5 text-muted-foreground/70">
               <Search className="size-5 text-primary/60" />
-              <p className="text-[11px] font-medium">{t("noMatchSearch")}</p>
+              <Typography.Text className="text-[11px] font-medium">{t("noMatchSearch")}</Typography.Text>
               <Button
                 variant="ghost"
                 onClick={() => setSearchQuery("")}

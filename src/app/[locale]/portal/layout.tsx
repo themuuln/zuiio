@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 const NAV_ITEMS = [
   { href: "/portal", labelKey: "portal.dashboard", icon: Wrench },
@@ -70,7 +71,7 @@ export default function PortalLayout({
   if (!customer) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-muted-foreground">Redirecting to login…</p>
+        <Typography.Muted className="text-sm text-muted-foreground">Redirecting to login…</Typography.Muted>
       </div>
     );
   }

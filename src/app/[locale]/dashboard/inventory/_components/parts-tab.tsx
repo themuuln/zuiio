@@ -39,6 +39,7 @@ import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
 import { SortKeyHeader } from "./sort-key-header";
 import type { SortKey } from "./constants";
+import { Typography } from "@/components/ui/typography";
 
 // Part data from API includes popularity_score joined from analytics
 type PartRow = PartsCatalogItem & { popularity_score?: number };
@@ -284,7 +285,7 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16">
             <Package className="size-10 text-muted-foreground/40" />
-            <p className="text-muted-foreground">{t("noParts")}</p>
+            <Typography.Muted className="text-muted-foreground">{t("noParts")}</Typography.Muted>
             <Button variant="outline" onClick={() => setShowAddPart(true)}>
               {t("addFirstPart")}
             </Button>

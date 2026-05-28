@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/table";
 import { Link } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { Typography } from "@/components/ui/typography";
 
 type PreviewRow = Record<string, string>;
 
@@ -125,11 +126,11 @@ function PreviewCard({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+          <Typography.Muted className="text-sm text-muted-foreground">
             {preview.totalRows} row
             {preview.totalRows !== 1 ? "s" : ""} found
             {isPreview && " — showing first 5"}
-          </p>
+          </Typography.Muted>
           {isPreview && (
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={onCancel}>
@@ -342,9 +343,9 @@ export default function ImportCustomersPage() {
         />
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
-            <p className="text-sm text-destructive">
+            <Typography.Text className="text-sm text-destructive">
               {orgQuery.error?.message ?? "No organization found"}
-            </p>
+            </Typography.Text>
           </CardContent>
         </Card>
       </div>
@@ -370,10 +371,10 @@ export default function ImportCustomersPage() {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Import Customers</h1>
-          <p className="text-sm text-muted-foreground">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">Import Customers</Typography.H1>
+          <Typography.Muted className="text-sm text-muted-foreground">
             Upload a CSV file to create customers in bulk
-          </p>
+          </Typography.Muted>
         </div>
       </div>
 
@@ -397,12 +398,12 @@ export default function ImportCustomersPage() {
               >
                 <Upload className="size-10 text-muted-foreground/50" />
                 <div className="text-center">
-                  <p className="font-medium">
+                  <Typography.Text className="font-medium">
                     Drag and drop a CSV file here, or click to browse
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  </Typography.Text>
+                  <Typography.Muted className="mt-1 text-sm text-muted-foreground">
                     Only .csv files with customer data are accepted
-                  </p>
+                  </Typography.Muted>
                 </div>
               </label>
               <input
@@ -439,9 +440,9 @@ export default function ImportCustomersPage() {
         <Card>
           <CardContent className="flex items-center gap-3 p-6">
             <Loader2 className="size-5 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">
+            <Typography.Muted className="text-sm text-muted-foreground">
               Processing {state.total} customer{state.total !== 1 ? "s" : ""}...
-            </p>
+            </Typography.Muted>
           </CardContent>
         </Card>
       )}
@@ -456,17 +457,17 @@ export default function ImportCustomersPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <p className="text-lg font-semibold">
+              <Typography.Text className="text-lg font-semibold">
                 Successfully imported {state.imported} customer
                 {state.imported !== 1 ? "s" : ""}
-              </p>
+              </Typography.Text>
 
               {state.errors.length > 0 && (
                 <div>
-                  <h3 className="mb-2 flex items-center gap-2 text-sm font-medium text-destructive">
+                  <Typography.H3 className="mb-2 flex items-center gap-2 text-sm font-medium text-destructive">
                     <AlertCircle className="size-4" />
                     {state.errors.length} error{state.errors.length !== 1 ? "s" : ""}
-                  </h3>
+                  </Typography.H3>
                   <div className="max-h-48 overflow-y-auto rounded-md border">
                     <Table>
                       <TableHeader>
@@ -513,7 +514,7 @@ export default function ImportCustomersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <p className="text-sm text-destructive">{state.message}</p>
+            <Typography.Text className="text-sm text-destructive">{state.message}</Typography.Text>
             <div className="flex gap-3">
               <Button variant="outline" onClick={resetImport}>
                 Try Again

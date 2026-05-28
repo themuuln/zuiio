@@ -49,6 +49,7 @@ import { CustomerWorkOrderHistory } from "./_customer-work-order-history";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { ContactCard } from "@/components/sidebar-tabs/contact-card";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { Typography } from "@/components/ui/typography";
 
 type CustomerType = "individual" | "company";
 
@@ -334,7 +335,7 @@ export default function CustomerDetailPage() {
         </Button>
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
-            <p className="text-muted-foreground">{error}</p>
+            <Typography.Muted className="text-muted-foreground">{error}</Typography.Muted>
             <Button onClick={() => refetch()} variant="outline">
               {t("retry")}
             </Button>
@@ -362,12 +363,12 @@ export default function CustomerDetailPage() {
           <ArrowLeft className="size-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {customerName}
-          </h1>
-          <p className="text-sm text-muted-foreground">
+          </Typography.H1>
+          <Typography.Muted className="text-sm text-muted-foreground">
             Added {new Date(customer.created_at).toLocaleDateString()}
-          </p>
+          </Typography.Muted>
         </div>
         {!editing ? (
           <div className="flex gap-2">
@@ -440,9 +441,9 @@ export default function CustomerDetailPage() {
       {(editing && saveError) || (!editing && error) ? (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
-            <p className="text-sm text-destructive">
+            <Typography.Text className="text-sm text-destructive">
               {editing ? saveError : error}
-            </p>
+            </Typography.Text>
           </CardContent>
         </Card>
       ) : null}
@@ -465,57 +466,57 @@ export default function CustomerDetailPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-lg bg-muted/50 p-3">
-                <p className="mb-1 text-xs text-muted-foreground">
+                <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                   {t("phone")}
-                </p>
-                <p className="text-sm font-medium">{customer.phone || "—"}</p>
+                </Typography.Muted>
+                <Typography.Text className="text-sm font-medium">{customer.phone || "—"}</Typography.Text>
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
-                <p className="mb-1 text-xs text-muted-foreground">
+                <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                   {t("email")}
-                </p>
-                <p className="text-sm font-medium">{customer.email || "—"}</p>
+                </Typography.Muted>
+                <Typography.Text className="text-sm font-medium">{customer.email || "—"}</Typography.Text>
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
-                <p className="mb-1 text-xs text-muted-foreground">
+                <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                   {t("type")}
-                </p>
-                <p className="text-sm font-medium capitalize">
+                </Typography.Muted>
+                <Typography.Text className="text-sm font-medium capitalize">
                   {customer.type}
-                </p>
+                </Typography.Text>
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
-                <p className="mb-1 text-xs text-muted-foreground">
+                <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                   {t("contactPerson")}
-                </p>
-                <p className="text-sm font-medium">
+                </Typography.Muted>
+                <Typography.Text className="text-sm font-medium">
                   {customer.contact_person || customer.first_name || "—"}
-                </p>
+                </Typography.Text>
               </div>
               <div className="rounded-lg bg-muted/50 p-3 sm:col-span-2">
-                <p className="mb-1 text-xs text-muted-foreground">
+                <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                   {t("address")}
-                </p>
-                <p className="text-sm font-medium">{customer.address || "—"}</p>
+                </Typography.Muted>
+                <Typography.Text className="text-sm font-medium">{customer.address || "—"}</Typography.Text>
               </div>
               {customer.type === "company" && (
                 <div className="rounded-lg bg-muted/50 p-3 sm:col-span-2">
-                  <p className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Typography.Muted className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
                     <Building2 className="size-3.5" />
                     Company account
-                  </p>
-                  <p className="text-sm font-medium">
+                  </Typography.Muted>
+                  <Typography.Text className="text-sm font-medium">
                     {customer.company_name || "Unnamed company"}
-                  </p>
+                  </Typography.Text>
                 </div>
               )}
               <div className="rounded-lg bg-muted/50 p-3 sm:col-span-2">
-                <p className="mb-1 text-xs text-muted-foreground">
+                <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                   {t("notes")}
-                </p>
-                <p className="whitespace-pre-wrap text-sm font-medium">
+                </Typography.Muted>
+                <Typography.Text className="whitespace-pre-wrap text-sm font-medium">
                   {customer.notes || "—"}
-                </p>
+                </Typography.Text>
               </div>
             </div>
           )}

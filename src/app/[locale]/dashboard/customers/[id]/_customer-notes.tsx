@@ -22,6 +22,7 @@ import {
   useCustomerNotes,
   useDeleteCustomerNote,
 } from "@/lib/queries/use-customer-notes";
+import { Typography } from "@/components/ui/typography";
 
 interface CustomerNotesProps {
   orgId: string | undefined;
@@ -168,9 +169,9 @@ export function CustomerNotes({ orgId, customerId }: CustomerNotesProps) {
             ))}
           </div>
         ) : notes.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted-foreground">
+          <Typography.Muted className="py-4 text-center text-sm text-muted-foreground">
             {showForm ? "Add the first note above" : "No notes yet"}
-          </p>
+          </Typography.Muted>
         ) : (
           <div className="flex flex-col gap-3">
             {notes.map((note) => (
@@ -180,7 +181,7 @@ export function CustomerNotes({ orgId, customerId }: CustomerNotesProps) {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex flex-1 flex-col gap-1">
-                    <p className="whitespace-pre-wrap text-sm">{note.content}</p>
+                    <Typography.Text className="whitespace-pre-wrap text-sm">{note.content}</Typography.Text>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="outline">
                         {NOTE_TYPES.find((nt) => nt.value === note.type)

@@ -67,6 +67,7 @@ import type {
   WorkOrderStatus,
 } from "@/lib/types";
 import { cn, formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 const STATUSES = [
   "New",
@@ -416,9 +417,9 @@ export default function WorkOrderDetailPage() {
         </Button>
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
-            <p className="text-muted-foreground">
+            <Typography.Muted className="text-muted-foreground">
               {error ?? t("workOrderNotFound")}
-            </p>
+            </Typography.Muted>
             <Button onClick={() => refetchWo()} variant="outline">
               Retry
             </Button>
@@ -473,25 +474,25 @@ export default function WorkOrderDetailPage() {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <Typography.H1 className="text-2xl font-semibold tracking-tight">
               WO #{wo.id.slice(0, 8)}
-            </h1>
+            </Typography.H1>
             <StatusBadge status={wo.status as unknown as WorkOrderStatus} />
           </div>
-          <p className="text-sm text-muted-foreground">
+          <Typography.Muted className="text-sm text-muted-foreground">
             {new Date(wo.created_at).toLocaleDateString()}
             {wo.customer
               ? ` \u00B7 ${wo.customer.first_name} ${wo.customer.last_name ?? ""}`
               : ""}
             {wo.vehicle ? ` \u00B7 ${wo.vehicle.plate_number}` : ""}
-          </p>
+          </Typography.Muted>
         </div>
       </div>
 
       {error && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
-            <p className="text-sm text-destructive">{error}</p>
+            <Typography.Text className="text-sm text-destructive">{error}</Typography.Text>
           </CardContent>
         </Card>
       )}
@@ -527,14 +528,14 @@ export default function WorkOrderDetailPage() {
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-500" />
                 <div>
-                  <p className="font-medium text-sm">
+                  <Typography.Text className="font-medium text-sm">
                     {t("changeStatusTo", { status: confirmStatus })}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  </Typography.Text>
+                  <Typography.Muted className="text-xs text-muted-foreground mt-1">
                     {confirmStatus === "Completed"
                       ? t("markComplete")
                       : t("markCancelled")}
-                  </p>
+                  </Typography.Muted>
                 </div>
               </div>
               <Input
@@ -579,31 +580,31 @@ export default function WorkOrderDetailPage() {
           {wo.customer && (
             <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
               <div>
-                <p className="text-sm font-medium">
+                <Typography.Text className="text-sm font-medium">
                   {wo.customer.first_name} {wo.customer.last_name ?? ""}
-                </p>
-                <p className="text-xs text-muted-foreground">
+                </Typography.Text>
+                <Typography.Muted className="text-xs text-muted-foreground">
                   {wo.customer.phone || wo.customer.email || "\u2014"}
-                </p>
+                </Typography.Muted>
               </div>
             </div>
           )}
           {wo.vehicle && (
             <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
               <div>
-                <p className="text-sm font-medium">{wo.vehicle.plate_number}</p>
-                <p className="text-xs text-muted-foreground">
+                <Typography.Text className="text-sm font-medium">{wo.vehicle.plate_number}</Typography.Text>
+                <Typography.Muted className="text-xs text-muted-foreground">
                   {[wo.vehicle.make, wo.vehicle.model, wo.vehicle.year]
                     .filter(Boolean)
                     .join(" ") || "\u2014"}
-                </p>
+                </Typography.Muted>
               </div>
             </div>
           )}
           {!wo.customer && !wo.vehicle && (
-            <p className="text-sm text-muted-foreground">
+            <Typography.Muted className="text-sm text-muted-foreground">
               {t("noCustomerOrVehicle")}
-            </p>
+            </Typography.Muted>
           )}
 
           {/* Complaint & Diagnosis Label */}
@@ -611,17 +612,17 @@ export default function WorkOrderDetailPage() {
             <div className="flex flex-col gap-2 p-3 bg-muted/30 rounded-lg">
               {wo.complaint && (
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">
+                  <Typography.Muted className="text-xs font-medium text-muted-foreground mb-0.5">
                     {t("complaint")}
-                  </p>
-                  <p className="text-sm">{wo.complaint}</p>
+                  </Typography.Muted>
+                  <Typography.Text className="text-sm">{wo.complaint}</Typography.Text>
                 </div>
               )}
               {(wo as any).diagnosis_label && (
                 <div className="flex items-center gap-2">
-                  <p className="text-xs font-medium text-muted-foreground">
+                  <Typography.Muted className="text-xs font-medium text-muted-foreground">
                     {t("diagnosis")}
-                  </p>
+                  </Typography.Muted>
                   <Badge
                     variant="outline"
                     className="gap-1.5"
@@ -726,9 +727,9 @@ export default function WorkOrderDetailPage() {
             </div>
           )}
           {(wo.services ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
+            <Typography.Muted className="text-sm text-muted-foreground py-4 text-center">
               {t("noServicesAdded")}
-            </p>
+            </Typography.Muted>
           ) : (
             (wo.services ?? []).map((s) => (
               <div
@@ -736,21 +737,21 @@ export default function WorkOrderDetailPage() {
                 className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">
+                  <Typography.Text className="text-sm font-medium truncate">
                     {s.service_name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
+                  </Typography.Text>
+                  <Typography.Muted className="text-xs text-muted-foreground">
                     {s.quantity} x {formatMNT(Number(s.unit_price))}
                     {Number(s.discount_amount) > 0
                       ? ` (-${formatMNT(Number(s.discount_amount))})`
                       : ""}
-                  </p>
+                  </Typography.Muted>
                   {s.last_sold_price && (
-                    <p className="text-xs text-amber-600">
+                    <Typography.Text className="text-xs text-amber-600">
                       {t("lastSoldShort", {
                         price: formatMNT(Number(s.last_sold_price)),
                       })}
-                    </p>
+                    </Typography.Text>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -900,13 +901,13 @@ export default function WorkOrderDetailPage() {
                     className="h-11"
                   />
                   {(partPriceHistoryData ?? []).length > 0 && (
-                    <p className="mt-1 text-[11px] text-amber-600">
+                    <Typography.Text className="mt-1 text-[11px] text-amber-600">
                       {t("lastPrices", {
                         prices: (partPriceHistoryData ?? [])
                           .map((price) => formatMNT(price))
                           .join(" | "),
                       })}
-                    </p>
+                    </Typography.Text>
                   )}
                 </div>
                 <Button
@@ -920,9 +921,9 @@ export default function WorkOrderDetailPage() {
             </div>
           )}
           {(wo.parts ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
+            <Typography.Muted className="text-sm text-muted-foreground py-4 text-center">
               {t("noPartsAdded")}
-            </p>
+            </Typography.Muted>
           ) : (
             (wo.parts ?? []).map((p) => (
               <div
@@ -930,16 +931,16 @@ export default function WorkOrderDetailPage() {
                 className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
               >
                 <div>
-                  <p className="text-sm font-medium">{p.part_name}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <Typography.Text className="text-sm font-medium">{p.part_name}</Typography.Text>
+                  <Typography.Muted className="text-xs text-muted-foreground">
                     {p.quantity} x {formatMNT(Number(p.unit_price))}
-                  </p>
+                  </Typography.Muted>
                   {p.last_sold_price && (
-                    <p className="text-xs text-amber-600">
+                    <Typography.Text className="text-xs text-amber-600">
                       {t("lastSoldShort", {
                         price: formatMNT(Number(p.last_sold_price)),
                       })}
-                    </p>
+                    </Typography.Text>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -976,13 +977,13 @@ export default function WorkOrderDetailPage() {
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 size-5 shrink-0 text-destructive" />
                 <div>
-                  <p className="font-medium text-sm">
+                  <Typography.Text className="font-medium text-sm">
                     {t("removeConfirm", { item: deleteConfirm.type })}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  </Typography.Text>
+                  <Typography.Muted className="text-xs text-muted-foreground mt-1">
                     <strong>{deleteConfirm.name}</strong> will be removed from
                     this work order. This can be undone by re-adding it.
-                  </p>
+                  </Typography.Muted>
                 </div>
               </div>
               <div className="flex gap-2 justify-end">
@@ -1055,9 +1056,9 @@ export default function WorkOrderDetailPage() {
                       {new Date(h.created_at).toLocaleString()}
                     </span>
                     {h.notes && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <Typography.Muted className="text-xs text-muted-foreground mt-0.5">
                         {h.notes}
-                      </p>
+                      </Typography.Muted>
                     )}
                   </div>
                 </div>
@@ -1078,9 +1079,9 @@ export default function WorkOrderDetailPage() {
         </CardHeader>
         <CardContent>
           {attachments.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
+            <Typography.Muted className="text-sm text-muted-foreground py-4 text-center">
               {t("noPhotos")}
-            </p>
+            </Typography.Muted>
           ) : (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
               {attachments.map((att: WorkOrderAttachment) => (
@@ -1142,12 +1143,12 @@ export default function WorkOrderDetailPage() {
               <div className="flex items-start gap-3">
                 <FileText className="mt-0.5 size-5 shrink-0 text-green-600" />
                 <div>
-                  <p className="font-medium text-sm">{t("invoiceReady")}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <Typography.Text className="font-medium text-sm">{t("invoiceReady")}</Typography.Text>
+                  <Typography.Muted className="text-xs text-muted-foreground mt-0.5">
                     {existingInvoiceId
                       ? t("invoiceReadyDesc")
                       : t("generateInvoiceDesc")}
-                  </p>
+                  </Typography.Muted>
                 </div>
               </div>
               <Button
@@ -1175,7 +1176,7 @@ export default function WorkOrderDetailPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Wallet className="size-5 text-green-600" />
-                <p className="font-medium text-sm">Payment Status</p>
+                <Typography.Text className="font-medium text-sm">Payment Status</Typography.Text>
               </div>
               <Badge
                 variant={

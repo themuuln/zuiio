@@ -24,6 +24,7 @@ import { useDeleteSupplier, useSuppliers } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Supplier } from "@/lib/types";
 import { createColumns } from "./_columns";
+import { Typography } from "@/components/ui/typography";
 
 export default function SuppliersPage() {
   const t = useTranslations("inventory");
@@ -73,10 +74,10 @@ export default function SuppliersPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("suppliersTitle")}
-        </h1>
-        <p className="text-muted-foreground">{t("suppliersSubtitle")}</p>
+        </Typography.H1>
+        <Typography.Muted className="text-muted-foreground">{t("suppliersSubtitle")}</Typography.Muted>
       </div>
 
       <ListToolbar

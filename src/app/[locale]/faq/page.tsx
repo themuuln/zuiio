@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
 
 const CATEGORIES: {
   key: string;
@@ -106,12 +107,12 @@ export default function FaqPage() {
               <HelpCircle className="mr-1 size-3" />
               FAQ
             </Badge>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+            <Typography.H1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
               {t("pageTitle")}
-            </h1>
-            <p className="mt-3 text-base text-muted-foreground sm:text-lg">
+            </Typography.H1>
+            <Typography.Muted className="mt-3 text-base text-muted-foreground sm:text-lg">
               {t("pageDescription")}
-            </p>
+            </Typography.Muted>
             <div className="relative mx-auto mt-8 max-w-md">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -140,12 +141,12 @@ export default function FaqPage() {
               return (
                 <div key={category.key} className="mb-10">
                   <div className="mb-4">
-                    <h2 className="text-lg font-semibold">
+                    <Typography.H2 className="text-lg font-semibold">
                       {t(`cat${category.key}`)}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
+                    </Typography.H2>
+                    <Typography.Muted className="text-sm text-muted-foreground">
                       {t(`cat${category.key}Desc`)}
-                    </p>
+                    </Typography.Muted>
                   </div>
 
                   <Accordion className="w-full">
@@ -161,9 +162,9 @@ export default function FaqPage() {
                           </span>
                         </AccordionTrigger>
                         <AccordionContent>
-                          <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                          <Typography.Muted className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                             {t(item.a)}
-                          </p>
+                          </Typography.Muted>
                         </AccordionContent>
                       </AccordionItem>
                     ))}
@@ -174,9 +175,9 @@ export default function FaqPage() {
 
             {searchQuery && (
               <div className="py-12 text-center">
-                <p className="text-muted-foreground">
+                <Typography.Muted className="text-muted-foreground">
                   Хайлтын үр дүн олдсонгүй. Өөр түлхүүр үгээр дахин хайна уу.
-                </p>
+                </Typography.Muted>
               </div>
             )}
           </div>
@@ -184,13 +185,13 @@ export default function FaqPage() {
 
         <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
           <div className="mx-auto max-w-2xl">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Өөр асуулт байна уу?
-            </h2>
-            <p className="mt-3 text-muted-foreground">
+            </Typography.H2>
+            <Typography.Muted className="mt-3 text-muted-foreground">
               Хариултаа олоогүй бол бидэнтэй холбогдоорой. Бид туслахад баяртай
               байх болно.
-            </p>
+            </Typography.Muted>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"
@@ -221,7 +222,7 @@ export default function FaqPage() {
               {appT("name")}
             </span>
           </div>
-          <p className="mt-2">{appT("tagline")}</p>
+          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
         </div>
       </footer>
     </div>

@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Typography } from "@/components/ui/typography";
 
 interface Props {
   onClose: () => void;
@@ -73,7 +74,7 @@ export function PinSettingsDialog({ onClose }: Props) {
             <div className="flex items-center justify-center size-12 rounded-full bg-green-100 dark:bg-green-900/30">
               <CheckCircle2 className="size-6 text-green-600" />
             </div>
-            <p className="text-sm font-medium text-center">{t("pinUpdated")}</p>
+            <Typography.Text className="text-sm font-medium text-center">{t("pinUpdated")}</Typography.Text>
             <Button onClick={onClose} size="default">
               {t("done")}
             </Button>

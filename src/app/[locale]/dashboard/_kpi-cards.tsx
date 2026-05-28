@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
 
 export const KPI_ACCENTS: Record<
   string,
@@ -122,9 +123,9 @@ export function KpiCard({
           </div>
         )}
         {comparisonLabel && (
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <Typography.Muted className="mt-0.5 text-xs text-muted-foreground">
             {comparisonLabel}
-          </p>
+          </Typography.Muted>
         )}
       </CardContent>
     </Card>

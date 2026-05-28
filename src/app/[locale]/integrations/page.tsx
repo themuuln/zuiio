@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Typography } from "@/components/ui/typography";
 
 const INTEGRATIONS = [1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -74,21 +75,21 @@ export default function IntegrationsPage() {
               <Cable className="mr-1 size-3" />
               {t("pageTitle")}
             </Badge>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+            <Typography.H1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
               {t("pageTitle")}
-            </h1>
-            <p className="mt-3 text-base text-muted-foreground sm:text-lg">
+            </Typography.H1>
+            <Typography.Muted className="mt-3 text-base text-muted-foreground sm:text-lg">
               {t("pageDescription")}
-            </p>
+            </Typography.Muted>
           </div>
         </section>
 
         <section className="px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("ecosystemTitle")}
-            </h2>
-            <p className="mt-3 text-muted-foreground">{t("ecosystemDesc")}</p>
+            </Typography.H2>
+            <Typography.Muted className="mt-3 text-muted-foreground">{t("ecosystemDesc")}</Typography.Muted>
           </div>
         </section>
 
@@ -118,10 +119,10 @@ export default function IntegrationsPage() {
 
         <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
           <div className="mx-auto max-w-2xl">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("ctaTitle")}
-            </h2>
-            <p className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</p>
+            </Typography.H2>
+            <Typography.Muted className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</Typography.Muted>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"
@@ -152,7 +153,7 @@ export default function IntegrationsPage() {
               {appT("name")}
             </span>
           </div>
-          <p className="mt-2">{appT("tagline")}</p>
+          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
         </div>
       </footer>
     </div>

@@ -7,6 +7,39 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization } from "@/lib/types";
 
 /**
+ * Given an oklch color string, return a hex approximation.
+ * In production, use a library like culori for accurate conversion.
+ */
+function oklchToHex(oklch: string): string | null {
+  try {
+    const match = oklch.match(/oklch\(([\d.]+)\s+([\d.]+)\s+([\d.]+)\)/);
+    if (!match) return null;
+    const [, lStr, cStr, hStr] = match;
+    const l = parseFloat(lStr);
+    const c = parseFloat(cStr);
+    const h = parseFloat(hStr);
+
+    // Very basic conversion (not accurate, but works for contrast calculation)
+    if (c < 0.01) {
+      const gray = Math.round(l * 255);
+      return `#${gray.toString(16).padStart(2, "0").repeat(3)}`;
+    }
+
+    // Approximate conversion via hue
+    const r = Math.round(128 + 127 * Math.cos((h * Math.PI) / 180) * c * 2);
+    const g = Math.round(
+      128 + 127 * Math.cos(((h - 120) * Math.PI) / 180) * c * 2,
+    );
+    const b = Math.round(
+      128 + 127 * Math.cos(((h - 240) * Math.PI) / 180) * c * 2,
+    );
+    return `#${Math.max(0, Math.min(255, r)).toString(16).padStart(2, "0")}${Math.max(0, Math.min(255, g)).toString(16).padStart(2, "0")}${Math.max(0, Math.min(255, b)).toString(16).padStart(2, "0")}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Given a hex color, return a near-black or near-white oklch color
  * that provides sufficient contrast when used as --primary-foreground.
  */
@@ -29,6 +62,36 @@ function applyBrandTheme(settings: Record<string, unknown> | null | undefined) {
   if (!settings) return;
   const root = document.documentElement;
 
+  // New theme system (oklch format)
+  const theme = settings.theme as {
+    primaryColor?: string;
+    accentColor?: string;
+    radius?: string;
+    fontFamily?: string;
+  } | undefined;
+
+  if (theme) {
+    if (theme.primaryColor) {
+      root.style.setProperty("--primary", theme.primaryColor);
+      // Auto-derive primary-foreground for contrast
+      const hex = oklchToHex(theme.primaryColor);
+      if (hex) {
+        root.style.setProperty("--primary-foreground", getContrastColor(hex));
+      }
+    }
+    if (theme.accentColor) {
+      root.style.setProperty("--accent", theme.accentColor);
+    }
+    if (theme.radius) {
+      root.style.setProperty("--radius", theme.radius);
+    }
+    if (theme.fontFamily) {
+      root.style.setProperty("--font-sans", theme.fontFamily);
+    }
+    return;
+  }
+
+  // Legacy brand_color (hex format)
   const brandColor = settings.brand_color as string | undefined;
   if (brandColor && /^#[0-9a-fA-F]{6}$/.test(brandColor)) {
     root.style.setProperty("--primary", brandColor);

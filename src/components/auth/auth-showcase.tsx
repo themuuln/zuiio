@@ -15,6 +15,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 
 interface Bay {
   id: number;
@@ -362,9 +363,9 @@ export function AuthShowcase() {
                 v0.9.4
               </span>
             </div>
-            <p className="text-xs text-zinc-400 tracking-wide font-sans">
+            <Typography.Text className="text-xs text-zinc-400 tracking-wide font-sans">
               {t("subtitle")}
-            </p>
+            </Typography.Text>
           </div>
         </div>
       </div>

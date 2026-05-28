@@ -11,6 +11,18 @@ export function formatMongolianPhone(value: string): string {
 }
 
 /**
+ * Enforce Mongolian plate format while typing: 4 digits + 3 Cyrillic letters.
+ * Strips non-alphanumeric characters, collects up to 4 digits then up to 3 letters.
+ * Intended to wrap `transliterateMongolianPlate` output.
+ */
+export function formatPlateInput(value: string): string {
+  const raw = value.replace(/[^0-9а-яА-ЯӨҮөүa-zA-Z]/g, "");
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  const letters = raw.replace(/[0-9]/g, "").slice(0, 3);
+  return digits + letters;
+}
+
+/**
  * Map a field name to its inputMode and autoComplete value.
  * Centralised so all forms get the same hints without repeating props.
  */

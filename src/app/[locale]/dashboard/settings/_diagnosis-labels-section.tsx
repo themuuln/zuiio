@@ -54,6 +54,7 @@ import {
 } from "@/lib/queries/use-diagnosis-labels";
 import type { DiagnosisLabel } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 const PRESET_COLORS = [
   { value: "#dc2626", label: "Engine" },
@@ -370,7 +371,7 @@ export function DiagnosisLabelsSection({
     return (
       <Card className="border-destructive/20">
         <CardContent className="py-6">
-          <p className="text-sm text-destructive">{t("loadFailed")}</p>
+          <Typography.Text className="text-sm text-destructive">{t("loadFailed")}</Typography.Text>
         </CardContent>
       </Card>
     );
@@ -380,9 +381,9 @@ export function DiagnosisLabelsSection({
     <>
       <div className="flex mt-4 flex-col gap-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+          <Typography.Muted className="text-sm text-muted-foreground">
             {t("sectionDescription")}
-          </p>
+          </Typography.Muted>
           <Button onClick={openAddDialog} size="sm">
             <Plus className="mr-1.5 size-4" />
             {t("addLabel")}
@@ -394,10 +395,10 @@ export function DiagnosisLabelsSection({
             <CardContent className="flex flex-col items-center gap-3 py-12">
               <Stethoscope className="size-10 text-muted-foreground/40" />
               <div className="text-center">
-                <p className="text-sm font-medium">{t("emptyTitle")}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <Typography.Text className="text-sm font-medium">{t("emptyTitle")}</Typography.Text>
+                <Typography.Muted className="mt-0.5 text-xs text-muted-foreground">
                   {t("emptyDescription")}
-                </p>
+                </Typography.Muted>
               </div>
             </CardContent>
           </Card>

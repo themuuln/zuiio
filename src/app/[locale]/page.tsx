@@ -37,6 +37,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 const FEATURES = [
   {
@@ -170,12 +171,12 @@ export default function HomePage() {
             <Badge variant="outline" className="mb-6 text-xs font-medium">
               {appT("tagline")}
             </Badge>
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+            <Typography.H1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
               {t("heroTitle")}
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
+            </Typography.H1>
+            <Typography.Muted className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
               {t("heroSubtitle")}
-            </p>
+            </Typography.Muted>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"
@@ -239,12 +240,12 @@ export default function HomePage() {
         >
           <div className="mx-auto max-w-6xl">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              <Typography.H2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 {t("featuresTitle")}
-              </h2>
-              <p className="mt-4 text-muted-foreground">
+              </Typography.H2>
+              <Typography.Muted className="mt-4 text-muted-foreground">
                 {t("featuresSubtitle")}
-              </p>
+              </Typography.Muted>
             </div>
             <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map((feature) => {
@@ -283,12 +284,12 @@ export default function HomePage() {
         <section className="border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-5xl">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              <Typography.H2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 {t("howItWorksTitle")}
-              </h2>
-              <p className="mt-4 text-muted-foreground">
+              </Typography.H2>
+              <Typography.Muted className="mt-4 text-muted-foreground">
                 {t("howItWorksSubtitle")}
-              </p>
+              </Typography.Muted>
             </div>
             <div className="mt-12 grid gap-8 md:grid-cols-3">
               {STEPS.map((step, i) => {
@@ -306,12 +307,12 @@ export default function HomePage() {
                       <Badge variant="secondary" className="mb-2">
                         {String(i + 1).padStart(2, "0")}
                       </Badge>
-                      <h3 className="text-lg font-semibold">
+                      <Typography.H3 className="text-lg font-semibold">
                         {t(`${step.key}Title`)}
-                      </h3>
-                      <p className="mt-2 text-sm text-muted-foreground">
+                      </Typography.H3>
+                      <Typography.Muted className="mt-2 text-sm text-muted-foreground">
                         {t(`${step.key}Desc`)}
-                      </p>
+                      </Typography.Muted>
                     </div>
                   </div>
                 );
@@ -325,15 +326,15 @@ export default function HomePage() {
           <div className="mx-auto max-w-7xl">
             <div className="mx-auto max-w-3xl text-center">
               <Badge variant="outline">{t('workflowEyebrow')}</Badge>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+              <Typography.H2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
                 {t('workflowTitle')}
-              </h2>
-              <p className="mt-4 text-muted-foreground">
+              </Typography.H2>
+              <Typography.Muted className="mt-4 text-muted-foreground">
                 {t('workflowSubtitle')}
-              </p>
-              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+              </Typography.Muted>
+              <Typography.Muted className="mt-4 text-sm leading-6 text-muted-foreground">
                 {t('workflowBody')}
-              </p>
+              </Typography.Muted>
             </div>
 
             <div className="mt-12 grid gap-6 lg:grid-cols-3">
@@ -359,9 +360,9 @@ export default function HomePage() {
                           <div className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
                             <Check className="size-3 text-primary" />
                           </div>
-                          <p className="text-sm text-muted-foreground">
+                          <Typography.Muted className="text-sm text-muted-foreground">
                             {t(`${pillar.key}Point${item}`)}
-                          </p>
+                          </Typography.Muted>
                         </div>
                       ))}
                     </CardContent>
@@ -377,12 +378,12 @@ export default function HomePage() {
           <div className="mx-auto max-w-6xl">
             <div className="mx-auto max-w-3xl text-center">
               <Badge variant="outline">{t('differenceEyebrow')}</Badge>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+              <Typography.H2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
                 {t('differenceTitle')}
-              </h2>
-              <p className="mt-4 text-muted-foreground">
+              </Typography.H2>
+              <Typography.Muted className="mt-4 text-muted-foreground">
                 {t('differenceSubtitle')}
-              </p>
+              </Typography.Muted>
             </div>
 
             <div className="mt-12 grid gap-6 md:grid-cols-2">
@@ -412,9 +413,9 @@ export default function HomePage() {
         {/* ═══ Testimonials ═══════════════════════════════════ */}
         <section className="border-b px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-5xl">
-            <h2 className="mb-12 text-center text-3xl font-bold tracking-tight sm:text-4xl">
+            <Typography.H2 className="mb-12 text-center text-3xl font-bold tracking-tight sm:text-4xl">
               {t("testimonialsTitle")}
-            </h2>
+            </Typography.H2>
             <div className="grid gap-6 md:grid-cols-2">
               {[1, 2].map((i) => (
                 <Card key={i} className="relative">
@@ -458,12 +459,12 @@ export default function HomePage() {
         <section className="border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-6xl">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              <Typography.H2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 {t("pricingPreviewTitle")}
-              </h2>
-              <p className="mt-4 text-muted-foreground">
+              </Typography.H2>
+              <Typography.Muted className="mt-4 text-muted-foreground">
                 {t("pricingPreviewSubtitle")}
-              </p>
+              </Typography.Muted>
             </div>
             <div className="mt-12 grid gap-6 lg:grid-cols-3">
               {PRICING_TIERS.map((tier) => {
@@ -512,9 +513,9 @@ export default function HomePage() {
               })}
             </div>
             <div className="mt-8 text-center">
-              <p className="text-sm text-muted-foreground">
+              <Typography.Muted className="text-sm text-muted-foreground">
                 {t("pricingEnterprise")}
-              </p>
+              </Typography.Muted>
               <Button
                 variant="link"
                 render={<Link href="/pricing" />}
@@ -535,10 +536,10 @@ export default function HomePage() {
             <div className="absolute top-1/2 left-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-3xl" />
           </div>
           <div className="mx-auto max-w-2xl">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            <Typography.H2 className="text-3xl font-bold tracking-tight sm:text-4xl">
               {t("ctaTitle")}
-            </h2>
-            <p className="mt-4 text-muted-foreground">{t("ctaSubtitle")}</p>
+            </Typography.H2>
+            <Typography.Muted className="mt-4 text-muted-foreground">{t("ctaSubtitle")}</Typography.Muted>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"
@@ -578,9 +579,9 @@ export default function HomePage() {
                 </div>
                 <span>{appT("name")}</span>
               </Link>
-              <p className="text-xs text-muted-foreground">
+              <Typography.Muted className="text-xs text-muted-foreground">
                 {t("footerTagline")}
-              </p>
+              </Typography.Muted>
               <div className="mt-2">
                 <LocaleSwitcher />
               </div>
@@ -588,9 +589,9 @@ export default function HomePage() {
 
             {/* Product */}
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Typography.H4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("footerProduct")}
-              </h4>
+              </Typography.H4>
               <ul className="flex flex-col gap-2">
                 {["Features", "Pricing", "Integrations"].map((item) => (
                   <li key={item}>
@@ -613,9 +614,9 @@ export default function HomePage() {
 
             {/* Company */}
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Typography.H4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("footerCompany")}
-              </h4>
+              </Typography.H4>
               <ul className="flex flex-col gap-2">
                 {["About", "Blog", "Contact"].map((item) => (
                   <li key={item}>
@@ -638,9 +639,9 @@ export default function HomePage() {
 
             {/* Support */}
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Typography.H4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("footerSupport")}
-              </h4>
+              </Typography.H4>
               <ul className="flex flex-col gap-2">
                 {["Docs", "FAQ", "Status"].map((item) => (
                   <li key={item}>

@@ -26,12 +26,6 @@ export async function getOrganizationUsers(
         roles (
           id,
           name
-        ),
-        profiles (
-          id,
-          full_name,
-          phone,
-          avatar_url
         )
       `)
         .eq("organization_id", orgId);
@@ -42,18 +36,29 @@ export async function getOrganizationUsers(
 
       if (!members?.length) return [];
 
+      // Fetch profiles separately — no direct FK from organization_users to profiles
+      const userIds = members.map((m) => m.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, phone, avatar_url")
+        .in("id", userIds);
+
+      const profileMap = new Map(
+        (profiles ?? []).map((p) => [
+          p.id,
+          {
+            full_name: p.full_name,
+            phone: p.phone,
+            avatar_url: p.avatar_url,
+          },
+        ]),
+      );
+
       return members.map((m) => {
         const role = Array.isArray(m.roles)
           ? m.roles[0]
           : (m.roles as unknown as { id: string; name: string } | null);
-        const profile = Array.isArray(m.profiles)
-          ? m.profiles[0]
-          : (m.profiles as unknown as {
-              id: string;
-              full_name: string | null;
-              phone: string | null;
-              avatar_url: string | null;
-            } | null);
+        const profile = profileMap.get(m.user_id);
 
         return {
           id: m.user_id,
@@ -277,7 +282,9 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   const [{ data: profile }, { data: membership }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, organization_id, branch_id, full_name, phone, avatar_url, is_active, created_at, updated_at")
+      .select(
+        "id, organization_id, branch_id, full_name, phone, avatar_url, is_active, created_at, updated_at",
+      )
       .eq("id", user.id)
       .maybeSingle(),
     supabase

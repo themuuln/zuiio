@@ -32,6 +32,7 @@ import {
   useVehicleSearch,
 } from "@/lib/queries/use-wizard-data";
 import { usePartsCatalog } from "@/lib/queries/use-inventory";
+import { Typography } from "@/components/ui/typography";
 import type {
   Customer,
   PartsCatalogItem,
@@ -1071,10 +1072,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         <div className="mb-4 px-1">
           <div className="flex items-center gap-3 rounded-sm border bg-muted/50 px-4 py-3">
             <FileText className="size-4 shrink-0 text-muted-foreground" />
-            <p className="flex-1 text-sm text-muted-foreground">
+            <Typography.Muted className="flex-1 text-sm text-muted-foreground">
               Unsaved draft found from{" "}
               {format(draftData.savedAt, "MMM d, HH:mm")}.
-            </p>
+            </Typography.Muted>
             <div className="flex gap-2">
               <Button size="sm" variant="ghost" onClick={handleDiscardDraft}>
                 Discard

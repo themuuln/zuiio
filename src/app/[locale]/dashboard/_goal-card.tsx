@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 export function GoalCard({
   dailyGoal,
@@ -71,15 +72,15 @@ export function GoalCard({
                 <Target className="size-5 text-primary" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Daily Goal</p>
+                <Typography.Muted className="text-xs text-muted-foreground">Daily Goal</Typography.Muted>
                 {settingsLoading ? (
                   <Skeleton className="mt-1 h-6 w-24" />
                 ) : (
-                  <p className="text-lg font-semibold tabular-nums">
+                  <Typography.Text className="text-lg font-semibold tabular-nums">
                     {dailyGoal > 0
                       ? formatCurrency(dailyGoal)
                       : "Not set"}
-                  </p>
+                  </Typography.Text>
                 )}
               </div>
             </div>

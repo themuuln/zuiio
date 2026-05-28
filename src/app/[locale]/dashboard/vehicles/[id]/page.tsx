@@ -20,7 +20,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { inputProps } from "@/lib/form-ux";
+import { formatPlateInput, inputProps } from "@/lib/form-ux";
 import {
   NativeSelect,
   NativeSelectOption,
@@ -51,6 +51,7 @@ import { formatMNT } from "@/lib/utils";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { ContactCard } from "@/components/sidebar-tabs/contact-card";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { Typography } from "@/components/ui/typography";
 
 interface VehicleOwnerSummary {
   customer_id: string;
@@ -363,7 +364,9 @@ export default function VehicleDetailPage() {
         </Button>
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
-            <p className="text-muted-foreground">{error}</p>
+            <Typography.Muted className="text-muted-foreground">
+              {error}
+            </Typography.Muted>
             <Button onClick={() => refetch()} variant="outline">
               {t("retry")}
             </Button>
@@ -439,14 +442,14 @@ export default function VehicleDetailPage() {
           <ArrowLeft className="size-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {vehicle.plate_number}
-          </h1>
-          <p className="text-sm text-muted-foreground">
+          </Typography.H1>
+          <Typography.Muted className="text-sm text-muted-foreground">
             {[vehicle.year, vehicle.make, vehicle.model]
               .filter(Boolean)
               .join(" ")}
-          </p>
+          </Typography.Muted>
         </div>
         {!editing ? (
           <>
@@ -514,7 +517,9 @@ export default function VehicleDetailPage() {
       {error && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
-            <p className="text-sm text-destructive">{error}</p>
+            <Typography.Text className="text-sm text-destructive">
+              {error}
+            </Typography.Text>
           </CardContent>
         </Card>
       )}
@@ -533,10 +538,12 @@ export default function VehicleDetailPage() {
               className="w-full justify-between rounded-lg bg-muted/50 px-3 py-3"
             >
               <div>
-                <p className="text-sm font-medium">{primaryOwner.name}</p>
-                <p className="text-xs text-muted-foreground">
+                <Typography.Text className="text-sm font-medium">
+                  {primaryOwner.name}
+                </Typography.Text>
+                <Typography.Muted className="text-xs text-muted-foreground">
                   {primaryOwner.phone || t("noPhoneNumber")}
-                </p>
+                </Typography.Muted>
               </div>
               <ArrowLeft className="size-4 rotate-180 text-muted-foreground" />
             </Button>
@@ -564,42 +571,44 @@ export default function VehicleDetailPage() {
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg bg-muted/50 p-3">
-              <p className="mb-1 text-xs text-muted-foreground">
+              <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                 {t("lastVisit")}
-              </p>
-              <p className="text-sm font-medium">
+              </Typography.Muted>
+              <Typography.Text className="text-sm font-medium">
                 {formatDate(vehicle.last_visit_at)}
-              </p>
+              </Typography.Text>
             </div>
             <div className="rounded-lg bg-muted/50 p-3">
-              <p className="mb-1 text-xs text-muted-foreground">
+              <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                 {t("nextService")}
-              </p>
-              <p className="text-sm font-medium">
+              </Typography.Muted>
+              <Typography.Text className="text-sm font-medium">
                 {formatDate(vehicle.next_service_at)}
-              </p>
+              </Typography.Text>
             </div>
             <div className="rounded-lg bg-muted/50 p-3">
-              <p className="mb-1 text-xs text-muted-foreground">
+              <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                 {t("licenseExpiry")}
-              </p>
-              <p className="text-sm font-medium">
+              </Typography.Muted>
+              <Typography.Text className="text-sm font-medium">
                 {formatDate(vehicle.license_expiry_at)}
-              </p>
+              </Typography.Text>
             </div>
             <div className="rounded-lg bg-muted/50 p-3">
-              <p className="mb-1 text-xs text-muted-foreground">
+              <Typography.Muted className="mb-1 text-xs text-muted-foreground">
                 {t("created")}
-              </p>
-              <p className="text-sm font-medium">
+              </Typography.Muted>
+              <Typography.Text className="text-sm font-medium">
                 {formatDate(vehicle.created_at)}
-              </p>
+              </Typography.Text>
             </div>
             <div className="rounded-lg bg-muted/50 p-3 sm:col-span-2">
-              <p className="mb-1 text-xs text-muted-foreground">{t("notes")}</p>
-              <p className="whitespace-pre-wrap text-sm font-medium">
+              <Typography.Muted className="mb-1 text-xs text-muted-foreground">
+                {t("notes")}
+              </Typography.Muted>
+              <Typography.Text className="whitespace-pre-wrap text-sm font-medium">
                 {vehicle.notes || "—"}
-              </p>
+              </Typography.Text>
             </div>
           </div>
         </CardContent>
@@ -619,9 +628,9 @@ export default function VehicleDetailPage() {
         </CardHeader>
         <CardContent>
           {vehicle.service_history.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
+            <Typography.Muted className="py-6 text-center text-sm text-muted-foreground">
               {t("noServiceHistory")}
-            </p>
+            </Typography.Muted>
           ) : (
             <div className="flex flex-col gap-3">
               {vehicle.service_history.map((workOrder) => (
@@ -639,20 +648,20 @@ export default function VehicleDetailPage() {
                           {formatDate(workOrder.created_at)}
                         </span>
                       </div>
-                      <p className="text-sm font-medium">
+                      <Typography.Text className="text-sm font-medium">
                         {workOrder.complaint ||
                           workOrder.description ||
                           t("generalService")}
-                      </p>
+                      </Typography.Text>
                       {workOrder.work_order_services.length > 0 && (
-                        <p className="text-xs text-muted-foreground">
+                        <Typography.Muted className="text-xs text-muted-foreground">
                           {workOrder.work_order_services
                             .flatMap((service) => {
                               const name = service.service_name || service.name;
                               return name ? [name] : [];
                             })
                             .join(", ")}
-                        </p>
+                        </Typography.Muted>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
@@ -722,8 +731,12 @@ function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
       <div className="grid gap-3 sm:grid-cols-2">
         {primaryFields.map(([label, value]) => (
           <div key={label} className="rounded-lg bg-muted/50 p-3">
-            <p className="mb-1 text-xs text-muted-foreground">{label}</p>
-            <p className="text-sm font-medium">{value || "—"}</p>
+            <Typography.Muted className="mb-1 text-xs text-muted-foreground">
+              {label}
+            </Typography.Muted>
+            <Typography.Text className="text-sm font-medium">
+              {value || "—"}
+            </Typography.Text>
           </div>
         ))}
       </div>
@@ -750,8 +763,12 @@ function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
         <div className="grid gap-3 sm:grid-cols-2 animate-in fade-in slide-in-from-top-1 duration-200">
           {detailFields.map(([label, value]) => (
             <div key={label} className="rounded-lg bg-muted/50 p-3">
-              <p className="mb-1 text-xs text-muted-foreground">{label}</p>
-              <p className="text-sm font-medium">{value || "—"}</p>
+              <Typography.Muted className="mb-1 text-xs text-muted-foreground">
+                {label}
+              </Typography.Muted>
+              <Typography.Text className="text-sm font-medium">
+                {value || "—"}
+              </Typography.Text>
             </div>
           ))}
         </div>
@@ -759,8 +776,10 @@ function VehicleReadView({ vehicle }: { vehicle: VehicleDetailResponse }) {
 
       {vehicle.notes && (
         <div className="rounded-lg bg-muted/50 p-3">
-          <p className="mb-1 text-xs text-muted-foreground">{t("notes")}</p>
-          <p className="text-sm">{vehicle.notes}</p>
+          <Typography.Muted className="mb-1 text-xs text-muted-foreground">
+            {t("notes")}
+          </Typography.Muted>
+          <Typography.Text className="text-sm">{vehicle.notes}</Typography.Text>
         </div>
       )}
     </div>
@@ -821,7 +840,9 @@ function VehicleEditForm({
 
   const setField = (field: keyof VehicleFormState, value: string) => {
     const processed =
-      field === "plateNumber" ? transliterateMongolianPlate(value) : value;
+      field === "plateNumber"
+        ? formatPlateInput(transliterateMongolianPlate(value))
+        : value;
     onChange((prev) => ({ ...prev, [field]: processed }));
   };
 

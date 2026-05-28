@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Typography } from "@/components/ui/typography";
 
 const FEATURES = [
   { key: "PricingMemory", icon: Tag },
@@ -49,23 +50,23 @@ export default function ServicesPage() {
               <Wrench className="mr-1 size-3" />
               {t("pageTitle")}
             </Badge>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+            <Typography.H1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
               {t("pageTitle")}
-            </h1>
-            <p className="mt-3 text-base text-muted-foreground sm:text-lg">
+            </Typography.H1>
+            <Typography.Muted className="mt-3 text-base text-muted-foreground sm:text-lg">
               {t("pageDescription")}
-            </p>
+            </Typography.Muted>
           </div>
         </section>
 
         <section className="px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("introTitle")}
-            </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
+            </Typography.H2>
+            <Typography.Muted className="mt-4 text-muted-foreground leading-relaxed">
               {t("introBody")}
-            </p>
+            </Typography.Muted>
           </div>
         </section>
 
@@ -100,12 +101,12 @@ export default function ServicesPage() {
 
         <section className="px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-5xl">
-            <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
               {t("sampleServicesTitle")}
-            </h2>
-            <p className="mt-3 text-center text-muted-foreground">
+            </Typography.H2>
+            <Typography.Muted className="mt-3 text-center text-muted-foreground">
               {t("sampleServicesDesc")}
-            </p>
+            </Typography.Muted>
 
             <div className="mt-10 overflow-hidden rounded-lg border">
               <table className="w-full text-left text-sm">
@@ -148,9 +149,9 @@ export default function ServicesPage() {
 
         <section className="border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl">
-            <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
               {t("defaultIntervalsTitle")}
-            </h2>
+            </Typography.H2>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {DEFAULT_INTERVALS.map((i) => (
                 <div
@@ -167,10 +168,10 @@ export default function ServicesPage() {
 
         <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
           <div className="mx-auto max-w-2xl">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("ctaTitle")}
-            </h2>
-            <p className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</p>
+            </Typography.H2>
+            <Typography.Muted className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</Typography.Muted>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"
@@ -201,7 +202,7 @@ export default function ServicesPage() {
               {appT("name")}
             </span>
           </div>
-          <p className="mt-2">{appT("tagline")}</p>
+          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
         </div>
       </footer>
     </div>

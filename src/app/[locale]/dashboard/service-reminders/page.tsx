@@ -78,6 +78,7 @@ import {
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { Typography } from "@/components/ui/typography";
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("mn-MN", {
     year: "numeric",
@@ -383,12 +384,12 @@ export default function ServiceRemindersPage() {
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("serviceReminders.title")}
-          </h1>
-          <p className="text-sm text-muted-foreground">
+          </Typography.H1>
+          <Typography.Muted className="text-sm text-muted-foreground">
             {t("serviceReminders.subtitle")}
-          </p>
+          </Typography.Muted>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -465,9 +466,9 @@ export default function ServiceRemindersPage() {
                   <Label htmlFor="default-channel">
                     {t("serviceReminders.defaultChannel")}
                   </Label>
-                  <p className="text-xs text-muted-foreground">
+                  <Typography.Muted className="text-xs text-muted-foreground">
                     {t("serviceReminders.defaultChannelDescription")}
-                  </p>
+                  </Typography.Muted>
                   <Select
                     value={configChannel}
                     onValueChange={(v) => v && setConfigChannel(v)}
@@ -494,9 +495,9 @@ export default function ServiceRemindersPage() {
                     <Label className="text-sm font-medium">
                       {t("serviceReminders.autoEnable")}
                     </Label>
-                    <p className="text-xs text-muted-foreground">
+                    <Typography.Muted className="text-xs text-muted-foreground">
                       {t("serviceReminders.autoEnableDescription")}
-                    </p>
+                    </Typography.Muted>
                   </div>
                   <Switch
                     checked={configAutoEnable}
@@ -769,7 +770,7 @@ export default function ServiceRemindersPage() {
                 </div>
               ) : listError ? (
                 <div className="flex flex-col items-center gap-2 p-8 text-center">
-                  <p className="text-destructive">{listError}</p>
+                  <Typography.Text className="text-destructive">{listError}</Typography.Text>
                   <Button variant="outline" onClick={() => refetch()}>
                     {t("common.retry")}
                   </Button>
@@ -850,7 +851,7 @@ function ReminderLogsTab({ orgId }: { orgId: string | undefined }) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center gap-2 p-8 text-center">
-          <p className="text-destructive">{error.message}</p>
+          <Typography.Text className="text-destructive">{error.message}</Typography.Text>
           <Button variant="outline" onClick={() => refetch()}>
             {t("common.retry")}
           </Button>

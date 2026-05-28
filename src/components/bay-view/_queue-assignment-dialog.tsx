@@ -6,6 +6,7 @@ import {
   CornerDownRight,
   Loader2,
   User,
+  UserPlus,
   Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -20,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn, formatPlateNumber } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 interface QueueAssignmentDialogProps {
   workOrder: WorkOrder & { vehicle: Vehicle | null };
@@ -110,12 +112,12 @@ export function QueueAssignmentDialog({
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2.5">
-                  <h2 className="text-xl font-semibold tracking-tight">
+                  <Typography.H2 className="text-xl font-semibold tracking-tight">
                     {v ? formatPlateNumber(v.plate_number) : t("noVehicle")}
-                  </h2>
+                  </Typography.H2>
                   <Badge variant="outline">{waitText}</Badge>
                 </div>
-                <p className="text-sm text-muted-foreground mt-0.5">
+                <Typography.Muted className="text-sm text-muted-foreground mt-0.5">
                   {v
                     ? `${v.make} ${v.model}${v.year ? ` · ${v.year}` : ""}`
                     : ""}
@@ -125,7 +127,7 @@ export function QueueAssignmentDialog({
                       · {v.color}
                     </span>
                   )}
-                </p>
+                </Typography.Muted>
                 {serviceDesc && (
                   <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground border border-border/50">
                     <Wrench className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/50" />
@@ -223,7 +225,7 @@ export function QueueAssignmentDialog({
                   })}
                 </div>
               )}
-              <p className="text-[10px] text-muted-foreground/50 mt-2">
+              <Typography.Muted className="text-[10px] text-muted-foreground/50 mt-2">
                 Press{" "}
                 <kbd className="rounded border border-border bg-muted px-1 py-0.5 text-[9px] font-mono">
                   1
@@ -233,7 +235,7 @@ export function QueueAssignmentDialog({
                   9
                 </kbd>{" "}
                 to quick-select a bay
-              </p>
+              </Typography.Muted>
             </div>
 
             {/* ── Right: Mechanic selection + quick info ── */}
@@ -255,6 +257,18 @@ export function QueueAssignmentDialog({
                     <span className="text-xs text-muted-foreground/60">
                       No mechanics registered
                     </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        (window.location.href =
+                          "/dashboard/organization/members")
+                      }
+                      className="mt-2 h-6 px-2 text-xs gap-1"
+                    >
+                      <UserPlus className="size-3" />
+                      Invite mechanic
+                    </Button>
                   </div>
                 ) : (
                   <>

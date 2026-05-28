@@ -14,6 +14,7 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { getBooleanSetting, getNumberSetting, getStringSetting } from "./_settings-utils";
+import { Typography } from "@/components/ui/typography";
 
 export interface SettingsForm {
   invoicePrefix: string;
@@ -198,9 +199,9 @@ export function BusinessDefaultsForm({
                 </select>
               </div>
               {currentLocale !== form.language && (
-                <p className="text-xs text-muted-foreground">
+                <Typography.Muted className="text-xs text-muted-foreground">
                   Language will change after save
-                </p>
+                </Typography.Muted>
               )}
             </Field>
           </FieldGroup>
@@ -218,11 +219,11 @@ export function BusinessDefaultsForm({
           )}
 
           <div className="flex items-center justify-between gap-4 border-t border-border pt-4">
-            <p className="text-xs text-muted-foreground">
+            <Typography.Muted className="text-xs text-muted-foreground">
               {form.language !== currentLocale
                 ? "Saving will switch the interface language immediately."
                 : "All changes are saved to your organization."}
-            </p>
+            </Typography.Muted>
             <Button type="submit" disabled={saving} className="min-w-24">
               {saving ? t("common.saving") : t("common.save")}
             </Button>

@@ -26,6 +26,7 @@ import {
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { PurchaseOrder } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 const PO_STATUS_KEYS: Record<string, string> = {
   draft: "poStatusDraft",
@@ -107,7 +108,7 @@ export default function PurchaseOrderDetailPage() {
         </Button>
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
-            <p className="text-muted-foreground">{t("poNotFound")}</p>
+            <Typography.Muted className="text-muted-foreground">{t("poNotFound")}</Typography.Muted>
             <Button
               onClick={() =>
                 push("/dashboard/inventory/purchase-orders")
@@ -138,17 +139,17 @@ export default function PurchaseOrderDetailPage() {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <Typography.H1 className="text-2xl font-semibold tracking-tight">
               {po.order_number}
-            </h1>
+            </Typography.H1>
             <Badge variant="outline">
               {t(PO_STATUS_KEYS[po.status] as string) ?? po.status}
             </Badge>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <Typography.Muted className="text-sm text-muted-foreground">
             {new Date(po.order_date).toLocaleDateString("mn-MN")}
             {po.supplier?.name ? ` · ${po.supplier.name}` : ""}
-          </p>
+          </Typography.Muted>
         </div>
         <Button
           variant="outline"
@@ -202,7 +203,7 @@ export default function PurchaseOrderDetailPage() {
             <CardTitle className="text-base">{t("notes")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">{po.notes}</p>
+            <Typography.Muted className="text-sm text-muted-foreground">{po.notes}</Typography.Muted>
           </CardContent>
         </Card>
       )}
@@ -213,9 +214,9 @@ export default function PurchaseOrderDetailPage() {
         </CardHeader>
         <CardContent className="p-0">
           {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground px-6 py-4">
+            <Typography.Muted className="text-sm text-muted-foreground px-6 py-4">
               {t("noItems")}
-            </p>
+            </Typography.Muted>
           ) : (
             <Table>
               <TableHeader>

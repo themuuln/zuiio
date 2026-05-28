@@ -42,6 +42,7 @@ import {
   useCustomerCommunications,
   useDeleteCustomerCommunication,
 } from "@/lib/queries/use-communications";
+import { Typography } from "@/components/ui/typography";
 
 const COMM_TYPES = ["call", "email", "in_person", "note"] as const;
 
@@ -223,19 +224,19 @@ export function CommunicationLog({ orgId, customerId }: CommunicationLogProps) {
           </div>
         ) : error ? (
           <div className="flex flex-col items-center gap-3 py-8">
-            <p className="text-sm text-destructive">
+            <Typography.Text className="text-sm text-destructive">
               {error instanceof Error
                 ? error.message
                 : "Failed to load communications"}
-            </p>
+            </Typography.Text>
             <Button onClick={() => refetch()} variant="outline" size="sm">
               {t("retry")}
             </Button>
           </div>
         ) : !communications || communications.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
+          <Typography.Muted className="py-8 text-center text-sm text-muted-foreground">
             {t("noCommunications")}
-          </p>
+          </Typography.Muted>
         ) : (
           /* Communications list */
           <div className="flex flex-col gap-3">
@@ -267,13 +268,13 @@ export function CommunicationLog({ orgId, customerId }: CommunicationLogProps) {
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 whitespace-pre-wrap text-sm">
+                    <Typography.Text className="mt-1 whitespace-pre-wrap text-sm">
                       {comm.content}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    </Typography.Text>
+                    <Typography.Muted className="mt-1 text-xs text-muted-foreground">
                       {commData.staff_name || "Staff"} ·{" "}
                       {formatRelativeTime(comm.created_at, t)}
-                    </p>
+                    </Typography.Muted>
                   </div>
 
                   <AlertDialog>

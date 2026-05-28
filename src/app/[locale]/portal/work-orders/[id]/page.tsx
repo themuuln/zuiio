@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { cn, formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 const STATUS_STYLES: Record<string, { dot: string; bg: string }> = {
   Completed: { dot: "bg-gray-400", bg: "bg-gray-50" },
@@ -181,9 +182,9 @@ export default function PortalWorkOrderDetailPage() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-xl font-semibold">
+                <Typography.H1 className="text-xl font-semibold">
                   {data.description ?? data.complaint ?? "Work Order"}
-                </h1>
+                </Typography.H1>
                 <Badge
                   variant="secondary"
                   className={cn("text-[11px]", style.bg)}
@@ -219,10 +220,10 @@ export default function PortalWorkOrderDetailPage() {
               </div>
             </div>
             <div className="shrink-0 text-right">
-              <p className="text-lg font-bold tabular-nums">
+              <Typography.Text className="text-lg font-bold tabular-nums">
                 {formatMNT(Number(data.total))}
-              </p>
-              <p className="text-[10px] text-muted-foreground/60">Total</p>
+              </Typography.Text>
+              <Typography.Muted className="text-[10px] text-muted-foreground/60">Total</Typography.Muted>
             </div>
           </div>
         </CardContent>
@@ -240,18 +241,18 @@ export default function PortalWorkOrderDetailPage() {
           <CardContent className="flex flex-col gap-3 text-sm">
             {data.complaint && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-0.5">
+                <Typography.Muted className="text-xs font-medium text-muted-foreground mb-0.5">
                   {t("workOrders.complaint") ?? "Complaint"}
-                </p>
-                <p>{data.complaint}</p>
+                </Typography.Muted>
+                <Typography.Text>{data.complaint}</Typography.Text>
               </div>
             )}
             {data.diagnosis && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-0.5">
+                <Typography.Muted className="text-xs font-medium text-muted-foreground mb-0.5">
                   {t("workOrders.diagnosis") ?? "Diagnosis"}
-                </p>
-                <p>{data.diagnosis}</p>
+                </Typography.Muted>
+                <Typography.Text>{data.diagnosis}</Typography.Text>
               </div>
             )}
           </CardContent>
@@ -268,9 +269,9 @@ export default function PortalWorkOrderDetailPage() {
         </CardHeader>
         <CardContent>
           {data.services.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
+            <Typography.Muted className="text-sm text-muted-foreground py-4 text-center">
               No services added.
-            </p>
+            </Typography.Muted>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -297,11 +298,11 @@ export default function PortalWorkOrderDetailPage() {
                       className="border-b border-border/40 last:border-0"
                     >
                       <td className="py-2.5 pr-4">
-                        <p className="font-medium">{s.service_name}</p>
+                        <Typography.Text className="font-medium">{s.service_name}</Typography.Text>
                         {s.notes && (
-                          <p className="text-xs text-muted-foreground/60 mt-0.5">
+                          <Typography.Muted className="text-xs text-muted-foreground/60 mt-0.5">
                             {s.notes}
-                          </p>
+                          </Typography.Muted>
                         )}
                       </td>
                       <td className="py-2.5 px-2 text-right tabular-nums">
@@ -360,11 +361,11 @@ export default function PortalWorkOrderDetailPage() {
                       className="border-b border-border/40 last:border-0"
                     >
                       <td className="py-2.5 pr-4">
-                        <p className="font-medium">{p.part_name}</p>
+                        <Typography.Text className="font-medium">{p.part_name}</Typography.Text>
                         {p.notes && (
-                          <p className="text-xs text-muted-foreground/60 mt-0.5">
+                          <Typography.Muted className="text-xs text-muted-foreground/60 mt-0.5">
                             {p.notes}
-                          </p>
+                          </Typography.Muted>
                         )}
                       </td>
                       <td className="py-2.5 pr-4 text-xs text-muted-foreground/70">
@@ -428,9 +429,9 @@ export default function PortalWorkOrderDetailPage() {
                         </span>
                       </div>
                       {entry.notes && (
-                        <p className="text-xs text-muted-foreground/70 mt-0.5">
+                        <Typography.Muted className="text-xs text-muted-foreground/70 mt-0.5">
                           {entry.notes}
-                        </p>
+                        </Typography.Muted>
                       )}
                     </div>
                   </div>
@@ -471,14 +472,14 @@ export default function PortalWorkOrderDetailPage() {
                         {inv.status}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground/60 mt-0.5">
+                    <Typography.Muted className="text-xs text-muted-foreground/60 mt-0.5">
                       {inv.issued_at
                         ? new Date(inv.issued_at).toLocaleDateString()
                         : ""}
                       {inv.due_at
                         ? ` · Due: ${new Date(inv.due_at).toLocaleDateString()}`
                         : ""}
-                    </p>
+                    </Typography.Muted>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span className="text-sm font-semibold tabular-nums">

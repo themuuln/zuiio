@@ -23,6 +23,7 @@ import { Link } from "@/lib/i18n/navigation";
 import { usePurchaseOrders } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { PurchaseOrder } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 const PO_STATUS_COLORS: Record<string, string> = {
   draft: "bg-gray-100 text-gray-700",
@@ -104,10 +105,10 @@ export default function PurchaseOrdersPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("purchaseOrdersTitle")}
-        </h1>
-        <p className="text-muted-foreground">{t("purchaseOrdersSubtitle")}</p>
+        </Typography.H1>
+        <Typography.Muted className="text-muted-foreground">{t("purchaseOrdersSubtitle")}</Typography.Muted>
       </div>
 
       <ListToolbar

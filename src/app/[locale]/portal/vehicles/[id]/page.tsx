@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { cn, formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 const STATUS_STYLES: Record<string, { dot: string; bg: string }> = {
   Completed: { dot: "bg-gray-400", bg: "bg-gray-50" },
@@ -88,13 +89,13 @@ export default function PortalVehicleDetailPage() {
               <Car className="size-7 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl font-semibold">
+              <Typography.H1 className="text-xl font-semibold">
                 {vehicle.plate_number as string}
-              </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              </Typography.H1>
+              <Typography.Muted className="text-sm text-muted-foreground mt-0.5">
                 {vehicle.make as string} {vehicle.model as string}
                 {vehicle.year ? ` (${vehicle.year})` : ""}
-              </p>
+              </Typography.Muted>
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground/70">
                 {(vehicle.vin as string) && (
                   <span>VIN: {vehicle.vin as string}</span>
@@ -130,17 +131,17 @@ export default function PortalVehicleDetailPage() {
                   className="flex items-center justify-between rounded-lg border border-border/60 px-3.5 py-2.5"
                 >
                   <div>
-                    <p className="text-sm font-medium">
+                    <Typography.Text className="text-sm font-medium">
                       {s.service_name as string}
-                    </p>
-                    <p className="text-xs text-muted-foreground/70 mt-0.5">
+                    </Typography.Text>
+                    <Typography.Muted className="text-xs text-muted-foreground/70 mt-0.5">
                       {s.next_due_date
                         ? `Due by ${new Date(s.next_due_date as string).toLocaleDateString()}`
                         : ""}
                       {s.next_due_km
                         ? ` or ${(s.next_due_km as number).toLocaleString()} km`
                         : ""}
-                    </p>
+                    </Typography.Muted>
                   </div>
                   {(s as { priority?: string }).priority === "urgent" && (
                     <Badge variant="destructive" className="text-[10px]">
@@ -164,9 +165,9 @@ export default function PortalVehicleDetailPage() {
         </CardHeader>
         <CardContent>
           {!workOrders || workOrders.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
+            <Typography.Muted className="text-sm text-muted-foreground py-4 text-center">
               {t("portal.noServiceHistory")}
-            </p>
+            </Typography.Muted>
           ) : (
             <div className="flex flex-col gap-1">
               {workOrders.map((wo) => {
@@ -186,16 +187,16 @@ export default function PortalVehicleDetailPage() {
                         )}
                       />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">
+                        <Typography.Text className="text-sm font-medium truncate">
                           {(wo.description as string) ??
                             (wo.complaint as string) ??
                             "Service"}
-                        </p>
-                        <p className="text-xs text-muted-foreground/60">
+                        </Typography.Text>
+                        <Typography.Muted className="text-xs text-muted-foreground/60">
                           {new Date(
                             wo.created_at as string,
                           ).toLocaleDateString()}
-                        </p>
+                        </Typography.Muted>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">

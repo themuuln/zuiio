@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { Typography } from "@/components/ui/typography";
 
 interface StatusCount {
   label: string;
@@ -19,9 +20,9 @@ export function StatusSummary({
   return (
     <div className="flex flex-col gap-1.5">
       {title && (
-        <p className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+        <Typography.Muted className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
           {title}
-        </p>
+        </Typography.Muted>
       )}
       {items.map((item) => (
         <div

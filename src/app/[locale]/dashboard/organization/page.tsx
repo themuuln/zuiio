@@ -9,6 +9,7 @@ import {
   Pencil,
   Save,
   Users,
+  Palette,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -31,6 +32,7 @@ import type { Organization, SubscriptionPlanInfo } from "@/lib/types";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { Typography } from "@/components/ui/typography";
 
 export default function OrganizationPage() {
   const t = useTranslations();
@@ -149,45 +151,45 @@ export default function OrganizationPage() {
         {subscription ? (
           <>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
-              <p className="text-[10px] text-muted-foreground">Plan</p>
-              <p className="text-xs font-medium">
+              <Typography.Muted className="text-[10px] text-muted-foreground">Plan</Typography.Muted>
+              <Typography.Text className="text-xs font-medium">
                 {formatPlanType(subscription.planType)}
-              </p>
+              </Typography.Text>
             </div>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
-              <p className="text-[10px] text-muted-foreground">Status</p>
-              <p className="text-xs font-medium capitalize">
+              <Typography.Muted className="text-[10px] text-muted-foreground">Status</Typography.Muted>
+              <Typography.Text className="text-xs font-medium capitalize">
                 {subscription.status}
-              </p>
+              </Typography.Text>
             </div>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
-              <p className="text-[10px] text-muted-foreground">Started</p>
-              <p className="text-xs font-medium">
+              <Typography.Muted className="text-[10px] text-muted-foreground">Started</Typography.Muted>
+              <Typography.Text className="text-xs font-medium">
                 {formatDate(subscription.startedAt)}
-              </p>
+              </Typography.Text>
             </div>
             {subscription.trial && subscription.expiresAt && (
               <div className="rounded-md border border-amber-200/50 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/20 px-2.5 py-1.5">
-                <p className="text-[10px] text-muted-foreground">Trial ends</p>
-                <p className="text-xs font-medium">
+                <Typography.Muted className="text-[10px] text-muted-foreground">Trial ends</Typography.Muted>
+                <Typography.Text className="text-xs font-medium">
                   {formatDate(subscription.expiresAt)}
-                </p>
+                </Typography.Text>
               </div>
             )}
           </>
         ) : (
-          <p className="text-xs text-muted-foreground">
+          <Typography.Muted className="text-xs text-muted-foreground">
             No active subscription
-          </p>
+          </Typography.Muted>
         )}
       </div>,
     );
     registerTab(
       "team",
       "Team",
-      <p className="text-xs text-muted-foreground px-2.5 py-1.5">
+      <Typography.Muted className="text-xs text-muted-foreground px-2.5 py-1.5">
         Manage team members via the Members page
-      </p>,
+      </Typography.Muted>,
     );
     return () => {
       unregisterTab("subscription");
@@ -223,14 +225,14 @@ export default function OrganizationPage() {
     return (
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("nav.organization")}
-          </h1>
-          <p className="text-muted-foreground">Manage your organization</p>
+          </Typography.H1>
+          <Typography.Muted className="text-muted-foreground">Manage your organization</Typography.Muted>
         </div>
         <Card>
           <CardContent className="flex flex-col items-start gap-4 py-6">
-            <p className="text-destructive">{error}</p>
+            <Typography.Text className="text-destructive">{error}</Typography.Text>
             <Button
               onClick={() => {
                 orgInfoQuery.refetch();
@@ -248,10 +250,10 @@ export default function OrganizationPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("nav.organization")}
-        </h1>
-        <p className="text-muted-foreground">Manage your organization</p>
+        </Typography.H1>
+        <Typography.Muted className="text-muted-foreground">Manage your organization</Typography.Muted>
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>
@@ -276,7 +278,7 @@ export default function OrganizationPage() {
             {editing ? (
               <>
                 <div>
-                  <p className="text-sm text-muted-foreground">Name</p>
+                  <Typography.Muted className="text-sm text-muted-foreground">Name</Typography.Muted>
                   <Input
                     value={form.name}
                     onChange={(e) =>
@@ -286,13 +288,13 @@ export default function OrganizationPage() {
                   />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Slug</p>
-                  <p className="font-medium">
+                  <Typography.Muted className="text-sm text-muted-foreground">Slug</Typography.Muted>
+                  <Typography.Text className="font-medium">
                     {organization?.slug ?? "\u2014"}
-                  </p>
+                  </Typography.Text>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Logo URL</p>
+                  <Typography.Muted className="text-sm text-muted-foreground">Logo URL</Typography.Muted>
                   <Input
                     value={form.logoUrl}
                     onChange={(e) =>
@@ -336,16 +338,16 @@ export default function OrganizationPage() {
             ) : (
               <>
                 <div>
-                  <p className="text-sm text-muted-foreground">Name</p>
-                  <p className="font-medium">
+                  <Typography.Muted className="text-sm text-muted-foreground">Name</Typography.Muted>
+                  <Typography.Text className="font-medium">
                     {organization?.name ?? "\u2014"}
-                  </p>
+                  </Typography.Text>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Slug</p>
-                  <p className="font-medium">
+                  <Typography.Muted className="text-sm text-muted-foreground">Slug</Typography.Muted>
+                  <Typography.Text className="font-medium">
                     {organization?.slug ?? "\u2014"}
-                  </p>
+                  </Typography.Text>
                 </div>
               </>
             )}
@@ -364,44 +366,44 @@ export default function OrganizationPage() {
             {subscription ? (
               <>
                 <div>
-                  <p className="text-sm text-muted-foreground">Plan</p>
-                  <p className="font-medium">
+                  <Typography.Muted className="text-sm text-muted-foreground">Plan</Typography.Muted>
+                  <Typography.Text className="font-medium">
                     {formatPlanType(subscription.planType)}
                     {subscription.trial && (
                       <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                         Trial
                       </span>
                     )}
-                  </p>
+                  </Typography.Text>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <p className="font-medium capitalize">
+                  <Typography.Muted className="text-sm text-muted-foreground">Status</Typography.Muted>
+                  <Typography.Text className="font-medium capitalize">
                     {subscription.status}
-                  </p>
+                  </Typography.Text>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Started</p>
-                  <p className="font-medium">
+                  <Typography.Muted className="text-sm text-muted-foreground">Started</Typography.Muted>
+                  <Typography.Text className="font-medium">
                     {formatDate(subscription.startedAt)}
-                  </p>
+                  </Typography.Text>
                 </div>
                 {subscription.expiresAt && (
                   <div>
-                    <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Typography.Muted className="flex items-center gap-1 text-sm text-muted-foreground">
                       <CalendarClock className="size-3" />
                       Trial ends
-                    </p>
-                    <p className="font-medium">
+                    </Typography.Muted>
+                    <Typography.Text className="font-medium">
                       {formatDate(subscription.expiresAt)}
-                    </p>
+                    </Typography.Text>
                   </div>
                 )}
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <Typography.Muted className="text-sm text-muted-foreground">
                 No active subscription
-              </p>
+              </Typography.Muted>
             )}
           </CardContent>
         </Card>
@@ -415,9 +417,9 @@ export default function OrganizationPage() {
             <CardDescription>Team management</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <p className="text-sm text-muted-foreground">
+            <Typography.Muted className="text-sm text-muted-foreground">
               Invite team members to collaborate.
-            </p>
+            </Typography.Muted>
             <Button
               variant="outline"
               className="w-full"
@@ -425,6 +427,29 @@ export default function OrganizationPage() {
             >
               <Users className="mr-2 size-4" />
               Manage Members
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="size-4" />
+              Theme
+            </CardTitle>
+            <CardDescription>Customize appearance</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <Typography.Muted className="text-sm text-muted-foreground">
+              Customize colors, fonts, and branding.
+            </Typography.Muted>
+            <Button
+              variant="outline"
+              className="w-full"
+              render={<Link href="/dashboard/organization/settings/theme" />}
+            >
+              <Palette className="mr-2 size-4" />
+              Theme Settings
             </Button>
           </CardContent>
         </Card>

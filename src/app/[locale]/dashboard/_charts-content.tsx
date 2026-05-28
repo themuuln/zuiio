@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/chart";
 import type { DashboardData } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
@@ -245,7 +246,7 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
           <CardContent>
             {topServices.length === 0 ? (
               <div className="flex h-72 items-center justify-center">
-                <p className="text-sm text-muted-foreground">{t("common.noData")}</p>
+                <Typography.Muted className="text-sm text-muted-foreground">{t("common.noData")}</Typography.Muted>
               </div>
             ) : (
               <ChartContainer
@@ -299,7 +300,7 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
           <CardContent>
             {technicianPerformance.length === 0 ? (
               <div className="flex h-72 items-center justify-center">
-                <p className="text-sm text-muted-foreground">{t("common.noData")}</p>
+                <Typography.Muted className="text-sm text-muted-foreground">{t("common.noData")}</Typography.Muted>
               </div>
             ) : (
               <ChartContainer config={techConfig} className="aspect-auto h-[340px] w-full">
@@ -357,7 +358,7 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
           <CardContent className="flex items-center justify-center">
             {serviceCategoryBreakdown.length === 0 ? (
               <div className="flex h-72 items-center justify-center">
-                <p className="text-sm text-muted-foreground">{t("common.noData")}</p>
+                <Typography.Muted className="text-sm text-muted-foreground">{t("common.noData")}</Typography.Muted>
               </div>
             ) : (
               <ChartContainer config={categoryChartConfig} className="mx-auto aspect-square h-[340px]">
@@ -398,7 +399,7 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
           <CardContent>
             {customerAcquisitionTrend.length === 0 ? (
               <div className="flex h-72 items-center justify-center">
-                <p className="text-sm text-muted-foreground">{t("common.noData")}</p>
+                <Typography.Muted className="text-sm text-muted-foreground">{t("common.noData")}</Typography.Muted>
               </div>
             ) : (
               <ChartContainer config={customerConfig} className="aspect-auto h-[340px] w-full">

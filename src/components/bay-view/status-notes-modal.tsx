@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
 
 interface StatusNotesModalProps {
   woId: string;
@@ -60,7 +61,7 @@ export function StatusNotesModal({
             {title}
           </DialogTitle>
         </DialogHeader>
-        <p className="text-sm text-muted-foreground">{t("addNotePrompt")}</p>
+        <Typography.Muted className="text-sm text-muted-foreground">{t("addNotePrompt")}</Typography.Muted>
         <Input
           ref={inputRef}
           value={notes}

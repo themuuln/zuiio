@@ -18,6 +18,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { transliterateMongolianPlate } from "@/lib/form-validation";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 interface Props {
   onClose: () => void;
@@ -105,8 +106,8 @@ function ServiceTimeline({
     return (
       <div className="flex flex-col items-center justify-center py-10 text-muted-foreground/50">
         <HistoryIcon className="size-10 mb-2" />
-        <p className="text-sm">{t("noServiceHistory")}</p>
-        <p className="text-xs mt-1">{t("serviceRecordsHere")}</p>
+        <Typography.Text className="text-sm">{t("noServiceHistory")}</Typography.Text>
+        <Typography.Text className="text-xs mt-1">{t("serviceRecordsHere")}</Typography.Text>
       </div>
     );
   }
@@ -149,9 +150,9 @@ function ServiceTimeline({
               </div>
 
               {entry.complaint && (
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                <Typography.Muted className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                   {entry.complaint}
-                </p>
+                </Typography.Muted>
               )}
 
               {entry.services.length > 0 && (
@@ -349,16 +350,16 @@ export function VehicleRegistrationDialog({
               <Car className="size-5 text-blue-500" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">
+              <Typography.H2 className="text-lg font-semibold">
                 {mode === "lookup"
                   ? t("vehicleServiceHistory")
                   : t("vehicleRegistration")}
-              </h2>
-              <p className="text-xs text-muted-foreground">
+              </Typography.H2>
+              <Typography.Muted className="text-xs text-muted-foreground">
                 {mode === "lookup"
                   ? t("lookupSubtitle")
                   : t("registerSubtitle")}
-              </p>
+              </Typography.Muted>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -662,8 +663,8 @@ export function VehicleRegistrationDialog({
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/40">
                 <Car className="size-12 mb-3" />
-                <p className="text-sm font-medium">{t("enterPlateAbove")}</p>
-                <p className="text-xs mt-1">{t("timelineWillAppear")}</p>
+                <Typography.Text className="text-sm font-medium">{t("enterPlateAbove")}</Typography.Text>
+                <Typography.Text className="text-xs mt-1">{t("timelineWillAppear")}</Typography.Text>
               </div>
             )}
           </div>

@@ -38,6 +38,7 @@ import {
 } from "./constants";
 import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
+import { Typography } from "@/components/ui/typography";
 
 interface PurchaseOrdersTabProps {
   orgId: string;
@@ -163,7 +164,7 @@ export function PurchaseOrdersTab({ orgId, search, onSearchChange }: PurchaseOrd
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16">
             <Truck className="size-10 text-muted-foreground/40" />
-            <p className="text-muted-foreground">{t("noPurchaseOrders")}</p>
+            <Typography.Muted className="text-muted-foreground">{t("noPurchaseOrders")}</Typography.Muted>
             <Button variant="outline" onClick={() => setShowAddPO(true)}>
               Create your first PO
             </Button>
@@ -242,7 +243,7 @@ export function PurchaseOrdersTab({ orgId, search, onSearchChange }: PurchaseOrd
             </div>
             <div className="flex flex-col gap-3 rounded-lg border border-border p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Items</p>
+                <Typography.Text className="text-sm font-medium">Items</Typography.Text>
               </div>
               <POItemEditor parts={activeParts} locale={locale} />
             </div>

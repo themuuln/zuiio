@@ -22,6 +22,7 @@ import {
 import type { Supplier } from "@/lib/types";
 import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
+import { Typography } from "@/components/ui/typography";
 
 interface SuppliersTabProps {
   orgId: string;
@@ -220,7 +221,7 @@ export function SuppliersTab({
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16">
             <Building2 className="size-10 text-muted-foreground/40" />
-            <p className="text-muted-foreground">{t("noSuppliers")}</p>
+            <Typography.Muted className="text-muted-foreground">{t("noSuppliers")}</Typography.Muted>
             <Button
               variant="outline"
               onClick={() => {

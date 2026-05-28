@@ -23,6 +23,7 @@ import { PartsTab } from "./_components/parts-tab";
 import { MovementsTab } from "./_components/movements-tab";
 import { SuppliersTab } from "./_components/suppliers-tab";
 import { PurchaseOrdersTab } from "./_components/purchase-orders-tab";
+import { Typography } from "@/components/ui/typography";
 
 export default function InventoryPage() {
   const t = useTranslations("inventory");
@@ -108,8 +109,8 @@ export default function InventoryPage() {
   return (
     <div className="tablet-touch flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
-        <p className="text-muted-foreground">{t("subtitleParts")}</p>
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">{t("title")}</Typography.H1>
+        <Typography.Muted className="text-muted-foreground">{t("subtitleParts")}</Typography.Muted>
       </div>
 
       {/* Tab navigation */}

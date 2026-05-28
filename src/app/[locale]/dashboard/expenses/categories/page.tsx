@@ -47,6 +47,7 @@ import {
   useDeleteExpenseCategory,
 } from "@/lib/queries/use-expenses";
 import type { ExpenseCategory } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 const CATEGORY_COLORS = [
   { name: "Blue", value: "#3b82f6" },
@@ -166,9 +167,9 @@ export default function CategoriesPage() {
       <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
         <Card>
           <CardContent className="flex flex-col items-start gap-4 py-6">
-            <p className="text-destructive">
+            <Typography.Text className="text-destructive">
               {error?.message ?? "Failed to load categories"}
-            </p>
+            </Typography.Text>
             <Button onClick={() => refetch()} variant="outline">
               {t("common.retry")}
             </Button>
@@ -183,10 +184,10 @@ export default function CategoriesPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
-          <p className="text-muted-foreground">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">Categories</Typography.H1>
+          <Typography.Muted className="text-muted-foreground">
             Organize expenses into categories for better tracking
-          </p>
+          </Typography.Muted>
         </div>
         <Button onClick={openAddDialog} size="default">
           <Plus className="size-4" />

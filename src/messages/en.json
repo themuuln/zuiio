@@ -1172,6 +1172,7 @@
     "searchResults": "{count} vehicle(s) found",
     "noPlateMatch": "No vehicles match this plate number",
     "noVehicles": "No vehicles found",
+    "noVehiclesDesc": "Get started by registering a vehicle and linking it to its owner.",
     "addVehicle": "Add Vehicle",
     "noOrganization": "No organization found",
     "failedToLoadOrg": "Failed to load organization",

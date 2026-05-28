@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 
 type FeatureStatus = boolean;
@@ -167,12 +168,12 @@ export default function PricingCurrentPage() {
               {t("badge")}
             </Badge>
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+          <Typography.H1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
             {t("heroTitle")}
-          </h1>
-          <p className="mt-4 text-base text-muted-foreground sm:text-lg">
+          </Typography.H1>
+          <Typography.Muted className="mt-4 text-base text-muted-foreground sm:text-lg">
             {t("heroSubtitle")}
-          </p>
+          </Typography.Muted>
 
           {/* Billing toggle */}
           <div className="mt-8 flex items-center justify-center gap-2">
@@ -233,9 +234,9 @@ export default function PricingCurrentPage() {
                       {price}
                     </span>
                     {perUnit && (
-                      <p className="mt-1 text-xs text-muted-foreground">
+                      <Typography.Muted className="mt-1 text-xs text-muted-foreground">
                         {perUnit} {t("monthly").toLowerCase()}
-                      </p>
+                      </Typography.Muted>
                     )}
                   </div>
                 </CardHeader>
@@ -276,10 +277,10 @@ export default function PricingCurrentPage() {
       {/* ── Enterprise ──────────────────────────────────────── */}
       <section className="border-t bg-muted/20 px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          <Typography.H2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {t("enterpriseTitle")}
-          </h2>
-          <p className="mt-3 text-muted-foreground">{t("enterpriseDesc")}</p>
+          </Typography.H2>
+          <Typography.Muted className="mt-3 text-muted-foreground">{t("enterpriseDesc")}</Typography.Muted>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:text-left">
             {[1, 2, 3, 4].map((i) => (
@@ -302,10 +303,10 @@ export default function PricingCurrentPage() {
       {/* ── What's Coming Next ──────────────────────────────── */}
       <section className="border-t px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          <Typography.H2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {t("comingTitle")}
-          </h2>
-          <p className="mt-3 text-muted-foreground">{t("comingSubtitle")}</p>
+          </Typography.H2>
+          <Typography.Muted className="mt-3 text-muted-foreground">{t("comingSubtitle")}</Typography.Muted>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:text-left">
             {[2, 3, 4, 5, 6].map((i) => (
@@ -334,9 +335,9 @@ export default function PricingCurrentPage() {
       {/* ── FAQ ──────────────────────────────────────────────── */}
       <section className="border-t bg-muted/20 px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-2xl">
-          <h2 className="mb-8 text-center text-2xl font-semibold tracking-tight sm:text-3xl">
+          <Typography.H2 className="mb-8 text-center text-2xl font-semibold tracking-tight sm:text-3xl">
             {t("faqTitle")}
-          </h2>
+          </Typography.H2>
           <Accordion>
             {FAQ_KEYS.map((item, i) => (
               <AccordionItem key={`faq-${i}`}>
@@ -347,7 +348,7 @@ export default function PricingCurrentPage() {
                   </span>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p className="text-muted-foreground">{t(item.a)}</p>
+                  <Typography.Muted className="text-muted-foreground">{t(item.a)}</Typography.Muted>
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -358,10 +359,10 @@ export default function PricingCurrentPage() {
       {/* ── CTA ──────────────────────────────────────────────── */}
       <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
         <div className="mx-auto max-w-2xl">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          <Typography.H2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {t("ctaTitle")}
-          </h2>
-          <p className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</p>
+          </Typography.H2>
+          <Typography.Muted className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</Typography.Muted>
           <div className="mt-8">
             <Button size="lg" render={<Link href="/auth/signup" />}>
               {t("ctaButton")}
@@ -380,7 +381,7 @@ export default function PricingCurrentPage() {
               {appT("name")}
             </span>
           </div>
-          <p className="mt-2">{appT("tagline")}</p>
+          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
         </div>
       </footer>
     </div>

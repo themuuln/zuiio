@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AdminOrg } from "@/lib/services/admin-service";
+import { Typography } from "@/components/ui/typography";
 
 const PLAN_COLORS: Record<string, string> = {
   starter: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
@@ -126,10 +127,10 @@ export default function AdminPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <ShieldAlert className="size-10 text-destructive" />
-        <h2 className="text-xl font-semibold">Access Denied</h2>
-        <p className="text-muted-foreground text-center max-w-md">
+        <Typography.H2 className="text-xl font-semibold">Access Denied</Typography.H2>
+        <Typography.Muted className="text-muted-foreground text-center max-w-md">
           You need super admin privileges to access this dashboard.
-        </p>
+        </Typography.Muted>
       </div>
     );
   }
@@ -138,13 +139,13 @@ export default function AdminPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
             <Shield className="size-6" />
             Admin Dashboard
-          </h1>
-          <p className="text-muted-foreground">
+          </Typography.H1>
+          <Typography.Muted className="text-muted-foreground">
             Manage organizations and their subscriptions
-          </p>
+          </Typography.Muted>
         </div>
         <Badge variant="outline" className="text-xs">
           {orgs.length} org{orgs.length === 1 ? "" : "s"}
@@ -174,10 +175,10 @@ export default function AdminPage() {
                   className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px_230px] gap-3 md:gap-4 px-6 py-4 items-center"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{org.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <Typography.Text className="text-sm font-medium truncate">{org.name}</Typography.Text>
+                    <Typography.Muted className="text-xs text-muted-foreground truncate">
                       {org.slug}
-                    </p>
+                    </Typography.Muted>
                   </div>
 
                   <div>
@@ -264,10 +265,10 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
-      <p className="text-xs text-muted-foreground">
+      <Typography.Muted className="text-xs text-muted-foreground">
         Changes take effect immediately. The subscription plan limits are not
         enforced yet; this only updates the plan type in the database.
-      </p>
+      </Typography.Muted>
     </div>
   );
 }

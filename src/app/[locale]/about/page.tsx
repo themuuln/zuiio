@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Typography } from "@/components/ui/typography";
 
 const VALUES = [
   { key: "value1", icon: "🎯" },
@@ -37,22 +38,22 @@ export default function AboutPage() {
             <Badge variant="outline" className="mb-4">
               TOLOM
             </Badge>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+            <Typography.H1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
               {t("pageTitle")}
-            </h1>
-            <p className="mt-3 text-base text-muted-foreground sm:text-lg">
+            </Typography.H1>
+            <Typography.Muted className="mt-3 text-base text-muted-foreground sm:text-lg">
               {t("pageDescription")}
-            </p>
+            </Typography.Muted>
           </div>
         </section>
         <section className="px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("storyTitle")}
-            </h2>
+            </Typography.H2>
             <div className="mt-6 space-y-4 text-muted-foreground leading-relaxed">
-              <p>{t("storyBody1")}</p>
-              <p>{t("storyBody2")}</p>
+              <Typography.Text>{t("storyBody1")}</Typography.Text>
+              <Typography.Text>{t("storyBody2")}</Typography.Text>
             </div>
           </div>
         </section>
@@ -67,9 +68,9 @@ export default function AboutPage() {
                 <CardTitle className="text-xl">{t("missionTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
+                <Typography.Muted className="text-muted-foreground leading-relaxed">
                   {t("missionBody")}
-                </p>
+                </Typography.Muted>
               </CardContent>
             </Card>
 
@@ -82,18 +83,18 @@ export default function AboutPage() {
                 <CardTitle className="text-xl">{t("visionTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
+                <Typography.Muted className="text-muted-foreground leading-relaxed">
                   {t("visionBody")}
-                </p>
+                </Typography.Muted>
               </CardContent>
             </Card>
           </div>
         </section>
         <section className="px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("approachTitle")}
-            </h2>
+            </Typography.H2>
             <div className="mt-6 space-y-3">
               {t("approachBody1")
                 .split("\n")
@@ -111,9 +112,9 @@ export default function AboutPage() {
         </section>
         <section className="border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-5xl">
-            <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
               {t("valuesTitle")}
-            </h2>
+            </Typography.H2>
             <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {VALUES.map((v) => (
                 <Card key={v.key} className="text-center">
@@ -133,20 +134,20 @@ export default function AboutPage() {
         </section>
         <section className="px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("techTitle")}
-            </h2>
-            <p className="mt-6 text-muted-foreground leading-relaxed">
+            </Typography.H2>
+            <Typography.Muted className="mt-6 text-muted-foreground leading-relaxed">
               {t("techBody")}
-            </p>
+            </Typography.Muted>
           </div>
         </section>
         <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
           <div className="mx-auto max-w-2xl">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("ctaTitle")}
-            </h2>
-            <p className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</p>
+            </Typography.H2>
+            <Typography.Muted className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</Typography.Muted>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"
@@ -176,7 +177,7 @@ export default function AboutPage() {
               {appT("name")}
             </span>
           </div>
-          <p className="mt-2">{appT("tagline")}</p>
+          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
         </div>
       </footer>
     </div>

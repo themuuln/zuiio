@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 
 export default function RootErrorPage({
   error,
@@ -13,11 +14,11 @@ export default function RootErrorPage({
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-4">
       <div className="text-center">
-        <h1 className="text-6xl font-semibold text-destructive/30">500</h1>
-        <h2 className="mt-4 text-xl font-semibold">Something went wrong</h2>
-        <p className="mt-2 text-muted-foreground">
+        <Typography.H1 className="text-6xl font-semibold text-destructive/30">500</Typography.H1>
+        <Typography.H2 className="mt-4 text-xl font-semibold">Something went wrong</Typography.H2>
+        <Typography.Muted className="mt-2 text-muted-foreground">
           An unexpected error occurred. Please try again.
-        </p>
+        </Typography.Muted>
         <div className="mt-6 flex items-center justify-center gap-3">
           <Button onClick={reset} variant="default">
             Try again

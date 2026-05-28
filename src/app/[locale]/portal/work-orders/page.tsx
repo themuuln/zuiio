@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 const STATUS_VARIANTS: Record<
   string,
@@ -62,15 +63,15 @@ export default function PortalWorkOrdersPage() {
   if (!workOrders || workOrders.length === 0) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-semibold">
+        <Typography.H1 className="text-xl font-semibold">
           {t("portal.workOrders") ?? "Work Orders"}
-        </h1>
+        </Typography.H1>
         <Card>
           <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
             <ClipboardList className="size-10 text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground">
+            <Typography.Muted className="text-sm text-muted-foreground">
               {t("portal.noWorkOrders") ?? "No work orders yet"}
-            </p>
+            </Typography.Muted>
           </CardContent>
         </Card>
       </div>
@@ -79,9 +80,9 @@ export default function PortalWorkOrdersPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">
+      <Typography.H1 className="text-xl font-semibold">
         {t("portal.workOrders") ?? "Work Orders"}
-      </h1>
+      </Typography.H1>
 
       <div className="flex flex-col gap-3">
         {workOrders.map((wo: Record<string, unknown>) => {
@@ -106,11 +107,11 @@ export default function PortalWorkOrdersPage() {
                         {wo.status as string}
                       </Badge>
                     </div>
-                    <p className="line-clamp-1 text-xs text-muted-foreground">
+                    <Typography.Muted className="line-clamp-1 text-xs text-muted-foreground">
                       {wo.description
                         ? (wo.description as string)
                         : (t("portal.noDescription") ?? "No description")}
-                    </p>
+                    </Typography.Muted>
                     <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
                       <span>
                         {wo.total != null ? formatMNT(Number(wo.total)) : "—"}

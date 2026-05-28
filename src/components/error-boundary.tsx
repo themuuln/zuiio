@@ -3,6 +3,7 @@
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Component, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 
 interface Props {
   children: ReactNode;
@@ -32,9 +33,9 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="flex items-center justify-center size-12 rounded-full bg-destructive/10">
             <AlertTriangle className="size-6 text-destructive" />
           </div>
-          <p className="text-sm text-muted-foreground text-center">
+          <Typography.Muted className="text-sm text-muted-foreground text-center">
             Something went wrong
-          </p>
+          </Typography.Muted>
           <Button
             variant="outline"
             size="sm"

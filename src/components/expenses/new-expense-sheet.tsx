@@ -24,6 +24,7 @@ import {
   useExpenseCategories,
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { Typography } from "@/components/ui/typography";
 
 const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "manual"] as const;
 
@@ -58,10 +59,7 @@ type NewExpenseSheetProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-export function NewExpenseSheet({
-  open,
-  onOpenChange,
-}: NewExpenseSheetProps) {
+export function NewExpenseSheet({ open, onOpenChange }: NewExpenseSheetProps) {
   const t = useTranslations("expenses");
   const commonT = useTranslations("common");
   const orgQuery = useCurrentOrg();
@@ -173,9 +171,9 @@ export function NewExpenseSheet({
                         aria-invalid={!!fieldErrors.description}
                       />
                       {fieldErrors.description && (
-                        <p className="text-xs text-destructive mt-1">
+                        <Typography.Text className="text-xs text-destructive mt-1">
                           {fieldErrors.description}
-                        </p>
+                        </Typography.Text>
                       )}
                     </div>
 
@@ -205,9 +203,9 @@ export function NewExpenseSheet({
                         aria-invalid={!!fieldErrors.amount}
                       />
                       {fieldErrors.amount && (
-                        <p className="text-xs text-destructive mt-1">
+                        <Typography.Text className="text-xs text-destructive mt-1">
                           {fieldErrors.amount}
-                        </p>
+                        </Typography.Text>
                       )}
                     </div>
 
@@ -420,9 +418,7 @@ export function NewExpenseSheet({
               ) : (
                 <Wallet className="size-4" />
               )}
-              {createExpense.isPending
-                ? t("saving")
-                : t("addExpense")}
+              {createExpense.isPending ? t("saving") : t("addExpense")}
             </Button>
           </div>
         </div>

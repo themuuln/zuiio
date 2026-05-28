@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ApiResponse } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 
 interface InviteData {
@@ -244,14 +245,14 @@ export default function InviteRedeemPage() {
                 <LogIn className="mr-2 size-4" />
                 {t("signInToAccept")}
               </Button>
-              <p className="text-xs text-muted-foreground">
+              <Typography.Muted className="text-xs text-muted-foreground">
                 {t("signInHint")}
-              </p>
+              </Typography.Muted>
             </>
           )}
-          <p className="text-xs text-muted-foreground">
+          <Typography.Muted className="text-xs text-muted-foreground">
             {appT("name")} &middot; {appT("tagline")}
-          </p>
+          </Typography.Muted>
         </CardFooter>
       </Card>
     </div>

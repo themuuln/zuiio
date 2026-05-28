@@ -55,6 +55,7 @@ import {
   ComboboxItem,
   ComboboxEmpty,
 } from "@/components/ui/combobox";
+import { Typography } from "@/components/ui/typography";
 
 const COMMISSION_TYPES = [
   { value: "percentage_of_labor", label: "% of Labor" },
@@ -213,9 +214,9 @@ function CommissionFormDialog({
                 </ComboboxContent>
               </Combobox>
             )}
-            <p className="text-xs text-muted-foreground">
+            <Typography.Muted className="text-xs text-muted-foreground">
               Leave empty to apply to all mechanics
-            </p>
+            </Typography.Muted>
           </Field>
 
           <Field>
@@ -380,7 +381,7 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
     return (
       <Card className="border-destructive/20">
         <CardContent className="py-6">
-          <p className="text-sm text-destructive">Failed to load commission rules</p>
+          <Typography.Text className="text-sm text-destructive">Failed to load commission rules</Typography.Text>
         </CardContent>
       </Card>
     );
@@ -390,9 +391,9 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
     <>
       <div className="flex mt-4 flex-col gap-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+          <Typography.Muted className="text-sm text-muted-foreground">
             Configure how mechanics earn commissions on completed work orders.
-          </p>
+          </Typography.Muted>
           <Button onClick={openAddDialog} size="sm">
             <Plus className="mr-1.5 size-4" />
             Add Rule

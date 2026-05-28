@@ -19,6 +19,7 @@ import { Link } from "@/lib/i18n/navigation";
 import { usePartsCars } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 const STATUS_STYLES: Record<string, string> = {
   arrived: "bg-blue-100 text-blue-700",
@@ -51,12 +52,12 @@ export default function PartsCarsListPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t('title')}
-        </h1>
-        <p className="text-muted-foreground">
+        </Typography.H1>
+        <Typography.Muted className="text-muted-foreground">
           {t('subtitle')}
-        </p>
+        </Typography.Muted>
       </div>
 
       <ListToolbar
@@ -101,13 +102,13 @@ export default function PartsCarsListPage() {
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="min-w-0">
-                      <p className="font-semibold truncate">
+                      <Typography.Text className="font-semibold truncate">
                         {car.make} {car.model}
-                      </p>
+                      </Typography.Text>
                       {car.year && (
-                        <p className="text-sm text-muted-foreground">
+                        <Typography.Muted className="text-sm text-muted-foreground">
                           {car.year}
-                        </p>
+                        </Typography.Muted>
                       )}
                     </div>
                     <Badge variant="outline" className="shrink-0">
@@ -117,37 +118,37 @@ export default function PartsCarsListPage() {
 
                   <div className="flex flex-col gap-1.5 text-sm">
                     {car.vin && (
-                      <p className="text-muted-foreground font-mono text-xs truncate">
+                      <Typography.Muted className="text-muted-foreground font-mono text-xs truncate">
                         VIN: {car.vin}
-                      </p>
+                      </Typography.Muted>
                     )}
                     {car.license_plate && (
-                      <p className="text-muted-foreground font-mono text-xs">
+                      <Typography.Muted className="text-muted-foreground font-mono text-xs">
                         {car.license_plate}
-                      </p>
+                      </Typography.Muted>
                     )}
-                    <p className="text-muted-foreground">
+                    <Typography.Muted className="text-muted-foreground">
                       {t('fields.cost')}:
                        {" "}
                       <span className="font-semibold text-foreground">
                         {formatMNT(car.purchase_cost)}
                       </span>
-                    </p>
+                    </Typography.Muted>
                     {car.status === "completed" && (
                       <>
-                        <p className="text-muted-foreground">
+                        <Typography.Muted className="text-muted-foreground">
                           {t('fields.parts')}:{" "}
                           <span className="font-semibold text-foreground">
                             {t('fields.partsCount', { count: car.total_parts_actual })}
                           </span>
-                        </p>
-                        <p className="text-muted-foreground">
+                        </Typography.Muted>
+                        <Typography.Muted className="text-muted-foreground">
                           {t('fields.value')}:{" "}
                           <span className="font-semibold text-green-600">
                             {formatMNT(car.total_estimated_value)}
                           </span>
-                        </p>
-                        <p className="text-muted-foreground">
+                        </Typography.Muted>
+                        <Typography.Muted className="text-muted-foreground">
                           {t('fields.profit')}:{" "}
                           <span
                             className={`font-semibold ${
@@ -160,18 +161,18 @@ export default function PartsCarsListPage() {
                               car.total_estimated_value - car.purchase_cost,
                             )}
                           </span>
-                        </p>
+                        </Typography.Muted>
                       </>
                     )}
                     {car.status === "disassembling" && (
-                      <p className="text-xs text-amber-600 font-medium">
+                      <Typography.Text className="text-xs text-amber-600 font-medium">
                         {t('fields.disassemblingLabel')}
-                      </p>
+                      </Typography.Text>
                     )}
                     {car.status === "arrived" && (
-                      <p className="text-xs text-blue-600 font-medium">
+                      <Typography.Text className="text-xs text-blue-600 font-medium">
                         {t('fields.notDisassembled')}
-                      </p>
+                      </Typography.Text>
                     )}
                   </div>
                 </CardContent>

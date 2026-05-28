@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { vehicleModelKeys } from "@/lib/queries/keys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Typography } from "@/components/ui/typography";
 
 interface VehicleModelItem {
   id: string;
@@ -446,10 +447,10 @@ export default function VehicleModelsPage() {
     <div className="flex flex-col gap-6">
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
-        <p className="text-muted-foreground">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">{t("title")}</Typography.H1>
+        <Typography.Muted className="text-muted-foreground">
           {t("subtitle")}
-        </p>
+        </Typography.Muted>
       </div>
 
       <ListToolbar
@@ -666,7 +667,7 @@ export default function VehicleModelsPage() {
             </div>
           ) : error ? (
             <div className="flex flex-col items-center gap-4 py-12">
-              <p className="text-destructive">{error}</p>
+              <Typography.Text className="text-destructive">{error}</Typography.Text>
               <Button onClick={() => refetch()}>Retry</Button>
             </div>
           ) : tree.length === 0 ? (
@@ -772,7 +773,7 @@ export default function VehicleModelsPage() {
                                       className="group flex items-center gap-3 pl-16 pr-4 py-2.5 min-h-[40px] hover:bg-muted/20 transition-colors"
                                     >
                                       <div className="flex-1 min-w-0">
-                                        <p className="text-sm text-muted-foreground">
+                                        <Typography.Muted className="text-sm text-muted-foreground">
                                           {variantLabel(v) ? (
                                             <>
                                               {variantLabel(v)}
@@ -784,7 +785,7 @@ export default function VehicleModelsPage() {
                                               {t("baseVariant")}
                                             </span>
                                           )}
-                                        </p>
+                                        </Typography.Muted>
                                       </div>
                                       <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Button

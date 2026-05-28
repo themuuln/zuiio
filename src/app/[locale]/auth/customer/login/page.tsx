@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { customerLogin } from "./actions";
+import { Typography } from "@/components/ui/typography";
 
 export default function CustomerLoginPage() {
   const t = useTranslations();
@@ -41,9 +42,9 @@ export default function CustomerLoginPage() {
             </div>
           </div>
           <CardTitle className="text-lg">{t("portal.loginTitle")}</CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">
+          <Typography.Muted className="text-xs text-muted-foreground mt-1">
             {t("portal.loginDesc")}
-          </p>
+          </Typography.Muted>
         </CardHeader>
         <CardContent>
           <form action={formAction} className="flex flex-col gap-4">

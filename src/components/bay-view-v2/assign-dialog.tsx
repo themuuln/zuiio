@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, CornerDownRight, Loader2, User } from "lucide-react";
+import { Car, CornerDownRight, Loader2, User, UserPlus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { cn, formatPlateNumber } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 interface AssignDialogProps {
   open: boolean;
@@ -105,13 +106,15 @@ export function AssignDialog({
 
         <div className="flex flex-col gap-4">
           <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2">
+            <Typography.Muted className="text-xs font-medium text-muted-foreground mb-2">
               Vehicle
-            </p>
+            </Typography.Muted>
             {queue.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground/60  border border-dashed">
                 <Car className="size-5 mb-1" />
-                <p className="text-xs">No vehicles in queue</p>
+                <Typography.Text className="text-xs">
+                  No vehicles in queue
+                </Typography.Text>
               </div>
             ) : (
               <>
@@ -170,24 +173,24 @@ export function AssignDialog({
                               <Car className="size-3.5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate">
+                              <Typography.Text className="text-xs font-medium truncate">
                                 {v
                                   ? formatPlateNumber(v.plate_number)
                                   : "No vehicle"}
-                              </p>
-                              <p className="text-[10px] text-muted-foreground truncate">
+                              </Typography.Text>
+                              <Typography.Muted className="text-[10px] text-muted-foreground truncate">
                                 {v
                                   ? `${v.make} ${v.model}`
                                   : wo.complaint || wo.id.slice(0, 8)}
-                              </p>
+                              </Typography.Muted>
                             </div>
                           </Button>
                         );
                       })}
                       {filtered.length === 0 && (
-                        <p className="text-xs text-muted-foreground/60 text-center py-4">
+                        <Typography.Muted className="text-xs text-muted-foreground/60 text-center py-4">
                           No match
-                        </p>
+                        </Typography.Muted>
                       )}
                     </div>
                   </ScrollArea>
@@ -201,14 +204,14 @@ export function AssignDialog({
                           <Car className="size-3.5" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium truncate">
+                          <Typography.Text className="text-xs font-medium truncate">
                             {v
                               ? formatPlateNumber(v.plate_number)
                               : "No vehicle"}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground truncate">
+                          </Typography.Text>
+                          <Typography.Muted className="text-[10px] text-muted-foreground truncate">
                             {v ? `${v.make} ${v.model}` : (wo?.complaint ?? "")}
-                          </p>
+                          </Typography.Muted>
                         </div>
                       </div>
                     );
@@ -216,13 +219,13 @@ export function AssignDialog({
                 ) : (
                   <div className="flex flex-col items-center justify-center py-5 text-center">
                     <Car className="size-5 text-muted-foreground/30 mb-1" />
-                    <p className="text-xs text-muted-foreground/60">
+                    <Typography.Muted className="text-xs text-muted-foreground/60">
                       {queue.length} vehicle{queue.length !== 1 ? "s" : ""}{" "}
                       waiting
-                    </p>
-                    <p className="text-[10px] text-muted-foreground/40 mt-0.5">
+                    </Typography.Muted>
+                    <Typography.Muted className="text-[10px] text-muted-foreground/40 mt-0.5">
                       Type in the search above to browse the queue
-                    </p>
+                    </Typography.Muted>
                   </div>
                 )}
               </>
@@ -230,17 +233,30 @@ export function AssignDialog({
           </div>
 
           <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2">
+            <Typography.Muted className="text-xs font-medium text-muted-foreground mb-2">
               Mechanic{" "}
               <span className="font-normal text-muted-foreground/50">
                 (optional)
               </span>
-            </p>
+            </Typography.Muted>
             <div className="flex flex-wrap gap-1.5">
               {mechanics.length === 0 ? (
-                <p className="text-xs text-muted-foreground/60 py-2">
-                  No mechanics available
-                </p>
+                <div className="flex flex-col items-start gap-1.5 py-2">
+                  <Typography.Muted className="text-xs text-muted-foreground/60">
+                    No mechanics available
+                  </Typography.Muted>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      (window.location.href = "/dashboard/organization/members")
+                    }
+                    className="h-6 px-2 text-xs gap-1"
+                  >
+                    <UserPlus className="size-3" />
+                    Invite mechanic
+                  </Button>
+                </div>
               ) : (
                 mechanics.map((m) => {
                   const isSelected = selectedMechId === m.id;
@@ -290,10 +306,10 @@ export function AssignDialog({
         </div>
 
         <div className="flex items-center justify-between gap-3 border-t pt-3">
-          <p className="text-[10px] text-muted-foreground/50">
+          <Typography.Muted className="text-[10px] text-muted-foreground/50">
             Bay #{bayNumber}
             {selectedMechId ? " + mechanic" : ""}
-          </p>
+          </Typography.Muted>
           <div className="flex items-center gap-2">
             <Button
               size="sm"

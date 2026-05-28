@@ -3,6 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import type { InventoryBalanceWithAvgCost } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 export interface ValuationRow extends InventoryBalanceWithAvgCost {
   avgUnitCost: number;
@@ -18,10 +19,10 @@ export const columns: ColumnDef<ValuationRow>[] = [
     ),
     cell: ({ row }) => (
       <div>
-        <p className="font-medium">{row.original.part_name}</p>
-        <p className="text-xs text-muted-foreground">
+        <Typography.Text className="font-medium">{row.original.part_name}</Typography.Text>
+        <Typography.Muted className="text-xs text-muted-foreground">
           {row.original.part_number ?? "—"}
-        </p>
+        </Typography.Muted>
       </div>
     ),
   },

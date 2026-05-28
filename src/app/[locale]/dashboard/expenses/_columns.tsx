@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import type { ExpenseWithCategory } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 // ── Category Badge ──
 
@@ -58,11 +59,11 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
       const expense = row.original;
       return (
         <div className="min-w-0 max-w-64">
-          <p className="truncate text-sm font-medium">{expense.description}</p>
+          <Typography.Text className="truncate text-sm font-medium">{expense.description}</Typography.Text>
           {expense.reference_number && (
-            <p className="truncate text-xs text-muted-foreground">
+            <Typography.Muted className="truncate text-xs text-muted-foreground">
               {expense.reference_number}
-            </p>
+            </Typography.Muted>
           )}
         </div>
       );

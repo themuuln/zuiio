@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatMNT } from "@/lib/utils";
 import type { WorkOrderStatus } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 interface WorkOrderSummary {
   id: string;
@@ -39,9 +40,9 @@ export function CustomerWorkOrderHistory({ workOrders, router }: Props) {
       </CardHeader>
       <CardContent>
         {workOrders.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
+          <Typography.Muted className="py-6 text-center text-sm text-muted-foreground">
             {t("noServiceHistory")}
-          </p>
+          </Typography.Muted>
         ) : (
           <div className="flex flex-col gap-3">
             {workOrders.map((workOrder) => (
@@ -62,18 +63,18 @@ export function CustomerWorkOrderHistory({ workOrders, router }: Props) {
                       </span>
                     </div>
                     {workOrder.vehicles && (
-                      <p className="text-xs text-muted-foreground">
+                      <Typography.Muted className="text-xs text-muted-foreground">
                         {workOrder.vehicles.plate_number}
                         {workOrder.vehicles.make && workOrder.vehicles.model
                           ? ` · ${workOrder.vehicles.make} ${workOrder.vehicles.model}`
                           : ""}
-                      </p>
+                      </Typography.Muted>
                     )}
-                    <p className="text-sm font-medium">
+                    <Typography.Text className="text-sm font-medium">
                       {workOrder.complaint ||
                         workOrder.description ||
                         "General service"}
-                    </p>
+                    </Typography.Text>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-sm font-semibold tabular-nums">

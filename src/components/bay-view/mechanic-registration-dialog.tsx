@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Typography } from "@/components/ui/typography";
 
 interface Props {
   onClose: () => void;
@@ -81,12 +82,12 @@ export function MechanicRegistrationDialog({ onClose, onRegistered }: Props) {
               <Wrench className="size-5 text-purple-500" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">
+              <Typography.H2 className="text-lg font-semibold">
                 {t("registerMechanicBtn")}
-              </h2>
-              <p className="text-xs text-muted-foreground font-normal">
+              </Typography.H2>
+              <Typography.Muted className="text-xs text-muted-foreground font-normal">
                 {t("registerMechanicDesc")}
-              </p>
+              </Typography.Muted>
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -144,7 +145,7 @@ export function MechanicRegistrationDialog({ onClose, onRegistered }: Props) {
             </div>
           </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && <Typography.Text className="text-sm text-destructive">{error}</Typography.Text>}
 
           <Button
             type="submit"

@@ -2,6 +2,7 @@
 
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 
 interface UnsavedWarningProps {
   show: boolean;
@@ -17,10 +18,10 @@ export function UnsavedWarning({ show, onDiscard, onKeepEditing }: UnsavedWarnin
       <div className="mx-4 flex w-full max-w-sm flex-col items-center gap-4 rounded-lg border border-border bg-card p-6 shadow-lg">
         <AlertTriangle className="size-8 text-amber-500" />
         <div className="text-center">
-          <p className="font-semibold">You have unsaved changes</p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <Typography.Text className="font-semibold">You have unsaved changes</Typography.Text>
+          <Typography.Muted className="mt-1 text-sm text-muted-foreground">
             Are you sure you want to close? Your changes will be lost.
-          </p>
+          </Typography.Muted>
         </div>
         <div className="flex gap-2">
           <Button

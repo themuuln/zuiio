@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Link } from "@/lib/i18n/navigation";
 import { setCookie } from "@/lib/utils";
 import { login } from "./actions";
+import { Typography } from "@/components/ui/typography";
 
 export default function LoginPage() {
   const t = useTranslations("auth.login");
@@ -54,12 +55,12 @@ export default function LoginPage() {
       {/* Card Header with Title and Language Switcher */}
       <div className="flex items-start justify-between border-b border-border pb-3">
         <div className="text-left">
-          <h2 className="text-sm font-bold tracking-tight text-foreground">
+          <Typography.H2 className="text-sm font-bold tracking-tight text-foreground">
             {t("title")}
-          </h2>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
+          </Typography.H2>
+          <Typography.Muted className="mt-0.5 text-[10px] text-muted-foreground">
             {t("subtitle")}
-          </p>
+          </Typography.Muted>
         </div>
 
         {/* Language Switcher */}
@@ -162,7 +163,7 @@ export default function LoginPage() {
               </span>
             </Button>
 
-            <p className="mt-3 text-center text-[10px] text-muted-foreground font-sans">
+            <Typography.Muted className="mt-3 text-center text-[10px] text-muted-foreground font-sans">
               {t("noAccount")}{" "}
               <Link
                 href="/auth/signup"
@@ -170,7 +171,7 @@ export default function LoginPage() {
               >
                 {authT("signUp")}
               </Link>
-            </p>
+            </Typography.Muted>
           </Field>
         </FieldGroup>
       </form>

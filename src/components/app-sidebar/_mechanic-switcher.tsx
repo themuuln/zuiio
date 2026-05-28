@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { Wrench } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Wrench, UserPlus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
+import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
 import { mechanicKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { getInitials } from "@/lib/utils";
@@ -64,6 +65,9 @@ export function MechanicSwitcher() {
   const displayName =
     activeMechanic?.full_name ?? profile?.full_name ?? "Mechanic";
 
+  const queryClient = useQueryClient();
+  const [showAddMechanic, setShowAddMechanic] = useState(false);
+
   const handleSwitch = useCallback(
     (mechanicId: string | null) => {
       const id = mechanicId ?? profile?.id ?? "";
@@ -74,63 +78,85 @@ export function MechanicSwitcher() {
   );
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <SidebarMenuButton
-            size="sm"
-            className="h-7 px-1 aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground"
-          />
-        }
-      >
-        <Avatar className="size-4.5 shrink-0">
-          <AvatarFallback className="text-[8px] font-medium bg-sidebar-accent text-sidebar-accent-foreground">
-            <Wrench className="size-2.5" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-          <span className="truncate text-xs font-medium">{displayName}</span>
-          <span className="truncate text-[9px] text-sidebar-foreground/50">
-            {mechanics.length > 0
-              ? `${mechanics.length} mechanics`
-              : "No mechanics"}
-          </span>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="min-w-48 rounded-lg"
-        side={isMobile ? "bottom" : "right"}
-        align="end"
-        sideOffset={4}
-      >
-        <div className="px-2 py-1.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-          Switch Mechanic
-        </div>
-        {mechanics.length === 0 && (
-          <div className="px-2 py-3 text-xs text-muted-foreground/50 text-center">
-            No mechanics found
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <SidebarMenuButton
+              size="sm"
+              className="h-7 px-1 aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground"
+            />
+          }
+        >
+          <Avatar className="size-4.5 shrink-0">
+            <AvatarFallback className="text-[8px] font-medium bg-sidebar-accent text-sidebar-accent-foreground">
+              <Wrench className="size-2.5" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+            <span className="truncate text-xs font-medium">{displayName}</span>
+            <span className="truncate text-[9px] text-sidebar-foreground/50">
+              {mechanics.length > 0
+                ? `${mechanics.length} mechanics`
+                : "No mechanics"}
+            </span>
           </div>
-        )}
-        {mechanics.map((m) => (
-          <DropdownMenuItem
-            key={m.id}
-            onClick={() => handleSwitch(m.id)}
-            className="gap-2"
-          >
-            <Avatar className="size-5">
-              <AvatarFallback className="text-[8px] font-medium">
-                {getInitials(m.full_name)}
-              </AvatarFallback>
-            </Avatar>
-            <span className="flex-1 text-xs">{m.full_name ?? "Unknown"}</span>
-            {m.id === activeMechanicId && (
-              <span className="text-[10px] text-primary font-medium">
-                Active
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="min-w-48 rounded-lg"
+          side={isMobile ? "bottom" : "right"}
+          align="end"
+          sideOffset={4}
+        >
+          <div className="px-2 py-1.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+            Switch Mechanic
+          </div>
+          {mechanics.length === 0 && (
+            <div className="flex flex-col items-center gap-2 px-2 py-3">
+              <span className="text-xs text-muted-foreground/50">
+                No mechanics found
               </span>
-            )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+              <button
+                onClick={() => setShowAddMechanic(true)}
+                className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+              >
+                <UserPlus className="size-3" />
+                Invite mechanic
+              </button>
+            </div>
+          )}
+          {mechanics.map((m) => (
+            <DropdownMenuItem
+              key={m.id}
+              onClick={() => handleSwitch(m.id)}
+              className="gap-2"
+            >
+              <Avatar className="size-5">
+                <AvatarFallback className="text-[8px] font-medium">
+                  {getInitials(m.full_name)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="flex-1 text-xs">{m.full_name ?? "Unknown"}</span>
+              {m.id === activeMechanicId && (
+                <span className="text-[10px] text-primary font-medium">
+                  Active
+                </span>
+              )}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <NewMechanicSheet
+        open={showAddMechanic}
+        onOpenChange={(open) => {
+          setShowAddMechanic(open);
+          if (!open) {
+            queryClient.invalidateQueries({
+              queryKey: mechanicKeys.list(orgId ?? ""),
+            });
+          }
+        }}
+      />
+    </>
   );
 }

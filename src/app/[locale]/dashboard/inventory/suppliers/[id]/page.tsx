@@ -14,6 +14,7 @@ import { useRouter } from "@/lib/i18n/navigation";
 import { useSuppliers, useUpdateSupplier } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
+import { Typography } from "@/components/ui/typography";
 
 export default function EditSupplierPage() {
   const t = useTranslations("inventory");
@@ -99,7 +100,7 @@ export default function EditSupplierPage() {
         </Button>
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
-            <p className="text-muted-foreground">{t("supplierNotFound")}</p>
+            <Typography.Muted className="text-muted-foreground">{t("supplierNotFound")}</Typography.Muted>
             <Button onClick={() => push("/dashboard/inventory/suppliers")}>
               {t("backToList")}
             </Button>
@@ -120,9 +121,9 @@ export default function EditSupplierPage() {
         >
           <ArrowLeft className="size-5" />
         </Button>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("editSupplier")}
-        </h1>
+        </Typography.H1>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">

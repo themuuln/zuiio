@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { resetPassword } from "./actions";
+import { Typography } from "@/components/ui/typography";
 
 export default function ResetPasswordPage() {
   const t = useTranslations("auth.resetPassword");
@@ -28,8 +29,8 @@ export default function ResetPasswordPage() {
   return (
     <div>
       <div className="mb-6 text-center">
-        <h2 className="text-lg font-semibold text-foreground">{t("title")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
+        <Typography.H2 className="text-lg font-semibold text-foreground">{t("title")}</Typography.H2>
+        <Typography.Muted className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</Typography.Muted>
       </div>
       <form action={formAction} className="flex flex-col gap-4">
         {state?.formError && <FieldError>{state.formError}</FieldError>}

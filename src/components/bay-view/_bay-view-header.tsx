@@ -25,6 +25,7 @@ import {
   type ColumnsMode,
   type ViewMode,
 } from "./bay-view-toolbar";
+import { Typography } from "@/components/ui/typography";
 
 interface BayViewHeaderProps {
   bayCount: number;
@@ -87,7 +88,7 @@ export function BayViewHeader({
     <div className="flex flex-col">
       <div className="flex items-center justify-between border-b border-border/50 py-1">
         <div className="flex items-center gap-2">
-          <h1 className="text-base font-semibold tracking-tight">{t("title")}</h1>
+          <Typography.H1 className="text-base font-semibold tracking-tight">{t("title")}</Typography.H1>
           {userIsMechanic && (
             <Button
               variant={myJobsOnly ? "default" : "outline"}

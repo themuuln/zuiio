@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Typography } from "@/components/ui/typography";
 
 
 export default function ConfirmEmailPage() {
@@ -43,15 +44,15 @@ export default function ConfirmEmailPage() {
           <Mail className="size-6 text-muted-foreground" />
         )}
       </div>
-      <h2 className="text-lg font-semibold text-foreground">{t("title")}</h2>
-      <p className="mt-2 text-sm text-muted-foreground">{t("subtitle")}</p>
+      <Typography.H2 className="text-lg font-semibold text-foreground">{t("title")}</Typography.H2>
+      <Typography.Muted className="mt-2 text-sm text-muted-foreground">{t("subtitle")}</Typography.Muted>
       {error && (
         <div className="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </div>
       )}
       {resent && (
-        <p className="mt-4 text-sm text-green-600">{t("resentMessage")}</p>
+        <Typography.Text className="mt-4 text-sm text-green-600">{t("resentMessage")}</Typography.Text>
       )}
       {!showResend ? (
         <div className="mt-6">
@@ -80,14 +81,14 @@ export default function ConfirmEmailPage() {
           </Button>
         </form>
       )}
-      <p className="mt-4 text-sm text-muted-foreground">
+      <Typography.Muted className="mt-4 text-sm text-muted-foreground">
         <Link
           href="/auth/login"
           className="font-medium text-foreground underline-offset-4 hover:underline"
         >
           {t("backToLogin")}
         </Link>
-      </p>
+      </Typography.Muted>
     </div>
   );
 }

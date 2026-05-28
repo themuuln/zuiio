@@ -5,6 +5,7 @@ import { Building2, Car, ChevronRight, Clock, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import type { Customer } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 export interface CustomerRow extends Customer {
   vehicle_count?: number;
@@ -57,12 +58,12 @@ export const columns: ColumnDef<CustomerRow>[] = [
             )}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">
+            <Typography.Text className="truncate text-sm font-medium">
               {getCustomerDisplayName(customer)}
-            </p>
-            <p className="text-xs text-muted-foreground capitalize">
+            </Typography.Text>
+            <Typography.Muted className="text-xs text-muted-foreground capitalize">
               {customer.type}
-            </p>
+            </Typography.Muted>
           </div>
         </div>
       );
@@ -78,11 +79,11 @@ export const columns: ColumnDef<CustomerRow>[] = [
       return (
         <div className="min-w-0 max-w-44">
           {customer.phone ? (
-            <p className="truncate text-sm">{customer.phone}</p>
+            <Typography.Text className="truncate text-sm">{customer.phone}</Typography.Text>
           ) : customer.email ? (
-            <p className="truncate text-sm text-muted-foreground">
+            <Typography.Muted className="truncate text-sm text-muted-foreground">
               {customer.email}
-            </p>
+            </Typography.Muted>
           ) : (
             <span className="text-sm text-muted-foreground/50">&mdash;</span>
           )}

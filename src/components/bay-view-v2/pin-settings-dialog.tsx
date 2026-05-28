@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Typography } from "@/components/ui/typography";
 
 interface Props {
   open: boolean;
@@ -90,7 +91,7 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
             <div className="flex items-center justify-center size-12  bg-green-100 dark:bg-green-900/30">
               <CheckCircle2 className="size-6 text-green-600" />
             </div>
-            <p className="text-sm font-medium text-center">{t("pinUpdated")}</p>
+            <Typography.Text className="text-sm font-medium text-center">{t("pinUpdated")}</Typography.Text>
             <Button onClick={() => onOpenChange(false)} size="default">
               {t("done")}
             </Button>

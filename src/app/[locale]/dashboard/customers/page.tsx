@@ -27,6 +27,7 @@ import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { columns } from "./_columns";
 import type { CustomerRow } from "./_columns";
+import { Typography } from "@/components/ui/typography";
 
 export default function CustomersPage() {
   const t = useTranslations("customers");
@@ -155,9 +156,9 @@ export default function CustomersPage() {
   if (isError || orgError) {
     return (
       <div className="tablet-touch flex flex-col gap-6">
-        <p className="text-destructive">
+        <Typography.Text className="text-destructive">
           {error?.message ?? t("noOrganization")}
-        </p>
+        </Typography.Text>
         <Button onClick={() => refetch()} variant="outline">
           {t("retry")}
         </Button>
@@ -169,12 +170,12 @@ export default function CustomersPage() {
     <div className="tablet-touch flex flex-col gap-6 tablet:gap-6 tablet:px-2">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("title")}
-          </h1>
-          <p className="text-muted-foreground">
+          </Typography.H1>
+          <Typography.Muted className="text-muted-foreground">
             {customers.length} customer{customers.length !== 1 ? "s" : ""}
-          </p>
+          </Typography.Muted>
         </div>
         <Button onClick={() => setNewCustomerDialogOpen(true)} size="default">
           <Plus className="size-4" />

@@ -32,6 +32,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Typography } from "@/components/ui/typography";
 
 export function LandingNav() {
   const t = useTranslations("home");
@@ -81,9 +82,9 @@ export function LandingNav() {
                           <div className="text-sm font-medium">
                             {t("navProduct")}
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          <Typography.Muted className="text-xs text-muted-foreground">
                             {t("navProductDesc")}
-                          </p>
+                          </Typography.Muted>
                         </div>
                       </NavigationMenuLink>
                     </li>
@@ -97,9 +98,9 @@ export function LandingNav() {
                           <div className="text-sm font-medium">
                             {t("navServices")}
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          <Typography.Muted className="text-xs text-muted-foreground">
                             {t("navServicesDesc")}
-                          </p>
+                          </Typography.Muted>
                         </div>
                       </NavigationMenuLink>
                     </li>
@@ -113,9 +114,9 @@ export function LandingNav() {
                           <div className="text-sm font-medium">
                             {t("navIntegrations")}
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          <Typography.Muted className="text-xs text-muted-foreground">
                             {t("navIntegrationsDesc")}
-                          </p>
+                          </Typography.Muted>
                         </div>
                       </NavigationMenuLink>
                     </li>
@@ -139,9 +140,9 @@ export function LandingNav() {
                           <div className="text-sm font-medium">
                             {t("navFAQ")}
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          <Typography.Muted className="text-xs text-muted-foreground">
                             {t("navFAQDesc")}
-                          </p>
+                          </Typography.Muted>
                         </div>
                       </NavigationMenuLink>
                     </li>
@@ -155,9 +156,9 @@ export function LandingNav() {
                           <div className="text-sm font-medium">
                             {t("navBlog")}
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          <Typography.Muted className="text-xs text-muted-foreground">
                             {t("navBlogDesc")}
-                          </p>
+                          </Typography.Muted>
                         </div>
                       </NavigationMenuLink>
                     </li>
@@ -171,9 +172,9 @@ export function LandingNav() {
                           <div className="text-sm font-medium">
                             {t("navDocs")}
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          <Typography.Muted className="text-xs text-muted-foreground">
                             Documentation and guides
-                          </p>
+                          </Typography.Muted>
                         </div>
                       </NavigationMenuLink>
                     </li>

@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText } from "lucide-react";
+import { Typography } from "@/components/ui/typography";
 
 interface NotesSectionProps {
   complaint: string | null;
@@ -28,9 +29,9 @@ export function NotesSection({ complaint, diagnosis, notes, t }: NotesSectionPro
             <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
               {t("complaint")}
             </span>
-            <p className="text-xs mt-0.5 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-foreground/80 leading-relaxed">
+            <Typography.Text className="text-xs mt-0.5 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-foreground/80 leading-relaxed">
               {complaint}
-            </p>
+            </Typography.Text>
           </div>
         )}
         {diagnosis && (
@@ -38,9 +39,9 @@ export function NotesSection({ complaint, diagnosis, notes, t }: NotesSectionPro
             <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
               {t("diagnosis")}
             </span>
-            <p className="text-xs mt-0.5 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-foreground/80 leading-relaxed">
+            <Typography.Text className="text-xs mt-0.5 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-foreground/80 leading-relaxed">
               {diagnosis}
-            </p>
+            </Typography.Text>
           </div>
         )}
         {notes && (
@@ -48,11 +49,11 @@ export function NotesSection({ complaint, diagnosis, notes, t }: NotesSectionPro
             <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
               {t("internalNotes")}
             </span>
-            <p className="text-xs mt-0.5 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-foreground/80 leading-relaxed">
+            <Typography.Text className="text-xs mt-0.5 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-foreground/80 leading-relaxed">
               {typeof notes === "object" && notes !== null
                 ? (notes as { content: string }).content
                 : notes}
-            </p>
+            </Typography.Text>
           </div>
         )}
       </div>

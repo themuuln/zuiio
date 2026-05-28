@@ -27,6 +27,7 @@ import {
 import type { InvoiceItem, InvoicePayment } from "@/lib/types";
 import type { InvoiceWithItems } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 // ── Invoice status badge ─────────────────────────────────
 
@@ -151,11 +152,11 @@ function InvoiceError({ message }: { message: string }) {
             <XCircle className="size-8 text-red-400" />
           </div>
           <div className="text-center">
-            <h2 className="text-lg font-semibold">Invoice Not Found</h2>
-            <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+            <Typography.H2 className="text-lg font-semibold">Invoice Not Found</Typography.H2>
+            <Typography.Muted className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
               {message ||
                 "This invoice could not be found. The link may be invalid or the invoice has been removed."}
-            </p>
+            </Typography.Muted>
           </div>
         </CardContent>
       </Card>
@@ -301,12 +302,12 @@ export default function PublicInvoicePage() {
             {/* Header */}
             <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                <Typography.H1 className="text-2xl font-semibold tracking-tight text-foreground">
                   {orgName || "INVOICE"}
-                </h1>
-                <p className="mt-1.5 text-sm text-muted-foreground">
+                </Typography.H1>
+                <Typography.Muted className="mt-1.5 text-sm text-muted-foreground">
                   Invoice #{invoice.invoice_number}
-                </p>
+                </Typography.Muted>
                 <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   <span>Issued: {formatDate(invoice.issued_at)}</span>
                   {invoice.due_at && (
@@ -322,56 +323,56 @@ export default function PublicInvoicePage() {
             {/* Billing info */}
             <div className="mb-10 grid gap-6 sm:grid-cols-2">
               <div>
-                <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Typography.H3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Bill To
-                </h3>
+                </Typography.H3>
                 <div className="flex flex-col gap-0.5 text-sm">
                   {invoice.customer_name && (
-                    <p className="font-medium">{invoice.customer_name}</p>
+                    <Typography.Text className="font-medium">{invoice.customer_name}</Typography.Text>
                   )}
                   {invoice.customer_phone && (
-                    <p className="text-muted-foreground">
+                    <Typography.Muted className="text-muted-foreground">
                       {invoice.customer_phone}
-                    </p>
+                    </Typography.Muted>
                   )}
                   {invoice.customer_email && (
-                    <p className="text-muted-foreground">
+                    <Typography.Muted className="text-muted-foreground">
                       {invoice.customer_email}
-                    </p>
+                    </Typography.Muted>
                   )}
                   {invoice.customer_address && (
-                    <p className="text-muted-foreground">
+                    <Typography.Muted className="text-muted-foreground">
                       {invoice.customer_address}
-                    </p>
+                    </Typography.Muted>
                   )}
                   {!invoice.customer_name &&
                     !invoice.customer_phone &&
                     !invoice.customer_email && (
-                      <p className="text-muted-foreground italic">
+                      <Typography.Muted className="text-muted-foreground italic">
                         No customer info
-                      </p>
+                      </Typography.Muted>
                     )}
                 </div>
               </div>
               <div>
-                <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Typography.H3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Vehicle
-                </h3>
+                </Typography.H3>
                 <div className="flex flex-col gap-0.5 text-sm">
                   {invoice.vehicle_plate && (
-                    <p className="font-mono font-medium">
+                    <Typography.Text className="font-mono font-medium">
                       {invoice.vehicle_plate}
-                    </p>
+                    </Typography.Text>
                   )}
                   {invoice.vehicle_details && (
-                    <p className="text-muted-foreground">
+                    <Typography.Muted className="text-muted-foreground">
                       {invoice.vehicle_details}
-                    </p>
+                    </Typography.Muted>
                   )}
                   {!invoice.vehicle_plate && !invoice.vehicle_details && (
-                    <p className="text-muted-foreground italic">
+                    <Typography.Muted className="text-muted-foreground italic">
                       No vehicle info
-                    </p>
+                    </Typography.Muted>
                   )}
                 </div>
               </div>
@@ -511,9 +512,9 @@ export default function PublicInvoicePage() {
             {/* Payment history */}
             {payments.length > 0 && (
               <div className="mt-10">
-                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Typography.H3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Payment History
-                </h3>
+                </Typography.H3>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -562,22 +563,22 @@ export default function PublicInvoicePage() {
             <div className="mt-10 grid gap-6 text-sm sm:grid-cols-2">
               {invoice.notes && (
                 <div>
-                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Typography.H3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Notes
-                  </h3>
-                  <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                  </Typography.H3>
+                  <Typography.Muted className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
                     {invoice.notes}
-                  </p>
+                  </Typography.Muted>
                 </div>
               )}
               {invoice.terms && (
                 <div>
-                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Typography.H3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Terms
-                  </h3>
-                  <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                  </Typography.H3>
+                  <Typography.Muted className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
                     {invoice.terms}
-                  </p>
+                  </Typography.Muted>
                 </div>
               )}
             </div>

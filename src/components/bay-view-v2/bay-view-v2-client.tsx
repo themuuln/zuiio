@@ -69,6 +69,7 @@ import { PostServiceDialog } from "./post-service-dialog";
 import { QueuePanel } from "./queue-panel";
 import { ShiftReportDialog } from "./shift-report-dialog";
 import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
+import { Typography } from "@/components/ui/typography";
 
 type ViewMode = "grid" | "kanban" | "list";
 
@@ -561,7 +562,7 @@ export function BayViewV2Client() {
   if (error || !data) {
     return (
       <div className="flex flex-col items-center justify-center py-6 gap-2">
-        <p className="text-sm text-muted-foreground">{error ?? t("noData")}</p>
+        <Typography.Muted className="text-sm text-muted-foreground">{error ?? t("noData")}</Typography.Muted>
         <Button variant="outline" size="sm" onClick={() => fetchData(true)}>
           {t("retry")}
         </Button>

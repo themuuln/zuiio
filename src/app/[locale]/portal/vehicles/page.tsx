@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { PageErrorState, PageShellSkeleton } from "@/components/page-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
+import { Typography } from "@/components/ui/typography";
 
 export default function PortalVehiclesPage() {
   const t = useTranslations();
@@ -48,21 +49,21 @@ export default function PortalVehiclesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("portal.myVehicles")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        </Typography.H1>
+        <Typography.Muted className="text-sm text-muted-foreground mt-1">
           {t("portal.vehiclesDesc")}
-        </p>
+        </Typography.Muted>
       </div>
 
       {!vehicles || vehicles.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Car className="size-10 text-muted-foreground/40 mb-3" />
-            <p className="text-sm text-muted-foreground">
+            <Typography.Muted className="text-sm text-muted-foreground">
               {t("portal.noVehicles")}
-            </p>
+            </Typography.Muted>
           </CardContent>
         </Card>
       ) : (
@@ -78,17 +79,17 @@ export default function PortalVehiclesPage() {
                   <Car className="size-5 text-primary" />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate font-semibold">
+                  <Typography.Text className="truncate font-semibold">
                     {v.plate_number as string}
-                  </p>
-                  <p className="truncate text-sm text-muted-foreground">
+                  </Typography.Text>
+                  <Typography.Muted className="truncate text-sm text-muted-foreground">
                     {v.make as string} {v.model as string}
                     {v.year ? ` (${v.year})` : ""}
-                  </p>
+                  </Typography.Muted>
                   {(v as { color?: string }).color && (
-                    <p className="text-xs text-muted-foreground/60">
+                    <Typography.Muted className="text-xs text-muted-foreground/60">
                       {v.color as string}
-                    </p>
+                    </Typography.Muted>
                   )}
                 </div>
               </div>

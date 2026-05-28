@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Typography } from "@/components/ui/typography";
 
 const SERVICES = [
   { key: "Platform", icon: "🖥️" },
@@ -41,12 +42,12 @@ export default function StatusPage() {
               <CheckCircle className="mr-1 size-3 text-emerald-500" />
               {t("statusOperational")}
             </Badge>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+            <Typography.H1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
               {t("pageTitle")}
-            </h1>
-            <p className="mt-3 text-base text-muted-foreground sm:text-lg">
+            </Typography.H1>
+            <Typography.Muted className="mt-3 text-base text-muted-foreground sm:text-lg">
               {t("pageDescription")}
-            </p>
+            </Typography.Muted>
           </div>
         </section>
         <section className="px-4 py-12 sm:px-6 sm:py-16">
@@ -60,9 +61,9 @@ export default function StatusPage() {
                       <CardTitle className="text-sm font-medium">
                         {t(`service${svc.key}`)}
                       </CardTitle>
-                      <p className="text-xs text-muted-foreground">
+                      <Typography.Muted className="text-xs text-muted-foreground">
                         {t(`service${svc.key}Desc`)}
-                      </p>
+                      </Typography.Muted>
                     </div>
                     <Badge
                       variant="outline"
@@ -83,7 +84,7 @@ export default function StatusPage() {
         {/* ═══ Uptime ───────────────────────────────────────── */}
         <section className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-3xl">
-            <h2 className="text-lg font-semibold">{t("uptimeTitle")}</h2>
+            <Typography.H2 className="text-lg font-semibold">{t("uptimeTitle")}</Typography.H2>
             <div className="mt-4 flex gap-6">
               <div className="rounded-lg border bg-muted/30 px-4 py-3">
                 <div className="text-2xl font-bold text-emerald-500">99.9%</div>
@@ -104,11 +105,11 @@ export default function StatusPage() {
         <Separator />
         <section className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-3xl">
-            <h2 className="text-lg font-semibold">{t("incidentTitle")}</h2>
+            <Typography.H2 className="text-lg font-semibold">{t("incidentTitle")}</Typography.H2>
             <div className="mt-4 rounded-lg border bg-muted/20 px-6 py-8 text-center">
-              <p className="text-sm text-muted-foreground">
+              <Typography.Muted className="text-sm text-muted-foreground">
                 {t("incidentNone")}
-              </p>
+              </Typography.Muted>
             </div>
           </div>
         </section>
@@ -118,10 +119,10 @@ export default function StatusPage() {
         {/* ═══ Subscribe ────────────────────────────────────── */}
         <section className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-md text-center">
-            <h2 className="text-lg font-semibold">{t("subscribeTitle")}</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <Typography.H2 className="text-lg font-semibold">{t("subscribeTitle")}</Typography.H2>
+            <Typography.Muted className="mt-2 text-sm text-muted-foreground">
               {t("subscribeDesc")}
-            </p>
+            </Typography.Muted>
             {subscribed ? (
               <div className="mt-6 flex items-center justify-center gap-2 text-sm font-medium text-emerald-600">
                 <CheckCircle className="size-4" />
@@ -152,9 +153,9 @@ export default function StatusPage() {
         </section>
         <section className="border-t bg-gradient-to-br from-primary/5 via-primary/[3%] to-background px-4 py-16 text-center sm:px-6 sm:py-24">
           <div className="mx-auto max-w-2xl">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               TOLOM-г туршиж үзэх
-            </h2>
+            </Typography.H2>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"
@@ -184,7 +185,7 @@ export default function StatusPage() {
               {appT("name")}
             </span>
           </div>
-          <p className="mt-2">{appT("tagline")}</p>
+          <Typography.Text className="mt-2">{appT("tagline")}</Typography.Text>
         </div>
       </footer>
     </div>

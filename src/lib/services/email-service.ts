@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import type { InvoiceWithItems } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 
 // ── Resend client (lazy-init) ──────────────────────────────────
 
@@ -128,8 +129,8 @@ function renderInvoiceEmailHtml(
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td>
-                    <h1 style="margin:0;font-size:22px;font-weight:700;color:#111827;">${orgName}</h1>
-                    <p style="margin:4px 0 0;font-size:14px;color:#6b7280;">Нэхэмжлэх #${invoice.invoice_number}</p>
+                    <Typography.H1 style="margin:0;font-size:22px;font-weight:700;color:#111827;">${orgName}</Typography.H1>
+                    <Typography.Text style="margin:4px 0 0;font-size:14px;color:#6b7280;">Нэхэмжлэх #${invoice.invoice_number}</Typography.Text>
                   </td>
                   <td align="right">
                     <span style="display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background-color:${statusBg[invoice.status] ?? statusBg.draft};color:${statusColor[invoice.status] ?? statusColor.draft};">
@@ -145,7 +146,7 @@ function renderInvoiceEmailHtml(
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td width="50%" valign="top">
-                    <h3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Төлбөр төлөгч</h3>
+                    <Typography.H3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Төлбөр төлөгч</Typography.H3>
                     <table cellpadding="0" cellspacing="0">
                       ${invoice.customer_name ? `<tr><td style="font-size:14px;font-weight:500;color:#111827;padding-bottom:2px;">${invoice.customer_name}</td></tr>` : ""}
                       ${invoice.customer_phone ? `<tr><td style="font-size:13px;color:#6b7280;">${invoice.customer_phone}</td></tr>` : ""}
@@ -154,7 +155,7 @@ function renderInvoiceEmailHtml(
                     </table>
                   </td>
                   <td width="50%" valign="top">
-                    <h3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Тээврийн хэрэгсэл</h3>
+                    <Typography.H3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Тээврийн хэрэгсэл</Typography.H3>
                     <table cellpadding="0" cellspacing="0">
                       ${invoice.vehicle_plate ? `<tr><td style="font-size:14px;font-family:monospace;font-weight:500;color:#111827;padding-bottom:2px;">${invoice.vehicle_plate}</td></tr>` : ""}
                       ${invoice.vehicle_details ? `<tr><td style="font-size:13px;color:#6b7280;">${invoice.vehicle_details}</td></tr>` : ""}
@@ -252,22 +253,22 @@ function renderInvoiceEmailHtml(
           ${invoice.notes ? `
           <tr>
             <td style="background-color:#ffffff;padding:0 32px 24px;">
-              <h3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Тэмдэглэл</h3>
-              <p style="margin:0;font-size:13px;color:#6b7280;white-space:pre-wrap;">${invoice.notes}</p>
+              <Typography.H3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Тэмдэглэл</Typography.H3>
+              <Typography.Text style="margin:0;font-size:13px;color:#6b7280;white-space:pre-wrap;">${invoice.notes}</Typography.Text>
             </td>
           </tr>` : ""}
           ${invoice.terms ? `
           <tr>
             <td style="background-color:#ffffff;padding:0 32px 24px;">
-              <h3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Нөхцөл</h3>
-              <p style="margin:0;font-size:13px;color:#6b7280;">${invoice.terms}</p>
+              <Typography.H3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Нөхцөл</Typography.H3>
+              <Typography.Text style="margin:0;font-size:13px;color:#6b7280;">${invoice.terms}</Typography.Text>
             </td>
           </tr>` : ""}
           <tr>
             <td style="background-color:#ffffff;border-radius:0 0 12px 12px;padding:24px 32px 32px;text-align:center;">
-              <p style="margin:0;font-size:12px;color:#9ca3af;">
+              <Typography.Text style="margin:0;font-size:12px;color:#9ca3af;">
                 ${orgName} &middot; TOLOM систем
-              </p>
+              </Typography.Text>
             </td>
           </tr>
         </table>
@@ -338,13 +339,13 @@ function renderReminderEmailHtml(params: SendReminderEmailParams): string {
         <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
           <tr>
             <td style="background-color:#ffffff;border-radius:12px;padding:40px 32px;text-align:center;">
-              <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#111827;">Үйлчилгээний хугацаа ойртлоо</h1>
-              <p style="margin:0 0 24px;font-size:15px;color:#6b7280;">${params.orgName}</p>
+              <Typography.H1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#111827;">Үйлчилгээний хугацаа ойртлоо</Typography.H1>
+              <Typography.Text style="margin:0 0 24px;font-size:15px;color:#6b7280;">${params.orgName}</Typography.Text>
               <div style="background-color:#f3f4f6;border-radius:8px;padding:20px;margin-bottom:24px;text-align:left;">
-                <p style="margin:0 0 12px;font-size:13px;color:#6b7280;">Эрхэм <strong style="color:#111827;">${params.customerName}</strong> танд,</p>
-                <p style="margin:0 0 12px;font-size:14px;color:#374151;line-height:1.5;">
+                <Typography.Text style="margin:0 0 12px;font-size:13px;color:#6b7280;">Эрхэм <strong style="color:#111827;">${params.customerName}</strong> танд,</Typography.Text>
+                <Typography.Text style="margin:0 0 12px;font-size:14px;color:#374151;line-height:1.5;">
                   Таны тээврийн хэрэгслийн дараах үйлчилгээний хугацаа ойртож байгааг сануулж байна:
-                </p>
+                </Typography.Text>
                 <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
                   <tr>
                     <td style="padding:6px 0;color:#6b7280;">Машин</td>
@@ -360,14 +361,14 @@ function renderReminderEmailHtml(params: SendReminderEmailParams): string {
                   </tr>
                 </table>
               </div>
-              <p style="margin:0 0 0;font-size:13px;color:#9ca3af;">
+              <Typography.Text style="margin:0 0 0;font-size:13px;color:#9ca3af;">
                 Цаг товлохыг хүсвэл бидэнтэй холбогдоно уу.
-              </p>
+              </Typography.Text>
             </td>
           </tr>
           <tr>
             <td style="padding:24px 32px;text-align:center;">
-              <p style="margin:0;font-size:12px;color:#9ca3af;">${params.orgName} &middot; TOLOM систем</p>
+              <Typography.Text style="margin:0;font-size:12px;color:#9ca3af;">${params.orgName} &middot; TOLOM систем</Typography.Text>
             </td>
           </tr>
         </table>

@@ -9,6 +9,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Link } from "@/lib/i18n/navigation";
 import { requestPasswordReset } from "./actions";
+import { Typography } from "@/components/ui/typography";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("auth.forgotPassword");
@@ -34,20 +35,20 @@ export default function ForgotPasswordPage() {
         <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
           <Mail className="size-6 text-muted-foreground" />
         </div>
-        <h2 className="text-lg font-semibold text-foreground">
+        <Typography.H2 className="text-lg font-semibold text-foreground">
           {t("checkEmail")}
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
+        </Typography.H2>
+        <Typography.Muted className="mt-2 text-sm text-muted-foreground">
           {t("checkEmailMessage")}
-        </p>
-        <p className="mt-6 text-sm">
+        </Typography.Muted>
+        <Typography.Text className="mt-6 text-sm">
           <Link
             href="/auth/login"
             className="font-medium text-foreground underline-offset-4 hover:underline"
           >
             {t("backToLogin")}
           </Link>
-        </p>
+        </Typography.Text>
       </div>
     );
   }
@@ -55,8 +56,8 @@ export default function ForgotPasswordPage() {
   return (
     <div>
       <div className="mb-6 text-center">
-        <h2 className="text-lg font-semibold text-foreground">{t("title")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
+        <Typography.H2 className="text-lg font-semibold text-foreground">{t("title")}</Typography.H2>
+        <Typography.Muted className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</Typography.Muted>
       </div>
       <form action={formAction} className="flex flex-col gap-4">
         {state?.formError && <FieldError>{state.formError}</FieldError>}
@@ -84,7 +85,7 @@ export default function ForgotPasswordPage() {
           {t("submit")}
         </Button>
       </form>
-      <p className="mt-6 text-center text-sm">
+      <Typography.Text className="mt-6 text-center text-sm">
         <Link
           href="/auth/login"
           className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
@@ -92,7 +93,7 @@ export default function ForgotPasswordPage() {
           <ArrowLeft className="size-3" />
           {t("backToLogin")}
         </Link>
-      </p>
+      </Typography.Text>
     </div>
   );
 }

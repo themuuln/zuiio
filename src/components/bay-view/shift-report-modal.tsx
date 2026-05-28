@@ -13,6 +13,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import type { ShiftReport } from "@/lib/services/bay-view-service";
 import { formatMNT } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 
 interface Props {
   onClose: () => void;
@@ -65,7 +66,7 @@ export function ShiftReportModal({ onClose }: Props) {
 
         {error && (
           <div className="flex flex-col items-center gap-3 py-8">
-            <p className="text-sm text-muted-foreground">{error}</p>
+            <Typography.Muted className="text-sm text-muted-foreground">{error}</Typography.Muted>
             <Button variant="outline" size="sm" onClick={onClose}>
               {t("close")}
             </Button>

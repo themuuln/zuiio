@@ -24,6 +24,7 @@ import { formatMNT } from "@/lib/utils";
 import { formatDate, MOVEMENT_LABELS } from "./constants";
 import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
+import { Typography } from "@/components/ui/typography";
 
 // API returns part_name joined on movements
 type MovementRow = InventoryMovement & { part_name: string };
@@ -282,7 +283,7 @@ export function MovementsTab({
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16">
             <ClipboardList className="size-10 text-muted-foreground/40" />
-            <p className="text-muted-foreground">{t("noMovements")}</p>
+            <Typography.Muted className="text-muted-foreground">{t("noMovements")}</Typography.Muted>
           </CardContent>
         </Card>
       ) : (
@@ -348,9 +349,9 @@ export function MovementsTab({
                 </div>
               )}
               {movementForm.part_id && !partsSearch && (
-                <p className="text-sm text-muted-foreground">
+                <Typography.Muted className="text-sm text-muted-foreground">
                   Selected: {movementForm.part_name}
-                </p>
+                </Typography.Muted>
               )}
             </div>
             <div className="grid grid-cols-2 gap-3">

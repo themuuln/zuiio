@@ -39,6 +39,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { Typography } from "@/components/ui/typography";
 
 type ReportType = "daily" | "weekly" | "monthly" | "eod";
 
@@ -166,7 +167,9 @@ function ReportKpiCard({
               {value}
             </div>
             {subtitle && (
-              <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+              <Typography.Muted className="mt-0.5 text-xs text-muted-foreground">
+                {subtitle}
+              </Typography.Muted>
             )}
           </>
         )}
@@ -284,11 +287,13 @@ function SectionHeader({
 }) {
   return (
     <div className="mb-3">
-      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+      <Typography.H3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
         {title}
-      </h3>
+      </Typography.H3>
       {description && (
-        <p className="text-xs text-muted-foreground">{description}</p>
+        <Typography.Muted className="text-xs text-muted-foreground">
+          {description}
+        </Typography.Muted>
       )}
     </div>
   );
@@ -466,32 +471,40 @@ export default function ReportsPage() {
       "help",
       "Help",
       <div className="flex flex-col gap-1.5">
-        <p className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+        <Typography.Muted className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
           Report Types
-        </p>
+        </Typography.Muted>
         <div className="rounded-md border border-border/50 bg-card px-2.5 py-2">
-          <p className="text-xs font-medium">Daily</p>
-          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+          <Typography.Text className="text-xs font-medium">
+            Daily
+          </Typography.Text>
+          <Typography.Muted className="text-[10px] text-muted-foreground leading-tight mt-0.5">
             Today&apos;s performance
-          </p>
+          </Typography.Muted>
         </div>
         <div className="rounded-md border border-border/50 bg-card px-2.5 py-2">
-          <p className="text-xs font-medium">Weekly</p>
-          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+          <Typography.Text className="text-xs font-medium">
+            Weekly
+          </Typography.Text>
+          <Typography.Muted className="text-[10px] text-muted-foreground leading-tight mt-0.5">
             This week&apos;s breakdown
-          </p>
+          </Typography.Muted>
         </div>
         <div className="rounded-md border border-border/50 bg-card px-2.5 py-2">
-          <p className="text-xs font-medium">Monthly</p>
-          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+          <Typography.Text className="text-xs font-medium">
+            Monthly
+          </Typography.Text>
+          <Typography.Muted className="text-[10px] text-muted-foreground leading-tight mt-0.5">
             Monthly trends
-          </p>
+          </Typography.Muted>
         </div>
         <div className="rounded-md border border-border/50 bg-card px-2.5 py-2">
-          <p className="text-xs font-medium">EOD Summary</p>
-          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+          <Typography.Text className="text-xs font-medium">
+            EOD Summary
+          </Typography.Text>
+          <Typography.Muted className="text-[10px] text-muted-foreground leading-tight mt-0.5">
             Per-mechanic summary
-          </p>
+          </Typography.Muted>
         </div>
       </div>,
     );
@@ -512,8 +525,8 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Reports</h1>
-          <p className="text-sm text-muted-foreground">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">Reports</Typography.H1>
+          <Typography.Muted className="text-sm text-muted-foreground">
             {reportPeriodTitle(
               reportType,
               reportType === "monthly"
@@ -522,7 +535,7 @@ export default function ReportsPage() {
                   ? weekStart
                   : date,
             )}
-          </p>
+          </Typography.Muted>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -621,7 +634,9 @@ export default function ReportsPage() {
       {error && !loading && (
         <Card className="border-red-200 bg-red-50/30 dark:border-red-800/30 dark:bg-red-950/10">
           <CardContent className="py-4">
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <Typography.Text className="text-sm text-red-600 dark:text-red-400">
+              {error}
+            </Typography.Text>
           </CardContent>
         </Card>
       )}
@@ -854,7 +869,9 @@ export default function ReportsPage() {
             <Card className="border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10">
               <CardContent className="flex items-start gap-2 py-3">
                 <Lightbulb className="mt-0.5 size-4 shrink-0 text-amber-500" />
-                <p className="text-sm text-muted-foreground">{insightLine}</p>
+                <Typography.Muted className="text-sm text-muted-foreground">
+                  {insightLine}
+                </Typography.Muted>
               </CardContent>
             </Card>
           )}
@@ -867,12 +884,12 @@ export default function ReportsPage() {
                   <BarChart3 className="size-7 text-muted-foreground" />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-sm font-semibold">
+                  <Typography.H3 className="text-sm font-semibold">
                     No completed work in this period
-                  </h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  </Typography.H3>
+                  <Typography.Muted className="mt-1 text-xs text-muted-foreground">
                     Try selecting a different date range or mechanic.
-                  </p>
+                  </Typography.Muted>
                 </div>
               </CardContent>
             </Card>
@@ -960,20 +977,20 @@ export default function ReportsPage() {
               {r && expenses && (
                 <Card>
                   <CardHeader className="pb-2">
-                    <p className="text-xs font-medium text-muted-foreground">
+                    <Typography.Muted className="text-xs font-medium text-muted-foreground">
                       Net Profit
-                    </p>
+                    </Typography.Muted>
                   </CardHeader>
                   <CardContent>
-                    <p
+                    <Typography.Text
                       className={`text-2xl font-semibold tabular-nums ${r.total_revenue - expenses.thisMonth < 0 ? "text-red-500" : "text-green-600 dark:text-green-400"}`}
                     >
                       {formatCurrency(r.total_revenue - expenses.thisMonth)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    </Typography.Text>
+                    <Typography.Muted className="text-xs text-muted-foreground mt-1">
                       {formatCurrency(r.total_revenue)} revenue &minus;{" "}
                       {formatCurrency(expenses.thisMonth)} expenses
-                    </p>
+                    </Typography.Muted>
                   </CardContent>
                 </Card>
               )}
@@ -1008,9 +1025,9 @@ export default function ReportsPage() {
                     </CardHeader>
                     <CardContent className="flex flex-col gap-4">
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-2">
+                        <Typography.Muted className="text-xs font-medium text-muted-foreground mb-2">
                           Service vs Parts Revenue
-                        </p>
+                        </Typography.Muted>
                         <RevenueMiniBar
                           total={r.total_revenue}
                           service={r.service_revenue ?? 0}
@@ -1019,9 +1036,9 @@ export default function ReportsPage() {
                       </div>
                       {(r.total_cost ?? 0) > 0 && (
                         <div className="flex flex-col gap-1.5 border-t border-border pt-3">
-                          <p className="text-xs font-medium text-muted-foreground mb-2">
+                          <Typography.Muted className="text-xs font-medium text-muted-foreground mb-2">
                             Cost Breakdown
-                          </p>
+                          </Typography.Muted>
                           <div className="flex justify-between text-xs">
                             <span className="text-muted-foreground">
                               Service Cost
@@ -1067,11 +1084,11 @@ export default function ReportsPage() {
               <BarChart3 className="size-7 text-muted-foreground" />
             </div>
             <div className="text-center">
-              <h3 className="text-sm font-semibold">Select a report type</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <Typography.H3 className="text-sm font-semibold">Select a report type</Typography.H3>
+              <Typography.Muted className="mt-1 text-xs text-muted-foreground">
                 Choose Daily, Weekly, Monthly, or End of Day to view your shop
                 data.
-              </p>
+              </Typography.Muted>
             </div>
           </CardContent>
         </Card>

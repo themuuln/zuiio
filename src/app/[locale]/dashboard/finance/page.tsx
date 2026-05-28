@@ -50,6 +50,7 @@ import { TransactionsTab } from "./_transactions-tab";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { Typography } from "@/components/ui/typography";
 
 type Period = "today" | "week" | "month" | "all";
 type Tab = "overview" | "transactions" | "invoices" | "expenses";
@@ -564,9 +565,9 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-muted-foreground">
+        <Typography.Muted className="text-sm font-medium text-muted-foreground">
           Recent Expenses
-        </p>
+        </Typography.Muted>
         <Button
           render={<Link href="/dashboard/expenses" />}
           variant="outline"
@@ -875,14 +876,14 @@ export default function FinancePage() {
     return (
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("nav.finance")}
-          </h1>
-          <p className="mt-1 text-muted-foreground">{t("finance.subtitle")}</p>
+          </Typography.H1>
+          <Typography.Muted className="mt-1 text-muted-foreground">{t("finance.subtitle")}</Typography.Muted>
         </div>
         <Card className="py-12">
           <CardContent className="flex flex-col items-center gap-4">
-            <p className="text-muted-foreground">{error}</p>
+            <Typography.Muted className="text-muted-foreground">{error}</Typography.Muted>
             <Button onClick={() => window.location.reload()}>Retry</Button>
           </CardContent>
         </Card>
@@ -894,10 +895,10 @@ export default function FinancePage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("nav.finance")}
-          </h1>
-          <p className="mt-1 text-muted-foreground">{t("finance.subtitle")}</p>
+          </Typography.H1>
+          <Typography.Muted className="mt-1 text-muted-foreground">{t("finance.subtitle")}</Typography.Muted>
         </div>
         <div className="flex flex-col items-end gap-3">
           <PeriodBar value={period} onChange={setPeriod} />
