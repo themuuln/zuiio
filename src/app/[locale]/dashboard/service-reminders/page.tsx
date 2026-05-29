@@ -449,10 +449,8 @@ export default function ServiceRemindersPage() {
             <Send className={`size-4 ${sending ? "animate-spin" : ""}`} />
           </Button>
           <Sheet open={showConfig} onOpenChange={setShowConfig}>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon-xs">
-                <Settings className="size-4" />
-              </Button>
+            <SheetTrigger render={<Button variant="outline" size="icon-xs" />}>
+              <Settings className="size-4" />
             </SheetTrigger>
             <SheetContent side="right" className="w-80 sm:w-96">
               <SheetHeader>
