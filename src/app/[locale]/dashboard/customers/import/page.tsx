@@ -34,9 +34,19 @@ type PreviewRow = Record<string, string>;
 
 type ImportState =
   | { status: "idle" }
-  | { status: "preview"; filename: string; headers: string[]; rows: PreviewRow[]; totalRows: number }
+  | {
+      status: "preview";
+      filename: string;
+      headers: string[];
+      rows: PreviewRow[];
+      totalRows: number;
+    }
   | { status: "importing"; total: number; current: number }
-  | { status: "done"; imported: number; errors: { row: number; message: string }[] }
+  | {
+      status: "done";
+      imported: number;
+      errors: { row: number; message: string }[];
+    }
   | { status: "error"; message: string };
 
 const CSV_TEMPLATE = [
@@ -146,7 +156,10 @@ function PreviewCard({
         </div>
 
         {isImporting && (
-          <Progress value={(state.current / preview.totalRows) * 100} className="h-2" />
+          <Progress
+            value={(state.current / preview.totalRows) * 100}
+            className="h-2"
+          />
         )}
 
         {preview.rows.length > 0 && (
@@ -193,46 +206,43 @@ export default function ImportCustomersPage() {
     totalRows: number;
   } | null>(null);
 
-  const handleFile = useCallback(
-    async (file: File | undefined) => {
-      if (!file) return;
+  const handleFile = useCallback(async (file: File | undefined) => {
+    if (!file) return;
 
-      if (!file.name.endsWith(".csv")) {
-        toast.error("Only .csv files are accepted");
-        return;
-      }
+    if (!file.name.endsWith(".csv")) {
+      toast.error("Only .csv files are accepted");
+      return;
+    }
 
-      const content = await file.text();
-      if (!content.trim()) {
-        toast.error("CSV file is empty");
-        return;
-      }
+    const content = await file.text();
+    if (!content.trim()) {
+      toast.error("CSV file is empty");
+      return;
+    }
 
-      fileContentRef.current = content;
-      const { headers, rows, totalLines } = parsePreview(content);
+    fileContentRef.current = content;
+    const { headers, rows, totalLines } = parsePreview(content);
 
-      if (headers.length === 0) {
-        toast.error("CSV file has no valid headers");
-        return;
-      }
+    if (headers.length === 0) {
+      toast.error("CSV file has no valid headers");
+      return;
+    }
 
-      previewRef.current = {
-        filename: file.name,
-        headers,
-        rows,
-        totalRows: totalLines,
-      };
+    previewRef.current = {
+      filename: file.name,
+      headers,
+      rows,
+      totalRows: totalLines,
+    };
 
-      setState({
-        status: "preview",
-        filename: file.name,
-        headers,
-        rows,
-        totalRows: totalLines,
-      });
-    },
-    [],
-  );
+    setState({
+      status: "preview",
+      filename: file.name,
+      headers,
+      rows,
+      totalRows: totalLines,
+    });
+  }, []);
 
   const handleDrop = useCallback(
     (event: React.DragEvent) => {
@@ -371,7 +381,9 @@ export default function ImportCustomersPage() {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">Import Customers</Typography.H1>
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
+            Import Customers
+          </Typography.H1>
           <Typography.Muted className="text-sm text-muted-foreground">
             Upload a CSV file to create customers in bulk
           </Typography.Muted>
@@ -466,7 +478,8 @@ export default function ImportCustomersPage() {
                 <div>
                   <Typography.H3 className="mb-2 flex items-center gap-2 text-sm font-medium text-destructive">
                     <AlertCircle className="size-4" />
-                    {state.errors.length} error{state.errors.length !== 1 ? "s" : ""}
+                    {state.errors.length} error
+                    {state.errors.length !== 1 ? "s" : ""}
                   </Typography.H3>
                   <div className="max-h-48 overflow-y-auto rounded-md border">
                     <Table>
@@ -482,7 +495,9 @@ export default function ImportCustomersPage() {
                             <TableCell className="font-mono text-xs">
                               {err.row}
                             </TableCell>
-                            <TableCell className="text-sm">{err.message}</TableCell>
+                            <TableCell className="text-sm">
+                              {err.message}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -514,7 +529,9 @@ export default function ImportCustomersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <Typography.Text className="text-sm text-destructive">{state.message}</Typography.Text>
+            <Typography.Text className="text-sm text-destructive">
+              {state.message}
+            </Typography.Text>
             <div className="flex gap-3">
               <Button variant="outline" onClick={resetImport}>
                 Try Again

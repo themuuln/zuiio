@@ -531,3 +531,10 @@ export interface UpdateVehicleParams {
   licenseExpiryAt?: string | null;
   nextServiceAt?: string | null;
 }
+
+export interface CreateServiceCatalogParams {
+  name: string;
+  description?: string;
+  default_price: number;
+  category?: string;
+}

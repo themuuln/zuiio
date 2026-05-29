@@ -20,7 +20,6 @@ import {
   type MechanicOption,
   fetchVehiclePartPrice,
   fetchVehicleServicePrice,
-  useCreateVehicle,
   useCreateWorkOrder,
   useCustomerSearch,
   useCustomersByPlate,
@@ -95,13 +94,7 @@ interface WizardState {
   vehicles: Vehicle[];
   selectedVehicle: Vehicle | null;
   showQuickVehicle: boolean;
-  quickPlate: string;
-  quickMake: string;
-  quickModel: string;
-  quickYear: string;
   vehicleSearching: boolean;
-  creatingVehicle: boolean;
-  vehicleCreateError: string | null;
 
   catalog: ServiceCatalog[];
   globalServices: GlobalService[];
@@ -147,12 +140,6 @@ interface WizardActions {
   setSelectedVehicle: (v: Vehicle | null) => void;
   handleSelectVehicle: (v: Vehicle) => Promise<void>;
   setShowQuickVehicle: (v: boolean) => void;
-  setQuickPlate: (v: string) => void;
-  setQuickMake: (v: string) => void;
-  setQuickModel: (v: string) => void;
-  setQuickYear: (v: string) => void;
-  handleQuickCreateVehicle: () => Promise<void>;
-  resetQuickVehicleForm: () => void;
 
   setServiceSearch: (v: string) => void;
   addService: (svc: ServiceCatalog) => void;
@@ -215,13 +202,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [showQuickVehicle, setShowQuickVehicle] = useState(false);
-  const [quickPlate, setQuickPlate] = useState("");
-  const [quickMake, setQuickMake] = useState("");
-  const [quickModel, setQuickModel] = useState("");
-  const [quickYear, setQuickYear] = useState("20");
-  const [vehicleCreateError, setVehicleCreateError] = useState<string | null>(
-    null,
-  );
 
   const [catalog, setCatalog] = useState<ServiceCatalog[]>([]);
   const [globalServices, setGlobalServices] = useState<GlobalService[]>([]);
@@ -346,7 +326,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     selectedVehicle?.id,
   );
 
-  const createVehicleMutation = useCreateVehicle(orgId);
   const createWorkOrderMutation = useCreateWorkOrder(orgId);
 
   const loading =
@@ -360,7 +339,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     draftRestored && !selectedCustomer && !selectedVehicle && !!draftData;
   const customerSearching = customerSearchFetching || plateSearchFetching;
   const vehicleSearching = vehicleSearchFetching;
-  const creatingVehicle = createVehicleMutation.isPending;
 
   const servicesTotal = serviceLines.reduce((s, l) => s + l.final_price, 0);
   const partsTotal = partLines.reduce((s, l) => s + l.final_price, 0);
@@ -570,33 +548,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     vehiclePartsFetchedRef.current = new Set();
     lastProcessedVehicleRef.current = null;
   }, []);
-
-  const handleQuickCreateVehicle = async () => {
-    if (!orgId || !quickPlate.trim()) {
-      setVehicleCreateError("Plate number is required");
-      return;
-    }
-    setVehicleCreateError(null);
-    try {
-      const vehicle = await createVehicleMutation.mutateAsync({
-        plate_number: quickPlate.trim().toUpperCase(),
-        make: quickMake.trim() || "Unknown",
-        model: quickModel.trim() || "Unknown",
-        year: quickYear ? parseInt(quickYear, 10) : null,
-        customer_id: selectedCustomer?.id ?? null,
-      });
-      void handleSelectVehicle(vehicle);
-      setQuickPlate("");
-      setQuickMake("");
-      setQuickModel("");
-      setQuickYear("20");
-      setShowQuickVehicle(false);
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to create vehicle";
-      setVehicleCreateError(message);
-    }
-  };
 
   const addAllFromLastVisit = useCallback(() => {
     if (!lastVisitData) return;
@@ -943,14 +894,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setDraftRestored(true);
   }, [draftData]);
 
-  const resetQuickVehicleForm = useCallback(() => {
-    setQuickPlate("");
-    setQuickMake("");
-    setQuickModel("");
-    setQuickYear("20");
-    setVehicleCreateError(null);
-  }, []);
-
   const customerRef = useRef<HTMLDivElement>(null);
 
   const value: WizardContextType = {
@@ -967,13 +910,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     vehicles,
     selectedVehicle,
     showQuickVehicle,
-    quickPlate,
-    quickMake,
-    quickModel,
-    quickYear,
     vehicleSearching,
-    creatingVehicle,
-    vehicleCreateError,
     catalog,
     globalServices,
     globalParts,
@@ -1008,22 +945,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setVehicleSearch,
     setSelectedVehicle,
     handleSelectVehicle,
-    setShowQuickVehicle: (v) => {
-      setShowQuickVehicle(v);
-      if (!v) {
-        setQuickPlate("");
-        setQuickMake("");
-        setQuickModel("");
-        setQuickYear("20");
-        setVehicleCreateError(null);
-      }
-    },
-    setQuickPlate,
-    setQuickMake,
-    setQuickModel,
-    setQuickYear,
-    handleQuickCreateVehicle,
-    resetQuickVehicleForm,
+    setShowQuickVehicle,
 
     setServiceSearch,
     addService,

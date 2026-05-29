@@ -1,7 +1,8 @@
 "use client";
 
-import { Check, Clock, Trash2, Wrench } from "lucide-react";
+import { Check, Clock, Plus, Trash2, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,10 +11,12 @@ import { NumericKeypad } from "@/components/ui/numeric-keypad";
 import { formatCurrency } from "@/lib/utils";
 import { useWizardContext } from "./wizard-context";
 import { Typography } from "@/components/ui/typography";
+import { ServiceForm } from "@/components/services/service-form";
 
 export function ServicesSection() {
   const ctx = useWizardContext();
   const t = useTranslations("workOrderWizard");
+  const [showQuickService, setShowQuickService] = useState(false);
 
   return (
     <Card>
@@ -225,6 +228,31 @@ export function ServicesSection() {
                   {t("noServicesMatch")}
                 </div>
               )}
+          </div>
+        )}
+
+        {!showQuickService ? (
+          <Button
+            variant="outline"
+            onClick={() => setShowQuickService(true)}
+            className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
+          >
+            <Plus className="size-4" />
+            Quick Create Service
+          </Button>
+        ) : (
+          <div className="border rounded-lg p-4 bg-muted/20 mt-2">
+            <Typography.Text className="text-sm font-semibold mb-3 block">
+              New Service
+            </Typography.Text>
+            <ServiceForm
+              mode="quick"
+              onSuccess={(svc) => {
+                ctx.addService(svc);
+                setShowQuickService(false);
+              }}
+              onCancel={() => setShowQuickService(false)}
+            />
           </div>
         )}
 

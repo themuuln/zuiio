@@ -58,9 +58,7 @@ function parseCsvLine(line: string): string[] {
   return result;
 }
 
-function parseCsv(
-  content: string,
-): { headers: string[]; rows: string[][] } {
+function parseCsv(content: string): { headers: string[]; rows: string[][] } {
   const lines = content.trim().split("\n");
   if (lines.length < 2) {
     return { headers: [], rows: [] };
@@ -69,9 +67,7 @@ function parseCsv(
   const headers = parseCsvLine(lines[0]);
   const rows = lines
     .slice(1)
-    .flatMap((line) =>
-      line.trim().length > 0 ? [parseCsvLine(line)] : [],
-    );
+    .flatMap((line) => (line.trim().length > 0 ? [parseCsvLine(line)] : []));
 
   return { headers, rows };
 }
@@ -170,8 +166,10 @@ export async function importCustomers(
     return { imported: 0, errors };
   }
 
-  const phonesToCheck = validRows
-    .flatMap((r) => { const phone = r.phone?.trim(); return phone ? [phone] : []; }) as string[];
+  const phonesToCheck = validRows.flatMap((r) => {
+    const phone = r.phone?.trim();
+    return phone ? [phone] : [];
+  }) as string[];
 
   const existingPhones = new Set<string>();
 
@@ -191,7 +189,9 @@ export async function importCustomers(
   }
 
   const toInsert: ParsedRow[] = [];
-  const validRowIndex = new Map<ParsedRow, number>(validRows.map((r, idx) => [r, idx]));
+  const validRowIndex = new Map<ParsedRow, number>(
+    validRows.map((r, idx) => [r, idx]),
+  );
   for (const row of validRows) {
     if (row.phone && existingPhones.has(row.phone)) {
       errors.push({
@@ -246,7 +246,8 @@ export async function importCustomers(
           const batchErrors: typeof errors = [];
           for (const { row, error: singleError } of results) {
             if (singleError) {
-              const csvRowNumber = (validRowIndex.get(batch[dbRows.indexOf(row)]) ?? 0) + 2;
+              const csvRowNumber =
+                (validRowIndex.get(batch[dbRows.indexOf(row)]) ?? 0) + 2;
               if (
                 singleError.code === "23505" ||
                 singleError.message?.toLowerCase().includes("duplicate") ||

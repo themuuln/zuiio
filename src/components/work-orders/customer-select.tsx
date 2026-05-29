@@ -180,7 +180,9 @@ export function CustomerSelect({
                   handleQuickCreate();
                 }}
               >
-                <Typography.Text className="text-sm font-medium">New Customer</Typography.Text>
+                <Typography.Text className="text-sm font-medium">
+                  New Customer
+                </Typography.Text>
                 <div className="grid grid-cols-2 gap-3">
                   <Input
                     placeholder="e.g. Bat"
@@ -236,7 +238,9 @@ export function CustomerSelect({
                     <span>{createError}</span>
                   </div>
                 ) : createError ? (
-                  <Typography.Text className="text-sm text-destructive">{createError}</Typography.Text>
+                  <Typography.Text className="text-sm text-destructive">
+                    {createError}
+                  </Typography.Text>
                 ) : null}
                 <div className="flex gap-2">
                   <Button

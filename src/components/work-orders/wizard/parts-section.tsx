@@ -2,6 +2,7 @@
 
 import { Check, Clock, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,10 +11,12 @@ import { NumericKeypad } from "@/components/ui/numeric-keypad";
 import { formatCurrency } from "@/lib/utils";
 import { useWizardContext } from "./wizard-context";
 import { Typography } from "@/components/ui/typography";
+import { PartForm } from "@/components/inventory/part-form";
 
 export function PartsSection() {
   const ctx = useWizardContext();
   const t = useTranslations("workOrderWizard");
+  const [showQuickPart, setShowQuickPart] = useState(false);
 
   const filteredParts = ctx.partSearch
     ? ctx.partsCatalog.filter(
@@ -218,6 +221,31 @@ export function PartsSection() {
                   {t("noPartsMatch")}
                 </div>
               )}
+          </div>
+        )}
+
+        {!showQuickPart ? (
+          <Button
+            variant="outline"
+            onClick={() => setShowQuickPart(true)}
+            className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
+          >
+            <Plus className="size-4" />
+            Quick Create Part
+          </Button>
+        ) : (
+          <div className="border rounded-lg p-4 bg-muted/20 mt-2">
+            <Typography.Text className="text-sm font-semibold mb-3 block">
+              New Part
+            </Typography.Text>
+            <PartForm
+              mode="quick"
+              onSuccess={(part) => {
+                ctx.addPartFromCatalog(part);
+                setShowQuickPart(false);
+              }}
+              onCancel={() => setShowQuickPart(false)}
+            />
           </div>
         )}
 

@@ -5,7 +5,16 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { Customer, ServiceCatalog, Vehicle } from "@/lib/types";
+import type {
+  Customer,
+  ServiceCatalog,
+  Vehicle,
+  CreateCustomerParams,
+  CreateVehicleParams,
+  CreateServiceCatalogParams,
+  CreatePartParams,
+  PartsCatalogItem,
+} from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import {
   customerKeys,
@@ -15,6 +24,7 @@ import {
   vehicleKeys,
   wizardKeys,
   workOrderKeys,
+  inventoryKeys,
 } from "./keys";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -424,11 +434,7 @@ export function useCreateCustomer(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (body: {
-      first_name: string;
-      last_name?: string | null;
-      phone?: string | null;
-    }) => {
+    mutationFn: async (body: CreateCustomerParams) => {
       if (!orgId) throw new Error("No organization ID");
       const res = await fetch(`/api/organizations/${orgId}/customers`, {
         method: "POST",
@@ -465,13 +471,7 @@ export function useCreateVehicle(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (body: {
-      plate_number: string;
-      make: string;
-      model: string;
-      year?: number | null;
-      customer_id?: string | null;
-    }) => {
+    mutationFn: async (body: CreateVehicleParams) => {
       if (!orgId) throw new Error("No organization ID");
       const res = await fetch(`/api/organizations/${orgId}/vehicles`, {
         method: "POST",
@@ -541,6 +541,60 @@ export function useCreateWorkOrder(orgId: string | undefined) {
       if (orgId) {
         queryClient.invalidateQueries({
           queryKey: workOrderKeys.all(orgId),
+        });
+      }
+    },
+  });
+}
+
+export function useCreateService(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (body: CreateServiceCatalogParams) => {
+      if (!orgId) throw new Error("No organization ID");
+      const res = await fetch(`/api/organizations/${orgId}/services`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        throw new Error(json.error?.message ?? "Failed to create service");
+      }
+      return json.data as ServiceCatalog;
+    },
+    onSuccess: () => {
+      if (orgId) {
+        queryClient.invalidateQueries({
+          queryKey: serviceKeys.list(orgId),
+        });
+      }
+    },
+  });
+}
+
+export function useCreatePart(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (body: CreatePartParams) => {
+      if (!orgId) throw new Error("No organization ID");
+      const res = await fetch(`/api/organizations/${orgId}/inventory/parts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        throw new Error(json.error?.message ?? "Failed to create part");
+      }
+      return json.data as PartsCatalogItem;
+    },
+    onSuccess: () => {
+      if (orgId) {
+        queryClient.invalidateQueries({
+          queryKey: inventoryKeys.parts(orgId),
         });
       }
     },

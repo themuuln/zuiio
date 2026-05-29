@@ -21,13 +21,11 @@ export function ComplaintSection() {
   const ctx = useWizardContext();
   const t = useTranslations("workOrderWizard");
   const org = useCurrentOrg();
-  const { data: labels } = useDiagnosisLabels(
-    org.data?.orgId,
-  );
+  const { data: labels } = useDiagnosisLabels(org.data?.orgId);
 
-  const activeLabels =
-    labels?.filter((l) => l.is_active) ?? [];
-  const selectedLabel = activeLabels.find((l) => l.id === ctx.diagnosisLabelId) ?? null;
+  const activeLabels = labels?.filter((l) => l.is_active) ?? [];
+  const selectedLabel =
+    activeLabels.find((l) => l.id === ctx.diagnosisLabelId) ?? null;
 
   return (
     <Card>

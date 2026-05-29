@@ -6,8 +6,9 @@ import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { VehicleForm } from "@/components/vehicles/vehicle-form";
+import { Typography } from "@/components/ui/typography";
 import { useWizardContext } from "./wizard-context";
-import { QuickCreateVehicleSheet } from "./quick-create-vehicle-sheet";
 
 export function VehicleSection() {
   const ctx = useWizardContext();
@@ -113,18 +114,32 @@ export function VehicleSection() {
                 ))}
               </div>
             )}
-            <Button
-              variant="outline"
-              onClick={() => ctx.setShowQuickVehicle(true)}
-              className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
-            >
-              <Plus className="size-4" />
-              {t("quickCreateVehicle")}
-            </Button>
-            <QuickCreateVehicleSheet
-              open={ctx.showQuickVehicle}
-              onOpenChange={ctx.setShowQuickVehicle}
-            />
+            {!ctx.showQuickVehicle ? (
+              <Button
+                variant="outline"
+                onClick={() => ctx.setShowQuickVehicle(true)}
+                className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
+              >
+                <Plus className="size-4" />
+                {t("quickCreateVehicle")}
+              </Button>
+            ) : (
+              <div className="border rounded-lg p-4 bg-muted/20 mt-2">
+                <Typography.Text className="text-sm font-semibold mb-3 block">
+                  {t("newVehicle")}
+                </Typography.Text>
+                <VehicleForm
+                  mode="quick"
+                  customerId={ctx.selectedCustomer?.id}
+                  showOwnerSelect={false}
+                  onSuccess={(vehicle) => {
+                    ctx.handleSelectVehicle(vehicle);
+                    ctx.setShowQuickVehicle(false);
+                  }}
+                  onCancel={() => ctx.setShowQuickVehicle(false)}
+                />
+              </div>
+            )}
           </div>
         )}
       </CardContent>

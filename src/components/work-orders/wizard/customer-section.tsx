@@ -6,7 +6,8 @@ import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { QuickCreateCustomerSheet } from "@/components/customers/quick-create-customer-sheet";
+import { CustomerForm } from "@/components/customers/customer-form";
+import { Typography } from "@/components/ui/typography";
 import { useWizardContext } from "./wizard-context";
 
 export function CustomerSection() {
@@ -122,21 +123,29 @@ export function CustomerSection() {
                 ))}
               </div>
             )}
-            <Button
-              variant="outline"
-              onClick={() => ctx.setShowQuickCustomer(true)}
-              className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
-            >
-              <Plus className="size-4" />
-              {t("quickCreateCustomer")}
-            </Button>
-            {ctx.orgId && (
-              <QuickCreateCustomerSheet
-                open={ctx.showQuickCustomer}
-                onOpenChange={ctx.setShowQuickCustomer}
-                orgId={ctx.orgId}
-                onCreated={(customer) => ctx.handleSelectCustomer(customer)}
-              />
+            {!ctx.showQuickCustomer ? (
+              <Button
+                variant="outline"
+                onClick={() => ctx.setShowQuickCustomer(true)}
+                className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
+              >
+                <Plus className="size-4" />
+                {t("quickCreateCustomer")}
+              </Button>
+            ) : (
+              <div className="border rounded-lg p-4 bg-muted/20 mt-2">
+                <Typography.Text className="text-sm font-semibold mb-3 block">
+                  Quick Add Customer
+                </Typography.Text>
+                <CustomerForm
+                  mode="quick"
+                  onSuccess={(customer) => {
+                    ctx.handleSelectCustomer(customer);
+                    ctx.setShowQuickCustomer(false);
+                  }}
+                  onCancel={() => ctx.setShowQuickCustomer(false)}
+                />
+              </div>
             )}
           </div>
         )}

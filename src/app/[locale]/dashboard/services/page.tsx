@@ -28,6 +28,7 @@ import { useServiceLastUsedPrices } from "@/lib/queries/use-price-memory";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatMNT } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
+import { ServiceForm } from "@/components/services/service-form";
 
 interface ServiceItem {
   id: string;
@@ -138,10 +139,17 @@ export default function ServicesPage() {
     onSuccess: () => {
       toast.success("Service created");
       setShowAdd(false);
-      setNewService({ name: "", description: "", default_price: "", category: "" });
+      setNewService({
+        name: "",
+        description: "",
+        default_price: "",
+        category: "",
+      });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: serviceKeys.list(orgId ?? "") });
+      queryClient.invalidateQueries({
+        queryKey: serviceKeys.list(orgId ?? ""),
+      });
     },
   });
 
@@ -177,7 +185,9 @@ export default function ServicesPage() {
     },
     onSuccess: () => toast.success("Service deleted"),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: serviceKeys.list(orgId ?? "") });
+      queryClient.invalidateQueries({
+        queryKey: serviceKeys.list(orgId ?? ""),
+      });
     },
   });
 
@@ -189,19 +199,16 @@ export default function ServicesPage() {
       id: string;
       formData: typeof editForm;
     }) => {
-      const r = await fetch(
-        `/api/organizations/${orgId}/services/${id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: formData.name,
-            description: formData.description || null,
-            default_price: parseFloat(formData.default_price) || 0,
-            category: formData.category || null,
-          }),
-        },
-      );
+      const r = await fetch(`/api/organizations/${orgId}/services/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description || null,
+          default_price: parseFloat(formData.default_price) || 0,
+          category: formData.category || null,
+        }),
+      });
       const d = await r.json();
       if (d.error) throw new Error(d.error.message);
       return d.data as ServiceItem;
@@ -242,10 +249,17 @@ export default function ServicesPage() {
     onSuccess: () => {
       toast.success("Service updated");
       setEditingId(null);
-      setEditForm({ name: "", description: "", default_price: "", category: "" });
+      setEditForm({
+        name: "",
+        description: "",
+        default_price: "",
+        category: "",
+      });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: serviceKeys.list(orgId ?? "") });
+      queryClient.invalidateQueries({
+        queryKey: serviceKeys.list(orgId ?? ""),
+      });
     },
   });
 
@@ -341,8 +355,12 @@ export default function ServicesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">Service Catalog</Typography.H1>
-        <Typography.Muted className="text-muted-foreground">Manage your service prices</Typography.Muted>
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
+          Service Catalog
+        </Typography.H1>
+        <Typography.Muted className="text-muted-foreground">
+          Manage your service prices
+        </Typography.Muted>
       </div>
 
       <ListToolbar
@@ -377,56 +395,18 @@ export default function ServicesPage() {
       />
 
       {showAdd && (
-        <Card>
+        <Card className="border-border">
           <CardHeader>
             <CardTitle>Add New Service</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input
-                placeholder="Service Name *"
-                value={newService.name}
-                onChange={(e) =>
-                  setNewService(prev => ({ ...prev, name: e.target.value }))
-                }
-                className="h-11"
-              />
-              <Input
-                placeholder="Category (e.g. Oil, Brakes)"
-                value={newService.category}
-                onChange={(e) =>
-                  setNewService(prev => ({ ...prev, category: e.target.value }))
-                }
-                className="h-11"
-              />
-              <Input
-                type="number"
-                min="0"
-                placeholder="Default Price (₮) *"
-                value={newService.default_price}
-                onChange={(e) =>
-                  setNewService(prev => ({ ...prev, default_price: e.target.value }))
-                }
-                className="h-11"
-              />
-              <Input
-                placeholder="Description"
-                value={newService.description}
-                onChange={(e) =>
-                  setNewService(prev => ({ ...prev, description: e.target.value }))
-                }
-                className="h-11"
-              />
-            </div>
-            <Button
-              onClick={handleAdd}
-              disabled={
-                addMutation.isPending || !newService.name.trim() || !newService.default_price
-              }
-              size="default"
-            >
-              {addMutation.isPending ? t("services.saving") : t("services.saveService")}
-            </Button>
+          <CardContent>
+            <ServiceForm
+              onSuccess={() => {
+                setShowAdd(false);
+                toast.success("Service created");
+              }}
+              onCancel={() => setShowAdd(false)}
+            />
           </CardContent>
         </Card>
       )}
@@ -444,7 +424,9 @@ export default function ServicesPage() {
             </div>
           ) : error ? (
             <div className="flex flex-col items-center gap-4 py-12">
-              <Typography.Text className="text-destructive">{error}</Typography.Text>
+              <Typography.Text className="text-destructive">
+                {error}
+              </Typography.Text>
               <Button onClick={() => refetch()}>Retry</Button>
             </div>
           ) : filtered.length === 0 ? (
@@ -454,9 +436,7 @@ export default function ServicesPage() {
                   <Pencil />
                 </EmptyMedia>
                 <EmptyTitle>{t("services.noServices")}</EmptyTitle>
-                <EmptyDescription>
-                  {t("services.noServices")}
-                </EmptyDescription>
+                <EmptyDescription>{t("services.noServices")}</EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
@@ -473,7 +453,10 @@ export default function ServicesPage() {
                           placeholder="Service Name *"
                           value={editForm.name}
                           onChange={(e) =>
-                            setEditForm(prev => ({ ...prev, name: e.target.value }))
+                            setEditForm((prev) => ({
+                              ...prev,
+                              name: e.target.value,
+                            }))
                           }
                           className="h-11"
                         />
@@ -481,7 +464,10 @@ export default function ServicesPage() {
                           placeholder="Category (e.g. Oil, Brakes)"
                           value={editForm.category}
                           onChange={(e) =>
-                            setEditForm(prev => ({ ...prev, category: e.target.value }))
+                            setEditForm((prev) => ({
+                              ...prev,
+                              category: e.target.value,
+                            }))
                           }
                           className="h-11"
                         />
@@ -491,7 +477,10 @@ export default function ServicesPage() {
                           placeholder="Default Price (₮) *"
                           value={editForm.default_price}
                           onChange={(e) =>
-                            setEditForm(prev => ({ ...prev, default_price: e.target.value }))
+                            setEditForm((prev) => ({
+                              ...prev,
+                              default_price: e.target.value,
+                            }))
                           }
                           className="h-11"
                         />
@@ -499,7 +488,10 @@ export default function ServicesPage() {
                           placeholder="Description"
                           value={editForm.description}
                           onChange={(e) =>
-                            setEditForm(prev => ({ ...prev, description: e.target.value }))
+                            setEditForm((prev) => ({
+                              ...prev,
+                              description: e.target.value,
+                            }))
                           }
                           className="h-11"
                         />
@@ -507,10 +499,14 @@ export default function ServicesPage() {
                       <div className="flex gap-2">
                         <Button
                           onClick={handleUpdate}
-                          disabled={updateMutation.isPending || !editForm.name.trim()}
+                          disabled={
+                            updateMutation.isPending || !editForm.name.trim()
+                          }
                           size="default"
                         >
-                          {updateMutation.isPending ? t("services.saving") : "Save"}
+                          {updateMutation.isPending
+                            ? t("services.saving")
+                            : "Save"}
                         </Button>
                         <Button
                           variant="outline"
@@ -524,7 +520,9 @@ export default function ServicesPage() {
                   ) : (
                     <>
                       <div className="flex-1 min-w-0">
-                        <Typography.Text className="font-medium truncate">{s.name}</Typography.Text>
+                        <Typography.Text className="font-medium truncate">
+                          {s.name}
+                        </Typography.Text>
                         <Typography.Muted className="text-sm text-muted-foreground">
                           {s.category ?? t("services.uncategorized")}
                         </Typography.Muted>

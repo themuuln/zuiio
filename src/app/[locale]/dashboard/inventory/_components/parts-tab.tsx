@@ -40,6 +40,7 @@ import { TableSkeleton } from "./table-skeleton";
 import { SortKeyHeader } from "./sort-key-header";
 import type { SortKey } from "./constants";
 import { Typography } from "@/components/ui/typography";
+import { PartForm } from "@/components/inventory/part-form";
 
 // Part data from API includes popularity_score joined from analytics
 type PartRow = PartsCatalogItem & { popularity_score?: number };
@@ -51,16 +52,18 @@ interface PartsTabProps {
   onNavigate: (tab: string) => void;
 }
 
-export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTabProps) {
+export function PartsTab({
+  orgId,
+  search,
+  onSearchChange,
+  onNavigate,
+}: PartsTabProps) {
   const locale = useLocale();
   const t = useTranslations("inventory");
   const now = useClientNow();
   const qc = useQueryClient();
 
-  const {
-    data: parts = [],
-    isLoading: partsLoading,
-  } = usePartsCatalog(orgId);
+  const { data: parts = [], isLoading: partsLoading } = usePartsCatalog(orgId);
   const { data: balances = [] } = useInventoryBalances(orgId);
   const { data: thresholds = [] } = useStockThresholds(orgId);
 
@@ -88,14 +91,11 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
 
   const createPart = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/parts`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        },
-      );
+      const res = await fetch(`/api/organizations/${orgId}/inventory/parts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
       return json.data;
@@ -108,7 +108,6 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
     },
     onError: (err: Error) => toast.error(err.message),
   });
-
 
   const saveThreshold = useMutation({
     mutationFn: async ({
@@ -141,7 +140,6 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
     onError: (err: Error) => toast.error(err.message),
   });
 
-
   const handleSort = useCallback(
     (key: SortKey) => {
       if (sortKey === key) {
@@ -153,7 +151,6 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
     },
     [sortKey],
   );
-
 
   const sortedParts = useMemo(() => {
     let filtered = parts.filter((p) => p.is_active);
@@ -199,7 +196,6 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
     return sorted;
   }, [parts, search, sortKey, sortDir, balanceMap, locale]);
 
-
   const partExportColumns: ExportColumn<
     PartRow & { quantity_on_hand?: number; stock_status?: string }
   >[] = useMemo(
@@ -217,7 +213,6 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
     ],
     [locale],
   );
-
 
   function handleAddPart(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -285,7 +280,9 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16">
             <Package className="size-10 text-muted-foreground/40" />
-            <Typography.Muted className="text-muted-foreground">{t("noParts")}</Typography.Muted>
+            <Typography.Muted className="text-muted-foreground">
+              {t("noParts")}
+            </Typography.Muted>
             <Button variant="outline" onClick={() => setShowAddPart(true)}>
               {t("addFirstPart")}
             </Button>
@@ -359,8 +356,7 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
                   const bal = balanceMap.get(part.id);
                   const qty = bal?.quantity_on_hand ?? 0;
                   const min = thresholdMap[part.id] ?? 5;
-                  const status =
-                    qty <= 0 ? "out" : qty < min ? "low" : "ok";
+                  const status = qty <= 0 ? "out" : qty < min ? "low" : "ok";
                   return (
                     <TableRow
                       key={part.id}
@@ -433,8 +429,7 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
                               onClick={() =>
                                 saveThreshold.mutate({
                                   partId: part.id,
-                                  minimumQuantity:
-                                    Number(thresholdValue) || 0,
+                                  minimumQuantity: Number(thresholdValue) || 0,
                                 })
                               }
                             >
@@ -468,109 +463,10 @@ export function PartsTab({ orgId, search, onSearchChange, onNavigate }: PartsTab
       {/* Add Part Modal */}
       {showAddPart && (
         <Modal title={t("addPart")} onClose={() => setShowAddPart(false)}>
-          <form onSubmit={handleAddPart} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="part-name" className="text-sm font-medium">
-                Name *
-              </label>
-              <Input
-                id="part-name"
-                name="name"
-                required
-                placeholder="Oil filter"
-                className="h-11"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="part-name-mn" className="text-sm font-medium">
-                Монгол нэр
-              </label>
-              <Input
-                id="part-name-mn"
-                name="name_mn"
-                placeholder="Тосны шүүлтүүр"
-                className="h-11"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-2">
-                <label htmlFor="part-number" className="text-sm font-medium">
-                  Part Number
-                </label>
-                <Input
-                  id="part-number"
-                  name="part_number"
-                  placeholder="OF-101"
-                  className="h-11"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label htmlFor="part-category" className="text-sm font-medium">
-                  Category
-                </label>
-                <Input
-                  id="part-category"
-                  name="category"
-                  placeholder="Filters"
-                  className="h-11"
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="part-description"
-                className="text-sm font-medium"
-              >
-                Description
-              </label>
-              <Input
-                id="part-description"
-                name="description"
-                placeholder="Optional description"
-                className="h-11"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-2">
-                <label htmlFor="part-unit" className="text-sm font-medium">
-                  Unit
-                </label>
-                <Input
-                  id="part-unit"
-                  name="unit"
-                  defaultValue="piece"
-                  className="h-11"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label
-                  htmlFor="part-default-price"
-                  className="text-sm font-medium"
-                >
-                  Default Price (₮)
-                </label>
-                <Input
-                  id="part-default-price"
-                  name="default_price"
-                  type="number"
-                  min="0"
-                  className="h-11"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowAddPart(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createPart.isPending}>
-                Create Part
-              </Button>
-            </div>
-          </form>
+          <PartForm
+            onSuccess={() => setShowAddPart(false)}
+            onCancel={() => setShowAddPart(false)}
+          />
         </Modal>
       )}
     </div>

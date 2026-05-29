@@ -17,7 +17,13 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
 
   const vehicleIds = (ownedVehicles ?? []).map((o) => o.vehicle_id);
 
-  let customerVehicles: { id: string; plate_number: string; make: string; model: string; year: number | null }[] = [];
+  let customerVehicles: {
+    id: string;
+    plate_number: string;
+    make: string;
+    model: string;
+    year: number | null;
+  }[] = [];
 
   if (vehicleIds.length > 0) {
     const { data: vehicles, error: vError } = await supabase
@@ -46,8 +52,8 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
     data: {
       vehicles: customerVehicles,
       lastVehicleId: vehicleIds.includes(lastVehicle?.vehicle_id ?? "")
-        ? lastVehicle?.vehicle_id ?? null
-        : customerVehicles[0]?.id ?? null,
+        ? (lastVehicle?.vehicle_id ?? null)
+        : (customerVehicles[0]?.id ?? null),
     },
   });
 });
