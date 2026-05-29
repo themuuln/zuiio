@@ -139,7 +139,7 @@ export function NewWorkOrderSheet({
           <SheetTitle>{t("newWorkOrder")}</SheetTitle>
         </SheetHeader>
         <WizardProvider>
-          <ScrollArea className="flex-1">
+          <ScrollArea className="min-h-0 flex-1">
             <NewWorkOrderSheetForm onClose={() => onOpenChange(false)} />
           </ScrollArea>
           <SheetBottomBar onClose={() => onOpenChange(false)} />

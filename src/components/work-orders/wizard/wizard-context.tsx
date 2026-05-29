@@ -336,7 +336,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     priceHistoryLoading;
   const saving = createWorkOrderMutation.isPending;
   const isRestoringFromDraft =
-    draftRestored && !selectedCustomer && !selectedVehicle && !!draftData;
+    draftRestored &&
+    !!draftData &&
+    ((!!draftData.selectedCustomerId && !selectedCustomer) ||
+      (!!draftData.selectedVehicleId && !selectedVehicle));
   const customerSearching = customerSearchFetching || plateSearchFetching;
   const vehicleSearching = vehicleSearchFetching;
 
