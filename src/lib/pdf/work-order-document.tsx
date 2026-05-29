@@ -1,32 +1,24 @@
 /**
- * Work Order PDF Document — renders a professional work order using @react-pdf/renderer.
+ * Work Order PDF Document — supports English and Mongolian.
  *
  * Usage:
- *   import { WorkOrderDocument } from "@/lib/pdf/work-order-document";
- *   import { renderToPdfBuffer } from "@/lib/utils/pdf";
- *   const buffer = await renderToPdfBuffer(
- *     <WorkOrderDocument workOrder={wo} org={org} branch={branch} settings={settings} />
- *   );
+ *   <WorkOrderDocument workOrder={wo} org={org} locale="mn" />
  */
 
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import type { WorkOrderDetail } from "@/lib/types";
 import {
+  type Locale,
+  t,
   colors,
   formatAmount,
   formatDate,
-  formatDateTime,
   sharedStyles,
 } from "./pdf-styles";
 
-// ── Types ────────────────────────────────────────────────────
-
 interface WorkOrderDocumentProps {
   workOrder: WorkOrderDetail;
-  org: {
-    name: string;
-    logo_url?: string | null;
-  };
+  org: { name: string; logo_url?: string | null };
   branch?: {
     name?: string | null;
     address?: string | null;
@@ -36,9 +28,8 @@ interface WorkOrderDocumentProps {
   settings?: {
     default_currency?: string | null;
   } | null;
+  locale?: Locale;
 }
-
-// ── Status Colors ────────────────────────────────────────────
 
 const statusColors: Record<string, string> = {
   New: colors.primary,
@@ -49,20 +40,14 @@ const statusColors: Record<string, string> = {
   Cancelled: colors.lightGray,
 };
 
-// ── Helpers ──────────────────────────────────────────────────
-
-function formatPaymentMethod(method: string): string {
-  return method.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-// ── Component ────────────────────────────────────────────────
-
 export function WorkOrderDocument({
   workOrder: wo,
   org,
   branch,
   settings,
+  locale = "mn",
 }: WorkOrderDocumentProps) {
+  const L = (key: string) => t(locale, key);
   const currency = settings?.default_currency ?? "MNT";
   const services = wo.services ?? [];
   const parts = wo.parts ?? [];
@@ -80,7 +65,7 @@ export function WorkOrderDocument({
   return (
     <Document>
       <Page size="A4" style={sharedStyles.page}>
-        {/* ── Header ─────────────────────────────── */}
+        {/* Header */}
         <View style={sharedStyles.header}>
           <View style={sharedStyles.headerLeft}>
             <Text style={sharedStyles.businessName}>{org.name}</Text>
@@ -94,21 +79,21 @@ export function WorkOrderDocument({
             )}
           </View>
           <View style={sharedStyles.headerRight}>
-            <Text style={sharedStyles.invoiceTitle}>WORK ORDER</Text>
+            <Text style={sharedStyles.invoiceTitle}>{L("workOrder")}</Text>
             <Text style={sharedStyles.invoiceNumber}>
               WO #{wo.id.slice(0, 8).toUpperCase()}
             </Text>
             <Text style={sharedStyles.invoiceDate}>
-              Created: {formatDate(wo.created_at)}
+              {L("created")}: {formatDate(wo.created_at)}
             </Text>
             {wo.started_at && (
               <Text style={sharedStyles.invoiceDate}>
-                Started: {formatDate(wo.started_at)}
+                {L("started")}: {formatDate(wo.started_at)}
               </Text>
             )}
             {wo.completed_at && (
               <Text style={sharedStyles.invoiceDate}>
-                Completed: {formatDate(wo.completed_at)}
+                {L("completed")}: {formatDate(wo.completed_at)}
               </Text>
             )}
             <View
@@ -129,14 +114,14 @@ export function WorkOrderDocument({
           </View>
         </View>
 
-        {/* ── Customer / Vehicle / Mechanic Info ──── */}
+        {/* Customer / Vehicle / Details */}
         <View style={sharedStyles.infoGrid}>
           <View style={sharedStyles.infoBlock}>
-            <Text style={sharedStyles.infoLabel}>Customer</Text>
+            <Text style={sharedStyles.infoLabel}>{L("customer")}</Text>
             {customerName ? (
               <Text style={sharedStyles.infoValue}>{customerName}</Text>
             ) : (
-              <Text style={sharedStyles.infoValue}>Walk-in</Text>
+              <Text style={sharedStyles.infoValue}>{L("walkIn")}</Text>
             )}
             {wo.customer?.phone && (
               <Text style={sharedStyles.infoValue}>{wo.customer.phone}</Text>
@@ -145,9 +130,8 @@ export function WorkOrderDocument({
               <Text style={sharedStyles.infoValue}>{wo.customer.email}</Text>
             )}
           </View>
-
           <View style={sharedStyles.infoBlock}>
-            <Text style={sharedStyles.infoLabel}>Vehicle</Text>
+            <Text style={sharedStyles.infoLabel}>{L("vehicle")}</Text>
             {wo.vehicle?.plate_number && (
               <Text
                 style={{
@@ -163,65 +147,70 @@ export function WorkOrderDocument({
             )}
             {wo.odometer_at_service != null && (
               <Text style={sharedStyles.infoValue}>
-                Odometer: {wo.odometer_at_service.toLocaleString()} km
+                {L("odometer")}: {wo.odometer_at_service.toLocaleString()} km
               </Text>
             )}
           </View>
-
           <View style={sharedStyles.infoBlock}>
-            <Text style={sharedStyles.infoLabel}>Details</Text>
+            <Text style={sharedStyles.infoLabel}>{L("details")}</Text>
             {wo.bay_number != null && (
-              <Text style={sharedStyles.infoValue}>Bay {wo.bay_number}</Text>
+              <Text style={sharedStyles.infoValue}>
+                {L("bay")} {wo.bay_number}
+              </Text>
             )}
             {wo.diagnosis_label && (
               <Text style={sharedStyles.infoValue}>
-                Diagnosis: {wo.diagnosis_label.name}
+                {wo.diagnosis_label.name}
               </Text>
             )}
           </View>
         </View>
 
-        {/* ── Complaint & Diagnosis ───────────────── */}
+        {/* Complaint & Diagnosis */}
         {(wo.complaint || wo.diagnosis) && (
           <View style={sharedStyles.section}>
             {wo.complaint && (
               <View style={sharedStyles.mb8}>
-                <Text style={sharedStyles.infoLabel}>Customer Complaint</Text>
+                <Text style={sharedStyles.infoLabel}>{L("complaint")}</Text>
                 <Text style={sharedStyles.infoValue}>{wo.complaint}</Text>
               </View>
             )}
             {wo.diagnosis && (
               <View>
-                <Text style={sharedStyles.infoLabel}>Diagnosis</Text>
+                <Text style={sharedStyles.infoLabel}>{L("diagnosis")}</Text>
                 <Text style={sharedStyles.infoValue}>{wo.diagnosis}</Text>
               </View>
             )}
           </View>
         )}
 
-        {/* ── Services Table ─────────────────────── */}
+        {/* Services Table */}
         {services.length > 0 && (
           <View style={sharedStyles.section}>
-            <Text style={sharedStyles.sectionTitle}>Services</Text>
-
+            <Text style={sharedStyles.sectionTitle}>{L("services")}</Text>
             <View style={sharedStyles.tableHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={sharedStyles.tableHeaderText}>Service</Text>
+                <Text style={sharedStyles.tableHeaderText}>
+                  {L("description")}
+                </Text>
               </View>
               <View style={{ width: 40, alignItems: "center" }}>
-                <Text style={sharedStyles.tableHeaderText}>Qty</Text>
+                <Text style={sharedStyles.tableHeaderText}>{L("qty")}</Text>
               </View>
               <View style={{ width: 80, alignItems: "flex-end" }}>
-                <Text style={sharedStyles.tableHeaderText}>Unit Price</Text>
+                <Text style={sharedStyles.tableHeaderText}>
+                  {L("unitPrice")}
+                </Text>
               </View>
               <View style={{ width: 60, alignItems: "flex-end" }}>
-                <Text style={sharedStyles.tableHeaderText}>Discount</Text>
+                <Text style={sharedStyles.tableHeaderText}>
+                  {L("discount")}
+                </Text>
               </View>
               <View style={{ width: 80, alignItems: "flex-end" }}>
-                <Text style={sharedStyles.tableHeaderText}>Total</Text>
+                <Text style={sharedStyles.tableHeaderText}>{L("total")}</Text>
               </View>
             </View>
-
             {services.map((service, idx) => (
               <View
                 key={service.id}
@@ -266,29 +255,31 @@ export function WorkOrderDocument({
           </View>
         )}
 
-        {/* ── Parts Table ────────────────────────── */}
+        {/* Parts Table */}
         {parts.length > 0 && (
           <View style={sharedStyles.section}>
-            <Text style={sharedStyles.sectionTitle}>Parts</Text>
-
+            <Text style={sharedStyles.sectionTitle}>{L("parts")}</Text>
             <View style={sharedStyles.tableHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={sharedStyles.tableHeaderText}>Part</Text>
+                <Text style={sharedStyles.tableHeaderText}>
+                  {L("description")}
+                </Text>
               </View>
               <View style={{ width: 60 }}>
-                <Text style={sharedStyles.tableHeaderText}>Part #</Text>
+                <Text style={sharedStyles.tableHeaderText}>{L("partNum")}</Text>
               </View>
               <View style={{ width: 40, alignItems: "center" }}>
-                <Text style={sharedStyles.tableHeaderText}>Qty</Text>
+                <Text style={sharedStyles.tableHeaderText}>{L("qty")}</Text>
               </View>
               <View style={{ width: 80, alignItems: "flex-end" }}>
-                <Text style={sharedStyles.tableHeaderText}>Unit Price</Text>
+                <Text style={sharedStyles.tableHeaderText}>
+                  {L("unitPrice")}
+                </Text>
               </View>
               <View style={{ width: 80, alignItems: "flex-end" }}>
-                <Text style={sharedStyles.tableHeaderText}>Total</Text>
+                <Text style={sharedStyles.tableHeaderText}>{L("total")}</Text>
               </View>
             </View>
-
             {parts.map((part, idx) => (
               <View
                 key={part.id}
@@ -323,25 +314,24 @@ export function WorkOrderDocument({
           </View>
         )}
 
-        {/* ── Totals ──────────────────────────────── */}
+        {/* Totals */}
         <View style={sharedStyles.totalsSection}>
           <View style={sharedStyles.totalsTable}>
             <View style={sharedStyles.totalRow}>
-              <Text style={sharedStyles.totalRowLabel}>Services</Text>
+              <Text style={sharedStyles.totalRowLabel}>{L("services")}</Text>
               <Text style={sharedStyles.totalRowValue}>
                 {formatAmount(servicesTotal, currency)}
               </Text>
             </View>
             <View style={sharedStyles.totalRow}>
-              <Text style={sharedStyles.totalRowLabel}>Parts</Text>
+              <Text style={sharedStyles.totalRowLabel}>{L("parts")}</Text>
               <Text style={sharedStyles.totalRowValue}>
                 {formatAmount(partsTotal, currency)}
               </Text>
             </View>
-
             {wo.discount_total > 0 && (
               <View style={sharedStyles.totalRow}>
-                <Text style={sharedStyles.totalRowLabel}>Discount</Text>
+                <Text style={sharedStyles.totalRowLabel}>{L("discount")}</Text>
                 <Text
                   style={{
                     ...sharedStyles.totalRowValue,
@@ -352,9 +342,10 @@ export function WorkOrderDocument({
                 </Text>
               </View>
             )}
-
             <View style={sharedStyles.grandTotalRow}>
-              <Text style={sharedStyles.grandTotalLabel}>Total</Text>
+              <Text style={sharedStyles.grandTotalLabel}>
+                {L("grandTotal")}
+              </Text>
               <Text style={sharedStyles.grandTotalValue}>
                 {formatAmount(wo.total, currency)}
               </Text>
@@ -362,25 +353,25 @@ export function WorkOrderDocument({
           </View>
         </View>
 
-        {/* ── Mechanic Notes ──────────────────────── */}
+        {/* Mechanic Notes */}
         {wo.mechanic_notes && (
           <View style={sharedStyles.notesSection}>
-            <Text style={sharedStyles.notesLabel}>Mechanic Notes</Text>
+            <Text style={sharedStyles.notesLabel}>{L("mechanicNotes")}</Text>
             <Text style={sharedStyles.notesText}>{wo.mechanic_notes}</Text>
           </View>
         )}
 
-        {/* ── Notes ───────────────────────────────── */}
+        {/* Notes */}
         {wo.notes && (
           <View style={{ ...sharedStyles.notesSection, marginTop: 8 }}>
-            <Text style={sharedStyles.notesLabel}>Notes</Text>
+            <Text style={sharedStyles.notesLabel}>{L("notes")}</Text>
             <Text style={sharedStyles.notesText}>{wo.notes}</Text>
           </View>
         )}
 
-        {/* ── Footer ──────────────────────────────── */}
+        {/* Footer */}
         <Text style={sharedStyles.footer}>
-          {org.name} — Work Order #{wo.id.slice(0, 8).toUpperCase()}
+          {org.name} — WO #{wo.id.slice(0, 8).toUpperCase()}
         </Text>
       </Page>
     </Document>

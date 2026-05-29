@@ -197,11 +197,13 @@ export function LandingNav() {
         <div className="flex items-center gap-2">
           <LocaleSwitcher />
           <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon-sm" className="md:hidden">
-                <Menu className="size-4" />
-                <span className="sr-only">{t("navOpenMenu")}</span>
-              </Button>
+            <SheetTrigger
+              render={
+                <Button variant="ghost" size="icon-sm" className="md:hidden" />
+              }
+            >
+              <Menu className="size-4" />
+              <span className="sr-only">{t("navOpenMenu")}</span>
             </SheetTrigger>
             <SheetContent side="right" className="w-[88vw] max-w-sm gap-0 p-0">
               <SheetHeader className="border-b">

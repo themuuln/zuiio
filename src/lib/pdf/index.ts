@@ -9,4 +9,11 @@
 
 export { InvoiceDocument } from "./invoice-document";
 export { WorkOrderDocument } from "./work-order-document";
-export { colors, formatAmount, formatDate, sharedStyles } from "./pdf-styles";
+export {
+  colors,
+  formatAmount,
+  formatDate,
+  sharedStyles,
+  t,
+} from "./pdf-styles";
+export type { Locale } from "./pdf-styles";

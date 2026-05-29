@@ -1,32 +1,24 @@
 /**
- * Invoice PDF Document — renders a professional invoice using @react-pdf/renderer.
+ * Invoice PDF Document — supports English and Mongolian.
  *
  * Usage:
- *   import { InvoiceDocument } from "@/lib/pdf/invoice-document";
- *   import { renderToPdfBuffer } from "@/lib/utils/pdf";
- *   const buffer = await renderToPdfBuffer(
- *     <InvoiceDocument invoice={invoice} org={org} branch={branch} settings={settings} />
- *   );
+ *   <InvoiceDocument invoice={invoice} org={org} locale="mn" />
  */
 
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import type { InvoiceWithItems } from "@/lib/types";
 import {
+  type Locale,
+  t,
   colors,
   formatAmount,
   formatDate,
-  formatDateTime,
   sharedStyles,
 } from "./pdf-styles";
 
-// ── Types ────────────────────────────────────────────────────
-
 interface InvoiceDocumentProps {
   invoice: InvoiceWithItems;
-  org: {
-    name: string;
-    logo_url?: string | null;
-  };
+  org: { name: string; logo_url?: string | null };
   branch?: {
     name?: string | null;
     address?: string | null;
@@ -37,9 +29,8 @@ interface InvoiceDocumentProps {
     default_currency?: string | null;
     default_tax_rate?: number | null;
   } | null;
+  locale?: Locale;
 }
-
-// ── Status Colors ────────────────────────────────────────────
 
 const statusColors: Record<string, string> = {
   draft: colors.lightGray,
@@ -50,14 +41,29 @@ const statusColors: Record<string, string> = {
   cancelled: colors.lightGray,
 };
 
-// ── Component ────────────────────────────────────────────────
+const methodLabels: Record<string, Record<string, string>> = {
+  en: {
+    cash: "Cash",
+    card: "Card",
+    bank_transfer: "Bank Transfer",
+    manual: "Manual",
+  },
+  mn: {
+    cash: "Бэлэн",
+    card: "Карт",
+    bank_transfer: "Шилжүүлэг",
+    manual: "Гараар",
+  },
+};
 
 export function InvoiceDocument({
   invoice,
   org,
   branch,
   settings,
+  locale = "mn",
 }: InvoiceDocumentProps) {
+  const L = (key: string) => t(locale, key);
   const currency = settings?.default_currency ?? "MNT";
   const items = invoice.items ?? [];
   const payments = invoice.payments ?? [];
@@ -69,7 +75,7 @@ export function InvoiceDocument({
   return (
     <Document>
       <Page size="A4" style={sharedStyles.page}>
-        {/* ── Header ─────────────────────────────── */}
+        {/* Header */}
         <View style={sharedStyles.header}>
           <View style={sharedStyles.headerLeft}>
             <Text style={sharedStyles.businessName}>{org.name}</Text>
@@ -86,16 +92,16 @@ export function InvoiceDocument({
             )}
           </View>
           <View style={sharedStyles.headerRight}>
-            <Text style={sharedStyles.invoiceTitle}>INVOICE</Text>
+            <Text style={sharedStyles.invoiceTitle}>{L("invoice")}</Text>
             <Text style={sharedStyles.invoiceNumber}>
               {invoice.invoice_number}
             </Text>
             <Text style={sharedStyles.invoiceDate}>
-              Issued: {formatDate(invoice.issued_at)}
+              {L("issued")}: {formatDate(invoice.issued_at)}
             </Text>
             {invoice.due_at && (
               <Text style={sharedStyles.invoiceDate}>
-                Due: {formatDate(invoice.due_at)}
+                {L("due")}: {formatDate(invoice.due_at)}
               </Text>
             )}
             <View
@@ -116,14 +122,16 @@ export function InvoiceDocument({
           </View>
         </View>
 
-        {/* ── Bill To / Vehicle ───────────────────── */}
+        {/* Bill To / Vehicle */}
         <View style={sharedStyles.infoGrid}>
           <View style={sharedStyles.infoBlock}>
-            <Text style={sharedStyles.infoLabel}>Bill To</Text>
-            {invoice.customer_name && (
+            <Text style={sharedStyles.infoLabel}>{L("billTo")}</Text>
+            {invoice.customer_name ? (
               <Text style={sharedStyles.infoValue}>
                 {invoice.customer_name}
               </Text>
+            ) : (
+              <Text style={sharedStyles.infoValue}>{L("walkIn")}</Text>
             )}
             {invoice.customer_phone && (
               <Text style={sharedStyles.infoValue}>
@@ -140,13 +148,10 @@ export function InvoiceDocument({
                 {invoice.customer_address}
               </Text>
             )}
-            {!invoice.customer_name && (
-              <Text style={sharedStyles.infoValue}>Walk-in Customer</Text>
-            )}
           </View>
           {(invoice.vehicle_plate || invoice.vehicle_details) && (
             <View style={sharedStyles.infoBlock}>
-              <Text style={sharedStyles.infoLabel}>Vehicle</Text>
+              <Text style={sharedStyles.infoLabel}>{L("vehicle")}</Text>
               {invoice.vehicle_plate && (
                 <Text style={sharedStyles.infoValue}>
                   {invoice.vehicle_plate}
@@ -161,33 +166,32 @@ export function InvoiceDocument({
           )}
         </View>
 
-        {/* ── Line Items Table ────────────────────── */}
+        {/* Line Items Table */}
         <View style={sharedStyles.section}>
-          <Text style={sharedStyles.sectionTitle}>Items</Text>
-
-          {/* Table Header */}
+          <Text style={sharedStyles.sectionTitle}>{L("items")}</Text>
           <View style={sharedStyles.tableHeader}>
             <View style={{ width: 32 }}>
               <Text style={sharedStyles.tableHeaderText}>Type</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={sharedStyles.tableHeaderText}>Description</Text>
+              <Text style={sharedStyles.tableHeaderText}>
+                {L("description")}
+              </Text>
             </View>
             <View style={{ width: 40, alignItems: "center" }}>
-              <Text style={sharedStyles.tableHeaderText}>Qty</Text>
+              <Text style={sharedStyles.tableHeaderText}>{L("qty")}</Text>
             </View>
             <View style={{ width: 80, alignItems: "flex-end" }}>
-              <Text style={sharedStyles.tableHeaderText}>Unit Price</Text>
+              <Text style={sharedStyles.tableHeaderText}>{L("unitPrice")}</Text>
             </View>
             <View style={{ width: 60, alignItems: "flex-end" }}>
-              <Text style={sharedStyles.tableHeaderText}>Discount</Text>
+              <Text style={sharedStyles.tableHeaderText}>{L("discount")}</Text>
             </View>
             <View style={{ width: 80, alignItems: "flex-end" }}>
-              <Text style={sharedStyles.tableHeaderText}>Total</Text>
+              <Text style={sharedStyles.tableHeaderText}>{L("total")}</Text>
             </View>
           </View>
 
-          {/* Table Rows */}
           {items.map((item, idx) => (
             <View
               key={item.id}
@@ -240,12 +244,14 @@ export function InvoiceDocument({
           )}
         </View>
 
-        {/* ── Category Subtotals ──────────────────── */}
+        {/* Category Subtotals */}
         {(serviceItems.length > 0 || partItems.length > 0) && (
           <View style={{ flexDirection: "row", gap: 24, marginBottom: 16 }}>
             {serviceItems.length > 0 && (
               <View>
-                <Text style={sharedStyles.tableCellMuted}>Services Total</Text>
+                <Text style={sharedStyles.tableCellMuted}>
+                  {L("servicesTotal")}
+                </Text>
                 <Text style={sharedStyles.tableCellBold}>
                   {formatAmount(servicesTotal, currency)}
                 </Text>
@@ -253,7 +259,9 @@ export function InvoiceDocument({
             )}
             {partItems.length > 0 && (
               <View>
-                <Text style={sharedStyles.tableCellMuted}>Parts Total</Text>
+                <Text style={sharedStyles.tableCellMuted}>
+                  {L("partsTotal")}
+                </Text>
                 <Text style={sharedStyles.tableCellBold}>
                   {formatAmount(partsTotal, currency)}
                 </Text>
@@ -262,19 +270,18 @@ export function InvoiceDocument({
           </View>
         )}
 
-        {/* ── Totals ──────────────────────────────── */}
+        {/* Totals */}
         <View style={sharedStyles.totalsSection}>
           <View style={sharedStyles.totalsTable}>
             <View style={sharedStyles.totalRow}>
-              <Text style={sharedStyles.totalRowLabel}>Subtotal</Text>
+              <Text style={sharedStyles.totalRowLabel}>{L("subtotal")}</Text>
               <Text style={sharedStyles.totalRowValue}>
                 {formatAmount(invoice.subtotal, currency)}
               </Text>
             </View>
-
             {invoice.discount_total > 0 && (
               <View style={sharedStyles.totalRow}>
-                <Text style={sharedStyles.totalRowLabel}>Discount</Text>
+                <Text style={sharedStyles.totalRowLabel}>{L("discount")}</Text>
                 <Text
                   style={{
                     ...sharedStyles.totalRowValue,
@@ -285,7 +292,6 @@ export function InvoiceDocument({
                 </Text>
               </View>
             )}
-
             {invoice.tax_total > 0 && (
               <View style={sharedStyles.totalRow}>
                 <Text style={sharedStyles.totalRowLabel}>Tax</Text>
@@ -294,18 +300,20 @@ export function InvoiceDocument({
                 </Text>
               </View>
             )}
-
             <View style={sharedStyles.grandTotalRow}>
-              <Text style={sharedStyles.grandTotalLabel}>Total</Text>
+              <Text style={sharedStyles.grandTotalLabel}>
+                {L("grandTotal")}
+              </Text>
               <Text style={sharedStyles.grandTotalValue}>
                 {formatAmount(invoice.total, currency)}
               </Text>
             </View>
-
             {invoice.amount_paid > 0 && (
               <>
                 <View style={sharedStyles.totalRow}>
-                  <Text style={sharedStyles.totalRowLabel}>Amount Paid</Text>
+                  <Text style={sharedStyles.totalRowLabel}>
+                    {L("amountPaid")}
+                  </Text>
                   <Text
                     style={{
                       ...sharedStyles.totalRowValue,
@@ -322,7 +330,7 @@ export function InvoiceDocument({
                       fontFamily: "Helvetica-Bold",
                     }}
                   >
-                    Balance Due
+                    {L("balanceDue")}
                   </Text>
                   <Text
                     style={{
@@ -342,26 +350,26 @@ export function InvoiceDocument({
           </View>
         </View>
 
-        {/* ── Payment History ─────────────────────── */}
+        {/* Payment History */}
         {payments.length > 0 && (
           <View style={sharedStyles.section}>
-            <Text style={sharedStyles.sectionTitle}>Payment History</Text>
-
+            <Text style={sharedStyles.sectionTitle}>{L("paymentHistory")}</Text>
             <View style={sharedStyles.tableHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={sharedStyles.tableHeaderText}>Date</Text>
+                <Text style={sharedStyles.tableHeaderText}>{L("date")}</Text>
               </View>
               <View style={{ width: 80 }}>
-                <Text style={sharedStyles.tableHeaderText}>Method</Text>
+                <Text style={sharedStyles.tableHeaderText}>{L("method")}</Text>
               </View>
               <View style={{ width: 100 }}>
-                <Text style={sharedStyles.tableHeaderText}>Reference</Text>
+                <Text style={sharedStyles.tableHeaderText}>
+                  {L("reference")}
+                </Text>
               </View>
               <View style={{ width: 80, alignItems: "flex-end" }}>
-                <Text style={sharedStyles.tableHeaderText}>Amount</Text>
+                <Text style={sharedStyles.tableHeaderText}>{L("total")}</Text>
               </View>
             </View>
-
             {payments.map((payment, idx) => (
               <View
                 key={payment.id}
@@ -377,7 +385,8 @@ export function InvoiceDocument({
                 </View>
                 <View style={{ width: 80 }}>
                   <Text style={sharedStyles.tableCell}>
-                    {payment.method.replace("_", " ")}
+                    {methodLabels[locale]?.[payment.method] ??
+                      payment.method.replace("_", " ")}
                   </Text>
                 </View>
                 <View style={{ width: 100 }}>
@@ -395,27 +404,27 @@ export function InvoiceDocument({
           </View>
         )}
 
-        {/* ── Notes & Terms ───────────────────────── */}
+        {/* Notes & Terms */}
         {(invoice.notes || invoice.terms) && (
           <View style={sharedStyles.notesSection}>
             {invoice.notes && (
               <View style={sharedStyles.mb8}>
-                <Text style={sharedStyles.notesLabel}>Notes</Text>
+                <Text style={sharedStyles.notesLabel}>{L("notes")}</Text>
                 <Text style={sharedStyles.notesText}>{invoice.notes}</Text>
               </View>
             )}
             {invoice.terms && (
               <View>
-                <Text style={sharedStyles.notesLabel}>Terms</Text>
+                <Text style={sharedStyles.notesLabel}>{L("terms")}</Text>
                 <Text style={sharedStyles.notesText}>{invoice.terms}</Text>
               </View>
             )}
           </View>
         )}
 
-        {/* ── Footer ──────────────────────────────── */}
+        {/* Footer */}
         <Text style={sharedStyles.footer}>
-          {invoice.footer ?? `Thank you for your business — ${org.name}`}
+          {invoice.footer ?? `${L("thankYou")} — ${org.name}`}
         </Text>
       </Page>
     </Document>

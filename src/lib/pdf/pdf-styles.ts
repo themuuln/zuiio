@@ -1,11 +1,110 @@
 /**
- * Shared styles for PDF documents (@react-pdf/renderer).
- *
- * React PDF uses its own StyleSheet — NOT Tailwind or CSS.
- * Colors, spacing, and layout constants live here.
+ * Shared styles, translations, and helpers for PDF documents (@react-pdf/renderer).
  */
 
 import { StyleSheet } from "@react-pdf/renderer";
+
+// ── Translations ─────────────────────────────────────────────
+
+export type Locale = "en" | "mn";
+
+const translations: Record<Locale, Record<string, string>> = {
+  en: {
+    invoice: "INVOICE",
+    workOrder: "WORK ORDER",
+    billTo: "Bill To",
+    vehicle: "Vehicle",
+    customer: "Customer",
+    details: "Details",
+    items: "Items",
+    services: "Services",
+    parts: "Parts",
+    description: "Description",
+    qty: "Qty",
+    unitPrice: "Unit Price",
+    discount: "Discount",
+    total: "Total",
+    subtotal: "Subtotal",
+    grandTotal: "Total",
+    amountPaid: "Amount Paid",
+    balanceDue: "Balance Due",
+    paymentHistory: "Payment History",
+    date: "Date",
+    method: "Method",
+    reference: "Reference",
+    notes: "Notes",
+    terms: "Terms",
+    mechanicNotes: "Mechanic Notes",
+    complaint: "Customer Complaint",
+    diagnosis: "Diagnosis",
+    bay: "Bay",
+    odometer: "Odometer",
+    servicesTotal: "Services Total",
+    partsTotal: "Parts Total",
+    issued: "Issued",
+    due: "Due",
+    created: "Created",
+    started: "Started",
+    completed: "Completed",
+    thankYou: "Thank you for your business",
+    walkIn: "Walk-in Customer",
+    partNum: "Part #",
+    cash: "Cash",
+    card: "Card",
+    bank_transfer: "Bank Transfer",
+    manual: "Manual",
+  },
+  mn: {
+    invoice: "НЭХЭЛГЭЭ",
+    workOrder: "АЖЛЫН ЗАХИАЛГА",
+    billTo: "Захиалагч",
+    vehicle: "Тэрэг",
+    customer: "Үйлчлүүлэгч",
+    details: "Дэлгэрэнгүй",
+    items: "Эд хогш",
+    services: "Үйлчилгээ",
+    parts: "Эд хогс",
+    description: "Тайлбар",
+    qty: "Тоо",
+    unitPrice: "Нэгж үнэ",
+    discount: "Хөнгөлөлт",
+    total: "Нийт",
+    subtotal: "Дүн",
+    grandTotal: "Нийт дүн",
+    amountPaid: "Төлсөн",
+    balanceDue: "Үлдэгдэл",
+    paymentHistory: "Төлбөрийн түүх",
+    date: "Огноо",
+    method: "Арга",
+    reference: "Лавлагаа",
+    notes: "Тэмдэглэл",
+    terms: "Нөхцөл",
+    mechanicNotes: "Механикийн тэмдэглэл",
+    complaint: "Гомдол",
+    diagnosis: "Онош",
+    bay: "Бэй",
+    odometer: "Гүйлтийн км",
+    servicesTotal: "Үйлчилгээний дүн",
+    partsTotal: "Эд хогсийн дүн",
+    issued: "Олгосон",
+    due: "Хугацаа",
+    created: "Үүсгэсэн",
+    started: "Эхэлсэн",
+    completed: "Дууссан",
+    thankYou: "Хамтран ажилласанд баярлалаа",
+    walkIn: "Зочин үйлчлүүлэгч",
+    partNum: "Барааны №",
+    cash: "Бэлэн",
+    card: "Карт",
+    bank_transfer: "Шилжүүлэг",
+    manual: "Гараар",
+  },
+};
+
+/** Get a translated label */
+export function t(locale: Locale, key: string): string {
+  return translations[locale]?.[key] ?? translations.en[key] ?? key;
+}
 
 // ── Colors ───────────────────────────────────────────────────
 
@@ -83,7 +182,6 @@ export function formatDateTime(dateStr: string | null): string {
 // ── Styles ───────────────────────────────────────────────────
 
 export const sharedStyles = StyleSheet.create({
-  // Page
   page: {
     padding: 40,
     fontSize: 9,
@@ -91,8 +189,6 @@ export const sharedStyles = StyleSheet.create({
     color: colors.black,
     lineHeight: 1.4,
   },
-
-  // Header
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -102,23 +198,15 @@ export const sharedStyles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  headerLeft: {
-    flex: 1,
-  },
-  headerRight: {
-    alignItems: "flex-end",
-  },
+  headerLeft: { flex: 1 },
+  headerRight: { alignItems: "flex-end" },
   businessName: {
     fontSize: 16,
     fontFamily: "Helvetica-Bold",
     color: colors.black,
     marginBottom: 4,
   },
-  businessDetail: {
-    fontSize: 8,
-    color: colors.gray,
-    marginBottom: 1,
-  },
+  businessDetail: { fontSize: 8, color: colors.gray, marginBottom: 1 },
   invoiceTitle: {
     fontSize: 20,
     fontFamily: "Helvetica-Bold",
@@ -133,13 +221,7 @@ export const sharedStyles = StyleSheet.create({
     textAlign: "right",
     marginBottom: 2,
   },
-  invoiceDate: {
-    fontSize: 8,
-    color: colors.gray,
-    textAlign: "right",
-  },
-
-  // Status badge
+  invoiceDate: { fontSize: 8, color: colors.gray, textAlign: "right" },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -152,11 +234,7 @@ export const sharedStyles = StyleSheet.create({
     fontFamily: "Helvetica-Bold",
     textTransform: "uppercase",
   },
-
-  // Section
-  section: {
-    marginBottom: 16,
-  },
+  section: { marginBottom: 16 },
   sectionTitle: {
     fontSize: 10,
     fontFamily: "Helvetica-Bold",
@@ -165,16 +243,8 @@ export const sharedStyles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-
-  // Info grid (Bill To / Ship To)
-  infoGrid: {
-    flexDirection: "row",
-    gap: 24,
-    marginBottom: 16,
-  },
-  infoBlock: {
-    flex: 1,
-  },
+  infoGrid: { flexDirection: "row", gap: 24, marginBottom: 16 },
+  infoBlock: { flex: 1 },
   infoLabel: {
     fontSize: 7,
     fontFamily: "Helvetica-Bold",
@@ -183,16 +253,8 @@ export const sharedStyles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 3,
   },
-  infoValue: {
-    fontSize: 9,
-    color: colors.dark,
-    marginBottom: 1,
-  },
-
-  // Table
-  table: {
-    marginBottom: 16,
-  },
+  infoValue: { fontSize: 9, color: colors.dark, marginBottom: 1 },
+  table: { marginBottom: 16 },
   tableHeader: {
     flexDirection: "row",
     backgroundColor: colors.background,
@@ -216,52 +278,29 @@ export const sharedStyles = StyleSheet.create({
     paddingHorizontal: 8,
     minHeight: 24,
   },
-  tableRowEven: {
-    backgroundColor: colors.background,
-  },
-  tableCell: {
-    fontSize: 8,
-    color: colors.dark,
-  },
-  tableCellRight: {
-    fontSize: 8,
-    color: colors.dark,
-    textAlign: "right",
-  },
+  tableRowEven: { backgroundColor: colors.background },
+  tableCell: { fontSize: 8, color: colors.dark },
+  tableCellRight: { fontSize: 8, color: colors.dark, textAlign: "right" },
   tableCellBold: {
     fontSize: 8,
     fontFamily: "Helvetica-Bold",
     color: colors.dark,
   },
-  tableCellMuted: {
-    fontSize: 7,
-    color: colors.lightGray,
-  },
-
-  // Totals
+  tableCellMuted: { fontSize: 7, color: colors.lightGray },
   totalsSection: {
     flexDirection: "row",
     justifyContent: "flex-end",
     marginBottom: 16,
   },
-  totalsTable: {
-    width: 240,
-  },
+  totalsTable: { width: 240 },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 3,
     paddingHorizontal: 8,
   },
-  totalRowLabel: {
-    fontSize: 9,
-    color: colors.gray,
-  },
-  totalRowValue: {
-    fontSize: 9,
-    color: colors.dark,
-    textAlign: "right",
-  },
+  totalRowLabel: { fontSize: 9, color: colors.gray },
+  totalRowValue: { fontSize: 9, color: colors.dark, textAlign: "right" },
   grandTotalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -282,8 +321,6 @@ export const sharedStyles = StyleSheet.create({
     color: colors.primary,
     textAlign: "right",
   },
-
-  // Notes / Terms
   notesSection: {
     marginTop: 8,
     padding: 12,
@@ -297,12 +334,7 @@ export const sharedStyles = StyleSheet.create({
     textTransform: "uppercase",
     marginBottom: 3,
   },
-  notesText: {
-    fontSize: 8,
-    color: colors.dark,
-  },
-
-  // Footer
+  notesText: { fontSize: 8, color: colors.dark },
   footer: {
     position: "absolute",
     bottom: 30,
@@ -315,8 +347,6 @@ export const sharedStyles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingTop: 8,
   },
-
-  // Utility
   divider: {
     borderBottomWidth: 0.5,
     borderBottomColor: colors.border,

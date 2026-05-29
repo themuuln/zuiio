@@ -5,13 +5,51 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** Format a number as Mongolian Tugrik (₮). */
-export function formatMNT(value: number): string {
-  return `${value.toLocaleString("mn-MN")} ₮`;
+const mntDecimal = new Intl.NumberFormat("mn-MN", {
+  style: "decimal",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+const cnyCurrency = new Intl.NumberFormat("zh-CN", {
+  style: "currency",
+  currency: "CNY",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+const usdCurrency = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+const eurCurrency = new Intl.NumberFormat("de-DE", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
+const currencyFormatters: Record<string, Intl.NumberFormat> = {
+  MNT: mntDecimal,
+  CNY: cnyCurrency,
+  USD: usdCurrency,
+  EUR: eurCurrency,
+};
+
+export function formatCurrency(
+  amount: number,
+  currency: string = "MNT",
+): string {
+  const key = currency.toUpperCase();
+  const fmt = currencyFormatters[key];
+  if (!fmt) return `${key} ${amount.toLocaleString()}`;
+  const formatted = fmt.format(amount);
+  return key === "MNT" ? `₮${formatted}` : formatted;
 }
 
-/** Alias used across the codebase for currency display. */
-export const formatCurrency = formatMNT;
+export function formatMNT(amount: number): string {
+  return `₮${mntDecimal.format(amount)}`;
+}
 
 /** Format a Mongolian license plate (e.g. "1234АБВ" → "1234 АБВ"). */
 export function formatPlateNumber(plate: string): string {
