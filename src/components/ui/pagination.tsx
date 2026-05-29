@@ -1,21 +1,19 @@
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  MoreHorizontalIcon,
-} from "lucide-react";
-import type * as React from "react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-react"
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
+      role="navigation"
       aria-label="pagination"
       data-slot="pagination"
       className={cn("mx-auto flex w-full justify-center", className)}
       {...props}
     />
-  );
+  )
 }
 
 function PaginationContent({
@@ -28,17 +26,17 @@ function PaginationContent({
       className={cn("flex items-center gap-0.5", className)}
       {...props}
     />
-  );
+  )
 }
 
 function PaginationItem({ ...props }: React.ComponentProps<"li">) {
-  return <li data-slot="pagination-item" {...props} />;
+  return <li data-slot="pagination-item" {...props} />
 }
 
 type PaginationLinkProps = {
-  isActive?: boolean;
+  isActive?: boolean
 } & Pick<React.ComponentProps<typeof Button>, "size"> &
-  React.ComponentProps<"a">;
+  React.ComponentProps<"a">
 
 function PaginationLink({
   className,
@@ -61,7 +59,7 @@ function PaginationLink({
         />
       }
     />
-  );
+  )
 }
 
 function PaginationPrevious({
@@ -79,7 +77,7 @@ function PaginationPrevious({
       <ChevronLeftIcon data-icon="inline-start" />
       <span className="hidden sm:block">{text}</span>
     </PaginationLink>
-  );
+  )
 }
 
 function PaginationNext({
@@ -97,7 +95,7 @@ function PaginationNext({
       <span className="hidden sm:block">{text}</span>
       <ChevronRightIcon data-icon="inline-end" />
     </PaginationLink>
-  );
+  )
 }
 
 function PaginationEllipsis({
@@ -110,14 +108,15 @@ function PaginationEllipsis({
       data-slot="pagination-ellipsis"
       className={cn(
         "flex size-8 items-center justify-center [&_svg:not([class*='size-'])]:size-4",
-        className,
+        className
       )}
       {...props}
     >
-      <MoreHorizontalIcon />
+      <MoreHorizontalIcon
+      />
       <span className="sr-only">More pages</span>
     </span>
-  );
+  )
 }
 
 export {
@@ -128,4 +127,4 @@ export {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-};
+}

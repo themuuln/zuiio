@@ -1,16 +1,37 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
+import { JetBrains_Mono } from "next/font/google";
 import type { ReactNode } from "react";
 import ThemeProvider from "@/components/theme-provider";
 import "./globals.css";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const sfProDisplay = localFont({
+  src: [
+    {
+      path: "../../public/fonts/SFProDisplay-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/SFProDisplay-Medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/SFProDisplay-Semibold.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/SFProDisplay-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-sf-pro",
   display: "swap",
 });
 
@@ -30,7 +51,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="mn"
-      className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${sfProDisplay.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
