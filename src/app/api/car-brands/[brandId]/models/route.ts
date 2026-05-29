@@ -63,7 +63,9 @@ export async function POST(
       name,
       is_active: true,
     })
-    .select("id, name, body_type, fuel_type, transmission, drivetrain, year_start, year_end, engine_options, is_active")
+    .select(
+      "id, name, body_type, fuel_type, transmission, drivetrain, year_start, year_end, engine_options, is_active",
+    )
     .single();
 
   if (error) {

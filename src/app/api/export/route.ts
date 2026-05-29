@@ -27,9 +27,17 @@ const COLORS = {
   tab: "2563EB",
 };
 
-const HEADER_FONT = { bold: true as const, size: 11, color: { argb: COLORS.headerText } };
-const HEADER_FILL = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: COLORS.headerBg } };
-const CURRENCY_FMT = '₮#,##0';
+const HEADER_FONT = {
+  bold: true as const,
+  size: 11,
+  color: { argb: COLORS.headerText },
+};
+const HEADER_FILL = {
+  type: "pattern" as const,
+  pattern: "solid" as const,
+  fgColor: { argb: COLORS.headerBg },
+};
+const CURRENCY_FMT = "₮#,##0";
 
 function displayWidth(rawLength: number, format?: string): number {
   if (format === "currency") {
@@ -40,12 +48,20 @@ function displayWidth(rawLength: number, format?: string): number {
   return rawLength;
 }
 
-function autoWidth(label: string, data: Record<string, unknown>[], key: string, format?: string): number {
-  const maxLen = data.reduce((max, row) => {
-    const raw = row[key];
-    const str = raw == null ? "" : String(raw);
-    return Math.max(max, displayWidth(str.length, format));
-  }, displayWidth(label.length, format));
+function autoWidth(
+  label: string,
+  data: Record<string, unknown>[],
+  key: string,
+  format?: string,
+): number {
+  const maxLen = data.reduce(
+    (max, row) => {
+      const raw = row[key];
+      const str = raw == null ? "" : String(raw);
+      return Math.max(max, displayWidth(str.length, format));
+    },
+    displayWidth(label.length, format),
+  );
   return Math.min(Math.max(maxLen, 10) + 3, 60);
 }
 
@@ -55,17 +71,28 @@ export const POST = createSimpleRouteHandler(async ({ request }) => {
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
     );
   }
   const body: ExportRequestBody = await request.json();
   const { columns, data, sheetName = "Sheet1", title } = body;
 
   if (!data.length) {
-    return NextResponse.json({ error: { message: "No data to export" } }, { status: 400 });
+    return NextResponse.json(
+      { error: { message: "No data to export" } },
+      { status: 400 },
+    );
   }
 
-  const filename = body.filename ?? `export-${new Date().toISOString().split("T")[0]}.xlsx`;
+  const filename =
+    body.filename ?? `export-${new Date().toISOString().split("T")[0]}.xlsx`;
 
   const wb = new ExcelJS.Workbook();
   wb.creator = "Tolom";
@@ -82,15 +109,26 @@ export const POST = createSimpleRouteHandler(async ({ request }) => {
   ws.pageSetup.fitToHeight = 0;
   ws.pageSetup.paperSize = 9;
   ws.pageSetup.margins = {
-    left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3,
+    left: 0.5,
+    right: 0.5,
+    top: 0.6,
+    bottom: 0.6,
+    header: 0.3,
+    footer: 0.3,
   };
 
-  const colWidths = columns.map((col) => autoWidth(col.label, data, col.key, col.format));
+  const colWidths = columns.map((col) =>
+    autoWidth(col.label, data, col.key, col.format),
+  );
   let rowIdx = 0;
 
   if (title) {
     const timestamp = new Date().toLocaleDateString("en-US", {
-      year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
     const titleCell = ws.getCell(rowIdx + 1, 1);
     titleCell.value = `${title}  —  Exported ${timestamp}`;
@@ -107,7 +145,11 @@ export const POST = createSimpleRouteHandler(async ({ request }) => {
     cell.value = col.label;
     cell.font = HEADER_FONT;
     cell.fill = HEADER_FILL;
-    cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+    cell.alignment = {
+      horizontal: "center",
+      vertical: "middle",
+      wrapText: true,
+    };
     cell.border = {
       top: { style: "thin", color: { argb: COLORS.borderDark } },
       bottom: { style: "thin", color: { argb: COLORS.borderDark } },
@@ -128,7 +170,11 @@ export const POST = createSimpleRouteHandler(async ({ request }) => {
 
       let value: string | number | Date | null = null;
       if (raw != null) {
-        if (typeof raw === "string" || typeof raw === "number" || raw instanceof Date) {
+        if (
+          typeof raw === "string" ||
+          typeof raw === "number" ||
+          raw instanceof Date
+        ) {
           value = raw;
         } else {
           value = String(raw);
@@ -137,7 +183,10 @@ export const POST = createSimpleRouteHandler(async ({ request }) => {
 
       if (value == null) {
         cell.value = "";
-      } else if (col.format === "date" && (value instanceof Date || typeof value === "string")) {
+      } else if (
+        col.format === "date" &&
+        (value instanceof Date || typeof value === "string")
+      ) {
         const d = value instanceof Date ? value : new Date(value);
         cell.value = isNaN(d.getTime()) ? String(value) : d;
         cell.numFmt = "yyyy-mm-dd";
@@ -166,7 +215,11 @@ export const POST = createSimpleRouteHandler(async ({ request }) => {
       };
 
       if (isAlt) {
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.altRow } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: COLORS.altRow },
+        };
       }
     });
 
@@ -179,14 +232,16 @@ export const POST = createSimpleRouteHandler(async ({ request }) => {
   });
 
   const freezeRow = title ? 2 : 1;
-  ws.views = [{
-    state: "frozen",
-    ySplit: freezeRow,
-    xSplit: 0,
-    showGridLines: false,
-    topLeftCell: `A${freezeRow + 1}`,
-    activeCell: `A${freezeRow + 1}`,
-  }];
+  ws.views = [
+    {
+      state: "frozen",
+      ySplit: freezeRow,
+      xSplit: 0,
+      showGridLines: false,
+      topLeftCell: `A${freezeRow + 1}`,
+      activeCell: `A${freezeRow + 1}`,
+    },
+  ];
 
   const filterStartRow = title ? 2 : 1;
   const filterEndRow = data.length + filterStartRow;
@@ -206,7 +261,8 @@ export const POST = createSimpleRouteHandler(async ({ request }) => {
   return new NextResponse(new Uint8Array(buffer as unknown as ArrayBuffer), {
     status: 200,
     headers: {
-      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${safeFilename}"`,
     },
   });

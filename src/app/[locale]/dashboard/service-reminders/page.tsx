@@ -770,7 +770,9 @@ export default function ServiceRemindersPage() {
                 </div>
               ) : listError ? (
                 <div className="flex flex-col items-center gap-2 p-8 text-center">
-                  <Typography.Text className="text-destructive">{listError}</Typography.Text>
+                  <Typography.Text className="text-destructive">
+                    {listError}
+                  </Typography.Text>
                   <Button variant="outline" onClick={() => refetch()}>
                     {t("common.retry")}
                   </Button>
@@ -851,7 +853,9 @@ function ReminderLogsTab({ orgId }: { orgId: string | undefined }) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center gap-2 p-8 text-center">
-          <Typography.Text className="text-destructive">{error.message}</Typography.Text>
+          <Typography.Text className="text-destructive">
+            {error.message}
+          </Typography.Text>
           <Button variant="outline" onClick={() => refetch()}>
             {t("common.retry")}
           </Button>

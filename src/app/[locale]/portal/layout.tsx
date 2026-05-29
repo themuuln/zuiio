@@ -71,7 +71,9 @@ export default function PortalLayout({
   if (!customer) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Typography.Muted className="text-sm text-muted-foreground">Redirecting to login…</Typography.Muted>
+        <Typography.Muted className="text-sm text-muted-foreground">
+          Redirecting to login…
+        </Typography.Muted>
       </div>
     );
   }

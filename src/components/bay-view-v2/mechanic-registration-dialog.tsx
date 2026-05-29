@@ -2,8 +2,8 @@
 
 import { Mail, Phone, User, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
-
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,9 +11,40 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  isValidMongolianPhone,
+  normalizeMongolianPhone,
+} from "@/lib/form-validation";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
+
+// ── Schema ───────────────────────────────────────────────────
+
+const mechanicSchema = z.object({
+  fullName: z
+    .string()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name is too long"),
+  email: z.string().email("Enter a valid email address"),
+  phone: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || isValidMongolianPhone(val),
+      "Enter a valid Mongolian phone number (8 digits)",
+    ),
+});
+
+type MechanicFormValues = z.infer<typeof mechanicSchema>;
+
+// ── Types ──────────────────────────────────────────────────
 
 interface Props {
   open: boolean;
@@ -21,43 +52,44 @@ interface Props {
   onRegistered: (email: string, fullName: string, phone?: string) => void;
 }
 
+// ── Component ──────────────────────────────────────────────
+
 export function MechanicRegistrationDialog({
   open,
   onOpenChange,
   onRegistered,
 }: Props) {
   const t = useTranslations("bayView");
-  const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
 
-  const nameRef = useRef<HTMLInputElement>(null);
+  const form = useForm<MechanicFormValues>({
+    resolver: zodResolver(mechanicSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+    },
+  });
 
-  useEffect(() => {
-    if (!open) return;
-    nameRef.current?.focus();
-  }, [open]);
-
-  // Reset state when dialog opens
-  useEffect(() => {
-    if (open) {
-      setEmail("");
-      setFullName("");
-      setPhone("");
+  // Reset form when dialog opens
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      form.reset({ fullName: "", email: "", phone: "" });
     }
-  }, [open]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !fullName.trim()) return;
-
-    // Optimistic: close immediately and hand off to parent
-    onRegistered(email.trim(), fullName.trim(), phone.trim() || undefined);
-    onOpenChange(false);
+    onOpenChange(nextOpen);
   };
 
+  const onSubmit = form.handleSubmit(async (data) => {
+    const normalizedPhone = data.phone?.trim()
+      ? normalizeMongolianPhone(data.phone)
+      : undefined;
+
+    // Optimistic: close immediately and hand off to parent
+    onRegistered(data.email.trim(), data.fullName.trim(), normalizedPhone);
+    onOpenChange(false);
+  });
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
@@ -69,67 +101,87 @@ export function MechanicRegistrationDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("fullName")}
-            </Label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                ref={nameRef}
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder={t("namePlaceholder")}
-                required
-                className="pl-10"
-              />
-            </div>
-          </div>
+        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <FieldGroup>
+            {/* Full Name — required */}
+            <Field data-invalid={!!form.formState.errors.fullName}>
+              <FieldLabel className="text-xs font-medium text-muted-foreground">
+                {t("fullName")}
+              </FieldLabel>
+              <FieldContent>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input
+                    placeholder={t("namePlaceholder")}
+                    className="pl-10"
+                    aria-invalid={!!form.formState.errors.fullName}
+                    {...form.register("fullName")}
+                  />
+                </div>
+                {form.formState.errors.fullName && (
+                  <FieldError>
+                    {form.formState.errors.fullName.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("email")}
-            </Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("emailPlaceholder")}
-                required
-                className="pl-10"
-              />
-            </div>
-          </div>
+            {/* Email — required */}
+            <Field data-invalid={!!form.formState.errors.email}>
+              <FieldLabel className="text-xs font-medium text-muted-foreground">
+                {t("email")}
+              </FieldLabel>
+              <FieldContent>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder={t("emailPlaceholder")}
+                    className="pl-10"
+                    aria-invalid={!!form.formState.errors.email}
+                    {...form.register("email")}
+                  />
+                </div>
+                {form.formState.errors.email && (
+                  <FieldError>{form.formState.errors.email.message}</FieldError>
+                )}
+              </FieldContent>
+            </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {t("phone")}{" "}
-              <span className="text-muted-foreground/60">(optional)</span>
-            </Label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder={t("phonePlaceholder")}
-                className="pl-10"
-              />
-            </div>
-          </div>
+            {/* Phone — optional */}
+            <Field data-invalid={!!form.formState.errors.phone}>
+              <FieldLabel className="text-xs font-medium text-muted-foreground">
+                {t("phone")}{" "}
+                <span className="text-muted-foreground/60">(optional)</span>
+              </FieldLabel>
+              <FieldContent>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input
+                    type="tel"
+                    placeholder={t("phonePlaceholder")}
+                    className="pl-10"
+                    aria-invalid={!!form.formState.errors.phone}
+                    {...form.register("phone")}
+                  />
+                </div>
+                {form.formState.errors.phone && (
+                  <FieldError>{form.formState.errors.phone.message}</FieldError>
+                )}
+              </FieldContent>
+            </Field>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={!email.trim() || !fullName.trim()}
-            size="default"
-          >
-            <User className="size-4" />
-            {t("registerMechanicBtn")}
-          </Button>
+            {/* Submit */}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+              size="default"
+            >
+              <User className="size-4" />
+              {t("registerMechanicBtn")}
+            </Button>
+          </FieldGroup>
         </form>
       </DialogContent>
     </Dialog>

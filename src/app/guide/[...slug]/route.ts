@@ -21,9 +21,10 @@ export async function GET(
       : "",
   );
 
-  const alternatePath = segments.length > 0
-    ? path.join(process.cwd(), "public", "guide", ...segments) + ".html"
-    : path.join(process.cwd(), "public", "guide", "index.html");
+  const alternatePath =
+    segments.length > 0
+      ? path.join(process.cwd(), "public", "guide", ...segments) + ".html"
+      : path.join(process.cwd(), "public", "guide", "index.html");
 
   const targetPath = fs.existsSync(filePath)
     ? filePath
@@ -32,10 +33,7 @@ export async function GET(
       : null;
 
   if (!targetPath) {
-    return NextResponse.json(
-      { error: "Not found" },
-      { status: 404 },
-    );
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const content = fs.readFileSync(targetPath, "utf-8");

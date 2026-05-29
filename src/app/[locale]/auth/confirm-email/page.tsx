@@ -8,7 +8,6 @@ import { Link } from "@/lib/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Typography } from "@/components/ui/typography";
 
-
 export default function ConfirmEmailPage() {
   const t = useTranslations("auth.confirmEmail");
   const [showResend, setShowResend] = useState(false);
@@ -44,15 +43,21 @@ export default function ConfirmEmailPage() {
           <Mail className="size-6 text-muted-foreground" />
         )}
       </div>
-      <Typography.H2 className="text-lg font-semibold text-foreground">{t("title")}</Typography.H2>
-      <Typography.Muted className="mt-2 text-sm text-muted-foreground">{t("subtitle")}</Typography.Muted>
+      <Typography.H2 className="text-lg font-semibold text-foreground">
+        {t("title")}
+      </Typography.H2>
+      <Typography.Muted className="mt-2 text-sm text-muted-foreground">
+        {t("subtitle")}
+      </Typography.Muted>
       {error && (
         <div className="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </div>
       )}
       {resent && (
-        <Typography.Text className="mt-4 text-sm text-green-600">{t("resentMessage")}</Typography.Text>
+        <Typography.Text className="mt-4 text-sm text-green-600">
+          {t("resentMessage")}
+        </Typography.Text>
       )}
       {!showResend ? (
         <div className="mt-6">

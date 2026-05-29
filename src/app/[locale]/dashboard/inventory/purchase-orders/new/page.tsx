@@ -164,7 +164,9 @@ export default function NewPurchaseOrderPage() {
         <Card>
           <CardContent className="p-6 flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <Typography.H2 className="text-lg font-semibold">{t("items")}</Typography.H2>
+              <Typography.H2 className="text-lg font-semibold">
+                {t("items")}
+              </Typography.H2>
               <Button
                 type="button"
                 variant="outline"
@@ -213,11 +215,17 @@ export default function NewPurchaseOrderPage() {
                         type="number"
                         min={1}
                         value={item.quantity_ordered}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const v = e.target.value;
                           updateItem(item.id, {
-                            quantity_ordered: Number(e.target.value) || 1,
-                          })
-                        }
+                            quantity_ordered: v === "" ? 0 : Number(v) || 0,
+                          });
+                        }}
+                        onBlur={(e) => {
+                          const n = Number(e.target.value);
+                          if (isNaN(n) || n < 1)
+                            updateItem(item.id, { quantity_ordered: 1 });
+                        }}
                         className="h-9 text-center"
                       />
                     </Field>
@@ -229,11 +237,12 @@ export default function NewPurchaseOrderPage() {
                         type="number"
                         min={0}
                         value={item.unit_cost}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const v = e.target.value;
                           updateItem(item.id, {
-                            unit_cost: Number(e.target.value) || 0,
-                          })
-                        }
+                            unit_cost: v === "" ? 0 : Number(v) || 0,
+                          });
+                        }}
                         className="h-9 text-right"
                       />
                     </Field>

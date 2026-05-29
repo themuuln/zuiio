@@ -34,7 +34,9 @@ export async function getOrganizationSubscription(
 
   const { data, error } = await supabase
     .from("subscription_plans")
-    .select("id, organization_id, plan_type, status, started_at, expires_at, grace_period_end, settings, created_at, updated_at")
+    .select(
+      "id, organization_id, plan_type, status, started_at, expires_at, grace_period_end, settings, created_at, updated_at",
+    )
     .eq("organization_id", orgId)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -52,10 +54,9 @@ export async function checkSubscriptionStatus(
 ): Promise<SubscriptionStatus> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc(
-    "check_org_subscription_status",
-    { target_org_id: orgId },
-  );
+  const { data, error } = await supabase.rpc("check_org_subscription_status", {
+    target_org_id: orgId,
+  });
 
   if (error) {
     throw new Error(error.message ?? "Failed to check subscription status");
@@ -105,7 +106,9 @@ export async function updateSubscription(
       updated_at: new Date().toISOString(),
     })
     .eq("id", currentPlan.id)
-    .select("id, organization_id, plan_type, status, started_at, expires_at, grace_period_end, settings, created_at, updated_at")
+    .select(
+      "id, organization_id, plan_type, status, started_at, expires_at, grace_period_end, settings, created_at, updated_at",
+    )
     .single();
 
   if (error || !data) {

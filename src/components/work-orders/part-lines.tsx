@@ -71,13 +71,19 @@ export function PartLines({
                   <Input
                     type="number"
                     value={part.quantity}
-                    onChange={(e) =>
-                      onUpdate(
-                        idx,
-                        "quantity",
-                        parseInt(e.target.value, 10) || 1,
-                      )
-                    }
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === "") {
+                        onUpdate(idx, "quantity", 0);
+                        return;
+                      }
+                      const n = parseInt(v, 10);
+                      if (!isNaN(n)) onUpdate(idx, "quantity", n);
+                    }}
+                    onBlur={(e) => {
+                      const n = Number(e.target.value);
+                      if (isNaN(n) || n < 1) onUpdate(idx, "quantity", 1);
+                    }}
                     className="w-14 h-10 text-center"
                     min={1}
                     aria-label="Quantity"
@@ -85,13 +91,15 @@ export function PartLines({
                   <Input
                     type="number"
                     value={part.unit_price}
-                    onChange={(e) =>
-                      onUpdate(
-                        idx,
-                        "unit_price",
-                        parseFloat(e.target.value) || 0,
-                      )
-                    }
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === "") {
+                        onUpdate(idx, "unit_price", 0);
+                        return;
+                      }
+                      const n = parseFloat(v);
+                      if (!isNaN(n)) onUpdate(idx, "unit_price", n);
+                    }}
                     className="w-20 h-10 text-right"
                     min={0}
                     step={100}

@@ -71,7 +71,9 @@ function setupFromMock(
   let i = 0;
   const origFrom = mockClient.from;
   Object.assign(mockClient, {
-    from: vi.fn().mockImplementation(() => builders[i++] ?? createQueryBuilder()),
+    from: vi
+      .fn()
+      .mockImplementation(() => builders[i++] ?? createQueryBuilder()),
   });
 }
 
@@ -207,21 +209,52 @@ describe("getDailyReport", () => {
   it("supports mechanicId filter and includes mechanic name", async () => {
     let callIdx = 0;
     const profileBuilder = createQueryBuilder<{ full_name: string }>();
-    profileBuilder.single.mockResolvedValueOnce({ data: { full_name: "Mech One" }, error: null });
+    profileBuilder.single.mockResolvedValueOnce({
+      data: { full_name: "Mech One" },
+      error: null,
+    });
     const mc = createMockSupabaseClient();
     mc.from = vi.fn().mockImplementation(() => {
       const idx = callIdx++;
       const builders = [
         profileBuilder,
         b([{ id: "wo-1" }]),
-        b([{ final_price: 100, discount_amount: 0, name: "Oil Change", work_order_id: "wo-1" }]),
-        b([{ final_price: 50, discount_amount: 0, part_name: "Filter", work_order_id: "wo-1" }]),
-        b([{ id: "wo-1", customer_id: "c-1", vehicle_id: "v-1", mechanic_id: "m-1" }]),
-        b([]), b([]), b([]), b([{ id: "c-1" }]), b([{ id: "v-1" }]), b([]),
+        b([
+          {
+            final_price: 100,
+            discount_amount: 0,
+            name: "Oil Change",
+            work_order_id: "wo-1",
+          },
+        ]),
+        b([
+          {
+            final_price: 50,
+            discount_amount: 0,
+            part_name: "Filter",
+            work_order_id: "wo-1",
+          },
+        ]),
+        b([
+          {
+            id: "wo-1",
+            customer_id: "c-1",
+            vehicle_id: "v-1",
+            mechanic_id: "m-1",
+          },
+        ]),
+        b([]),
+        b([]),
+        b([]),
+        b([{ id: "c-1" }]),
+        b([{ id: "v-1" }]),
+        b([]),
       ];
       return builders[idx] ?? createQueryBuilder();
     });
-    vi.mocked(createClient).mockResolvedValue(mc as unknown as Awaited<ReturnType<typeof createClient>>);
+    vi.mocked(createClient).mockResolvedValue(
+      mc as unknown as Awaited<ReturnType<typeof createClient>>,
+    );
 
     const result = await getDailyReport("org-1", "m-1", "2025-01-15");
 
@@ -300,7 +333,9 @@ describe("getWeeklyReport", () => {
     // This is needed because getWeeklyReport calls getDailyReport 7 times
     // via Promise.all (parallel), making sequential builder lists non-deterministic.
     mc.from = vi.fn().mockReturnValue(makeRobustQueryBuilder());
-    vi.mocked(createClient).mockResolvedValue(mc as unknown as Awaited<ReturnType<typeof createClient>>);
+    vi.mocked(createClient).mockResolvedValue(
+      mc as unknown as Awaited<ReturnType<typeof createClient>>,
+    );
 
     const result = await getWeeklyReport("org-1", null, "2025-01-06");
 
@@ -312,7 +347,9 @@ describe("getWeeklyReport", () => {
   it("supports mechanicId filter", async () => {
     const mc = createMockSupabaseClient();
     mc.from = vi.fn().mockReturnValue(makeRobustQueryBuilder());
-    vi.mocked(createClient).mockResolvedValue(mc as unknown as Awaited<ReturnType<typeof createClient>>);
+    vi.mocked(createClient).mockResolvedValue(
+      mc as unknown as Awaited<ReturnType<typeof createClient>>,
+    );
 
     const result = await getWeeklyReport("org-1", "m-1", "2025-01-06");
 
@@ -609,12 +646,22 @@ function dashboardBuilders(
 }
 
 describe("getDashboardData", () => {
-  function runDashboard(period: "today" | "week" | "month" | "all" = "month", withPrev = true) {
+  function runDashboard(
+    period: "today" | "week" | "month" | "all" = "month",
+    withPrev = true,
+  ) {
     const mc = createMockSupabaseClient();
-    const builders = dashboardBuilders({ withPrevPeriod: withPrev, emptyStatus: false });
+    const builders = dashboardBuilders({
+      withPrevPeriod: withPrev,
+      emptyStatus: false,
+    });
     let i = 0;
-    mc.from = vi.fn().mockImplementation(() => builders[i++] ?? createQueryBuilder());
-    vi.mocked(createClient).mockResolvedValue(mc as unknown as Awaited<ReturnType<typeof createClient>>);
+    mc.from = vi
+      .fn()
+      .mockImplementation(() => builders[i++] ?? createQueryBuilder());
+    vi.mocked(createClient).mockResolvedValue(
+      mc as unknown as Awaited<ReturnType<typeof createClient>>,
+    );
     return getDashboardData("org-1", period);
   }
 
@@ -664,7 +711,9 @@ describe("getDashboardData", () => {
   it("handles empty data gracefully", async () => {
     const mc = createMockSupabaseClient();
     mc.from = vi.fn().mockImplementation(() => createQueryBuilder());
-    vi.mocked(createClient).mockResolvedValue(mc as unknown as Awaited<ReturnType<typeof createClient>>);
+    vi.mocked(createClient).mockResolvedValue(
+      mc as unknown as Awaited<ReturnType<typeof createClient>>,
+    );
 
     const result = await getDashboardData("org-1", "all");
 
@@ -686,7 +735,9 @@ describe("getDashboardData", () => {
       const mc = createMockSupabaseClient();
       const builders = dashboardBuilders({ withPrevPeriod: period !== "all" });
       let i = 0;
-      mc.from = vi.fn().mockImplementation(() => builders[i++] ?? createQueryBuilder());
+      mc.from = vi
+        .fn()
+        .mockImplementation(() => builders[i++] ?? createQueryBuilder());
       vi.mocked(createClient).mockResolvedValue(
         mc as unknown as Awaited<ReturnType<typeof createClient>>,
       );
@@ -704,8 +755,12 @@ describe("getDashboardData", () => {
     const mc = createMockSupabaseClient();
     const builders = dashboardBuilders({ withPrevPeriod: true });
     let i = 0;
-    mc.from = vi.fn().mockImplementation(() => builders[i++] ?? createQueryBuilder());
-    vi.mocked(createClient).mockResolvedValue(mc as unknown as Awaited<ReturnType<typeof createClient>>);
+    mc.from = vi
+      .fn()
+      .mockImplementation(() => builders[i++] ?? createQueryBuilder());
+    vi.mocked(createClient).mockResolvedValue(
+      mc as unknown as Awaited<ReturnType<typeof createClient>>,
+    );
 
     await getDashboardData("org-1", "month");
 

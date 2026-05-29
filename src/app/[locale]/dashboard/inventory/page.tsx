@@ -109,8 +109,12 @@ export default function InventoryPage() {
   return (
     <div className="tablet-touch flex flex-col gap-6">
       <div>
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">{t("title")}</Typography.H1>
-        <Typography.Muted className="text-muted-foreground">{t("subtitleParts")}</Typography.Muted>
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
+          {t("title")}
+        </Typography.H1>
+        <Typography.Muted className="text-muted-foreground">
+          {t("subtitleParts")}
+        </Typography.Muted>
       </div>
 
       {/* Tab navigation */}

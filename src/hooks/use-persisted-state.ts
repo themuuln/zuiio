@@ -24,12 +24,9 @@ export function usePersistedState<T>(
     }
   }, [key, state]);
 
-  const setPersisted = useCallback(
-    (value: T | ((prev: T) => T)) => {
-      setState(value);
-    },
-    [],
-  );
+  const setPersisted = useCallback((value: T | ((prev: T) => T)) => {
+    setState(value);
+  }, []);
 
   return [state, setPersisted];
 }

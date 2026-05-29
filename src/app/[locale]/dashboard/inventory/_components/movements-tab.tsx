@@ -283,7 +283,9 @@ export function MovementsTab({
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16">
             <ClipboardList className="size-10 text-muted-foreground/40" />
-            <Typography.Muted className="text-muted-foreground">{t("noMovements")}</Typography.Muted>
+            <Typography.Muted className="text-muted-foreground">
+              {t("noMovements")}
+            </Typography.Muted>
           </CardContent>
         </Card>
       ) : (

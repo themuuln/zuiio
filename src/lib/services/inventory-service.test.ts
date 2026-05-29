@@ -72,12 +72,16 @@ describe("getPartsCatalog", () => {
 
     // First query: parts_catalog — eq is not terminal (is() follows), limit ends the chain
     // Second query: vehicle_model_parts — eq IS terminal
-    mockClient.from("parts_catalog").limit.mockReturnValueOnce(
-      Promise.resolve({ data: mockParts, error: null }),
-    );
-    mockClient.from("parts_catalog").eq
-      .mockReturnValueOnce(mockClient.from("parts_catalog")) // parts_catalog eq: return builder for chaining
-      .mockReturnValueOnce(                                  // vehicle_model_parts eq: terminal call
+    mockClient
+      .from("parts_catalog")
+      .limit.mockReturnValueOnce(
+        Promise.resolve({ data: mockParts, error: null }),
+      );
+    mockClient
+      .from("parts_catalog")
+      .eq.mockReturnValueOnce(mockClient.from("parts_catalog")) // parts_catalog eq: return builder for chaining
+      .mockReturnValueOnce(
+        // vehicle_model_parts eq: terminal call
         Promise.resolve({ data: mockAssignments, error: null }),
       );
 
@@ -90,27 +94,35 @@ describe("getPartsCatalog", () => {
   });
 
   it("filters by organization_id and deleted_at is null", async () => {
-    mockClient.from("parts_catalog").limit.mockReturnValueOnce(
-      Promise.resolve({ data: [], error: null }),
-    );
-    mockClient.from("parts_catalog").eq
-      .mockReturnValueOnce(mockClient.from("parts_catalog"))
+    mockClient
+      .from("parts_catalog")
+      .limit.mockReturnValueOnce(Promise.resolve({ data: [], error: null }));
+    mockClient
+      .from("parts_catalog")
+      .eq.mockReturnValueOnce(mockClient.from("parts_catalog"))
       .mockReturnValueOnce(Promise.resolve({ data: [], error: null }));
 
     const result = await getPartsCatalog("org-1");
 
     expect(result).toEqual([]);
     expect(mockClient.from).toHaveBeenCalledWith("parts_catalog");
-    expect(mockClient.from("parts_catalog").is).toHaveBeenCalledWith("deleted_at", null);
-    expect(mockClient.from("parts_catalog").eq).toHaveBeenCalledWith("organization_id", "org-1");
+    expect(mockClient.from("parts_catalog").is).toHaveBeenCalledWith(
+      "deleted_at",
+      null,
+    );
+    expect(mockClient.from("parts_catalog").eq).toHaveBeenCalledWith(
+      "organization_id",
+      "org-1",
+    );
   });
 
   it("returns empty array when no parts exist", async () => {
-    mockClient.from("parts_catalog").limit.mockReturnValueOnce(
-      Promise.resolve({ data: null, error: null }),
-    );
-    mockClient.from("parts_catalog").eq
-      .mockReturnValueOnce(mockClient.from("parts_catalog"))
+    mockClient
+      .from("parts_catalog")
+      .limit.mockReturnValueOnce(Promise.resolve({ data: null, error: null }));
+    mockClient
+      .from("parts_catalog")
+      .eq.mockReturnValueOnce(mockClient.from("parts_catalog"))
       .mockReturnValueOnce(Promise.resolve({ data: [], error: null }));
 
     const result = await getPartsCatalog("org-1");
@@ -141,13 +153,17 @@ describe("createPart", () => {
       error: null,
     });
 
-    const result = await createPart("org-1", {
-      name: "Oil Filter",
-      part_number: "OF-123",
-      category: "Filters",
-      unit: "piece",
-      default_price: 15000,
-    }, "user-1");
+    const result = await createPart(
+      "org-1",
+      {
+        name: "Oil Filter",
+        part_number: "OF-123",
+        category: "Filters",
+        unit: "piece",
+        default_price: 15000,
+      },
+      "user-1",
+    );
 
     expect(result).toEqual(createdPart);
     expect(mockClient.from("parts_catalog").insert).toHaveBeenCalledWith(
@@ -162,13 +178,16 @@ describe("createPart", () => {
         updated_by: "user-1",
       }),
     );
-    expect(revalidateTag).toHaveBeenCalledWith(cacheTags.partsCatalog("org-1"), "max");
+    expect(revalidateTag).toHaveBeenCalledWith(
+      cacheTags.partsCatalog("org-1"),
+      "max",
+    );
   });
 
   it("rejects when name is missing", async () => {
-    await expect(
-      createPart("org-1", { name: "" }, "user-1"),
-    ).rejects.toThrow(ValidationError);
+    await expect(createPart("org-1", { name: "" }, "user-1")).rejects.toThrow(
+      ValidationError,
+    );
 
     await expect(
       createPart("org-1", { name: "   " }, "user-1"),
@@ -211,7 +230,10 @@ describe("updatePart", () => {
         updated_by: "test-user-id",
       }),
     );
-    expect(revalidateTag).toHaveBeenCalledWith(cacheTags.partsCatalog("org-1"), "max");
+    expect(revalidateTag).toHaveBeenCalledWith(
+      cacheTags.partsCatalog("org-1"),
+      "max",
+    );
   });
 
   it("throws NotFoundError when part does not exist", async () => {
@@ -236,17 +258,29 @@ describe("deletePart", () => {
     const updateCall = mockClient.from("parts_catalog").update.mock.calls[0][0];
     expect(updateCall).toHaveProperty("deleted_at");
     expect(updateCall).toHaveProperty("updated_by", "test-user-id");
-    expect(mockClient.from("parts_catalog").eq).toHaveBeenCalledWith("id", "part-1");
-    expect(mockClient.from("parts_catalog").eq).toHaveBeenCalledWith("organization_id", "org-1");
-    expect(revalidateTag).toHaveBeenCalledWith(cacheTags.partsCatalog("org-1"), "max");
+    expect(mockClient.from("parts_catalog").eq).toHaveBeenCalledWith(
+      "id",
+      "part-1",
+    );
+    expect(mockClient.from("parts_catalog").eq).toHaveBeenCalledWith(
+      "organization_id",
+      "org-1",
+    );
+    expect(revalidateTag).toHaveBeenCalledWith(
+      cacheTags.partsCatalog("org-1"),
+      "max",
+    );
   });
 
   it("throws NotFoundError when soft-deleting non-existent part", async () => {
     // deletePart chains update().eq("id", ...).eq("organization_id", ...)
     // First eq must return builder for chaining, second eq is terminal
-    mockClient.from("parts_catalog").eq
-      .mockReturnValueOnce(mockClient.from("parts_catalog"))
-      .mockReturnValueOnce(Promise.resolve({ error: { message: "Not found" } }));
+    mockClient
+      .from("parts_catalog")
+      .eq.mockReturnValueOnce(mockClient.from("parts_catalog"))
+      .mockReturnValueOnce(
+        Promise.resolve({ error: { message: "Not found" } }),
+      );
 
     const promise = deletePart("nonexistent", "org-1");
 
@@ -284,9 +318,11 @@ describe("getInventoryBalances", () => {
       },
     ];
 
-    mockClient.from("inventory_balances").eq.mockReturnValueOnce(
-      Promise.resolve({ data: mockBalances, error: null }),
-    );
+    mockClient
+      .from("inventory_balances")
+      .eq.mockReturnValueOnce(
+        Promise.resolve({ data: mockBalances, error: null }),
+      );
 
     const result = await getInventoryBalances("org-1");
 
@@ -300,9 +336,9 @@ describe("getInventoryBalances", () => {
   });
 
   it("returns empty array when no data", async () => {
-    mockClient.from("inventory_balances").eq.mockReturnValueOnce(
-      Promise.resolve({ data: null, error: null }),
-    );
+    mockClient
+      .from("inventory_balances")
+      .eq.mockReturnValueOnce(Promise.resolve({ data: null, error: null }));
 
     const result = await getInventoryBalances("org-1");
 
@@ -360,17 +396,31 @@ describe("createMovement", () => {
         created_by: "user-1",
       }),
     );
-    expect(revalidateTag).toHaveBeenCalledWith(cacheTags.inventoryMovements("org-1"), "max");
-    expect(revalidateTag).toHaveBeenCalledWith(cacheTags.inventoryBalances("org-1"), "max");
+    expect(revalidateTag).toHaveBeenCalledWith(
+      cacheTags.inventoryMovements("org-1"),
+      "max",
+    );
+    expect(revalidateTag).toHaveBeenCalledWith(
+      cacheTags.inventoryBalances("org-1"),
+      "max",
+    );
   });
 
   it("rejects when part_id is missing", async () => {
     await expect(
-      createMovement("org-1", { part_id: "", movement_type: "purchase", quantity: 1 }, "user-1"),
+      createMovement(
+        "org-1",
+        { part_id: "", movement_type: "purchase", quantity: 1 },
+        "user-1",
+      ),
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      createMovement("org-1", { part_id: "", movement_type: "purchase", quantity: 1 }, "user-1"),
+      createMovement(
+        "org-1",
+        { part_id: "", movement_type: "purchase", quantity: 1 },
+        "user-1",
+      ),
     ).rejects.toThrow("Part is required");
   });
 
@@ -396,11 +446,19 @@ describe("createMovement", () => {
 
   it("rejects when quantity is zero", async () => {
     await expect(
-      createMovement("org-1", { part_id: "part-1", movement_type: "purchase", quantity: 0 }, "user-1"),
+      createMovement(
+        "org-1",
+        { part_id: "part-1", movement_type: "purchase", quantity: 0 },
+        "user-1",
+      ),
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      createMovement("org-1", { part_id: "part-1", movement_type: "purchase", quantity: 0 }, "user-1"),
+      createMovement(
+        "org-1",
+        { part_id: "part-1", movement_type: "purchase", quantity: 0 },
+        "user-1",
+      ),
     ).rejects.toThrow("Quantity must be non-zero");
   });
 
@@ -411,7 +469,9 @@ describe("createMovement", () => {
     });
 
     const promise = createMovement(
-      "org-1", { part_id: "nonexistent", movement_type: "purchase", quantity: 5 }, "user-1",
+      "org-1",
+      { part_id: "nonexistent", movement_type: "purchase", quantity: 5 },
+      "user-1",
     );
 
     await expect(promise).rejects.toThrow(NotFoundError);
@@ -495,7 +555,10 @@ describe("setStockThreshold", () => {
       }),
       { onConflict: "organization_id, branch_id, part_id" },
     );
-    expect(revalidateTag).toHaveBeenCalledWith(cacheTags.stockThresholds("org-1"), "max");
+    expect(revalidateTag).toHaveBeenCalledWith(
+      cacheTags.stockThresholds("org-1"),
+      "max",
+    );
   });
 
   it("rejects when part_id is missing", async () => {
@@ -540,9 +603,11 @@ describe("getStockThresholds", () => {
       },
     ];
 
-    mockClient.from("stock_thresholds").eq.mockReturnValueOnce(
-      Promise.resolve({ data: mockThresholds, error: null }),
-    );
+    mockClient
+      .from("stock_thresholds")
+      .eq.mockReturnValueOnce(
+        Promise.resolve({ data: mockThresholds, error: null }),
+      );
 
     const result = await getStockThresholds("org-1");
 
@@ -555,9 +620,9 @@ describe("getStockThresholds", () => {
   });
 
   it("returns empty array when no thresholds exist", async () => {
-    mockClient.from("stock_thresholds").eq.mockReturnValueOnce(
-      Promise.resolve({ data: null, error: null }),
-    );
+    mockClient
+      .from("stock_thresholds")
+      .eq.mockReturnValueOnce(Promise.resolve({ data: null, error: null }));
 
     const result = await getStockThresholds("org-1");
 

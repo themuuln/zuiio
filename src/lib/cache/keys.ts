@@ -39,8 +39,7 @@ export const cacheTags = {
   vehicleModels: (orgId: string) => `vehicle-models:${orgId}`,
 
   // Bay View
-  bayView: (orgId: string, branchId: string) =>
-    `bay-view:${orgId}:${branchId}`,
+  bayView: (orgId: string, branchId: string) => `bay-view:${orgId}:${branchId}`,
 
   // Expenses
   expenses: (orgId: string) => `expenses:${orgId}`,

@@ -38,7 +38,9 @@ export default function AlertsPage() {
       thresholdMap.set(th.part_id, th.minimum_quantity);
     }
 
-    const result: Array<{ min: number; shortage: number } & (typeof balances)[number]> = [];
+    const result: Array<
+      { min: number; shortage: number } & (typeof balances)[number]
+    > = [];
     for (const b of balances) {
       const min = thresholdMap.get(b.part_id ?? "") ?? 0;
       const shortage = Math.max(0, min - (b.quantity_on_hand ?? 0));
@@ -55,7 +57,9 @@ export default function AlertsPage() {
 
   useEffect(() => {
     const lowStock = alerts.filter((a) => (a.quantity_on_hand ?? 0) > 0).length;
-    const outOfStock = alerts.filter((a) => (a.quantity_on_hand ?? 0) === 0).length;
+    const outOfStock = alerts.filter(
+      (a) => (a.quantity_on_hand ?? 0) === 0,
+    ).length;
 
     sidebar.setActiveTab("summary");
 
@@ -88,7 +92,9 @@ export default function AlertsPage() {
         <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("alertsTitle")}
         </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">{t("alertsSubtitle")}</Typography.Muted>
+        <Typography.Muted className="text-muted-foreground">
+          {t("alertsSubtitle")}
+        </Typography.Muted>
       </div>
 
       <Card>

@@ -2,7 +2,8 @@
 
 import { MessageSquare } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,8 +11,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldContent, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Typography } from "@/components/ui/typography";
+import { useForm } from "@/lib/hooks/use-form";
+
+// ── Schema ───────────────────────────────────────────────────
+
+const statusNotesSchema = z.object({
+  notes: z.string().optional(),
+});
+
+type StatusNotesFormValues = z.infer<typeof statusNotesSchema>;
+
+// ── Types ──────────────────────────────────────────────────
 
 interface StatusNotesModalProps {
   woId: string;
@@ -20,6 +33,8 @@ interface StatusNotesModalProps {
   onCancel: () => void;
 }
 
+// ── Component ──────────────────────────────────────────────
+
 export function StatusNotesModal({
   woId,
   newStatus,
@@ -27,17 +42,24 @@ export function StatusNotesModal({
   onCancel,
 }: StatusNotesModalProps) {
   const t = useTranslations("bayView");
-  const [notes, setNotes] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    // Focus the input on mount
-    inputRef.current?.focus();
-  }, []);
+  const form = useForm<StatusNotesFormValues>({
+    defaultValues: { notes: "" },
+  });
 
-  const handleSubmit = () => {
-    onConfirm(woId, newStatus, notes.trim() || undefined);
-  };
+  // Register notes field and merge with auto-focus ref
+  const notesRegister = form.register("notes");
+  const notesRef = useCallback(
+    (el: HTMLInputElement | null) => {
+      notesRegister.ref({ current: el });
+      if (el) el.focus();
+    },
+    [notesRegister],
+  );
+
+  const onSubmit = form.handleSubmit((data) => {
+    onConfirm(woId, newStatus, data.notes?.trim() || undefined);
+  });
 
   const LABEL_MAP: Record<string, string> = {
     "Ready for Pickup": t("statusNotesTitle"),
@@ -61,28 +83,46 @@ export function StatusNotesModal({
             {title}
           </DialogTitle>
         </DialogHeader>
-        <Typography.Muted className="text-sm text-muted-foreground">{t("addNotePrompt")}</Typography.Muted>
-        <Input
-          ref={inputRef}
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder={t("notePlaceholder")}
-          className="h-11"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit();
-            }
-          }}
-        />
-        <div className="flex gap-2 justify-end">
-          <Button variant="outline" onClick={onCancel} size="default">
-            {t("cancel")}
-          </Button>
-          <Button onClick={handleSubmit} size="default">
-            {title}
-          </Button>
-        </div>
+        <Typography.Muted className="text-sm text-muted-foreground">
+          {t("addNotePrompt")}
+        </Typography.Muted>
+        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <Field data-invalid={!!form.formState.errors.notes}>
+            <FieldContent>
+              <Input
+                ref={notesRef}
+                placeholder={t("notePlaceholder")}
+                className="h-11"
+                aria-invalid={!!form.formState.errors.notes}
+                onChange={notesRegister.onChange}
+                onBlur={notesRegister.onBlur}
+                name={notesRegister.name}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    onSubmit(e as unknown as React.FormEvent);
+                  }
+                }}
+              />
+              {form.formState.errors.notes && (
+                <FieldError>{form.formState.errors.notes.message}</FieldError>
+              )}
+            </FieldContent>
+          </Field>
+          <div className="flex gap-2 justify-end">
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              type="button"
+              size="default"
+            >
+              {t("cancel")}
+            </Button>
+            <Button type="submit" size="default">
+              {title}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

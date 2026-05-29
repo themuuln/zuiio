@@ -2,7 +2,13 @@
 
 import { useId } from "react";
 // recharts - consider next/dynamic for code splitting
-import { Area, AreaChart as RechartsAreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  Area,
+  AreaChart as RechartsAreaChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
@@ -23,8 +29,14 @@ export default function AreaChartInner({
   const id = useId();
 
   return (
-    <ChartContainer config={config} className={`aspect-auto h-[${height}px] w-full`}>
-      <RechartsAreaChart data={data} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
+    <ChartContainer
+      config={config}
+      className={`aspect-auto h-[${height}px] w-full`}
+    >
+      <RechartsAreaChart
+        data={data}
+        margin={{ top: 4, right: 4, bottom: 4, left: 4 }}
+      >
         {showGrid && <CartesianGrid vertical={false} />}
         <XAxis
           dataKey={xKey}
@@ -42,9 +54,23 @@ export default function AreaChartInner({
         />
         {series.map((s) => (
           <defs key={s.key}>
-            <linearGradient id={`fill${s.key}${id}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={s.color ?? "var(--color-foreground)"} stopOpacity={0.3} />
-              <stop offset="95%" stopColor={s.color ?? "var(--color-foreground)"} stopOpacity={0.05} />
+            <linearGradient
+              id={`fill${s.key}${id}`}
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
+              <stop
+                offset="5%"
+                stopColor={s.color ?? "var(--color-foreground)"}
+                stopOpacity={0.3}
+              />
+              <stop
+                offset="95%"
+                stopColor={s.color ?? "var(--color-foreground)"}
+                stopOpacity={0.05}
+              />
             </linearGradient>
           </defs>
         ))}

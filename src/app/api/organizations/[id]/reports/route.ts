@@ -23,7 +23,8 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type") ?? "daily";
   const mechanicId = searchParams.get("mechanic");
-  const date = searchParams.get("date") ?? new Date().toISOString().split("T")[0];
+  const date =
+    searchParams.get("date") ?? new Date().toISOString().split("T")[0];
   const dateFrom = searchParams.get("date_from") ?? date;
   const dateTo = searchParams.get("date_to") ?? date;
 
@@ -34,7 +35,8 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
 
   if (type === "dashboard") {
     const period =
-      (searchParams.get("period") as "today" | "week" | "month" | "all") ?? "all";
+      (searchParams.get("period") as "today" | "week" | "month" | "all") ??
+      "all";
     const dashboard = await getDashboardData(orgId, period);
     return NextResponse.json({ data: dashboard });
   }
@@ -65,12 +67,21 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
     }
     case "mechanic-trend": {
       if (!mid) {
-        throw new ValidationError("mechanic parameter is required for mechanic-trend");
+        throw new ValidationError(
+          "mechanic parameter is required for mechanic-trend",
+        );
       }
-      const period = (searchParams.get("period") as "weekly" | "monthly") ?? "weekly";
+      const period =
+        (searchParams.get("period") as "weekly" | "monthly") ?? "weekly";
       const startDate = searchParams.get("startDate") ?? date;
       const endDate = searchParams.get("endDate") ?? date;
-      const trend = await getMechanicPerformanceTrend(orgId, mid, period, startDate, endDate);
+      const trend = await getMechanicPerformanceTrend(
+        orgId,
+        mid,
+        period,
+        startDate,
+        endDate,
+      );
       return NextResponse.json({ data: trend });
     }
     // ── ERP-Grade endpoints ────────────────────────────────
@@ -79,12 +90,16 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
       return NextResponse.json({ data: insights });
     }
     case "forecast": {
-      const periodType = (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ?? "monthly";
+      const periodType =
+        (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ??
+        "monthly";
       const forecast = await getRevenueForecast(orgId, periodType, date);
       return NextResponse.json({ data: forecast });
     }
     case "targets": {
-      const periodType = (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ?? "monthly";
+      const periodType =
+        (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ??
+        "monthly";
       const targets = await getRevenueTargets(orgId, periodType, date);
       return NextResponse.json({ data: targets });
     }
@@ -112,10 +127,23 @@ export const POST = createRouteHandler(async ({ request, orgId }) => {
   const body = await request.json();
   const { period_type, period_start, period_end, target_revenue } = body;
 
-  if (!period_type || !period_start || !period_end || target_revenue === undefined) {
-    throw new ValidationError("period_type, period_start, period_end, and target_revenue are required");
+  if (
+    !period_type ||
+    !period_start ||
+    !period_end ||
+    target_revenue === undefined
+  ) {
+    throw new ValidationError(
+      "period_type, period_start, period_end, and target_revenue are required",
+    );
   }
 
-  const target = await setRevenueTarget(orgId, period_type, period_start, period_end, Number(target_revenue));
+  const target = await setRevenueTarget(
+    orgId,
+    period_type,
+    period_start,
+    period_end,
+    Number(target_revenue),
+  );
   return NextResponse.json({ data: target });
 });

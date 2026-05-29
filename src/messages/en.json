@@ -1166,7 +1166,9 @@
     "noNotes": "No notes yet",
     "paginationShowing": "Showing {from}-{to} of {total}",
     "paginationPrev": "Previous",
-    "paginationNext": "Next"
+    "paginationNext": "Next",
+    "createSubtitle": "Create a customer record before check-in or invoicing.",
+    "customerNotFound": "Customer not found."
   },
   "vehicles": {
     "title": "Vehicles",
@@ -1265,7 +1267,8 @@
     "cancel": "Cancel",
     "createVehicle": "Create vehicle",
     "plateRequired": "Plate number is required",
-    "plateInvalid": "Must be 4 digits + 3 letters (e.g. 4444УНА)"
+    "plateInvalid": "Must be 4 digits + 3 letters (e.g. 4444УНА)",
+    "vehicleNotFound": "Vehicle not found."
   },
   "vehicleModels": {
     "title": "Vehicle Models",

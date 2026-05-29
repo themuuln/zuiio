@@ -207,6 +207,115 @@ After adding, verify against the rules above. Third-party registries (e.g., `@ma
 
 The rule: pages use hooks, hooks call API routes, API routes call services, services query Supabase. Never skip a layer.
 
+## Client State (Zustand)
+
+React Query handles server state. Zustand handles **transient client UI state** — state that doesn't belong in React Query, nuqs, or react-hook-form.
+
+### Mental Model
+
+```
+Server state    → React Query
+URL state       → nuqs
+Form state      → react-hook-form
+Client UI state → Zustand
+```
+
+### When to Use Zustand
+
+- Multi-step form wizard progress (work order builder)
+- UI state (sidebar collapsed, active filters, panel open/closed)
+- Cross-component state that doesn't need URL persistence
+- Shopping cart / work order builder before submission
+
+### When NOT to Use Zustand
+
+- **Server data** (customers, work orders, inventory) → use React Query
+- **URL-synced state** (pagination, search, tabs) → use nuqs
+- **Form field values** (inputs, validation) → use react-hook-form
+- **Auth/session** → use Supabase SSR
+
+### Store Conventions
+
+All stores live in `src/lib/stores/` and must follow this pattern:
+
+```tsx
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
+
+// Separate State and Actions interfaces
+interface MyState { /* ... */ }
+interface MyActions { /* ... */ }
+type MyStore = MyState & MyActions;
+
+export const useMyStore = create<MyStore>()(
+  devtools(
+    persist(
+      immer((set, get) => ({
+        // State
+        // Actions (use immer draft: s.field = value)
+      })),
+      { name: 'tolom-my-store', partialize: (state) => ({ /* only durable state */ }) },
+    ),
+    { name: 'MyStore' }, // DevTools label
+  ),
+);
+
+// Selector hooks for granular re-renders
+export const useMyThing = () => useMyStore((s) => s.thing);
+```
+
+### Required Middleware
+
+| Middleware | Purpose | Required |
+|-----------|---------|----------|
+| `devtools` | Redux DevTools integration | Yes |
+| `immer` | Immutable updates with mutable syntax | Yes |
+| `persist` | localStorage persistence | When state survives page refresh |
+
+### Selector Hooks — Always Use Them
+
+Every store MUST export selector hooks. Components must never destructure the full store.
+
+```tsx
+// ❌ WRONG — re-renders on ANY store change
+const { sidebarCollapsed, activeFilters, toggleSidebar } = useUiStore();
+
+// ✅ CORRECT — only re-renders when sidebarCollapsed changes
+const sidebarCollapsed = useSidebarCollapsed();
+
+// ✅ CORRECT — only re-renders when this specific filter changes
+const statusFilter = useFilter('status');
+```
+
+### Current Stores
+
+| Store | File | Persisted | Purpose |
+|-------|------|-----------|---------|
+| `useUiStore` | `src/lib/stores/ui-store.ts` | Sidebar only | Sidebar collapsed, active filters |
+| `useWorkOrderStore` | `src/lib/stores/work-order-store.ts` | All state | Multi-step wizard, vehicle selection, line items, notes |
+
+### Available Selector Hooks
+
+| Hook | Store | Returns |
+|------|-------|---------|
+| `useSidebarCollapsed` | ui | `boolean` |
+| `useActiveFilters` | ui | `Record<string, string>` |
+| `useFilter(key)` | ui | `string \| undefined` |
+| `useWorkOrderStep` | work-order | `WorkOrderStep` |
+| `useWorkOrderItems` | work-order | `WorkOrderItem[]` |
+| `useWorkOrderVehicle` | work-order | `{ vehicleId, customerId }` |
+| `useWorkOrderTotals` | work-order | `{ itemCount, totalAmount }` |
+
+### Adding a New Store
+
+1. Create `src/lib/stores/<name>-store.ts`
+2. Follow the middleware stack: `devtools > persist > immer`
+3. Separate `State` and `Actions` interfaces
+4. Export selector hooks for every frequently-accessed field
+5. Export from `src/lib/stores/index.ts`
+6. Add tests in `<name>-store.test.ts`
+
 ## Database & Multi-Tenancy Rules
 
 - Every table MUST include `organization_id`, `branch_id`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`.

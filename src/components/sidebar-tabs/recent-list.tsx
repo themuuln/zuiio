@@ -39,10 +39,7 @@ export function RecentList({
           </Typography.Muted>
         )}
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-10 animate-pulse rounded-md bg-muted/50"
-          />
+          <div key={i} className="h-10 animate-pulse rounded-md bg-muted/50" />
         ))}
       </div>
     );

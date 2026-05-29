@@ -58,8 +58,14 @@ export function MechanicTrendChart({
         <CardTitle className="text-sm font-medium">Weekly Trend</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={config} className="aspect-auto h-[200px] w-full">
-          <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+        <ChartContainer
+          config={config}
+          className="aspect-auto h-[200px] w-full"
+        >
+          <BarChart
+            data={data}
+            margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+          >
             <CartesianGrid
               strokeDasharray="3 3"
               className="stroke-border"
@@ -81,13 +87,8 @@ export function MechanicTrendChart({
               tickLine={false}
               width={35}
             />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent />}
-            />
-            <ChartLegend
-              content={<ChartLegendContent />}
-            />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+            <ChartLegend content={<ChartLegendContent />} />
             <Bar
               dataKey="revenue"
               name="Revenue"
@@ -121,10 +122,12 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
   } = data;
 
   const totalStatusCount = workOrderStatusDistribution.reduce(
-    (sum, s) => sum + s.count, 0,
+    (sum, s) => sum + s.count,
+    0,
   );
   const totalServiceRevenue = serviceCategoryBreakdown.reduce(
-    (sum, c) => sum + c.revenue, 0,
+    (sum, c) => sum + c.revenue,
+    0,
   );
 
   const revenueConfig = {
@@ -163,15 +166,36 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
             <CardTitle>{t("dashboard.revenueTrend")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={revenueConfig} className="aspect-auto h-[320px] w-full">
+            <ChartContainer
+              config={revenueConfig}
+              className="aspect-auto h-[320px] w-full"
+            >
               <AreaChart data={revenueTrend}>
                 <defs>
-                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS[0]} stopOpacity={0.25} />
-                    <stop offset="95%" stopColor={CHART_COLORS[0]} stopOpacity={0} />
+                  <linearGradient
+                    id="revenueGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="5%"
+                      stopColor={CHART_COLORS[0]}
+                      stopOpacity={0.25}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={CHART_COLORS[0]}
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" strokeOpacity={0.5} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  className="stroke-border"
+                  strokeOpacity={0.5}
+                />
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatDate}
@@ -189,7 +213,10 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                   tickLine={false}
                   width={50}
                 />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent />}
+                />
                 <Area
                   type="monotone"
                   dataKey="revenue"
@@ -208,9 +235,15 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
             <CardTitle>{t("dashboard.workOrderStatus")}</CardTitle>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
-            <ChartContainer config={statusChartConfig} className="mx-auto aspect-square h-[320px]">
+            <ChartContainer
+              config={statusChartConfig}
+              className="mx-auto aspect-square h-[320px]"
+            >
               <PieChart>
-                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent />}
+                />
                 <Pie
                   data={workOrderStatusDistribution}
                   cx="50%"
@@ -228,9 +261,7 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                     />
                   ))}
                 </Pie>
-                <ChartLegend
-                  content={<ChartLegendContent />}
-                />
+                <ChartLegend content={<ChartLegendContent />} />
               </PieChart>
             </ChartContainer>
           </CardContent>
@@ -246,7 +277,9 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
           <CardContent>
             {topServices.length === 0 ? (
               <div className="flex h-72 items-center justify-center">
-                <Typography.Muted className="text-sm text-muted-foreground">{t("common.noData")}</Typography.Muted>
+                <Typography.Muted className="text-sm text-muted-foreground">
+                  {t("common.noData")}
+                </Typography.Muted>
               </div>
             ) : (
               <ChartContainer
@@ -258,7 +291,12 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                   layout="vertical"
                   margin={{ left: 20, right: 20 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" strokeOpacity={0.5} horizontal={false} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    className="stroke-border"
+                    strokeOpacity={0.5}
+                    horizontal={false}
+                  />
                   <XAxis
                     type="number"
                     tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
@@ -276,7 +314,10 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                     axisLine={false}
                     tickLine={false}
                   />
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
                   <Bar
                     dataKey="revenue"
                     name={t("reports.revenue")}
@@ -284,7 +325,10 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                     barSize={20}
                   >
                     {topServices.map((item, i) => (
-                      <Cell key={item.name} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                      <Cell
+                        key={item.name}
+                        fill={CHART_COLORS[i % CHART_COLORS.length]}
+                      />
                     ))}
                   </Bar>
                 </BarChart>
@@ -300,15 +344,25 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
           <CardContent>
             {technicianPerformance.length === 0 ? (
               <div className="flex h-72 items-center justify-center">
-                <Typography.Muted className="text-sm text-muted-foreground">{t("common.noData")}</Typography.Muted>
+                <Typography.Muted className="text-sm text-muted-foreground">
+                  {t("common.noData")}
+                </Typography.Muted>
               </div>
             ) : (
-              <ChartContainer config={techConfig} className="aspect-auto h-[340px] w-full">
+              <ChartContainer
+                config={techConfig}
+                className="aspect-auto h-[340px] w-full"
+              >
                 <BarChart
                   data={technicianPerformance}
                   margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" strokeOpacity={0.5} vertical={false} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    className="stroke-border"
+                    strokeOpacity={0.5}
+                    vertical={false}
+                  />
                   <XAxis
                     dataKey="name"
                     tick={{ fontSize: 12 }}
@@ -324,10 +378,11 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                     tickLine={false}
                     width={50}
                   />
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                  <ChartLegend
-                    content={<ChartLegendContent />}
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
                   />
+                  <ChartLegend content={<ChartLegendContent />} />
                   <Bar
                     dataKey="revenue"
                     name={t("reports.revenue")}
@@ -358,12 +413,20 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
           <CardContent className="flex items-center justify-center">
             {serviceCategoryBreakdown.length === 0 ? (
               <div className="flex h-72 items-center justify-center">
-                <Typography.Muted className="text-sm text-muted-foreground">{t("common.noData")}</Typography.Muted>
+                <Typography.Muted className="text-sm text-muted-foreground">
+                  {t("common.noData")}
+                </Typography.Muted>
               </div>
             ) : (
-              <ChartContainer config={categoryChartConfig} className="mx-auto aspect-square h-[340px]">
+              <ChartContainer
+                config={categoryChartConfig}
+                className="mx-auto aspect-square h-[340px]"
+              >
                 <PieChart>
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
                   <Pie
                     data={serviceCategoryBreakdown}
                     cx="50%"
@@ -380,12 +443,13 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                     labelLine={{ stroke: "#888", strokeWidth: 1 }}
                   >
                     {serviceCategoryBreakdown.map((item, i) => (
-                      <Cell key={item.category} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                      <Cell
+                        key={item.category}
+                        fill={CHART_COLORS[i % CHART_COLORS.length]}
+                      />
                     ))}
                   </Pie>
-                  <ChartLegend
-                    content={<ChartLegendContent />}
-                  />
+                  <ChartLegend content={<ChartLegendContent />} />
                 </PieChart>
               </ChartContainer>
             )}
@@ -399,21 +463,33 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
           <CardContent>
             {customerAcquisitionTrend.length === 0 ? (
               <div className="flex h-72 items-center justify-center">
-                <Typography.Muted className="text-sm text-muted-foreground">{t("common.noData")}</Typography.Muted>
+                <Typography.Muted className="text-sm text-muted-foreground">
+                  {t("common.noData")}
+                </Typography.Muted>
               </div>
             ) : (
-              <ChartContainer config={customerConfig} className="aspect-auto h-[340px] w-full">
+              <ChartContainer
+                config={customerConfig}
+                className="aspect-auto h-[340px] w-full"
+              >
                 <LineChart
                   data={customerAcquisitionTrend}
                   margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" strokeOpacity={0.5} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    className="stroke-border"
+                    strokeOpacity={0.5}
+                  />
                   <XAxis
                     dataKey="month"
                     tickFormatter={(m: string) => {
                       const [year, month] = m.split("-");
                       const d = new Date(Number(year), Number(month) - 1);
-                      return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+                      return d.toLocaleDateString("en-US", {
+                        month: "short",
+                        year: "2-digit",
+                      });
                     }}
                     tick={{ fontSize: 12 }}
                     className="text-muted-foreground"
@@ -428,7 +504,10 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                     tickLine={false}
                     width={30}
                   />
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
                   <Line
                     type="monotone"
                     dataKey="newCustomers"

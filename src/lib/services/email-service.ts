@@ -199,30 +199,44 @@ function renderInvoiceEmailHtml(
                 <tr>
                   <td align="right">
                     <table cellpadding="0" cellspacing="0" style="min-width:220px;">
-                      ${servicesTotal > 0 ? `
+                      ${
+                        servicesTotal > 0
+                          ? `
                       <tr>
                         <td style="padding:4px 0;font-size:13px;color:#6b7280;">Үйлчилгээний дүн</td>
                         <td style="padding:4px 0 4px 24px;font-size:13px;font-weight:500;color:#111827;text-align:right;">${formatCurrency(servicesTotal)}</td>
-                      </tr>` : ""}
-                      ${partsTotal > 0 ? `
+                      </tr>`
+                          : ""
+                      }
+                      ${
+                        partsTotal > 0
+                          ? `
                       <tr>
                         <td style="padding:4px 0;font-size:13px;color:#6b7280;">Сэлбэгийн дүн</td>
                         <td style="padding:4px 0 4px 24px;font-size:13px;font-weight:500;color:#111827;text-align:right;">${formatCurrency(partsTotal)}</td>
-                      </tr>` : ""}
+                      </tr>`
+                          : ""
+                      }
                       <tr>
                         <td style="padding:4px 0;font-size:13px;color:#6b7280;">Нийт дүн</td>
                         <td style="padding:4px 0 4px 24px;font-size:13px;font-weight:500;color:#111827;text-align:right;">${formatCurrency(Number(invoice.subtotal))}</td>
                       </tr>
-                      ${Number(invoice.discount_total) > 0 ? `
+                      ${
+                        Number(invoice.discount_total) > 0
+                          ? `
                       <tr>
                         <td style="padding:4px 0;font-size:13px;color:#6b7280;">Хямдрал</td>
                         <td style="padding:4px 0 4px 24px;font-size:13px;font-weight:500;color:#dc2626;text-align:right;">-${formatCurrency(Number(invoice.discount_total))}</td>
-                      </tr>` : ""}
+                      </tr>`
+                          : ""
+                      }
                       <tr>
                         <td style="padding:8px 0 4px;border-top:2px solid #e5e7eb;font-size:16px;font-weight:700;color:#111827;">Төлөх дүн</td>
                         <td style="padding:8px 0 4px 24px;border-top:2px solid #e5e7eb;font-size:16px;font-weight:700;color:#111827;text-align:right;">${formatCurrency(Number(invoice.total))}</td>
                       </tr>
-                      ${Number(invoice.amount_paid) > 0 ? `
+                      ${
+                        Number(invoice.amount_paid) > 0
+                          ? `
                       <tr>
                         <td style="padding:4px 0;font-size:13px;color:#16a34a;">Төлөгдсөн</td>
                         <td style="padding:4px 0 4px 24px;font-size:13px;font-weight:500;color:#16a34a;text-align:right;">-${formatCurrency(Number(invoice.amount_paid))}</td>
@@ -230,7 +244,9 @@ function renderInvoiceEmailHtml(
                       <tr>
                         <td style="padding:4px 0;border-top:1px solid #e5e7eb;font-size:14px;font-weight:600;color:#111827;">Үлдэгдэл</td>
                         <td style="padding:4px 0 4px 24px;border-top:1px solid #e5e7eb;font-size:14px;font-weight:600;color:#111827;text-align:right;">${formatCurrency(Number(invoice.balance_due))}</td>
-                      </tr>` : ""}
+                      </tr>`
+                          : ""
+                      }
                     </table>
                   </td>
                 </tr>
@@ -250,20 +266,28 @@ function renderInvoiceEmailHtml(
               </table>
             </td>
           </tr>
-          ${invoice.notes ? `
+          ${
+            invoice.notes
+              ? `
           <tr>
             <td style="background-color:#ffffff;padding:0 32px 24px;">
               <Typography.H3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Тэмдэглэл</Typography.H3>
               <Typography.Text style="margin:0;font-size:13px;color:#6b7280;white-space:pre-wrap;">${invoice.notes}</Typography.Text>
             </td>
-          </tr>` : ""}
-          ${invoice.terms ? `
+          </tr>`
+              : ""
+          }
+          ${
+            invoice.terms
+              ? `
           <tr>
             <td style="background-color:#ffffff;padding:0 32px 24px;">
               <Typography.H3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Нөхцөл</Typography.H3>
               <Typography.Text style="margin:0;font-size:13px;color:#6b7280;">${invoice.terms}</Typography.Text>
             </td>
-          </tr>` : ""}
+          </tr>`
+              : ""
+          }
           <tr>
             <td style="background-color:#ffffff;border-radius:0 0 12px 12px;padding:24px 32px 32px;text-align:center;">
               <Typography.Text style="margin:0;font-size:12px;color:#9ca3af;">

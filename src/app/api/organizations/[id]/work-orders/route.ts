@@ -3,12 +3,16 @@ import { createRouteHandler } from "@/lib/api-handler";
 import type { WorkOrderStatus } from "@/lib/types";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
-import { createWorkOrder, getWorkOrders } from "@/lib/services/work-order-service";
+import {
+  createWorkOrder,
+  getWorkOrders,
+} from "@/lib/services/work-order-service";
 
 export const GET = createRouteHandler(async ({ request, orgId }) => {
   const { searchParams } = new URL(request.url);
   const filters = {
-    status: (searchParams.get("status") as unknown as WorkOrderStatus) ?? undefined,
+    status:
+      (searchParams.get("status") as unknown as WorkOrderStatus) ?? undefined,
     mechanic_id: searchParams.get("mechanic") ?? undefined,
     date: searchParams.get("date") ?? undefined,
     search: searchParams.get("q") ?? undefined,
@@ -25,7 +29,14 @@ export const POST = createRouteHandler(async ({ request, orgId }) => {
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
     );
   }
   const body = await request.json();

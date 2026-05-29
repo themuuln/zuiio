@@ -19,8 +19,8 @@ export function EmptyDashboardState({ onRetry }: { onRetry: () => void }) {
         </EmptyMedia>
         <EmptyTitle>Welcome to TOLOM</EmptyTitle>
         <EmptyDescription>
-          Your garage&apos;s command center. Start by creating your first
-          work order; revenue, customer stats, and trends will appear here
+          Your garage&apos;s command center. Start by creating your first work
+          order; revenue, customer stats, and trends will appear here
           automatically as you complete jobs.
         </EmptyDescription>
       </EmptyHeader>

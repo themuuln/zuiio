@@ -175,9 +175,7 @@ export default function VehicleModelsPage() {
           year_start: formData.year_start
             ? parseInt(formData.year_start, 10)
             : null,
-          year_end: formData.year_end
-            ? parseInt(formData.year_end, 10)
-            : null,
+          year_end: formData.year_end ? parseInt(formData.year_end, 10) : null,
           engine: formData.engine || null,
           body_type: formData.body_type || null,
         }),
@@ -201,9 +199,7 @@ export default function VehicleModelsPage() {
         year_start: formData.year_start
           ? parseInt(formData.year_start, 10)
           : null,
-        year_end: formData.year_end
-          ? parseInt(formData.year_end, 10)
-          : null,
+        year_end: formData.year_end ? parseInt(formData.year_end, 10) : null,
         engine: formData.engine || null,
         body_type: formData.body_type || null,
       };
@@ -447,7 +443,9 @@ export default function VehicleModelsPage() {
     <div className="flex flex-col gap-6">
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex flex-col gap-1">
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">{t("title")}</Typography.H1>
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
+          {t("title")}
+        </Typography.H1>
         <Typography.Muted className="text-muted-foreground">
           {t("subtitle")}
         </Typography.Muted>
@@ -461,7 +459,10 @@ export default function VehicleModelsPage() {
         }}
         stats={
           <span>
-            {t("modelCount", { count: tree.reduce((s, m) => s + m.models.length, 0) })} · {t("variantCount", { count: totalCount })}
+            {t("modelCount", {
+              count: tree.reduce((s, m) => s + m.models.length, 0),
+            })}{" "}
+            · {t("variantCount", { count: totalCount })}
           </span>
         }
         actions={
@@ -501,13 +502,14 @@ export default function VehicleModelsPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium">
-                  {t("makeRequired")} <span className="text-destructive">*</span>
+                  {t("makeRequired")}{" "}
+                  <span className="text-destructive">*</span>
                 </label>
                 <Input
                   placeholder={t("makePlaceholder")}
                   value={editForm.make}
                   onChange={(e) =>
-                    setEditForm(prev => ({ ...prev, make: e.target.value }))
+                    setEditForm((prev) => ({ ...prev, make: e.target.value }))
                   }
                   className="h-11"
                   data-1p-ignore
@@ -517,13 +519,14 @@ export default function VehicleModelsPage() {
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium">
-                  {t("modelRequired")} <span className="text-destructive">*</span>
+                  {t("modelRequired")}{" "}
+                  <span className="text-destructive">*</span>
                 </label>
                 <Input
                   placeholder={t("modelPlaceholder")}
                   value={editForm.model}
                   onChange={(e) =>
-                    setEditForm(prev => ({ ...prev, model: e.target.value }))
+                    setEditForm((prev) => ({ ...prev, model: e.target.value }))
                   }
                   className="h-11"
                   data-1p-ignore
@@ -551,12 +554,17 @@ export default function VehicleModelsPage() {
             {showDetails && (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-top-1 duration-200">
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium">{t("generation")}</label>
+                  <label className="text-sm font-medium">
+                    {t("generation")}
+                  </label>
                   <Input
                     placeholder={t("generationPlaceholder")}
                     value={editForm.generation}
                     onChange={(e) =>
-                      setEditForm(prev => ({ ...prev, generation: e.target.value }))
+                      setEditForm((prev) => ({
+                        ...prev,
+                        generation: e.target.value,
+                      }))
                     }
                     className="h-11"
                   />
@@ -570,7 +578,10 @@ export default function VehicleModelsPage() {
                     placeholder="2014"
                     value={editForm.year_start}
                     onChange={(e) =>
-                      setEditForm(prev => ({ ...prev, year_start: e.target.value }))
+                      setEditForm((prev) => ({
+                        ...prev,
+                        year_start: e.target.value,
+                      }))
                     }
                     className="h-11"
                   />
@@ -584,7 +595,10 @@ export default function VehicleModelsPage() {
                     placeholder="2020"
                     value={editForm.year_end}
                     onChange={(e) =>
-                      setEditForm(prev => ({ ...prev, year_end: e.target.value }))
+                      setEditForm((prev) => ({
+                        ...prev,
+                        year_end: e.target.value,
+                      }))
                     }
                     className="h-11"
                   />
@@ -595,7 +609,10 @@ export default function VehicleModelsPage() {
                     placeholder={t("enginePlaceholder")}
                     value={editForm.engine}
                     onChange={(e) =>
-                      setEditForm(prev => ({ ...prev, engine: e.target.value }))
+                      setEditForm((prev) => ({
+                        ...prev,
+                        engine: e.target.value,
+                      }))
                     }
                     className="h-11"
                   />
@@ -605,7 +622,10 @@ export default function VehicleModelsPage() {
                   <select
                     value={editForm.body_type}
                     onChange={(e) =>
-                      setEditForm(prev => ({ ...prev, body_type: e.target.value }))
+                      setEditForm((prev) => ({
+                        ...prev,
+                        body_type: e.target.value,
+                      }))
                     }
                     className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
@@ -624,7 +644,9 @@ export default function VehicleModelsPage() {
               <Button
                 onClick={editingId ? () => handleUpdate(editingId) : handleAdd}
                 disabled={
-                  (editingId ? updateMutation.isPending : addMutation.isPending) ||
+                  (editingId
+                    ? updateMutation.isPending
+                    : addMutation.isPending) ||
                   !editForm.make.trim() ||
                   !editForm.model.trim()
                 }
@@ -667,7 +689,9 @@ export default function VehicleModelsPage() {
             </div>
           ) : error ? (
             <div className="flex flex-col items-center gap-4 py-12">
-              <Typography.Text className="text-destructive">{error}</Typography.Text>
+              <Typography.Text className="text-destructive">
+                {error}
+              </Typography.Text>
               <Button onClick={() => refetch()}>Retry</Button>
             </div>
           ) : tree.length === 0 ? (
@@ -677,13 +701,9 @@ export default function VehicleModelsPage() {
                   <Car />
                 </EmptyMedia>
                 <EmptyTitle>
-                  {search
-                    ? t("noModelsMatch")
-                    : t("noModels")}
+                  {search ? t("noModelsMatch") : t("noModels")}
                 </EmptyTitle>
-                <EmptyDescription>
-                  {t("noModelsDesc") || ""}
-                </EmptyDescription>
+                <EmptyDescription>{t("noModelsDesc") || ""}</EmptyDescription>
               </EmptyHeader>
               {!search && (
                 <EmptyContent>
@@ -743,10 +763,7 @@ export default function VehicleModelsPage() {
                               {/* Model header */}
                               <Button
                                 onClick={() =>
-                                  toggleModel(
-                                    makeGroup.make,
-                                    modelGroup.model,
-                                  )
+                                  toggleModel(makeGroup.make, modelGroup.model)
                                 }
                                 variant="ghost"
                                 className="w-full justify-start gap-2 pl-10 pr-4 py-2.5"
@@ -760,7 +777,9 @@ export default function VehicleModelsPage() {
                                   {modelGroup.model}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                  {t("variantCount", { count: modelGroup.variants.length })}
+                                  {t("variantCount", {
+                                    count: modelGroup.variants.length,
+                                  })}
                                 </span>
                               </Button>
 
@@ -777,7 +796,9 @@ export default function VehicleModelsPage() {
                                           {variantLabel(v) ? (
                                             <>
                                               {variantLabel(v)}
-                                              <span className="mx-1.5 text-muted-foreground/40">·</span>
+                                              <span className="mx-1.5 text-muted-foreground/40">
+                                                ·
+                                              </span>
                                               {variantShortLabel(v)}
                                             </>
                                           ) : (

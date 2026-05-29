@@ -78,8 +78,6 @@ export default function MembersPage() {
     roles,
   } = pageData;
   const [showInviteForm, setShowInviteForm] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [selectedRoleId, setSelectedRoleId] = useState("");
   const [sending, setSending] = useState(false);
 
   const loadMembers = useCallback(async () => {
@@ -154,7 +152,9 @@ export default function MembersPage() {
         // Default to first non-admin role, fallback to first role
         const defaultRole =
           body.data.find((r) => r.name === "Mechanic") ?? body.data[0];
-        if (defaultRole) setSelectedRoleId(defaultRole.id);
+        if (defaultRole) {
+          dispatchPageData({ type: "SET_ROLES", roles: body.data });
+        }
       }
     } catch {
       toast.error("Failed to load roles");
@@ -175,9 +175,8 @@ export default function MembersPage() {
     return profile.organizationId ?? profile.data?.organizationId ?? "";
   };
 
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inviteEmail.trim()) return;
+  const handleInvite = async (data: { email: string; roleId: string }) => {
+    if (!data.email.trim()) return;
 
     setSending(true);
     try {
@@ -186,8 +185,8 @@ export default function MembersPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: inviteEmail.trim(),
-          roleId: selectedRoleId || undefined,
+          email: data.email.trim(),
+          roleId: data.roleId || undefined,
         }),
       });
 
@@ -197,7 +196,6 @@ export default function MembersPage() {
       }
 
       toast.success(t("inviteSent"));
-      setInviteEmail("");
       setShowInviteForm(false);
       loadInvites();
     } catch (err) {
@@ -351,7 +349,9 @@ export default function MembersPage() {
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("title")}
           </Typography.H1>
-          <Typography.Muted className="text-muted-foreground">{t("subtitle")}</Typography.Muted>
+          <Typography.Muted className="text-muted-foreground">
+            {t("subtitle")}
+          </Typography.Muted>
         </div>
         <Button onClick={() => setShowInviteForm(true)}>
           <UserPlus className="mr-2 size-4" />
@@ -361,14 +361,11 @@ export default function MembersPage() {
 
       {showInviteForm && (
         <InviteForm
-          email={inviteEmail}
-          onEmailChange={setInviteEmail}
           sending={sending}
           onSubmit={handleInvite}
           onClose={() => setShowInviteForm(false)}
           roles={roles}
-          selectedRoleId={selectedRoleId}
-          onRoleChange={setSelectedRoleId}
+          defaultRoleId={roles[0]?.id ?? ""}
           t={t}
         />
       )}

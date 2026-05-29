@@ -14,7 +14,8 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
     .order("created_at", { ascending: false })
     .limit(3);
 
-  if (serviceCatalogId) query = query.eq("service_catalog_id", serviceCatalogId);
+  if (serviceCatalogId)
+    query = query.eq("service_catalog_id", serviceCatalogId);
   if (vehicleMake) query = query.eq("vehicle_make", vehicleMake);
   if (vehicleModel) query = query.eq("vehicle_model", vehicleModel);
 

@@ -37,7 +37,11 @@ describe("PriceDisplay", () => {
   });
 
   it("applies custom className", () => {
-    const { container } = render(<PriceDisplay amount={100} className="custom-class" />);
-    expect(container.firstElementChild?.classList.contains("custom-class")).toBe(true);
+    const { container } = render(
+      <PriceDisplay amount={100} className="custom-class" />,
+    );
+    expect(
+      container.firstElementChild?.classList.contains("custom-class"),
+    ).toBe(true);
   });
 });

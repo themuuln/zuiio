@@ -10,7 +10,11 @@ interface UnsavedWarningProps {
   onKeepEditing: () => void;
 }
 
-export function UnsavedWarning({ show, onDiscard, onKeepEditing }: UnsavedWarningProps) {
+export function UnsavedWarning({
+  show,
+  onDiscard,
+  onKeepEditing,
+}: UnsavedWarningProps) {
   if (!show) return null;
 
   return (
@@ -18,7 +22,9 @@ export function UnsavedWarning({ show, onDiscard, onKeepEditing }: UnsavedWarnin
       <div className="mx-4 flex w-full max-w-sm flex-col items-center gap-4 rounded-lg border border-border bg-card p-6 shadow-lg">
         <AlertTriangle className="size-8 text-amber-500" />
         <div className="text-center">
-          <Typography.Text className="font-semibold">You have unsaved changes</Typography.Text>
+          <Typography.Text className="font-semibold">
+            You have unsaved changes
+          </Typography.Text>
           <Typography.Muted className="mt-1 text-sm text-muted-foreground">
             Are you sure you want to close? Your changes will be lost.
           </Typography.Muted>
@@ -32,11 +38,7 @@ export function UnsavedWarning({ show, onDiscard, onKeepEditing }: UnsavedWarnin
           >
             Discard
           </Button>
-          <Button
-            size="sm"
-            onClick={onKeepEditing}
-            className="h-8 text-xs"
-          >
+          <Button size="sm" onClick={onKeepEditing} className="h-8 text-xs">
             Keep editing
           </Button>
         </div>

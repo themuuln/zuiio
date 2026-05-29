@@ -21,6 +21,10 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     setTabs(SETTINGS_TABS);
     setActiveTab("general");
+
+    return () => {
+      setTabs([]);
+    };
   }, [setTabs, setActiveTab]);
 
   return (

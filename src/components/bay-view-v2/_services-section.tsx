@@ -65,9 +65,7 @@ export function ServicesSection({
             {t("services")}
           </span>
           {(services?.length ?? 0) > 0 && (
-            <Badge variant="outline">
-              {services?.length}
-            </Badge>
+            <Badge variant="outline">{services?.length}</Badge>
           )}
         </div>
       </div>
@@ -88,9 +86,7 @@ export function ServicesSection({
           <div className="flex items-center gap-2 px-1 mb-0.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
             <div className="flex-1">{t("service")}</div>
             <div className="w-14 text-right">{t("qty")}</div>
-            <div className="w-20 text-right">
-              {t("price")}
-            </div>
+            <div className="w-20 text-right">{t("price")}</div>
             <div className="w-7" />
           </div>
           <div className="flex flex-col gap-px">
@@ -113,17 +109,11 @@ export function ServicesSection({
                       type="number"
                       className="w-20 h-7 text-right text-xs font-semibold tabular-nums rounded-sm border-primary/60 bg-background px-1 [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       value={editingPriceVal}
-                      onChange={(e) =>
-                        onEditPriceChange(e.target.value)
-                      }
-                      onBlur={() =>
-                        onEditPriceSave(svc.id)
-                      }
+                      onChange={(e) => onEditPriceChange(e.target.value)}
+                      onBlur={() => onEditPriceSave(svc.id)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter")
-                          onEditPriceSave(svc.id);
-                        if (e.key === "Escape")
-                          onEditPriceCancel();
+                        if (e.key === "Enter") onEditPriceSave(svc.id);
+                        if (e.key === "Escape") onEditPriceCancel();
                       }}
                       autoFocus
                     />
@@ -132,7 +122,10 @@ export function ServicesSection({
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        onEditPriceStart(svc.id, String(Number(svc.final_price)));
+                        onEditPriceStart(
+                          svc.id,
+                          String(Number(svc.final_price)),
+                        );
                       }}
                       className="font-semibold tabular-nums h-auto px-1 -mx-1 rounded-sm"
                     >
@@ -192,9 +185,7 @@ export function ServicesSection({
             <div className="absolute bottom-full left-0 right-0 z-10 mb-1 border rounded-lg bg-background shadow-lg max-h-40 overflow-y-auto">
               {catalog
                 .filter((s) =>
-                  s.name
-                    .toLowerCase()
-                    .includes(serviceSearch.toLowerCase()),
+                  s.name.toLowerCase().includes(serviceSearch.toLowerCase()),
                 )
                 .slice(0, 8)
                 .map((svc) => {
@@ -221,18 +212,14 @@ export function ServicesSection({
                           <Loader2 className="size-3 animate-spin text-primary" />
                         )}
                         <span className="tabular-nums font-medium">
-                          {formatMNT(
-                            Number(svc.default_price),
-                          )}
+                          {formatMNT(Number(svc.default_price))}
                         </span>
                       </span>
                     </Button>
                   );
                 })}
               {catalog.filter((s) =>
-                s.name
-                  .toLowerCase()
-                  .includes(serviceSearch.toLowerCase()),
+                s.name.toLowerCase().includes(serviceSearch.toLowerCase()),
               ).length === 0 && (
                 <div className="p-3 text-xs text-muted-foreground text-center">
                   {t("noMatchService")}
@@ -255,9 +242,7 @@ export function ServicesSection({
         ) : (
           <Plus className="size-4" />
         )}
-        {addingServiceId
-          ? "Adding service..."
-          : t("addService")}
+        {addingServiceId ? "Adding service..." : t("addService")}
       </Button>
     </section>
   );

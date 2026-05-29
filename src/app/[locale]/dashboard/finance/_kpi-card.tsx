@@ -36,7 +36,9 @@ export function KpiCard({
               {value}
             </div>
             {subtitle && (
-              <Typography.Muted className="mt-1 text-xs text-muted-foreground">{subtitle}</Typography.Muted>
+              <Typography.Muted className="mt-1 text-xs text-muted-foreground">
+                {subtitle}
+              </Typography.Muted>
             )}
           </>
         )}

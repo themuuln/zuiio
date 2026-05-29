@@ -87,6 +87,17 @@ Phase 1 is only the tablet-first startup CRM for auto service shops.
 - [ ] Save pricing context by vehicle make / model when possible
 - [ ] Save work order, mechanic, quantity, discount, and final sold price history
 
+## Infrastructure & Tooling
+
+- [ ] Add Sentry for error monitoring (production)
+- [ ] Add Inngest for background jobs:
+  - [ ] Service reminder emails
+  - [ ] Auto-close stale work orders
+  - [ ] Monthly report generation
+  - [ ] Invoice follow-up reminders
+- [ ] Add Playwright E2E tests for critical paths
+- [ ] Add Zustand for client-only state (UI state, multi-step form progress)
+
 ## Not In Phase 1
 
 - [ ] Do not build payments yet

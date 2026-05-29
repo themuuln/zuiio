@@ -12,10 +12,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { formatMNT } from "@/lib/utils";
-import { transliterateMongolianPlate } from "@/lib/form-validation";
-import { formatPlateInput } from "@/lib/form-ux";
-
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -23,16 +21,52 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-
-import { ColorSelect } from "@/components/vehicles/color-select";
 import { Typography } from "@/components/ui/typography";
+import { ColorSelect } from "@/components/vehicles/color-select";
+import { formatPlateInput } from "@/lib/form-ux";
+import {
+  isValidMongolianPhone,
+  transliterateMongolianPlate,
+} from "@/lib/form-validation";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
+import { formatMNT } from "@/lib/utils";
+
+// ── Schema ───────────────────────────────────────────────────
+
+const vehicleRegistrationSchema = z.object({
+  make: z.string().min(1, "Brand is required"),
+  model: z.string().min(1, "Model is required"),
+  year: z.string().optional(),
+  color: z.string().optional(),
+  vin: z.string().optional(),
+  engine: z.string().optional(),
+  odometer: z.string().optional(),
+  custFirstName: z.string().optional(),
+  custLastName: z.string().optional(),
+  custPhone: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || isValidMongolianPhone(val),
+      "Enter a valid Mongolian phone number (8 digits)",
+    ),
+  complaint: z.string().optional(),
+});
+
+type VehicleRegistrationFormValues = z.infer<typeof vehicleRegistrationSchema>;
+
+// ── Types ──────────────────────────────────────────────────
 
 interface Props {
   open: boolean;
@@ -216,6 +250,8 @@ function resolveQueueIds(
   };
 }
 
+// ── Component ──────────────────────────────────────────────
+
 export function VehicleRegistrationDialog({
   open,
   onOpenChange,
@@ -229,17 +265,6 @@ export function VehicleRegistrationDialog({
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [lookupDone, setLookupDone] = useState(false);
-
-  const [make, setMake] = useState("");
-  const [model, setModel] = useState("");
-  const [year, setYear] = useState("");
-  const [color, setColor] = useState("");
-  const [vin, setVin] = useState("");
-  const [engine, setEngine] = useState("");
-  const [odometer, setOdometer] = useState("");
-  const [custFirstName, setCustFirstName] = useState("");
-  const [custLastName, setCustLastName] = useState("");
-  const [custPhone, setCustPhone] = useState("");
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -262,13 +287,29 @@ export function VehicleRegistrationDialog({
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // ── Queue state ──────────────────────────────────────────────
-  const [complaint, setComplaint] = useState("");
   const [queueSaving, setQueueSaving] = useState(false);
   const [queueError, setQueueError] = useState<string | null>(null);
   const [savedVehicleId, setSavedVehicleId] = useState<string | null>(null);
   const [savedCustomerId, setSavedCustomerId] = useState<string | null>(null);
 
   const plateRef = useRef<HTMLInputElement>(null);
+
+  const form = useForm<VehicleRegistrationFormValues>({
+    resolver: zodResolver(vehicleRegistrationSchema),
+    defaultValues: {
+      make: "",
+      model: "",
+      year: "",
+      color: "",
+      vin: "",
+      engine: "",
+      odometer: "",
+      custFirstName: "",
+      custLastName: "",
+      custPhone: "",
+      complaint: "",
+    },
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -283,53 +324,54 @@ export function VehicleRegistrationDialog({
       setLookupLoading(false);
       setLookupError(null);
       setLookupDone(false);
-      setMake("");
-      setModel("");
-      setYear("");
-      setColor("");
-      setVin("");
-      setEngine("");
-      setOdometer("");
-      setCustFirstName("");
-      setCustLastName("");
-      setCustPhone("");
       setSaving(false);
       setSaveError(null);
       setSaveSuccess(false);
       setSaveMode(null);
-      setComplaint("");
       setQueueSaving(false);
       setQueueError(null);
       setSavedVehicleId(null);
       setSavedCustomerId(null);
       setSearchResults([]);
       setShowDropdown(false);
+      form.reset({
+        make: "",
+        model: "",
+        year: "",
+        color: "",
+        vin: "",
+        engine: "",
+        odometer: "",
+        custFirstName: "",
+        custLastName: "",
+        custPhone: "",
+        complaint: "",
+      });
     }
-  }, [open]);
+  }, [open, form]);
 
   // Populate form from lookup result
   useEffect(() => {
     if (lookupResult.vehicle) {
       const v = lookupResult.vehicle;
-      setMake(v.make);
-      setModel(v.model);
-      setYear(v.year?.toString() ?? "");
-      setColor(v.color ?? "");
-      setVin(v.vin ?? "");
-      setEngine(v.engine ?? "");
-      setOdometer(v.odometer?.toString() ?? "");
-      if (lookupResult.customer) {
-        const [first, ...rest] = (lookupResult.customer.first_name ?? "").split(
-          " ",
-        );
-        setCustFirstName(first);
-        setCustLastName(
-          rest.join(" ") || (lookupResult.customer.last_name ?? ""),
-        );
-        setCustPhone(lookupResult.customer.phone ?? "");
-      }
+      form.reset({
+        make: v.make,
+        model: v.model,
+        year: v.year?.toString() ?? "",
+        color: v.color ?? "",
+        vin: v.vin ?? "",
+        engine: v.engine ?? "",
+        odometer: v.odometer?.toString() ?? "",
+        custFirstName: lookupResult.customer?.first_name?.split(" ")[0] ?? "",
+        custLastName:
+          lookupResult.customer?.first_name?.split(" ").slice(1).join(" ") ||
+          lookupResult.customer?.last_name ||
+          "",
+        custPhone: lookupResult.customer?.phone ?? "",
+        complaint: "",
+      });
     }
-  }, [lookupResult]);
+  }, [lookupResult, form]);
 
   const handleLookup = useCallback(async () => {
     if (!plate.trim()) return;
@@ -393,64 +435,61 @@ export function VehicleRegistrationDialog({
     [handleLookup],
   );
 
-  const handleSave = useCallback(async () => {
-    if (!plate.trim() || !make.trim() || !model.trim()) return;
-    setSaving(true);
-    setSaveError(null);
-    setSaveSuccess(false);
+  const getSavePayload = useCallback(
+    (data: VehicleRegistrationFormValues) => ({
+      plateNumber: plate.trim().toUpperCase(),
+      make: data.make.trim(),
+      model: data.model.trim(),
+      year: data.year ? parseInt(data.year, 10) : undefined,
+      color: data.color?.trim() || undefined,
+      vin: data.vin?.trim() || undefined,
+      engine: data.engine?.trim() || undefined,
+      odometer: data.odometer ? parseInt(data.odometer, 10) : undefined,
+      customerFirstName: data.custFirstName?.trim() || undefined,
+      customerLastName: data.custLastName?.trim() || undefined,
+      customerPhone: data.custPhone?.trim() || undefined,
+    }),
+    [plate],
+  );
 
-    try {
-      const { quickRegisterVehicle, lookupVehicleByPlate } = await import(
-        "@/lib/services/bay-view-actions"
-      );
-      const saveResult = await quickRegisterVehicle({
-        plateNumber: plate.trim().toUpperCase(),
-        make: make.trim(),
-        model: model.trim(),
-        year: year ? parseInt(year, 10) : undefined,
-        color: color.trim() || undefined,
-        vin: vin.trim() || undefined,
-        engine: engine.trim() || undefined,
-        odometer: odometer ? parseInt(odometer, 10) : undefined,
-        customerFirstName: custFirstName.trim() || undefined,
-        customerLastName: custLastName.trim() || undefined,
-        customerPhone: custPhone.trim() || undefined,
-      });
+  const handleSave = useCallback(
+    async (data: VehicleRegistrationFormValues) => {
+      if (!plate.trim() || !data.make.trim() || !data.model.trim()) return;
+      setSaving(true);
+      setSaveError(null);
+      setSaveSuccess(false);
 
-      // Store returned IDs for queue use
-      setSavedVehicleId(saveResult.vehicle.id);
-      setSavedCustomerId(saveResult.customerId);
+      try {
+        const { quickRegisterVehicle, lookupVehicleByPlate } = await import(
+          "@/lib/services/bay-view-actions"
+        );
+        const saveResult = await quickRegisterVehicle(getSavePayload(data));
 
-      setSaveSuccess(true);
-      setSaveMode(saveResult.isUpdate ? "updated" : "created");
+        // Store returned IDs for queue use
+        setSavedVehicleId(saveResult.vehicle.id);
+        setSavedCustomerId(saveResult.customerId);
 
-      // Re-lookup to update timeline
-      const refreshResult = await lookupVehicleByPlate(
-        plate.trim().toUpperCase(),
-      );
-      setLookupResult(refreshResult);
-    } catch (err) {
-      setSaveError(
-        err instanceof Error ? err.message : "Failed to register vehicle",
-      );
-    } finally {
-      setSaving(false);
-    }
-  }, [
-    plate,
-    make,
-    model,
-    year,
-    color,
-    vin,
-    engine,
-    odometer,
-    custFirstName,
-    custLastName,
-    custPhone,
-  ]);
+        setSaveSuccess(true);
+        setSaveMode(saveResult.isUpdate ? "updated" : "created");
+
+        // Re-lookup to update timeline
+        const refreshResult = await lookupVehicleByPlate(
+          plate.trim().toUpperCase(),
+        );
+        setLookupResult(refreshResult);
+      } catch (err) {
+        setSaveError(
+          err instanceof Error ? err.message : "Failed to register vehicle",
+        );
+      } finally {
+        setSaving(false);
+      }
+    },
+    [plate, getSavePayload],
+  );
 
   const handleAddToQueue = useCallback(async () => {
+    const formData = form.getValues();
     const { vehicleId, customerId } = resolveQueueIds(
       savedVehicleId,
       savedCustomerId,
@@ -459,7 +498,7 @@ export function VehicleRegistrationDialog({
 
     if (!vehicleId) {
       // Vehicle hasn't been saved yet — save first
-      if (!plate.trim() || !make.trim() || !model.trim()) {
+      if (!plate.trim() || !formData.make.trim() || !formData.model.trim()) {
         setQueueError("Fill in vehicle info (plate, make, model) first.");
         return;
       }
@@ -467,19 +506,7 @@ export function VehicleRegistrationDialog({
         const { quickRegisterVehicle } = await import(
           "@/lib/services/bay-view-actions"
         );
-        const saveResult = await quickRegisterVehicle({
-          plateNumber: plate.trim().toUpperCase(),
-          make: make.trim(),
-          model: model.trim(),
-          year: year ? parseInt(year, 10) : undefined,
-          color: color.trim() || undefined,
-          vin: vin.trim() || undefined,
-          engine: engine.trim() || undefined,
-          odometer: odometer ? parseInt(odometer, 10) : undefined,
-          customerFirstName: custFirstName.trim() || undefined,
-          customerLastName: custLastName.trim() || undefined,
-          customerPhone: custPhone.trim() || undefined,
-        });
+        const saveResult = await quickRegisterVehicle(getSavePayload(formData));
         setSavedVehicleId(saveResult.vehicle.id);
         setSavedCustomerId(saveResult.customerId);
 
@@ -489,7 +516,7 @@ export function VehicleRegistrationDialog({
         await addVehicleToQueue({
           vehicleId: saveResult.vehicle.id,
           customerId: saveResult.customerId ?? "",
-          complaint: complaint.trim() || undefined,
+          complaint: formData.complaint?.trim() || undefined,
         });
       } catch (err) {
         setQueueError(
@@ -513,7 +540,7 @@ export function VehicleRegistrationDialog({
         await addVehicleToQueue({
           vehicleId,
           customerId,
-          complaint: complaint.trim() || undefined,
+          complaint: formData.complaint?.trim() || undefined,
         });
       } catch (err) {
         setQueueError(
@@ -528,29 +555,25 @@ export function VehicleRegistrationDialog({
     onQueued?.();
   }, [
     plate,
-    make,
-    model,
-    year,
-    color,
-    vin,
-    engine,
-    odometer,
-    custFirstName,
-    custLastName,
-    custPhone,
     savedVehicleId,
     savedCustomerId,
     lookupResult,
-    complaint,
     onQueued,
+    form,
+    getSavePayload,
   ]);
 
   // Determine whether queue action is available
   const { vehicleId: resolvedVehicleId, customerId: resolvedCustomerId } =
     resolveQueueIds(savedVehicleId, savedCustomerId, lookupResult);
   const canQueue = !!resolvedVehicleId && !!resolvedCustomerId;
+
+  const formValues = form.watch();
   const needsSave =
-    !resolvedVehicleId && plate.trim() && make.trim() && model.trim();
+    !resolvedVehicleId &&
+    plate.trim() &&
+    formValues.make.trim() &&
+    formValues.model.trim();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -571,6 +594,7 @@ export function VehicleRegistrationDialog({
           <Button
             variant="outline"
             size="sm"
+            type="button"
             onClick={() => {
               setMode(mode === "register" ? "lookup" : "register");
               setLookupResult(EMPTY_LOOKUP);
@@ -698,53 +722,75 @@ export function VehicleRegistrationDialog({
             )}
 
             <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSave();
-              }}
+              onSubmit={form.handleSubmit(handleSave)}
               className="flex flex-col gap-4"
             >
               {/* ── Primary: Brand, Model ── */}
               <div className="flex flex-col gap-2">
-                <Input
-                  value={make}
-                  onChange={(e) => setMake(e.target.value)}
-                  placeholder={`${t("brand")} (e.g. Toyota)`}
-                  required
-                  className="font-medium"
-                />
-                <Input
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                  placeholder={`${t("model")} (e.g. Prius)`}
-                  required
-                  className="font-medium"
-                />
+                <Field data-invalid={!!form.formState.errors.make}>
+                  <FieldContent>
+                    <Input
+                      placeholder={`${t("brand")} (e.g. Toyota)`}
+                      className="font-medium"
+                      aria-invalid={!!form.formState.errors.make}
+                      {...form.register("make")}
+                    />
+                    {form.formState.errors.make && (
+                      <FieldError>
+                        {form.formState.errors.make.message}
+                      </FieldError>
+                    )}
+                  </FieldContent>
+                </Field>
+                <Field data-invalid={!!form.formState.errors.model}>
+                  <FieldContent>
+                    <Input
+                      placeholder={`${t("model")} (e.g. Prius)`}
+                      className="font-medium"
+                      aria-invalid={!!form.formState.errors.model}
+                      {...form.register("model")}
+                    />
+                    {form.formState.errors.model && (
+                      <FieldError>
+                        {form.formState.errors.model.message}
+                      </FieldError>
+                    )}
+                  </FieldContent>
+                </Field>
               </div>
 
               {/* ── Secondary: Year, Color ── */}
               <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <Field data-invalid={!!form.formState.errors.year}>
+                  <FieldLabel className="mb-1 block text-xs font-medium text-muted-foreground">
                     {t("year")}
-                  </Label>
-                  <Input
-                    type="number"
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                    placeholder="e.g. 2020"
-                  />
-                </div>
-                <div>
-                  <Label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  </FieldLabel>
+                  <FieldContent>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 2020"
+                      aria-invalid={!!form.formState.errors.year}
+                      {...form.register("year")}
+                    />
+                    {form.formState.errors.year && (
+                      <FieldError>
+                        {form.formState.errors.year.message}
+                      </FieldError>
+                    )}
+                  </FieldContent>
+                </Field>
+                <Field data-invalid={!!form.formState.errors.color}>
+                  <FieldLabel className="mb-1 block text-xs font-medium text-muted-foreground">
                     {t("color")}
-                  </Label>
-                  <ColorSelect
-                    value={color}
-                    onChange={(val) => setColor(val)}
-                    className="w-full"
-                  />
-                </div>
+                  </FieldLabel>
+                  <FieldContent>
+                    <ColorSelect
+                      value={formValues.color ?? ""}
+                      onChange={(val) => form.setValue("color", val)}
+                      className="w-full"
+                    />
+                  </FieldContent>
+                </Field>
               </div>
 
               {/* ── Separator ── */}
@@ -756,26 +802,38 @@ export function VehicleRegistrationDialog({
                   {t("additionalDetails")}
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    value={vin}
-                    onChange={(e) => setVin(e.target.value)}
-                    placeholder="VIN / Chassis"
-                    className="text-xs"
-                  />
-                  <Input
-                    value={engine}
-                    onChange={(e) => setEngine(e.target.value)}
-                    placeholder={`${t("engine")} (e.g. 2ZR-FE)`}
-                    className="text-xs"
-                  />
+                  <Field data-invalid={!!form.formState.errors.vin}>
+                    <FieldContent>
+                      <Input
+                        placeholder="VIN / Chassis"
+                        className="text-xs"
+                        aria-invalid={!!form.formState.errors.vin}
+                        {...form.register("vin")}
+                      />
+                    </FieldContent>
+                  </Field>
+                  <Field data-invalid={!!form.formState.errors.engine}>
+                    <FieldContent>
+                      <Input
+                        placeholder={`${t("engine")} (e.g. 2ZR-FE)`}
+                        className="text-xs"
+                        aria-invalid={!!form.formState.errors.engine}
+                        {...form.register("engine")}
+                      />
+                    </FieldContent>
+                  </Field>
                 </div>
-                <Input
-                  type="number"
-                  value={odometer}
-                  onChange={(e) => setOdometer(e.target.value)}
-                  placeholder={`${t("odometer")} (e.g. 120000)`}
-                  className="text-xs"
-                />
+                <Field data-invalid={!!form.formState.errors.odometer}>
+                  <FieldContent>
+                    <Input
+                      type="number"
+                      placeholder={`${t("odometer")} (e.g. 120000)`}
+                      className="text-xs"
+                      aria-invalid={!!form.formState.errors.odometer}
+                      {...form.register("odometer")}
+                    />
+                  </FieldContent>
+                </Field>
               </div>
 
               {/* ── Separator ── */}
@@ -788,38 +846,51 @@ export function VehicleRegistrationDialog({
                   <span className="text-muted-foreground/50">(optional)</span>
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    value={custFirstName}
-                    onChange={(e) => setCustFirstName(e.target.value)}
-                    placeholder="e.g. Bat"
-                    className="text-xs"
-                  />
-                  <Input
-                    value={custLastName}
-                    onChange={(e) => setCustLastName(e.target.value)}
-                    placeholder="e.g. Erdene"
-                    className="text-xs"
-                  />
+                  <Field data-invalid={!!form.formState.errors.custFirstName}>
+                    <FieldContent>
+                      <Input
+                        placeholder="e.g. Bat"
+                        className="text-xs"
+                        aria-invalid={!!form.formState.errors.custFirstName}
+                        {...form.register("custFirstName")}
+                      />
+                    </FieldContent>
+                  </Field>
+                  <Field data-invalid={!!form.formState.errors.custLastName}>
+                    <FieldContent>
+                      <Input
+                        placeholder="e.g. Erdene"
+                        className="text-xs"
+                        aria-invalid={!!form.formState.errors.custLastName}
+                        {...form.register("custLastName")}
+                      />
+                    </FieldContent>
+                  </Field>
                 </div>
-                <Input
-                  type="tel"
-                  value={custPhone}
-                  onChange={(e) =>
-                    setCustPhone(e.target.value.replace(/\D/g, "").slice(0, 8))
-                  }
-                  placeholder="e.g. 99112233"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  className="text-xs"
-                />
+                <Field data-invalid={!!form.formState.errors.custPhone}>
+                  <FieldContent>
+                    <Input
+                      type="tel"
+                      placeholder="e.g. 99112233"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      className="text-xs"
+                      aria-invalid={!!form.formState.errors.custPhone}
+                      {...form.register("custPhone")}
+                    />
+                    {form.formState.errors.custPhone && (
+                      <FieldError>
+                        {form.formState.errors.custPhone.message}
+                      </FieldError>
+                    )}
+                  </FieldContent>
+                </Field>
               </div>
 
               <Button
                 type="submit"
                 className="w-full"
-                disabled={
-                  saving || !plate.trim() || !make.trim() || !model.trim()
-                }
+                disabled={saving}
                 size="default"
               >
                 {saving ? (
@@ -846,12 +917,15 @@ export function VehicleRegistrationDialog({
                     <MessageSquarePlus className="size-3.5 text-primary" />
                     Add to Waiting Queue
                   </Label>
-                  <Textarea
-                    value={complaint}
-                    onChange={(e) => setComplaint(e.target.value)}
-                    placeholder="Complaint or reason for visit (optional)"
-                    className="min-h-[60px] text-xs resize-none"
-                  />
+                  <Field data-invalid={!!form.formState.errors.complaint}>
+                    <FieldContent>
+                      <Textarea
+                        placeholder="Complaint or reason for visit (optional)"
+                        className="min-h-[60px] text-xs resize-none"
+                        {...form.register("complaint")}
+                      />
+                    </FieldContent>
+                  </Field>
 
                   {!canQueue && needsSave && (
                     <Typography.Muted className="text-[10px] text-muted-foreground/60">

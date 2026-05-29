@@ -149,7 +149,9 @@ function QueueItem({
             <Typography.Text className="text-[11px] font-medium truncate">
               {workOrder.complaint || `WO ${workOrder.id.slice(0, 8)}`}
             </Typography.Text>
-            <Typography.Muted className="text-[9px] text-muted-foreground">No vehicle</Typography.Muted>
+            <Typography.Muted className="text-[9px] text-muted-foreground">
+              No vehicle
+            </Typography.Muted>
           </div>
         )}
       </div>

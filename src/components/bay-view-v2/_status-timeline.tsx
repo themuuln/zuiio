@@ -26,18 +26,16 @@ export function StatusTimeline({ statusHistory, t }: StatusTimelineProps) {
       {(statusHistory ?? []).length === 0 ? (
         <div className="flex flex-col items-center justify-center py-4 text-muted-foreground/50">
           <History className="size-5 mb-1.5 opacity-60" />
-          <Typography.Text className="text-xs">{t("noHistoryYet")}</Typography.Text>
+          <Typography.Text className="text-xs">
+            {t("noHistoryYet")}
+          </Typography.Text>
         </div>
       ) : (
         <div className="flex flex-col gap-0">
           {statusHistory?.map((h, idx) => {
-            const isLast =
-              idx === (statusHistory?.length ?? 0) - 1;
+            const isLast = idx === (statusHistory?.length ?? 0) - 1;
             return (
-              <div
-                key={h.id}
-                className="relative flex gap-2 pb-3 last:pb-0"
-              >
+              <div key={h.id} className="relative flex gap-2 pb-3 last:pb-0">
                 {!isLast && (
                   <div className="absolute left-[10px] top-5 bottom-0 w-px bg-gradient-to-b from-border to-transparent" />
                 )}
@@ -67,15 +65,11 @@ export function StatusTimeline({ statusHistory, t }: StatusTimelineProps) {
                   <div className="flex items-center justify-between gap-2">
                     <StatusPill status={h.status} />
                     <span className="text-[10px] text-muted-foreground/60 shrink-0 font-mono">
-                      {new Date(
-                        h.created_at,
-                      ).toLocaleDateString([], {
+                      {new Date(h.created_at).toLocaleDateString([], {
                         month: "short",
                         day: "numeric",
                       })}{" "}
-                      {new Date(
-                        h.created_at,
-                      ).toLocaleTimeString([], {
+                      {new Date(h.created_at).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}

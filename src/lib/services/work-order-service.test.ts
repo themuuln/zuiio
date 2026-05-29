@@ -674,18 +674,17 @@ describe("addPartToWorkOrder", () => {
   it("with part_data.part_id — creates inventory_movement with sale", async () => {
     // Use mockResolvedValue (not Once) so that any number of .single() calls
     // through the shared builder will resolve correctly.
-    mockClient.from("work_orders").single
-      .mockResolvedValue({
-        data: {
-          id: "wp-1",
-          work_order_id: "wo-1",
-          part_name: "Oil Filter",
-          quantity: 2,
-          unit_price: 15,
-          final_price: 30,
-        },
-        error: null,
-      });
+    mockClient.from("work_orders").single.mockResolvedValue({
+      data: {
+        id: "wp-1",
+        work_order_id: "wo-1",
+        part_name: "Oil Filter",
+        quantity: 2,
+        unit_price: 15,
+        final_price: 30,
+      },
+      error: null,
+    });
 
     await addPartToWorkOrder("wo-1", "org-1", {
       part_id: "part-1",

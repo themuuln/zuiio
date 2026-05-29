@@ -2,13 +2,20 @@
 
 import { Loader2, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -16,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -25,29 +31,37 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import {
   useCreateExpense,
   useExpenseCategories,
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { Typography } from "@/components/ui/typography";
 
-const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "manual"] as const;
+// ── Schema ───────────────────────────────────────────────────
 
-type ExpenseFormState = {
-  description: string;
-  amount: string;
-  expenseDate: string;
-  categoryId: string;
-  vendorName: string;
-  taxAmount: string;
-  paymentMethod: string;
-  referenceNumber: string;
-  paid: boolean;
-  notes: string;
-};
+const expenseSchema = z.object({
+  description: z.string().min(1, "Description is required"),
+  amount: z
+    .string()
+    .min(1, "Amount is required")
+    .refine((val) => {
+      const n = Number(val);
+      return !Number.isNaN(n) && n > 0;
+    }, "Enter a valid amount"),
+  expenseDate: z.string().optional(),
+  categoryId: z.string().optional(),
+  vendorName: z.string().optional(),
+  taxAmount: z.string().optional(),
+  paymentMethod: z.string().optional(),
+  referenceNumber: z.string().optional(),
+  paid: z.boolean(),
+  notes: z.string().optional(),
+});
 
-const initialForm: ExpenseFormState = {
+type ExpenseFormValues = z.infer<typeof expenseSchema>;
+
+const defaultExpenseValues: ExpenseFormValues = {
   description: "",
   amount: "",
   expenseDate: new Date().toISOString().split("T")[0],
@@ -59,6 +73,10 @@ const initialForm: ExpenseFormState = {
   paid: false,
   notes: "",
 };
+
+const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "manual"] as const;
+
+// ── Component ────────────────────────────────────────────────
 
 type NewExpenseSheetProps = {
   open: boolean;
@@ -72,63 +90,48 @@ export function NewExpenseSheet({ open, onOpenChange }: NewExpenseSheetProps) {
   const orgId = orgQuery.data?.orgId ?? null;
   const { data: categories } = useExpenseCategories(orgId ?? undefined);
   const createExpense = useCreateExpense(orgId ?? undefined);
-  const [form, setForm] = useState<ExpenseFormState>(initialForm);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Clear errors on any input change
-  useEffect(() => {
-    if (Object.keys(fieldErrors).length > 0) {
-      setFieldErrors({});
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form]);
+  const form = useForm<ExpenseFormValues>({
+    resolver: zodResolver(expenseSchema),
+    defaultValues: defaultExpenseValues,
+  });
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const paid = form.watch("paid");
 
+  const onSubmit = form.handleSubmit(async (data) => {
     if (!orgId) {
       toast.error("Organization not loaded. Please try again.");
       return;
     }
 
-    const errors: Record<string, string> = {};
-    if (!form.description.trim())
-      errors.description = "Description is required";
-    const amount = parseFloat(form.amount);
-    if (!form.amount.trim()) errors.amount = "Amount is required";
-    else if (Number.isNaN(amount) || amount <= 0)
-      errors.amount = "Enter a valid amount";
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
-    const taxAmount = form.taxAmount ? parseFloat(form.taxAmount) : 0;
+    const amount = parseFloat(data.amount);
+    const taxAmount = data.taxAmount ? parseFloat(data.taxAmount) : 0;
 
     createExpense.mutate(
       {
-        description: form.description,
+        description: data.description,
         amount,
         taxAmount: Number.isNaN(taxAmount) ? 0 : taxAmount,
-        expenseDate: form.expenseDate || undefined,
-        categoryId: form.categoryId || undefined,
-        vendorName: form.vendorName || undefined,
-        paymentMethod: form.paymentMethod || undefined,
-        referenceNumber: form.referenceNumber || undefined,
-        paidAt: form.paid ? new Date().toISOString() : null,
-        notes: form.notes || undefined,
+        expenseDate: data.expenseDate || undefined,
+        categoryId: data.categoryId || undefined,
+        vendorName: data.vendorName || undefined,
+        paymentMethod: data.paymentMethod || undefined,
+        referenceNumber: data.referenceNumber || undefined,
+        paidAt: data.paid ? new Date().toISOString() : null,
+        notes: data.notes || undefined,
       },
       {
         onSuccess: () => {
-          setForm(initialForm);
+          form.reset(defaultExpenseValues);
           onOpenChange(false);
         },
       },
     );
-  };
+  });
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      setForm(initialForm);
-      setFieldErrors({});
+      form.reset(defaultExpenseValues);
     }
     onOpenChange(open);
   };
@@ -147,267 +150,203 @@ export function NewExpenseSheet({ open, onOpenChange }: NewExpenseSheetProps) {
 
         <ScrollArea className="flex-1">
           <div className="flex flex-col gap-4 p-4">
-            <form onSubmit={handleSubmit} id="new-expense-sheet-form">
+            <form onSubmit={onSubmit} id="new-expense-sheet-form">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">{t("details")}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="sm:col-span-2">
-                      <Label
-                        htmlFor="sheet-expense-description"
-                        className="mb-1 block text-sm font-medium"
-                      >
+                <CardContent>
+                  <FieldGroup>
+                    {/* Description — required */}
+                    <Field data-invalid={!!form.formState.errors.description}>
+                      <FieldLabel>
                         {t("description")}{" "}
                         <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="sheet-expense-description"
-                        value={form.description}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            description: e.target.value,
-                          }))
-                        }
-                        className={`h-11 ${fieldErrors.description ? "border-destructive" : ""}`}
-                        placeholder={t("descriptionPlaceholder")}
-                        required
-                        aria-invalid={!!fieldErrors.description}
-                      />
-                      {fieldErrors.description && (
-                        <Typography.Text className="text-xs text-destructive mt-1">
-                          {fieldErrors.description}
-                        </Typography.Text>
-                      )}
-                    </div>
+                      </FieldLabel>
+                      <FieldContent>
+                        <Input
+                          id="sheet-expense-description"
+                          placeholder={t("descriptionPlaceholder")}
+                          className="h-11"
+                          aria-invalid={!!form.formState.errors.description}
+                          {...form.register("description")}
+                        />
+                        {form.formState.errors.description && (
+                          <FieldError>
+                            {form.formState.errors.description.message}
+                          </FieldError>
+                        )}
+                      </FieldContent>
+                    </Field>
 
-                    <div>
-                      <Label
-                        htmlFor="sheet-expense-amount"
-                        className="mb-1 block text-sm font-medium"
-                      >
-                        {t("amount")}{" "}
-                        <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="sheet-expense-amount"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={form.amount}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            amount: e.target.value,
-                          }))
-                        }
-                        className={`h-11 ${fieldErrors.amount ? "border-destructive" : ""}`}
-                        placeholder="₮"
-                        required
-                        aria-invalid={!!fieldErrors.amount}
-                      />
-                      {fieldErrors.amount && (
-                        <Typography.Text className="text-xs text-destructive mt-1">
-                          {fieldErrors.amount}
-                        </Typography.Text>
-                      )}
-                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {/* Amount — required */}
+                      <Field data-invalid={!!form.formState.errors.amount}>
+                        <FieldLabel>
+                          {t("amount")}{" "}
+                          <span className="text-destructive">*</span>
+                        </FieldLabel>
+                        <FieldContent>
+                          <Input
+                            id="sheet-expense-amount"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="₮"
+                            className="h-11"
+                            aria-invalid={!!form.formState.errors.amount}
+                            {...form.register("amount")}
+                          />
+                          {form.formState.errors.amount && (
+                            <FieldError>
+                              {form.formState.errors.amount.message}
+                            </FieldError>
+                          )}
+                        </FieldContent>
+                      </Field>
 
-                    <div>
-                      <Label
-                        htmlFor="sheet-expense-date"
-                        className="mb-1 block text-sm font-medium"
-                      >
-                        {t("expenseDate")}
-                      </Label>
-                      <Input
-                        id="sheet-expense-date"
-                        type="date"
-                        value={form.expenseDate}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            expenseDate: e.target.value,
-                          }))
-                        }
-                        className="h-11"
-                      />
-                    </div>
+                      {/* Expense Date — optional */}
+                      <Field>
+                        <FieldLabel>{t("expenseDate")}</FieldLabel>
+                        <FieldContent>
+                          <Input
+                            id="sheet-expense-date"
+                            type="date"
+                            className="h-11"
+                            {...form.register("expenseDate")}
+                          />
+                        </FieldContent>
+                      </Field>
 
-                    <div>
-                      <Label
-                        htmlFor="sheet-expense-category"
-                        className="mb-1 block text-sm font-medium"
-                      >
-                        {t("category")}
-                      </Label>
-                      <Select
-                        id="sheet-expense-category"
-                        value={form.categoryId || null}
-                        onValueChange={(val) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            categoryId: val ?? "",
-                          }))
-                        }
-                      >
-                        <SelectTrigger
-                          className="w-full"
-                          aria-label={t("category")}
+                      {/* Category — optional */}
+                      <Field>
+                        <FieldLabel>{t("category")}</FieldLabel>
+                        <FieldContent>
+                          <Select
+                            value={form.watch("categoryId") || ""}
+                            onValueChange={(val) =>
+                              form.setValue("categoryId", val ?? "")
+                            }
+                          >
+                            <SelectTrigger
+                              className="w-full"
+                              aria-label={t("category")}
+                            >
+                              <SelectValue placeholder={commonT("all")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories?.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                  {cat.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FieldContent>
+                      </Field>
+
+                      {/* Vendor — optional */}
+                      <Field>
+                        <FieldLabel>{t("vendor")}</FieldLabel>
+                        <FieldContent>
+                          <Input
+                            id="sheet-expense-vendor"
+                            className="h-11"
+                            placeholder={t("vendorPlaceholder")}
+                            {...form.register("vendorName")}
+                          />
+                        </FieldContent>
+                      </Field>
+
+                      {/* Tax Amount — optional */}
+                      <Field>
+                        <FieldLabel>{t("taxAmount")}</FieldLabel>
+                        <FieldContent>
+                          <Input
+                            id="sheet-expense-tax"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            className="h-11"
+                            placeholder="₮"
+                            {...form.register("taxAmount")}
+                          />
+                        </FieldContent>
+                      </Field>
+
+                      {/* Payment Method — optional */}
+                      <Field>
+                        <FieldLabel>{t("paymentMethod")}</FieldLabel>
+                        <FieldContent>
+                          <Select
+                            value={form.watch("paymentMethod") || ""}
+                            onValueChange={(val) =>
+                              form.setValue("paymentMethod", val ?? "")
+                            }
+                          >
+                            <SelectTrigger
+                              className="w-full"
+                              aria-label={t("paymentMethod")}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PAYMENT_METHODS.map((method) => (
+                                <SelectItem key={method} value={method}>
+                                  {t(method)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FieldContent>
+                      </Field>
+
+                      {/* Reference Number — optional */}
+                      <Field>
+                        <FieldLabel>{t("referenceNumber")}</FieldLabel>
+                        <FieldContent>
+                          <Input
+                            id="sheet-expense-reference"
+                            className="h-11"
+                            placeholder={t("referenceNumberPlaceholder")}
+                            {...form.register("referenceNumber")}
+                          />
+                        </FieldContent>
+                      </Field>
+
+                      {/* Paid checkbox */}
+                      <div className="flex items-center gap-2 sm:col-span-2">
+                        <Checkbox
+                          id="sheet-expense-paid"
+                          checked={paid}
+                          onCheckedChange={(checked) =>
+                            form.setValue("paid", checked === true)
+                          }
+                        />
+                        <label
+                          htmlFor="sheet-expense-paid"
+                          className="cursor-pointer text-sm font-medium"
                         >
-                          <SelectValue placeholder={commonT("all")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories?.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                          {t("paid")}
+                        </label>
+                      </div>
 
-                    <div>
-                      <Label
-                        htmlFor="sheet-expense-vendor"
-                        className="mb-1 block text-sm font-medium"
-                      >
-                        {t("vendor")}
-                      </Label>
-                      <Input
-                        id="sheet-expense-vendor"
-                        value={form.vendorName}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            vendorName: e.target.value,
-                          }))
-                        }
-                        className="h-11"
-                        placeholder={t("vendorPlaceholder")}
-                      />
+                      {/* Notes — optional */}
+                      <div className="sm:col-span-2">
+                        <Field>
+                          <FieldLabel>{t("notes")}</FieldLabel>
+                          <FieldContent>
+                            <Textarea
+                              id="sheet-expense-notes"
+                              rows={3}
+                              placeholder={t("notesPlaceholder")}
+                              {...form.register("notes")}
+                            />
+                          </FieldContent>
+                        </Field>
+                      </div>
                     </div>
-
-                    <div>
-                      <Label
-                        htmlFor="sheet-expense-tax"
-                        className="mb-1 block text-sm font-medium"
-                      >
-                        {t("taxAmount")}
-                      </Label>
-                      <Input
-                        id="sheet-expense-tax"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={form.taxAmount}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            taxAmount: e.target.value,
-                          }))
-                        }
-                        className="h-11"
-                        placeholder="₮"
-                      />
-                    </div>
-
-                    <div>
-                      <Label
-                        htmlFor="sheet-expense-payment-method"
-                        className="mb-1 block text-sm font-medium"
-                      >
-                        {t("paymentMethod")}
-                      </Label>
-                      <Select
-                        id="sheet-expense-payment-method"
-                        value={form.paymentMethod}
-                        onValueChange={(val) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            paymentMethod: val ?? "",
-                          }))
-                        }
-                      >
-                        <SelectTrigger
-                          className="w-full"
-                          aria-label={t("paymentMethod")}
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PAYMENT_METHODS.map((method) => (
-                            <SelectItem key={method} value={method}>
-                              {t(method)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label
-                        htmlFor="sheet-expense-reference"
-                        className="mb-1 block text-sm font-medium"
-                      >
-                        {t("referenceNumber")}
-                      </Label>
-                      <Input
-                        id="sheet-expense-reference"
-                        value={form.referenceNumber}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            referenceNumber: e.target.value,
-                          }))
-                        }
-                        className="h-11"
-                        placeholder={t("referenceNumberPlaceholder")}
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2 sm:col-span-2">
-                      <Checkbox
-                        id="sheet-expense-paid"
-                        checked={form.paid}
-                        onCheckedChange={(checked) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            paid: checked === true,
-                          }))
-                        }
-                      />
-                      <Label
-                        htmlFor="sheet-expense-paid"
-                        className="cursor-pointer text-sm font-medium"
-                      >
-                        {t("paid")}
-                      </Label>
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <Label
-                        htmlFor="sheet-expense-notes"
-                        className="mb-1 block text-sm font-medium"
-                      >
-                        {t("notes")}
-                      </Label>
-                      <Textarea
-                        id="sheet-expense-notes"
-                        value={form.notes}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            notes: e.target.value,
-                          }))
-                        }
-                        rows={3}
-                        placeholder={t("notesPlaceholder")}
-                      />
-                    </div>
-                  </div>
+                  </FieldGroup>
                 </CardContent>
               </Card>
             </form>

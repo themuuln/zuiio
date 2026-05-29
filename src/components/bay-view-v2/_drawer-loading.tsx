@@ -11,7 +11,12 @@ interface DrawerLoadingProps {
   onRetry: () => void;
 }
 
-export function DrawerLoading({ loading, hasLoadedOnce, error, onRetry }: DrawerLoadingProps) {
+export function DrawerLoading({
+  loading,
+  hasLoadedOnce,
+  error,
+  onRetry,
+}: DrawerLoadingProps) {
   if (loading && !hasLoadedOnce) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
@@ -23,7 +28,9 @@ export function DrawerLoading({ loading, hasLoadedOnce, error, onRetry }: Drawer
   if (error && !loading && !hasLoadedOnce) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
-        <Typography.Muted className="text-sm text-muted-foreground">{error}</Typography.Muted>
+        <Typography.Muted className="text-sm text-muted-foreground">
+          {error}
+        </Typography.Muted>
         <Button variant="outline" size="sm" onClick={onRetry}>
           Retry
         </Button>
@@ -41,7 +48,12 @@ interface DrawerSkeletonProps {
   onRetry: () => void;
 }
 
-export function DrawerSkeleton({ loading, error, children, onRetry }: DrawerSkeletonProps) {
+export function DrawerSkeleton({
+  loading,
+  error,
+  children,
+  onRetry,
+}: DrawerSkeletonProps) {
   if (loading) {
     return (
       <div className="flex-1 overflow-y-auto min-h-0">
@@ -64,7 +76,9 @@ export function DrawerSkeleton({ loading, error, children, onRetry }: DrawerSkel
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
-        <Typography.Muted className="text-sm text-muted-foreground">{error}</Typography.Muted>
+        <Typography.Muted className="text-sm text-muted-foreground">
+          {error}
+        </Typography.Muted>
         <Button variant="outline" size="sm" onClick={onRetry}>
           Retry
         </Button>

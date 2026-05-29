@@ -541,9 +541,9 @@ describe("updateVehicle", () => {
       error: null,
     });
 
-    await expect(
-      updateVehicle("v-1", ORG_ID, {}, USER_ID),
-    ).rejects.toThrow(ValidationError);
+    await expect(updateVehicle("v-1", ORG_ID, {}, USER_ID)).rejects.toThrow(
+      ValidationError,
+    );
   });
 
   it("when customerId changes — deactivates old ownership, creates new", async () => {
@@ -610,12 +610,7 @@ describe("updateVehicle", () => {
       error: null,
     });
 
-    await updateVehicle(
-      "v-1",
-      ORG_ID,
-      { plateNumber: "XYZ999" },
-      USER_ID,
-    );
+    await updateVehicle("v-1", ORG_ID, { plateNumber: "XYZ999" }, USER_ID);
 
     expect(createAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -661,9 +656,9 @@ describe("deleteVehicle", () => {
       error: null,
     });
 
-    await expect(
-      deleteVehicle("nonexistent", ORG_ID, USER_ID),
-    ).rejects.toThrow(NotFoundError);
+    await expect(deleteVehicle("nonexistent", ORG_ID, USER_ID)).rejects.toThrow(
+      NotFoundError,
+    );
   });
 
   it("creates audit log for soft_delete", async () => {
@@ -706,7 +701,12 @@ describe("getVehicleServiceHistory", () => {
           total: 150,
           created_at: "2026-05-01T10:00:00Z",
           work_order_services: [
-            { id: "wos-1", service_name: "Oil Change", quantity: 1, price: 150 },
+            {
+              id: "wos-1",
+              service_name: "Oil Change",
+              quantity: 1,
+              price: 150,
+            },
           ],
         },
         {
@@ -717,7 +717,12 @@ describe("getVehicleServiceHistory", () => {
           total: 350,
           created_at: "2026-04-28T09:00:00Z",
           work_order_services: [
-            { id: "wos-2", service_name: "Brake Pads", quantity: 2, price: 175 },
+            {
+              id: "wos-2",
+              service_name: "Brake Pads",
+              quantity: 2,
+              price: 175,
+            },
           ],
         },
       ],

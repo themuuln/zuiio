@@ -1279,9 +1279,7 @@ export async function getWorkOrderProfit(
   };
 }
 
-export async function getDashboardProfitSummary(
-  orgId: string,
-): Promise<{
+export async function getDashboardProfitSummary(orgId: string): Promise<{
   todayProfit: WorkOrderProfit;
   weekProfit: WorkOrderProfit;
   monthProfit: WorkOrderProfit;
@@ -2140,8 +2138,14 @@ export async function generateReportInsights(
 
   // Fetch previous period data (same duration, immediately before)
   const durationMs = new Date(dateTo).getTime() - new Date(dateFrom).getTime();
-  const prevFrom = new Date(new Date(dateFrom).getTime() - durationMs - 86400000).toISOString().split("T")[0];
-  const prevTo = new Date(new Date(dateFrom).getTime() - 86400000).toISOString().split("T")[0];
+  const prevFrom = new Date(
+    new Date(dateFrom).getTime() - durationMs - 86400000,
+  )
+    .toISOString()
+    .split("T")[0];
+  const prevTo = new Date(new Date(dateFrom).getTime() - 86400000)
+    .toISOString()
+    .split("T")[0];
 
   const { data: prevWOs } = await supabase
     .from("work_orders")
@@ -2156,30 +2160,70 @@ export async function generateReportInsights(
 
   // Revenue comparison
   const [curServices, curParts, prevServices, prevParts] = await Promise.all([
-    supabase.from("work_order_services").select("final_price, unit_cost, quantity, service_name").in("work_order_id", currentWoIds),
-    supabase.from("work_order_parts").select("final_price, unit_cost, quantity").in("work_order_id", currentWoIds),
+    supabase
+      .from("work_order_services")
+      .select("final_price, unit_cost, quantity, service_name")
+      .in("work_order_id", currentWoIds),
+    supabase
+      .from("work_order_parts")
+      .select("final_price, unit_cost, quantity")
+      .in("work_order_id", currentWoIds),
     prevWoIds.length > 0
-      ? supabase.from("work_order_services").select("final_price, unit_cost, quantity").in("work_order_id", prevWoIds)
+      ? supabase
+          .from("work_order_services")
+          .select("final_price, unit_cost, quantity")
+          .in("work_order_id", prevWoIds)
       : { data: [] as any[] },
     prevWoIds.length > 0
-      ? supabase.from("work_order_parts").select("final_price, unit_cost, quantity").in("work_order_id", prevWoIds)
+      ? supabase
+          .from("work_order_parts")
+          .select("final_price, unit_cost, quantity")
+          .in("work_order_id", prevWoIds)
       : { data: [] as any[] },
   ]);
 
-  const curSvcRev = (curServices.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
-  const curPartsRev = (curParts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
-  const curSvcCost = (curServices.data ?? []).reduce((s, r) => s + Number(r.unit_cost ?? 0) * r.quantity, 0);
-  const curPartsCost = (curParts.data ?? []).reduce((s, r) => s + Number(r.unit_cost ?? 0) * r.quantity, 0);
+  const curSvcRev = (curServices.data ?? []).reduce(
+    (s, r) => s + Number(r.final_price),
+    0,
+  );
+  const curPartsRev = (curParts.data ?? []).reduce(
+    (s, r) => s + Number(r.final_price),
+    0,
+  );
+  const curSvcCost = (curServices.data ?? []).reduce(
+    (s, r) => s + Number(r.unit_cost ?? 0) * r.quantity,
+    0,
+  );
+  const curPartsCost = (curParts.data ?? []).reduce(
+    (s, r) => s + Number(r.unit_cost ?? 0) * r.quantity,
+    0,
+  );
   const curTotalRev = curSvcRev + curPartsRev;
   const curTotalCost = curSvcCost + curPartsCost;
-  const curMargin = curTotalRev > 0 ? ((curTotalRev - curTotalCost) / curTotalRev) * 100 : 0;
+  const curMargin =
+    curTotalRev > 0 ? ((curTotalRev - curTotalCost) / curTotalRev) * 100 : 0;
 
-  const prevSvcRev = (prevServices.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
-  const prevPartsRev = (prevParts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
+  const prevSvcRev = (prevServices.data ?? []).reduce(
+    (s, r) => s + Number(r.final_price),
+    0,
+  );
+  const prevPartsRev = (prevParts.data ?? []).reduce(
+    (s, r) => s + Number(r.final_price),
+    0,
+  );
   const prevTotalRev = prevSvcRev + prevPartsRev;
-  const prevSvcCost = (prevServices.data ?? []).reduce((s, r) => s + Number(r.unit_cost ?? 0) * r.quantity, 0);
-  const prevPartsCost = (prevParts.data ?? []).reduce((s, r) => s + Number(r.unit_cost ?? 0) * r.quantity, 0);
-  const prevMargin = prevTotalRev > 0 ? ((prevTotalRev - (prevSvcCost + prevPartsCost)) / prevTotalRev) * 100 : 0;
+  const prevSvcCost = (prevServices.data ?? []).reduce(
+    (s, r) => s + Number(r.unit_cost ?? 0) * r.quantity,
+    0,
+  );
+  const prevPartsCost = (prevParts.data ?? []).reduce(
+    (s, r) => s + Number(r.unit_cost ?? 0) * r.quantity,
+    0,
+  );
+  const prevMargin =
+    prevTotalRev > 0
+      ? ((prevTotalRev - (prevSvcCost + prevPartsCost)) / prevTotalRev) * 100
+      : 0;
 
   // Revenue insight
   if (prevTotalRev > 0) {
@@ -2192,7 +2236,8 @@ export async function generateReportInsights(
         message: `${formatCurrencyHelper(curTotalRev)} vs ${formatCurrencyHelper(prevTotalRev)} in the previous period.`,
         metric_value: curTotalRev,
         comparison_value: prevTotalRev,
-        action: "Great momentum — consider increasing marketing to sustain growth.",
+        action:
+          "Great momentum — consider increasing marketing to sustain growth.",
       });
     } else if (revChange < -10) {
       insights.push({
@@ -2217,9 +2262,10 @@ export async function generateReportInsights(
       message: `Gross margin: ${curMargin.toFixed(1)}% vs ${prevMargin.toFixed(1)}% previous.`,
       metric_value: curMargin,
       comparison_value: prevMargin,
-      action: marginDelta > 0
-        ? "Cost control is improving — maintain supplier negotiation pressure."
-        : "Check parts pricing and labor rate alignment. Discount abuse may be a factor.",
+      action:
+        marginDelta > 0
+          ? "Cost control is improving — maintain supplier negotiation pressure."
+          : "Check parts pricing and labor rate alignment. Discount abuse may be a factor.",
     });
   }
 
@@ -2233,14 +2279,16 @@ export async function generateReportInsights(
         title: "Parts-heavy revenue mix",
         message: `Parts are ${Math.round(partsRatio * 100)}% of labor revenue. Industry target is 40-50%.`,
         metric_value: partsRatio,
-        action: "Review parts markup strategy. Consider value-added services to balance the mix.",
+        action:
+          "Review parts markup strategy. Consider value-added services to balance the mix.",
       });
     }
   }
 
   // Work order count insight
   if (prevWoIds.length > 0) {
-    const woChange = ((currentWoIds.length - prevWoIds.length) / prevWoIds.length) * 100;
+    const woChange =
+      ((currentWoIds.length - prevWoIds.length) / prevWoIds.length) * 100;
     if (woChange < -15) {
       insights.push({
         id: `insight-${++insightId}`,
@@ -2266,7 +2314,7 @@ export async function generateReportInsights(
   // Top service insight
   const svcMap = new Map<string, { count: number; revenue: number }>();
   for (const s of curServices.data ?? []) {
-    const name = s.service_name as string ?? "Unknown";
+    const name = (s.service_name as string) ?? "Unknown";
     const existing = svcMap.get(name) ?? { count: 0, revenue: 0 };
     existing.count++;
     existing.revenue += Number(s.final_price);
@@ -2279,7 +2327,8 @@ export async function generateReportInsights(
   if (topServices.length > 0) {
     const topName = topServices[0][0];
     const topRev = topServices[0][1].revenue;
-    const topPct = curTotalRev > 0 ? Math.round((topRev / curTotalRev) * 100) : 0;
+    const topPct =
+      curTotalRev > 0 ? Math.round((topRev / curTotalRev) * 100) : 0;
     insights.push({
       id: `insight-${++insightId}`,
       severity: "info",
@@ -2293,7 +2342,12 @@ export async function generateReportInsights(
 }
 
 function formatCurrencyHelper(amount: number): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
 
 /**
@@ -2328,7 +2382,10 @@ export async function getRevenueForecast(
     periodEnd = we.toISOString().split("T")[0];
     totalDays = 7;
     const wsTime = ws.getTime();
-    daysElapsed = Math.min(totalDays, Math.max(1, Math.ceil((now.getTime() - wsTime) / 86400000)));
+    daysElapsed = Math.min(
+      totalDays,
+      Math.max(1, Math.ceil((now.getTime() - wsTime) / 86400000)),
+    );
   } else {
     // monthly
     const [y, m] = date.split("-").map(Number);
@@ -2354,18 +2411,27 @@ export async function getRevenueForecast(
 
   if (woIds.length > 0) {
     const [svcs, parts] = await Promise.all([
-      supabase.from("work_order_services").select("final_price").in("work_order_id", woIds),
-      supabase.from("work_order_parts").select("final_price").in("work_order_id", woIds),
+      supabase
+        .from("work_order_services")
+        .select("final_price")
+        .in("work_order_id", woIds),
+      supabase
+        .from("work_order_parts")
+        .select("final_price")
+        .in("work_order_id", woIds),
     ]);
-    currentRevenue = (svcs.data ?? []).reduce((s, r) => s + Number(r.final_price), 0)
-      + (parts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
+    currentRevenue =
+      (svcs.data ?? []).reduce((s, r) => s + Number(r.final_price), 0) +
+      (parts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
   }
 
   const dailyRunRate = daysElapsed > 0 ? currentRevenue / daysElapsed : 0;
-  const projectedRevenue = totalDays > 0 ? dailyRunRate * totalDays : currentRevenue;
+  const projectedRevenue =
+    totalDays > 0 ? dailyRunRate * totalDays : currentRevenue;
 
   // Fetch previous period revenue for comparison
-  const prevDuration = new Date(periodEnd).getTime() - new Date(periodStart).getTime();
+  const prevDuration =
+    new Date(periodEnd).getTime() - new Date(periodStart).getTime();
   const prevEndMs = new Date(periodStart).getTime() - 86400000;
   const prevStartMs = prevEndMs - prevDuration;
   const prevStart = new Date(prevStartMs).toISOString().split("T")[0];
@@ -2384,16 +2450,24 @@ export async function getRevenueForecast(
   let prevRevenue = 0;
   if (prevWoIds.length > 0) {
     const [svcs, parts] = await Promise.all([
-      supabase.from("work_order_services").select("final_price").in("work_order_id", prevWoIds),
-      supabase.from("work_order_parts").select("final_price").in("work_order_id", prevWoIds),
+      supabase
+        .from("work_order_services")
+        .select("final_price")
+        .in("work_order_id", prevWoIds),
+      supabase
+        .from("work_order_parts")
+        .select("final_price")
+        .in("work_order_id", prevWoIds),
     ]);
-    prevRevenue = (svcs.data ?? []).reduce((s, r) => s + Number(r.final_price), 0)
-      + (parts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
+    prevRevenue =
+      (svcs.data ?? []).reduce((s, r) => s + Number(r.final_price), 0) +
+      (parts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
   }
 
-  const projectedChangePct = prevRevenue > 0
-    ? Math.round(((projectedRevenue - prevRevenue) / prevRevenue) * 1000) / 10
-    : null;
+  const projectedChangePct =
+    prevRevenue > 0
+      ? Math.round(((projectedRevenue - prevRevenue) / prevRevenue) * 1000) / 10
+      : null;
 
   const onTrack = prevRevenue > 0 ? projectedRevenue >= prevRevenue : true;
 
@@ -2429,9 +2503,9 @@ export async function getRevenueTargets(
     .single();
 
   const settings = (org?.settings as Record<string, unknown>) ?? {};
-  const targets = (settings.report_targets as Array<Record<string, unknown>> ?? []).filter(
-    (t) => t.period_type === periodType,
-  );
+  const targets = (
+    (settings.report_targets as Array<Record<string, unknown>>) ?? []
+  ).filter((t) => t.period_type === periodType);
 
   if (targets.length === 0) return [];
 
@@ -2458,11 +2532,18 @@ export async function getRevenueTargets(
     let actualRevenue = 0;
     if (woIds.length > 0) {
       const [svcs, parts] = await Promise.all([
-        supabase.from("work_order_services").select("final_price").in("work_order_id", woIds),
-        supabase.from("work_order_parts").select("final_price").in("work_order_id", woIds),
+        supabase
+          .from("work_order_services")
+          .select("final_price")
+          .in("work_order_id", woIds),
+        supabase
+          .from("work_order_parts")
+          .select("final_price")
+          .in("work_order_id", woIds),
       ]);
-      actualRevenue = (svcs.data ?? []).reduce((s, r) => s + Number(r.final_price), 0)
-        + (parts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
+      actualRevenue =
+        (svcs.data ?? []).reduce((s, r) => s + Number(r.final_price), 0) +
+        (parts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
     }
 
     results.push({
@@ -2471,7 +2552,10 @@ export async function getRevenueTargets(
       period_type: periodType,
       target_revenue: targetRevenue,
       actual_revenue: actualRevenue,
-      progress_pct: targetRevenue > 0 ? Math.round((actualRevenue / targetRevenue) * 1000) / 10 : 0,
+      progress_pct:
+        targetRevenue > 0
+          ? Math.round((actualRevenue / targetRevenue) * 1000) / 10
+          : 0,
       achieved: actualRevenue >= targetRevenue,
       period_start: periodStart,
       period_end: periodEnd,
@@ -2498,8 +2582,11 @@ export async function setRevenueTarget(
     .single();
 
   const settings = (org?.settings as Record<string, unknown>) ?? {};
-  const existingTargets = (settings.report_targets as Array<Record<string, unknown>> ?? [])
-    .filter((t) => !(t.period_type === periodType && t.period_start === periodStart));
+  const existingTargets = (
+    (settings.report_targets as Array<Record<string, unknown>>) ?? []
+  ).filter(
+    (t) => !(t.period_type === periodType && t.period_start === periodStart),
+  );
 
   const newTarget = {
     id: `target-${Date.now()}`,
@@ -2562,7 +2649,9 @@ export async function getCustomerRetention(
     };
   }
 
-  const customerIds = [...new Set(wos.map((w) => w.customer_id).filter(Boolean))] as string[];
+  const customerIds = [
+    ...new Set(wos.map((w) => w.customer_id).filter(Boolean)),
+  ] as string[];
 
   // For each customer, count total visits (all time) and visits in period
   const [allTimeWOs, prevWOs] = await Promise.all([
@@ -2594,10 +2683,15 @@ export async function getCustomerRetention(
     const cid = wo.customer_id as string;
     if (!cid) continue;
     lifetimeVisitMap.set(cid, (lifetimeVisitMap.get(cid) ?? 0) + 1);
-    lifetimeRevenueMap.set(cid, (lifetimeRevenueMap.get(cid) ?? 0) + Number(wo.total_amount ?? 0));
+    lifetimeRevenueMap.set(
+      cid,
+      (lifetimeRevenueMap.get(cid) ?? 0) + Number(wo.total_amount ?? 0),
+    );
   }
 
-  const prevVisitSet = new Set((prevWOs.data ?? []).map((w) => w.customer_id).filter(Boolean));
+  const prevVisitSet = new Set(
+    (prevWOs.data ?? []).map((w) => w.customer_id).filter(Boolean),
+  );
 
   // Period visit counts
   const periodVisitMap = new Map<string, number>();
@@ -2615,12 +2709,16 @@ export async function getCustomerRetention(
     else newCount++;
   }
 
-  const retentionRate = customerIds.length > 0 && (returningCount + newCount) > 0
-    ? Math.round((returningCount / (returningCount + newCount)) * 1000) / 10
-    : 0;
+  const retentionRate =
+    customerIds.length > 0 && returningCount + newCount > 0
+      ? Math.round((returningCount / (returningCount + newCount)) * 1000) / 10
+      : 0;
 
   const totalVisitsInPeriod = wos.length;
-  const avgVisits = customerIds.length > 0 ? Math.round((totalVisitsInPeriod / customerIds.length) * 10) / 10 : 0;
+  const avgVisits =
+    customerIds.length > 0
+      ? Math.round((totalVisitsInPeriod / customerIds.length) * 10) / 10
+      : 0;
 
   // Top customers by revenue in period
   // Fetch revenue per WO for period
@@ -2628,35 +2726,54 @@ export async function getCustomerRetention(
   let revenueData: Array<{ work_order_id: string; final_price: number }> = [];
   if (periodWoIds.length > 0) {
     const [svcs, parts] = await Promise.all([
-      supabase.from("work_order_services").select("work_order_id, final_price").in("work_order_id", periodWoIds),
-      supabase.from("work_order_parts").select("work_order_id, final_price").in("work_order_id", periodWoIds),
+      supabase
+        .from("work_order_services")
+        .select("work_order_id, final_price")
+        .in("work_order_id", periodWoIds),
+      supabase
+        .from("work_order_parts")
+        .select("work_order_id, final_price")
+        .in("work_order_id", periodWoIds),
     ]);
-    revenueData = [
-      ...(svcs.data ?? []),
-      ...(parts.data ?? []),
-    ] as Array<{ work_order_id: string; final_price: number }>;
+    revenueData = [...(svcs.data ?? []), ...(parts.data ?? [])] as Array<{
+      work_order_id: string;
+      final_price: number;
+    }>;
   }
 
   const woRevenueMap = new Map<string, number>();
   for (const r of revenueData) {
-    woRevenueMap.set(r.work_order_id, (woRevenueMap.get(r.work_order_id) ?? 0) + Number(r.final_price));
+    woRevenueMap.set(
+      r.work_order_id,
+      (woRevenueMap.get(r.work_order_id) ?? 0) + Number(r.final_price),
+    );
   }
 
   const customerRevenueMap = new Map<string, number>();
   for (const wo of wos) {
     const cid = wo.customer_id as string;
     if (!cid) continue;
-    customerRevenueMap.set(cid, (customerRevenueMap.get(cid) ?? 0) + (woRevenueMap.get(wo.id) ?? 0));
+    customerRevenueMap.set(
+      cid,
+      (customerRevenueMap.get(cid) ?? 0) + (woRevenueMap.get(wo.id) ?? 0),
+    );
   }
 
   // Fetch customer names
-  const { data: customerProfiles } = customerIds.length > 0
-    ? await supabase.from("customers").select("id, first_name, last_name").in("id", customerIds)
-    : { data: [] as any[] };
+  const { data: customerProfiles } =
+    customerIds.length > 0
+      ? await supabase
+          .from("customers")
+          .select("id, first_name, last_name")
+          .in("id", customerIds)
+      : { data: [] as any[] };
 
   const nameMap = new Map<string, string>();
   for (const c of customerProfiles ?? []) {
-    nameMap.set(c.id, [c.first_name, c.last_name].filter(Boolean).join(" ") || "Customer");
+    nameMap.set(
+      c.id,
+      [c.first_name, c.last_name].filter(Boolean).join(" ") || "Customer",
+    );
   }
 
   const topCustomers = [...customerRevenueMap.entries()]
@@ -2670,8 +2787,14 @@ export async function getCustomerRetention(
     }));
 
   // Average lifetime value
-  const totalLifetimeRevenue = [...lifetimeRevenueMap.values()].reduce((s, v) => s + v, 0);
-  const avgLTV = customerIds.length > 0 ? Math.round(totalLifetimeRevenue / customerIds.length) : 0;
+  const totalLifetimeRevenue = [...lifetimeRevenueMap.values()].reduce(
+    (s, v) => s + v,
+    0,
+  );
+  const avgLTV =
+    customerIds.length > 0
+      ? Math.round(totalLifetimeRevenue / customerIds.length)
+      : 0;
 
   return {
     total_customers: customerIds.length,
@@ -2709,10 +2832,16 @@ export async function getPnLSummary(
   // Fetch services + parts with costs
   const [svcs, parts, expenses] = await Promise.all([
     woIds.length > 0
-      ? supabase.from("work_order_services").select("final_price, unit_cost, quantity").in("work_order_id", woIds)
+      ? supabase
+          .from("work_order_services")
+          .select("final_price, unit_cost, quantity")
+          .in("work_order_id", woIds)
       : { data: [] as any[] },
     woIds.length > 0
-      ? supabase.from("work_order_parts").select("final_price, unit_cost, quantity").in("work_order_id", woIds)
+      ? supabase
+          .from("work_order_parts")
+          .select("final_price, unit_cost, quantity")
+          .in("work_order_id", woIds)
       : { data: [] as any[] },
     supabase
       .from("expenses")
@@ -2723,15 +2852,28 @@ export async function getPnLSummary(
       .is("deleted_at", null),
   ]);
 
-  const serviceRevenue = (svcs.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
-  const serviceCost = (svcs.data ?? []).reduce((s, r) => s + Number(r.unit_cost ?? 0) * r.quantity, 0);
-  const partsRevenue = (parts.data ?? []).reduce((s, r) => s + Number(r.final_price), 0);
-  const partsCost = (parts.data ?? []).reduce((s, r) => s + Number(r.unit_cost ?? 0) * r.quantity, 0);
+  const serviceRevenue = (svcs.data ?? []).reduce(
+    (s, r) => s + Number(r.final_price),
+    0,
+  );
+  const serviceCost = (svcs.data ?? []).reduce(
+    (s, r) => s + Number(r.unit_cost ?? 0) * r.quantity,
+    0,
+  );
+  const partsRevenue = (parts.data ?? []).reduce(
+    (s, r) => s + Number(r.final_price),
+    0,
+  );
+  const partsCost = (parts.data ?? []).reduce(
+    (s, r) => s + Number(r.unit_cost ?? 0) * r.quantity,
+    0,
+  );
 
   const totalRevenue = serviceRevenue + partsRevenue;
   const totalCOGS = serviceCost + partsCost;
   const grossProfit = totalRevenue - totalCOGS;
-  const grossMarginPct = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
+  const grossMarginPct =
+    totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
 
   // Expenses by category
   const expenseMap = new Map<string, number>();
@@ -2816,7 +2958,10 @@ export async function getServiceBreakdown(
       service_count: data.count,
       total_revenue: data.revenue,
       avg_price: data.count > 0 ? Math.round(data.revenue / data.count) : 0,
-      percentage_of_revenue: totalRevenue > 0 ? Math.round((data.revenue / totalRevenue) * 1000) / 10 : 0,
+      percentage_of_revenue:
+        totalRevenue > 0
+          ? Math.round((data.revenue / totalRevenue) * 1000) / 10
+          : 0,
     }))
     .sort((a, b) => b.total_revenue - a.total_revenue);
 }

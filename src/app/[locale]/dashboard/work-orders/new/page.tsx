@@ -46,7 +46,9 @@ function NewWorkOrderForm() {
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("newWorkOrder")}
           </Typography.H1>
-          <Typography.Muted className="text-sm text-muted-foreground">{t("createSubtitle")}</Typography.Muted>
+          <Typography.Muted className="text-sm text-muted-foreground">
+            {t("createSubtitle")}
+          </Typography.Muted>
         </div>
       </div>
 

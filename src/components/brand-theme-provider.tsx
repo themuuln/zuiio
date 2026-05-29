@@ -63,12 +63,14 @@ function applyBrandTheme(settings: Record<string, unknown> | null | undefined) {
   const root = document.documentElement;
 
   // New theme system (oklch format)
-  const theme = settings.theme as {
-    primaryColor?: string;
-    accentColor?: string;
-    radius?: string;
-    fontFamily?: string;
-  } | undefined;
+  const theme = settings.theme as
+    | {
+        primaryColor?: string;
+        accentColor?: string;
+        radius?: string;
+        fontFamily?: string;
+      }
+    | undefined;
 
   if (theme) {
     if (theme.primaryColor) {
@@ -103,7 +105,6 @@ function applyBrandTheme(settings: Record<string, unknown> | null | undefined) {
     root.style.removeProperty("--primary");
     root.style.removeProperty("--primary-foreground");
   }
-
 }
 
 /**

@@ -30,9 +30,7 @@ export async function createInvite(
     .maybeSingle();
 
   if (existing?.data) {
-    throw new ConflictError(
-      "An active invite already exists for this email",
-    );
+    throw new ConflictError("An active invite already exists for this email");
   }
 
   const token = generateToken();
@@ -47,11 +45,11 @@ export async function createInvite(
       status: "pending",
       invited_by: invitedByUserId,
       message: message?.trim() ?? null,
-      expires_at: new Date(
-        Date.now() + 7 * 24 * 60 * 60 * 1000,
-      ).toISOString(),
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     })
-    .select("id, organization_id, email, role_id, token, status, invited_by, message, expires_at, created_at, updated_at")
+    .select(
+      "id, organization_id, email, role_id, token, status, invited_by, message, expires_at, created_at, updated_at",
+    )
     .single();
 
   if (error || !data) {
@@ -66,7 +64,9 @@ export async function getOrgInvites(orgId: string): Promise<OrgInvite[]> {
 
   const { data, error } = await supabase
     .from("org_invites")
-    .select("id, organization_id, email, role_id, token, status, invited_by, message, expires_at, created_at, updated_at")
+    .select(
+      "id, organization_id, email, role_id, token, status, invited_by, message, expires_at, created_at, updated_at",
+    )
     .eq("organization_id", orgId)
     .order("created_at", { ascending: false });
 
@@ -129,7 +129,11 @@ export async function redeemInvite(
     throw new ValidationError(error.message ?? "Failed to accept invite");
   }
 
-  const result = data as { success: boolean; error?: string; organization_id?: string };
+  const result = data as {
+    success: boolean;
+    error?: string;
+    organization_id?: string;
+  };
 
   if (!result.success) {
     throw new ValidationError(result.error ?? "Failed to accept invite");

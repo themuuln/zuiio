@@ -32,9 +32,7 @@
       "onFailure": "fail"
     },
     "taskPrefix": "FN",
-    "taskAttributionTrailerNames": [
-      "Fusion-Task-Id"
-    ],
+    "taskAttributionTrailerNames": ["Fusion-Task-Id"],
     "commitMsgHookEnabled": true,
     "includeTaskIdInCommit": true,
     "commitAuthorEnabled": true,

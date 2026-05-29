@@ -110,7 +110,9 @@ export default function BlogPage() {
         {/* ═══ Article Grid ────────────────────────────────── */}
         <section className="px-4 py-10 sm:px-6 sm:py-14">
           <div className="mx-auto max-w-5xl">
-            <Typography.H2 className="mb-8 text-lg font-semibold">{t("latestTitle")}</Typography.H2>
+            <Typography.H2 className="mb-8 text-lg font-semibold">
+              {t("latestTitle")}
+            </Typography.H2>
 
             {ARTICLES.filter((a) => {
               if (activeCategory === "all") return true;
@@ -176,7 +178,9 @@ export default function BlogPage() {
             <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("ctaTitle")}
             </Typography.H2>
-            <Typography.Muted className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</Typography.Muted>
+            <Typography.Muted className="mt-3 text-muted-foreground">
+              {t("ctaSubtitle")}
+            </Typography.Muted>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"

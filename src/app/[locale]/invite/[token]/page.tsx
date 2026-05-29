@@ -17,7 +17,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { ApiResponse } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
 
-
 interface InviteData {
   id: string;
   organization_id: string;
@@ -55,9 +54,7 @@ export default function InviteRedeemPage() {
       });
       if (!res.ok) {
         const body = (await res.json()) as ApiResponse<unknown>;
-        throw new Error(
-          body.error?.message ?? "Invite not found or expired",
-        );
+        throw new Error(body.error?.message ?? "Invite not found or expired");
       }
       const body = (await res.json()) as ApiResponse<InviteData>;
       if (!body.data) throw new Error("Invite not found");
@@ -93,9 +90,7 @@ export default function InviteRedeemPage() {
         organizationId: string;
       }>;
       if (!res.ok || !body.data) {
-        throw new Error(
-          body.error?.message ?? "Failed to accept invite",
-        );
+        throw new Error(body.error?.message ?? "Failed to accept invite");
       }
       setAccepted(true);
       setTimeout(() => {
@@ -141,10 +136,7 @@ export default function InviteRedeemPage() {
             <CardDescription>{state.message}</CardDescription>
           </CardHeader>
           <CardFooter className="justify-center">
-            <Button
-              variant="outline"
-              onClick={() => push("/auth/login")}
-            >
+            <Button variant="outline" onClick={() => push("/auth/login")}>
               {t("backToLogin")}
             </Button>
           </CardFooter>
@@ -196,9 +188,7 @@ export default function InviteRedeemPage() {
           <div className="rounded-lg border bg-muted/30 p-4 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">{t("organization")}</span>
-              <span className="font-medium">
-                {invite.organization_name}
-              </span>
+              <span className="font-medium">{invite.organization_name}</span>
             </div>
             {invite.inviter_name && (
               <div className="mt-2 flex items-center justify-between">

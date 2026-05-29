@@ -2,12 +2,18 @@
 
 import { Loader2, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet,
   SheetContent,
@@ -15,37 +21,33 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import { inputProps } from "@/lib/form-ux";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCreateSupplier } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
-import { Typography } from "@/components/ui/typography";
+
+// ── Schema ───────────────────────────────────────────────────
+
+const supplierSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  contactPerson: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  address: z.string().optional(),
+  taxId: z.string().optional(),
+  paymentTerms: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type SupplierFormValues = z.infer<typeof supplierSchema>;
+
+// ── Component ────────────────────────────────────────────────
 
 interface NewSupplierSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-interface SupplierForm {
-  name: string;
-  contactPerson: string;
-  phone: string;
-  email: string;
-  address: string;
-  taxId: string;
-  paymentTerms: string;
-  notes: string;
-}
-
-const initialForm: SupplierForm = {
-  name: "",
-  contactPerson: "",
-  phone: "",
-  email: "",
-  address: "",
-  taxId: "",
-  paymentTerms: "",
-  notes: "",
-};
 
 export function NewSupplierSheet({
   open,
@@ -55,46 +57,49 @@ export function NewSupplierSheet({
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
   const createSupplier = useCreateSupplier(orgId);
-  const [form, setForm] = useState<SupplierForm>(initialForm);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const form = useForm<SupplierFormValues>({
+    resolver: zodResolver(supplierSchema),
+    defaultValues: {
+      name: "",
+      contactPerson: "",
+      phone: "",
+      email: "",
+      address: "",
+      taxId: "",
+      paymentTerms: "",
+      notes: "",
+    },
+  });
 
   const handleOpenChange = useCallback(
     (value: boolean) => {
       if (!value) {
-        setForm(initialForm);
-        setFieldErrors({});
+        form.reset();
       }
       onOpenChange(value);
     },
-    [onOpenChange],
+    [onOpenChange, form],
   );
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const errors: Record<string, string> = {};
-    if (!form.name.trim()) {
-      errors.name = t("nameRequired");
-    }
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
+  const onSubmit = form.handleSubmit(async (data) => {
     try {
       await createSupplier.mutateAsync({
-        name: form.name.trim(),
-        contact_person: form.contactPerson || undefined,
-        phone: form.phone || undefined,
-        email: form.email || undefined,
-        address: form.address || undefined,
-        tax_id: form.taxId || undefined,
-        payment_terms: form.paymentTerms || undefined,
-        notes: form.notes || undefined,
+        name: data.name.trim(),
+        contact_person: data.contactPerson || undefined,
+        phone: data.phone || undefined,
+        email: data.email || undefined,
+        address: data.address || undefined,
+        tax_id: data.taxId || undefined,
+        payment_terms: data.paymentTerms || undefined,
+        notes: data.notes || undefined,
       });
       toast.success(t("supplierCreated"));
       handleOpenChange(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("failedToCreate"));
     }
-  };
+  });
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -115,7 +120,7 @@ export function NewSupplierSheet({
 
         <form
           id="new-supplier-sheet-form"
-          onSubmit={handleSubmit}
+          onSubmit={onSubmit}
           className="flex-1 overflow-y-auto min-h-0"
         >
           <div className="p-4 flex flex-col gap-4">
@@ -166,130 +171,116 @@ export function NewSupplierSheet({
               </div>
             ) : (
               <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="supplier-name">
+                {/* Name — required */}
+                <Field data-invalid={!!form.formState.errors.name}>
+                  <FieldLabel>
                     {t("name")} <span className="text-destructive">*</span>
                   </FieldLabel>
-                  <Input
-                    id="supplier-name"
-                    value={form.name}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, name: e.target.value }))
-                    }
-                    placeholder={t("namePlaceholder")}
-                    aria-invalid={!!fieldErrors.name}
-                  />
-                  {fieldErrors.name && (
-                    <Typography.Text className="text-xs text-destructive mt-1">
-                      {fieldErrors.name}
-                    </Typography.Text>
-                  )}
+                  <FieldContent>
+                    <Input
+                      id="supplier-name"
+                      placeholder={t("namePlaceholder")}
+                      aria-invalid={!!form.formState.errors.name}
+                      {...form.register("name")}
+                    />
+                    {form.formState.errors.name && (
+                      <FieldError>
+                        {form.formState.errors.name.message}
+                      </FieldError>
+                    )}
+                  </FieldContent>
                 </Field>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Contact Person — optional */}
                   <Field>
-                    <FieldLabel htmlFor="supplier-contact">
-                      {t("contactPerson")}
-                    </FieldLabel>
-                    <Input
-                      id="supplier-contact"
-                      value={form.contactPerson}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          contactPerson: e.target.value,
-                        }))
-                      }
-                      placeholder={t("contactPersonPlaceholder")}
-                    />
+                    <FieldLabel>{t("contactPerson")}</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="supplier-contact"
+                        placeholder={t("contactPersonPlaceholder")}
+                        {...form.register("contactPerson")}
+                      />
+                    </FieldContent>
                   </Field>
+
+                  {/* Phone — optional */}
                   <Field>
-                    <FieldLabel htmlFor="supplier-phone">
-                      {t("phone")}
-                    </FieldLabel>
-                    <Input
-                      id="supplier-phone"
-                      type="tel"
-                      value={form.phone}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          phone: formatMongolianPhone(e.target.value),
-                        }))
-                      }
-                      placeholder={t("phonePlaceholder")}
-                      {...inputProps("phone")}
-                    />
+                    <FieldLabel>{t("phone")}</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="supplier-phone"
+                        type="tel"
+                        placeholder={t("phonePlaceholder")}
+                        {...inputProps("phone")}
+                        {...form.register("phone")}
+                      />
+                    </FieldContent>
                   </Field>
                 </div>
 
+                {/* Email — optional */}
                 <Field>
-                  <FieldLabel htmlFor="supplier-email">{t("email")}</FieldLabel>
-                  <Input
-                    id="supplier-email"
-                    type="email"
-                    value={form.email}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, email: e.target.value }))
-                    }
-                    placeholder={t("emailPlaceholder")}
-                  />
+                  <FieldLabel>{t("email")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="supplier-email"
+                      type="email"
+                      placeholder={t("emailPlaceholder")}
+                      {...form.register("email")}
+                    />
+                  </FieldContent>
                 </Field>
 
+                {/* Address — optional */}
                 <Field>
-                  <FieldLabel htmlFor="supplier-address">
-                    {t("address")}
-                  </FieldLabel>
-                  <Input
-                    id="supplier-address"
-                    value={form.address}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, address: e.target.value }))
-                    }
-                    placeholder={t("addressPlaceholder")}
-                  />
+                  <FieldLabel>{t("address")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="supplier-address"
+                      placeholder={t("addressPlaceholder")}
+                      {...form.register("address")}
+                    />
+                  </FieldContent>
                 </Field>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Tax ID — optional */}
                   <Field>
-                    <FieldLabel htmlFor="supplier-tax-id">Tax ID</FieldLabel>
-                    <Input
-                      id="supplier-tax-id"
-                      value={form.taxId}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, taxId: e.target.value }))
-                      }
-                      placeholder={t("taxIdPlaceholder")}
-                    />
+                    <FieldLabel>Tax ID</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="supplier-tax-id"
+                        placeholder={t("taxIdPlaceholder")}
+                        {...inputProps("taxId")}
+                        {...form.register("taxId")}
+                      />
+                    </FieldContent>
                   </Field>
+
+                  {/* Payment Terms — optional */}
                   <Field>
-                    <FieldLabel htmlFor="supplier-payment-terms">
-                      Payment Terms
-                    </FieldLabel>
-                    <Input
-                      id="supplier-payment-terms"
-                      value={form.paymentTerms}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          paymentTerms: e.target.value,
-                        }))
-                      }
-                      placeholder={t("paymentTermsPlaceholder")}
-                    />
+                    <FieldLabel>Payment Terms</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="supplier-payment-terms"
+                        placeholder={t("paymentTermsPlaceholder")}
+                        {...form.register("paymentTerms")}
+                      />
+                    </FieldContent>
                   </Field>
                 </div>
 
+                {/* Notes — optional */}
                 <Field>
-                  <FieldLabel htmlFor="supplier-notes">{t("notes")}</FieldLabel>
-                  <Input
-                    id="supplier-notes"
-                    value={form.notes}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, notes: e.target.value }))
-                    }
-                    placeholder={t("notesPlaceholder")}
-                  />
+                  <FieldLabel>{t("notes")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="supplier-notes"
+                      placeholder={t("notesPlaceholder")}
+                      {...form.register("notes")}
+                    />
+                  </FieldContent>
                 </Field>
               </FieldGroup>
             )}

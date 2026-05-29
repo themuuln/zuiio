@@ -3,11 +3,7 @@
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import type { WorkOrderPart } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
@@ -20,7 +16,11 @@ interface PartsSectionProps {
   newPartPrice: number;
   showAddPart: boolean;
   addingPart: boolean;
-  pendingPartPreview: { name: string; quantity: number; unitPrice: number } | null;
+  pendingPartPreview: {
+    name: string;
+    quantity: number;
+    unitPrice: number;
+  } | null;
   editingPriceId: string | null;
   editingPriceVal: string;
   onNewPartNameChange: (val: string) => void;
@@ -63,24 +63,19 @@ export function PartsSection({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
           <div className="flex items-center justify-center size-5 rounded-md bg-amber-500/10">
-            <span className="text-[10px] font-semibold text-amber-600">
-              P
-            </span>
+            <span className="text-[10px] font-semibold text-amber-600">P</span>
           </div>
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {t("parts")}
           </span>
           {(parts?.length ?? 0) > 0 && (
-            <Badge variant="outline">
-              {parts?.length}
-            </Badge>
+            <Badge variant="outline">{parts?.length}</Badge>
           )}
         </div>
       </div>
 
       {/* Parts list */}
-      {(parts ?? []).length === 0 &&
-      !pendingPartPreview ? (
+      {(parts ?? []).length === 0 && !pendingPartPreview ? (
         <Empty>
           <EmptyHeader>
             <EmptyTitle>{t("noPartsYet")}</EmptyTitle>
@@ -92,9 +87,7 @@ export function PartsSection({
           <div className="flex items-center gap-2 px-1 mb-0.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
             <div className="flex-1">{t("part")}</div>
             <div className="w-14 text-right">{t("qty")}</div>
-            <div className="w-20 text-right">
-              {t("total")}
-            </div>
+            <div className="w-20 text-right">{t("total")}</div>
             <div className="w-7" />
           </div>
           <div className="flex flex-col gap-px">
@@ -121,17 +114,11 @@ export function PartsSection({
                       type="number"
                       className="w-20 h-7 text-right text-xs font-semibold tabular-nums rounded-sm border-primary/60 bg-background px-1 [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       value={editingPriceVal}
-                      onChange={(e) =>
-                        onEditPriceChange(e.target.value)
-                      }
-                      onBlur={() =>
-                        onEditPriceSave(part.id)
-                      }
+                      onChange={(e) => onEditPriceChange(e.target.value)}
+                      onBlur={() => onEditPriceSave(part.id)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter")
-                          onEditPriceSave(part.id);
-                        if (e.key === "Escape")
-                          onEditPriceCancel();
+                        if (e.key === "Enter") onEditPriceSave(part.id);
+                        if (e.key === "Escape") onEditPriceCancel();
                       }}
                       autoFocus
                     />
@@ -140,7 +127,10 @@ export function PartsSection({
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        onEditPriceStart(part.id, String(Number(part.final_price)));
+                        onEditPriceStart(
+                          part.id,
+                          String(Number(part.final_price)),
+                        );
                       }}
                       className="font-semibold tabular-nums h-auto px-1 -mx-1 rounded-sm"
                     >
@@ -176,8 +166,7 @@ export function PartsSection({
                 </div>
                 <div className="w-20 text-right text-xs font-semibold tabular-nums text-amber-700 dark:text-amber-400">
                   {formatMNT(
-                    pendingPartPreview.quantity *
-                      pendingPartPreview.unitPrice,
+                    pendingPartPreview.quantity * pendingPartPreview.unitPrice,
                   )}
                 </div>
                 <div className="w-7 flex justify-center">
@@ -204,9 +193,19 @@ export function PartsSection({
             <Input
               type="number"
               value={newPartQty}
-              onChange={(e) =>
-                onNewPartQtyChange(Number(e.target.value) || 1)
-              }
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "") {
+                  onNewPartQtyChange(0);
+                  return;
+                }
+                const n = Number(v);
+                if (!isNaN(n)) onNewPartQtyChange(n);
+              }}
+              onBlur={(e) => {
+                const n = Number(e.target.value);
+                if (isNaN(n) || n < 1) onNewPartQtyChange(1);
+              }}
               placeholder={t("qty")}
               className="h-8 w-14 text-center text-xs"
               disabled={addingPart}
@@ -214,9 +213,15 @@ export function PartsSection({
             <Input
               type="number"
               value={newPartPrice || ""}
-              onChange={(e) =>
-                onNewPartPriceChange(Number(e.target.value) || 0)
-              }
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "") {
+                  onNewPartPriceChange(0);
+                  return;
+                }
+                const n = Number(v);
+                if (!isNaN(n)) onNewPartPriceChange(n);
+              }}
               placeholder={t("unitPrice")}
               className="h-8 flex-1 text-xs"
               disabled={addingPart}
@@ -227,11 +232,7 @@ export function PartsSection({
               disabled={!newPartName.trim() || addingPart}
               className="h-8 px-2 text-xs"
             >
-              {addingPart ? (
-                <Loader2 className="size-3 animate-spin" />
-              ) : (
-                "Add"
-              )}
+              {addingPart ? <Loader2 className="size-3 animate-spin" /> : "Add"}
             </Button>
           </div>
         </div>

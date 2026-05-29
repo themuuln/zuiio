@@ -14,7 +14,6 @@ export interface BarChartProps {
   layout?: "horizontal" | "vertical";
 }
 
-export const BarChart = dynamic(
-  () => import("./_bar-chart-inner"),
-  { ssr: false },
-);
+export const BarChart = dynamic(() => import("./_bar-chart-inner"), {
+  ssr: false,
+});

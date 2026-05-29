@@ -52,7 +52,9 @@ export default function PortalSettingsPage() {
         <CardContent className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t("common.name")}</span>
-            <span className="font-medium">{customer?.full_name ?? customer?.first_name ?? "—"}</span>
+            <span className="font-medium">
+              {customer?.full_name ?? customer?.first_name ?? "—"}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t("common.phone")}</span>
@@ -97,14 +99,15 @@ export default function PortalSettingsPage() {
                 }
                 disabled={settingPwd}
               >
-                {settingPwd && <Loader2 className="size-4 animate-spin mr-1.5" />}
+                {settingPwd && (
+                  <Loader2 className="size-4 animate-spin mr-1.5" />
+                )}
                 {t("portal.setPassword")}
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
-
     </div>
   );
 }

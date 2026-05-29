@@ -2,12 +2,7 @@
 
 import { Building2 } from "lucide-react";
 import OrgLogoUpload from "@/components/org-logo-upload";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Organization } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
 
@@ -41,13 +36,17 @@ export function OrganizationCard({
           onLogoChange={() => onRefetch()}
         />
         <div className="rounded-lg bg-muted/50 px-3 py-2.5">
-          <Typography.Muted className="text-xs font-medium text-muted-foreground">Name</Typography.Muted>
+          <Typography.Muted className="text-xs font-medium text-muted-foreground">
+            Name
+          </Typography.Muted>
           <Typography.Text className="mt-0.5 text-sm font-medium">
             {organization?.name ?? "\u2014"}
           </Typography.Text>
         </div>
         <div className="rounded-lg bg-muted/50 px-3 py-2.5">
-          <Typography.Muted className="text-xs font-medium text-muted-foreground">Slug</Typography.Muted>
+          <Typography.Muted className="text-xs font-medium text-muted-foreground">
+            Slug
+          </Typography.Muted>
           <Typography.Muted className="mt-0.5 text-sm font-mono text-muted-foreground">
             {organization?.slug ?? "\u2014"}
           </Typography.Muted>

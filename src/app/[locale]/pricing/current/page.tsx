@@ -24,7 +24,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
 
-
 type FeatureStatus = boolean;
 
 interface PlanFeature {
@@ -139,11 +138,7 @@ export default function PricingCurrentPage() {
           </Link>
 
           <nav className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              render={<Link href="/pricing" />}
-            >
+            <Button variant="ghost" size="sm" render={<Link href="/pricing" />}>
               {t("viewGoalPricing")}
             </Button>
             <Button
@@ -244,7 +239,10 @@ export default function PricingCurrentPage() {
                 <CardContent className="flex-1">
                   <ul className="flex flex-col gap-2.5">
                     {plan.features.map((f, i) => (
-                      <li key={`feature-${i}`} className="flex items-start gap-2 text-sm">
+                      <li
+                        key={`feature-${i}`}
+                        className="flex items-start gap-2 text-sm"
+                      >
                         <FeatureIcon status={f.included} />
                         <span
                           className={
@@ -280,11 +278,16 @@ export default function PricingCurrentPage() {
           <Typography.H2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {t("enterpriseTitle")}
           </Typography.H2>
-          <Typography.Muted className="mt-3 text-muted-foreground">{t("enterpriseDesc")}</Typography.Muted>
+          <Typography.Muted className="mt-3 text-muted-foreground">
+            {t("enterpriseDesc")}
+          </Typography.Muted>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:text-left">
             {[1, 2, 3, 4].map((i) => (
-              <div key={`item-${i}`} className="flex items-center gap-2 text-sm">
+              <div
+                key={`item-${i}`}
+                className="flex items-center gap-2 text-sm"
+              >
                 <Check className="size-4 shrink-0 text-emerald-500" />
                 <span>{t(`enterpriseFeature${i}`)}</span>
               </div>
@@ -306,11 +309,16 @@ export default function PricingCurrentPage() {
           <Typography.H2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {t("comingTitle")}
           </Typography.H2>
-          <Typography.Muted className="mt-3 text-muted-foreground">{t("comingSubtitle")}</Typography.Muted>
+          <Typography.Muted className="mt-3 text-muted-foreground">
+            {t("comingSubtitle")}
+          </Typography.Muted>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:text-left">
             {[2, 3, 4, 5, 6].map((i) => (
-              <div key={`item-${i}`} className="flex items-center gap-2 text-sm">
+              <div
+                key={`item-${i}`}
+                className="flex items-center gap-2 text-sm"
+              >
                 <Check className="size-4 shrink-0 text-muted-foreground/40" />
                 <span className="text-muted-foreground">
                   {t(`comingItem${i}`)}
@@ -348,7 +356,9 @@ export default function PricingCurrentPage() {
                   </span>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <Typography.Muted className="text-muted-foreground">{t(item.a)}</Typography.Muted>
+                  <Typography.Muted className="text-muted-foreground">
+                    {t(item.a)}
+                  </Typography.Muted>
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -362,7 +372,9 @@ export default function PricingCurrentPage() {
           <Typography.H2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {t("ctaTitle")}
           </Typography.H2>
-          <Typography.Muted className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</Typography.Muted>
+          <Typography.Muted className="mt-3 text-muted-foreground">
+            {t("ctaSubtitle")}
+          </Typography.Muted>
           <div className="mt-8">
             <Button size="lg" render={<Link href="/auth/signup" />}>
               {t("ctaButton")}

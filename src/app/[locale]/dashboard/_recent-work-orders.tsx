@@ -128,7 +128,8 @@ export function RecentWorkOrdersTable({
                           <Badge variant="outline" className="gap-1.5">
                             <span
                               className={`size-1.5 rounded-full ${
-                                WO_STATUS_STYLES[wo.status]?.dot ?? "bg-muted-foreground"
+                                WO_STATUS_STYLES[wo.status]?.dot ??
+                                "bg-muted-foreground"
                               }`}
                             />
                             {wo.status}

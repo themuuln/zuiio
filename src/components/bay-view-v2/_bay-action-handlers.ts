@@ -181,7 +181,7 @@ export function useBayActionHandlers({
       );
       await updateBayCount(count);
     } catch {
-      setData(prev => ({ ...prev!, bayCount: prevCount, bays: prevBays }));
+      setData((prev) => ({ ...prev!, bayCount: prevCount, bays: prevBays }));
       setToast({
         message: "Failed to update bay count — reverted",
         variant: "error",

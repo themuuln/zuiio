@@ -626,10 +626,6 @@
     "complaint": "Гомдол / Оношлогоо",
     "complaintPlaceholder": "Үйлчлүүлэгчийн гомдлыг бичнэ үү...",
     "diagnosisLabelPlaceholder": "Оношлогооны шошго сонгох...",
-    "firstName": "Нэр",
-    "lastName": "Овог",
-    "phone": "Утас",
-    "createCustomer": "Харилцагч үүсгэх",
     "createVehicle": "Тээврийн хэрэгсэл үүсгэх",
     "quickCreateCustomerDescription": "Системд шинэ харилцагч нэмэх",
     "quickCreateVehicleDescription": "Системд шинэ тээврийн хэрэгсэл нэмэх",
@@ -1173,7 +1169,9 @@
     "noNotes": "Тэмдэглэл байхгүй",
     "paginationShowing": "{from}-{to} / {total}",
     "paginationPrev": "Өмнөх",
-    "paginationNext": "Дараах"
+    "paginationNext": "Дараах",
+    "createSubtitle": "Харилцагчийн бүртгэлийг үйлчилгээний өмнө үүсгэнэ үү.",
+    "customerNotFound": "Харилцагч олдсонгүй."
   },
   "vehicles": {
     "title": "Тээврийн хэрэгсэл",
@@ -1272,7 +1270,8 @@
     "cancel": "Цуцлах",
     "createVehicle": "Тээврийн хэрэгсэл үүсгэх",
     "plateRequired": "Улсын дугаар шаардлагатай",
-    "plateInvalid": "4 оронтой тоо + 3 үсэг байх ёстой (жишээ: 4444УНА)"
+    "plateInvalid": "4 оронтой тоо + 3 үсэг байх ёстой (жишээ: 4444УНА)",
+    "vehicleNotFound": "Машин олдсонгүй."
   },
   "vehicleModels": {
     "title": "Машины загварууд",

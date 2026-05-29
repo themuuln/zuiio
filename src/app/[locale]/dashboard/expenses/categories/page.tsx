@@ -135,13 +135,20 @@ export default function CategoriesPage() {
     if (isEditing && selectedCategory) {
       updateCategory.mutate(
         { id: selectedCategory.id, ...params },
-        { onSuccess: () => { setDialogOpen(false); setSelectedCategory(null); } },
+        {
+          onSuccess: () => {
+            setDialogOpen(false);
+            setSelectedCategory(null);
+          },
+        },
       );
     } else {
-      createCategory.mutate(
-        params,
-        { onSuccess: () => { setDialogOpen(false); setSelectedCategory(null); } },
-      );
+      createCategory.mutate(params, {
+        onSuccess: () => {
+          setDialogOpen(false);
+          setSelectedCategory(null);
+        },
+      });
     }
   }
 
@@ -184,7 +191,9 @@ export default function CategoriesPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">Categories</Typography.H1>
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
+            Categories
+          </Typography.H1>
           <Typography.Muted className="text-muted-foreground">
             Organize expenses into categories for better tracking
           </Typography.Muted>

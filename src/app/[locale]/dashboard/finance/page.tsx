@@ -879,11 +879,15 @@ export default function FinancePage() {
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("nav.finance")}
           </Typography.H1>
-          <Typography.Muted className="mt-1 text-muted-foreground">{t("finance.subtitle")}</Typography.Muted>
+          <Typography.Muted className="mt-1 text-muted-foreground">
+            {t("finance.subtitle")}
+          </Typography.Muted>
         </div>
         <Card className="py-12">
           <CardContent className="flex flex-col items-center gap-4">
-            <Typography.Muted className="text-muted-foreground">{error}</Typography.Muted>
+            <Typography.Muted className="text-muted-foreground">
+              {error}
+            </Typography.Muted>
             <Button onClick={() => window.location.reload()}>Retry</Button>
           </CardContent>
         </Card>
@@ -898,7 +902,9 @@ export default function FinancePage() {
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("nav.finance")}
           </Typography.H1>
-          <Typography.Muted className="mt-1 text-muted-foreground">{t("finance.subtitle")}</Typography.Muted>
+          <Typography.Muted className="mt-1 text-muted-foreground">
+            {t("finance.subtitle")}
+          </Typography.Muted>
         </div>
         <div className="flex flex-col items-end gap-3">
           <PeriodBar value={period} onChange={setPeriod} />

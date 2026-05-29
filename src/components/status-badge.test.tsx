@@ -41,7 +41,9 @@ describe("StatusBadge", () => {
   });
 
   it("applies custom className", () => {
-    const { container } = render(<StatusBadge status="New" className="custom-class" />);
+    const { container } = render(
+      <StatusBadge status="New" className="custom-class" />,
+    );
     const badge = container.querySelector('[data-slot="status-badge"]');
     expect(badge?.classList.contains("custom-class")).toBe(true);
   });

@@ -207,9 +207,7 @@ export function PostServiceDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Car className="size-4 text-muted-foreground" />
-            {isComplete
-              ? t("postServiceCompleteTitle")
-              : t("postServiceTitle")}
+            {isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
             <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50  px-2 py-0.5 ml-1">
               {vehiclePlate}
             </span>
@@ -238,9 +236,7 @@ export function PostServiceDialog({
               <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
                 <MessageSquare className="size-3.5" />
                 {t("postServiceServicesTitle")}
-                <Badge variant="secondary">
-                  {entries.length}
-                </Badge>
+                <Badge variant="secondary">{entries.length}</Badge>
               </span>
               <Button
                 variant="ghost"
@@ -297,7 +293,9 @@ export function PostServiceDialog({
           {error && (
             <div className="flex items-start gap-2  bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
               <AlertTriangle className="mt-0.5 size-4 shrink-0 text-red-500" />
-              <Typography.Text className="text-xs text-red-700 dark:text-red-400">{error}</Typography.Text>
+              <Typography.Text className="text-xs text-red-700 dark:text-red-400">
+                {error}
+              </Typography.Text>
             </div>
           )}
 
@@ -353,9 +351,7 @@ function ServiceCard({
             {entry.serviceName}
           </span>
           {entry.priority !== "standard" && (
-            <Badge variant="outline">
-              {entry.priority}
-            </Badge>
+            <Badge variant="outline">{entry.priority}</Badge>
           )}
         </div>
         {entry.expanded ? (
@@ -425,7 +421,10 @@ function ServiceCard({
               <Select
                 value={entry.priority}
                 onValueChange={(val) => {
-                  if (val) onChange({ priority: val as "standard" | "important" | "urgent" });
+                  if (val)
+                    onChange({
+                      priority: val as "standard" | "important" | "urgent",
+                    });
                 }}
               >
                 <SelectTrigger className="h-8 text-xs">

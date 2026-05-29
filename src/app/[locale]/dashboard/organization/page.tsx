@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,14 +25,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization, SubscriptionPlanInfo } from "@/lib/types";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { Typography } from "@/components/ui/typography";
 
 export default function OrganizationPage() {
@@ -72,29 +78,44 @@ export default function OrganizationPage() {
     staleTime: 30_000,
   });
 
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ name: "", logoUrl: "" });
-  const [isSaving, setIsSaving] = useState(false);
+  // ── Org edit form schema ────────────────────────────────────
 
-  useEffect(() => {
-    if (organization) {
-      setForm({
-        name: organization.name ?? "",
-        logoUrl: organization.logo_url ?? "",
-      });
-    }
-  }, [organization]);
+  const orgEditSchema = z.object({
+    name: z
+      .string()
+      .min(1, "Organization name is required")
+      .max(100, "Name is too long"),
+    logoUrl: z.string().url("Invalid URL").or(z.literal("")),
+  });
+
+  type OrgEditValues = z.infer<typeof orgEditSchema>;
+
+  // Keep initial form values stable across renders for defaultValues
+  const initialOrgRef = useRef<OrgEditValues>({
+    name: organization?.name ?? "",
+    logoUrl: organization?.logo_url ?? "",
+  });
+
+  const form = useForm<OrgEditValues>({
+    resolver: zodResolver(orgEditSchema),
+    defaultValues: initialOrgRef.current,
+  });
+
+  const watchedLogoUrl = form.watch("logoUrl");
+  const [editing, setEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     if (!orgId) return;
     setIsSaving(true);
+    const values = form.getValues();
     try {
       const res = await fetch(`/api/organizations/${orgId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: form.name,
-          logoUrl: form.logoUrl || null,
+          name: values.name,
+          logoUrl: values.logoUrl || null,
         }),
       });
       const json = await res.json();
@@ -112,7 +133,7 @@ export default function OrganizationPage() {
   };
 
   const handleCancel = () => {
-    setForm({
+    form.reset({
       name: organization?.name ?? "",
       logoUrl: organization?.logo_url ?? "",
     });
@@ -151,26 +172,34 @@ export default function OrganizationPage() {
         {subscription ? (
           <>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
-              <Typography.Muted className="text-[10px] text-muted-foreground">Plan</Typography.Muted>
+              <Typography.Muted className="text-[10px] text-muted-foreground">
+                Plan
+              </Typography.Muted>
               <Typography.Text className="text-xs font-medium">
                 {formatPlanType(subscription.planType)}
               </Typography.Text>
             </div>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
-              <Typography.Muted className="text-[10px] text-muted-foreground">Status</Typography.Muted>
+              <Typography.Muted className="text-[10px] text-muted-foreground">
+                Status
+              </Typography.Muted>
               <Typography.Text className="text-xs font-medium capitalize">
                 {subscription.status}
               </Typography.Text>
             </div>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
-              <Typography.Muted className="text-[10px] text-muted-foreground">Started</Typography.Muted>
+              <Typography.Muted className="text-[10px] text-muted-foreground">
+                Started
+              </Typography.Muted>
               <Typography.Text className="text-xs font-medium">
                 {formatDate(subscription.startedAt)}
               </Typography.Text>
             </div>
             {subscription.trial && subscription.expiresAt && (
               <div className="rounded-md border border-amber-200/50 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/20 px-2.5 py-1.5">
-                <Typography.Muted className="text-[10px] text-muted-foreground">Trial ends</Typography.Muted>
+                <Typography.Muted className="text-[10px] text-muted-foreground">
+                  Trial ends
+                </Typography.Muted>
                 <Typography.Text className="text-xs font-medium">
                   {formatDate(subscription.expiresAt)}
                 </Typography.Text>
@@ -228,11 +257,15 @@ export default function OrganizationPage() {
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("nav.organization")}
           </Typography.H1>
-          <Typography.Muted className="text-muted-foreground">Manage your organization</Typography.Muted>
+          <Typography.Muted className="text-muted-foreground">
+            Manage your organization
+          </Typography.Muted>
         </div>
         <Card>
           <CardContent className="flex flex-col items-start gap-4 py-6">
-            <Typography.Text className="text-destructive">{error}</Typography.Text>
+            <Typography.Text className="text-destructive">
+              {error}
+            </Typography.Text>
             <Button
               onClick={() => {
                 orgInfoQuery.refetch();
@@ -253,7 +286,9 @@ export default function OrganizationPage() {
         <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("nav.organization")}
         </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">Manage your organization</Typography.Muted>
+        <Typography.Muted className="text-muted-foreground">
+          Manage your organization
+        </Typography.Muted>
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>
@@ -276,55 +311,78 @@ export default function OrganizationPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {editing ? (
-              <>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  form.handleSubmit(handleSave)();
+                }}
+                className="flex flex-col gap-3"
+              >
+                <Field data-invalid={!!form.formState.errors.name}>
+                  <FieldLabel>Name</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      placeholder="Organization name"
+                      aria-invalid={!!form.formState.errors.name}
+                      {...form.register("name")}
+                    />
+                    {form.formState.errors.name && (
+                      <FieldError>
+                        {form.formState.errors.name.message}
+                      </FieldError>
+                    )}
+                  </FieldContent>
+                </Field>
+
                 <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">Name</Typography.Muted>
-                  <Input
-                    value={form.name}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, name: e.target.value }))
-                    }
-                    placeholder="Organization name"
-                  />
-                </div>
-                <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">Slug</Typography.Muted>
+                  <Typography.Muted className="text-sm text-muted-foreground">
+                    Slug
+                  </Typography.Muted>
                   <Typography.Text className="font-medium">
                     {organization?.slug ?? "\u2014"}
                   </Typography.Text>
                 </div>
-                <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">Logo URL</Typography.Muted>
-                  <Input
-                    value={form.logoUrl}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, logoUrl: e.target.value }))
-                    }
-                    placeholder="https://example.com/logo.png"
-                  />
-                  {form.logoUrl && (
-                    <div className="mt-2 rounded border p-1">
-                      <Image
-                        src={form.logoUrl}
-                        alt="Logo preview"
-                        width={200}
-                        height={80}
-                        className="max-h-20 rounded"
-                        unoptimized
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display =
-                            "none";
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
+
+                <Field data-invalid={!!form.formState.errors.logoUrl}>
+                  <FieldLabel>Logo URL</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      placeholder="https://example.com/logo.png"
+                      aria-invalid={!!form.formState.errors.logoUrl}
+                      {...form.register("logoUrl")}
+                    />
+                    {form.formState.errors.logoUrl && (
+                      <FieldError>
+                        {form.formState.errors.logoUrl.message}
+                      </FieldError>
+                    )}
+                    {watchedLogoUrl && (
+                      <div className="mt-2 rounded border p-1">
+                        <Image
+                          src={watchedLogoUrl}
+                          alt="Logo preview"
+                          width={200}
+                          height={80}
+                          className="max-h-20 rounded"
+                          unoptimized
+                          onError={(e) => {
+                            (
+                              e.currentTarget as HTMLImageElement
+                            ).style.display = "none";
+                          }}
+                        />
+                      </div>
+                    )}
+                  </FieldContent>
+                </Field>
+
                 <div className="flex gap-2 pt-2">
-                  <Button onClick={handleSave} disabled={isSaving} size="sm">
+                  <Button type="submit" disabled={isSaving} size="sm">
                     <Save className="mr-1 size-3.5" />
                     {isSaving ? "Saving..." : "Save"}
                   </Button>
                   <Button
+                    type="button"
                     onClick={handleCancel}
                     variant="outline"
                     size="sm"
@@ -334,17 +392,21 @@ export default function OrganizationPage() {
                     Cancel
                   </Button>
                 </div>
-              </>
+              </form>
             ) : (
               <>
                 <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">Name</Typography.Muted>
+                  <Typography.Muted className="text-sm text-muted-foreground">
+                    Name
+                  </Typography.Muted>
                   <Typography.Text className="font-medium">
                     {organization?.name ?? "\u2014"}
                   </Typography.Text>
                 </div>
                 <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">Slug</Typography.Muted>
+                  <Typography.Muted className="text-sm text-muted-foreground">
+                    Slug
+                  </Typography.Muted>
                   <Typography.Text className="font-medium">
                     {organization?.slug ?? "\u2014"}
                   </Typography.Text>
@@ -366,7 +428,9 @@ export default function OrganizationPage() {
             {subscription ? (
               <>
                 <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">Plan</Typography.Muted>
+                  <Typography.Muted className="text-sm text-muted-foreground">
+                    Plan
+                  </Typography.Muted>
                   <Typography.Text className="font-medium">
                     {formatPlanType(subscription.planType)}
                     {subscription.trial && (
@@ -377,13 +441,17 @@ export default function OrganizationPage() {
                   </Typography.Text>
                 </div>
                 <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">Status</Typography.Muted>
+                  <Typography.Muted className="text-sm text-muted-foreground">
+                    Status
+                  </Typography.Muted>
                   <Typography.Text className="font-medium capitalize">
                     {subscription.status}
                   </Typography.Text>
                 </div>
                 <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">Started</Typography.Muted>
+                  <Typography.Muted className="text-sm text-muted-foreground">
+                    Started
+                  </Typography.Muted>
                   <Typography.Text className="font-medium">
                     {formatDate(subscription.startedAt)}
                   </Typography.Text>

@@ -41,7 +41,9 @@ export function SearchInput({
   const [value, setValue] = useState(externalValue ?? "");
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
-  const shortcutLabel = focusShortcut ? `Cmd+${focusShortcut.toUpperCase()}` : undefined;
+  const shortcutLabel = focusShortcut
+    ? `Cmd+${focusShortcut.toUpperCase()}`
+    : undefined;
   useEffect(() => {
     if (externalValue !== undefined) {
       setValue(externalValue);
@@ -125,10 +127,7 @@ export function SearchInput({
       )}
       {loading && (
         <InputGroupAddon align="inline-end">
-          <Loader2
-            className="size-5 animate-spin"
-            aria-label="Searching..."
-          />
+          <Loader2 className="size-5 animate-spin" aria-label="Searching..." />
         </InputGroupAddon>
       )}
       {!loading && value && (
@@ -159,7 +158,18 @@ function isEditingActive(): boolean {
   if (tag === "TEXTAREA" || tag === "SELECT") return true;
   if (tag === "INPUT") {
     const type = (el as HTMLInputElement).type;
-    return ["text", "search", "email", "number", "password", "tel", "url"].includes(type);
+    return [
+      "text",
+      "search",
+      "email",
+      "number",
+      "password",
+      "tel",
+      "url",
+    ].includes(type);
   }
-  return el.getAttribute("role") === "textbox" || (el as HTMLElement).isContentEditable;
+  return (
+    el.getAttribute("role") === "textbox" ||
+    (el as HTMLElement).isContentEditable
+  );
 }

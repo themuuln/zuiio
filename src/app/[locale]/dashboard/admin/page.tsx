@@ -127,7 +127,9 @@ export default function AdminPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <ShieldAlert className="size-10 text-destructive" />
-        <Typography.H2 className="text-xl font-semibold">Access Denied</Typography.H2>
+        <Typography.H2 className="text-xl font-semibold">
+          Access Denied
+        </Typography.H2>
         <Typography.Muted className="text-muted-foreground text-center max-w-md">
           You need super admin privileges to access this dashboard.
         </Typography.Muted>
@@ -175,7 +177,9 @@ export default function AdminPage() {
                   className="grid grid-cols-1 md:grid-cols-[1fr_120px_100px_230px] gap-3 md:gap-4 px-6 py-4 items-center"
                 >
                   <div className="min-w-0">
-                    <Typography.Text className="text-sm font-medium truncate">{org.name}</Typography.Text>
+                    <Typography.Text className="text-sm font-medium truncate">
+                      {org.name}
+                    </Typography.Text>
                     <Typography.Muted className="text-xs text-muted-foreground truncate">
                       {org.slug}
                     </Typography.Muted>

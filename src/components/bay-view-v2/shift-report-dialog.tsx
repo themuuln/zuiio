@@ -69,7 +69,9 @@ export function ShiftReportDialog({ open, onOpenChange }: Props) {
 
         {error && (
           <div className="flex flex-col items-center gap-3 py-8">
-            <Typography.Muted className="text-sm text-muted-foreground">{error}</Typography.Muted>
+            <Typography.Muted className="text-sm text-muted-foreground">
+              {error}
+            </Typography.Muted>
             <Button
               variant="outline"
               size="sm"

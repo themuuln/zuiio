@@ -145,7 +145,9 @@ export default function MovementsPage() {
         <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("movementsTitle")}
         </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">{t("movementsSubtitle")}</Typography.Muted>
+        <Typography.Muted className="text-muted-foreground">
+          {t("movementsSubtitle")}
+        </Typography.Muted>
       </div>
 
       <ListToolbar

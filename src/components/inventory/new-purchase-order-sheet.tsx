@@ -2,10 +2,18 @@
 
 import { FileText, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
+import { useFieldArray } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -14,8 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Typography } from "@/components/ui/typography";
+import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -23,6 +30,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import {
   useCreatePurchaseOrder,
   usePartsCatalog,
@@ -30,18 +40,35 @@ import {
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatMNT } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
+
+// ── Schema ───────────────────────────────────────────────────
+
+const lineItemSchema = z.object({
+  part_id: z.string().min(1, "Select a part"),
+  quantity_ordered: z.number().min(1, "Quantity must be at least 1"),
+  unit_cost: z.number().min(0, "Cost cannot be negative"),
+});
+
+const purchaseOrderSchema = z.object({
+  orderNumber: z.string().min(1, "Order number is required"),
+  supplierId: z.string().optional(),
+  notes: z.string().optional(),
+  items: z
+    .array(lineItemSchema)
+    .min(1, "Add at least one item")
+    .refine(
+      (items) => items.every((i) => i.part_id.length > 0),
+      "Select a part for all items",
+    ),
+});
+
+type PurchaseOrderFormValues = z.infer<typeof purchaseOrderSchema>;
+
+// ── Component ────────────────────────────────────────────────
 
 interface NewPurchaseOrderSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-interface LineItem {
-  id: string;
-  part_id: string;
-  quantity_ordered: number;
-  unit_cost: number;
 }
 
 export function NewPurchaseOrderSheet({
@@ -59,69 +86,53 @@ export function NewPurchaseOrderSheet({
     orgQuery.isPending || suppliersQuery.isLoading || partsQuery.isLoading;
   const createPO = useCreatePurchaseOrder(orgId);
 
-  const [orderNumber, setOrderNumber] = useState("");
-  const [supplierId, setSupplierId] = useState("");
-  const [notes, setNotes] = useState("");
-  const [items, setItems] = useState<LineItem[]>([]);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const form = useForm<PurchaseOrderFormValues>({
+    resolver: zodResolver(purchaseOrderSchema),
+    defaultValues: {
+      orderNumber: "",
+      supplierId: "",
+      notes: "",
+      items: [],
+    },
+  });
 
+  const {
+    fields: itemFields,
+    append: addItem,
+    remove: removeItem,
+  } = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
+
+  const items = form.watch("items");
   const totalAmount = items.reduce(
-    (sum, item) => sum + item.quantity_ordered * item.unit_cost,
+    (sum, item) => sum + (item.quantity_ordered || 0) * (item.unit_cost || 0),
     0,
   );
 
   const handleOpenChange = useCallback(
     (value: boolean) => {
       if (!value) {
-        setOrderNumber("");
-        setSupplierId("");
-        setNotes("");
-        setItems([]);
-        setFieldErrors({});
+        form.reset({
+          orderNumber: "",
+          supplierId: "",
+          notes: "",
+          items: [],
+        });
       }
       onOpenChange(value);
     },
-    [onOpenChange],
+    [onOpenChange, form],
   );
 
-  const addItem = () => {
-    setItems((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        part_id: "",
-        quantity_ordered: 1,
-        unit_cost: 0,
-      },
-    ]);
-  };
-
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-  };
-
-  const updateItem = (id: string, updates: Partial<LineItem>) => {
-    setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, ...updates } : i)),
-    );
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const errors: Record<string, string> = {};
-    if (!orderNumber.trim()) errors.orderNumber = t("orderNumberRequired");
-    if (items.length === 0) errors.items = t("addAtLeastOneItem");
-    if (items.some((i) => !i.part_id))
-      errors.items = t("selectPartForAllItems");
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
+  const onSubmit = form.handleSubmit(async (data) => {
     try {
       await createPO.mutateAsync({
-        supplier_id: supplierId || undefined,
-        order_number: orderNumber.trim(),
-        notes: notes || undefined,
-        items: items.map((i) => ({
+        supplier_id: data.supplierId || undefined,
+        order_number: data.orderNumber.trim(),
+        notes: data.notes || undefined,
+        items: data.items.map((i) => ({
           part_id: i.part_id,
           quantity_ordered: i.quantity_ordered,
           unit_cost: i.unit_cost,
@@ -132,7 +143,7 @@ export function NewPurchaseOrderSheet({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("failedToCreate"));
     }
-  };
+  });
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -158,7 +169,7 @@ export function NewPurchaseOrderSheet({
 
         <form
           id="new-po-sheet-form"
-          onSubmit={handleSubmit}
+          onSubmit={onSubmit}
           className="flex-1 overflow-y-auto min-h-0"
         >
           <div className="p-4 flex flex-col gap-4">
@@ -197,55 +208,62 @@ export function NewPurchaseOrderSheet({
               <>
                 <FieldGroup>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Field>
-                      <FieldLabel htmlFor="po-order-number">
+                    {/* Order Number — required */}
+                    <Field data-invalid={!!form.formState.errors.orderNumber}>
+                      <FieldLabel>
                         {t("orderNumber")}{" "}
                         <span className="text-destructive">*</span>
                       </FieldLabel>
-                      <Input
-                        id="po-order-number"
-                        value={orderNumber}
-                        onChange={(e) => setOrderNumber(e.target.value)}
-                        placeholder="PO-001"
-                        aria-invalid={!!fieldErrors.orderNumber}
-                      />
-                      {fieldErrors.orderNumber && (
-                        <Typography.Text className="text-xs text-destructive mt-1">
-                          {fieldErrors.orderNumber}
-                        </Typography.Text>
-                      )}
+                      <FieldContent>
+                        <Input
+                          id="po-order-number"
+                          placeholder="PO-001"
+                          aria-invalid={!!form.formState.errors.orderNumber}
+                          {...form.register("orderNumber")}
+                        />
+                        {form.formState.errors.orderNumber && (
+                          <FieldError>
+                            {form.formState.errors.orderNumber.message}
+                          </FieldError>
+                        )}
+                      </FieldContent>
                     </Field>
+
+                    {/* Supplier — optional */}
                     <Field>
-                      <FieldLabel htmlFor="po-supplier">
-                        {t("supplier")}
-                      </FieldLabel>
-                      <Select
-                        id="po-supplier"
-                        value={supplierId || null}
-                        onValueChange={(val) => setSupplierId(val ?? "")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="—" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {suppliers.map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
-                              {s.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FieldLabel>{t("supplier")}</FieldLabel>
+                      <FieldContent>
+                        <Select
+                          value={form.watch("supplierId") || ""}
+                          onValueChange={(val) =>
+                            form.setValue("supplierId", val ?? "")
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="—" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {suppliers.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>
+                                {s.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FieldContent>
                     </Field>
                   </div>
 
+                  {/* Notes — optional */}
                   <Field>
-                    <FieldLabel htmlFor="po-notes">{t("notes")}</FieldLabel>
-                    <Input
-                      id="po-notes"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder={t("notesPlaceholder")}
-                    />
+                    <FieldLabel>{t("notes")}</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="po-notes"
+                        placeholder={t("notesPlaceholder")}
+                        {...form.register("notes")}
+                      />
+                    </FieldContent>
                   </Field>
                 </FieldGroup>
 
@@ -261,7 +279,13 @@ export function NewPurchaseOrderSheet({
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={addItem}
+                      onClick={() =>
+                        addItem({
+                          part_id: "",
+                          quantity_ordered: 1,
+                          unit_cost: 0,
+                        })
+                      }
                       className="gap-1.5"
                     >
                       <Plus className="size-3.5" />
@@ -269,31 +293,40 @@ export function NewPurchaseOrderSheet({
                     </Button>
                   </div>
 
-                  {fieldErrors.items && (
+                  {form.formState.errors.items?.message && (
                     <Typography.Text className="text-xs text-destructive mb-2">
-                      {fieldErrors.items}
+                      {form.formState.errors.items.message}
                     </Typography.Text>
                   )}
 
-                  {items.length === 0 ? (
+                  {itemFields.length === 0 ? (
                     <Typography.Muted className="text-sm text-muted-foreground py-6 text-center border border-dashed rounded-lg">
                       {t("noItems")}
                     </Typography.Muted>
                   ) : (
                     <div className="flex flex-col gap-2">
-                      {items.map((item) => (
+                      {itemFields.map((field, index) => (
                         <div
-                          key={item.id}
+                          key={field.id}
                           className="flex items-end gap-2 p-2.5 rounded-lg border border-border/60 bg-card/40"
                         >
                           <div className="flex-1 min-w-0">
                             <Select
-                              value={item.part_id || null}
+                              value={form.watch(`items.${index}.part_id`) || ""}
                               onValueChange={(val) =>
-                                updateItem(item.id, { part_id: val ?? "" })
+                                form.setValue(
+                                  `items.${index}.part_id`,
+                                  val ?? "",
+                                )
                               }
                             >
-                              <SelectTrigger className="w-full">
+                              <SelectTrigger
+                                className="w-full"
+                                aria-invalid={
+                                  !!form.formState.errors.items?.[index]
+                                    ?.part_id
+                                }
+                              >
                                 <SelectValue placeholder={t("selectPart")} />
                               </SelectTrigger>
                               <SelectContent>
@@ -304,42 +337,48 @@ export function NewPurchaseOrderSheet({
                                 ))}
                               </SelectContent>
                             </Select>
+                            {form.formState.errors.items?.[index]?.part_id && (
+                              <Typography.Text className="text-xs text-destructive mt-1">
+                                {
+                                  form.formState.errors.items[index]?.part_id
+                                    ?.message
+                                }
+                              </Typography.Text>
+                            )}
                           </div>
                           <div className="w-20">
                             <Input
                               type="number"
                               min={1}
-                              value={item.quantity_ordered}
-                              onChange={(e) =>
-                                updateItem(item.id, {
-                                  quantity_ordered: Number(e.target.value) || 1,
-                                })
-                              }
                               className="text-center"
+                              {...form.register(
+                                `items.${index}.quantity_ordered`,
+                                { valueAsNumber: true },
+                              )}
                             />
                           </div>
                           <div className="w-28">
                             <Input
                               type="number"
                               min={0}
-                              value={item.unit_cost}
-                              onChange={(e) =>
-                                updateItem(item.id, {
-                                  unit_cost: Number(e.target.value) || 0,
-                                })
-                              }
                               className="text-right"
+                              {...form.register(`items.${index}.unit_cost`, {
+                                valueAsNumber: true,
+                              })}
                             />
                           </div>
                           <div className="w-24 text-right text-sm tabular-nums pb-2">
-                            {formatMNT(item.quantity_ordered * item.unit_cost)}
+                            {formatMNT(
+                              (items[index]?.quantity_ordered || 0) *
+                                (items[index]?.unit_cost || 0),
+                            )}
                           </div>
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon-xs"
                             className="size-8 text-destructive shrink-0"
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => removeItem(index)}
                           >
                             <Trash2 className="size-4" />
                           </Button>
@@ -348,7 +387,7 @@ export function NewPurchaseOrderSheet({
                     </div>
                   )}
 
-                  {items.length > 0 && (
+                  {itemFields.length > 0 && (
                     <div className="flex justify-end text-base font-semibold mt-3 pt-3 border-t border-border">
                       <span>
                         {t("totalAmount")}: {formatMNT(totalAmount)}

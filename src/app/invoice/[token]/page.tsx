@@ -68,12 +68,14 @@ const invoiceStatusConfig: Record<
 };
 
 function InvoiceStatusBadge({ status }: { status: string }) {
-  const config =
-    invoiceStatusConfig[status] ?? invoiceStatusConfig.draft;
+  const config = invoiceStatusConfig[status] ?? invoiceStatusConfig.draft;
   const Icon = config.icon;
 
   return (
-    <Badge variant="outline" className="gap-1.5 text-sm font-semibold min-h-[32px]">
+    <Badge
+      variant="outline"
+      className="gap-1.5 text-sm font-semibold min-h-[32px]"
+    >
       <Icon className="size-3.5" />
       {config.label}
     </Badge>
@@ -152,7 +154,9 @@ function InvoiceError({ message }: { message: string }) {
             <XCircle className="size-8 text-red-400" />
           </div>
           <div className="text-center">
-            <Typography.H2 className="text-lg font-semibold">Invoice Not Found</Typography.H2>
+            <Typography.H2 className="text-lg font-semibold">
+              Invoice Not Found
+            </Typography.H2>
             <Typography.Muted className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
               {message ||
                 "This invoice could not be found. The link may be invalid or the invoice has been removed."}
@@ -207,8 +211,8 @@ export default function PublicInvoicePage() {
   };
 
   // All hooks must be called before early returns (Rules of Hooks)
-  const items = (invoice?.items ?? []);
-  const payments = (invoice?.payments ?? []);
+  const items = invoice?.items ?? [];
+  const payments = invoice?.payments ?? [];
 
   const invoiceItemColumns: ExportColumn<InvoiceItem>[] = useMemo(
     () => [
@@ -328,7 +332,9 @@ export default function PublicInvoicePage() {
                 </Typography.H3>
                 <div className="flex flex-col gap-0.5 text-sm">
                   {invoice.customer_name && (
-                    <Typography.Text className="font-medium">{invoice.customer_name}</Typography.Text>
+                    <Typography.Text className="font-medium">
+                      {invoice.customer_name}
+                    </Typography.Text>
                   )}
                   {invoice.customer_phone && (
                     <Typography.Muted className="text-muted-foreground">
@@ -418,7 +424,10 @@ export default function PublicInvoicePage() {
                       >
                         <TableCell className="py-3 pr-4">
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] uppercase tracking-wider"
+                            >
                               {item.item_type === "service" ? "SVC" : "PRT"}
                             </Badge>
                             <span className="font-medium">

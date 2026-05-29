@@ -20,7 +20,10 @@ export function ContactCard({
 }: {
   title?: string;
   items: ContactInfo[];
-  badge?: { label: string; color?: "default" | "secondary" | "outline" | "destructive" };
+  badge?: {
+    label: string;
+    color?: "default" | "secondary" | "outline" | "destructive";
+  };
 }) {
   if (items.length === 0) return null;
 
@@ -33,7 +36,10 @@ export function ContactCard({
       )}
       <div className="rounded-md border border-border/50 bg-card p-2.5 flex flex-col gap-2">
         {badge && (
-          <Badge variant={badge.color ?? "secondary"} className="text-[10px] h-4 px-1.5 w-fit">
+          <Badge
+            variant={badge.color ?? "secondary"}
+            className="text-[10px] h-4 px-1.5 w-fit"
+          >
             {badge.label}
           </Badge>
         )}
@@ -42,10 +48,16 @@ export function ContactCard({
           const Icon = item.icon;
           return (
             <div key={item.label} className="flex items-start gap-2">
-              {Icon && <Icon className="size-3.5 text-muted-foreground/50 mt-0.5 shrink-0" />}
+              {Icon && (
+                <Icon className="size-3.5 text-muted-foreground/50 mt-0.5 shrink-0" />
+              )}
               <div className="flex-1 min-w-0">
-                <Typography.Muted className="text-[10px] text-muted-foreground/50">{item.label}</Typography.Muted>
-                <Typography.Text className="text-xs font-medium truncate">{item.value}</Typography.Text>
+                <Typography.Muted className="text-[10px] text-muted-foreground/50">
+                  {item.label}
+                </Typography.Muted>
+                <Typography.Text className="text-xs font-medium truncate">
+                  {item.value}
+                </Typography.Text>
               </div>
               {item.copyable && (
                 <Button

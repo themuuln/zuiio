@@ -145,7 +145,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <RightSidebarProvider>
           <SidebarProvider defaultOpen={false}>
             <AppSidebar />
-            <SidebarInset className="min-h-0">
+            <SidebarInset className="min-h-0 min-w-0 w-auto">
               <DashboardHeader />
               <GlobalDialogs />
               <div className="flex min-h-0 flex-1 overflow-hidden">

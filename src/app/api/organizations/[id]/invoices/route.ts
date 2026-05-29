@@ -4,7 +4,11 @@ import type { InvoiceStatus } from "@/lib/types";
 import { ValidationError } from "@/lib/errors";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
-import { createInvoiceFromWorkOrder, createStandaloneInvoice, getInvoices } from "@/lib/services/invoice-service";
+import {
+  createInvoiceFromWorkOrder,
+  createStandaloneInvoice,
+  getInvoices,
+} from "@/lib/services/invoice-service";
 
 export const GET = createRouteHandler(async ({ request, orgId }) => {
   const { searchParams } = new URL(request.url);
@@ -20,7 +24,14 @@ export const POST = createRouteHandler(async ({ request, orgId, user }) => {
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
     );
   }
   const body = await request.json();
@@ -33,7 +44,9 @@ export const POST = createRouteHandler(async ({ request, orgId, user }) => {
 
   // Work-order-based invoice
   if (!body.work_order_id) {
-    throw new ValidationError("work_order_id is required when no items provided");
+    throw new ValidationError(
+      "work_order_id is required when no items provided",
+    );
   }
   const invoice = await createInvoiceFromWorkOrder(orgId, body.work_order_id, {
     dueDays: body.due_days ?? body.dueDays,

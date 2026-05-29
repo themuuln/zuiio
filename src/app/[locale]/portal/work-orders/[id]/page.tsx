@@ -223,7 +223,9 @@ export default function PortalWorkOrderDetailPage() {
               <Typography.Text className="text-lg font-bold tabular-nums">
                 {formatMNT(Number(data.total))}
               </Typography.Text>
-              <Typography.Muted className="text-[10px] text-muted-foreground/60">Total</Typography.Muted>
+              <Typography.Muted className="text-[10px] text-muted-foreground/60">
+                Total
+              </Typography.Muted>
             </div>
           </div>
         </CardContent>
@@ -298,7 +300,9 @@ export default function PortalWorkOrderDetailPage() {
                       className="border-b border-border/40 last:border-0"
                     >
                       <td className="py-2.5 pr-4">
-                        <Typography.Text className="font-medium">{s.service_name}</Typography.Text>
+                        <Typography.Text className="font-medium">
+                          {s.service_name}
+                        </Typography.Text>
                         {s.notes && (
                           <Typography.Muted className="text-xs text-muted-foreground/60 mt-0.5">
                             {s.notes}
@@ -361,7 +365,9 @@ export default function PortalWorkOrderDetailPage() {
                       className="border-b border-border/40 last:border-0"
                     >
                       <td className="py-2.5 pr-4">
-                        <Typography.Text className="font-medium">{p.part_name}</Typography.Text>
+                        <Typography.Text className="font-medium">
+                          {p.part_name}
+                        </Typography.Text>
                         {p.notes && (
                           <Typography.Muted className="text-xs text-muted-foreground/60 mt-0.5">
                             {p.notes}

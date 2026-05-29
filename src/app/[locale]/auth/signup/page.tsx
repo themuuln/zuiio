@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, UserPlus } from "lucide-react";
+import { Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -36,6 +36,8 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
     <div className="flex flex-col gap-6">
@@ -118,17 +120,33 @@ export default function SignupPage() {
             <FieldLabel htmlFor="password">
               {t("passwordLabel")} <span className="text-destructive">*</span>
             </FieldLabel>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t("passwordPlaceholder")}
-              aria-invalid={"password" in fieldErrors || undefined}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("passwordPlaceholder")}
+                aria-invalid={"password" in fieldErrors || undefined}
+                className="pr-9"
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+            </div>
             {"password" in fieldErrors && (
               <FieldError>{fieldErrors.password}</FieldError>
             )}
@@ -139,17 +157,35 @@ export default function SignupPage() {
               {t("confirmPasswordLabel")}{" "}
               <span className="text-destructive">*</span>
             </FieldLabel>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder={t("confirmPasswordPlaceholder")}
-              aria-invalid={"confirmPassword" in fieldErrors || undefined}
-            />
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder={t("confirmPasswordPlaceholder")}
+                aria-invalid={"confirmPassword" in fieldErrors || undefined}
+                className="pr-9"
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+            </div>
             {"confirmPassword" in fieldErrors && (
               <FieldError>{fieldErrors.confirmPassword}</FieldError>
             )}

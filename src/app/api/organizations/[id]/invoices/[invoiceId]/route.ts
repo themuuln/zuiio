@@ -29,7 +29,14 @@ export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
     );
   }
   const { invoiceId } = params;
@@ -46,7 +53,12 @@ export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
   }
 
   if (body.status) {
-    const invoice = await updateInvoiceStatus(invoiceId, orgId, body.status, body.notes);
+    const invoice = await updateInvoiceStatus(
+      invoiceId,
+      orgId,
+      body.status,
+      body.notes,
+    );
     return NextResponse.json({ data: invoice });
   }
 
@@ -66,7 +78,12 @@ export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
   }
 
   if (body.action === "update_item") {
-    const item = await updateInvoiceItem(body.itemId, invoiceId, orgId, body.item);
+    const item = await updateInvoiceItem(
+      body.itemId,
+      invoiceId,
+      orgId,
+      body.item,
+    );
     return NextResponse.json({ data: item });
   }
 
@@ -97,7 +114,9 @@ export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
       .update({ tax_total: taxTotal, total: newTotal })
       .eq("id", invoiceId)
       .eq("organization_id", orgId)
-      .select("id, organization_id, invoice_number, status, subtotal, discount_total, tax_total, total, amount_paid, balance_due, issued_at, due_at, paid_at, notes")
+      .select(
+        "id, organization_id, invoice_number, status, subtotal, discount_total, tax_total, total, amount_paid, balance_due, issued_at, due_at, paid_at, notes",
+      )
       .single();
 
     return NextResponse.json({ data: updated });
@@ -116,7 +135,14 @@ export const DELETE = createRouteHandler(async ({ request, orgId, params }) => {
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
     );
   }
   const { invoiceId } = params;

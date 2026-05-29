@@ -19,7 +19,9 @@ export const columns: ColumnDef<ValuationRow>[] = [
     ),
     cell: ({ row }) => (
       <div>
-        <Typography.Text className="font-medium">{row.original.part_name}</Typography.Text>
+        <Typography.Text className="font-medium">
+          {row.original.part_name}
+        </Typography.Text>
         <Typography.Muted className="text-xs text-muted-foreground">
           {row.original.part_number ?? "—"}
         </Typography.Muted>

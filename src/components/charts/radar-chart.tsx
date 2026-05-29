@@ -12,7 +12,6 @@ export interface RadarChartProps {
   showGrid?: boolean;
 }
 
-export const RadarChart = dynamic(
-  () => import("./_radar-chart-inner"),
-  { ssr: false },
-);
+export const RadarChart = dynamic(() => import("./_radar-chart-inner"), {
+  ssr: false,
+});

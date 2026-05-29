@@ -10,7 +10,12 @@ interface NotesSectionProps {
   t: (key: string) => string;
 }
 
-export function NotesSection({ complaint, diagnosis, notes, t }: NotesSectionProps) {
+export function NotesSection({
+  complaint,
+  diagnosis,
+  notes,
+  t,
+}: NotesSectionProps) {
   if (!complaint && !diagnosis && !notes) return null;
 
   return (

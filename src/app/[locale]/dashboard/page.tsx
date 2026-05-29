@@ -22,6 +22,8 @@ import { Typography } from "@/components/ui/typography";
 import type { ExportColumn } from "@/lib/export";
 import { useDashboard } from "@/lib/queries/use-dashboard";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { dashboardKeys, workOrderKeys } from "@/lib/queries/keys";
+import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import type { WorkOrderDetail } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { DailyTimeline } from "./_daily-timeline";
@@ -58,6 +60,18 @@ export default function DashboardPage() {
   // ── React Query hooks ───────────────────────────────
   const { data: org, isPending: orgLoading, error: orgError } = useCurrentOrg();
   const orgId = org?.orgId;
+
+  // ── Realtime: refresh dashboard when core tables change ────
+  useRealtimeMulti({
+    enabled: !!orgId,
+    tables: [
+      { table: "work_orders", queryKey: dashboardKeys.all(orgId ?? ""), filter: `organization_id=eq.${orgId}` },
+      { table: "invoices", queryKey: dashboardKeys.all(orgId ?? ""), filter: `organization_id=eq.${orgId}` },
+      { table: "work_order_services", queryKey: dashboardKeys.all(orgId ?? ""), filter: `organization_id=eq.${orgId}` },
+      { table: "work_order_parts", queryKey: dashboardKeys.all(orgId ?? ""), filter: `organization_id=eq.${orgId}` },
+      { table: "customers", queryKey: dashboardKeys.all(orgId ?? ""), filter: `organization_id=eq.${orgId}` },
+    ],
+  });
 
   const {
     data,

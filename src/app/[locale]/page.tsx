@@ -94,16 +94,16 @@ const STEPS = [
 ];
 
 const WORKFLOW_PILLARS = [
-  { key: 'workflowFrontDesk', icon: ClipboardList },
-  { key: 'workflowWorkshop', icon: Wrench },
-  { key: 'workflowManagement', icon: LineChart },
+  { key: "workflowFrontDesk", icon: ClipboardList },
+  { key: "workflowWorkshop", icon: Wrench },
+  { key: "workflowManagement", icon: LineChart },
 ];
 
 const DIFFERENTIATORS = [
-  { key: 'differenceTablet', icon: Check },
-  { key: 'differencePricing', icon: Tag },
-  { key: 'differenceVisibility', icon: Users },
-  { key: 'differenceScalability', icon: Store },
+  { key: "differenceTablet", icon: Check },
+  { key: "differencePricing", icon: Tag },
+  { key: "differenceVisibility", icon: Users },
+  { key: "differenceScalability", icon: Store },
 ];
 
 const PRICING_TIERS = [
@@ -325,15 +325,15 @@ export default function HomePage() {
         <section className="border-t px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-7xl">
             <div className="mx-auto max-w-3xl text-center">
-              <Badge variant="outline">{t('workflowEyebrow')}</Badge>
+              <Badge variant="outline">{t("workflowEyebrow")}</Badge>
               <Typography.H2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                {t('workflowTitle')}
+                {t("workflowTitle")}
               </Typography.H2>
               <Typography.Muted className="mt-4 text-muted-foreground">
-                {t('workflowSubtitle')}
+                {t("workflowSubtitle")}
               </Typography.Muted>
               <Typography.Muted className="mt-4 text-sm leading-6 text-muted-foreground">
-                {t('workflowBody')}
+                {t("workflowBody")}
               </Typography.Muted>
             </div>
 
@@ -377,12 +377,12 @@ export default function HomePage() {
         <section className="border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-6xl">
             <div className="mx-auto max-w-3xl text-center">
-              <Badge variant="outline">{t('differenceEyebrow')}</Badge>
+              <Badge variant="outline">{t("differenceEyebrow")}</Badge>
               <Typography.H2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                {t('differenceTitle')}
+                {t("differenceTitle")}
               </Typography.H2>
               <Typography.Muted className="mt-4 text-muted-foreground">
-                {t('differenceSubtitle')}
+                {t("differenceSubtitle")}
               </Typography.Muted>
             </div>
 
@@ -539,7 +539,9 @@ export default function HomePage() {
             <Typography.H2 className="text-3xl font-bold tracking-tight sm:text-4xl">
               {t("ctaTitle")}
             </Typography.H2>
-            <Typography.Muted className="mt-4 text-muted-foreground">{t("ctaSubtitle")}</Typography.Muted>
+            <Typography.Muted className="mt-4 text-muted-foreground">
+              {t("ctaSubtitle")}
+            </Typography.Muted>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"

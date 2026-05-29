@@ -2,12 +2,18 @@
 
 import { Car, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
@@ -16,11 +22,29 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { inputProps } from "@/lib/form-ux";
 import { transliterateMongolianPlate } from "@/lib/form-validation";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCreatePartsCar } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { Typography } from "@/components/ui/typography";
+
+// ── Schema ───────────────────────────────────────────────────
+
+const partsCarSchema = z.object({
+  make: z.string().min(1, "Make is required"),
+  model: z.string().min(1, "Model is required"),
+  year: z.string().optional(),
+  vin: z.string().optional(),
+  license_plate: z.string().optional(),
+  purchase_cost: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type PartsCarFormValues = z.infer<typeof partsCarSchema>;
+
+// ── Component ────────────────────────────────────────────────
 
 interface NewPartsCarSheetProps {
   open: boolean;
@@ -37,51 +61,48 @@ export function NewPartsCarSheet({
   const create = useCreatePartsCar(orgId);
   const [saving, setSaving] = useState(false);
   const [arrivalDate, setArrivalDate] = useState<Date>(new Date());
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const form = useForm<PartsCarFormValues>({
+    resolver: zodResolver(partsCarSchema),
+    defaultValues: {
+      make: "",
+      model: "",
+      year: "",
+      vin: "",
+      license_plate: "",
+      purchase_cost: "",
+      notes: "",
+    },
+  });
 
   const handleOpenChange = useCallback(
     (value: boolean) => {
       if (!value) {
+        form.reset();
         setArrivalDate(new Date());
-        setFieldErrors({});
       }
       onOpenChange(value);
     },
-    [onOpenChange],
+    [onOpenChange, form],
   );
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  const onSubmit = form.handleSubmit(async (data) => {
     if (!orgId) return;
-
-    const form = new FormData(e.currentTarget);
-    const make = (form.get("make") as string)?.trim();
-    const model = (form.get("model") as string)?.trim();
-
-    const errors: Record<string, string> = {};
-    if (!make) errors.make = t("nameRequired");
-    if (!model) errors.model = t("nameRequired");
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
 
     setSaving(true);
     try {
-      const car = await create.mutateAsync({
-        make,
-        model,
-        year: form.get("year") ? Number(form.get("year")) : undefined,
-        vin: (form.get("vin") as string)?.toUpperCase() || undefined,
+      await create.mutateAsync({
+        make: data.make.trim(),
+        model: data.model.trim(),
+        year: data.year ? Number(data.year) : undefined,
+        vin: data.vin?.toUpperCase() || undefined,
         license_plate:
-          transliterateMongolianPlate(
-            (form.get("license_plate") as string) || "",
-          ) || undefined,
-        purchase_cost: form.get("purchase_cost")
-          ? Number(form.get("purchase_cost"))
-          : 0,
+          transliterateMongolianPlate(data.license_plate || "") || undefined,
+        purchase_cost: data.purchase_cost ? Number(data.purchase_cost) : 0,
         arrival_date: arrivalDate
           ? arrivalDate.toISOString().split("T")[0]
           : new Date().toISOString().split("T")[0],
-        notes: (form.get("notes") as string) || undefined,
+        notes: data.notes || undefined,
       });
       toast.success("Машин бүртгэгдлээ");
       handleOpenChange(false);
@@ -90,7 +111,7 @@ export function NewPartsCarSheet({
     } finally {
       setSaving(false);
     }
-  }
+  });
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -177,117 +198,141 @@ export function NewPartsCarSheet({
           ) : (
             <form
               id="new-parts-car-sheet-form"
-              onSubmit={handleSubmit}
+              onSubmit={onSubmit}
               className="p-4 flex flex-col gap-4"
             >
               <FieldGroup>
                 <div className="grid grid-cols-2 gap-4">
-                  <Field>
-                    <FieldLabel htmlFor="parts-car-make">
+                  {/* Make — required */}
+                  <Field data-invalid={!!form.formState.errors.make}>
+                    <FieldLabel>
                       Үйлдвэрлэгч <span className="text-destructive">*</span>
                     </FieldLabel>
-                    <Input
-                      id="parts-car-make"
-                      name="make"
-                      placeholder="Toyota, Honda"
-                      aria-invalid={!!fieldErrors.make}
-                    />
-                    {fieldErrors.make && (
-                      <Typography.Text className="text-xs text-destructive mt-1">
-                        {fieldErrors.make}
-                      </Typography.Text>
-                    )}
+                    <FieldContent>
+                      <Input
+                        id="parts-car-make"
+                        placeholder="Toyota, Honda"
+                        aria-invalid={!!form.formState.errors.make}
+                        {...inputProps("make")}
+                        {...form.register("make")}
+                      />
+                      {form.formState.errors.make && (
+                        <FieldError>
+                          {form.formState.errors.make.message}
+                        </FieldError>
+                      )}
+                    </FieldContent>
                   </Field>
-                  <Field>
-                    <FieldLabel htmlFor="parts-car-model">
+
+                  {/* Model — required */}
+                  <Field data-invalid={!!form.formState.errors.model}>
+                    <FieldLabel>
                       Модель <span className="text-destructive">*</span>
                     </FieldLabel>
-                    <Input
-                      id="parts-car-model"
-                      name="model"
-                      placeholder="Camry, Civic"
-                      aria-invalid={!!fieldErrors.model}
-                    />
-                    {fieldErrors.model && (
-                      <Typography.Text className="text-xs text-destructive mt-1">
-                        {fieldErrors.model}
-                      </Typography.Text>
-                    )}
+                    <FieldContent>
+                      <Input
+                        id="parts-car-model"
+                        placeholder="Camry, Civic"
+                        aria-invalid={!!form.formState.errors.model}
+                        {...inputProps("model")}
+                        {...form.register("model")}
+                      />
+                      {form.formState.errors.model && (
+                        <FieldError>
+                          {form.formState.errors.model.message}
+                        </FieldError>
+                      )}
+                    </FieldContent>
                   </Field>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
+                  {/* Year — optional */}
                   <Field>
-                    <FieldLabel htmlFor="parts-car-year">Он</FieldLabel>
-                    <Input
-                      id="parts-car-year"
-                      name="year"
-                      type="number"
-                      min={1980}
-                      max={2030}
-                      placeholder="2018"
-                    />
+                    <FieldLabel>Он</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="parts-car-year"
+                        type="number"
+                        min={1980}
+                        max={2030}
+                        placeholder="2018"
+                        {...inputProps("year")}
+                        {...form.register("year")}
+                      />
+                    </FieldContent>
                   </Field>
+
+                  {/* Arrival Date */}
                   <Field>
                     <FieldLabel>Ирсэн огноо</FieldLabel>
-                    <DatePicker
-                      value={arrivalDate}
-                      onChange={(date) => date && setArrivalDate(date)}
-                      placeholder="Огноо сонгох"
-                      fromYear={2020}
-                      toYear={2026}
-                    />
+                    <FieldContent>
+                      <DatePicker
+                        value={arrivalDate}
+                        onChange={(date) => date && setArrivalDate(date)}
+                        placeholder="Огноо сонгох"
+                        fromYear={2020}
+                        toYear={2026}
+                      />
+                    </FieldContent>
                   </Field>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
+                  {/* VIN — optional */}
                   <Field>
-                    <FieldLabel htmlFor="parts-car-vin">VIN</FieldLabel>
-                    <Input
-                      id="parts-car-vin"
-                      name="vin"
-                      placeholder="1HGCM82633A004352"
-                      className="font-mono tracking-wider uppercase"
-                      onChange={(e) => {
-                        e.currentTarget.value =
-                          e.currentTarget.value.toUpperCase();
-                      }}
-                    />
+                    <FieldLabel>VIN</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="parts-car-vin"
+                        placeholder="1HGCM82633A004352"
+                        className="font-mono tracking-wider uppercase"
+                        {...inputProps("vin")}
+                        {...form.register("vin")}
+                      />
+                    </FieldContent>
                   </Field>
+
+                  {/* License Plate — optional */}
                   <Field>
-                    <FieldLabel htmlFor="parts-car-plate">
-                      Хятадын дугаар
-                    </FieldLabel>
-                    <Input
-                      id="parts-car-plate"
-                      name="license_plate"
-                      placeholder="Хятадын дугаар"
-                    />
+                    <FieldLabel>Хятадын дугаар</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="parts-car-plate"
+                        placeholder="Хятадын дугаар"
+                        {...inputProps("plate")}
+                        {...form.register("license_plate")}
+                      />
+                    </FieldContent>
                   </Field>
                 </div>
 
+                {/* Purchase Cost — optional */}
                 <Field>
-                  <FieldLabel htmlFor="parts-car-cost">
-                    Худалдан авалтын үнэ
-                  </FieldLabel>
-                  <Input
-                    id="parts-car-cost"
-                    name="purchase_cost"
-                    type="number"
-                    min={0}
-                    step={10000}
-                    placeholder="12,000,000"
-                  />
+                  <FieldLabel>Худалдан авалтын үнэ</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="parts-car-cost"
+                      type="number"
+                      min={0}
+                      step={10000}
+                      placeholder="12,000,000"
+                      {...form.register("purchase_cost")}
+                    />
+                  </FieldContent>
                 </Field>
 
+                {/* Notes — optional */}
                 <Field>
-                  <FieldLabel htmlFor="parts-car-notes">Тэмдэглэл</FieldLabel>
-                  <Textarea
-                    id="parts-car-notes"
-                    name="notes"
-                    placeholder="Машины тухай нэмэлт мэдээлэл..."
-                    rows={3}
-                  />
+                  <FieldLabel>Тэмдэглэл</FieldLabel>
+                  <FieldContent>
+                    <Textarea
+                      id="parts-car-notes"
+                      placeholder="Машины тухай нэмэлт мэдээлэл..."
+                      rows={3}
+                      {...form.register("notes")}
+                    />
+                  </FieldContent>
                 </Field>
               </FieldGroup>
             </form>

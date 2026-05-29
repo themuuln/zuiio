@@ -169,7 +169,12 @@ describe("getCompletionData", () => {
     builder.eq.mockReturnThis();
     builder.single.mockResolvedValue({
       data: null,
-      error: { code: "PGRST116", message: "No rows found", details: "", hint: "" },
+      error: {
+        code: "PGRST116",
+        message: "No rows found",
+        details: "",
+        hint: "",
+      },
     });
 
     const result = await getCompletionData("wo-404");

@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, LogIn } from "lucide-react";
+import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useActionState, useEffect, useRef, useState } from "react";
@@ -25,6 +25,7 @@ export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(login, {});
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const searchParams = useSearchParams();
   const redirectTo = searchParams?.get("redirectTo") ?? "";
 
@@ -130,18 +131,33 @@ export default function LoginPage() {
                 {t("forgotPassword")}
               </Link>
             </div>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t("passwordPlaceholder")}
-              aria-invalid={"password" in fieldErrors ? true : undefined}
-              className="font-mono text-xs bg-muted/10 focus-visible:bg-transparent h-8 min-h-0"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("passwordPlaceholder")}
+                aria-invalid={"password" in fieldErrors ? true : undefined}
+                className="font-mono text-xs bg-muted/10 focus-visible:bg-transparent h-8 min-h-0 pr-9"
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+            </div>
             {"password" in fieldErrors && (
               <FieldError>{fieldErrors.password}</FieldError>
             )}

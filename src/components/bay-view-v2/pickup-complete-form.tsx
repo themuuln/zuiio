@@ -3,7 +3,7 @@
 import { CalendarIcon, Loader2, MessageSquare, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { useClientNow } from "@/hooks/use-client-now";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,9 +11,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useClientNow } from "@/hooks/use-client-now";
+import { useForm } from "@/lib/hooks/use-form";
 import { cn } from "@/lib/utils";
+
+// ── Schema ───────────────────────────────────────────────────
+
+const pickupCompleteSchema = z.object({
+  satisfaction: z.number().nullable(),
+  feedback: z.string().optional(),
+  appointmentDate: z.string().optional(),
+});
+
+type PickupCompleteFormValues = z.infer<typeof pickupCompleteSchema>;
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -78,12 +95,19 @@ export function PickupCompleteForm({
   onCancel,
 }: PickupCompleteFormProps) {
   const t = useTranslations("bayView");
-  const [satisfaction, setSatisfaction] = useState<number | null>(null);
-  const [feedback, setFeedback] = useState("");
-  const [appointmentDate, setAppointmentDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const now = useClientNow();
+
+  const form = useForm<PickupCompleteFormValues>({
+    defaultValues: {
+      satisfaction: null,
+      feedback: "",
+      appointmentDate: "",
+    },
+  });
+
+  const satisfaction = form.watch("satisfaction");
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -93,14 +117,14 @@ export function PickupCompleteForm({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onCancel]);
 
-  async function handleSubmit() {
+  const onSubmit = form.handleSubmit(async (data) => {
     setSaving(true);
     setError(null);
     try {
       await onConfirm({
-        customerSatisfaction: satisfaction,
-        customerFeedback: feedback.trim(),
-        nextAppointmentDate: appointmentDate || null,
+        customerSatisfaction: data.satisfaction,
+        customerFeedback: data.feedback?.trim() ?? "",
+        nextAppointmentDate: data.appointmentDate || null,
       });
     } catch (err) {
       setError(
@@ -108,7 +132,7 @@ export function PickupCompleteForm({
       );
       setSaving(false);
     }
-  }
+  });
 
   return (
     <Dialog
@@ -127,44 +151,63 @@ export function PickupCompleteForm({
           </span>
         </DialogHeader>
 
-        <div className="flex flex-col gap-5 pt-1">
+        <form onSubmit={onSubmit} className="flex flex-col gap-5 pt-1">
           {/* Satisfaction */}
-          <div className="flex flex-col gap-2">
-            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+          <Field>
+            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <Star className="size-3.5" />
               {t("pickupSummarySatisfaction")}
-            </Label>
-            <StarRating value={satisfaction} onChange={setSatisfaction} />
-          </div>
+            </FieldLabel>
+            <FieldContent>
+              <StarRating
+                value={satisfaction}
+                onChange={(v) => form.setValue("satisfaction", v)}
+              />
+            </FieldContent>
+          </Field>
 
           {/* Feedback */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+          <Field data-invalid={!!form.formState.errors.feedback}>
+            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <MessageSquare className="size-3.5" />
               {t("pickupSummaryFeedback")}
-            </Label>
-            <Input
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder={`${t("pickupSummaryFeedback")}...`}
-              className="h-10"
-            />
-          </div>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder={`${t("pickupSummaryFeedback")}...`}
+                className="h-10"
+                aria-invalid={!!form.formState.errors.feedback}
+                {...form.register("feedback")}
+              />
+              {form.formState.errors.feedback && (
+                <FieldError>
+                  {form.formState.errors.feedback.message}
+                </FieldError>
+              )}
+            </FieldContent>
+          </Field>
 
           {/* Next appointment */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+          <Field data-invalid={!!form.formState.errors.appointmentDate}>
+            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <CalendarIcon className="size-3.5" />
               {t("pickupSummaryAppointmentDate")}
-            </Label>
-            <Input
-              type="date"
-              value={appointmentDate}
-              onChange={(e) => setAppointmentDate(e.target.value)}
-              className="h-10"
-              min={now.toISOString().split("T")[0]}
-            />
-          </div>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                type="date"
+                className="h-10"
+                min={now.toISOString().split("T")[0]}
+                aria-invalid={!!form.formState.errors.appointmentDate}
+                {...form.register("appointmentDate")}
+              />
+              {form.formState.errors.appointmentDate && (
+                <FieldError>
+                  {form.formState.errors.appointmentDate.message}
+                </FieldError>
+              )}
+            </FieldContent>
+          </Field>
 
           {/* Error */}
           {error && (
@@ -178,17 +221,18 @@ export function PickupCompleteForm({
             <Button
               variant="outline"
               onClick={onCancel}
+              type="button"
               size="default"
               disabled={saving}
             >
               {t("cancel")}
             </Button>
-            <Button onClick={handleSubmit} size="default" disabled={saving}>
+            <Button type="submit" size="default" disabled={saving}>
               {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
               {saving ? t("saving") : t("complete")}
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

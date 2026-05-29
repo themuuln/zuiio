@@ -17,7 +17,10 @@ export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
           return (
             <li key={item.label} className="flex items-center gap-1">
               {i > 0 && (
-                <ChevronRight className="size-3 shrink-0 text-muted-foreground/50" aria-hidden="true" />
+                <ChevronRight
+                  className="size-3 shrink-0 text-muted-foreground/50"
+                  aria-hidden="true"
+                />
               )}
               {isLast || !item.href ? (
                 <span

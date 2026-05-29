@@ -156,13 +156,19 @@ export function ServiceLines({
                   <Input
                     type="number"
                     value={svc.quantity}
-                    onChange={(e) =>
-                      onUpdate(
-                        idx,
-                        "quantity",
-                        parseInt(e.target.value, 10) || 1,
-                      )
-                    }
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === "") {
+                        onUpdate(idx, "quantity", 0);
+                        return;
+                      }
+                      const n = parseInt(v, 10);
+                      if (!isNaN(n)) onUpdate(idx, "quantity", n);
+                    }}
+                    onBlur={(e) => {
+                      const n = Number(e.target.value);
+                      if (isNaN(n) || n < 1) onUpdate(idx, "quantity", 1);
+                    }}
                     className="w-14 h-10 text-center"
                     min={1}
                     aria-label="Quantity"

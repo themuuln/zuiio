@@ -177,7 +177,6 @@ export function AppearanceCustomization({
             ))}
           </div>
         </Field>
-
       </CardContent>
     </Card>
   );

@@ -1,7 +1,13 @@
 "use client";
 
 // recharts - consider next/dynamic for code splitting
-import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart as RechartsBarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
@@ -20,7 +26,10 @@ export default function BarChartInner({
   layout = "horizontal",
 }: BarChartProps) {
   return (
-    <ChartContainer config={config} className={`aspect-auto h-[${height}px] w-full`}>
+    <ChartContainer
+      config={config}
+      className={`aspect-auto h-[${height}px] w-full`}
+    >
       <RechartsBarChart
         data={data}
         layout={layout}
@@ -36,13 +45,29 @@ export default function BarChartInner({
         )}
         {layout === "horizontal" ? (
           <>
-            <XAxis dataKey={xKey} tickLine={false} axisLine={false} tickMargin={8} />
+            <XAxis
+              dataKey={xKey}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
             <YAxis tickLine={false} axisLine={false} tickMargin={8} />
           </>
         ) : (
           <>
-            <XAxis type="number" tickLine={false} axisLine={false} tickMargin={8} />
-            <YAxis dataKey={xKey} type="category" tickLine={false} axisLine={false} tickMargin={8} />
+            <XAxis
+              type="number"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
+            <YAxis
+              dataKey={xKey}
+              type="category"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
           </>
         )}
         <ChartTooltip

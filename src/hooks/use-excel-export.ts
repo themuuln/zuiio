@@ -21,7 +21,9 @@ export function useExcelExport() {
         const transformedData: Record<string, unknown>[] = data.map((row) => {
           const newRow: Record<string, unknown> = {};
           for (const col of columns) {
-            newRow[col.key as string] = col.value ? col.value(row) : (row as Record<string, unknown>)[col.key as string];
+            newRow[col.key as string] = col.value
+              ? col.value(row)
+              : (row as Record<string, unknown>)[col.key as string];
           }
           return newRow;
         });
@@ -43,7 +45,9 @@ export function useExcelExport() {
         });
 
         if (!res.ok) {
-          const err = await res.json().catch(() => ({ error: { message: "Export failed" } }));
+          const err = await res
+            .json()
+            .catch(() => ({ error: { message: "Export failed" } }));
           throw new Error(err.error?.message ?? "Export failed");
         }
 
@@ -51,7 +55,8 @@ export function useExcelExport() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = filename ?? `export-${new Date().toISOString().split("T")[0]}.xlsx`;
+        a.download =
+          filename ?? `export-${new Date().toISOString().split("T")[0]}.xlsx`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

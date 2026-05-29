@@ -14,7 +14,6 @@ export interface AreaChartProps {
   stacked?: boolean;
 }
 
-export const AreaChart = dynamic(
-  () => import("./_area-chart-inner"),
-  { ssr: false },
-);
+export const AreaChart = dynamic(() => import("./_area-chart-inner"), {
+  ssr: false,
+});

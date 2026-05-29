@@ -4,7 +4,8 @@ type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 type VehicleRow = Database["public"]["Tables"]["vehicles"]["Row"];
 type WorkOrderRow = Database["public"]["Tables"]["work_orders"]["Row"];
 type OrganizationRow = Database["public"]["Tables"]["organizations"]["Row"];
-type InventoryMovementRow = Database["public"]["Tables"]["inventory_movements"]["Row"];
+type InventoryMovementRow =
+  Database["public"]["Tables"]["inventory_movements"]["Row"];
 
 let autoId = 1;
 function nextId(): string {
@@ -43,9 +44,7 @@ export function createMockCustomer(
   } as CustomerRow;
 }
 
-export function createMockVehicle(
-  overrides?: Partial<VehicleRow>,
-): VehicleRow {
+export function createMockVehicle(overrides?: Partial<VehicleRow>): VehicleRow {
   const id = nextId();
   return {
     id,

@@ -22,7 +22,14 @@ export const PATCH = createRouteHandler(async ({ request, params, orgId }) => {
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
     );
   }
   const { workOrderId } = params;
@@ -62,7 +69,14 @@ export const DELETE = createRouteHandler(async ({ request, params, orgId }) => {
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
     );
   }
   const { workOrderId } = params;

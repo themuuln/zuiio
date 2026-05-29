@@ -2,12 +2,18 @@
 
 import { Loader2, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet,
   SheetContent,
@@ -15,29 +21,29 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
+import { inputProps } from "@/lib/form-ux";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useSuppliers, useUpdateSupplier } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
-import { Typography } from "@/components/ui/typography";
 
-interface SupplierDetailSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  supplierId: string | null;
-}
+// ── Schema ───────────────────────────────────────────────────
 
-interface SupplierForm {
-  name: string;
-  contactPerson: string;
-  phone: string;
-  email: string;
-  address: string;
-  taxId: string;
-  paymentTerms: string;
-  notes: string;
-}
+const supplierSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  contactPerson: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  address: z.string().optional(),
+  taxId: z.string().optional(),
+  paymentTerms: z.string().optional(),
+  notes: z.string().optional(),
+});
 
-const emptyForm: SupplierForm = {
+type SupplierFormValues = z.infer<typeof supplierSchema>;
+
+const emptyForm: SupplierFormValues = {
   name: "",
   contactPerson: "",
   phone: "",
@@ -47,6 +53,14 @@ const emptyForm: SupplierForm = {
   paymentTerms: "",
   notes: "",
 };
+
+// ── Component ────────────────────────────────────────────────
+
+interface SupplierDetailSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  supplierId: string | null;
+}
 
 export function SupplierDetailSheet({
   open,
@@ -62,13 +76,15 @@ export function SupplierDetailSheet({
 
   const supplier = suppliers.find((s) => s.id === supplierId);
 
-  const [form, setForm] = useState<SupplierForm>(emptyForm);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const form = useForm<SupplierFormValues>({
+    resolver: zodResolver(supplierSchema),
+    defaultValues: emptyForm,
+  });
 
   // Populate form when supplier loads
   useEffect(() => {
     if (supplier) {
-      setForm({
+      form.reset({
         name: supplier.name,
         contactPerson: supplier.contact_person ?? "",
         phone: supplier.phone ?? "",
@@ -79,42 +95,33 @@ export function SupplierDetailSheet({
         notes: supplier.notes ?? "",
       });
     }
-  }, [supplier]);
+  }, [supplier, form.reset]);
 
   const handleOpenChange = useCallback(
     (value: boolean) => {
       if (!value) {
-        setForm(emptyForm);
-        setFieldErrors({});
+        form.reset(emptyForm);
       }
       onOpenChange(value);
     },
-    [onOpenChange],
+    [onOpenChange, form],
   );
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = form.handleSubmit(async (data) => {
     if (!supplierId) return;
-
-    const errors: Record<string, string> = {};
-    if (!form.name.trim()) {
-      errors.name = t("nameRequired");
-    }
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
 
     try {
       await updateSupplier.mutateAsync({
         id: supplierId,
         body: {
-          name: form.name.trim(),
-          contact_person: form.contactPerson || undefined,
-          phone: form.phone || undefined,
-          email: form.email || undefined,
-          address: form.address || undefined,
-          tax_id: form.taxId || undefined,
-          payment_terms: form.paymentTerms || undefined,
-          notes: form.notes || undefined,
+          name: data.name.trim(),
+          contact_person: data.contactPerson || undefined,
+          phone: data.phone || undefined,
+          email: data.email || undefined,
+          address: data.address || undefined,
+          tax_id: data.taxId || undefined,
+          payment_terms: data.paymentTerms || undefined,
+          notes: data.notes || undefined,
         },
       });
       toast.success(t("supplierUpdated"));
@@ -122,7 +129,7 @@ export function SupplierDetailSheet({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("failedToUpdate"));
     }
-  };
+  });
 
   const isLoading = suppliersLoading && open;
   const notFound = open && !suppliersLoading && !supplier;
@@ -146,7 +153,7 @@ export function SupplierDetailSheet({
 
         <form
           id="supplier-detail-sheet-form"
-          onSubmit={handleSubmit}
+          onSubmit={onSubmit}
           className="flex-1 overflow-y-auto min-h-0"
         >
           <div className="p-4 flex flex-col gap-4">
@@ -185,126 +192,116 @@ export function SupplierDetailSheet({
               </div>
             ) : (
               <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="sd-name">
+                {/* Name — required */}
+                <Field data-invalid={!!form.formState.errors.name}>
+                  <FieldLabel>
                     {t("name")} <span className="text-destructive">*</span>
                   </FieldLabel>
-                  <Input
-                    id="sd-name"
-                    value={form.name}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, name: e.target.value }))
-                    }
-                    placeholder={t("namePlaceholder")}
-                    aria-invalid={!!fieldErrors.name}
-                  />
-                  {fieldErrors.name && (
-                    <Typography.Text className="text-xs text-destructive mt-1">
-                      {fieldErrors.name}
-                    </Typography.Text>
-                  )}
+                  <FieldContent>
+                    <Input
+                      id="sd-name"
+                      placeholder={t("namePlaceholder")}
+                      aria-invalid={!!form.formState.errors.name}
+                      {...form.register("name")}
+                    />
+                    {form.formState.errors.name && (
+                      <FieldError>
+                        {form.formState.errors.name.message}
+                      </FieldError>
+                    )}
+                  </FieldContent>
                 </Field>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Contact Person — optional */}
                   <Field>
-                    <FieldLabel htmlFor="sd-contact">
-                      {t("contactPerson")}
-                    </FieldLabel>
-                    <Input
-                      id="sd-contact"
-                      value={form.contactPerson}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          contactPerson: e.target.value,
-                        }))
-                      }
-                      placeholder={t("contactPersonPlaceholder")}
-                    />
+                    <FieldLabel>{t("contactPerson")}</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="sd-contact"
+                        placeholder={t("contactPersonPlaceholder")}
+                        {...form.register("contactPerson")}
+                      />
+                    </FieldContent>
                   </Field>
+
+                  {/* Phone — optional */}
                   <Field>
-                    <FieldLabel htmlFor="sd-phone">{t("phone")}</FieldLabel>
-                    <Input
-                      id="sd-phone"
-                      type="tel"
-                      value={form.phone}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          phone: formatMongolianPhone(e.target.value),
-                        }))
-                      }
-                      placeholder={t("phonePlaceholder")}
-                      {...inputProps("phone")}
-                    />
+                    <FieldLabel>{t("phone")}</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="sd-phone"
+                        type="tel"
+                        placeholder={t("phonePlaceholder")}
+                        {...inputProps("phone")}
+                        {...form.register("phone")}
+                      />
+                    </FieldContent>
                   </Field>
                 </div>
 
+                {/* Email — optional */}
                 <Field>
-                  <FieldLabel htmlFor="sd-email">{t("email")}</FieldLabel>
-                  <Input
-                    id="sd-email"
-                    type="email"
-                    value={form.email}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, email: e.target.value }))
-                    }
-                    placeholder={t("emailPlaceholder")}
-                  />
+                  <FieldLabel>{t("email")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="sd-email"
+                      type="email"
+                      placeholder={t("emailPlaceholder")}
+                      {...form.register("email")}
+                    />
+                  </FieldContent>
                 </Field>
 
+                {/* Address — optional */}
                 <Field>
-                  <FieldLabel htmlFor="sd-address">{t("address")}</FieldLabel>
-                  <Input
-                    id="sd-address"
-                    value={form.address}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, address: e.target.value }))
-                    }
-                    placeholder={t("addressPlaceholder")}
-                  />
+                  <FieldLabel>{t("address")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="sd-address"
+                      placeholder={t("addressPlaceholder")}
+                      {...form.register("address")}
+                    />
+                  </FieldContent>
                 </Field>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Tax ID — optional */}
                   <Field>
-                    <FieldLabel htmlFor="sd-tax-id">Tax ID</FieldLabel>
-                    <Input
-                      id="sd-tax-id"
-                      value={form.taxId}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, taxId: e.target.value }))
-                      }
-                      placeholder={t("taxIdPlaceholder")}
-                    />
+                    <FieldLabel>Tax ID</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="sd-tax-id"
+                        placeholder={t("taxIdPlaceholder")}
+                        {...inputProps("taxId")}
+                        {...form.register("taxId")}
+                      />
+                    </FieldContent>
                   </Field>
+
+                  {/* Payment Terms — optional */}
                   <Field>
-                    <FieldLabel htmlFor="sd-payment-terms">
-                      Payment Terms
-                    </FieldLabel>
-                    <Input
-                      id="sd-payment-terms"
-                      value={form.paymentTerms}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          paymentTerms: e.target.value,
-                        }))
-                      }
-                      placeholder={t("paymentTermsPlaceholder")}
-                    />
+                    <FieldLabel>Payment Terms</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="sd-payment-terms"
+                        placeholder={t("paymentTermsPlaceholder")}
+                        {...form.register("paymentTerms")}
+                      />
+                    </FieldContent>
                   </Field>
                 </div>
 
+                {/* Notes — optional */}
                 <Field>
-                  <FieldLabel htmlFor="sd-notes">{t("notes")}</FieldLabel>
-                  <Input
-                    id="sd-notes"
-                    value={form.notes}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, notes: e.target.value }))
-                    }
-                    placeholder={t("notesPlaceholder")}
-                  />
+                  <FieldLabel>{t("notes")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="sd-notes"
+                      placeholder={t("notesPlaceholder")}
+                      {...form.register("notes")}
+                    />
+                  </FieldContent>
                 </Field>
               </FieldGroup>
             )}

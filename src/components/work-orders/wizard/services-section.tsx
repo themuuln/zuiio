@@ -283,7 +283,11 @@ export function ServicesSection() {
                   <NumericKeypad
                     value={svc.quantity}
                     onChange={(val) =>
-                      ctx.updateService(idx, "quantity", Math.round(val) || 1)
+                      ctx.updateService(
+                        idx,
+                        "quantity",
+                        Math.max(1, Math.round(val)),
+                      )
                     }
                   >
                     <Input

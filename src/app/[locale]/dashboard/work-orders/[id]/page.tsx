@@ -14,6 +14,7 @@ import {
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { MechanicSelect } from "@/components/mechanic-select";
@@ -29,8 +30,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import WorkOrderPhotoUpload from "@/components/work-order-photo-upload";
@@ -107,10 +114,25 @@ export default function WorkOrderDetailPage() {
     null,
   );
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [paymentReference, setPaymentReference] = useState("");
-  const [paymentNotes, setPaymentNotes] = useState("");
+
+  const paymentSchema = z.object({
+    amount: z.number().positive("Amount must be greater than 0"),
+    method: z.string().min(1, "Payment method is required"),
+    reference: z.string().optional().or(z.literal("")),
+    notes: z.string().optional().or(z.literal("")),
+  });
+
+  type PaymentFormValues = z.infer<typeof paymentSchema>;
+
+  const paymentForm = useForm<PaymentFormValues>({
+    resolver: zodResolver(paymentSchema),
+    defaultValues: {
+      amount: 0,
+      method: "cash",
+      reference: "",
+      notes: "",
+    },
+  });
 
   const {
     data: orgData,
@@ -353,27 +375,23 @@ export default function WorkOrderDetailPage() {
     );
   };
 
-  const handlePaymentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!orgId || !existingInvoiceId || paymentAmount <= 0) {
+  const handlePaymentSubmit = paymentForm.handleSubmit(async (data) => {
+    if (!orgId || !existingInvoiceId) {
       toast.error("Please enter a valid payment amount");
       return;
     }
     recordPayment.mutate(
       {
         invoiceId: existingInvoiceId,
-        amount: paymentAmount,
-        method: paymentMethod,
-        reference: paymentReference || undefined,
-        notes: paymentNotes || undefined,
+        amount: data.amount,
+        method: data.method,
+        reference: data.reference || undefined,
+        notes: data.notes || undefined,
       },
       {
         onSuccess: () => {
           setShowPaymentDialog(false);
-          setPaymentAmount(0);
-          setPaymentMethod("cash");
-          setPaymentReference("");
-          setPaymentNotes("");
+          paymentForm.reset();
           toast.success("Payment recorded");
         },
         onError: (err: Error) => {
@@ -381,7 +399,7 @@ export default function WorkOrderDetailPage() {
         },
       },
     );
-  };
+  });
 
   const loading = orgLoading || woLoading;
 
@@ -492,7 +510,9 @@ export default function WorkOrderDetailPage() {
       {error && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
-            <Typography.Text className="text-sm text-destructive">{error}</Typography.Text>
+            <Typography.Text className="text-sm text-destructive">
+              {error}
+            </Typography.Text>
           </CardContent>
         </Card>
       )}
@@ -592,7 +612,9 @@ export default function WorkOrderDetailPage() {
           {wo.vehicle && (
             <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
               <div>
-                <Typography.Text className="text-sm font-medium">{wo.vehicle.plate_number}</Typography.Text>
+                <Typography.Text className="text-sm font-medium">
+                  {wo.vehicle.plate_number}
+                </Typography.Text>
                 <Typography.Muted className="text-xs text-muted-foreground">
                   {[wo.vehicle.make, wo.vehicle.model, wo.vehicle.year]
                     .filter(Boolean)
@@ -615,7 +637,9 @@ export default function WorkOrderDetailPage() {
                   <Typography.Muted className="text-xs font-medium text-muted-foreground mb-0.5">
                     {t("complaint")}
                   </Typography.Muted>
-                  <Typography.Text className="text-sm">{wo.complaint}</Typography.Text>
+                  <Typography.Text className="text-sm">
+                    {wo.complaint}
+                  </Typography.Text>
                 </div>
               )}
               {(wo as any).diagnosis_label && (
@@ -878,12 +902,18 @@ export default function WorkOrderDetailPage() {
                     type="number"
                     placeholder={t("qty")}
                     value={newPart.quantity}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const v = e.target.value;
                       setNewPart((p) => ({
                         ...p,
-                        quantity: Number(e.target.value) || 1,
-                      }))
-                    }
+                        quantity: v === "" ? 0 : Number(v) || 0,
+                      }));
+                    }}
+                    onBlur={(e) => {
+                      const n = Number(e.target.value);
+                      if (isNaN(n) || n < 1)
+                        setNewPart((p) => ({ ...p, quantity: 1 }));
+                    }}
                     className="h-11"
                   />
                 </div>
@@ -931,7 +961,9 @@ export default function WorkOrderDetailPage() {
                 className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
               >
                 <div>
-                  <Typography.Text className="text-sm font-medium">{p.part_name}</Typography.Text>
+                  <Typography.Text className="text-sm font-medium">
+                    {p.part_name}
+                  </Typography.Text>
                   <Typography.Muted className="text-xs text-muted-foreground">
                     {p.quantity} x {formatMNT(Number(p.unit_price))}
                   </Typography.Muted>
@@ -1143,7 +1175,9 @@ export default function WorkOrderDetailPage() {
               <div className="flex items-start gap-3">
                 <FileText className="mt-0.5 size-5 shrink-0 text-green-600" />
                 <div>
-                  <Typography.Text className="font-medium text-sm">{t("invoiceReady")}</Typography.Text>
+                  <Typography.Text className="font-medium text-sm">
+                    {t("invoiceReady")}
+                  </Typography.Text>
                   <Typography.Muted className="text-xs text-muted-foreground mt-0.5">
                     {existingInvoiceId
                       ? t("invoiceReadyDesc")
@@ -1176,7 +1210,9 @@ export default function WorkOrderDetailPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Wallet className="size-5 text-green-600" />
-                <Typography.Text className="font-medium text-sm">Payment Status</Typography.Text>
+                <Typography.Text className="font-medium text-sm">
+                  Payment Status
+                </Typography.Text>
               </div>
               <Badge
                 variant={
@@ -1230,7 +1266,7 @@ export default function WorkOrderDetailPage() {
             {balanceDue > 0 && (
               <Button
                 onClick={() => {
-                  setPaymentAmount(balanceDue);
+                  paymentForm.setValue("amount", balanceDue);
                   setShowPaymentDialog(true);
                 }}
                 size="sm"
@@ -1353,50 +1389,63 @@ export default function WorkOrderDetailPage() {
             <DialogTitle>Record Payment</DialogTitle>
           </DialogHeader>
           <form onSubmit={handlePaymentSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="amount">Amount</Label>
-              <Input
-                id="amount"
-                type="number"
-                value={paymentAmount || ""}
-                onChange={(e) => setPaymentAmount(Number(e.target.value))}
-                min={1}
-                max={balanceDue}
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="method">Payment Method</Label>
-              <select
-                id="method"
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="flex h-11 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="cash">Cash</option>
-                <option value="card">Card</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="manual">Manual</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="reference">Reference (optional)</Label>
-              <Input
-                id="reference"
-                value={paymentReference}
-                onChange={(e) => setPaymentReference(e.target.value)}
-                placeholder="Transaction ID / card last 4"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="notes">Notes (optional)</Label>
-              <Input
-                id="notes"
-                value={paymentNotes}
-                onChange={(e) => setPaymentNotes(e.target.value)}
-                placeholder="Any notes"
-              />
-            </div>
+            <Field data-invalid={!!paymentForm.formState.errors.amount}>
+              <FieldLabel>Amount</FieldLabel>
+              <FieldContent>
+                <Input
+                  type="number"
+                  min={1}
+                  max={balanceDue}
+                  aria-invalid={!!paymentForm.formState.errors.amount}
+                  {...paymentForm.register("amount", {
+                    valueAsNumber: true,
+                  })}
+                />
+                {paymentForm.formState.errors.amount && (
+                  <FieldError>
+                    {paymentForm.formState.errors.amount.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
+            <Field data-invalid={!!paymentForm.formState.errors.method}>
+              <FieldLabel>Payment Method</FieldLabel>
+              <FieldContent>
+                <select
+                  aria-invalid={!!paymentForm.formState.errors.method}
+                  className="flex h-11 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+                  {...paymentForm.register("method")}
+                >
+                  <option value="cash">Cash</option>
+                  <option value="card">Card</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="manual">Manual</option>
+                </select>
+                {paymentForm.formState.errors.method && (
+                  <FieldError>
+                    {paymentForm.formState.errors.method.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
+            <Field>
+              <FieldLabel>Reference (optional)</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="Transaction ID / card last 4"
+                  {...paymentForm.register("reference")}
+                />
+              </FieldContent>
+            </Field>
+            <Field>
+              <FieldLabel>Notes (optional)</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="Any notes"
+                  {...paymentForm.register("notes")}
+                />
+              </FieldContent>
+            </Field>
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"
@@ -1405,7 +1454,12 @@ export default function WorkOrderDetailPage() {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={recordPayment.isPending}>
+              <Button
+                type="submit"
+                disabled={
+                  recordPayment.isPending || paymentForm.formState.isSubmitting
+                }
+              >
                 {recordPayment.isPending ? "Recording..." : "Record Payment"}
               </Button>
             </div>

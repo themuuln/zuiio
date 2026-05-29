@@ -59,7 +59,9 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
       const expense = row.original;
       return (
         <div className="min-w-0 max-w-64">
-          <Typography.Text className="truncate text-sm font-medium">{expense.description}</Typography.Text>
+          <Typography.Text className="truncate text-sm font-medium">
+            {expense.description}
+          </Typography.Text>
           {expense.reference_number && (
             <Typography.Muted className="truncate text-xs text-muted-foreground">
               {expense.reference_number}

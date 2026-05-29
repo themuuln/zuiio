@@ -4,10 +4,7 @@ import { Database, Download, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 
 interface DataExportSectionProps {
@@ -25,7 +22,9 @@ export function DataExportSection({ orgId }: DataExportSectionProps) {
               <Download className="size-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <Typography.H3 className="text-sm font-semibold">Export All Data</Typography.H3>
+              <Typography.H3 className="text-sm font-semibold">
+                Export All Data
+              </Typography.H3>
               <Typography.Muted className="mt-0.5 text-xs text-muted-foreground">
                 Download all your organization data as JSON.
               </Typography.Muted>
@@ -49,7 +48,9 @@ export function DataExportSection({ orgId }: DataExportSectionProps) {
               <Database className="size-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <Typography.H3 className="text-sm font-semibold">Database Backup</Typography.H3>
+              <Typography.H3 className="text-sm font-semibold">
+                Database Backup
+              </Typography.H3>
               <Typography.Muted className="mt-0.5 text-xs text-muted-foreground">
                 Back up from the command line.
               </Typography.Muted>
@@ -57,13 +58,17 @@ export function DataExportSection({ orgId }: DataExportSectionProps) {
           </div>
           <div className="mt-3 flex flex-col gap-1.5">
             <div className="rounded-lg bg-muted/50 px-3 py-2">
-              <Typography.Muted className="text-xs text-muted-foreground">Local backup</Typography.Muted>
+              <Typography.Muted className="text-xs text-muted-foreground">
+                Local backup
+              </Typography.Muted>
               <code className="mt-0.5 block text-xs font-mono text-foreground">
                 ./scripts/backup.sh
               </code>
             </div>
             <div className="rounded-lg bg-muted/50 px-3 py-2">
-              <Typography.Muted className="text-xs text-muted-foreground">Remote backup</Typography.Muted>
+              <Typography.Muted className="text-xs text-muted-foreground">
+                Remote backup
+              </Typography.Muted>
               <code className="mt-0.5 block text-xs font-mono text-foreground">
                 ./scripts/backup.sh --remote
               </code>
@@ -131,7 +136,9 @@ function ExportDataButton({ orgId }: { orgId: string }) {
         )}
       </Button>
       {exportError && (
-        <Typography.Text className="text-xs text-destructive">{exportError}</Typography.Text>
+        <Typography.Text className="text-xs text-destructive">
+          {exportError}
+        </Typography.Text>
       )}
     </div>
   );

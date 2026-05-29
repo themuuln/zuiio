@@ -1,11 +1,18 @@
 "use client";
 
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -15,32 +22,37 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { inputProps, formatMongolianPhone } from "@/lib/form-ux";
+import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreateCustomer } from "@/lib/queries/use-wizard-data";
-import { Typography } from "@/components/ui/typography";
-import type { Customer, CreateCustomerParams } from "@/lib/types";
+import type { CreateCustomerParams, Customer } from "@/lib/types";
 
-type CustomerType = "individual" | "company";
+// ── Schema ───────────────────────────────────────────────────
+// Base schema with all optional — mode-specific validation runs in handleSubmit.
+
+const customerSchema = z.object({
+  type: z.enum(["individual", "company"]),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  companyName: z.string().optional(),
+  contactPerson: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  address: z.string().optional(),
+  notes: z.string().optional(),
+  source: z.string().optional(),
+});
+
+type CustomerFormValues = z.infer<typeof customerSchema>;
+
+// ── Component ────────────────────────────────────────────────
 
 export type CustomerFormProps = {
   mode?: "quick" | "full";
   initialData?: Partial<CreateCustomerParams>;
   onSuccess?: (customer: Customer) => void;
   onCancel?: () => void;
-};
-
-const initialForm: CreateCustomerParams = {
-  type: "individual",
-  firstName: "",
-  lastName: "",
-  companyName: "",
-  contactPerson: "",
-  phone: "",
-  email: "",
-  address: "",
-  source: "",
-  notes: "",
 };
 
 export function CustomerForm({
@@ -55,13 +67,7 @@ export function CustomerForm({
   const commonT = useTranslations("common");
 
   const [currentMode, setCurrentMode] = useState<"quick" | "full">(mode);
-  const [form, setForm] = useState<CreateCustomerParams>({
-    ...initialForm,
-    ...initialData,
-  });
-
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [conflictInfo, setConflictInfo] = useState<{
     field: "phone" | "email";
     existingCustomerId: string;
@@ -69,95 +75,116 @@ export function CustomerForm({
 
   const createCustomerMutation = useCreateCustomer(orgId);
 
+  const form = useForm<CustomerFormValues>({
+    resolver: zodResolver(customerSchema),
+    defaultValues: {
+      type: initialData?.type ?? "individual",
+      firstName: initialData?.firstName ?? "",
+      lastName: initialData?.lastName ?? "",
+      companyName: initialData?.companyName ?? "",
+      contactPerson: initialData?.contactPerson ?? "",
+      phone: initialData?.phone ?? "",
+      email: initialData?.email ?? "",
+      address: initialData?.address ?? "",
+      notes: initialData?.notes ?? "",
+      source: initialData?.source ?? "",
+    },
+  });
+
   // Sync mode if prop changes
   useEffect(() => {
     setCurrentMode(mode);
   }, [mode]);
 
-  // Clear errors on input or mode changes
+  // Clear server errors on mode change
   useEffect(() => {
     setError(null);
-    setFieldErrors({});
     setConflictInfo(null);
-  }, [form, currentMode]);
+  }, []);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit = form.handleSubmit(async (data) => {
     if (!orgId) {
       setError(t("noOrganization"));
       return;
     }
 
-    // Validation
-    const errors: Record<string, string> = {};
-
+    // ── Mode-specific validation ──
     if (currentMode === "quick") {
-      if (!form.firstName?.trim()) {
-        errors.firstName = t("firstNameRequired", {
-          fallback: "First name is required",
+      if (!data.firstName?.trim()) {
+        form.setError("firstName", {
+          message: t("firstNameRequired", {
+            fallback: "First name is required",
+          }),
         });
+        return;
       }
-      const digits = (form.phone ?? "").replace(/\D/g, "");
-      if (!form.phone?.trim()) {
-        errors.phone = t("phoneRequired", { fallback: "Phone is required" });
-      } else if (digits.length !== 8) {
-        errors.phone = t("phoneMustBe8Digits", {
-          fallback: "Must be 8 digits",
+      const digits = (data.phone ?? "").replace(/\D/g, "");
+      if (!data.phone?.trim()) {
+        form.setError("phone", {
+          message: t("phoneRequired", { fallback: "Phone is required" }),
         });
+        return;
+      } else if (digits.length !== 8) {
+        form.setError("phone", {
+          message: t("phoneMustBe8Digits", { fallback: "Must be 8 digits" }),
+        });
+        return;
       }
     } else {
-      // Full Mode validation
+      // Full mode validation
       if (
-        form.type === "individual" &&
-        !form.firstName?.trim() &&
-        !form.lastName?.trim()
+        data.type === "individual" &&
+        !data.firstName?.trim() &&
+        !data.lastName?.trim()
       ) {
-        errors.firstName = t("firstNameRequired", {
-          fallback: "First or last name is required",
+        form.setError("firstName", {
+          message: t("firstNameRequired", {
+            fallback: "First or last name is required",
+          }),
         });
+        return;
       }
       if (
-        form.type === "company" &&
-        !form.companyName?.trim() &&
-        !form.contactPerson?.trim()
+        data.type === "company" &&
+        !data.companyName?.trim() &&
+        !data.contactPerson?.trim()
       ) {
-        errors.companyName = t("companyNameRequired", {
-          fallback: "Company name or contact person is required",
+        form.setError("companyName", {
+          message: t("companyNameRequired", {
+            fallback: "Company name or contact person is required",
+          }),
         });
+        return;
       }
     }
-
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
 
     setError(null);
     setConflictInfo(null);
 
     try {
-      // Clean up body
       const payload: CreateCustomerParams = {
-        type: currentMode === "quick" ? "individual" : form.type,
-        firstName: form.firstName?.trim() || undefined,
-        lastName: form.lastName?.trim() || undefined,
-        phone: form.phone?.trim() || undefined,
+        type: currentMode === "quick" ? "individual" : data.type,
+        firstName: data.firstName?.trim() || undefined,
+        lastName: data.lastName?.trim() || undefined,
+        phone: data.phone?.trim() || undefined,
         companyName:
           currentMode === "quick"
-            ? form.companyName?.trim() || undefined
-            : form.type === "company"
-              ? form.companyName?.trim() || undefined
+            ? data.companyName?.trim() || undefined
+            : data.type === "company"
+              ? data.companyName?.trim() || undefined
               : undefined,
         contactPerson:
-          currentMode !== "quick" && form.type === "company"
-            ? form.contactPerson?.trim() || undefined
+          currentMode !== "quick" && data.type === "company"
+            ? data.contactPerson?.trim() || undefined
             : undefined,
-        email: form.email?.trim() || undefined,
+        email: data.email?.trim() || undefined,
         address:
           currentMode === "full"
-            ? form.address?.trim() || undefined
+            ? data.address?.trim() || undefined
             : undefined,
-        notes: form.notes?.trim() || undefined,
+        notes: data.notes?.trim() || undefined,
         source:
-          currentMode === "full" ? form.source?.trim() || undefined : undefined,
+          currentMode === "full" ? data.source?.trim() || undefined : undefined,
       };
 
       const customer = await createCustomerMutation.mutateAsync(payload);
@@ -174,10 +201,14 @@ export function CustomerForm({
       }
       setError(err.message || "Failed to save customer");
     }
-  };
+  });
+
+  const watchedType = form.watch("type");
+  const watchedSource = form.watch("source");
+  const phoneValue = form.watch("phone");
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
       {/* ── Mode Toggle Tabs ── */}
       <Tabs
         value={currentMode}
@@ -221,250 +252,204 @@ export function CustomerForm({
         </div>
       )}
 
-      <div className="flex flex-col gap-4">
+      <FieldGroup>
         {currentMode === "full" && (
-          <div>
-            <Label
-              className="mb-1 block text-sm font-medium"
-              htmlFor="customer-type"
-            >
+          <Field>
+            <FieldLabel>
               {t("type")} <span className="text-destructive">*</span>
-            </Label>
-            <Select
-              id="customer-type"
-              value={form.type}
-              onValueChange={(val) =>
-                setForm((current) => ({
-                  ...current,
-                  type: val as CustomerType,
-                }))
-              }
-            >
-              <SelectTrigger className="w-full h-11" aria-label="Customer type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="individual">{t("individual")}</SelectItem>
-                <SelectItem value="company">{t("company")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            </FieldLabel>
+            <FieldContent>
+              <Select
+                value={watchedType}
+                onValueChange={(val) =>
+                  form.setValue("type", val as "individual" | "company")
+                }
+              >
+                <SelectTrigger
+                  className="w-full h-11"
+                  aria-label="Customer type"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="individual">{t("individual")}</SelectItem>
+                  <SelectItem value="company">{t("company")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FieldContent>
+          </Field>
         )}
 
-        {(currentMode === "quick" || form.type === "individual") && (
+        {(currentMode === "quick" || watchedType === "individual") && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <Label
-                className="mb-1 block text-sm font-medium"
-                htmlFor="firstName"
-              >
+            <Field data-invalid={!!form.formState.errors.firstName}>
+              <FieldLabel>
                 {t("firstName")} <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="firstName"
-                value={form.firstName || ""}
-                onChange={(e) =>
-                  setForm((c) => ({ ...c, firstName: e.target.value }))
-                }
-                className={`h-11 ${fieldErrors.firstName ? "border-destructive" : ""}`}
-                placeholder="Bat"
-                autoComplete="given-name"
-                autoFocus={currentMode === "quick"}
-              />
-              {fieldErrors.firstName && (
-                <Typography.Text className="text-xs text-destructive mt-1">
-                  {fieldErrors.firstName}
-                </Typography.Text>
-              )}
-            </div>
-            <div>
-              <Label
-                className="mb-1 block text-sm font-medium"
-                htmlFor="lastName"
-              >
-                {t("lastName")}
-              </Label>
-              <Input
-                id="lastName"
-                value={form.lastName || ""}
-                onChange={(e) =>
-                  setForm((c) => ({ ...c, lastName: e.target.value }))
-                }
-                className="h-11"
-                placeholder="Erdene"
-                autoComplete="family-name"
-              />
-            </div>
+              </FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="Bat"
+                  autoComplete="given-name"
+                  autoFocus={currentMode === "quick"}
+                  aria-invalid={!!form.formState.errors.firstName}
+                  {...form.register("firstName")}
+                />
+                {form.formState.errors.firstName && (
+                  <FieldError>
+                    {form.formState.errors.firstName.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
+
+            <Field>
+              <FieldLabel>{t("lastName")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="Erdene"
+                  autoComplete="family-name"
+                  {...form.register("lastName")}
+                />
+              </FieldContent>
+            </Field>
           </div>
         )}
 
-        {currentMode === "full" && form.type === "company" && (
+        {currentMode === "full" && watchedType === "company" && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <Label
-                className="mb-1 block text-sm font-medium"
-                htmlFor="companyName"
-              >
+            <Field data-invalid={!!form.formState.errors.companyName}>
+              <FieldLabel>
                 {t("companyName")} <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="companyName"
-                value={form.companyName || ""}
-                onChange={(e) =>
-                  setForm((c) => ({ ...c, companyName: e.target.value }))
-                }
-                className={`h-11 ${fieldErrors.companyName ? "border-destructive" : ""}`}
-                placeholder="Fleet Co."
-              />
-              {fieldErrors.companyName && (
-                <Typography.Text className="text-xs text-destructive mt-1">
-                  {fieldErrors.companyName}
-                </Typography.Text>
-              )}
-            </div>
-            <div>
-              <Label
-                className="mb-1 block text-sm font-medium"
-                htmlFor="contactPerson"
-              >
-                {t("contactPerson")}
-              </Label>
-              <Input
-                id="contactPerson"
-                value={form.contactPerson || ""}
-                onChange={(e) =>
-                  setForm((c) => ({ ...c, contactPerson: e.target.value }))
-                }
-                className="h-11"
-                placeholder="B. Batbold"
-              />
-            </div>
+              </FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="Fleet Co."
+                  aria-invalid={!!form.formState.errors.companyName}
+                  {...form.register("companyName")}
+                />
+                {form.formState.errors.companyName && (
+                  <FieldError>
+                    {form.formState.errors.companyName.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
+
+            <Field>
+              <FieldLabel>{t("contactPerson")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="B. Batbold"
+                  {...form.register("contactPerson")}
+                />
+              </FieldContent>
+            </Field>
           </div>
         )}
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <Label className="mb-1 block text-sm font-medium" htmlFor="phone">
+          <Field data-invalid={!!form.formState.errors.phone}>
+            <FieldLabel>
               {t("phone")}{" "}
               {currentMode === "quick" && (
                 <span className="text-destructive">*</span>
               )}
-            </Label>
-            <Input
-              id="phone"
-              value={form.phone || ""}
-              onChange={(e) =>
-                setForm((c) => ({
-                  ...c,
-                  phone: formatMongolianPhone(e.target.value),
-                }))
-              }
-              className={`h-11 ${fieldErrors.phone ? "border-destructive" : ""}`}
-              placeholder="99112233"
-              {...inputProps("phone")}
-              type="tel"
-            />
-            {fieldErrors.phone && (
-              <Typography.Text className="text-xs text-destructive mt-1">
-                {fieldErrors.phone}
-              </Typography.Text>
-            )}
-          </div>
-          <div>
-            <Label className="mb-1 block text-sm font-medium" htmlFor="email">
-              {t("email")}
-            </Label>
-            <Input
-              id="email"
-              value={form.email || ""}
-              onChange={(e) =>
-                setForm((c) => ({ ...c, email: e.target.value }))
-              }
-              className="h-11"
-              placeholder="name@example.com"
-              type="email"
-              autoComplete="email"
-            />
-          </div>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                value={phoneValue}
+                onChange={(e) =>
+                  form.setValue("phone", formatMongolianPhone(e.target.value))
+                }
+                placeholder="99112233"
+                type="tel"
+                aria-invalid={!!form.formState.errors.phone}
+                {...inputProps("phone")}
+              />
+              {form.formState.errors.phone && (
+                <FieldError>{form.formState.errors.phone.message}</FieldError>
+              )}
+            </FieldContent>
+          </Field>
+
+          <Field>
+            <FieldLabel>{t("email")}</FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder="name@example.com"
+                type="email"
+                {...inputProps("email")}
+                {...form.register("email")}
+              />
+            </FieldContent>
+          </Field>
         </div>
 
         {currentMode === "quick" && (
-          <div>
-            <Label className="mb-1 block text-sm font-medium" htmlFor="company">
-              Company
-            </Label>
-            <Input
-              id="company"
-              value={form.companyName || ""}
-              onChange={(e) =>
-                setForm((c) => ({ ...c, companyName: e.target.value }))
-              }
-              className="h-11"
-              placeholder="Optional"
-              autoComplete="organization"
-            />
-          </div>
+          <Field>
+            <FieldLabel>Company</FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder="Optional"
+                {...inputProps("companyName")}
+                {...form.register("companyName")}
+              />
+            </FieldContent>
+          </Field>
         )}
 
         {currentMode === "full" && (
-          <div>
-            <Label className="mb-1 block text-sm font-medium" htmlFor="address">
-              {t("address")}
-            </Label>
-            <Input
-              id="address"
-              value={form.address || ""}
-              onChange={(e) =>
-                setForm((c) => ({ ...c, address: e.target.value }))
-              }
-              className="h-11"
-              placeholder="Ulaanbaatar, Mongolia"
-            />
-          </div>
+          <Field>
+            <FieldLabel>{t("address")}</FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder="Ulaanbaatar, Mongolia"
+                {...inputProps("address")}
+                {...form.register("address")}
+              />
+            </FieldContent>
+          </Field>
         )}
 
         {currentMode === "full" && (
-          <div>
-            <Label className="mb-1 block text-sm font-medium" htmlFor="source">
-              {t("source")}
-            </Label>
-            <Select
-              id="source"
-              value={form.source}
-              onValueChange={(val) =>
-                setForm((c) => ({ ...c, source: val ?? undefined }))
-              }
-            >
-              <SelectTrigger
-                className="w-full h-11"
-                aria-label="Customer source"
+          <Field>
+            <FieldLabel>{t("source")}</FieldLabel>
+            <FieldContent>
+              <Select
+                value={watchedSource || ""}
+                onValueChange={(val) =>
+                  form.setValue("source", val ?? undefined)
+                }
               >
-                <SelectValue placeholder="Select how they found you" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="facebook">Facebook</SelectItem>
-                <SelectItem value="google">Google</SelectItem>
-                <SelectItem value="recommendation">Friend/Family</SelectItem>
-                <SelectItem value="passing_by">Passing by</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+                <SelectTrigger
+                  className="w-full h-11"
+                  aria-label="Customer source"
+                >
+                  <SelectValue placeholder="Select how they found you" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="facebook">Facebook</SelectItem>
+                  <SelectItem value="google">Google</SelectItem>
+                  <SelectItem value="recommendation">Friend/Family</SelectItem>
+                  <SelectItem value="passing_by">Passing by</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </FieldContent>
+          </Field>
         )}
 
-        <div>
-          <Label className="mb-1 block text-sm font-medium" htmlFor="notes">
-            {t("notes")}
-          </Label>
-          <Textarea
-            id="notes"
-            value={form.notes || ""}
-            onChange={(e) => setForm((c) => ({ ...c, notes: e.target.value }))}
-            placeholder="Optional notes"
-            rows={2}
-          />
-        </div>
-      </div>
+        <Field>
+          <FieldLabel>{t("notes")}</FieldLabel>
+          <FieldContent>
+            <Textarea
+              placeholder="Optional notes"
+              rows={2}
+              {...form.register("notes")}
+            />
+          </FieldContent>
+        </Field>
+      </FieldGroup>
 
       <div className="flex flex-col-reverse gap-2 mt-4 sm:flex-row sm:justify-end">
         {onCancel && (

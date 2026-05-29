@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { getExpenseCategories as getCategories, createExpenseCategory, seedDefaultExpenseCategories } from "@/lib/services/expense-service";
+import {
+  getExpenseCategories as getCategories,
+  createExpenseCategory,
+  seedDefaultExpenseCategories,
+} from "@/lib/services/expense-service";
 
 export const GET = createRouteHandler(async ({ orgId, user }) => {
   await seedDefaultExpenseCategories(orgId, user.id);
@@ -15,7 +19,14 @@ export const POST = createRouteHandler(async ({ request, orgId, user }) => {
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
     );
   }
   const body = await request.json();

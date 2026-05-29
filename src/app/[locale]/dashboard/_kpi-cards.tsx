@@ -1,8 +1,4 @@
-import {
-  ArrowDown,
-  ArrowUp,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, type LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
@@ -75,9 +71,7 @@ export function KpiCard({
   return (
     <Card className="group relative overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
       {accent && (
-        <div
-          className={`absolute left-0 top-0 h-full w-1 ${accent.bar}`}
-        />
+        <div className={`absolute left-0 top-0 h-full w-1 ${accent.bar}`} />
       )}
       <CardHeader className="flex flex-row items-center justify-between gap-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">

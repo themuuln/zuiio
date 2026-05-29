@@ -14,21 +14,35 @@ export const GET = createRouteHandler(async ({ params }) => {
   return NextResponse.json({ data: schedule });
 });
 
-export const PATCH = createRouteHandler(async ({ request, orgId, params, user }) => {
-  await requireActiveSubscription(orgId);
-  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = mutationRateLimiter.check(ip);
-  if (!rateCheck.allowed) {
-    return NextResponse.json(
-      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+export const PATCH = createRouteHandler(
+  async ({ request, orgId, params, user }) => {
+    await requireActiveSubscription(orgId);
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+    const rateCheck = mutationRateLimiter.check(ip);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+            ),
+          },
+        },
+      );
+    }
+    const { reminderId } = params;
+    const body = await request.json();
+    const schedule = await updateServiceSchedule(
+      reminderId,
+      orgId,
+      user.id,
+      body,
     );
-  }
-  const { reminderId } = params;
-  const body = await request.json();
-  const schedule = await updateServiceSchedule(reminderId, orgId, user.id, body);
-  return NextResponse.json({ data: schedule });
-});
+    return NextResponse.json({ data: schedule });
+  },
+);
 
 export const DELETE = createRouteHandler(async ({ request, orgId, params }) => {
   await requireActiveSubscription(orgId);
@@ -37,7 +51,14 @@ export const DELETE = createRouteHandler(async ({ request, orgId, params }) => {
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000)) } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
     );
   }
   const { reminderId } = params;

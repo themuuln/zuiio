@@ -74,7 +74,9 @@ export function PendingInvites({
                     <Mail className="size-4" />
                   </div>
                   <div>
-                    <Typography.Text className="text-sm font-medium">{invite.email}</Typography.Text>
+                    <Typography.Text className="text-sm font-medium">
+                      {invite.email}
+                    </Typography.Text>
                     <Typography.Muted className="text-xs text-muted-foreground">
                       {t("pending")} &middot;{" "}
                       {new Date(invite.expires_at).toLocaleDateString()}

@@ -3,12 +3,12 @@
 import {
   closestCenter,
   DndContext,
+  type DragEndEvent,
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
-  type DragEndEvent,
 } from "@dnd-kit/core";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
@@ -18,24 +18,39 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import {
+  GripVertical,
+  Loader2,
+  Pencil,
+  Plus,
+  Stethoscope,
+  Trash2,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { GripVertical, Loader2, Pencil, Plus, Stethoscope, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -44,17 +59,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Typography } from "@/components/ui/typography";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import {
-  useDiagnosisLabels,
   useCreateDiagnosisLabel,
-  useUpdateDiagnosisLabel,
   useDeleteDiagnosisLabel,
+  useDiagnosisLabels,
   useReorderDiagnosisLabels,
+  useUpdateDiagnosisLabel,
 } from "@/lib/queries/use-diagnosis-labels";
 import type { DiagnosisLabel } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 
 const PRESET_COLORS = [
   { value: "#dc2626", label: "Engine" },
@@ -120,6 +135,17 @@ function DraggableRow({
   );
 }
 
+// ── Zod Schema ──────────────────────────────────────────────
+
+const diagnosisLabelSchema = z.object({
+  nameMn: z.string().optional(),
+  name: z.string().min(1, "English name is required"),
+  color: z.string().optional(),
+  isActive: z.boolean(),
+});
+
+type DiagnosisLabelValues = z.infer<typeof diagnosisLabelSchema>;
+
 function LabelFormDialog({
   open,
   onOpenChange,
@@ -136,33 +162,25 @@ function LabelFormDialog({
   const updateLabel = useUpdateDiagnosisLabel(orgId);
   const isEditing = !!editingLabel;
 
-  const [nameMn, setNameMn] = useState(editingLabel?.name_mn ?? "");
-  const [name, setName] = useState(editingLabel?.name ?? "");
-  const [color, setColor] = useState(editingLabel?.color ?? "");
-  const [isActive, setIsActive] = useState(editingLabel?.is_active ?? true);
-  const [saving, setSaving] = useState(false);
+  const form = useForm<DiagnosisLabelValues>({
+    resolver: zodResolver(diagnosisLabelSchema),
+    defaultValues: {
+      nameMn: editingLabel?.name_mn ?? "",
+      name: editingLabel?.name ?? "",
+      color: editingLabel?.color ?? "",
+      isActive: editingLabel?.is_active ?? true,
+    },
+  });
 
-  function resetForm() {
-    setNameMn("");
-    setName("");
-    setColor("");
-    setIsActive(true);
-  }
+  const watchedColor = form.watch("color");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim()) {
-      toast.error(t("nameRequired"));
-      return;
-    }
-
-    setSaving(true);
+  async function onSubmit(data: DiagnosisLabelValues) {
     try {
       const body = {
-        name: name.trim(),
-        name_mn: nameMn.trim() || null,
-        color: color.trim() || null,
-        is_active: isActive,
+        name: data.name.trim(),
+        name_mn: data.nameMn?.trim() || null,
+        color: data.color?.trim() || null,
+        is_active: data.isActive,
       };
 
       if (isEditing && editingLabel) {
@@ -174,11 +192,8 @@ function LabelFormDialog({
       }
 
       onOpenChange(false);
-      resetForm();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("saveFailed"));
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -190,81 +205,94 @@ function LabelFormDialog({
             {isEditing ? t("editTitle") : t("addTitle")}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-col gap-4"
+        >
           <FieldGroup>
-          {/* Mongolian name first */}
-          <Field>
-            <FieldLabel htmlFor="label-name-mn">{t("nameMn")}</FieldLabel>
-            <Input
-              id="label-name-mn"
-              value={nameMn}
-              onChange={(e) => setNameMn(e.target.value)}
-              placeholder={t("namePlaceholder")}
-            />
-          </Field>
-
-          {/* English name second */}
-          <Field>
-            <FieldLabel htmlFor="label-name">
-              {t("name")} <span className="text-destructive">*</span>
-            </FieldLabel>
-            <Input
-              id="label-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("nameEnPlaceholder")}
-              required
-            />
-          </Field>
-
-          {/* Color picker with presets */}
-          <Field>
-            <FieldLabel>{t("color")}</FieldLabel>
-            <div className="flex flex-wrap gap-1.5">
-              {PRESET_COLORS.map((preset) => (
-                <Button
-                  key={preset.value}
-                  title={preset.label}
-                  onClick={() => setColor(preset.value)}
-                  variant="outline"
-                  size="icon-sm"
-                  className={cn(
-                    "rounded-full border-2 transition-all hover:scale-110",
-                    color === preset.value
-                      ? "border-foreground scale-110 ring-2 ring-offset-1 ring-ring"
-                      : "border-transparent",
-                  )}
-                  style={{ backgroundColor: preset.value }}
-                />
-              ))}
-            </div>
-            <div className="mt-1.5 flex gap-2 items-center">
-              <div className="relative flex-1">
+            {/* Mongolian name first */}
+            <Field>
+              <FieldLabel htmlFor="label-name-mn">{t("nameMn")}</FieldLabel>
+              <FieldContent>
                 <Input
-                  id="label-color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  placeholder={t("colorPlaceholder")}
-                  className="flex-1 pl-9"
+                  id="label-name-mn"
+                  placeholder={t("namePlaceholder")}
+                  {...form.register("nameMn")}
                 />
-                {color && (
-                  <div
-                    className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 rounded-full border"
-                    style={{ backgroundColor: color }}
-                  />
+              </FieldContent>
+            </Field>
+
+            {/* English name second */}
+            <Field data-invalid={!!form.formState.errors.name}>
+              <FieldLabel htmlFor="label-name">
+                {t("name")} <span className="text-destructive">*</span>
+              </FieldLabel>
+              <FieldContent>
+                <Input
+                  id="label-name"
+                  placeholder={t("nameEnPlaceholder")}
+                  aria-invalid={!!form.formState.errors.name}
+                  {...form.register("name")}
+                />
+                {form.formState.errors.name && (
+                  <FieldError>{form.formState.errors.name.message}</FieldError>
                 )}
-              </div>
-              {color && !PRESET_COLORS.some((p) => p.value === color) && (
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  {t("customColor")}
-                </span>
-              )}
-            </div>
-          </Field>
+              </FieldContent>
+            </Field>
+
+            {/* Color picker with presets */}
+            <Field>
+              <FieldLabel>{t("color")}</FieldLabel>
+              <FieldContent>
+                <div className="flex flex-wrap gap-1.5">
+                  {PRESET_COLORS.map((preset) => (
+                    <Button
+                      key={preset.value}
+                      title={preset.label}
+                      onClick={() => form.setValue("color", preset.value)}
+                      variant="outline"
+                      size="icon-sm"
+                      className={cn(
+                        "rounded-full border-2 transition-all hover:scale-110",
+                        watchedColor === preset.value
+                          ? "border-foreground scale-110 ring-2 ring-offset-1 ring-ring"
+                          : "border-transparent",
+                      )}
+                      style={{ backgroundColor: preset.value }}
+                    />
+                  ))}
+                </div>
+                <div className="mt-1.5 flex gap-2 items-center">
+                  <div className="relative flex-1">
+                    <Input
+                      id="label-color"
+                      placeholder={t("colorPlaceholder")}
+                      className="flex-1 pl-9"
+                      {...form.register("color")}
+                    />
+                    {watchedColor && (
+                      <div
+                        className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 rounded-full border"
+                        style={{ backgroundColor: watchedColor }}
+                      />
+                    )}
+                  </div>
+                  {watchedColor &&
+                    !PRESET_COLORS.some((p) => p.value === watchedColor) && (
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {t("customColor")}
+                      </span>
+                    )}
+                </div>
+              </FieldContent>
+            </Field>
           </FieldGroup>
 
           <div className="flex items-center gap-3">
-            <Switch checked={isActive} onCheckedChange={setIsActive} />
+            <Switch
+              checked={form.watch("isActive")}
+              onCheckedChange={(v) => form.setValue("isActive", v)}
+            />
             <Label className="cursor-pointer">{t("active")}</Label>
           </div>
 
@@ -272,15 +300,14 @@ function LabelFormDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
-                onOpenChange(false);
-                resetForm();
-              }}
+              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={saving}>
-              {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting && (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              )}
               {isEditing ? t("editLabel") : t("addLabel")}
             </Button>
           </DialogFooter>
@@ -294,9 +321,7 @@ interface DiagnosisLabelsSectionProps {
   orgId: string;
 }
 
-export function DiagnosisLabelsSection({
-  orgId,
-}: DiagnosisLabelsSectionProps) {
+export function DiagnosisLabelsSection({ orgId }: DiagnosisLabelsSectionProps) {
   const t = useTranslations("diagnosisLabels");
   const { data: labels, isLoading, error } = useDiagnosisLabels(orgId);
   const deleteLabel = useDeleteDiagnosisLabel(orgId);
@@ -313,7 +338,9 @@ export function DiagnosisLabelsSection({
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
     useSensor(KeyboardSensor),
   );
 
@@ -371,7 +398,9 @@ export function DiagnosisLabelsSection({
     return (
       <Card className="border-destructive/20">
         <CardContent className="py-6">
-          <Typography.Text className="text-sm text-destructive">{t("loadFailed")}</Typography.Text>
+          <Typography.Text className="text-sm text-destructive">
+            {t("loadFailed")}
+          </Typography.Text>
         </CardContent>
       </Card>
     );
@@ -395,7 +424,9 @@ export function DiagnosisLabelsSection({
             <CardContent className="flex flex-col items-center gap-3 py-12">
               <Stethoscope className="size-10 text-muted-foreground/40" />
               <div className="text-center">
-                <Typography.Text className="text-sm font-medium">{t("emptyTitle")}</Typography.Text>
+                <Typography.Text className="text-sm font-medium">
+                  {t("emptyTitle")}
+                </Typography.Text>
                 <Typography.Muted className="mt-0.5 text-xs text-muted-foreground">
                   {t("emptyDescription")}
                 </Typography.Muted>
@@ -468,12 +499,16 @@ export function DiagnosisLabelsSection({
                                 </code>
                               </div>
                             ) : (
-                              <span className="text-muted-foreground/50">–</span>
+                              <span className="text-muted-foreground/50">
+                                –
+                              </span>
                             )}
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <Badge
-                              variant={label.is_active ? "default" : "secondary"}
+                              variant={
+                                label.is_active ? "default" : "secondary"
+                              }
                               className="text-xs"
                             >
                               {label.is_active ? t("active") : t("inactive")}

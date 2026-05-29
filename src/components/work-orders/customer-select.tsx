@@ -2,13 +2,16 @@
 
 import { AlertTriangle, Plus, User } from "lucide-react";
 import { useState } from "react";
+import { z } from "zod";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldContent, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
-import type { Customer } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
+import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
+import type { Customer } from "@/lib/types";
 
 interface CustomerSelectProps {
   orgId: string;
@@ -27,11 +30,24 @@ export function CustomerSelect({
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searching, setSearching] = useState(false);
   const [showQuick, setShowQuick] = useState(false);
-  const [quickFirstName, setQuickFirstName] = useState("");
-  const [quickLastName, setQuickLastName] = useState("");
-  const [quickPhone, setQuickPhone] = useState("");
-  const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+
+  const customerQuickSchema = z.object({
+    first_name: z.string().min(1, "First name is required"),
+    last_name: z.string().optional().or(z.literal("")),
+    phone: z.string().optional().or(z.literal("")),
+  });
+
+  type CustomerQuickValues = z.infer<typeof customerQuickSchema>;
+
+  const form = useForm<CustomerQuickValues>({
+    resolver: zodResolver(customerQuickSchema),
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      phone: "",
+    },
+  });
 
   // Search customers
   const handleSearch = (q: string) => {
@@ -48,22 +64,17 @@ export function CustomerSelect({
       .finally(() => setSearching(false));
   };
 
-  // Quick create
-  const handleQuickCreate = async () => {
-    if (!orgId || !quickFirstName.trim()) {
-      setCreateError("First name is required");
-      return;
-    }
-    setCreating(true);
+  const handleQuickCreate = form.handleSubmit(async (data) => {
+    if (!orgId) return;
     setCreateError(null);
     try {
       const res = await fetch(`/api/organizations/${orgId}/customers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          first_name: quickFirstName.trim(),
-          last_name: quickLastName.trim() || null,
-          phone: quickPhone.trim() || null,
+          first_name: data.first_name.trim(),
+          last_name: data.last_name?.trim() || null,
+          phone: data.phone?.trim() || null,
           type: "individual",
         }),
       });
@@ -78,17 +89,13 @@ export function CustomerSelect({
         }
       } else if (json.data) {
         onSelect(json.data);
-        setQuickFirstName("");
-        setQuickLastName("");
-        setQuickPhone("");
+        form.reset();
         setShowQuick(false);
       }
     } catch {
       setCreateError("Network error");
-    } finally {
-      setCreating(false);
     }
-  };
+  });
 
   return (
     <Card>
@@ -175,64 +182,82 @@ export function CustomerSelect({
             {showQuick && (
               <form
                 className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/20"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleQuickCreate();
-                }}
+                onSubmit={handleQuickCreate}
               >
                 <Typography.Text className="text-sm font-medium">
                   New Customer
                 </Typography.Text>
                 <div className="grid grid-cols-2 gap-3">
-                  <Input
-                    placeholder="e.g. Bat"
-                    value={quickFirstName}
-                    onChange={(e) => setQuickFirstName(e.target.value)}
-                    className="h-11"
-                    {...inputProps("firstName")}
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        // Focus last name
-                        const form = e.currentTarget.closest("form");
-                        if (form) {
-                          const inputs = form.querySelectorAll("input");
-                          inputs[1]?.focus();
-                        }
-                      }
-                    }}
-                  />
-                  <Input
-                    placeholder="e.g. Erdene"
-                    value={quickLastName}
-                    onChange={(e) => setQuickLastName(e.target.value)}
-                    className="h-11"
-                    {...inputProps("lastName")}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        // Focus phone
-                        const form = e.currentTarget.closest("form");
-                        if (form) {
-                          const inputs = form.querySelectorAll("input");
-                          inputs[2]?.focus();
-                        }
-                      }
-                    }}
-                  />
+                  <Field data-invalid={!!form.formState.errors.first_name}>
+                    <FieldContent>
+                      <Input
+                        placeholder="e.g. Bat"
+                        aria-invalid={!!form.formState.errors.first_name}
+                        className="h-11"
+                        {...inputProps("firstName")}
+                        {...form.register("first_name")}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const formEl = e.currentTarget.closest("form");
+                            if (formEl) {
+                              const inputs = formEl.querySelectorAll("input");
+                              inputs[1]?.focus();
+                            }
+                          }
+                        }}
+                      />
+                      {form.formState.errors.first_name && (
+                        <FieldError>
+                          {form.formState.errors.first_name.message}
+                        </FieldError>
+                      )}
+                    </FieldContent>
+                  </Field>
+                  <Field>
+                    <FieldContent>
+                      <Input
+                        placeholder="e.g. Erdene"
+                        className="h-11"
+                        {...inputProps("lastName")}
+                        {...form.register("last_name")}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const formEl = e.currentTarget.closest("form");
+                            if (formEl) {
+                              const inputs = formEl.querySelectorAll("input");
+                              inputs[2]?.focus();
+                            }
+                          }
+                        }}
+                      />
+                    </FieldContent>
+                  </Field>
                 </div>
-                <Input
-                  placeholder="e.g. 99112233"
-                  type="tel"
-                  value={quickPhone}
-                  onChange={(e) =>
-                    setQuickPhone(formatMongolianPhone(e.target.value))
-                  }
-                  className="h-11"
-                  {...inputProps("phone")}
-                />
-                {createError && createError.includes("belongs to") ? (
+                <Field data-invalid={!!form.formState.errors.phone}>
+                  <FieldContent>
+                    <Input
+                      placeholder="e.g. 99112233"
+                      type="tel"
+                      className="h-11"
+                      aria-invalid={!!form.formState.errors.phone}
+                      {...inputProps("phone")}
+                      {...form.register("phone", {
+                        onChange: (e) => {
+                          e.target.value = formatMongolianPhone(e.target.value);
+                        },
+                      })}
+                    />
+                    {form.formState.errors.phone && (
+                      <FieldError>
+                        {form.formState.errors.phone.message}
+                      </FieldError>
+                    )}
+                  </FieldContent>
+                </Field>
+                {createError?.includes("belongs to") ? (
                   <div className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/20 dark:text-amber-300">
                     <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
                     <span>{createError}</span>
@@ -250,6 +275,7 @@ export function CustomerSelect({
                     onClick={() => {
                       setShowQuick(false);
                       setCreateError(null);
+                      form.reset();
                     }}
                   >
                     Cancel
@@ -257,9 +283,14 @@ export function CustomerSelect({
                   <Button
                     type="submit"
                     size="sm"
-                    disabled={creating || !quickFirstName.trim()}
+                    disabled={
+                      form.formState.isSubmitting ||
+                      !form.watch("first_name").trim()
+                    }
                   >
-                    {creating ? "Creating..." : "Create & Select"}
+                    {form.formState.isSubmitting
+                      ? "Creating..."
+                      : "Create & Select"}
                   </Button>
                 </div>
               </form>

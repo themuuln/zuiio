@@ -89,7 +89,9 @@ export default function IntegrationsPage() {
             <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("ecosystemTitle")}
             </Typography.H2>
-            <Typography.Muted className="mt-3 text-muted-foreground">{t("ecosystemDesc")}</Typography.Muted>
+            <Typography.Muted className="mt-3 text-muted-foreground">
+              {t("ecosystemDesc")}
+            </Typography.Muted>
           </div>
         </section>
 
@@ -122,7 +124,9 @@ export default function IntegrationsPage() {
             <Typography.H2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {t("ctaTitle")}
             </Typography.H2>
-            <Typography.Muted className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</Typography.Muted>
+            <Typography.Muted className="mt-3 text-muted-foreground">
+              {t("ctaSubtitle")}
+            </Typography.Muted>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"

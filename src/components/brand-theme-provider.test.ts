@@ -10,9 +10,9 @@ describe("applyBrandThemePreview", () => {
   it("sets brand_color CSS vars correctly", () => {
     applyBrandThemePreview({ brand_color: "#2563eb" });
 
-    expect(
-      document.documentElement.style.getPropertyValue("--primary"),
-    ).toBe("#2563eb");
+    expect(document.documentElement.style.getPropertyValue("--primary")).toBe(
+      "#2563eb",
+    );
     expect(
       document.documentElement.style.getPropertyValue("--primary-foreground"),
     ).toBeTruthy();

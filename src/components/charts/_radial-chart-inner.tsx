@@ -19,7 +19,10 @@ export default function RadialChartInner({
   barSize = 8,
 }: RadialChartProps) {
   return (
-    <ChartContainer config={config} className={`mx-auto aspect-square h-[${height}px]`}>
+    <ChartContainer
+      config={config}
+      className={`mx-auto aspect-square h-[${height}px]`}
+    >
       <RechartsRadialBarChart
         data={data}
         innerRadius={innerRadius}

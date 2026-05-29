@@ -291,7 +291,11 @@ export function PartsSection() {
                     <NumericKeypad
                       value={part.quantity}
                       onChange={(val) =>
-                        ctx.updatePart(idx, "quantity", Math.round(val) || 1)
+                        ctx.updatePart(
+                          idx,
+                          "quantity",
+                          Math.max(1, Math.round(val)),
+                        )
                       }
                     >
                       <Input

@@ -18,7 +18,9 @@ interface PriceHistoryResponse {
 export const GET = createRouteHandler(async ({ supabase, orgId }) => {
   const { data: servicePrices, error: serviceError } = await supabase
     .from("service_price_history")
-    .select("service_catalog_id, unit_price, vehicle_make, vehicle_model, created_at")
+    .select(
+      "service_catalog_id, unit_price, vehicle_make, vehicle_model, created_at",
+    )
     .eq("organization_id", orgId)
     .order("created_at", { ascending: false });
 

@@ -221,7 +221,9 @@ export function SuppliersTab({
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16">
             <Building2 className="size-10 text-muted-foreground/40" />
-            <Typography.Muted className="text-muted-foreground">{t("noSuppliers")}</Typography.Muted>
+            <Typography.Muted className="text-muted-foreground">
+              {t("noSuppliers")}
+            </Typography.Muted>
             <Button
               variant="outline"
               onClick={() => {

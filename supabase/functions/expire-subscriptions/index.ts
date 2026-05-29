@@ -22,18 +22,17 @@ Deno.serve({ timeout: 300000 }, async () => {
 
   if (fetchError) {
     console.error("Failed to fetch expired subscriptions:", fetchError);
-    return new Response(
-      JSON.stringify({ error: fetchError.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: fetchError.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   if (!expired || expired.length === 0) {
     console.log("No expired subscriptions found");
-    return new Response(
-      JSON.stringify({ expired: 0 }),
-      { headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ expired: 0 }), {
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   const ids = expired.map((s) => s.id);
@@ -45,15 +44,14 @@ Deno.serve({ timeout: 300000 }, async () => {
 
   if (updateError) {
     console.error("Failed to update expired subscriptions:", updateError);
-    return new Response(
-      JSON.stringify({ error: updateError.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: updateError.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   console.log(`Expired ${ids.length} subscriptions`);
-  return new Response(
-    JSON.stringify({ expired: ids.length }),
-    { headers: { "Content-Type": "application/json" } },
-  );
+  return new Response(JSON.stringify({ expired: ids.length }), {
+    headers: { "Content-Type": "application/json" },
+  });
 });

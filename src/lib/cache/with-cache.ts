@@ -38,13 +38,9 @@ export function withCache<T>(
     revalidate?: number;
   },
 ): Promise<T> {
-  const cachedFn = unstable_cache(
-    async () => fn(),
-    keyParts,
-    {
-      tags: options?.tags,
-      revalidate: options?.revalidate,
-    },
-  );
+  const cachedFn = unstable_cache(async () => fn(), keyParts, {
+    tags: options?.tags,
+    revalidate: options?.revalidate,
+  });
   return cachedFn();
 }

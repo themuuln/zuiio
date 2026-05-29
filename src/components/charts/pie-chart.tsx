@@ -15,7 +15,6 @@ export interface PieChartProps {
   donut?: boolean;
 }
 
-export const PieChart = dynamic(
-  () => import("./_pie-chart-inner"),
-  { ssr: false },
-);
+export const PieChart = dynamic(() => import("./_pie-chart-inner"), {
+  ssr: false,
+});

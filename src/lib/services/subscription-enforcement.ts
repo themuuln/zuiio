@@ -5,10 +5,9 @@ export async function checkSubscriptionExpired(
 ): Promise<{ expired: boolean; message?: string; status?: string }> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc(
-    "check_org_subscription_status",
-    { target_org_id: orgId },
-  );
+  const { data, error } = await supabase.rpc("check_org_subscription_status", {
+    target_org_id: orgId,
+  });
 
   if (error) {
     return { expired: false };

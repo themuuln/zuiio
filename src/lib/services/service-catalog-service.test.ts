@@ -15,10 +15,9 @@ import {
 } from "./service-catalog-service";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
-vi.mock(
-  "@/lib/cache/with-cache",
-  () => ({ withCache: vi.fn((_key: unknown, fn: () => unknown) => fn()) }),
-);
+vi.mock("@/lib/cache/with-cache", () => ({
+  withCache: vi.fn((_key: unknown, fn: () => unknown) => fn()),
+}));
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 
 describe("Service Catalog Service", () => {
@@ -89,9 +88,7 @@ describe("Service Catalog Service", () => {
     });
 
     it("supports category filter", async () => {
-      const services = [
-        { ...mockService, category: "Maintenance" },
-      ];
+      const services = [{ ...mockService, category: "Maintenance" }];
       mockClient
         .from("service_catalog")
         .limit.mockResolvedValueOnce({ data: services, error: null });
@@ -129,12 +126,10 @@ describe("Service Catalog Service", () => {
     });
 
     it("throws NotFoundError when not found", async () => {
-      mockClient.from("service_catalog").single = vi
-        .fn()
-        .mockResolvedValue({
-          data: null,
-          error: { code: "PGRST116", message: "No rows found" },
-        });
+      mockClient.from("service_catalog").single = vi.fn().mockResolvedValue({
+        data: null,
+        error: { code: "PGRST116", message: "No rows found" },
+      });
 
       await expect(getService("nonexistent")).rejects.toThrow(NotFoundError);
       await expect(getService("nonexistent")).rejects.toThrow(
@@ -234,12 +229,10 @@ describe("Service Catalog Service", () => {
     });
 
     it("throws NotFoundError when service not found", async () => {
-      mockClient.from("service_catalog").single = vi
-        .fn()
-        .mockResolvedValue({
-          data: null,
-          error: { code: "PGRST116", message: "No rows found" },
-        });
+      mockClient.from("service_catalog").single = vi.fn().mockResolvedValue({
+        data: null,
+        error: { code: "PGRST116", message: "No rows found" },
+      });
 
       await expect(
         updateService("nonexistent", "org-1", { name: "Updated" }),
@@ -283,12 +276,12 @@ describe("Service Catalog Service", () => {
         error: { message: "Not found" },
       });
 
-      await expect(
-        deleteService("nonexistent", "org-1"),
-      ).rejects.toThrow(NotFoundError);
-      await expect(
-        deleteService("nonexistent", "org-1"),
-      ).rejects.toThrow("Service not found or already deleted");
+      await expect(deleteService("nonexistent", "org-1")).rejects.toThrow(
+        NotFoundError,
+      );
+      await expect(deleteService("nonexistent", "org-1")).rejects.toThrow(
+        "Service not found or already deleted",
+      );
     });
 
     it("revalidates cache", async () => {
@@ -311,7 +304,10 @@ describe("Service Catalog Service", () => {
     it("returns most recent price for service_catalog_id", async () => {
       mockClient
         .from("service_price_history")
-        .maybeSingle.mockResolvedValueOnce({ data: mockPriceHistory, error: null });
+        .maybeSingle.mockResolvedValueOnce({
+          data: mockPriceHistory,
+          error: null,
+        });
 
       const result = await getLastSoldPrice("org-1", "svc-1");
 
@@ -354,7 +350,10 @@ describe("Service Catalog Service", () => {
     it("orders by created_at desc, limit 1", async () => {
       mockClient
         .from("service_price_history")
-        .maybeSingle.mockResolvedValueOnce({ data: mockPriceHistory, error: null });
+        .maybeSingle.mockResolvedValueOnce({
+          data: mockPriceHistory,
+          error: null,
+        });
 
       await getLastSoldPrice("org-1", "svc-1");
 

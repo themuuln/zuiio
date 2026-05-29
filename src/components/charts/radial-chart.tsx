@@ -13,7 +13,6 @@ export interface RadialChartProps {
   barSize?: number;
 }
 
-export const RadialChart = dynamic(
-  () => import("./_radial-chart-inner"),
-  { ssr: false },
-);
+export const RadialChart = dynamic(() => import("./_radial-chart-inner"), {
+  ssr: false,
+});

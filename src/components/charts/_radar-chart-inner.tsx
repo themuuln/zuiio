@@ -1,7 +1,13 @@
 "use client";
 
 // recharts - consider next/dynamic for code splitting
-import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart as RechartsRadarChart } from "recharts";
+import {
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart as RechartsRadarChart,
+} from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
@@ -18,8 +24,14 @@ export default function RadarChartInner({
   showGrid = true,
 }: RadarChartProps) {
   return (
-    <ChartContainer config={config} className={`mx-auto aspect-square h-[${height}px]`}>
-      <RechartsRadarChart data={data} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
+    <ChartContainer
+      config={config}
+      className={`mx-auto aspect-square h-[${height}px]`}
+    >
+      <RechartsRadarChart
+        data={data}
+        margin={{ top: 4, right: 4, bottom: 4, left: 4 }}
+      >
         {showGrid && <PolarGrid />}
         <PolarAngleAxis dataKey={xKey} tick={{ fontSize: 12 }} />
         <PolarRadiusAxis angle={90} tick={false} axisLine={false} />

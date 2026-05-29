@@ -50,7 +50,14 @@ export const PO_STATUS_LABELS: Record<string, string> = {
 
 // ── Movement type filter chips ───────────────────────────────
 
-export const MOVEMENT_FILTER_TYPES = ["", "purchase", "sale", "adjustment", "return", "waste"] as const;
+export const MOVEMENT_FILTER_TYPES = [
+  "",
+  "purchase",
+  "sale",
+  "adjustment",
+  "return",
+  "waste",
+] as const;
 
 // ── Tab config ───────────────────────────────────────────────
 

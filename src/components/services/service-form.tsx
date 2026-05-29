@@ -1,30 +1,49 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreateService } from "@/lib/queries/use-wizard-data";
-import { Typography } from "@/components/ui/typography";
-import type { ServiceCatalog, CreateServiceCatalogParams } from "@/lib/types";
+import type { CreateServiceCatalogParams, ServiceCatalog } from "@/lib/types";
+
+// ── Schema ───────────────────────────────────────────────────
+// Number fields are strings in the form (matching <Input type="number">).
+// Validated via refine, converted to number in the submit handler.
+
+const serviceSchema = z.object({
+  name: z.string().min(1, "Service name is required"),
+  default_price: z
+    .string()
+    .refine(
+      (v) => v.trim() !== "" && !Number.isNaN(Number(v)) && Number(v) >= 0,
+      "Enter a valid price",
+    ),
+  category: z.string().optional(),
+  description: z.string().optional(),
+});
+
+type ServiceFormValues = z.infer<typeof serviceSchema>;
+
+// ── Component ────────────────────────────────────────────────
 
 export type ServiceFormProps = {
   mode?: "quick" | "full";
   initialData?: Partial<CreateServiceCatalogParams>;
   onSuccess?: (service: ServiceCatalog) => void;
   onCancel?: () => void;
-};
-
-const initialForm: CreateServiceCatalogParams = {
-  name: "",
-  description: "",
-  default_price: 0,
-  category: "",
 };
 
 export function ServiceForm({
@@ -35,74 +54,40 @@ export function ServiceForm({
 }: ServiceFormProps) {
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? "";
-  const t = useTranslations("services");
   const commonT = useTranslations("common");
 
   const [currentMode, setCurrentMode] = useState<"quick" | "full">(mode);
-  const [form, setForm] = useState<CreateServiceCatalogParams>({
-    ...initialForm,
-    ...initialData,
-  });
-
-  const [priceInput, setPriceInput] = useState(
-    initialData?.default_price !== undefined
-      ? String(initialData.default_price)
-      : "",
-  );
-
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const createServiceMutation = useCreateService(orgId);
 
-  // Sync mode if prop changes
-  useEffect(() => {
-    setCurrentMode(mode);
-  }, [mode]);
+  const form = useForm<ServiceFormValues>({
+    resolver: zodResolver(serviceSchema),
+    defaultValues: {
+      name: initialData?.name ?? "",
+      default_price:
+        initialData?.default_price != null
+          ? String(initialData.default_price)
+          : "",
+      category: initialData?.category ?? "",
+      description: initialData?.description ?? "",
+    },
+  });
 
-  // Clear errors on input or mode changes
-  useEffect(() => {
-    setError(null);
-    setFieldErrors({});
-  }, [form, currentMode]);
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!orgId) {
-      setError("No organization selected");
-      return;
-    }
-
-    // Validation
-    const errors: Record<string, string> = {};
-
-    if (!form.name?.trim()) {
-      errors.name = "Service name is required";
-    }
-
-    const price = parseFloat(priceInput);
-    if (!priceInput.trim()) {
-      errors.default_price = "Price is required";
-    } else if (isNaN(price) || price < 0) {
-      errors.default_price = "Enter a valid price";
-    }
-
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
+  const onSubmit = form.handleSubmit(async (data) => {
     setError(null);
 
     try {
       const payload: CreateServiceCatalogParams = {
-        name: form.name.trim(),
-        default_price: price,
+        name: data.name.trim(),
+        default_price: Number(data.default_price),
         description:
           currentMode === "full"
-            ? form.description?.trim() || undefined
+            ? data.description?.trim() || undefined
             : undefined,
         category:
           currentMode === "full"
-            ? form.category?.trim() || undefined
+            ? data.category?.trim() || undefined
             : undefined,
       };
 
@@ -111,10 +96,10 @@ export function ServiceForm({
     } catch (err: any) {
       setError(err.message || "Failed to save service");
     }
-  };
+  });
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
       {/* ── Mode Toggle Tabs ── */}
       <Tabs
         value={currentMode}
@@ -144,93 +129,70 @@ export function ServiceForm({
         </div>
       )}
 
-      <div className="flex flex-col gap-4">
+      <FieldGroup>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <Label
-              className="mb-1 block text-sm font-medium"
-              htmlFor="service-name"
-            >
+          <Field data-invalid={!!form.formState.errors.name}>
+            <FieldLabel>
               Service Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="service-name"
-              value={form.name}
-              onChange={(e) => setForm((c) => ({ ...c, name: e.target.value }))}
-              className={`h-11 ${fieldErrors.name ? "border-destructive" : ""}`}
-              placeholder="e.g. Oil Change"
-              autoFocus
-            />
-            {fieldErrors.name && (
-              <Typography.Text className="text-xs text-destructive mt-1">
-                {fieldErrors.name}
-              </Typography.Text>
-            )}
-          </div>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder="e.g. Oil Change"
+                autoFocus
+                aria-invalid={!!form.formState.errors.name}
+                {...form.register("name")}
+              />
+              {form.formState.errors.name && (
+                <FieldError>{form.formState.errors.name.message}</FieldError>
+              )}
+            </FieldContent>
+          </Field>
 
-          <div>
-            <Label
-              className="mb-1 block text-sm font-medium"
-              htmlFor="service-price"
-            >
+          <Field data-invalid={!!form.formState.errors.default_price}>
+            <FieldLabel>
               Default Price (₮) <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="service-price"
-              type="number"
-              min="0"
-              value={priceInput}
-              onChange={(e) => setPriceInput(e.target.value)}
-              className={`h-11 ${fieldErrors.default_price ? "border-destructive" : ""}`}
-              placeholder="45000"
-            />
-            {fieldErrors.default_price && (
-              <Typography.Text className="text-xs text-destructive mt-1">
-                {fieldErrors.default_price}
-              </Typography.Text>
-            )}
-          </div>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                type="number"
+                min="0"
+                placeholder="45000"
+                aria-invalid={!!form.formState.errors.default_price}
+                {...form.register("default_price")}
+              />
+              {form.formState.errors.default_price && (
+                <FieldError>
+                  {form.formState.errors.default_price.message}
+                </FieldError>
+              )}
+            </FieldContent>
+          </Field>
         </div>
 
         {currentMode === "full" && (
           <div className="grid gap-3 sm:grid-cols-2 animate-fade-in">
-            <div>
-              <Label
-                className="mb-1 block text-sm font-medium"
-                htmlFor="service-category"
-              >
-                Category
-              </Label>
-              <Input
-                id="service-category"
-                value={form.category || ""}
-                onChange={(e) =>
-                  setForm((c) => ({ ...c, category: e.target.value }))
-                }
-                className="h-11"
-                placeholder="e.g. Engine, Brakes"
-              />
-            </div>
-            <div>
-              <Label
-                className="mb-1 block text-sm font-medium"
-                htmlFor="service-description"
-              >
-                Description
-              </Label>
-              <Input
-                id="service-description"
-                value={form.description || ""}
-                onChange={(e) =>
-                  setForm((c) => ({ ...c, description: e.target.value }))
-                }
-                className="h-11"
-                placeholder="e.g. Replaced engine oil and oil filter"
-              />
-            </div>
+            <Field>
+              <FieldLabel>Category</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="e.g. Engine, Brakes"
+                  {...form.register("category")}
+                />
+              </FieldContent>
+            </Field>
+
+            <Field>
+              <FieldLabel>Description</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="e.g. Replaced engine oil and oil filter"
+                  {...form.register("description")}
+                />
+              </FieldContent>
+            </Field>
           </div>
         )}
-      </div>
+      </FieldGroup>
 
       <div className="flex flex-col-reverse gap-2 mt-4 sm:flex-row sm:justify-end">
         {onCancel && (

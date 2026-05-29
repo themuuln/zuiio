@@ -41,18 +41,17 @@ Deno.serve({ timeout: 300000 }, async () => {
 
   if (fetchError) {
     console.error("Failed to fetch service schedules:", fetchError);
-    return new Response(
-      JSON.stringify({ error: fetchError.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: fetchError.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   if (!schedules || schedules.length === 0) {
     console.log("No upcoming service schedules found");
-    return new Response(
-      JSON.stringify({ checked: 0 }),
-      { headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ checked: 0 }), {
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   // Check which schedules already have a recent reminder
@@ -71,9 +70,7 @@ Deno.serve({ timeout: 300000 }, async () => {
     existingReminders?.map((r) => r.vehicle_service_schedule_id) ?? [],
   );
 
-  const toNotify = schedules.filter(
-    (s) => !alreadyNotified.has(s.id),
-  );
+  const toNotify = schedules.filter((s) => !alreadyNotified.has(s.id));
 
   if (toNotify.length === 0) {
     console.log("All schedules already have recent reminders");
@@ -85,11 +82,14 @@ Deno.serve({ timeout: 300000 }, async () => {
 
   // Create reminder_log entries for each due schedule
   // Also collect email data for sending later
-  const emailDataMap = new Map<string, {
-    customerEmail: string;
-    vehicleLabel: string;
-    orgName: string;
-  }>();
+  const emailDataMap = new Map<
+    string,
+    {
+      customerEmail: string;
+      vehicleLabel: string;
+      orgName: string;
+    }
+  >();
 
   const reminders = toNotify.map((schedule) => {
     const vehicle = schedule.vehicle as unknown as {
@@ -134,14 +134,16 @@ Deno.serve({ timeout: 300000 }, async () => {
   const { data: createdLogs, error: insertError } = await supabase
     .from("reminder_logs")
     .insert(reminders)
-    .select("id, organization_id, vehicle_service_schedule_id, service_name, channel");
+    .select(
+      "id, organization_id, vehicle_service_schedule_id, service_name, channel",
+    );
 
   if (insertError) {
     console.error("Failed to insert reminder logs:", insertError);
-    return new Response(
-      JSON.stringify({ error: insertError.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: insertError.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   let sentCount = 0;
@@ -180,7 +182,7 @@ Deno.serve({ timeout: 300000 }, async () => {
           const res = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
-              "Authorization": `Bearer ${RESEND_API_KEY}`,
+              Authorization: `Bearer ${RESEND_API_KEY}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({

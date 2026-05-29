@@ -2,11 +2,7 @@
 
 import { Car, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  isValidMongolianPlate,
-  transliterateMongolianPlate,
-} from "@/lib/form-validation";
-import { formatPlateInput, inputProps } from "@/lib/form-ux";
+import { z } from "zod";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,10 +14,22 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
+import { formatPlateInput, inputProps } from "@/lib/form-ux";
+import {
+  isValidMongolianPlate,
+  transliterateMongolianPlate,
+} from "@/lib/form-validation";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useMakes, useModelsByMake } from "@/lib/queries/use-vehicle-models";
 import type { Vehicle } from "@/lib/types";
-import { Typography } from "@/components/ui/typography";
 
 interface VehicleSelectProps {
   orgId: string;
@@ -42,12 +50,35 @@ export function VehicleSelect({
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [searching, setSearching] = useState(false);
   const [showQuick, setShowQuick] = useState(false);
-  const [quickPlate, setQuickPlate] = useState("");
-  const [quickMake, setQuickMake] = useState("");
-  const [quickModel, setQuickModel] = useState("");
-  const [quickYear, setQuickYear] = useState("20");
-  const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+
+  const vehicleQuickSchema = z.object({
+    plate_number: z
+      .string()
+      .min(1, "Plate number is required")
+      .refine(
+        (v) => isValidMongolianPlate(v),
+        "Must be 4 digits + 3 letters (e.g. 4444УНА)",
+      ),
+    make: z.string().optional().or(z.literal("")),
+    model: z.string().optional().or(z.literal("")),
+    year: z.string().optional().or(z.literal("")),
+  });
+
+  type VehicleQuickValues = z.infer<typeof vehicleQuickSchema>;
+
+  const form = useForm<VehicleQuickValues>({
+    resolver: zodResolver(vehicleQuickSchema),
+    defaultValues: {
+      plate_number: "",
+      make: "",
+      model: "",
+      year: "20",
+    },
+  });
+
+  const quickMake = form.watch("make") ?? "";
+  const quickModel = form.watch("model") ?? "";
 
   const { data: dbMakes = [] } = useMakes(orgId);
   const { data: dbModels = [] } = useModelsByMake(orgId, quickMake);
@@ -160,27 +191,18 @@ export function VehicleSelect({
       .finally(() => setSearching(false));
   };
 
-  // Quick create
-  const handleQuickCreate = async () => {
-    if (!orgId || !quickPlate.trim()) {
-      setCreateError("Plate number is required");
-      return;
-    }
-    if (!isValidMongolianPlate(quickPlate)) {
-      setCreateError("Must be 4 digits + 3 letters (e.g. 4444УНА)");
-      return;
-    }
-    setCreating(true);
+  const handleQuickCreate = form.handleSubmit(async (data) => {
+    if (!orgId) return;
     setCreateError(null);
     try {
       const res = await fetch(`/api/organizations/${orgId}/vehicles`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          plate_number: quickPlate.trim().toUpperCase(),
-          make: quickMake.trim() || "Unknown",
-          model: quickModel.trim() || "Unknown",
-          year: quickYear ? parseInt(quickYear, 10) : null,
+          plate_number: data.plate_number.trim().toUpperCase(),
+          make: data.make?.trim() || "Unknown",
+          model: data.model?.trim() || "Unknown",
+          year: data.year ? parseInt(data.year, 10) : null,
           customer_id: customerId,
         }),
       });
@@ -189,18 +211,13 @@ export function VehicleSelect({
         setCreateError(json.error.message ?? "Failed to create vehicle");
       } else if (json.data) {
         onSelect(json.data);
-        setQuickPlate("");
-        setQuickMake("");
-        setQuickModel("");
-        setQuickYear("20");
+        form.reset();
         setShowQuick(false);
       }
     } catch {
       setCreateError("Network error");
-    } finally {
-      setCreating(false);
     }
-  };
+  });
 
   return (
     <Card>
@@ -284,110 +301,131 @@ export function VehicleSelect({
             {showQuick && (
               <form
                 className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/20"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleQuickCreate();
-                }}
+                onSubmit={handleQuickCreate}
               >
                 <Typography.Text className="text-sm font-medium">
                   New Vehicle
                 </Typography.Text>
-                <Input
-                  placeholder="e.g. 4444УНА"
-                  value={quickPlate}
-                  onChange={(e) =>
-                    setQuickPlate(
-                      formatPlateInput(
-                        transliterateMongolianPlate(e.target.value),
-                      ),
-                    )
-                  }
-                  className="h-11"
-                  {...inputProps("plate")}
-                  autoFocus
-                />
-                <div className="flex flex-col gap-3">
-                  <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">
-                      Make <span className="text-destructive">*</span>
-                    </label>
-                    <Combobox
-                      items={allMakes}
-                      inputValue={quickMake}
-                      onInputValueChange={(v) => setQuickMake(v)}
-                      value={quickMake}
-                      onValueChange={(make) => {
-                        setQuickMake(make ?? "");
-                        if (make && make !== quickMake) {
-                          setQuickModel("");
-                        }
-                      }}
-                    >
-                      <ComboboxInput
-                        placeholder="Search make…"
-                        showTrigger
-                        showClear={!!quickMake}
-                        className="h-11 text-sm"
-                      />
-                      <ComboboxContent>
-                        <ComboboxList>
-                          {(make: string) => (
-                            <ComboboxItem key={make} value={make}>
-                              {make}
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                        <ComboboxEmpty>No makes found</ComboboxEmpty>
-                      </ComboboxContent>
-                    </Combobox>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">
-                      Model <span className="text-destructive">*</span>
-                    </label>
-                    <Combobox
-                      items={modelOptions}
-                      inputValue={quickModel}
-                      onInputValueChange={(v) => setQuickModel(v)}
-                      value={quickModel}
-                      onValueChange={(model) => setQuickModel(model ?? "")}
-                    >
-                      <ComboboxInput
-                        placeholder={
-                          quickMake.trim()
-                            ? "Search model…"
-                            : "Select make first"
-                        }
-                        showTrigger
-                        showClear={!!quickModel}
-                        className="h-11 text-sm"
-                        disabled={!quickMake.trim()}
-                      />
-                      <ComboboxContent>
-                        <ComboboxList>
-                          {(model: string) => (
-                            <ComboboxItem key={model} value={model}>
-                              {model}
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                        <ComboboxEmpty>No models found</ComboboxEmpty>
-                      </ComboboxContent>
-                    </Combobox>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">
-                      Year
-                    </label>
+                <Field data-invalid={!!form.formState.errors.plate_number}>
+                  <FieldContent>
                     <Input
-                      placeholder="20__"
-                      type="number"
-                      value={quickYear}
-                      onChange={(e) => setQuickYear(e.target.value)}
+                      placeholder="e.g. 4444УНА"
+                      aria-invalid={!!form.formState.errors.plate_number}
                       className="h-11"
-                      {...inputProps("year")}
+                      {...inputProps("plate")}
+                      {...form.register("plate_number", {
+                        onChange: (e) => {
+                          e.target.value = formatPlateInput(
+                            transliterateMongolianPlate(e.target.value),
+                          );
+                        },
+                      })}
+                      autoFocus
                     />
-                  </div>
+                    {form.formState.errors.plate_number && (
+                      <FieldError>
+                        {form.formState.errors.plate_number.message}
+                      </FieldError>
+                    )}
+                  </FieldContent>
+                </Field>
+                <div className="flex flex-col gap-3">
+                  <Field data-invalid={!!form.formState.errors.make}>
+                    <FieldLabel>
+                      Make <span className="text-destructive">*</span>
+                    </FieldLabel>
+                    <FieldContent>
+                      <Combobox
+                        items={allMakes}
+                        inputValue={quickMake}
+                        onInputValueChange={(v) => form.setValue("make", v)}
+                        value={quickMake}
+                        onValueChange={(make) => {
+                          form.setValue("make", make ?? "");
+                          if (make && make !== quickMake) {
+                            form.setValue("model", "");
+                          }
+                        }}
+                      >
+                        <ComboboxInput
+                          placeholder="Search make…"
+                          showTrigger
+                          showClear={!!quickMake}
+                          className="h-11 text-sm"
+                        />
+                        <ComboboxContent>
+                          <ComboboxList>
+                            {(make: string) => (
+                              <ComboboxItem key={make} value={make}>
+                                {make}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                          <ComboboxEmpty>No makes found</ComboboxEmpty>
+                        </ComboboxContent>
+                      </Combobox>
+                      {form.formState.errors.make && (
+                        <FieldError>
+                          {form.formState.errors.make.message}
+                        </FieldError>
+                      )}
+                    </FieldContent>
+                  </Field>
+                  <Field data-invalid={!!form.formState.errors.model}>
+                    <FieldLabel>
+                      Model <span className="text-destructive">*</span>
+                    </FieldLabel>
+                    <FieldContent>
+                      <Combobox
+                        items={modelOptions}
+                        inputValue={quickModel}
+                        onInputValueChange={(v) => form.setValue("model", v)}
+                        value={quickModel}
+                        onValueChange={(model) =>
+                          form.setValue("model", model ?? "")
+                        }
+                      >
+                        <ComboboxInput
+                          placeholder={
+                            quickMake.trim()
+                              ? "Search model…"
+                              : "Select make first"
+                          }
+                          showTrigger
+                          showClear={!!quickModel}
+                          className="h-11 text-sm"
+                          disabled={!quickMake.trim()}
+                        />
+                        <ComboboxContent>
+                          <ComboboxList>
+                            {(model: string) => (
+                              <ComboboxItem key={model} value={model}>
+                                {model}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                          <ComboboxEmpty>No models found</ComboboxEmpty>
+                        </ComboboxContent>
+                      </Combobox>
+                      {form.formState.errors.model && (
+                        <FieldError>
+                          {form.formState.errors.model.message}
+                        </FieldError>
+                      )}
+                    </FieldContent>
+                  </Field>
+                  <Field>
+                    <FieldLabel>Year</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        placeholder="20__"
+                        type="number"
+                        className="h-11"
+                        {...inputProps("year")}
+                        {...form.register("year")}
+                      />
+                    </FieldContent>
+                  </Field>
                 </div>
                 {createError && (
                   <Typography.Text className="text-sm text-destructive">
@@ -402,6 +440,7 @@ export function VehicleSelect({
                     onClick={() => {
                       setShowQuick(false);
                       setCreateError(null);
+                      form.reset();
                     }}
                   >
                     Cancel
@@ -410,9 +449,14 @@ export function VehicleSelect({
                     type="submit"
                     size="sm"
                     className="w-full"
-                    disabled={creating || !quickPlate.trim()}
+                    disabled={
+                      form.formState.isSubmitting ||
+                      !form.watch("plate_number").trim()
+                    }
                   >
-                    {creating ? "Creating..." : "Create & Select"}
+                    {form.formState.isSubmitting
+                      ? "Creating..."
+                      : "Create & Select"}
                   </Button>
                 </div>
               </form>

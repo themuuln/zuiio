@@ -16,7 +16,9 @@ export default async function RootNotFoundPage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-4">
       <div className="text-center">
-        <Typography.H1 className="text-6xl font-semibold text-muted-foreground/30">404</Typography.H1>
+        <Typography.H1 className="text-6xl font-semibold text-muted-foreground/30">
+          404
+        </Typography.H1>
         <Typography.H2 className="mt-4 text-xl font-semibold">
           {isMn ? "Хуудас олдсонгүй" : "Page Not Found"}
         </Typography.H2>

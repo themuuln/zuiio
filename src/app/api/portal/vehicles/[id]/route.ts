@@ -6,13 +6,14 @@ export const GET = createPortalRouteHandler(
   async ({ customer, supabase, params }) => {
     const vehicleId = params.id;
 
-    const vehicleIds = (
-      await supabase
-        .from("vehicle_owners")
-        .select("vehicle_id")
-        .eq("customer_id", customer.id)
-        .is("owned_until", null)
-    ).data?.map((v) => v.vehicle_id) ?? [];
+    const vehicleIds =
+      (
+        await supabase
+          .from("vehicle_owners")
+          .select("vehicle_id")
+          .eq("customer_id", customer.id)
+          .is("owned_until", null)
+      ).data?.map((v) => v.vehicle_id) ?? [];
 
     if (!vehicleIds.includes(vehicleId)) {
       throw new NotFoundError("Vehicle not found");
@@ -20,7 +21,9 @@ export const GET = createPortalRouteHandler(
 
     const { data: vehicle, error: vehicleError } = await supabase
       .from("vehicles")
-      .select("id, plate_number, make, model, year, vin, color, odometer, engine, fuel_type, transmission, trim, drivetrain, body_type, license_expiry_at, next_service_at, last_visit_at, notes, created_at")
+      .select(
+        "id, plate_number, make, model, year, vin, color, odometer, engine, fuel_type, transmission, trim, drivetrain, body_type, license_expiry_at, next_service_at, last_visit_at, notes, created_at",
+      )
       .eq("id", vehicleId)
       .is("deleted_at", null)
       .single();
@@ -30,13 +33,17 @@ export const GET = createPortalRouteHandler(
     const [workOrdersResult, upcomingServicesResult] = await Promise.all([
       supabase
         .from("work_orders")
-        .select("id, vehicle_id, status, complaint, description, total, bay_number, mechanic_id, created_at, completed_at")
+        .select(
+          "id, vehicle_id, status, complaint, description, total, bay_number, mechanic_id, created_at, completed_at",
+        )
         .eq("vehicle_id", vehicleId)
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       supabase
         .from("vehicle_service_schedules")
-        .select("id, service_name, interval_months, interval_km, last_service_date, last_service_odometer, next_due_date, next_due_km, reminder_enabled, notes")
+        .select(
+          "id, service_name, interval_months, interval_km, last_service_date, last_service_odometer, next_due_date, next_due_km, reminder_enabled, notes",
+        )
         .eq("vehicle_id", vehicleId)
         .is("deleted_at", null)
         .order("next_due_date", { ascending: true }),
@@ -52,13 +59,17 @@ export const GET = createPortalRouteHandler(
 
       const [servicesResult, partsResult] = await Promise.all([
         supabase
-    .from("work_order_services")
-    .select("id, work_order_id, service_name, description, unit_price, quantity, final_price, notes, created_at")
-    .in("work_order_id", workOrderIds),
-  supabase
-    .from("work_order_parts")
-    .select("id, work_order_id, part_name, part_number, quantity, unit_price, final_price, notes, created_at")
-    .in("work_order_id", workOrderIds),
+          .from("work_order_services")
+          .select(
+            "id, work_order_id, service_name, description, unit_price, quantity, final_price, notes, created_at",
+          )
+          .in("work_order_id", workOrderIds),
+        supabase
+          .from("work_order_parts")
+          .select(
+            "id, work_order_id, part_name, part_number, quantity, unit_price, final_price, notes, created_at",
+          )
+          .in("work_order_id", workOrderIds),
       ]);
 
       if (servicesResult.error) throw servicesResult.error;

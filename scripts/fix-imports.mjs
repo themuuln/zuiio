@@ -13,7 +13,8 @@ function findTsxFiles(dir) {
   const results = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (entry.isDirectory()) {
-      if (SKIP_DIRS.has(path.relative(SRC, path.join(dir, entry.name)))) continue;
+      if (SKIP_DIRS.has(path.relative(SRC, path.join(dir, entry.name))))
+        continue;
       results.push(...findTsxFiles(path.join(dir, entry.name)));
     } else if (entry.name.endsWith(".tsx") || entry.name.endsWith(".ts")) {
       results.push(path.join(dir, entry.name));

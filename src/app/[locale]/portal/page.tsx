@@ -69,7 +69,9 @@ export default function PortalDashboardPage() {
             <Car className="size-4 text-muted-foreground/60" />
           </CardHeader>
           <CardContent>
-            <Typography.Text className="text-2xl font-semibold">{vehicles?.length ?? 0}</Typography.Text>
+            <Typography.Text className="text-2xl font-semibold">
+              {vehicles?.length ?? 0}
+            </Typography.Text>
           </CardContent>
         </Card>
         <Card>

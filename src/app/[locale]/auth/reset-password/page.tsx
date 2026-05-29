@@ -29,8 +29,12 @@ export default function ResetPasswordPage() {
   return (
     <div>
       <div className="mb-6 text-center">
-        <Typography.H2 className="text-lg font-semibold text-foreground">{t("title")}</Typography.H2>
-        <Typography.Muted className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</Typography.Muted>
+        <Typography.H2 className="text-lg font-semibold text-foreground">
+          {t("title")}
+        </Typography.H2>
+        <Typography.Muted className="mt-1 text-sm text-muted-foreground">
+          {t("subtitle")}
+        </Typography.Muted>
       </div>
       <form action={formAction} className="flex flex-col gap-4">
         {state?.formError && <FieldError>{state.formError}</FieldError>}

@@ -336,7 +336,9 @@ export default function PricingPage() {
             <Typography.H2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
               {t("enterpriseTitle")}
             </Typography.H2>
-            <Typography.Muted className="mt-3 text-muted-foreground">{t("enterpriseDesc")}</Typography.Muted>
+            <Typography.Muted className="mt-3 text-muted-foreground">
+              {t("enterpriseDesc")}
+            </Typography.Muted>
             <Typography.Muted className="mt-1 text-sm text-muted-foreground">
               ₮3M – ₮10M+ / month · Setup: ₮50M – ₮150M+
             </Typography.Muted>
@@ -418,7 +420,9 @@ export default function PricingPage() {
                     </span>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <Typography.Muted className="text-muted-foreground">{t(item.a)}</Typography.Muted>
+                    <Typography.Muted className="text-muted-foreground">
+                      {t(item.a)}
+                    </Typography.Muted>
                   </AccordionContent>
                 </AccordionItem>
               ))}
@@ -432,7 +436,9 @@ export default function PricingPage() {
             <Typography.H2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
               {t("ctaTitle")}
             </Typography.H2>
-            <Typography.Muted className="mt-3 text-muted-foreground">{t("ctaSubtitle")}</Typography.Muted>
+            <Typography.Muted className="mt-3 text-muted-foreground">
+              {t("ctaSubtitle")}
+            </Typography.Muted>
             <div className="mt-8">
               <Button size="lg" render={<Link href="/auth/signup" />}>
                 {t("ctaButton")}

@@ -13,7 +13,6 @@ export interface LineChartProps {
   showDots?: boolean;
 }
 
-export const LineChart = dynamic(
-  () => import("./_line-chart-inner"),
-  { ssr: false },
-);
+export const LineChart = dynamic(() => import("./_line-chart-inner"), {
+  ssr: false,
+});

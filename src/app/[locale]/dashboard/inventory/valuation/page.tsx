@@ -74,7 +74,9 @@ export default function ValuationPage() {
         <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("valuationTitle")}
         </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">{t("valuationSubtitle")}</Typography.Muted>
+        <Typography.Muted className="text-muted-foreground">
+          {t("valuationSubtitle")}
+        </Typography.Muted>
       </div>
 
       <Card className="bg-primary/5 border-primary/10">
@@ -148,7 +150,9 @@ export default function ValuationPage() {
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-12">
               <TrendingUp className="size-10 text-muted-foreground/40" />
-              <Typography.Muted className="text-muted-foreground">{t("noValuationData")}</Typography.Muted>
+              <Typography.Muted className="text-muted-foreground">
+                {t("noValuationData")}
+              </Typography.Muted>
             </div>
           ) : (
             <DataTable

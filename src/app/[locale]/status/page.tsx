@@ -84,7 +84,9 @@ export default function StatusPage() {
         {/* ═══ Uptime ───────────────────────────────────────── */}
         <section className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-3xl">
-            <Typography.H2 className="text-lg font-semibold">{t("uptimeTitle")}</Typography.H2>
+            <Typography.H2 className="text-lg font-semibold">
+              {t("uptimeTitle")}
+            </Typography.H2>
             <div className="mt-4 flex gap-6">
               <div className="rounded-lg border bg-muted/30 px-4 py-3">
                 <div className="text-2xl font-bold text-emerald-500">99.9%</div>
@@ -105,7 +107,9 @@ export default function StatusPage() {
         <Separator />
         <section className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-3xl">
-            <Typography.H2 className="text-lg font-semibold">{t("incidentTitle")}</Typography.H2>
+            <Typography.H2 className="text-lg font-semibold">
+              {t("incidentTitle")}
+            </Typography.H2>
             <div className="mt-4 rounded-lg border bg-muted/20 px-6 py-8 text-center">
               <Typography.Muted className="text-sm text-muted-foreground">
                 {t("incidentNone")}
@@ -119,7 +123,9 @@ export default function StatusPage() {
         {/* ═══ Subscribe ────────────────────────────────────── */}
         <section className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-md text-center">
-            <Typography.H2 className="text-lg font-semibold">{t("subscribeTitle")}</Typography.H2>
+            <Typography.H2 className="text-lg font-semibold">
+              {t("subscribeTitle")}
+            </Typography.H2>
             <Typography.Muted className="mt-2 text-sm text-muted-foreground">
               {t("subscribeDesc")}
             </Typography.Muted>

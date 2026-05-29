@@ -8,10 +8,7 @@ const handleI18n = createMiddleware(routing);
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (
-    pathname.startsWith("/guide") ||
-    pathname.startsWith("/invoice/")
-  ) {
+  if (pathname.startsWith("/guide") || pathname.startsWith("/invoice/")) {
     return NextResponse.next();
   }
 

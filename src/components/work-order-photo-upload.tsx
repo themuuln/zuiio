@@ -39,7 +39,9 @@ export default function WorkOrderPhotoUpload({
     }
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error("Only JPEG, PNG, WebP, HEIC images and PDF files are allowed");
+      toast.error(
+        "Only JPEG, PNG, WebP, HEIC images and PDF files are allowed",
+      );
       return;
     }
 

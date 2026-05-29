@@ -17,7 +17,9 @@ export function DrawerCelebration({ show, message }: CelebrationProps) {
         <div className="flex size-16 items-center justify-center rounded-full bg-green-500/20 animate-in zoom-in-50 duration-300">
           <CheckCircle2 className="size-10 text-green-500" />
         </div>
-        <Typography.Text className="text-lg font-semibold">{message}</Typography.Text>
+        <Typography.Text className="text-lg font-semibold">
+          {message}
+        </Typography.Text>
       </div>
     </div>
   );

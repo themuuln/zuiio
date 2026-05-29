@@ -13,7 +13,9 @@ import { createClient } from "@/lib/supabase/server";
 
 async function getOrgId(): Promise<string> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new UnauthorizedError();
 
   const { data: membership } = await supabase
@@ -62,15 +64,26 @@ export async function savePostServiceData(
   input: PostServiceDataInput,
 ): Promise<{ recommendationsCount: number }> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new UnauthorizedError();
   const orgId = await getOrgId();
 
-  const { workOrderId, vehicleId, odometerReading, recommendations, mechanicNotes } = input;
+  const {
+    workOrderId,
+    vehicleId,
+    odometerReading,
+    recommendations,
+    mechanicNotes,
+  } = input;
 
   // 1. Validate
   if (!workOrderId) throw new ValidationError("Work order ID is required");
-  if (!recommendations.length) throw new ValidationError("At least one service recommendation is required");
+  if (!recommendations.length)
+    throw new ValidationError(
+      "At least one service recommendation is required",
+    );
 
   // Delete existing recommendations for this work order to prevent duplicates on retry
   const { error: deleteError } = await supabase
@@ -80,7 +93,9 @@ export async function savePostServiceData(
     .eq("organization_id", orgId);
 
   if (deleteError) {
-    throw new Error(`Failed to clear old recommendations: ${deleteError.message}`);
+    throw new Error(
+      `Failed to clear old recommendations: ${deleteError.message}`,
+    );
   }
 
   // Delete existing pending reminder logs for this vehicle and the service names we are recommending
@@ -97,40 +112,43 @@ export async function savePostServiceData(
   }
 
   // 2. Insert service_recommendations
-  const recommendationRows: ServiceRecommendationInsert[] = recommendations.map((r) => {
-    let nextDueDate: string | null = null;
-    if (r.intervalMonths) {
-      const d = new Date();
-      d.setMonth(d.getMonth() + r.intervalMonths);
-      nextDueDate = d.toISOString().split("T")[0];
-    }
-    let nextDueKm: number | null = null;
-    if (r.intervalKm && odometerReading) {
-      nextDueKm = odometerReading + r.intervalKm;
-    }
+  const recommendationRows: ServiceRecommendationInsert[] = recommendations.map(
+    (r) => {
+      let nextDueDate: string | null = null;
+      if (r.intervalMonths) {
+        const d = new Date();
+        d.setMonth(d.getMonth() + r.intervalMonths);
+        nextDueDate = d.toISOString().split("T")[0];
+      }
+      let nextDueKm: number | null = null;
+      if (r.intervalKm && odometerReading) {
+        nextDueKm = odometerReading + r.intervalKm;
+      }
 
-    return {
-      organization_id: orgId,
-      work_order_id: workOrderId,
-      work_order_service_id: r.workOrderServiceId,
-      service_name: r.serviceName,
-      service_catalog_id: r.serviceCatalogId ?? null,
-      recommended_interval_months: r.intervalMonths ?? null,
-      recommended_interval_km: r.intervalKm ?? null,
-      next_due_date: nextDueDate,
-      next_due_km: nextDueKm,
-      priority: r.priority,
-      notes: r.notes?.trim() ?? null,
-      created_by: user.id,
-      updated_by: user.id,
-    };
-  });
+      return {
+        organization_id: orgId,
+        work_order_id: workOrderId,
+        work_order_service_id: r.workOrderServiceId,
+        service_name: r.serviceName,
+        service_catalog_id: r.serviceCatalogId ?? null,
+        recommended_interval_months: r.intervalMonths ?? null,
+        recommended_interval_km: r.intervalKm ?? null,
+        next_due_date: nextDueDate,
+        next_due_km: nextDueKm,
+        priority: r.priority,
+        notes: r.notes?.trim() ?? null,
+        created_by: user.id,
+        updated_by: user.id,
+      };
+    },
+  );
 
   const { error: recError } = await supabase
     .from("service_recommendations")
     .insert(recommendationRows);
 
-  if (recError) throw new Error(`Failed to save recommendations: ${recError.message}`);
+  if (recError)
+    throw new Error(`Failed to save recommendations: ${recError.message}`);
 
   // 3. Update work_order.odometer_at_service + notes
   const updateData: Record<string, unknown> = {
@@ -147,7 +165,8 @@ export async function savePostServiceData(
     .eq("id", workOrderId)
     .eq("organization_id", orgId);
 
-  if (woError) throw new Error(`Failed to update work order: ${woError.message}`);
+  if (woError)
+    throw new Error(`Failed to update work order: ${woError.message}`);
 
   // 4. Update vehicle odometer if newer
   if (odometerReading) {
@@ -157,7 +176,10 @@ export async function savePostServiceData(
       .eq("id", vehicleId)
       .single();
 
-    if (vehicle && (vehicle.odometer === null || odometerReading > vehicle.odometer)) {
+    if (
+      vehicle &&
+      (vehicle.odometer === null || odometerReading > vehicle.odometer)
+    ) {
       await supabase
         .from("vehicles")
         .update({ odometer: odometerReading })
@@ -171,7 +193,9 @@ export async function savePostServiceData(
       if (!rec.intervalMonths && !rec.intervalKm) return;
 
       const nextDueDate = rec.intervalMonths
-        ? new Date(new Date().setMonth(new Date().getMonth() + rec.intervalMonths))
+        ? new Date(
+            new Date().setMonth(new Date().getMonth() + rec.intervalMonths),
+          )
             .toISOString()
             .split("T")[0]
         : null;
@@ -263,7 +287,9 @@ export async function saveCompletionData(
   input: CompletionDataInput,
 ): Promise<void> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new UnauthorizedError();
   const orgId = await getOrgId();
 
@@ -306,10 +332,14 @@ export async function saveCompletionData(
         next_appointment_date: nextAppointmentDate ?? null,
       })
       .eq("id", existing.id);
-    if (error) throw new Error(`Failed to update completion data: ${error.message}`);
+    if (error)
+      throw new Error(`Failed to update completion data: ${error.message}`);
   } else {
-    const { error } = await supabase.from("service_completion_data").insert(row);
-    if (error) throw new Error(`Failed to save completion data: ${error.message}`);
+    const { error } = await supabase
+      .from("service_completion_data")
+      .insert(row);
+    if (error)
+      throw new Error(`Failed to save completion data: ${error.message}`);
   }
 
   // 2. Update vehicle last_visit_at
@@ -361,7 +391,8 @@ export async function saveCompletionData(
       type: "in_person",
       direction: "outbound",
       subject: "Service Completed",
-      content: "Service completed and customer received recommendations summary.",
+      content:
+        "Service completed and customer received recommendations summary.",
       staff_id: user.id,
     });
   }
@@ -404,8 +435,14 @@ export async function getWorkOrderServicesWithIntervals(
 
   return (data ?? []).map((svc: Record<string, unknown>) => {
     const catalog = Array.isArray(svc.service_catalog)
-      ? (svc.service_catalog[0] as { interval_months: number | null; interval_km: number | null } | null)
-      : (svc.service_catalog as { interval_months: number | null; interval_km: number | null } | null);
+      ? (svc.service_catalog[0] as {
+          interval_months: number | null;
+          interval_km: number | null;
+        } | null)
+      : (svc.service_catalog as {
+          interval_months: number | null;
+          interval_km: number | null;
+        } | null);
 
     return {
       id: svc.id as string,
@@ -424,12 +461,15 @@ export async function getRecommendations(workOrderId: string) {
 
   const { data, error } = await supabase
     .from("service_recommendations")
-    .select("id, organization_id, branch_id, work_order_id, work_order_service_id, service_name, service_catalog_id, recommended_interval_months, recommended_interval_km, next_due_date, next_due_km, priority, notes, created_at, updated_at, deleted_at")
+    .select(
+      "id, organization_id, branch_id, work_order_id, work_order_service_id, service_name, service_catalog_id, recommended_interval_months, recommended_interval_km, next_due_date, next_due_km, priority, notes, created_at, updated_at, deleted_at",
+    )
     .eq("work_order_id", workOrderId)
     .is("deleted_at", null)
     .order("priority", { ascending: true });
 
-  if (error) throw new Error(`Failed to fetch recommendations: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to fetch recommendations: ${error.message}`);
   return data ?? [];
 }
 
@@ -440,7 +480,9 @@ export async function getCompletionData(workOrderId: string) {
 
   const { data, error } = await supabase
     .from("service_completion_data")
-    .select("id, organization_id, branch_id, work_order_id, vehicle_id, odometer_reading, customer_satisfaction, customer_feedback, customer_preferences, next_appointment_date, collected_at, created_by, created_at")
+    .select(
+      "id, organization_id, branch_id, work_order_id, vehicle_id, odometer_reading, customer_satisfaction, customer_feedback, customer_preferences, next_appointment_date, collected_at, created_by, created_at",
+    )
     .eq("work_order_id", workOrderId)
     .single();
 

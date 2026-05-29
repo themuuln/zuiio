@@ -40,5 +40,11 @@ export function useCurrentUserRole() {
       ? profile.roleName
       : null;
 
-  return { profile, role, loading, isAdmin: role === "Admin", isMechanic: role === "Mechanic" };
+  return {
+    profile,
+    role,
+    loading,
+    isAdmin: role === "Admin",
+    isMechanic: role === "Mechanic",
+  };
 }

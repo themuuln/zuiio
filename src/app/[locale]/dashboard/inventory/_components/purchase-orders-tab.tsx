@@ -31,11 +31,7 @@ import {
   type PurchaseOrderWithSupplier,
 } from "@/lib/queries/use-inventory";
 import { formatMNT } from "@/lib/utils";
-import {
-  PO_STATUS_COLORS,
-  PO_STATUS_LABELS,
-  formatDate,
-} from "./constants";
+import { PO_STATUS_COLORS, PO_STATUS_LABELS, formatDate } from "./constants";
 import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
 import { Typography } from "@/components/ui/typography";
@@ -46,12 +42,15 @@ interface PurchaseOrdersTabProps {
   onSearchChange: (value: string) => void;
 }
 
-export function PurchaseOrdersTab({ orgId, search, onSearchChange }: PurchaseOrdersTabProps) {
+export function PurchaseOrdersTab({
+  orgId,
+  search,
+  onSearchChange,
+}: PurchaseOrdersTabProps) {
   const locale = useLocale();
   const t = useTranslations("inventory");
   const now = useClientNow();
-  const { data: purchaseOrders = [], isLoading } =
-    usePurchaseOrders(orgId);
+  const { data: purchaseOrders = [], isLoading } = usePurchaseOrders(orgId);
   const createPO = useCreatePurchaseOrder(orgId);
   const receivePO = useReceivePurchaseOrder(orgId);
   const { data: parts = [] } = usePartsCatalog(orgId);
@@ -86,7 +85,11 @@ export function PurchaseOrdersTab({ orgId, search, onSearchChange }: PurchaseOrd
   function handleCreatePO(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
-    const items: { part_id: string; quantity_ordered: number; unit_cost: number }[] = [];
+    const items: {
+      part_id: string;
+      quantity_ordered: number;
+      unit_cost: number;
+    }[] = [];
     const itemCount = Number(form.get("item_count") || 0);
     for (let i = 0; i < itemCount; i++) {
       const partId = form.get(`item_${i}_part_id`);
@@ -164,7 +167,9 @@ export function PurchaseOrdersTab({ orgId, search, onSearchChange }: PurchaseOrd
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16">
             <Truck className="size-10 text-muted-foreground/40" />
-            <Typography.Muted className="text-muted-foreground">{t("noPurchaseOrders")}</Typography.Muted>
+            <Typography.Muted className="text-muted-foreground">
+              {t("noPurchaseOrders")}
+            </Typography.Muted>
             <Button variant="outline" onClick={() => setShowAddPO(true)}>
               Create your first PO
             </Button>
@@ -243,7 +248,9 @@ export function PurchaseOrdersTab({ orgId, search, onSearchChange }: PurchaseOrd
             </div>
             <div className="flex flex-col gap-3 rounded-lg border border-border p-4">
               <div className="flex items-center justify-between">
-                <Typography.Text className="text-sm font-medium">Items</Typography.Text>
+                <Typography.Text className="text-sm font-medium">
+                  Items
+                </Typography.Text>
               </div>
               <POItemEditor parts={activeParts} locale={locale} />
             </div>
@@ -265,8 +272,6 @@ export function PurchaseOrdersTab({ orgId, search, onSearchChange }: PurchaseOrd
     </div>
   );
 }
-
-
 
 function POListItem({
   po,
@@ -335,11 +340,10 @@ function POListItem({
               </TableHeader>
               <TableBody>
                 {items.map((item) => (
-                  <TableRow
-                    key={item.id}
-                    className="border-b border-border/50"
-                  >
-                    <TableCell className="py-2 pr-4">{item.part_name}</TableCell>
+                  <TableRow key={item.id} className="border-b border-border/50">
+                    <TableCell className="py-2 pr-4">
+                      {item.part_name}
+                    </TableCell>
                     <TableCell className="py-2 pr-4 text-right tabular-nums">
                       {item.quantity_ordered}
                     </TableCell>
@@ -368,13 +372,16 @@ function POListItem({
   );
 }
 
-
-
 function POItemEditor({
   parts,
   locale,
 }: {
-  parts: { id: string; name: string; name_mn: string | null; is_active: boolean }[];
+  parts: {
+    id: string;
+    name: string;
+    name_mn: string | null;
+    is_active: boolean;
+  }[];
   locale: string;
 }) {
   const [count, setCount] = useState(0);

@@ -56,10 +56,7 @@ interface Fragment {
  * Breaks query into words and highlights each one independently.
  */
 function highlightFragments(text: string, query: string): Fragment[] {
-  const terms = query
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean);
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
 
   if (terms.length === 0) return [{ text, match: false }];
 
