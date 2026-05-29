@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -79,6 +80,13 @@ import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { Typography } from "@/components/ui/typography";
+import {
+  Item,
+  ItemContent,
+  ItemTitle,
+  ItemDescription,
+  ItemActions,
+} from "@/components/ui/item";
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("mn-MN", {
     year: "numeric",
@@ -488,20 +496,25 @@ export default function ServiceRemindersPage() {
                   </Select>
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                  <div className="flex flex-col gap-0.5">
-                    <Label className="text-sm font-medium">
+                <Item
+                  variant="outline"
+                  className="justify-between rounded-lg p-4"
+                >
+                  <ItemContent className="gap-0.5">
+                    <ItemTitle className="text-sm">
                       {t("serviceReminders.autoEnable")}
-                    </Label>
-                    <Typography.Muted className="text-xs text-muted-foreground">
+                    </ItemTitle>
+                    <ItemDescription className="text-xs">
                       {t("serviceReminders.autoEnableDescription")}
-                    </Typography.Muted>
-                  </div>
-                  <Switch
-                    checked={configAutoEnable}
-                    onCheckedChange={setConfigAutoEnable}
-                  />
-                </div>
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <Switch
+                      checked={configAutoEnable}
+                      onCheckedChange={setConfigAutoEnable}
+                    />
+                  </ItemActions>
+                </Item>
 
                 <Button
                   className="w-full"
@@ -591,32 +604,64 @@ export default function ServiceRemindersPage() {
                     <Label htmlFor="last_service_date">
                       {t("serviceReminders.lastServiceDate")}
                     </Label>
-                    <Input
-                      id="last_service_date"
-                      type="date"
-                      value={newSchedule.last_service_date}
-                      onChange={(e) =>
-                        setNewSchedule((p) => ({
-                          ...p,
-                          last_service_date: e.target.value,
-                        }))
+                    <DatePicker
+                      value={
+                        newSchedule.last_service_date
+                          ? new Date(newSchedule.last_service_date)
+                          : undefined
                       }
+                      onChange={(d) => {
+                        if (d) {
+                          const year = d.getFullYear();
+                          const monthStr = String(d.getMonth() + 1).padStart(
+                            2,
+                            "0",
+                          );
+                          const dayStr = String(d.getDate()).padStart(2, "0");
+                          setNewSchedule((p) => ({
+                            ...p,
+                            last_service_date: `${year}-${monthStr}-${dayStr}`,
+                          }));
+                        } else {
+                          setNewSchedule((p) => ({
+                            ...p,
+                            last_service_date: "",
+                          }));
+                        }
+                      }}
+                      className="w-full"
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="next_due_date">
                       {t("serviceReminders.nextDueDate")}
                     </Label>
-                    <Input
-                      id="next_due_date"
-                      type="date"
-                      value={newSchedule.next_due_date}
-                      onChange={(e) =>
-                        setNewSchedule((p) => ({
-                          ...p,
-                          next_due_date: e.target.value,
-                        }))
+                    <DatePicker
+                      value={
+                        newSchedule.next_due_date
+                          ? new Date(newSchedule.next_due_date)
+                          : undefined
                       }
+                      onChange={(d) => {
+                        if (d) {
+                          const year = d.getFullYear();
+                          const monthStr = String(d.getMonth() + 1).padStart(
+                            2,
+                            "0",
+                          );
+                          const dayStr = String(d.getDate()).padStart(2, "0");
+                          setNewSchedule((p) => ({
+                            ...p,
+                            next_due_date: `${year}-${monthStr}-${dayStr}`,
+                          }));
+                        } else {
+                          setNewSchedule((p) => ({
+                            ...p,
+                            next_due_date: "",
+                          }));
+                        }
+                      }}
+                      className="w-full"
                     />
                   </div>
                 </div>

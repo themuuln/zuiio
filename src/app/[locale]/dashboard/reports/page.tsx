@@ -10,23 +10,41 @@ import {
   BarChart3,
   Calendar,
   ClipboardList,
+  type LucideIcon,
   RefreshCw,
   TrendingUp,
   Wallet,
-  type LucideIcon,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { subDays } from "date-fns";
 
 import { Cell, Pie, PieChart as RechartsPieChart } from "recharts";
-
+import { ExportButton } from "@/components/export-button";
+import { MechanicSelect } from "@/components/mechanic-select";
+import {
+  DailyRevenueChart,
+  ForecastCard,
+  InsightAlerts,
+  MechanicBarChart,
+  MechanicTable,
+  PnLCard,
+  ReportKpiCard,
+  RetentionCard,
+  ServiceBreakdownChart,
+  TargetCard,
+} from "@/components/reports";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
+import { MonthPicker } from "@/components/ui/month-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import type { DateRange } from "react-day-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -38,33 +56,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
-import { MechanicSelect } from "@/components/mechanic-select";
-import { ExportButton } from "@/components/export-button";
-import type { ExportColumn } from "@/lib/export";
-import { formatCurrency } from "@/lib/utils";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import type { ExportColumn } from "@/lib/export";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
-  ReportKpiCard,
-  InsightAlerts,
-  ForecastCard,
-  TargetCard,
-  RetentionCard,
-  PnLCard,
-  ServiceBreakdownChart,
-  DailyRevenueChart,
-  MechanicBarChart,
-  MechanicTable,
-} from "@/components/reports";
-import {
-  useReport,
   useMechanics,
-  useReportInsights,
+  useReport,
   useReportForecast,
-  useReportTargets,
-  useReportRetention,
+  useReportInsights,
   useReportPnl,
+  useReportRetention,
   useReportServiceBreakdown,
+  useReportTargets,
 } from "@/lib/queries/use-reports";
 import type {
   DailyReport,
@@ -72,10 +75,11 @@ import type {
   ReportMechanicKpi,
   ReportProfitability,
 } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────
 
-type ReportType = "daily" | "weekly" | "monthly" | "eod";
+type ReportType = "daily" | "weekly" | "monthly" | "custom" | "eod";
 
 interface ReportData {
   work_orders_completed: number;
@@ -108,7 +112,17 @@ interface EodReport {
 
 // ── Helpers ────────────────────────────────────────────────
 
-function periodTitle(type: ReportType, date: string): string {
+function periodTitle(type: ReportType, date: string, dateTo?: string): string {
+  if (type === "custom" && dateTo) {
+    const fromDate = new Date(date);
+    const toDate = new Date(dateTo);
+    const formatD = (d: Date) =>
+      d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    if (fromDate.toDateString() === toDate.toDateString()) {
+      return formatD(fromDate);
+    }
+    return `${fromDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${formatD(toDate)}`;
+  }
   const d = new Date(date);
   switch (type) {
     case "daily":
@@ -128,6 +142,12 @@ function periodTitle(type: ReportType, date: string): string {
     case "eod":
       return d.toLocaleDateString("en-US", {
         weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+    default:
+      return d.toLocaleDateString("en-US", {
         month: "long",
         day: "numeric",
         year: "numeric",
@@ -337,33 +357,63 @@ export default function ReportsPage() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
+  const [customRange, setCustomRange] = useState<DateRange | undefined>(() => ({
+    from: subDays(new Date(), 6),
+    to: new Date(),
+  }));
 
-  const orgIdRef = useRef<string | null>(null);
-  const [orgId, setOrgId] = useState<string>("");
-  const { registerTab } = useRightSidebar();
+  // ── Init: get org ID ─────────────────────────────────
+  const { data: orgInfo } = useCurrentOrg();
+  const orgId = orgInfo?.orgId ?? "";
 
   // ── Derived params ───────────────────────────────────
   const isEod = reportType === "eod";
+
+  const customFromStr = useMemo(() => {
+    if (!customRange?.from) return new Date().toISOString().split("T")[0];
+    const y = customRange.from.getFullYear();
+    const m = String(customRange.from.getMonth() + 1).padStart(2, "0");
+    const d = String(customRange.from.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, [customRange?.from]);
+
+  const customToStr = useMemo(() => {
+    const toDate = customRange?.to || customRange?.from || new Date();
+    const y = toDate.getFullYear();
+    const m = String(toDate.getMonth() + 1).padStart(2, "0");
+    const d = String(toDate.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, [customRange?.to, customRange?.from]);
+
   const dateParam =
     reportType === "monthly"
       ? `${month}-01`
       : reportType === "weekly"
         ? weekStart
-        : date;
-  const { from: dateFrom, to: dateTo } = useMemo(
-    () => getDateRange(reportType, date, weekStart, month),
-    [reportType, date, weekStart, month],
-  );
+        : reportType === "custom"
+          ? customFromStr
+          : date;
+
+  const { from: dateFrom, to: dateTo } = useMemo(() => {
+    if (reportType === "custom") {
+      return { from: customFromStr, to: customToStr };
+    }
+    return getDateRange(reportType, date, weekStart, month);
+  }, [reportType, date, weekStart, month, customFromStr, customToStr]);
+
   const periodType =
     reportType === "daily"
       ? "daily"
       : reportType === "weekly"
         ? "weekly"
-        : "monthly";
+        : reportType === "monthly"
+          ? "monthly"
+          : "daily";
 
   // ── Data hooks ───────────────────────────────────────
   const reportQ = useReport(orgId, reportType, {
     date: dateParam,
+    ...(reportType === "custom" ? { date_from: dateFrom, date_to: dateTo } : {}),
     ...(mechanicFilter ? { mechanic: mechanicFilter } : {}),
   });
   const mechanicsQ = useMechanics(orgId);
@@ -379,19 +429,8 @@ export default function ReportsPage() {
   const report = reportQ.data as ReportData | null;
   const eodReport = reportQ.data as EodReport | null;
 
-  // ── Init: get org ID ─────────────────────────────────
-  useEffect(() => {
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then((d) => {
-        const oid = d?.organizationId ?? d?.data?.organizationId;
-        if (oid) {
-          orgIdRef.current = oid;
-          setOrgId(oid);
-        }
-      })
-      .catch(console.error);
-  }, []);
+  // ── Sidebar ──────────────────────────────────────────
+  const { registerTab } = useRightSidebar();
 
   // ── Sidebar ──────────────────────────────────────────
   useEffect(() => {
@@ -481,6 +520,7 @@ export default function ReportsPage() {
     { label: "Daily", value: "daily", icon: Calendar },
     { label: "Weekly", value: "weekly", icon: BarChart3 },
     { label: "Monthly", value: "monthly", icon: TrendingUp },
+    { label: "Custom Range", value: "custom", icon: Calendar },
     { label: "EOD Summary", value: "eod", icon: ClipboardList },
   ];
 
@@ -500,7 +540,10 @@ export default function ReportsPage() {
                 ? `${month}-01`
                 : reportType === "weekly"
                   ? weekStart
-                  : date,
+                  : reportType === "custom"
+                    ? customFromStr
+                    : date,
+              dateTo,
             )}
           </Typography.Muted>
         </div>
@@ -546,27 +589,49 @@ export default function ReportsPage() {
       <div className="flex flex-wrap items-center gap-3">
         <Calendar className="size-4 text-muted-foreground" />
         {(reportType === "daily" || reportType === "eod") && (
-          <Input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="h-9 w-auto"
+          <DatePicker
+            value={date ? new Date(date) : undefined}
+            onChange={(d) => {
+              if (d) {
+                const year = d.getFullYear();
+                const monthStr = String(d.getMonth() + 1).padStart(2, "0");
+                const dayStr = String(d.getDate()).padStart(2, "0");
+                setDate(`${year}-${monthStr}-${dayStr}`);
+              }
+            }}
+            className="w-[180px]"
           />
         )}
         {reportType === "weekly" && (
-          <Input
-            type="date"
-            value={weekStart}
-            onChange={(e) => setWeekStart(e.target.value)}
-            className="h-9 w-auto"
+          <DatePicker
+            value={weekStart ? new Date(weekStart) : undefined}
+            onChange={(d) => {
+              if (d) {
+                const dateCopy = new Date(d);
+                const day = dateCopy.getDay();
+                const diff = dateCopy.getDate() - day + (day === 0 ? -6 : 1);
+                const monday = new Date(dateCopy.setDate(diff));
+                const year = monday.getFullYear();
+                const monthStr = String(monday.getMonth() + 1).padStart(2, "0");
+                const dayStr = String(monday.getDate()).padStart(2, "0");
+                setWeekStart(`${year}-${monthStr}-${dayStr}`);
+              }
+            }}
+            className="w-[180px]"
           />
         )}
         {reportType === "monthly" && (
-          <Input
-            type="month"
+          <MonthPicker
             value={month}
-            onChange={(e) => setMonth(e.target.value)}
-            className="h-9 w-auto"
+            onChange={setMonth}
+            className="w-[180px]"
+          />
+        )}
+        {reportType === "custom" && (
+          <DateRangePicker
+            value={customRange}
+            onChange={setCustomRange}
+            className="w-[260px]"
           />
         )}
       </div>

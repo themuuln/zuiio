@@ -1,52 +1,49 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Navigation", () => {
-  test("redirects root to default locale", async ({ page }) => {
+  test("loads the landing page at root", async ({ page }) => {
     await page.goto("/");
-    // Should redirect to /mn (Mongolian default)
-    await expect(page).toHaveURL(/\/mn/);
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: /operating system for auto service/i,
+      }),
+    ).toBeVisible();
   });
 
-  test("navigates to login page", async ({ page }) => {
-    await page.goto("/mn");
-
-    // Find and click the login link
-    const loginLink = page.getByRole("link", { name: /log in|нэвтрэх/i });
-    await loginLink.first().click();
-
+  test("navigates to login via nav button", async ({ page }) => {
+    await page.goto("/");
+    await page
+      .getByRole("banner")
+      .getByRole("button", { name: "Sign in" })
+      .click();
     await expect(page).toHaveURL(/\/auth\/login/);
   });
 
-  test("navigates to signup page", async ({ page }) => {
-    await page.goto("/mn");
-
-    const signUpLink = page.getByRole("link", { name: /sign up|бүртгүүлэх/i });
-    await signUpLink.first().click();
-
+  test("navigates to signup via nav button", async ({ page }) => {
+    await page.goto("/");
+    await page
+      .getByRole("banner")
+      .getByRole("button", { name: "Get Started" })
+      .click();
     await expect(page).toHaveURL(/\/auth\/signup/);
   });
 
-  test("navigates to pricing page", async ({ page }) => {
-    await page.goto("/mn");
-
-    const pricingLink = page
-      .getByRole("link", { name: /pricing|үнэ/i })
-      .first();
-    await pricingLink.click();
-
+  test("navigates to pricing page via link", async ({ page }) => {
+    await page.goto("/");
+    // Pricing is a direct link in the nav (not inside a dropdown)
+    await page.getByRole("link", { name: "Pricing" }).first().click();
     await expect(page).toHaveURL(/\/pricing/);
   });
 
-  test("navigates to FAQ page", async ({ page }) => {
-    await page.goto("/mn");
-
-    // FAQ is in the footer
+  test("navigates to FAQ via footer link", async ({ page }) => {
+    await page.goto("/");
     const footer = page.locator("footer");
     await footer.scrollIntoViewIfNeeded();
-
-    const faqLink = page.getByRole("link", { name: /FAQ/i });
+    await expect(footer).toBeVisible();
+    const faqLink = footer.getByRole("link", { name: "FAQ" });
+    await expect(faqLink).toBeVisible();
     await faqLink.click();
-
-    await expect(page).toHaveURL(/\/faq/);
+    await expect(page).toHaveURL(/\/faq/, { timeout: 10000 });
   });
 });

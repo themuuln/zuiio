@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
+import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 
 import { usePageHeader } from "@/hooks/use-page-header";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
@@ -204,15 +205,10 @@ export function ExpenseDetailSheet({
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg p-0 gap-0">
         <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
-              {isLoadingData ? (
-                <Loader2 className="size-5 animate-spin text-primary" />
-              ) : (
-                <Pencil className="size-5 text-primary" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
+          <DetailSheetHeader
+            icon={Pencil}
+            iconLoading={isLoadingData}
+            title={
               <SheetTitle className="text-base truncate">
                 {isLoadingData
                   ? "Loading…"
@@ -220,8 +216,10 @@ export function ExpenseDetailSheet({
                     ? expense.description
                     : t("details")}
               </SheetTitle>
-              {expense && (
-                <div className="flex items-center gap-2 mt-0.5">
+            }
+            subtitle={
+              expense ? (
+                <>
                   <Badge
                     variant={expense.paid_at ? "outline" : "secondary"}
                     className="text-xs"
@@ -233,52 +231,57 @@ export function ExpenseDetailSheet({
                       {new Date(expense.created_at).toLocaleDateString()}
                     </span>
                   )}
-                </div>
-              )}
-            </div>
-            {/* Actions in header */}
-            {expense && !editing && (
-              <div className="flex items-center gap-1 shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => {
-                    form.reset(syncForm(expense));
-                    setEditing(true);
-                  }}
-                >
-                  <Pencil className="size-4" />
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger
-                    render={
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        className="text-destructive"
-                      />
-                    }
+                </>
+              ) : undefined
+            }
+            actions={
+              expense && !editing ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => {
+                      form.reset(syncForm(expense));
+                      setEditing(true);
+                    }}
                   >
-                    <Trash2 className="size-4" />
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {t("deleteConfirm")}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete}>
-                        {commonT("delete")}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            )}
-          </div>
+                    <Pencil className="size-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          className="text-destructive"
+                        />
+                      }
+                    >
+                      <Trash2 className="size-4" />
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          {t("deleteConfirm")}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t("deleteConfirm")}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>
+                          {commonT("cancel")}
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>
+                          {commonT("delete")}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              ) : undefined
+            }
+          />
         </SheetHeader>
 
         {/* Loading */}

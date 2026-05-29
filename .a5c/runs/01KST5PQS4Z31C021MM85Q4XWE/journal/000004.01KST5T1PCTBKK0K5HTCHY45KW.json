@@ -1,0 +1,22 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-29T15:31:54.188Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KST5T1NQDK54NM9Q4QJ2X4H9",
+    "invocationKey": "project-install:S000002:analyze-repo",
+    "invocationHash": "41401767729d650f3355fe0330422db41b24654e895ed5942b88325022ab5d5c",
+    "stepId": "S000002",
+    "taskId": "analyze-repo",
+    "kind": "agent",
+    "label": "agent",
+    "taskDefRef": "tasks/01KST5T1NQDK54NM9Q4QJ2X4H9/task.json",
+    "labels": [
+      "agent",
+      "cradle",
+      "analysis",
+      "repo"
+    ]
+  },
+  "checksum": "fbd2828212f44a6d07625592c8e735306eff464516a3506bfd05e46232174405"
+}

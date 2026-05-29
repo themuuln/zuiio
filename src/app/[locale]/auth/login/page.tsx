@@ -98,17 +98,18 @@ export default function LoginPage() {
               htmlFor="email"
               className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono font-bold"
             >
-              {t("emailLabel")} <span className="text-destructive">*</span>
+              {t("emailOrPhoneLabel")}{" "}
+              <span className="text-destructive">*</span>
             </FieldLabel>
             <Input
               id="email"
               name="email"
-              type="email"
+              type="text"
               autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("emailPlaceholder")}
+              placeholder={t("emailOrPhonePlaceholder")}
               aria-invalid={"email" in fieldErrors ? true : undefined}
               className="font-mono text-xs bg-muted/10 focus-visible:bg-transparent h-8 min-h-0"
             />

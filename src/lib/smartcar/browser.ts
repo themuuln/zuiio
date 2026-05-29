@@ -13,7 +13,7 @@
  * Dependencies: playwright (npm install -D playwright)
  */
 
-import type { Browser, Page } from "playwright";
+import type { Browser, Page } from "playwright-core";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,7 +57,7 @@ async function getBrowser(): Promise<Browser> {
   if (_launching) return _launching;
 
   _launching = (async () => {
-    const { chromium } = await import("playwright");
+    const { chromium } = await import("playwright-core");
     const browser = await chromium.launch({
       headless: true,
       args: [

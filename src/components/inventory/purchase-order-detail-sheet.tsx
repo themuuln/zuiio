@@ -31,6 +31,7 @@ import {
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { PurchaseOrder } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
+import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 
 interface PurchaseOrderDetailSheetProps {
   open: boolean;
@@ -107,15 +108,10 @@ export function PurchaseOrderDetailSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-2xl p-0 gap-0">
         <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
-              {isLoading ? (
-                <Loader2 className="size-5 animate-spin text-primary" />
-              ) : (
-                <Truck className="size-5 text-primary" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
+          <DetailSheetHeader
+            icon={Truck}
+            iconLoading={isLoading}
+            title={
               <SheetTitle className="text-base">
                 {isLoading
                   ? "Loading…"
@@ -123,8 +119,10 @@ export function PurchaseOrderDetailSheet({
                     ? po.order_number
                     : t("poNotFound")}
               </SheetTitle>
-              {po && (
-                <div className="flex items-center gap-2 mt-0.5">
+            }
+            subtitle={
+              po ? (
+                <>
                   <Badge variant="outline" className="text-xs">
                     {t(PO_STATUS_KEYS[po.status] as string) ?? po.status}
                   </Badge>
@@ -132,10 +130,10 @@ export function PurchaseOrderDetailSheet({
                     {new Date(po.order_date).toLocaleDateString("mn-MN")}
                     {po.supplier?.name ? ` · ${po.supplier.name}` : ""}
                   </span>
-                </div>
-              )}
-            </div>
-          </div>
+                </>
+              ) : undefined
+            }
+          />
         </SheetHeader>
 
         {/* Loading */}

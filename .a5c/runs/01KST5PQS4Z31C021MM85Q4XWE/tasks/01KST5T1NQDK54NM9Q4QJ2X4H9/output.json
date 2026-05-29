@@ -1,0 +1,66 @@
+{
+  "architecture": {
+    "pattern": "Vertical SaaS — multi-tenant application with feature-based modules",
+    "modules": [
+      {"name": "customers", "path": "src/app/[locale]/dashboard/customers", "description": "CRM — customer list, detail, notes, comms"},
+      {"name": "vehicles", "path": "src/app/[locale]/dashboard/vehicles", "description": "Vehicle registry and lookup"},
+      {"name": "work-orders", "path": "src/app/[locale]/dashboard/work-orders", "description": "Work order creation, detail, wizard"},
+      {"name": "inventory", "path": "src/app/[locale]/dashboard/inventory", "description": "Parts inventory, movements, purchase orders"},
+      {"name": "expenses", "path": "src/app/[locale]/dashboard/expenses", "description": "Expense tracking and categories"},
+      {"name": "finance", "path": "src/app/[locale]/dashboard/finance", "description": "Financial overview, P&L"},
+      {"name": "reports", "path": "src/app/[locale]/dashboard/reports", "description": "Analytics, charts, forecasting, retention"},
+      {"name": "services", "path": "src/app/[locale]/dashboard/services", "description": "Service catalog management"},
+      {"name": "organization", "path": "src/app/[locale]/dashboard/organization", "description": "Org settings, staff management"},
+      {"name": "bay-view", "path": "src/app/[locale]/dashboard/bay-view-v2", "description": "Physical bay assignment view"},
+      {"name": "mechanic", "path": "src/app/[locale]/dashboard/mechanic", "description": "Mechanic view, time tracking"},
+      {"name": "portal", "path": "src/app/[locale]/dashboard/portal", "description": "Customer self-service portal"},
+      {"name": "service-reminders", "path": "src/app/[locale]/dashboard/service-reminders", "description": "Scheduled service reminders"},
+      {"name": "vehicle-models", "path": "src/app/[locale]/dashboard/vehicle-models", "description": "Vehicle make/model database"}
+    ],
+    "entryPoints": ["src/app/[locale]/page.tsx", "src/app/layout.tsx", "src/app/[locale]/layout.tsx"],
+    "dataFlow": "Pages → React Query hooks (src/lib/queries/) → API Routes (src/app/api/) → Services (src/lib/services/) → Supabase client → PostgreSQL"
+  },
+  "techStack": {
+    "languages": [{"name": "TypeScript", "version": "5.9", "role": "primary"}],
+    "frameworks": [
+      {"name": "Next.js", "version": "16.2.6", "category": "framework"},
+      {"name": "React", "version": "19.2.4", "category": "ui"},
+      {"name": "Tailwind CSS", "version": "4.3", "category": "css"},
+      {"name": "shadcn/ui", "version": "4", "category": "component-library"}
+    ],
+    "databases": [{"name": "PostgreSQL", "type": "relational", "version": "15+", "provider": "Supabase"}],
+    "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
+    "packageManagers": ["pnpm"],
+    "infrastructure": [
+      {"name": "Vercel", "category": "hosting"},
+      {"name": "Supabase", "category": "backend-as-a-service"},
+      {"name": "Sentry", "category": "error-monitoring"},
+      {"name": "Resend", "category": "email"}
+    ]
+  },
+  "conventions": {
+    "naming": {
+      "directories": "kebab-case",
+      "components": "PascalCase exports, kebab-case files",
+      "hooks": "use- prefix",
+      "database": "snake_case",
+      "apiRoutes": "RESTful nested under /api/organizations/[id]/..."
+    },
+    "codeStyle": {
+      "indentation": "2 spaces",
+      "quotes": "single quotes",
+      "semicolons": "trailing",
+      "formatter": "Biome"
+    },
+    "importOrder": ["@/lib/*", "@/components/*", "@/hooks/*", "external packages"],
+    "errorHandling": "Custom AppError hierarchy (NotFoundError, UnauthorizedError, ForbiddenError, ValidationError, ConflictError) with toApiErrorResponse() wire format. All API routes wrapped in createRouteHandler.",
+    "testingConventions": "Vitest for unit/integration, Playwright for E2E. Co-located test files. Test credentials in AGENTS.md."
+  },
+  "documentation": [
+    {"path": "MASTER_PLAN.md", "type": "product-vision", "summary": "Full product vision, development phases, pricing strategy"},
+    {"path": "AGENTS.md", "type": "agent-config", "summary": "Global + project agent configuration with comprehensive rules"},
+    {"path": "README.md", "type": "readme", "summary": "Repository readme"},
+    {"path": "docs/", "type": "documentation-site", "summary": "VitePress documentation with 25+ pages"}
+  ],
+  "directoryTree": {"src": {"app": "Next.js App Router pages", "components": "React components", "hooks": "Custom hooks", "lib": "Utilities, services, queries, stores, types"}}
+}

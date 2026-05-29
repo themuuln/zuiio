@@ -32,6 +32,8 @@ import type { ExpenseWithCategory } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 import { columns } from "./_columns";
 import { Typography } from "@/components/ui/typography";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import type { DateRange } from "react-day-picker";
 
 // ── Inline KPI Card ──
 
@@ -103,6 +105,33 @@ export default function ExpensesPage() {
   const [paidFilter, setPaidFilter] = useState<PaidFilter>("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  const rangeValue = useMemo<DateRange | undefined>(() => {
+    return {
+      from: startDate ? new Date(startDate) : undefined,
+      to: endDate ? new Date(endDate) : undefined,
+    };
+  }, [startDate, endDate]);
+
+  const handleRangeChange = (range: DateRange | undefined) => {
+    if (range?.from) {
+      const y = range.from.getFullYear();
+      const m = String(range.from.getMonth() + 1).padStart(2, "0");
+      const d = String(range.from.getDate()).padStart(2, "0");
+      setStartDate(`${y}-${m}-${d}`);
+    } else {
+      setStartDate("");
+    }
+
+    if (range?.to) {
+      const y = range.to.getFullYear();
+      const m = String(range.to.getMonth() + 1).padStart(2, "0");
+      const d = String(range.to.getDate()).padStart(2, "0");
+      setEndDate(`${y}-${m}-${d}`);
+    } else {
+      setEndDate("");
+    }
+  };
 
   const { data: org, isLoading: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId;
@@ -319,23 +348,24 @@ export default function ExpensesPage() {
             </select>
 
             {/* Date range */}
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="h-9 rounded-lg border border-input bg-background px-3 text-xs font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Start date"
-              title="Start date"
+            <DateRangePicker
+              value={rangeValue}
+              onChange={handleRangeChange}
+              className="w-[240px]"
             />
-            <span className="text-xs text-muted-foreground">&ndash;</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="h-9 rounded-lg border border-input bg-background px-3 text-xs font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="End date"
-              title="End date"
-            />
+            {(startDate || endDate) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 px-2 text-muted-foreground hover:text-foreground text-xs"
+                onClick={() => {
+                  setStartDate("");
+                  setEndDate("");
+                }}
+              >
+                Clear
+              </Button>
+            )}
 
             {/* Paid / Unpaid toggle */}
             <div className="flex gap-1">

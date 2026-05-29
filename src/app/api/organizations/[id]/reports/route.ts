@@ -5,6 +5,7 @@ import {
   generateReportInsights,
   getCustomerRetention,
   getDailyReport,
+  getCustomReport,
   getDailyTimeline,
   getDashboardData,
   getEndOfDaySummary,
@@ -46,6 +47,10 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
   switch (type) {
     case "daily": {
       const report = await getDailyReport(orgId, mid || null, date);
+      return NextResponse.json({ data: report });
+    }
+    case "custom": {
+      const report = await getCustomReport(orgId, mid || null, dateFrom, dateTo);
       return NextResponse.json({ data: report });
     }
     case "weekly": {

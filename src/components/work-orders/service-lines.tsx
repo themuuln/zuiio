@@ -11,6 +11,12 @@ import { Input } from "@/components/ui/input";
 import type { ServiceCatalog } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
+import {
+  Item,
+  ItemContent,
+  ItemTitle,
+  ItemActions,
+} from "@/components/ui/item";
 
 export interface ServiceLine {
   service_catalog_id: string | null;
@@ -136,14 +142,13 @@ export function ServiceLines({
           <div className="border rounded-lg overflow-hidden">
             <div className="divide-y">
               {lines.map((svc, idx) => (
-                <div
+                <Item
                   key={svc.service_catalog_id ?? `svc-${idx}`}
-                  className="flex items-center gap-2 p-3 hover:bg-muted/20"
+                  variant="muted"
+                  className="gap-2 px-3 py-2.5"
                 >
-                  <div className="flex-1 min-w-0">
-                    <Typography.Text className="text-sm font-medium truncate">
-                      {svc.name}
-                    </Typography.Text>
+                  <ItemContent className="gap-0.5">
+                    <ItemTitle className="text-sm">{svc.name}</ItemTitle>
                     {svc.last_price && (
                       <Typography.Text
                         className={`text-[11px] ${svc.base_price <= svc.last_price ? "text-green-600" : "text-amber-600"}`}
@@ -152,40 +157,42 @@ export function ServiceLines({
                         {formatCurrency(svc.last_price)}
                       </Typography.Text>
                     )}
-                  </div>
-                  <Input
-                    type="number"
-                    value={svc.quantity}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (v === "") {
-                        onUpdate(idx, "quantity", 0);
-                        return;
-                      }
-                      const n = parseInt(v, 10);
-                      if (!isNaN(n)) onUpdate(idx, "quantity", n);
-                    }}
-                    onBlur={(e) => {
-                      const n = Number(e.target.value);
-                      if (isNaN(n) || n < 1) onUpdate(idx, "quantity", 1);
-                    }}
-                    className="w-14 h-10 text-center"
-                    min={1}
-                    aria-label="Quantity"
-                  />
-                  <span className="text-sm font-semibold tabular-nums w-20 text-right">
-                    {formatCurrency(svc.final_price)}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => onRemove(idx)}
-                    className="shrink-0 min-w-[44px] min-h-[var(--ui-touch-target)]"
-                    aria-label={`Remove ${svc.name}`}
-                  >
-                    <Trash2 className="size-4 text-destructive" />
-                  </Button>
-                </div>
+                  </ItemContent>
+                  <ItemActions>
+                    <Input
+                      type="number"
+                      value={svc.quantity}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === "") {
+                          onUpdate(idx, "quantity", 0);
+                          return;
+                        }
+                        const n = parseInt(v, 10);
+                        if (!isNaN(n)) onUpdate(idx, "quantity", n);
+                      }}
+                      onBlur={(e) => {
+                        const n = Number(e.target.value);
+                        if (isNaN(n) || n < 1) onUpdate(idx, "quantity", 1);
+                      }}
+                      className="w-14 h-10 text-center"
+                      min={1}
+                      aria-label="Quantity"
+                    />
+                    <span className="text-sm font-semibold tabular-nums w-20 text-right">
+                      {formatCurrency(svc.final_price)}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={() => onRemove(idx)}
+                      className="shrink-0 min-w-[44px] min-h-[var(--ui-touch-target)]"
+                      aria-label={`Remove ${svc.name}`}
+                    >
+                      <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                  </ItemActions>
+                </Item>
               ))}
             </div>
           </div>

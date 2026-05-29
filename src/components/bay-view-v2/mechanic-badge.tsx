@@ -4,6 +4,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
 
 interface MechanicBadgeProps {
   workOrderId: string;
@@ -54,13 +55,14 @@ export function MechanicBadge({
     );
   }
 
-  // "Temuulen Undrakhbayar" → "Temuulen U."
+  const color = getMechanicColor(mechanic.id);
   const shortName = (() => {
     if (!mechanic.full_name) return "?";
     const parts = mechanic.full_name.trim().split(/\s+/);
     if (parts.length <= 1) return parts[0] ?? "?";
     return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
   })();
+  const initials = getMechanicInitials(mechanic.full_name);
 
   return (
     <div
@@ -84,10 +86,12 @@ export function MechanicBadge({
         <AvatarFallback
           className={cn(
             compact ? "text-[8px]" : "text-xs",
-            "bg-primary/10 text-primary",
+            "font-medium",
+            color.bg,
+            color.text,
           )}
         >
-          {shortName}
+          {initials}
         </AvatarFallback>
       </Avatar>
       <span

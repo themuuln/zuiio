@@ -21,6 +21,7 @@ import {
 import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
+import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
 
 interface MechanicItemProps {
   mechanic: Profile & { current_jobs: number };
@@ -40,14 +41,8 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
       }
     : undefined;
 
-  const initials = mechanic.full_name
-    ? mechanic.full_name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "?";
+  const color = getMechanicColor(mechanic.id);
+  const initials = getMechanicInitials(mechanic.full_name);
 
   const jobCount = mechanic.current_jobs;
   const isAvailable = jobCount === 0;
@@ -65,7 +60,9 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
       )}
     >
       <Avatar className="size-6 shrink-0">
-        <AvatarFallback className="text-[8px] bg-primary/8 text-primary font-medium">
+        <AvatarFallback
+          className={cn("text-[8px] font-medium", color.bg, color.text)}
+        >
           {initials}
         </AvatarFallback>
       </Avatar>

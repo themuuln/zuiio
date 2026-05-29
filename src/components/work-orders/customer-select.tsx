@@ -9,6 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldContent, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Typography } from "@/components/ui/typography";
+import {
+  Item,
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemActions,
+} from "@/components/ui/item";
 import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import type { Customer } from "@/lib/types";
@@ -115,26 +122,34 @@ export function CustomerSelect({
       </CardHeader>
       <CardContent>
         {selectedCustomer ? (
-          <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50/30 dark:border-green-800/30 dark:bg-green-950/10 p-4">
-            <div className="flex items-center gap-3">
-              <User className="size-5 text-green-600" />
-              <div>
-                <span className="font-medium">
-                  {[selectedCustomer.first_name, selectedCustomer.last_name]
-                    .filter(Boolean)
-                    .join(" ")}
-                </span>
+          <Item
+            variant="outline"
+            className="border-green-200 bg-green-50/30 dark:border-green-800/30 dark:bg-green-950/10 p-4"
+          >
+            <ItemMedia
+              variant="icon"
+              className="[&_svg]:size-5 [&_svg]:text-green-600"
+            >
+              <User />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>
+                {[selectedCustomer.first_name, selectedCustomer.last_name]
+                  .filter(Boolean)
+                  .join(" ")}
                 {selectedCustomer.phone && (
-                  <span className="ml-2 text-sm text-muted-foreground">
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
                     {selectedCustomer.phone}
                   </span>
                 )}
-              </div>
-            </div>
-            <Button variant="ghost" size="sm" onClick={onClear}>
-              Change
-            </Button>
-          </div>
+              </ItemTitle>
+            </ItemContent>
+            <ItemActions>
+              <Button variant="ghost" size="sm" onClick={onClear}>
+                Change
+              </Button>
+            </ItemActions>
+          </Item>
         ) : (
           <div className="flex flex-col gap-3">
             <SearchInput

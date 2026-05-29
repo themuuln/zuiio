@@ -14,7 +14,15 @@ import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
 import { mechanicKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { getInitials } from "@/lib/utils";
+import { cn, getInitials } from "@/lib/utils";
+import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
+import {
+  Item,
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemActions,
+} from "@/components/ui/item";
 
 const MECHANIC_STORAGE_KEY = "tolom_active_mechanic";
 
@@ -129,19 +137,35 @@ export function MechanicSwitcher() {
             <DropdownMenuItem
               key={m.id}
               onClick={() => handleSwitch(m.id)}
-              className="gap-2"
+              className="p-0"
             >
-              <Avatar className="size-5">
-                <AvatarFallback className="text-[8px] font-medium">
-                  {getInitials(m.full_name)}
-                </AvatarFallback>
-              </Avatar>
-              <span className="flex-1 text-xs">{m.full_name ?? "Unknown"}</span>
-              {m.id === activeMechanicId && (
-                <span className="text-[10px] text-primary font-medium">
-                  Active
-                </span>
-              )}
+              <Item size="xs" className="border-0 w-full">
+                <ItemMedia variant="image">
+                  <Avatar className="size-5">
+                    <AvatarFallback
+                      className={cn(
+                        "text-[8px] font-medium",
+                        getMechanicColor(m.id).bg,
+                        getMechanicColor(m.id).text,
+                      )}
+                    >
+                      {getMechanicInitials(m.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle className="text-xs">
+                    {m.full_name ?? "Unknown"}
+                  </ItemTitle>
+                </ItemContent>
+                {m.id === activeMechanicId && (
+                  <ItemActions>
+                    <span className="text-[10px] text-primary font-medium">
+                      Active
+                    </span>
+                  </ItemActions>
+                )}
+              </Item>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

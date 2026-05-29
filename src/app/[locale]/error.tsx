@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { PageErrorState } from "@/components/page-state";
 
@@ -11,8 +10,6 @@ export default function LocaleError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const t = useTranslations("common");
-
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -20,8 +17,8 @@ export default function LocaleError({
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-5xl px-4 py-10 sm:px-6">
       <PageErrorState
-        title={t("somethingWentWrong")}
-        description={error.message || t("unexpectedError")}
+        title="Something went wrong"
+        description={error.message || "An unexpected error occurred."}
         onRetry={reset}
         className="my-auto"
       />

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KST74A561K63HCW5X9D6C82K",
+  "taskId": "update-claude-md",
+  "invocationKey": "project-install:S000010:update-claude-md",
+  "status": "ok",
+  "result": {
+    "addedSections": [
+      "Babysitter"
+    ],
+    "additions": "## Babysitter section added with quick commands, recommended processes, methodology, key skills, and pain point remediations.",
+    "claudeMdInstructions": [
+      "Use babysitter run:create to start orchestration runs",
+      "Use gsd/verify after schema migrations and type regeneration",
+      "Use gsd/audit weekly for test coverage and CI health checks",
+      "Use gsd/map-codebase to decompose large service files",
+      "Follow evolutionary methodology for refactoring",
+      "Use TDD for new services and financial logic",
+      "Remove continue-on-error from CI typecheck to catch schema drift early",
+      "Add i18n parity check for mn.json vs en.json keys"
+    ],
+    "claudeMdPath": "CLAUDE.md",
+    "updated": true
+  },
+  "startedAt": "2026-05-29T15:56:24.913Z",
+  "finishedAt": "2026-05-29T15:56:24.913Z",
+  "value": {
+    "addedSections": [
+      "Babysitter"
+    ],
+    "additions": "## Babysitter section added with quick commands, recommended processes, methodology, key skills, and pain point remediations.",
+    "claudeMdInstructions": [
+      "Use babysitter run:create to start orchestration runs",
+      "Use gsd/verify after schema migrations and type regeneration",
+      "Use gsd/audit weekly for test coverage and CI health checks",
+      "Use gsd/map-codebase to decompose large service files",
+      "Follow evolutionary methodology for refactoring",
+      "Use TDD for new services and financial logic",
+      "Remove continue-on-error from CI typecheck to catch schema drift early",
+      "Add i18n parity check for mn.json vs en.json keys"
+    ],
+    "claudeMdPath": "CLAUDE.md",
+    "updated": true
+  }
+}

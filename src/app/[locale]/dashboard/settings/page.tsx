@@ -39,6 +39,13 @@ import { DataSharingForm } from "./_data-sharing-form";
 import { DiagnosisLabelsSection } from "./_diagnosis-labels-section";
 import { VehicleNicheForm } from "./_vehicle-niche-form";
 import { Typography } from "@/components/ui/typography";
+import {
+  Item,
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemDescription,
+} from "@/components/ui/item";
 
 function SectionHeading({
   icon: Icon,
@@ -50,19 +57,18 @@ function SectionHeading({
   description: string;
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
-        <Icon className="size-5 text-muted-foreground" />
-      </div>
-      <div>
-        <Typography.H2 className="text-base font-semibold tracking-tight">
-          {title}
-        </Typography.H2>
-        <Typography.Muted className="text-sm text-muted-foreground">
-          {description}
-        </Typography.Muted>
-      </div>
-    </div>
+    <Item variant="default" className="border-0 p-0 gap-3">
+      <ItemMedia
+        variant="icon"
+        className="size-10 rounded-lg bg-muted [&_svg]:size-5 [&_svg]:text-muted-foreground"
+      >
+        <Icon />
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle className="text-base tracking-tight">{title}</ItemTitle>
+        <ItemDescription>{description}</ItemDescription>
+      </ItemContent>
+    </Item>
   );
 }
 

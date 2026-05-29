@@ -33,6 +33,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Typography } from "@/components/ui/typography";
+import { onLinkHover } from "@/lib/prefetch";
 
 export function LandingNav() {
   const t = useTranslations("home");
@@ -258,7 +259,12 @@ export function LandingNav() {
           <Button
             variant="ghost"
             size="sm"
-            render={<Link href="/auth/login" />}
+            render={
+              <Link
+                href="/auth/login"
+                onMouseEnter={onLinkHover("/auth/login")}
+              />
+            }
             nativeButton={false}
             className="hidden md:inline-flex"
           >
@@ -266,7 +272,12 @@ export function LandingNav() {
           </Button>
           <Button
             size="sm"
-            render={<Link href="/auth/signup" />}
+            render={
+              <Link
+                href="/auth/signup"
+                onMouseEnter={onLinkHover("/auth/signup")}
+              />
+            }
             nativeButton={false}
           >
             {t("navGetStarted")}

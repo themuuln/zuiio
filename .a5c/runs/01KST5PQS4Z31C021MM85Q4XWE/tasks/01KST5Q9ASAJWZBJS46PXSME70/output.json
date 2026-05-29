@@ -1,0 +1,12 @@
+{
+  "existingProfile": null,
+  "isFirstRun": true,
+  "isNewProject": false,
+  "a5cDirExists": true,
+  "a5cFiles": ["runs/"],
+  "claudeMdExists": true,
+  "claudeMdContent": "Present at project root",
+  "cicdConfigFiles": [".github/workflows/ci.yml", ".github/workflows/react-doctor.yml"],
+  "gitCommitCount": 123,
+  "profileVersion": null
+}

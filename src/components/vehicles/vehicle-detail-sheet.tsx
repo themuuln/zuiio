@@ -55,6 +55,13 @@ import { vehicleKeys } from "@/lib/queries/keys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatMNT } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
+import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
+import {
+  Item,
+  ItemContent,
+  ItemTitle,
+  ItemDescription,
+} from "@/components/ui/item";
 
 interface VehicleOwnerSummary {
   customer_id: string;
@@ -348,15 +355,10 @@ export function VehicleDetailSheet({
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-2xl p-0 gap-0">
         <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
-              {isLoadingData ? (
-                <Loader2 className="size-5 animate-spin text-primary" />
-              ) : (
-                <Pencil className="size-5 text-primary" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
+          <DetailSheetHeader
+            icon={Pencil}
+            iconLoading={isLoadingData}
+            title={
               <SheetTitle className="text-base truncate">
                 {isLoadingData
                   ? "Loading…"
@@ -364,62 +366,67 @@ export function VehicleDetailSheet({
                     ? vehicle.plate_number
                     : t("vehicleNotFound")}
               </SheetTitle>
-              {vehicle && (
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-muted-foreground">
-                    {[vehicle.year, vehicle.make, vehicle.model]
-                      .filter(Boolean)
-                      .join(" ")}
-                  </span>
-                </div>
-              )}
-            </div>
-            {/* Actions in header */}
-            {vehicle && !editing && (
-              <div className="flex items-center gap-1 shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => {
-                    setForm(syncForm(vehicle));
-                    setEditing(true);
-                  }}
-                >
-                  <Pencil className="size-4" />
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger
-                    render={
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        className="text-destructive"
-                      />
-                    }
+            }
+            subtitle={
+              vehicle ? (
+                <span className="text-xs text-muted-foreground">
+                  {[vehicle.year, vehicle.make, vehicle.model]
+                    .filter(Boolean)
+                    .join(" ")}
+                </span>
+              ) : undefined
+            }
+            actions={
+              vehicle && !editing ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => {
+                      setForm(syncForm(vehicle));
+                      setEditing(true);
+                    }}
                   >
-                    <Trash2 className="size-4" />
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {t("deleteConfirm")}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => deleteMutation.mutate()}
-                        variant="destructive"
-                      >
-                        {commonT("delete")}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            )}
-          </div>
+                    <Pencil className="size-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          className="text-destructive"
+                        />
+                      }
+                    >
+                      <Trash2 className="size-4" />
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          {t("deleteConfirm")}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t("deleteConfirm")}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>
+                          {commonT("cancel")}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteMutation.mutate()}
+                          variant="destructive"
+                        >
+                          {commonT("delete")}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              ) : undefined
+            }
+          />
         </SheetHeader>
 
         {/* Loading */}
@@ -591,27 +598,28 @@ export function VehicleDetailSheet({
               ) : (
                 <div className="mt-2 flex flex-col gap-2">
                   {vehicle.service_history.map((wo) => (
-                    <div
+                    <Item
                       key={wo.id}
-                      className="rounded-lg bg-muted/50 px-3 py-2.5 flex items-center justify-between"
+                      variant="muted"
+                      className="justify-between py-2.5"
                     >
-                      <div className="flex flex-col gap-0.5 min-w-0">
-                        <div className="flex items-center gap-2">
+                      <ItemContent className="gap-0.5">
+                        <ItemTitle>
                           <StatusBadge status={wo.status} />
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-muted-foreground font-normal">
                             {formatDate(wo.created_at)}
                           </span>
-                        </div>
-                        <div className="text-sm font-medium truncate">
+                        </ItemTitle>
+                        <ItemDescription>
                           {wo.complaint ||
                             wo.description ||
                             t("generalService")}
-                        </div>
-                      </div>
+                        </ItemDescription>
+                      </ItemContent>
                       <span className="text-sm font-semibold tabular-nums shrink-0 ml-2">
                         {formatMNT(Number(wo.total))}
                       </span>
-                    </div>
+                    </Item>
                   ))}
                 </div>
               )}

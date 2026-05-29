@@ -6,11 +6,10 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
 import NuqsProvider from "@/components/nuqs-provider";
 import QueryProvider from "@/components/query-provider";
+import { ServiceWorkerProvider } from "@/components/service-worker-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/lib/i18n/routing";
 import "../globals.css";
-
-export const dynamic = "force-dynamic";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
 
@@ -73,6 +72,7 @@ export default async function LocaleLayout({
           </NuqsProvider>
         </NextIntlClientProvider>
       </TooltipProvider>
+      <ServiceWorkerProvider />
     </div>
   );
 }

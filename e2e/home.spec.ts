@@ -2,44 +2,52 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Landing Page", () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the Mongolian locale (default redirect)
-    await page.goto("/mn");
+    await page.goto("/");
   });
 
-  test("renders the hero section with title and CTAs", async ({ page }) => {
-    // Hero section should be visible
-    const hero = page.locator("section").first();
-    await expect(hero).toBeVisible();
+  test("renders the hero section with title and CTA", async ({ page }) => {
+    // Hero heading should be visible
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: /operating system for auto service/i,
+      }),
+    ).toBeVisible();
 
-    // Should have sign up and features CTAs
-    const signUpLink = page.getByRole("link", { name: /sign up|бүртгүүлэх/i });
-    await expect(signUpLink.first()).toBeVisible();
+    // Primary CTA — there are multiple "Start Free Trial" buttons, take the first
+    await expect(
+      page.getByRole("button", { name: "Start Free Trial" }).first(),
+    ).toBeVisible();
   });
 
-  test("displays the navigation bar", async ({ page }) => {
-    const nav = page.getByRole("navigation");
-    await expect(nav).toBeVisible();
+  test("displays the navigation bar with brand and links", async ({ page }) => {
+    await expect(page.getByRole("navigation")).toBeVisible();
 
-    // TOLOM brand should be visible
-    await expect(page.getByText("TOLOM")).toBeVisible();
+    // Brand link in the header
+    await expect(
+      page.getByRole("banner").getByRole("link", { name: "TOLOM" }),
+    ).toBeVisible();
+
+    // Pricing link in nav (scoped to navigation, not footer)
+    await expect(
+      page.getByRole("navigation").getByRole("link", { name: "Pricing" }),
+    ).toBeVisible();
   });
 
   test("shows features section", async ({ page }) => {
-    // Scroll to features section
     const featuresSection = page.locator("#features");
     await featuresSection.scrollIntoViewIfNeeded();
     await expect(featuresSection).toBeVisible();
   });
 
   test("shows pricing section with tiers", async ({ page }) => {
-    // Scroll to pricing section
     await page
-      .getByText(/pricing|үнэ/i)
+      .getByRole("heading", { name: /pricing/i })
       .first()
       .scrollIntoViewIfNeeded();
 
-    // Should show pricing cards
-    await expect(page.getByText(/₮|month|сар/i).first()).toBeVisible();
+    // Should show Mongolian tugrik pricing
+    await expect(page.getByText(/₮/).first()).toBeVisible();
   });
 
   test("has a working footer with links", async ({ page }) => {
@@ -47,7 +55,8 @@ test.describe("Landing Page", () => {
     await footer.scrollIntoViewIfNeeded();
     await expect(footer).toBeVisible();
 
-    // Footer should have copyright text
-    await expect(footer.getByText(/©|2025|2026/i)).toBeVisible();
+    await expect(footer.getByText(/© 2026 TOLOM/)).toBeVisible();
+    await expect(footer.getByRole("link", { name: "FAQ" })).toBeVisible();
+    await expect(footer.getByRole("link", { name: "Pricing" })).toBeVisible();
   });
 });

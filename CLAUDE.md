@@ -63,3 +63,32 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+## Babysitter
+
+### Quick Commands
+- `babysitter run:create` — Create a new orchestration run
+- `babysitter run:iterate` — Execute next iteration
+- `babysitter run:status` — Check run status
+
+### Recommended Processes
+- `gsd/verify` — Schema type regen, service splits, RLS changes verification
+- `gsd/audit` — Weekly test coverage, CI pass rate, bundle drift check
+- `gsd/map-codebase` — Map large files for decomposition
+
+### Methodology
+- **Evolutionary** — Refactor, backfill tests, ship without freezing development
+- **TDD** — For new services and financial logic
+
+### Key Skills
+- `supabase` — Migration management, schema drift prevention
+- `tdd` — Test backfill for under-covered services
+- `next-best-practices` — RSC boundaries, data fetching patterns
+- `shadcn` — Component usage consistency
+- `diagnose` — Schema/type debugging
+
+### Pain Point Remediations
+- Schema drift: Remove `continue-on-error: true` from CI typecheck, add post-migration type sync verification
+- i18n: Add CI parity check for mn.json vs en.json keys

@@ -16,6 +16,13 @@ import {
 import { useRouter } from "@/lib/i18n/navigation";
 import type { UserProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import {
+  Item,
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemDescription,
+} from "@/components/ui/item";
 
 function getInitials(name: string | null | undefined): string {
   if (!name) return "?";
@@ -70,15 +77,19 @@ export default function UserMenu({ collapsed }: UserMenuProps) {
           collapsed && "lg:w-auto lg:justify-center",
         )}
       >
-        <Avatar className="size-8">
-          <AvatarFallback>…</AvatarFallback>
-        </Avatar>
-        {!collapsed && (
-          <div className="flex-1 truncate text-left flex flex-col gap-1.5">
-            <Skeleton className="h-3.5 w-20" />
-            <Skeleton className="h-3 w-28" />
-          </div>
-        )}
+        <Item size="sm" className="border-0 gap-3 p-2">
+          <ItemMedia variant="image">
+            <Avatar className="size-8">
+              <AvatarFallback>…</AvatarFallback>
+            </Avatar>
+          </ItemMedia>
+          {!collapsed && (
+            <ItemContent className="gap-1.5">
+              <Skeleton className="h-3.5 w-20" />
+              <Skeleton className="h-3 w-28" />
+            </ItemContent>
+          )}
+        </Item>
       </div>
     );
   }
@@ -92,19 +103,21 @@ export default function UserMenu({ collapsed }: UserMenuProps) {
           collapsed && "lg:w-auto lg:justify-center",
         )}
       >
-        <Avatar className="size-8">
-          <AvatarFallback>{initials}</AvatarFallback>
-        </Avatar>
-        {!collapsed && (
-          <div className="flex-1 truncate text-left">
-            <div className="text-sm font-medium leading-none">
-              {displayName}
-            </div>
-            <div className="text-xs text-sidebar-foreground/60 truncate">
-              {email}
-            </div>
-          </div>
-        )}
+        <Item size="sm" className="border-0 gap-3 p-2">
+          <ItemMedia variant="image">
+            <Avatar className="size-8">
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+          </ItemMedia>
+          {!collapsed && (
+            <ItemContent>
+              <ItemTitle className="text-sm">{displayName}</ItemTitle>
+              <ItemDescription className="text-xs text-sidebar-foreground/60">
+                {email}
+              </ItemDescription>
+            </ItemContent>
+          )}
+        </Item>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"

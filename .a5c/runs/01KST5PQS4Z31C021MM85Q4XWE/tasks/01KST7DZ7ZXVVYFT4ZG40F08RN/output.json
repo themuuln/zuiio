@@ -1,0 +1,5 @@
+{
+  "approved": true,
+  "response": "Logs only — ignore .a5c/logs/",
+  "level": "logs-only"
+}

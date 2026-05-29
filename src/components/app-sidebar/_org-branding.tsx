@@ -27,7 +27,7 @@ export function OrgBranding() {
     <div className="flex flex-col gap-2">
       <Link
         href="/dashboard"
-        className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-sidebar-accent/50 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-xl group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:border group-data-[collapsible=icon]:border-sidebar-border/60 group-data-[collapsible=icon]:bg-sidebar-accent/20 group-data-[collapsible=icon]:self-center"
+        className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-sidebar-accent/50 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-start group-data-[collapsible=icon]:rounded-xl group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:self-start group-data-[collapsible=icon]:ml-[-2px] group-data-[collapsible=icon]:group-hover:w-full group-data-[collapsible=icon]:group-hover:h-9 group-data-[collapsible=icon]:group-hover:pl-0 group-data-[collapsible=icon]:group-hover:pr-2 group-data-[collapsible=icon]:group-hover:bg-transparent group-data-[collapsible=icon]:group-hover:hover:bg-sidebar-accent/50"
       >
         <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sidebar-primary/95 text-sidebar-primary-foreground shadow-sm ring-1 ring-sidebar-primary/20">
           {logoUrl ? (
@@ -42,14 +42,8 @@ export function OrgBranding() {
             <span className="text-sm font-bold tracking-tight">T</span>
           )}
         </div>
-        <div className="grid min-w-0 flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
-          <span className="truncate text-[9px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/45">
-            Workspace
-          </span>
+        <div className="grid min-w-0 flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:group-hover:grid">
           <span className="truncate text-sm font-semibold">{name}</span>
-          <span className="truncate text-[10px] text-sidebar-foreground/55">
-            {org?.name ? "Operations hub" : "Loading..."}
-          </span>
         </div>
       </Link>
     </div>

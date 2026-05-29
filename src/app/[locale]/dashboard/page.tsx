@@ -19,6 +19,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
+import { Badge } from "@/components/ui/badge";
+import type { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import type { ExportColumn } from "@/lib/export";
 import { useDashboard } from "@/lib/queries/use-dashboard";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -57,6 +60,7 @@ export default function DashboardPage() {
   const t = useTranslations();
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("all");
+  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(undefined);
   // ── React Query hooks ───────────────────────────────
   const { data: org, isPending: orgLoading, error: orgError } = useCurrentOrg();
   const orgId = org?.orgId;
@@ -237,6 +241,35 @@ export default function DashboardPage() {
 
   const { summary, summaryComparison, insights, recentWorkOrders } = data ?? {};
 
+  const filteredWorkOrders = useMemo(() => {
+    if (!recentWorkOrders) return [];
+    if (!selectedRange || !selectedRange.from) return recentWorkOrders;
+
+    const fromStart = new Date(selectedRange.from);
+    fromStart.setHours(0, 0, 0, 0);
+
+    const toEnd = new Date(selectedRange.to || selectedRange.from);
+    toEnd.setHours(23, 59, 59, 999);
+
+    return recentWorkOrders.filter((wo) => {
+      if (!wo.created_at) return false;
+      const woDate = new Date(wo.created_at);
+      return woDate >= fromStart && woDate <= toEnd;
+    });
+  }, [recentWorkOrders, selectedRange]);
+
+  const rangeLabel = useMemo(() => {
+    if (!selectedRange || !selectedRange.from) return "";
+    const { from, to } = selectedRange;
+    const formatD = (d: Date) =>
+      d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+    if (!to || from.toDateString() === to.toDateString()) {
+      return formatD(from);
+    }
+    return `${formatD(from)} – ${formatD(to)}`;
+  }, [selectedRange]);
+
   const hasRevenue = summary ? summary.totalRevenue > 0 : false;
   const hasActiveWos = summary ? summary.activeWorkOrders > 0 : false;
 
@@ -397,19 +430,45 @@ export default function DashboardPage() {
       </div>
       {insightElements}
       {hasRevenue && data ? <ChartsSection data={data} /> : null}
-      <div>
-        <SectionHeader
-          title={t("dashboard.recentWorkOrders")}
-          description={t("dashboard.recentWorkOrdersDesc")}
-        />
-        <RecentWorkOrdersTable
-          workOrders={recentWorkOrders ?? []}
-          router={router}
-          t={t}
-          workOrdersForExport={dashboardExportColumns}
-        />
+      <div className="grid gap-6 lg:grid-cols-3 items-start">
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+              <SectionHeader
+                title={t("dashboard.recentWorkOrders")}
+                description={t("dashboard.recentWorkOrdersDesc")}
+              />
+              <div className="flex items-center gap-2">
+                <DateRangePicker
+                  value={selectedRange}
+                  onChange={setSelectedRange}
+                  className="w-[260px]"
+                  align="end"
+                />
+                {selectedRange && selectedRange.from && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 px-2 text-muted-foreground hover:text-foreground text-xs"
+                    onClick={() => setSelectedRange(undefined)}
+                  >
+                    Clear Filter
+                  </Button>
+                )}
+              </div>
+            </div>
+            <RecentWorkOrdersTable
+              workOrders={filteredWorkOrders}
+              router={router}
+              t={t}
+              workOrdersForExport={dashboardExportColumns}
+            />
+          </div>
+        </div>
+        <div className="flex flex-col gap-6">
+          <DailyTimeline orgId={orgId ?? ""} />
+        </div>
       </div>
-      <DailyTimeline orgId={orgId ?? ""} />
     </div>
   );
 

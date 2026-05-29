@@ -30,11 +30,22 @@ import {
   usePartsCarParts,
   useRemovePartsCarPart,
   useStartDisassembly,
+  usePublishPartsCarToCatalog,
+  usePartsCatalog,
 } from "@/lib/queries/use-inventory";
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxEmpty,
+} from "@/components/ui/combobox";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { PartsCarLocationGroup } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
+import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 
 interface PartsCarDetailSheetProps {
   open: boolean;
@@ -77,6 +88,10 @@ export function PartsCarDetailSheet({
   const completeDisassembly = useCompleteDisassembly(orgId);
   const addPart = useAddPartsCarPart(orgId);
   const removePart = useRemovePartsCarPart(orgId);
+  const publishToCatalog = usePublishPartsCarToCatalog(orgId);
+
+  const { data: catalogItems = [] } = usePartsCatalog(orgId);
+  const [selectedPartId, setSelectedPartId] = useState<string | null>(null);
 
   const [partName, setPartName] = useState("");
   const [partLocation, setPartLocation] =
@@ -120,6 +135,7 @@ export function PartsCarDetailSheet({
         await addPart.mutateAsync({
           carId,
           name: partName.trim(),
+          part_id: selectedPartId ?? undefined,
           location_group: partLocation,
           quantity: partQty,
           estimated_price: partPrice,
@@ -127,6 +143,7 @@ export function PartsCarDetailSheet({
         setPartName("");
         setPartQty(1);
         setPartPrice(0);
+        setSelectedPartId(null);
         nameInputRef.current?.focus();
       } catch (err) {
         toast.error(err instanceof Error ? err.message : t("toast.addError"));
@@ -134,7 +151,7 @@ export function PartsCarDetailSheet({
         setAdding(false);
       }
     },
-    [addPart, carId, partName, partLocation, partQty, partPrice, t],
+    [addPart, carId, partName, partLocation, partQty, partPrice, selectedPartId, t],
   );
 
   const handleRemovePart = useCallback(
@@ -151,6 +168,18 @@ export function PartsCarDetailSheet({
     [removePart, carId, t],
   );
 
+  const handlePublish = useCallback(async () => {
+    if (!carId) return;
+    try {
+      const result = await publishToCatalog.mutateAsync(carId);
+      toast.success(t("toast.published", { count: result.publishedCount }));
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : t("toast.publishError"),
+      );
+    }
+  }, [publishToCatalog, carId, t]);
+
   const totalCost = car?.purchase_cost ?? 0;
   const totalValue = parts.reduce(
     (sum, p) => sum + (p.estimated_price ?? 0) * (p.quantity ?? 1),
@@ -158,6 +187,7 @@ export function PartsCarDetailSheet({
   );
   const profit = totalValue - totalCost;
   const partsCount = parts.length;
+  const unpublishedPartsCount = parts.filter((p) => !p.part_id).length;
 
   const grouped = parts.reduce<Record<string, typeof parts>>((acc, p) => {
     const group = p.location_group ?? "other";
@@ -175,15 +205,10 @@ export function PartsCarDetailSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-2xl p-0 gap-0">
         <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
-              {isLoadingData ? (
-                <Loader2 className="size-5 animate-spin text-primary" />
-              ) : (
-                <Car className="size-5 text-primary" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
+          <DetailSheetHeader
+            icon={Car}
+            iconLoading={isLoadingData}
+            title={
               <SheetTitle className="text-base truncate">
                 {isLoadingData
                   ? "Loading…"
@@ -191,8 +216,10 @@ export function PartsCarDetailSheet({
                     ? `${car.make} ${car.model}`
                     : t("notFound")}
               </SheetTitle>
-              {car && (
-                <div className="flex items-center gap-2 mt-0.5">
+            }
+            subtitle={
+              car ? (
+                <>
                   <Badge variant="outline" className="text-xs">
                     {t(`status.${car.status}`)}
                   </Badge>
@@ -200,37 +227,51 @@ export function PartsCarDetailSheet({
                     {car.year && `${car.year} · `}
                     {formatMNT(car.purchase_cost)}
                   </span>
-                </div>
-              )}
-            </div>
-            {/* Action buttons in header */}
-            {car && (
-              <div className="flex items-center gap-1 shrink-0">
-                {car.status === "arrived" && (
-                  <Button
-                    size="sm"
-                    onClick={handleStart}
-                    disabled={startDisassembly.isPending}
-                  >
-                    {startDisassembly.isPending
-                      ? t("actions.starting")
-                      : t("actions.startDisassembly")}
-                  </Button>
-                )}
-                {car.status === "disassembling" && (
-                  <Button
-                    size="sm"
-                    onClick={handleComplete}
-                    disabled={completeDisassembly.isPending || partsCount === 0}
-                  >
-                    {completeDisassembly.isPending
-                      ? t("actions.completing")
-                      : t("actions.completeDisassembly")}
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
+                </>
+              ) : undefined
+            }
+            actions={
+              car ? (
+                <>
+                  {car.status === "arrived" && (
+                    <Button
+                      size="sm"
+                      onClick={handleStart}
+                      disabled={startDisassembly.isPending}
+                    >
+                      {startDisassembly.isPending
+                        ? t("actions.starting")
+                        : t("actions.startDisassembly")}
+                    </Button>
+                  )}
+                  {car.status === "disassembling" && (
+                    <Button
+                      size="sm"
+                      onClick={handleComplete}
+                      disabled={
+                        completeDisassembly.isPending || partsCount === 0
+                      }
+                    >
+                      {completeDisassembly.isPending
+                        ? t("actions.completing")
+                        : t("actions.completeDisassembly")}
+                    </Button>
+                  )}
+                  {car.status === "completed" && unpublishedPartsCount > 0 && (
+                    <Button
+                      size="sm"
+                      onClick={handlePublish}
+                      disabled={publishToCatalog.isPending}
+                    >
+                      {publishToCatalog.isPending
+                        ? t("actions.publishing")
+                        : t("actions.publishToCatalog")}
+                    </Button>
+                  )}
+                </>
+              ) : undefined
+            }
+          />
         </SheetHeader>
 
         {isLoadingData && (
@@ -295,14 +336,67 @@ export function PartsCarDetailSheet({
                 </span>
                 <form
                   onSubmit={handleAddPart}
-                  className="mt-2 flex flex-col gap-2"
+                  className="mt-2 flex flex-col gap-2.5"
                 >
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t("partForm.searchCatalog")}
+                    </span>
+                    <Combobox
+                      items={catalogItems}
+                      value={catalogItems.find((item) => item.id === selectedPartId) ?? null}
+                      onValueChange={(item) => {
+                        if (item) {
+                          setSelectedPartId(item.id);
+                          setPartName(item.name);
+                          if (item.category && LOCATION_GROUPS.includes(item.category as PartsCarLocationGroup)) {
+                            setPartLocation(item.category as PartsCarLocationGroup);
+                          }
+                          if (item.default_price) {
+                            setPartPrice(item.default_price);
+                          }
+                        } else {
+                          setSelectedPartId(null);
+                        }
+                      }}
+                      isItemEqualToValue={(a, b) => a?.id === b?.id}
+                      itemToStringLabel={(item) => item?.name ?? ""}
+                    >
+                      <ComboboxInput
+                        placeholder={t("partForm.namePlaceholder")}
+                        showTrigger
+                        showClear={!!selectedPartId}
+                        className="h-9 text-xs"
+                      />
+                      <ComboboxContent>
+                        <ComboboxList>
+                          {(item) => (
+                            <ComboboxItem key={item.id} value={item} className="text-xs">
+                              <span>{item.name}</span>
+                              {item.part_number && (
+                                <span className="text-[10px] text-muted-foreground ml-1.5 font-mono">
+                                  ({item.part_number})
+                                </span>
+                              )}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                        <ComboboxEmpty className="text-xs">
+                          {t("partForm.catalogEmpty")}
+                        </ComboboxEmpty>
+                      </ComboboxContent>
+                    </Combobox>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       ref={nameInputRef}
                       value={partName}
-                      onChange={(e) => setPartName(e.target.value)}
-                      placeholder="Part name"
+                      onChange={(e) => {
+                        setPartName(e.target.value);
+                        setSelectedPartId(null);
+                      }}
+                      placeholder={t("partForm.namePlaceholder")}
                       className="h-9 text-sm"
                     />
                     <select
@@ -314,7 +408,7 @@ export function PartsCarDetailSheet({
                     >
                       {LOCATION_GROUPS.map((g) => (
                         <option key={g} value={g}>
-                          {g}
+                          {t(`locations.${g}`)}
                         </option>
                       ))}
                     </select>
@@ -349,6 +443,44 @@ export function PartsCarDetailSheet({
                       )}
                     </Button>
                   </div>
+
+                  {/* Quick Templates */}
+                  <div className="flex flex-col gap-1.5 mt-1">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t("templates.title")}
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {Object.entries({
+                        engine: "engine",
+                        transmission: "transmission",
+                        starter: "engine",
+                        alternator: "engine",
+                        radiator: "cooling",
+                        shock: "suspension",
+                        caliper: "brake",
+                        frontBumper: "body",
+                        rearBumper: "body",
+                        headlight: "body",
+                        door: "body",
+                      }).map(([key, group]) => {
+                        const name = t(`templates.${key}`);
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => {
+                              setPartName(name);
+                              setPartLocation(group as PartsCarLocationGroup);
+                              setSelectedPartId(null);
+                            }}
+                            className="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs font-medium bg-background text-foreground hover:bg-muted transition-colors cursor-pointer"
+                          >
+                            {name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </form>
               </div>
             )}
@@ -366,8 +498,8 @@ export function PartsCarDetailSheet({
                 <div className="mt-2 flex flex-col gap-3">
                   {Object.entries(grouped).map(([group, groupParts]) => (
                     <div key={group}>
-                      <div className="text-xs font-medium text-muted-foreground capitalize mb-1">
-                        {group} ({groupParts.length})
+                      <div className="text-xs font-medium text-muted-foreground mb-1">
+                        {t(`locations.${group}`)} ({groupParts.length})
                       </div>
                       <div className="flex flex-col gap-1">
                         {groupParts.map((part) => (
@@ -375,9 +507,14 @@ export function PartsCarDetailSheet({
                             key={part.id}
                             className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2"
                           >
-                            <div className="min-w-0">
-                              <div className="text-sm font-medium truncate">
-                                {part.name}
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium truncate flex items-center gap-1.5 flex-wrap">
+                                <span>{part.name}</span>
+                                {part.part_id && (
+                                  <Badge variant="outline" className="text-[10px] py-0 px-1 border-primary/20 text-primary bg-primary/5 font-normal shrink-0">
+                                    {t("inCatalog")}
+                                  </Badge>
+                                )}
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {part.quantity}× ·{" "}

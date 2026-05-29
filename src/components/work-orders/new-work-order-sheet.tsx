@@ -132,13 +132,14 @@ export function NewWorkOrderSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="flex w-full flex-col gap-0 p-0 sm:max-w-lg md:max-w-xl"
+        size="xl"
+        className="flex w-full flex-col gap-0 p-0"
         showCloseButton
       >
         <SheetHeader className="px-4 pt-4">
           <SheetTitle>{t("newWorkOrder")}</SheetTitle>
         </SheetHeader>
-        <WizardProvider>
+        <WizardProvider onCreated={() => onOpenChange(false)}>
           <ScrollArea className="min-h-0 flex-1">
             <NewWorkOrderSheetForm onClose={() => onOpenChange(false)} />
           </ScrollArea>

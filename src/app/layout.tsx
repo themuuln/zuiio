@@ -55,11 +55,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <head>
-        <Script
-          src="//unpkg.com/react-grab/dist/index.global.js"
-          crossOrigin="anonymous"
-          strategy="beforeInteractive"
-        />
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
       </head>
       <body className="flex min-h-dvh flex-col">
         <ThemeProvider>{children}</ThemeProvider>

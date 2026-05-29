@@ -3,6 +3,23 @@
     "name": "TOLOM",
     "tagline": "Auto Service Management Platform"
   },
+  "dateRangePicker": {
+    "placeholder": "Select date range",
+    "commonGroup": "Common",
+    "extendedGroup": "Extended",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This Week",
+    "lastWeek": "Last Week",
+    "last7Days": "Last 7 Days",
+    "last14Days": "Last 14 Days",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "last30Days": "Last 30 Days",
+    "last90Days": "Last 90 Days",
+    "thisYear": "This Year",
+    "allTime": "All Time"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -92,8 +109,8 @@
     "login": {
       "title": "Sign in to TOLOM",
       "subtitle": "Enter your credentials to continue",
-      "emailLabel": "Email",
-      "emailPlaceholder": "you@example.com",
+      "emailOrPhoneLabel": "Email or phone",
+      "emailOrPhonePlaceholder": "you@example.com or +976 99112233",
       "passwordLabel": "Password",
       "passwordPlaceholder": "••••••••",
       "submit": "Sign in",
@@ -109,8 +126,10 @@
       "organizationPlaceholder": "Acme Auto Shop",
       "fullNameLabel": "Full name",
       "fullNamePlaceholder": "John Smith",
-      "emailLabel": "Email",
-      "emailPlaceholder": "you@example.com",
+      "emailOrPhoneLabel": "Email or phone",
+      "emailOrPhonePlaceholder": "you@example.com or +976 99112233",
+      "phoneLabel": "Phone (optional)",
+      "phonePlaceholder": "+976 99112233",
       "passwordLabel": "Password",
       "passwordPlaceholder": "At least 8 characters",
       "confirmPasswordLabel": "Confirm password",
@@ -626,7 +645,8 @@
     "complaint": "Complaint / Diagnosis",
     "complaintPlaceholder": "Describe the issue reported by the customer...",
     "diagnosisLabelPlaceholder": "Select diagnosis label...",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "change": "Change"
   },
   "inventory": {
     "title": "Inventory",
@@ -1168,7 +1188,9 @@
     "paginationPrev": "Previous",
     "paginationNext": "Next",
     "createSubtitle": "Create a customer record before check-in or invoicing.",
-    "customerNotFound": "Customer not found."
+    "customerNotFound": "Customer not found.",
+    "quickCreateCustomer": "Quick",
+    "createCustomer": "Create Customer"
   },
   "vehicles": {
     "title": "Vehicles",
@@ -1268,7 +1290,8 @@
     "createVehicle": "Create vehicle",
     "plateRequired": "Plate number is required",
     "plateInvalid": "Must be 4 digits + 3 letters (e.g. 4444УНА)",
-    "vehicleNotFound": "Vehicle not found."
+    "vehicleNotFound": "Vehicle not found.",
+    "quickCreateVehicle": "Quick Vehicle"
   },
   "vehicleModels": {
     "title": "Vehicle Models",
@@ -1739,6 +1762,7 @@
     "empty": "No parts cars",
     "emptyAction": "Register new car",
     "notFound": "Car not found",
+    "inCatalog": "In Catalog",
     "back": "Back",
     "status": {
       "arrived": "Arrived",
@@ -1774,7 +1798,9 @@
       "quantity": "Qty",
       "decrementAria": "Decrease quantity",
       "incrementAria": "Increase quantity",
-      "price": "Price (₮)"
+      "price": "Price (₮)",
+      "searchCatalog": "Select from Catalog (Optional)",
+      "catalogEmpty": "No catalog parts found"
     },
     "partsSection": {
       "title": "Parts",
@@ -1817,8 +1843,22 @@
       "exhaust": "Exhaust",
       "fuel": "Fuel",
       "steering": "Steering",
-      "ac": "A/C",
+      "ac": "AC",
       "other": "Other"
+    },
+    "templates": {
+      "title": "Quick Templates",
+      "engine": "Engine Block",
+      "transmission": "Transmission (Gearbox)",
+      "starter": "Starter Motor",
+      "alternator": "Alternator",
+      "radiator": "Radiator",
+      "shock": "Shock Absorber",
+      "caliper": "Brake Caliper",
+      "frontBumper": "Front Bumper",
+      "rearBumper": "Rear Bumper",
+      "headlight": "Headlight",
+      "door": "Door"
     }
   },
   "diagnosisLabels": {

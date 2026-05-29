@@ -14,6 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getInitials } from "@/lib/utils";
+import {
+  Item,
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemDescription,
+} from "@/components/ui/item";
 
 export function NavUser() {
   const [profile, setProfile] = useState<{
@@ -64,19 +71,19 @@ export function NavUser() {
         sideOffset={6}
       >
         <DropdownMenuGroup>
-          <div className="flex items-center gap-2 px-1.5 py-2 text-left text-sm">
-            <Avatar className="size-8">
-              <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
-                {loading ? "…" : initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{displayName}</span>
-              <span className="truncate text-[11px] text-muted-foreground">
-                {email}
-              </span>
-            </div>
-          </div>
+          <Item size="sm" className="border-0 px-1.5 py-2">
+            <ItemMedia variant="image">
+              <Avatar className="size-8">
+                <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
+                  {loading ? "…" : initials}
+                </AvatarFallback>
+              </Avatar>
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle className="text-sm">{displayName}</ItemTitle>
+              <ItemDescription className="text-[11px]">{email}</ItemDescription>
+            </ItemContent>
+          </Item>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>

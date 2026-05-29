@@ -22,6 +22,13 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Typography } from "@/components/ui/typography";
+import {
+  Item,
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemActions,
+} from "@/components/ui/item";
 import { formatPlateInput, inputProps } from "@/lib/form-ux";
 import {
   isValidMongolianPlate,
@@ -236,14 +243,22 @@ export function VehicleSelect({
       </CardHeader>
       <CardContent>
         {selectedVehicle ? (
-          <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50/30 dark:border-green-800/30 dark:bg-green-950/10 p-4">
-            <div className="flex items-center gap-3">
-              <Car className="size-5 text-green-600" />
-              <div>
+          <Item
+            variant="outline"
+            className="border-green-200 bg-green-50/30 dark:border-green-800/30 dark:bg-green-950/10 p-4"
+          >
+            <ItemMedia
+              variant="icon"
+              className="[&_svg]:size-5 [&_svg]:text-green-600"
+            >
+              <Car />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>
                 <span className="font-mono font-semibold">
                   {selectedVehicle.plate_number}
                 </span>
-                <span className="ml-3 text-sm text-muted-foreground">
+                <span className="ml-3 text-sm font-normal text-muted-foreground">
                   {[
                     selectedVehicle.year,
                     selectedVehicle.make,
@@ -252,12 +267,14 @@ export function VehicleSelect({
                     .filter(Boolean)
                     .join(" ")}
                 </span>
-              </div>
-            </div>
-            <Button variant="ghost" size="sm" onClick={onClear}>
-              Change
-            </Button>
-          </div>
+              </ItemTitle>
+            </ItemContent>
+            <ItemActions>
+              <Button variant="ghost" size="sm" onClick={onClear}>
+                Change
+              </Button>
+            </ItemActions>
+          </Item>
         ) : (
           <div className="flex flex-col gap-3">
             <SearchInput

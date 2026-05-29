@@ -610,7 +610,7 @@ export function BayViewV2Client() {
             {/* Left Controls (View Selector, Filter, Refresh) */}
             <div className="flex flex-wrap items-center gap-2">
               {/* Segmented view selector */}
-              <div className="flex items-center gap-0.5 rounded-lg border border-border/50 bg-muted/40 p-0.5 shadow-sm">
+              <div className="flex items-center gap-0.5 rounded-lg border border-border/50 bg-muted/40 p-0.5 shadow-sm h-8">
                 {VIEW_OPTIONS.map((opt) => {
                   const Icon = opt.icon;
                   const isActive = viewMode === opt.mode;
@@ -620,7 +620,7 @@ export function BayViewV2Client() {
                       type="button"
                       onClick={() => setViewMode(opt.mode)}
                       className={cn(
-                        "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer h-7",
+                        "flex items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-all cursor-pointer h-full",
                         isActive
                           ? "bg-background text-foreground shadow-sm font-bold border border-border/30"
                           : "text-muted-foreground/80 hover:bg-muted/70 hover:text-foreground",
@@ -657,11 +657,11 @@ export function BayViewV2Client() {
               {/* Refresh Button */}
               <Button
                 type="button"
-                size="icon-sm"
+                size="icon"
                 variant="outline"
                 onClick={() => fetchData(true)}
                 title={t("refresh")}
-                className="h-8 w-8 rounded-lg border-border/50 text-muted-foreground shadow-sm hover:text-foreground cursor-pointer"
+                className="rounded-lg border-border/50 text-muted-foreground shadow-sm hover:text-foreground cursor-pointer"
               >
                 <RefreshCw className="size-3.5" />
               </Button>
@@ -670,17 +670,16 @@ export function BayViewV2Client() {
             {/* Right Controls (Action Buttons & Bay Count) */}
             <div className="flex flex-wrap items-center gap-3">
               {/* Quick Admin Actions Box */}
-              <div className="flex items-center gap-1 rounded-lg border border-border/50 bg-card p-1 shadow-sm">
+              <div className="flex items-center gap-1 rounded-lg border border-border/50 bg-card px-1 shadow-sm h-8">
                 <Tooltip>
                   <TooltipTrigger
-                    className="size-7 shrink-0 cursor-pointer"
                     render={
                       <Button
                         type="button"
-                        size="icon-xs"
+                        size="icon-sm"
                         variant="ghost"
                         onClick={() => setShowVehicleReg(true)}
-                        className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85"
+                        className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
                       />
                     }
                   >
@@ -696,14 +695,13 @@ export function BayViewV2Client() {
 
                 <Tooltip>
                   <TooltipTrigger
-                    className="size-7 shrink-0 cursor-pointer"
                     render={
                       <Button
                         type="button"
-                        size="icon-xs"
+                        size="icon-sm"
                         variant="ghost"
                         onClick={() => setShowMechanicReg(true)}
-                        className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85"
+                        className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
                       />
                     }
                   >
@@ -719,14 +717,13 @@ export function BayViewV2Client() {
 
                 <Tooltip>
                   <TooltipTrigger
-                    className="size-7 shrink-0 cursor-pointer"
                     render={
                       <Button
                         type="button"
-                        size="icon-xs"
+                        size="icon-sm"
                         variant="ghost"
                         onClick={() => setShowShiftReport(true)}
-                        className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85"
+                        className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
                       />
                     }
                   >
@@ -742,14 +739,13 @@ export function BayViewV2Client() {
 
                 <Tooltip>
                   <TooltipTrigger
-                    className="size-7 shrink-0 cursor-pointer"
                     render={
                       <Button
                         type="button"
-                        size="icon-xs"
+                        size="icon-sm"
                         variant="ghost"
                         onClick={() => setShowPinSettings(true)}
-                        className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85"
+                        className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
                       />
                     }
                   >
@@ -765,11 +761,11 @@ export function BayViewV2Client() {
               </div>
 
               {/* Digital Bay Counter */}
-              <div className="flex items-center gap-1.5 border border-border/50 bg-card rounded-lg p-0.5 pr-2.5 pl-1.5 shadow-sm">
+              <div className="flex items-center gap-1.5 border border-border/50 bg-card rounded-lg p-0.5 pr-2.5 pl-1.5 shadow-sm h-8">
                 <span className="text-[10px] font-mono font-black text-muted-foreground/75 uppercase tracking-wider px-1 select-none">
                   Bays
                 </span>
-                <div className="flex items-center gap-0.5 rounded border border-border/40 bg-muted/20 p-0.5">
+                <div className="flex items-center gap-0.5 rounded border border-border/40 bg-muted/20 p-0.5 h-full">
                   <Button
                     type="button"
                     size="icon-xs"
@@ -782,7 +778,7 @@ export function BayViewV2Client() {
                       await applyBayCountChange(next);
                     }}
                     disabled={bayCountPending || data.bayCount <= 1}
-                    className="h-5 w-5 rounded hover:bg-background cursor-pointer text-muted-foreground"
+                    className="size-5 rounded hover:bg-background cursor-pointer text-muted-foreground"
                   >
                     <Minus className="size-2.5" />
                   </Button>
@@ -835,7 +831,7 @@ export function BayViewV2Client() {
                       await applyBayCountChange(next);
                     }}
                     disabled={bayCountPending || data.bayCount >= 50}
-                    className="h-5 w-5 rounded hover:bg-background cursor-pointer text-muted-foreground"
+                    className="size-5 rounded hover:bg-background cursor-pointer text-muted-foreground"
                   >
                     <Plus className="size-2.5" />
                   </Button>
@@ -1005,7 +1001,7 @@ export function BayViewV2Client() {
                                 });
                               }
                             }}
-                            className="h-5 w-5 rounded hover:bg-muted text-muted-foreground/80 hover:text-foreground cursor-pointer"
+                            className="size-5 rounded hover:bg-muted text-muted-foreground/80 hover:text-foreground cursor-pointer"
                             title="Assign vehicle to an empty bay"
                           >
                             <Plus className="size-3" />
@@ -1093,7 +1089,7 @@ export function BayViewV2Client() {
                           });
                         }
                       }}
-                      className="h-5 w-5 rounded hover:bg-muted text-muted-foreground/80 hover:text-foreground cursor-pointer"
+                      className="size-5 rounded hover:bg-muted text-muted-foreground/80 hover:text-foreground cursor-pointer"
                       title="Assign vehicle to an empty bay"
                     >
                       <Plus className="size-3" />

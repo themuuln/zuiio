@@ -8,6 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CustomerForm } from "@/components/customers/customer-form";
 import { Typography } from "@/components/ui/typography";
+import {
+  Item,
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemActions,
+} from "@/components/ui/item";
 import { useWizardContext } from "./wizard-context";
 
 export function CustomerSection() {
@@ -56,26 +63,32 @@ export function CustomerSection() {
       </CardHeader>
       <CardContent>
         {ctx.selectedCustomer ? (
-          <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50/30 dark:border-green-800/30 dark:bg-green-950/10 p-4">
-            <div className="flex items-center gap-3">
-              <User className="size-5 text-green-600" />
-              <div>
-                <span className="font-medium">
-                  {[
-                    ctx.selectedCustomer.first_name,
-                    ctx.selectedCustomer.last_name,
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                </span>
+          <Item
+            variant="outline"
+            className="border-green-200 bg-green-50/30 dark:border-green-800/30 dark:bg-green-950/10 p-4"
+          >
+            <ItemMedia
+              variant="icon"
+              className="[&_svg]:size-5 [&_svg]:text-green-600"
+            >
+              <User />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>
+                {[
+                  ctx.selectedCustomer.first_name,
+                  ctx.selectedCustomer.last_name,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 {ctx.selectedCustomer.phone && (
-                  <span className="ml-2 text-sm text-muted-foreground">
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
                     {ctx.selectedCustomer.phone}
                   </span>
                 )}
-              </div>
-            </div>
-            <div>
+              </ItemTitle>
+            </ItemContent>
+            <ItemActions>
               <Button
                 variant="ghost"
                 size="sm"
@@ -87,8 +100,8 @@ export function CustomerSection() {
                 <User className="size-4" />
                 {t("change")}
               </Button>
-            </div>
-          </div>
+            </ItemActions>
+          </Item>
         ) : (
           <div className="flex flex-col gap-3">
             <SearchInput

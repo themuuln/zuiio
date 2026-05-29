@@ -555,6 +555,11 @@ export async function addPartToWorkOrder(
 ): Promise<WorkOrderPart> {
   const supabase = await createClient();
 
+  // Get current user for RLS compliance
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const quantity = partData.quantity ?? 1;
   const unitPrice = partData.unit_price;
   let finalPrice = unitPrice * quantity;
@@ -593,6 +598,7 @@ export async function addPartToWorkOrder(
       discount_percentage: partData.discount_percentage ?? 0,
       final_price: finalPrice,
       notes: partData.notes ?? null,
+      created_by: user?.id ?? null,
     })
     .select(
       "id, work_order_id, organization_id, part_id, part_name, part_number, quantity, unit_price, unit_cost, discount_amount, discount_percentage, final_price, notes, created_at",

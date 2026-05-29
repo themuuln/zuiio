@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
+import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import { inputProps } from "@/lib/form-ux";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useSuppliers, useUpdateSupplier } from "@/lib/queries/use-inventory";
@@ -138,17 +139,19 @@ export function SupplierDetailSheet({
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg p-0 gap-0">
         <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
-              <Pencil className="size-5 text-primary" />
-            </div>
-            <div>
-              <SheetTitle className="text-base">{t("editSupplier")}</SheetTitle>
-              <SheetDescription className="text-xs text-muted-foreground">
-                {supplier?.name ?? "..."}
-              </SheetDescription>
-            </div>
-          </div>
+          <DetailSheetHeader
+            icon={Pencil}
+            title={
+              <>
+                <SheetTitle className="text-base">
+                  {t("editSupplier")}
+                </SheetTitle>
+                <SheetDescription className="text-xs text-muted-foreground">
+                  {supplier?.name ?? "..."}
+                </SheetDescription>
+              </>
+            }
+          />
         </SheetHeader>
 
         <form

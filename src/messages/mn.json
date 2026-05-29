@@ -3,6 +3,23 @@
     "name": "TOLOM",
     "tagline": "Авто засварын удирдлагын систем"
   },
+  "dateRangePicker": {
+    "placeholder": "Хугацаа сонгох",
+    "commonGroup": "Түгээмэл",
+    "extendedGroup": "Нэмэлт",
+    "today": "Өнөөдөр",
+    "yesterday": "Өчигдөр",
+    "thisWeek": "Энэ долоо хоног",
+    "lastWeek": "Өнгөрсөн долоо хоног",
+    "last7Days": "Сүүлийн 7 хоног",
+    "last14Days": "Сүүлийн 14 хоног",
+    "thisMonth": "Энэ сар",
+    "lastMonth": "Өнгөрсөн сар",
+    "last30Days": "Сүүлийн 30 хоног",
+    "last90Days": "Сүүлийн 90 хоног",
+    "thisYear": "Энэ жил",
+    "allTime": "Бүх цаг үе"
+  },
   "common": {
     "save": "Хадгалах",
     "cancel": "Цуцлах",
@@ -92,8 +109,8 @@
     "login": {
       "title": "TOLOM-д нэвтрэх",
       "subtitle": "Өөрийн бүртгэлээр нэвтэрнэ үү",
-      "emailLabel": "Имэйл",
-      "emailPlaceholder": "tanii@example.com",
+      "emailOrPhoneLabel": "Имэйл эсвэл утас",
+      "emailOrPhonePlaceholder": "tanii@example.com эсвэл +976 99112233",
       "passwordLabel": "Нууц үг",
       "passwordPlaceholder": "••••••••",
       "submit": "Нэвтрэх",
@@ -109,8 +126,10 @@
       "organizationPlaceholder": "Шинийн Авто Засвар",
       "fullNameLabel": "Бүтэн нэр",
       "fullNamePlaceholder": "Бат Дорж",
-      "emailLabel": "Имэйл",
-      "emailPlaceholder": "tanii@example.com",
+      "emailOrPhoneLabel": "Имэйл эсвэл утас",
+      "emailOrPhonePlaceholder": "tanii@example.com эсвэл +976 99112233",
+      "phoneLabel": "Утас (нэмэлт)",
+      "phonePlaceholder": "+976 99112233",
       "passwordLabel": "Нууц үг",
       "passwordPlaceholder": "Хамгийн багадаа 8 тэмдэгт",
       "confirmPasswordLabel": "Нууц үг давтах",
@@ -629,7 +648,8 @@
     "createVehicle": "Тээврийн хэрэгсэл үүсгэх",
     "quickCreateCustomerDescription": "Системд шинэ харилцагч нэмэх",
     "quickCreateVehicleDescription": "Системд шинэ тээврийн хэрэгсэл нэмэх",
-    "cancel": "Цуцлах"
+    "cancel": "Цуцлах",
+    "change": "Солих"
   },
   "inventory": {
     "title": "Бараа материал",
@@ -1171,7 +1191,9 @@
     "paginationPrev": "Өмнөх",
     "paginationNext": "Дараах",
     "createSubtitle": "Харилцагчийн бүртгэлийг үйлчилгээний өмнө үүсгэнэ үү.",
-    "customerNotFound": "Харилцагч олдсонгүй."
+    "customerNotFound": "Харилцагч олдсонгүй.",
+    "quickCreateCustomer": "Хурдан",
+    "createCustomer": "Харилцагч үүсгэх"
   },
   "vehicles": {
     "title": "Тээврийн хэрэгсэл",
@@ -1271,7 +1293,8 @@
     "createVehicle": "Тээврийн хэрэгсэл үүсгэх",
     "plateRequired": "Улсын дугаар шаардлагатай",
     "plateInvalid": "4 оронтой тоо + 3 үсэг байх ёстой (жишээ: 4444УНА)",
-    "vehicleNotFound": "Машин олдсонгүй."
+    "vehicleNotFound": "Машин олдсонгүй.",
+    "quickCreateVehicle": "Хурдан тээвэр"
   },
   "vehicleModels": {
     "title": "Машины загварууд",
@@ -1742,6 +1765,7 @@
     "empty": "Задаргааны машин байхгүй",
     "emptyAction": "Шинэ машин бүртгэх",
     "notFound": "Машин олдсонгүй",
+    "inCatalog": "Каталогт орсон",
     "back": "Буцах",
     "status": {
       "arrived": "Ирсэн",
@@ -1777,7 +1801,9 @@
       "quantity": "Тоо",
       "decrementAria": "Тоо хэмжээ хасах",
       "incrementAria": "Тоо хэмжээ нэмэх",
-      "price": "Үнэ (₮)"
+      "price": "Үнэ (₮)",
+      "searchCatalog": "Үндсэн каталогоос сонгох (Сонголттой)",
+      "catalogEmpty": "Каталогт сэлбэг олдсонгүй"
     },
     "partsSection": {
       "title": "Сэлбэгүүд",
@@ -1822,6 +1848,20 @@
       "steering": "Жолооны механизм",
       "ac": "Кондиционер",
       "other": "Бусад"
+    },
+    "templates": {
+      "title": "Хурдан сонгох",
+      "engine": "Хөдөлгүүр блок",
+      "transmission": "Кроп (Хурдны хайрцаг)",
+      "starter": "Стартер",
+      "alternator": "Динамо",
+      "radiator": "Радиатор",
+      "shock": "Амортизатор",
+      "caliper": "Тормозны аппарат",
+      "frontBumper": "Урд гупер",
+      "rearBumper": "Хойд гупер",
+      "headlight": "Толгой гэрэл",
+      "door": "Хаалга"
     }
   },
   "diagnosisLabels": {

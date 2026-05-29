@@ -9,6 +9,9 @@ import {
   ComboboxItem,
   ComboboxEmpty,
 } from "@/components/ui/combobox";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
 
 interface Mechanic {
   id: string;
@@ -82,12 +85,26 @@ export function MechanicSelect({
         />
         <ComboboxContent>
           <ComboboxList>
-            {(mechanic: Mechanic) => (
-              <ComboboxItem key={mechanic.id} value={mechanic}>
-                <User className="size-4 shrink-0 text-muted-foreground" />
-                <span>{getMechanicLabel(mechanic, showJobCount)}</span>
-              </ComboboxItem>
-            )}
+            {(mechanic: Mechanic) => {
+              const color = getMechanicColor(mechanic.id);
+              const initials = getMechanicInitials(getMechanicName(mechanic));
+              return (
+                <ComboboxItem key={mechanic.id} value={mechanic}>
+                  <Avatar className="size-5 shrink-0">
+                    <AvatarFallback
+                      className={cn(
+                        "text-[9px] font-medium",
+                        color.bg,
+                        color.text,
+                      )}
+                    >
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span>{getMechanicLabel(mechanic, showJobCount)}</span>
+                </ComboboxItem>
+              );
+            }}
           </ComboboxList>
           <ComboboxEmpty>No mechanics found</ComboboxEmpty>
         </ComboboxContent>

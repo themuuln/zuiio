@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KST7DZ7ZXVVYFT4ZG40F08RN",
+  "taskId": "__sdk.breakpoint",
+  "invocationKey": "project-install:S000012:__sdk.breakpoint",
+  "status": "ok",
+  "result": {
+    "approved": true,
+    "level": "logs-only",
+    "response": "Logs only — ignore .a5c/logs/"
+  },
+  "startedAt": "2026-05-29T16:05:34.665Z",
+  "finishedAt": "2026-05-29T16:05:34.665Z",
+  "value": {
+    "approved": true,
+    "level": "logs-only",
+    "response": "Logs only — ignore .a5c/logs/"
+  }
+}

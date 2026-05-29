@@ -12,9 +12,7 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
 import {
   type LastVisitInfo,
   type MechanicOption,
@@ -36,7 +34,7 @@ import {
   type GlobalService,
   type GlobalPart,
 } from "@/lib/queries/use-global-catalog";
-import { Typography } from "@/components/ui/typography";
+
 import type {
   Customer,
   PartsCatalogItem,
@@ -75,7 +73,6 @@ interface WizardDraft {
   partLines: PartLine[];
   savedAt: number;
 }
-
 const DRAFT_KEY = (orgId: string) => `wizard-draft-${orgId}`;
 
 interface WizardState {
@@ -170,8 +167,8 @@ interface WizardActions {
   addAllFromLastVisit: () => void;
 
   handleCreate: () => Promise<void>;
-  handleDiscardDraft: () => void;
-  handleRestoreDraft: () => void;
+  // handleDiscardDraft: () => void; // draft feature hidden
+  // handleRestoreDraft: () => void; // draft feature hidden
 }
 
 type WizardContextType = WizardState & WizardActions;
@@ -185,7 +182,12 @@ export function useWizardContext() {
   return ctx;
 }
 
-export function WizardProvider({ children }: { children: ReactNode }) {
+interface WizardProviderProps {
+  children: ReactNode;
+  onCreated?: () => void;
+}
+
+export function WizardProvider({ children, onCreated }: WizardProviderProps) {
   const { push } = useRouter();
   const searchParams = useSearchParams();
   const preselectedCustomerId = searchParams.get("customerId");
@@ -242,7 +244,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
   // ── Draft auto-save state ──────────────────────────────────────
   const [draftData, setDraftData] = useState<WizardDraft | null>(null);
-  const [showDraftBanner, setShowDraftBanner] = useState(false);
+
   const [draftRestored, setDraftRestored] = useState(false);
   const draftCheckedRef = useRef(false);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -335,11 +337,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     mechanicsLoading ||
     priceHistoryLoading;
   const saving = createWorkOrderMutation.isPending;
-  const isRestoringFromDraft =
-    draftRestored &&
-    !!draftData &&
-    ((!!draftData.selectedCustomerId && !selectedCustomer) ||
-      (!!draftData.selectedVehicleId && !selectedVehicle));
+  const isRestoringFromDraft = false; // draft feature hidden
   const customerSearching = customerSearchFetching || plateSearchFetching;
   const vehicleSearching = vehicleSearchFetching;
 
@@ -438,7 +436,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       const draft = JSON.parse(raw) as WizardDraft;
       if (!draft || typeof draft.savedAt !== "number") return;
       setDraftData(draft);
-      setShowDraftBanner(true);
     } catch {
       // Invalid or inaccessible draft — ignore silently
     }
@@ -492,45 +489,11 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("beforeunload", handler);
   }, []);
 
-  // 4. Fetch draft customer entity once user clicks Restore
-  const { data: draftRestoredCustomer } = useQuery({
-    queryKey: ["draft-customer", orgId, draftData?.selectedCustomerId],
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/customers/${draftData!.selectedCustomerId}`,
-      );
-      const json = await res.json();
-      return json.data as Customer;
-    },
-    enabled: !!orgId && !!draftData?.selectedCustomerId && draftRestored,
-    staleTime: 30_000,
-  });
-
-  useEffect(() => {
-    if (draftRestoredCustomer) {
-      setSelectedCustomer(draftRestoredCustomer);
-    }
-  }, [draftRestoredCustomer]);
-
-  // 5. Fetch draft vehicle entity once user clicks Restore
-  const { data: draftRestoredVehicle } = useQuery({
-    queryKey: ["draft-vehicle", orgId, draftData?.selectedVehicleId],
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/vehicles/${draftData!.selectedVehicleId}`,
-      );
-      const json = await res.json();
-      return json.data as Vehicle;
-    },
-    enabled: !!orgId && !!draftData?.selectedVehicleId && draftRestored,
-    staleTime: 30_000,
-  });
-
-  useEffect(() => {
-    if (draftRestoredVehicle) {
-      setSelectedVehicle(draftRestoredVehicle);
-    }
-  }, [draftRestoredVehicle]);
+  // ── Draft restore queries (hidden per user request) ─────────────
+  // const { data: draftRestoredCustomer } = useQuery({ ... });
+  // useEffect(() => { ... set customer from draft ... }, [draftRestoredCustomer]);
+  // const { data: draftRestoredVehicle } = useQuery({ ... });
+  // useEffect(() => { ... set vehicle from draft ... }, [draftRestoredVehicle]);
 
   const handleSelectCustomer = useCallback((customer: Customer) => {
     setSelectedCustomer(customer);
@@ -864,6 +827,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
             /* ignore */
           }
           toast.success("Work order created");
+          onCreated?.();
           push(`/dashboard/work-orders/${data.id}`);
         },
         onError: (err) => {
@@ -881,7 +845,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       /* ignore */
     }
     setDraftData(null);
-    setShowDraftBanner(false);
     setDraftRestored(false);
   }, [orgId]);
 
@@ -893,7 +856,6 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setSelectedMechanic(draftData.selectedMechanicId ?? "");
     if (draftData.serviceLines?.length) setServiceLines(draftData.serviceLines);
     if (draftData.partLines?.length) setPartLines(draftData.partLines);
-    setShowDraftBanner(false);
     setDraftRestored(true);
   }, [draftData]);
 
@@ -903,7 +865,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     orgId,
     loading,
     saving,
-    isRestoringFromDraft,
+    isRestoringFromDraft, // always false — draft feature hidden
     customerSearch,
     customers,
     selectedCustomer,
@@ -970,33 +932,15 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     addAllFromLastVisit,
 
     handleCreate,
-    handleDiscardDraft,
-    handleRestoreDraft,
+    // handleDiscardDraft, // draft feature hidden
+    // handleRestoreDraft, // draft feature hidden
   };
 
   (value as unknown as Record<string, unknown>).customerRef = customerRef;
 
   return (
     <>
-      {showDraftBanner && draftData && (
-        <div className="mb-4 px-1">
-          <div className="flex items-center gap-3 rounded-sm border bg-muted/50 px-4 py-3">
-            <FileText className="size-4 shrink-0 text-muted-foreground" />
-            <Typography.Muted className="flex-1 text-sm text-muted-foreground">
-              Unsaved draft found from{" "}
-              {format(draftData.savedAt, "MMM d, HH:mm")}.
-            </Typography.Muted>
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={handleDiscardDraft}>
-                Discard
-              </Button>
-              <Button size="sm" onClick={handleRestoreDraft}>
-                Restore
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* TODO: restore draft feature — hidden per user request */}
       <WizardContext.Provider value={value}>{children}</WizardContext.Provider>
     </>
   );

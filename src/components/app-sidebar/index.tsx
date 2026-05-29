@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { useTranslations } from "next-intl";
 import {
   Sidebar,
@@ -7,7 +8,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -53,28 +53,28 @@ export function AppSidebar() {
         <SidebarSeparator />
 
         {/* All nav groups */}
-        {groups.map((group) => (
-          <SidebarGroup key={group.labelKey} className="py-1">
-            <SidebarGroupLabel className="h-6.5 text-[9px] font-semibold uppercase tracking-wider text-sidebar-foreground/45">
-              {t(group.labelKey)}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-0.5">
-                {group.children.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      render={<Link href={item.href} />}
-                      isActive={isActive(item.href)}
-                      tooltip={t(item.labelKey)}
-                    >
-                      <item.icon className="size-4 shrink-0" />
-                      <span>{t(item.labelKey)}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+        {groups.map((group, i) => (
+          <Fragment key={group.labelKey}>
+            {i > 0 && <SidebarSeparator />}
+            <SidebarGroup className="py-1">
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-0.5">
+                  {group.children.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        render={<Link href={item.href} />}
+                        isActive={isActive(item.href)}
+                        tooltip={t(item.labelKey)}
+                      >
+                        <item.icon className="size-4 shrink-0" />
+                        <span>{t(item.labelKey)}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </Fragment>
         ))}
 
         <SidebarSeparator />

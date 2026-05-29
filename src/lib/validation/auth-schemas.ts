@@ -1,13 +1,28 @@
 import { z } from "zod";
 
+// ── Helpers ──
+
+const phoneRegex = /^\+?[1-9]\d{7,14}$/;
+
+function isEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isPhone(value: string): boolean {
+  return phoneRegex.test(value.replace(/[\s\-()]/g, ""));
+}
+
 // ── Login ──
 
-export const loginSchema = z.object({
-  email: z
-    .email({ message: "Invalid email address" })
-    .min(1, "Email is required"),
-  password: z.string().min(1, "Password is required"),
-});
+export const loginSchema = z
+  .object({
+    email: z.string().min(1, "Email or phone is required"),
+    password: z.string().min(1, "Password is required"),
+  })
+  .refine((data) => isEmail(data.email) || isPhone(data.email), {
+    message: "Enter a valid email or phone number",
+    path: ["email"],
+  });
 export type LoginInput = z.infer<typeof loginSchema>;
 
 // ── Signup ──
@@ -18,17 +33,24 @@ export const signupSchema = z
       .string()
       .min(2, "Organization name must be at least 2 characters"),
     fullName: z.string().min(1, "Full name is required"),
-    email: z
-      .email({ message: "Invalid email address" })
-      .min(1, "Email is required"),
+    email: z.string().min(1, "Email or phone is required"),
+    phone: z.string().optional(),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => isEmail(data.email) || isPhone(data.email), {
+    message: "Enter a valid email or phone number",
+    path: ["email"],
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
 export type SignupInput = z.infer<typeof signupSchema>;
+
+// ── Helpers for external use ──
+
+export { isEmail, isPhone };
 
 // ── Forgot Password ──
 

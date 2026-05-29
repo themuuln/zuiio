@@ -11,7 +11,6 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
-  ComboboxValue,
 } from "@/components/ui/combobox";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useDiagnosisLabels } from "@/lib/queries/use-diagnosis-labels";
@@ -47,18 +46,13 @@ export function ComplaintSection() {
               ctx.setDiagnosisLabelId(label?.id ?? "");
             }}
             isItemEqualToValue={(a, b) => a.id === b.id}
+            itemToStringLabel={(item) => item.name_mn ?? item.name}
           >
             <ComboboxInput
               placeholder={t("diagnosisLabelPlaceholder")}
               showTrigger
               className="h-11"
-            >
-              <ComboboxValue>
-                {selectedLabel
-                  ? (selectedLabel.name_mn ?? selectedLabel.name)
-                  : t("diagnosisLabelPlaceholder")}
-              </ComboboxValue>
-            </ComboboxInput>
+            />
             <ComboboxContent>
               <ComboboxList>
                 {(label: (typeof activeLabels)[number]) => (

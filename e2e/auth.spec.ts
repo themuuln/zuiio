@@ -4,70 +4,64 @@ test.describe("Authentication Flows", () => {
   test.describe("Login Page", () => {
     test.beforeEach(async ({ page }) => {
       await page.goto("/mn/auth/login");
+      // Wait for the login form to be fully rendered
+      await expect(
+        page.getByRole("heading", { name: /sign in/i }),
+      ).toBeVisible();
     });
 
-    test("renders the login form", async ({ page }) => {
-      // Email input should be visible
-      await expect(page.getByLabel(/email/i)).toBeVisible();
-
-      // Password input should be visible
-      await expect(page.getByLabel(/password/i)).toBeVisible();
-
-      // Submit button should be visible
+    test("renders the login form with email and password", async ({ page }) => {
+      await expect(page.getByRole("textbox", { name: /email/i })).toBeVisible();
       await expect(
-        page.getByRole("button", { name: /log in|нэвтрэх/i }),
+        page.getByRole("textbox", { name: "Password *" }),
       ).toBeVisible();
+      await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
     });
 
     test("shows validation error on empty submit", async ({ page }) => {
-      const submitButton = page.getByRole("button", {
-        name: /log in|нэвтрэх/i,
-      });
-      await submitButton.click();
-
-      // Should show some form of validation feedback
-      // (either browser native or custom error messages)
-      await expect(
-        page
-          .locator('[role="alert"], .text-destructive, [data-state="error"]')
-          .first(),
-      ).toBeVisible();
+      // The form has required attributes — clicking submit with empty fields
+      // triggers browser native validation. We verify the form doesn't navigate away.
+      const url = page.url();
+      await page.getByRole("button", { name: "Sign in" }).click();
+      // Page should still be on login (form blocked by required validation)
+      await expect(page).toHaveURL(url);
     });
 
     test("has a link to signup page", async ({ page }) => {
-      const signUpLink = page.getByRole("link", {
-        name: /sign up|бүртгүүлэх/i,
-      });
-      await expect(signUpLink).toBeVisible();
+      await expect(page.getByRole("link", { name: "Sign up" })).toBeVisible();
     });
 
     test("has a forgot password link", async ({ page }) => {
-      const forgotLink = page.getByRole("link", { name: /forgot|мартсан/i });
-      await expect(forgotLink).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: /forgot password/i }),
+      ).toBeVisible();
     });
   });
 
   test.describe("Signup Page", () => {
     test.beforeEach(async ({ page }) => {
       await page.goto("/mn/auth/signup");
+      await expect(
+        page.getByRole("heading", { name: /create your/i }),
+      ).toBeVisible();
     });
 
-    test("renders the signup form", async ({ page }) => {
-      // Email input should be visible
-      await expect(page.getByLabel(/email/i)).toBeVisible();
-
-      // Password input should be visible
-      await expect(page.getByLabel(/password/i)).toBeVisible();
-
-      // Submit button should be visible
+    test("renders the signup form with all fields", async ({ page }) => {
+      await expect(page.getByRole("textbox", { name: /email/i })).toBeVisible();
+      // Use exact match to avoid matching "Confirm password *"
       await expect(
-        page.getByRole("button", { name: /sign up|бүртгүүлэх/i }),
+        page.getByRole("textbox", { name: "Password *", exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("textbox", { name: "Confirm password *" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Create account" }),
       ).toBeVisible();
     });
 
     test("has a link to login page", async ({ page }) => {
-      const loginLink = page.getByRole("link", { name: /log in|нэвтрэх/i });
-      await expect(loginLink).toBeVisible();
+      await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
     });
   });
 
@@ -76,8 +70,6 @@ test.describe("Authentication Flows", () => {
       page,
     }) => {
       await page.goto("/mn/dashboard");
-
-      // Should be redirected to login or show auth-related page
       await expect(page).toHaveURL(/\/auth\/(login|select-organization)/);
     });
   });

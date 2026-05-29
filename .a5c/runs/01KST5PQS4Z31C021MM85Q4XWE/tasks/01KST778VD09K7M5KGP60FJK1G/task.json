@@ -1,0 +1,1045 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "packageJsonCreated": {
+          "type": "boolean"
+        },
+        "packageJsonPath": {
+          "type": "string"
+        },
+        "qualityGates": {
+          "type": "object"
+        },
+        "qualityGatesPath": {
+          "type": "string"
+        },
+        "sdkInstalled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "packageJsonCreated",
+        "sdkInstalled"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "isNewProject": false,
+        "profile": {
+          "architecture": {
+            "dataFlow": "Page → React Query hook → API route → Service → Supabase",
+            "entryPoints": [
+              "src/app/[locale]/page.tsx",
+              "src/app/layout.tsx"
+            ],
+            "modules": [
+              {
+                "description": "CRM",
+                "name": "customers",
+                "path": "src/app/[locale]/dashboard/customers"
+              },
+              {
+                "description": "Vehicle registry",
+                "name": "vehicles",
+                "path": "src/app/[locale]/dashboard/vehicles"
+              },
+              {
+                "description": "Work order lifecycle",
+                "name": "work-orders",
+                "path": "src/app/[locale]/dashboard/work-orders"
+              },
+              {
+                "description": "Parts inventory (ledger-based)",
+                "name": "inventory",
+                "path": "src/app/[locale]/dashboard/inventory"
+              },
+              {
+                "description": "Expense tracking",
+                "name": "expenses",
+                "path": "src/app/[locale]/dashboard/expenses"
+              },
+              {
+                "description": "Financial overview",
+                "name": "finance",
+                "path": "src/app/[locale]/dashboard/finance"
+              },
+              {
+                "description": "Analytics & reporting",
+                "name": "reports",
+                "path": "src/app/[locale]/dashboard/reports"
+              },
+              {
+                "description": "Service catalog",
+                "name": "services",
+                "path": "src/app/[locale]/dashboard/services"
+              },
+              {
+                "description": "Org settings",
+                "name": "organization",
+                "path": "src/app/[locale]/dashboard/organization"
+              },
+              {
+                "description": "Bay assignment",
+                "name": "bay-view",
+                "path": "src/app/[locale]/dashboard/bay-view-v2"
+              },
+              {
+                "description": "Mechanic view",
+                "name": "mechanic",
+                "path": "src/app/[locale]/dashboard/mechanic"
+              },
+              {
+                "description": "Customer portal",
+                "name": "portal",
+                "path": "src/app/[locale]/dashboard/portal"
+              },
+              {
+                "description": "Service reminders",
+                "name": "service-reminders",
+                "path": "src/app/[locale]/dashboard/service-reminders"
+              },
+              {
+                "description": "Vehicle models",
+                "name": "vehicle-models",
+                "path": "src/app/[locale]/dashboard/vehicle-models"
+              }
+            ],
+            "pattern": "Multi-tenant SaaS with feature-based modules"
+          },
+          "bottlenecks": [
+            {
+              "description": "Both locale files changed in lockstep (24 commits each)",
+              "id": "bn-i18n-0",
+              "impact": "Doubles cost of every UI text change",
+              "location": "src/messages/"
+            },
+            {
+              "description": "Schema drift between local and remote DB",
+              "id": "bn-schema-0",
+              "impact": "5+ commits fixing drift",
+              "location": "supabase/migrations/"
+            },
+            {
+              "description": "Central types/index.ts changed 18 times",
+              "id": "bn-types-0",
+              "impact": "Every migration ripples here",
+              "location": "src/lib/types/"
+            }
+          ],
+          "cicd": {
+            "configPaths": [
+              ".github/workflows/ci.yml",
+              ".github/workflows/react-doctor.yml"
+            ],
+            "pipelines": [
+              {
+                "name": "CI",
+                "stages": [
+                  "lint",
+                  "typecheck",
+                  "test",
+                  "build"
+                ],
+                "trigger": "PR + push to main"
+              },
+              {
+                "name": "React Doctor",
+                "stages": [
+                  "diff analysis"
+                ],
+                "trigger": "PR + push to main"
+              }
+            ],
+            "provider": "GitHub Actions"
+          },
+          "conventions": {
+            "additionalRules": [
+              "shadcn mandatory",
+              "gap- not space-y-",
+              "semantic color tokens only",
+              "never import from database.types directly"
+            ],
+            "codeStyle": {
+              "formatter": "Biome",
+              "indentation": "2 spaces",
+              "quotes": "single"
+            },
+            "errorHandling": "AppError hierarchy + createRouteHandler wrapper",
+            "importOrder": [
+              "@/lib/*",
+              "@/components/*",
+              "@/hooks/*",
+              "external"
+            ],
+            "naming": {
+              "components": "PascalCase",
+              "database": "snake_case",
+              "directories": "kebab-case",
+              "hooks": "use- prefix"
+            },
+            "testingConventions": "Vitest unit/integration + Playwright E2E"
+          },
+          "createdAt": "2026-05-29T15:43:00.000Z",
+          "description": "Vertical operating system for auto service businesses — multi-tenant SaaS covering customers, vehicles, work orders, inventory, expenses, finance, reports, and more.",
+          "externalIntegrations": [
+            {
+              "category": "authentication",
+              "enabled": true,
+              "service": "Supabase Auth"
+            },
+            {
+              "category": "monitoring",
+              "enabled": true,
+              "service": "Sentry"
+            },
+            {
+              "category": "email",
+              "enabled": true,
+              "service": "Resend"
+            },
+            {
+              "category": "vehicle-data",
+              "enabled": true,
+              "service": "SmartCar.mn"
+            }
+          ],
+          "goals": [
+            {
+              "category": "productivity",
+              "description": "Ship Phase 1 features (customers, vehicles, work orders, inventory, expenses, finance)",
+              "id": "goal-productivity-0",
+              "priority": "high",
+              "status": "active"
+            },
+            {
+              "category": "quality",
+              "description": "Polish existing 14 dashboard modules to production quality",
+              "id": "goal-quality-0",
+              "priority": "high",
+              "status": "active"
+            },
+            {
+              "category": "launch",
+              "description": "Prepare for beta launch with real auto service businesses",
+              "id": "goal-launch-0",
+              "priority": "high",
+              "status": "active"
+            }
+          ],
+          "installedAgents": [],
+          "installedProcesses": [
+            "cradle/project-install"
+          ],
+          "installedSkills": [],
+          "painPoints": [
+            {
+              "category": "tooling",
+              "description": "Recurring schema drift between local and remote Supabase DB",
+              "id": "pp-schema-drift-0",
+              "severity": "medium"
+            },
+            {
+              "category": "productivity",
+              "description": "i18n double-touch — every UI change requires updating both mn.json and en.json",
+              "id": "pp-i18n-burden-0",
+              "severity": "medium"
+            }
+          ],
+          "projectName": "TOLOM",
+          "services": [
+            {
+              "name": "Supabase",
+              "type": "backend-as-a-service"
+            },
+            {
+              "name": "Vercel",
+              "type": "hosting"
+            },
+            {
+              "name": "Sentry",
+              "type": "error-monitoring"
+            },
+            {
+              "name": "Resend",
+              "type": "email"
+            },
+            {
+              "name": "SmartCar.mn",
+              "type": "vehicle-lookup"
+            }
+          ],
+          "team": [
+            {
+              "name": "Temuulen Undrakhbayar",
+              "responsibilities": [
+                "Frontend",
+                "Backend",
+                "Database",
+                "DevOps",
+                "Product"
+              ],
+              "role": "Solo Developer"
+            }
+          ],
+          "techStack": {
+            "buildTools": [
+              "Next.js",
+              "Turbopack",
+              "PostCSS",
+              "Tailwind CSS"
+            ],
+            "databases": [
+              {
+                "name": "PostgreSQL",
+                "provider": "Supabase",
+                "type": "relational"
+              }
+            ],
+            "frameworks": [
+              {
+                "category": "framework",
+                "name": "Next.js",
+                "version": "16.2.6"
+              },
+              {
+                "category": "ui",
+                "name": "React",
+                "version": "19.2.4"
+              },
+              {
+                "category": "css",
+                "name": "Tailwind CSS",
+                "version": "4.3"
+              },
+              {
+                "category": "component-library",
+                "name": "shadcn/ui",
+                "version": "4"
+              },
+              {
+                "category": "state-management",
+                "name": "Zustand",
+                "version": "5.0.13"
+              },
+              {
+                "category": "data-fetching",
+                "name": "TanStack React Query",
+                "version": "5.100.14"
+              },
+              {
+                "category": "forms",
+                "name": "react-hook-form",
+                "version": "7.76.1"
+              },
+              {
+                "category": "validation",
+                "name": "Zod",
+                "version": "4.4.3"
+              },
+              {
+                "category": "i18n",
+                "name": "next-intl",
+                "version": "4.12.0"
+              }
+            ],
+            "infrastructure": [
+              {
+                "category": "hosting",
+                "name": "Vercel"
+              },
+              {
+                "category": "backend-as-a-service",
+                "name": "Supabase"
+              },
+              {
+                "category": "error-monitoring",
+                "name": "Sentry"
+              },
+              {
+                "category": "email",
+                "name": "Resend"
+              }
+            ],
+            "languages": [
+              {
+                "name": "TypeScript",
+                "role": "primary",
+                "version": "5.9"
+              }
+            ],
+            "packageManagers": [
+              "pnpm"
+            ]
+          },
+          "tools": {
+            "formatting": [
+              {
+                "name": "Biome",
+                "version": "2.2.0"
+              }
+            ],
+            "linting": [
+              {
+                "name": "Biome",
+                "version": "2.2.0"
+              }
+            ],
+            "testing": [
+              {
+                "name": "Vitest",
+                "version": "3.2.4"
+              },
+              {
+                "name": "Playwright",
+                "version": "1.60.0"
+              },
+              {
+                "name": "react-doctor",
+                "version": "0.2.9"
+              }
+            ]
+          },
+          "updatedAt": "2026-05-29T15:43:00.000Z",
+          "version": 1,
+          "workflows": [
+            {
+              "description": "Local dev with hot reload",
+              "name": "Development",
+              "steps": [
+                "pnpm install",
+                "pnpm dev"
+              ],
+              "triggers": [
+                "manual"
+              ]
+            },
+            {
+              "description": "Automated quality gates",
+              "name": "CI",
+              "steps": [
+                "biome check",
+                "tsc --noEmit",
+                "vitest run --coverage",
+                "next build"
+              ],
+              "triggers": [
+                "PR",
+                "push to main"
+              ]
+            },
+            {
+              "description": "Vercel auto-deploy",
+              "name": "Deployment",
+              "steps": [
+                "merge to main",
+                "Vercel build + deploy"
+              ],
+              "triggers": [
+                "merge to main"
+              ]
+            }
+          ]
+        },
+        "projectRoot": "/Users/themuuln/coding/personal/tolom/tolom",
+        "toolSelection": {
+          "justifications": {
+            "diagnose": "Recurring schema/type issues need structured debugging",
+            "evolutionary": "Live 14-module codebase approaching beta — not greenfield. Evolutionary architecture allows refactoring, backfilling tests, and shipping without freezing development.",
+            "gsd/audit": "Weekly audit of test coverage, CI pass rate, bundle drift",
+            "gsd/map-codebase": "Map report-service.ts (90KB) for decomposition, identify test coverage gaps",
+            "gsd/verify": "Schema type regen, service splits, RLS changes need verification after each step",
+            "next-best-practices": "RSC boundaries, data fetching patterns for Next.js 16",
+            "shadcn": "59 components in use — need consistent usage patterns",
+            "supabase": "71 migrations, recurring schema drift — needs careful migration management",
+            "tdd": "Only 15 test files for 40 services — backfill needed for financial logic"
+          },
+          "prioritized": {
+            "mustHave": [
+              "gsd/verify",
+              "supabase",
+              "tdd",
+              "next-best-practices",
+              "shadcn"
+            ],
+            "niceToHave": [
+              "gsd/audit",
+              "gsd/map-codebase",
+              "uiux",
+              "karpathy-guidelines",
+              "react-doctor",
+              "webapp-testing"
+            ]
+          },
+          "recommendedAgents": [
+            "general-purpose",
+            "codebase-analyzer",
+            "codebase-locator"
+          ],
+          "recommendedMethodology": "evolutionary",
+          "recommendedProcesses": [
+            "gsd/map-codebase",
+            "gsd/verify",
+            "gsd/audit",
+            "gsd/iterative-convergence",
+            "methodologies/evolutionary",
+            "methodologies/atdd-tdd"
+          ],
+          "recommendedSkills": [
+            "supabase",
+            "tdd",
+            "next-best-practices",
+            "shadcn",
+            "diagnose",
+            "karpathy-guidelines",
+            "react-doctor",
+            "uiux",
+            "supabase-postgres-best-practices",
+            "webapp-testing",
+            "vercel-react-best-practices"
+          ],
+          "remediations": [
+            {
+              "painPointId": "pp-schema-drift-0",
+              "process": "gsd/verify",
+              "recommendation": "Remove continue-on-error: true from CI typecheck, add post-migration type sync verification script"
+            },
+            {
+              "painPointId": "pp-i18n-burden-0",
+              "process": "gsd/audit",
+              "recommendation": "Add CI parity check that diffs mn.json vs en.json keys"
+            }
+          ]
+        }
+      },
+      "instructions": [
+        "**1. .a5c/package.json**: Ensure .a5c/package.json exists in the project root:",
+        "  - If it does not exist, create it with name \"<projectName>-a5c\", version \"1.0.0\", type \"module\"",
+        "  - Ensure @a5c-ai/babysitter-sdk is listed as a dependency (use \"latest\" if no version specified)",
+        "  - Run `cd .a5c && npm install` to install dependencies if package.json was created or modified",
+        "  - Do NOT overwrite an existing package.json — only add missing dependencies",
+        "**2. Quality Gates Configuration**: Create or update .a5c/quality-gates.json:",
+        "  - qualityThreshold: use BABYSITTER_QUALITY_THRESHOLD env var default (80)",
+        "  - testCoverage: set minimum coverage target based on project maturity (new: 60%, existing: match current)",
+        "  - linting: reference the project linting tools from the profile (eslint, prettier, etc.)",
+        "  - formatting: reference formatting tools from the profile",
+        "  - commitChecks: list pre-commit checks (lint, type-check, test) appropriate for the project",
+        "  - deployGates: list deployment gates (tests pass, no lint errors, coverage met)",
+        "  - If profile has CI/CD configured, note quality gate integration points",
+        "**3. Verification**: Confirm .a5c/package.json is valid JSON and dependencies are installable",
+        "IMPORTANT: Always use the babysitter CLI for profile operations — never import SDK profile functions directly"
+      ],
+      "outputFormat": "JSON with packageJsonCreated (boolean), packageJsonPath (string), qualityGatesPath (string), sdkInstalled (boolean), qualityGates (object with configured gates)",
+      "role": "DevOps engineer specializing in project infrastructure, CI/CD quality gates, and testing standards",
+      "task": "Ensure the .a5c/ directory has a package.json with @a5c-ai/babysitter-sdk as a dependency, and configure quality gates for the project. This task is idempotent — do not overwrite existing configuration, only add what is missing."
+    }
+  },
+  "description": "Create .a5c/package.json with babysitter-sdk dependency, configure quality thresholds, and set up testing/linting enforcement gates",
+  "io": {
+    "inputJsonPath": "tasks/01KST778VD09K7M5KGP60FJK1G/input.json",
+    "outputJsonPath": "tasks/01KST778VD09K7M5KGP60FJK1G/result.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "agent",
+    "cradle",
+    "infrastructure",
+    "quality-gates"
+  ],
+  "title": "Initialize .a5c infrastructure and quality gates",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KST778VD09K7M5KGP60FJK1G",
+  "taskId": "initialize-a5c-infra",
+  "invocationKey": "project-install:S000011:initialize-a5c-infra",
+  "stepId": "S000011",
+  "inputs": {
+    "isNewProject": false,
+    "profile": {
+      "architecture": {
+        "dataFlow": "Page → React Query hook → API route → Service → Supabase",
+        "entryPoints": [
+          "src/app/[locale]/page.tsx",
+          "src/app/layout.tsx"
+        ],
+        "modules": [
+          {
+            "description": "CRM",
+            "name": "customers",
+            "path": "src/app/[locale]/dashboard/customers"
+          },
+          {
+            "description": "Vehicle registry",
+            "name": "vehicles",
+            "path": "src/app/[locale]/dashboard/vehicles"
+          },
+          {
+            "description": "Work order lifecycle",
+            "name": "work-orders",
+            "path": "src/app/[locale]/dashboard/work-orders"
+          },
+          {
+            "description": "Parts inventory (ledger-based)",
+            "name": "inventory",
+            "path": "src/app/[locale]/dashboard/inventory"
+          },
+          {
+            "description": "Expense tracking",
+            "name": "expenses",
+            "path": "src/app/[locale]/dashboard/expenses"
+          },
+          {
+            "description": "Financial overview",
+            "name": "finance",
+            "path": "src/app/[locale]/dashboard/finance"
+          },
+          {
+            "description": "Analytics & reporting",
+            "name": "reports",
+            "path": "src/app/[locale]/dashboard/reports"
+          },
+          {
+            "description": "Service catalog",
+            "name": "services",
+            "path": "src/app/[locale]/dashboard/services"
+          },
+          {
+            "description": "Org settings",
+            "name": "organization",
+            "path": "src/app/[locale]/dashboard/organization"
+          },
+          {
+            "description": "Bay assignment",
+            "name": "bay-view",
+            "path": "src/app/[locale]/dashboard/bay-view-v2"
+          },
+          {
+            "description": "Mechanic view",
+            "name": "mechanic",
+            "path": "src/app/[locale]/dashboard/mechanic"
+          },
+          {
+            "description": "Customer portal",
+            "name": "portal",
+            "path": "src/app/[locale]/dashboard/portal"
+          },
+          {
+            "description": "Service reminders",
+            "name": "service-reminders",
+            "path": "src/app/[locale]/dashboard/service-reminders"
+          },
+          {
+            "description": "Vehicle models",
+            "name": "vehicle-models",
+            "path": "src/app/[locale]/dashboard/vehicle-models"
+          }
+        ],
+        "pattern": "Multi-tenant SaaS with feature-based modules"
+      },
+      "bottlenecks": [
+        {
+          "description": "Both locale files changed in lockstep (24 commits each)",
+          "id": "bn-i18n-0",
+          "impact": "Doubles cost of every UI text change",
+          "location": "src/messages/"
+        },
+        {
+          "description": "Schema drift between local and remote DB",
+          "id": "bn-schema-0",
+          "impact": "5+ commits fixing drift",
+          "location": "supabase/migrations/"
+        },
+        {
+          "description": "Central types/index.ts changed 18 times",
+          "id": "bn-types-0",
+          "impact": "Every migration ripples here",
+          "location": "src/lib/types/"
+        }
+      ],
+      "cicd": {
+        "configPaths": [
+          ".github/workflows/ci.yml",
+          ".github/workflows/react-doctor.yml"
+        ],
+        "pipelines": [
+          {
+            "name": "CI",
+            "stages": [
+              "lint",
+              "typecheck",
+              "test",
+              "build"
+            ],
+            "trigger": "PR + push to main"
+          },
+          {
+            "name": "React Doctor",
+            "stages": [
+              "diff analysis"
+            ],
+            "trigger": "PR + push to main"
+          }
+        ],
+        "provider": "GitHub Actions"
+      },
+      "conventions": {
+        "additionalRules": [
+          "shadcn mandatory",
+          "gap- not space-y-",
+          "semantic color tokens only",
+          "never import from database.types directly"
+        ],
+        "codeStyle": {
+          "formatter": "Biome",
+          "indentation": "2 spaces",
+          "quotes": "single"
+        },
+        "errorHandling": "AppError hierarchy + createRouteHandler wrapper",
+        "importOrder": [
+          "@/lib/*",
+          "@/components/*",
+          "@/hooks/*",
+          "external"
+        ],
+        "naming": {
+          "components": "PascalCase",
+          "database": "snake_case",
+          "directories": "kebab-case",
+          "hooks": "use- prefix"
+        },
+        "testingConventions": "Vitest unit/integration + Playwright E2E"
+      },
+      "createdAt": "2026-05-29T15:43:00.000Z",
+      "description": "Vertical operating system for auto service businesses — multi-tenant SaaS covering customers, vehicles, work orders, inventory, expenses, finance, reports, and more.",
+      "externalIntegrations": [
+        {
+          "category": "authentication",
+          "enabled": true,
+          "service": "Supabase Auth"
+        },
+        {
+          "category": "monitoring",
+          "enabled": true,
+          "service": "Sentry"
+        },
+        {
+          "category": "email",
+          "enabled": true,
+          "service": "Resend"
+        },
+        {
+          "category": "vehicle-data",
+          "enabled": true,
+          "service": "SmartCar.mn"
+        }
+      ],
+      "goals": [
+        {
+          "category": "productivity",
+          "description": "Ship Phase 1 features (customers, vehicles, work orders, inventory, expenses, finance)",
+          "id": "goal-productivity-0",
+          "priority": "high",
+          "status": "active"
+        },
+        {
+          "category": "quality",
+          "description": "Polish existing 14 dashboard modules to production quality",
+          "id": "goal-quality-0",
+          "priority": "high",
+          "status": "active"
+        },
+        {
+          "category": "launch",
+          "description": "Prepare for beta launch with real auto service businesses",
+          "id": "goal-launch-0",
+          "priority": "high",
+          "status": "active"
+        }
+      ],
+      "installedAgents": [],
+      "installedProcesses": [
+        "cradle/project-install"
+      ],
+      "installedSkills": [],
+      "painPoints": [
+        {
+          "category": "tooling",
+          "description": "Recurring schema drift between local and remote Supabase DB",
+          "id": "pp-schema-drift-0",
+          "severity": "medium"
+        },
+        {
+          "category": "productivity",
+          "description": "i18n double-touch — every UI change requires updating both mn.json and en.json",
+          "id": "pp-i18n-burden-0",
+          "severity": "medium"
+        }
+      ],
+      "projectName": "TOLOM",
+      "services": [
+        {
+          "name": "Supabase",
+          "type": "backend-as-a-service"
+        },
+        {
+          "name": "Vercel",
+          "type": "hosting"
+        },
+        {
+          "name": "Sentry",
+          "type": "error-monitoring"
+        },
+        {
+          "name": "Resend",
+          "type": "email"
+        },
+        {
+          "name": "SmartCar.mn",
+          "type": "vehicle-lookup"
+        }
+      ],
+      "team": [
+        {
+          "name": "Temuulen Undrakhbayar",
+          "responsibilities": [
+            "Frontend",
+            "Backend",
+            "Database",
+            "DevOps",
+            "Product"
+          ],
+          "role": "Solo Developer"
+        }
+      ],
+      "techStack": {
+        "buildTools": [
+          "Next.js",
+          "Turbopack",
+          "PostCSS",
+          "Tailwind CSS"
+        ],
+        "databases": [
+          {
+            "name": "PostgreSQL",
+            "provider": "Supabase",
+            "type": "relational"
+          }
+        ],
+        "frameworks": [
+          {
+            "category": "framework",
+            "name": "Next.js",
+            "version": "16.2.6"
+          },
+          {
+            "category": "ui",
+            "name": "React",
+            "version": "19.2.4"
+          },
+          {
+            "category": "css",
+            "name": "Tailwind CSS",
+            "version": "4.3"
+          },
+          {
+            "category": "component-library",
+            "name": "shadcn/ui",
+            "version": "4"
+          },
+          {
+            "category": "state-management",
+            "name": "Zustand",
+            "version": "5.0.13"
+          },
+          {
+            "category": "data-fetching",
+            "name": "TanStack React Query",
+            "version": "5.100.14"
+          },
+          {
+            "category": "forms",
+            "name": "react-hook-form",
+            "version": "7.76.1"
+          },
+          {
+            "category": "validation",
+            "name": "Zod",
+            "version": "4.4.3"
+          },
+          {
+            "category": "i18n",
+            "name": "next-intl",
+            "version": "4.12.0"
+          }
+        ],
+        "infrastructure": [
+          {
+            "category": "hosting",
+            "name": "Vercel"
+          },
+          {
+            "category": "backend-as-a-service",
+            "name": "Supabase"
+          },
+          {
+            "category": "error-monitoring",
+            "name": "Sentry"
+          },
+          {
+            "category": "email",
+            "name": "Resend"
+          }
+        ],
+        "languages": [
+          {
+            "name": "TypeScript",
+            "role": "primary",
+            "version": "5.9"
+          }
+        ],
+        "packageManagers": [
+          "pnpm"
+        ]
+      },
+      "tools": {
+        "formatting": [
+          {
+            "name": "Biome",
+            "version": "2.2.0"
+          }
+        ],
+        "linting": [
+          {
+            "name": "Biome",
+            "version": "2.2.0"
+          }
+        ],
+        "testing": [
+          {
+            "name": "Vitest",
+            "version": "3.2.4"
+          },
+          {
+            "name": "Playwright",
+            "version": "1.60.0"
+          },
+          {
+            "name": "react-doctor",
+            "version": "0.2.9"
+          }
+        ]
+      },
+      "updatedAt": "2026-05-29T15:43:00.000Z",
+      "version": 1,
+      "workflows": [
+        {
+          "description": "Local dev with hot reload",
+          "name": "Development",
+          "steps": [
+            "pnpm install",
+            "pnpm dev"
+          ],
+          "triggers": [
+            "manual"
+          ]
+        },
+        {
+          "description": "Automated quality gates",
+          "name": "CI",
+          "steps": [
+            "biome check",
+            "tsc --noEmit",
+            "vitest run --coverage",
+            "next build"
+          ],
+          "triggers": [
+            "PR",
+            "push to main"
+          ]
+        },
+        {
+          "description": "Vercel auto-deploy",
+          "name": "Deployment",
+          "steps": [
+            "merge to main",
+            "Vercel build + deploy"
+          ],
+          "triggers": [
+            "merge to main"
+          ]
+        }
+      ]
+    },
+    "projectRoot": "/Users/themuuln/coding/personal/tolom/tolom",
+    "toolSelection": {
+      "justifications": {
+        "diagnose": "Recurring schema/type issues need structured debugging",
+        "evolutionary": "Live 14-module codebase approaching beta — not greenfield. Evolutionary architecture allows refactoring, backfilling tests, and shipping without freezing development.",
+        "gsd/audit": "Weekly audit of test coverage, CI pass rate, bundle drift",
+        "gsd/map-codebase": "Map report-service.ts (90KB) for decomposition, identify test coverage gaps",
+        "gsd/verify": "Schema type regen, service splits, RLS changes need verification after each step",
+        "next-best-practices": "RSC boundaries, data fetching patterns for Next.js 16",
+        "shadcn": "59 components in use — need consistent usage patterns",
+        "supabase": "71 migrations, recurring schema drift — needs careful migration management",
+        "tdd": "Only 15 test files for 40 services — backfill needed for financial logic"
+      },
+      "prioritized": {
+        "mustHave": [
+          "gsd/verify",
+          "supabase",
+          "tdd",
+          "next-best-practices",
+          "shadcn"
+        ],
+        "niceToHave": [
+          "gsd/audit",
+          "gsd/map-codebase",
+          "uiux",
+          "karpathy-guidelines",
+          "react-doctor",
+          "webapp-testing"
+        ]
+      },
+      "recommendedAgents": [
+        "general-purpose",
+        "codebase-analyzer",
+        "codebase-locator"
+      ],
+      "recommendedMethodology": "evolutionary",
+      "recommendedProcesses": [
+        "gsd/map-codebase",
+        "gsd/verify",
+        "gsd/audit",
+        "gsd/iterative-convergence",
+        "methodologies/evolutionary",
+        "methodologies/atdd-tdd"
+      ],
+      "recommendedSkills": [
+        "supabase",
+        "tdd",
+        "next-best-practices",
+        "shadcn",
+        "diagnose",
+        "karpathy-guidelines",
+        "react-doctor",
+        "uiux",
+        "supabase-postgres-best-practices",
+        "webapp-testing",
+        "vercel-react-best-practices"
+      ],
+      "remediations": [
+        {
+          "painPointId": "pp-schema-drift-0",
+          "process": "gsd/verify",
+          "recommendation": "Remove continue-on-error: true from CI typecheck, add post-migration type sync verification script"
+        },
+        {
+          "painPointId": "pp-i18n-burden-0",
+          "process": "gsd/audit",
+          "recommendation": "Add CI parity check that diffs mn.json vs en.json keys"
+        }
+      ]
+    }
+  }
+}

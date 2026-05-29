@@ -12,11 +12,17 @@ import { formatCurrency } from "@/lib/utils";
 import { useWizardContext } from "./wizard-context";
 import { Typography } from "@/components/ui/typography";
 import { PartForm } from "@/components/inventory/part-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export function PartsSection() {
   const ctx = useWizardContext();
   const t = useTranslations("workOrderWizard");
-  const [showQuickPart, setShowQuickPart] = useState(false);
+  const [showPartDialog, setShowPartDialog] = useState(false);
 
   const filteredParts = ctx.partSearch
     ? ctx.partsCatalog.filter(
@@ -38,7 +44,7 @@ export function PartsSection() {
         <Button
           variant="outline"
           size="sm"
-          onClick={ctx.addPart}
+          onClick={() => setShowPartDialog(true)}
           className="min-h-[var(--ui-touch-target)]"
         >
           <Plus className="size-4" /> {t("addPart")}
@@ -224,30 +230,21 @@ export function PartsSection() {
           </div>
         )}
 
-        {!showQuickPart ? (
-          <Button
-            variant="outline"
-            onClick={() => setShowQuickPart(true)}
-            className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
-          >
-            <Plus className="size-4" />
-            Quick Create Part
-          </Button>
-        ) : (
-          <div className="border rounded-lg p-4 bg-muted/20 mt-2">
-            <Typography.Text className="text-sm font-semibold mb-3 block">
-              New Part
-            </Typography.Text>
+        <Dialog open={showPartDialog} onOpenChange={setShowPartDialog}>
+          <DialogContent size="xl" className="max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{t("addPart")}</DialogTitle>
+            </DialogHeader>
             <PartForm
               mode="quick"
               onSuccess={(part) => {
                 ctx.addPartFromCatalog(part);
-                setShowQuickPart(false);
+                setShowPartDialog(false);
               }}
-              onCancel={() => setShowQuickPart(false)}
+              onCancel={() => setShowPartDialog(false)}
             />
-          </div>
-        )}
+          </DialogContent>
+        </Dialog>
 
         {ctx.partLines.length === 0 && !ctx.showLastVisitSuggestions ? (
           <Typography.Muted className="text-sm text-muted-foreground text-center py-3">
@@ -255,7 +252,7 @@ export function PartsSection() {
           </Typography.Muted>
         ) : (
           <div className="border rounded-lg overflow-hidden">
-            <div className="divide-y">
+            <div className="flex flex-col gap-2">
               {ctx.partLines.map((part, idx) => {
                 const pname = part.part_name.toLowerCase();
                 const vehiclePrice = ctx.vehiclePartPrices[pname];

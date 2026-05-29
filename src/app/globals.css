@@ -131,7 +131,10 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-none;
+  }
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring/50;
   }
   body {
     @apply bg-background text-foreground;
@@ -148,16 +151,6 @@
   textarea,
   [role="button"] {
     -webkit-touch-callout: none;
-  }
-  @media (min-width: 768px) {
-    button,
-    a,
-    input,
-    select,
-    textarea,
-    [role="button"] {
-      min-height: 44px;
-    }
   }
   .tablet-touch {
     -webkit-touch-callout: none;

@@ -21,8 +21,8 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
 
-  /* Opt out of parallel tests on CI — single browser at a time is more stable for Supabase auth. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Single worker — the dev server struggles with parallel auth/logins */
+  workers: 1,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI
@@ -70,9 +70,9 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: `PORT=${PORT} npm run dev`,
+    command: `PORT=${PORT} node node_modules/next/dist/bin/next dev`,
     url: baseURL,
     timeout: 120_000,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
   },
 });

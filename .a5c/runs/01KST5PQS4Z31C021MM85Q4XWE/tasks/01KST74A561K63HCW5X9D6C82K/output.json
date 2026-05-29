@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "claudeMdPath": "CLAUDE.md",
+  "addedSections": ["Babysitter"],
+  "claudeMdInstructions": [
+    "Use babysitter run:create to start orchestration runs",
+    "Use gsd/verify after schema migrations and type regeneration",
+    "Use gsd/audit weekly for test coverage and CI health checks",
+    "Use gsd/map-codebase to decompose large service files",
+    "Follow evolutionary methodology for refactoring",
+    "Use TDD for new services and financial logic",
+    "Remove continue-on-error from CI typecheck to catch schema drift early",
+    "Add i18n parity check for mn.json vs en.json keys"
+  ],
+  "additions": "## Babysitter section added with quick commands, recommended processes, methodology, key skills, and pain point remediations."
+}
