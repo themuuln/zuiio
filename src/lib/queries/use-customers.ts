@@ -8,9 +8,12 @@ interface CustomerWithVehicleCount extends Customer {
   organization_name?: string;
 }
 
-const fetchCustomers = createOrgQuery<CustomerWithVehicleCount[]>("/customers", {
-  unwrap: "paginated",
-});
+const fetchCustomers = createOrgQuery<CustomerWithVehicleCount[]>(
+  "/customers",
+  {
+    unwrap: "paginated",
+  },
+);
 
 const fetchSharedCustomers = createOrgQuery<CustomerWithVehicleCount[]>(
   "/customers",

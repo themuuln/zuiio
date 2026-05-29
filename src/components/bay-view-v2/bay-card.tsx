@@ -1,7 +1,7 @@
 "use client";
 
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { Car, Clock, Loader2, Maximize2, Plus } from "lucide-react";
+import { Car, Clock, Loader2, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn, formatPlateNumber } from "@/lib/utils";
@@ -148,11 +148,12 @@ export function BayCard({
         className={cn(
           "relative h-full min-h-[145px] transition-all py-0 gap-0",
           wo
-            ? "border-border/80 bg-card"
+            ? "border-border/80 bg-card cursor-pointer hover:bg-muted/20"
             : "border-dashed border-muted-foreground/25 bg-muted/10",
           isOver && !wo && "border-primary/40 bg-primary/5",
           isPending && "opacity-55 pointer-events-none",
         )}
+        onClick={() => wo && onOpenDetail(wo.id)}
       >
         {wo && (
           <div
@@ -226,7 +227,10 @@ export function BayCard({
                 {wo.status === "New" && (
                   <Button
                     size="xs"
-                    onClick={() => onStatusChange(wo.id, "Diagnosing")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStatusChange(wo.id, "Diagnosing");
+                    }}
                     disabled={isPending}
                   >
                     Start Diagnose
@@ -236,7 +240,10 @@ export function BayCard({
                   <Button
                     size="xs"
                     variant="outline"
-                    onClick={() => onStatusChange(wo.id, "In Progress")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStatusChange(wo.id, "In Progress");
+                    }}
                     disabled={isPending}
                   >
                     Start Work
@@ -246,7 +253,10 @@ export function BayCard({
                   <Button
                     size="xs"
                     variant="secondary"
-                    onClick={() => onStatusChange(wo.id, "Ready for Pickup")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStatusChange(wo.id, "Ready for Pickup");
+                    }}
                     disabled={isPending}
                   >
                     Mark Ready
@@ -255,7 +265,10 @@ export function BayCard({
                 {wo.status === "Ready for Pickup" && (
                   <Button
                     size="xs"
-                    onClick={() => onStatusChange(wo.id, "Completed")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStatusChange(wo.id, "Completed");
+                    }}
                     disabled={isPending}
                   >
                     Complete
@@ -287,16 +300,6 @@ export function BayCard({
                     </Button>
                   )}
               </div>
-              <Button
-                type="button"
-                size="icon-xs"
-                variant="ghost"
-                onClick={() => onOpenDetail(wo.id)}
-                title="Details"
-                disabled={isPending}
-              >
-                <Maximize2 className="size-2.5" />
-              </Button>
             </CardFooter>
           </>
         ) : (

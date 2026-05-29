@@ -104,6 +104,7 @@ export function ServicesSection() {
         />
         {ctx.serviceSearch && (
           <div className="flex flex-col gap-1 border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+            {/* Org-level services */}
             {ctx.catalog
               .filter(
                 (s) =>
@@ -164,6 +165,44 @@ export function ServicesSection() {
                   </Button>
                 );
               })}
+            {/* Global catalog suggestions (if not in org catalog) */}
+            {ctx.globalServices
+              .filter(
+                (s) =>
+                  !ctx.catalog.some(
+                    (c) => c.name.toLowerCase() === s.name.toLowerCase(),
+                  ) &&
+                  (s.name
+                    .toLowerCase()
+                    .includes(ctx.serviceSearch.toLowerCase()) ||
+                    s.category
+                      ?.toLowerCase()
+                      .includes(ctx.serviceSearch.toLowerCase())),
+              )
+              .slice(0, 6)
+              .map((svc) => (
+                <Button
+                  variant="ghost"
+                  key={`global-${svc.id}`}
+                  onClick={() => {
+                    // Add as custom service (no catalog id)
+                    ctx.setServiceSearch("");
+                  }}
+                  className="w-full justify-between p-3 min-h-[48px] h-auto border-dashed border border-muted-foreground/20"
+                >
+                  <div>
+                    <span className="text-sm font-medium">{svc.name}</span>
+                    {svc.category && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {svc.category}
+                      </span>
+                    )}
+                    <span className="ml-2 text-xs text-muted-foreground italic">
+                      global
+                    </span>
+                  </div>
+                </Button>
+              ))}
             {ctx.catalog.filter(
               (s) =>
                 s.name
@@ -172,11 +211,20 @@ export function ServicesSection() {
                 s.category
                   ?.toLowerCase()
                   .includes(ctx.serviceSearch.toLowerCase()),
-            ).length === 0 && (
-              <div className="p-4 text-sm text-muted-foreground text-center">
-                {t("noServicesMatch")}
-              </div>
-            )}
+            ).length === 0 &&
+              ctx.globalServices.filter(
+                (s) =>
+                  s.name
+                    .toLowerCase()
+                    .includes(ctx.serviceSearch.toLowerCase()) ||
+                  s.category
+                    ?.toLowerCase()
+                    .includes(ctx.serviceSearch.toLowerCase()),
+              ).length === 0 && (
+                <div className="p-4 text-sm text-muted-foreground text-center">
+                  {t("noServicesMatch")}
+                </div>
+              )}
           </div>
         )}
 

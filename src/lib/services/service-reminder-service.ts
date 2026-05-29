@@ -3,6 +3,42 @@ import { cacheTags } from "@/lib/cache/keys";
 import type { VehicleServiceSchedule, ReminderLog } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import { buildUpdates, type FieldMap } from "./build-updates";
+
+type ScheduleUpdateParams = {
+  service_catalog_id?: string | null;
+  service_name?: string;
+  interval_months?: number | null;
+  interval_km?: number | null;
+  last_service_date?: string | null;
+  last_service_odometer?: number | null;
+  next_due_date?: string | null;
+  next_due_km?: number | null;
+  reminder_enabled?: boolean;
+  notes?: string | null;
+};
+
+const trim = (v: unknown) => (v as string).trim() || null;
+
+const scheduleFieldMap: FieldMap<ScheduleUpdateParams> = {
+  columns: {
+    service_name: "service_name",
+    service_catalog_id: "service_catalog_id",
+    interval_months: "interval_months",
+    interval_km: "interval_km",
+    last_service_date: "last_service_date",
+    last_service_odometer: "last_service_odometer",
+    next_due_date: "next_due_date",
+    next_due_km: "next_due_km",
+    reminder_enabled: "reminder_enabled",
+    notes: "notes",
+  },
+  transforms: {
+    service_name: (v) => (v as string).trim(),
+    service_catalog_id: trim,
+    notes: trim,
+  },
+};
 
 // ----------------------------------------------------------
 // Vehicle Service Schedules
@@ -126,30 +162,9 @@ export async function updateServiceSchedule(
 ): Promise<VehicleServiceSchedule> {
   const supabase = await createClient();
 
-  const updates: Record<string, unknown> = {
-    updated_by: userId,
-    updated_at: new Date().toISOString(),
-  };
-
-  if (params.service_name !== undefined)
-    updates.service_name = params.service_name.trim();
-  if (params.service_catalog_id !== undefined)
-    updates.service_catalog_id = params.service_catalog_id?.trim() ?? null;
-  if (params.interval_months !== undefined)
-    updates.interval_months = params.interval_months;
-  if (params.interval_km !== undefined)
-    updates.interval_km = params.interval_km;
-  if (params.last_service_date !== undefined)
-    updates.last_service_date = params.last_service_date;
-  if (params.last_service_odometer !== undefined)
-    updates.last_service_odometer = params.last_service_odometer;
-  if (params.next_due_date !== undefined)
-    updates.next_due_date = params.next_due_date;
-  if (params.next_due_km !== undefined)
-    updates.next_due_km = params.next_due_km;
-  if (params.reminder_enabled !== undefined)
-    updates.reminder_enabled = params.reminder_enabled;
-  if (params.notes !== undefined) updates.notes = params.notes?.trim() ?? null;
+  const updates = buildUpdates(params, scheduleFieldMap);
+  updates.updated_by = userId;
+  updates.updated_at = new Date().toISOString();
 
   const { data, error } = await supabase
     .from("vehicle_service_schedules")

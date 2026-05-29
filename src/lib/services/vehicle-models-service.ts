@@ -3,6 +3,7 @@ import { cacheTags } from "@/lib/cache/keys";
 import type { VehicleModel } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import { buildUpdates, type FieldMap } from "./build-updates";
 
 export async function getVehicleModels(
   orgId: string,
@@ -124,18 +125,30 @@ export async function updateVehicleModel(
   const supabase = await createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
-  const updates: Record<string, unknown> = { updated_by: userId };
-  if (params.make !== undefined) updates.make = params.make.trim();
-  if (params.model !== undefined) updates.model = params.model.trim();
-  if (params.generation !== undefined)
-    updates.generation = params.generation?.trim() ?? null;
-  if (params.year_start !== undefined) updates.year_start = params.year_start;
-  if (params.year_end !== undefined) updates.year_end = params.year_end;
-  if (params.engine !== undefined)
-    updates.engine = params.engine?.trim() ?? null;
-  if (params.body_type !== undefined)
-    updates.body_type = params.body_type?.trim() ?? null;
-  if (params.is_active !== undefined) updates.is_active = params.is_active;
+  const trim = (v: unknown) => (v as string).trim() || null;
+
+  const fieldMap: FieldMap<typeof params> = {
+    columns: {
+      make: "make",
+      model: "model",
+      generation: "generation",
+      year_start: "year_start",
+      year_end: "year_end",
+      engine: "engine",
+      body_type: "body_type",
+      is_active: "is_active",
+    },
+    transforms: {
+      make: trim,
+      model: trim,
+      generation: trim,
+      engine: trim,
+      body_type: trim,
+    },
+  };
+
+  const updates = buildUpdates(params, fieldMap);
+  updates.updated_by = userId;
 
   const { data, error } = await supabase
     .from("vehicle_models")

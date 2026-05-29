@@ -119,6 +119,45 @@ export interface WorkOrderFilters {
 
 // ── Reports ────────────────────────────────────────────────────
 
+/** Period-over-period comparison snapshot */
+export interface ReportComparison {
+  work_orders_completed: number;
+  total_revenue: number;
+  services_count: number;
+  parts_count: number;
+  /** % change from previous period (positive = improvement) */
+  revenue_change_pct: number | null;
+  work_orders_change_pct: number | null;
+}
+
+/** Profitability and efficiency metrics */
+export interface ReportProfitability {
+  gross_profit: number;
+  margin_percent: number;
+  service_revenue: number;
+  service_cost: number;
+  parts_revenue: number;
+  parts_cost: number;
+  total_cost: number;
+  /** Effective labor rate: service revenue / billed hours (or per-WO proxy) */
+  effective_labor_rate: number;
+  /** Average repair order value */
+  avg_repair_order: number;
+  /** Parts-to-labor revenue ratio (e.g. 0.42 = 42 parts per 100 labor) */
+  parts_to_labor_ratio: number;
+}
+
+/** Per-mechanic KPI row */
+export interface ReportMechanicKpi {
+  mechanic_id: string;
+  mechanic_name: string;
+  work_orders_completed: number;
+  services_count: number;
+  parts_count: number;
+  total_revenue: number;
+  avg_revenue_per_wo: number;
+}
+
 export interface DailyReport {
   date: string;
   mechanic_id: string;
@@ -129,6 +168,12 @@ export interface DailyReport {
   total_revenue: number;
   total_discounts: number;
   work_orders: WorkOrderDetail[];
+  /** Previous same-length period comparison */
+  comparison: ReportComparison | null;
+  /** Profitability metrics */
+  profitability: ReportProfitability | null;
+  /** Per-mechanic breakdown (for "all mechanics" view) */
+  mechanic_kpis: ReportMechanicKpi[];
 }
 
 export interface WeeklyReport {
@@ -142,6 +187,9 @@ export interface WeeklyReport {
   total_revenue: number;
   total_discounts: number;
   daily_breakdown: DailyReport[];
+  comparison: ReportComparison | null;
+  profitability: ReportProfitability | null;
+  mechanic_kpis: ReportMechanicKpi[];
 }
 
 export interface MonthlyReport {
@@ -155,6 +203,155 @@ export interface MonthlyReport {
   total_revenue: number;
   total_discounts: number;
   weekly_breakdown: WeeklyReport[];
+  comparison: ReportComparison | null;
+  profitability: ReportProfitability | null;
+  mechanic_kpis: ReportMechanicKpi[];
+}
+
+// ── ERP-Grade Report Extensions ───────────────────────────────
+
+/** Severity levels for automated insights */
+export type InsightSeverity = "positive" | "warning" | "danger" | "info";
+
+/** Automated insight / alert generated from data analysis */
+export interface ReportInsight {
+  id: string;
+  severity: InsightSeverity;
+  title: string;
+  message: string;
+  /** Optional metric value that triggered the insight */
+  metric_value?: number;
+  /** Optional comparison value */
+  comparison_value?: number;
+  /** Actionable suggestion */
+  action?: string;
+}
+
+/** Revenue forecast / projection */
+export interface ReportForecast {
+  /** Current period revenue to date */
+  current_revenue: number;
+  /** Days elapsed in period */
+  days_elapsed: number;
+  /** Total days in period */
+  total_days: number;
+  /** Projected end-of-period revenue based on current pace */
+  projected_revenue: number;
+  /** Previous period revenue for comparison */
+  previous_period_revenue: number | null;
+  /** Projected % change vs previous period */
+  projected_change_pct: number | null;
+  /** Daily run rate */
+  daily_run_rate: number;
+  /** Whether on track to meet or exceed previous period */
+  on_track: boolean;
+  /** Revenue target for this period (if set) */
+  target_revenue: number | null;
+  /** % of target achieved */
+  target_progress_pct: number | null;
+}
+
+/** Revenue target / goal */
+export interface ReportTarget {
+  id: string;
+  organization_id: string;
+  /** Daily, weekly, monthly */
+  period_type: "daily" | "weekly" | "monthly";
+  /** Target revenue amount */
+  target_revenue: number;
+  /** Current actual revenue */
+  actual_revenue: number;
+  /** % of target achieved */
+  progress_pct: number;
+  /** Whether target was met */
+  achieved: boolean;
+  /** The period this target covers */
+  period_start: string;
+  period_end: string;
+}
+
+/** Customer retention data */
+export interface CustomerRetentionData {
+  /** Total customers who visited in this period */
+  total_customers: number;
+  /** Customers who are returning (have >1 visit in last 12 months) */
+  returning_customers: number;
+  /** New customers (first visit in this period) */
+  new_customers: number;
+  /** Retention rate: returning / (returning + returning from before) */
+  retention_rate: number;
+  /** Average visits per customer in period */
+  avg_visits_per_customer: number;
+  /** Customer lifetime value (avg total revenue per customer) */
+  avg_lifetime_value: number;
+  /** Top customers by revenue */
+  top_customers: Array<{
+    customer_id: string;
+    customer_name: string;
+    total_revenue: number;
+    visit_count: number;
+  }>;
+}
+
+/** P&L line item */
+export interface PnLLineItem {
+  label: string;
+  amount: number;
+  /** % of revenue (for sub-items) */
+  pct_of_revenue?: number;
+  /** Sub-items for grouped lines */
+  children?: PnLLineItem[];
+}
+
+/** Simplified Profit & Loss statement */
+export interface PnLSummary {
+  period_start: string;
+  period_end: string;
+  /** Revenue lines */
+  revenue: {
+    service_revenue: number;
+    parts_revenue: number;
+    other_revenue: number;
+    total: number;
+  };
+  /** Cost of goods sold */
+  cogs: {
+    service_cost: number;
+    parts_cost: number;
+    total: number;
+  };
+  /** Gross profit = Revenue - COGS */
+  gross_profit: number;
+  gross_margin_pct: number;
+  /** Operating expenses */
+  expenses: {
+    total: number;
+    by_category: Array<{
+      category: string;
+      amount: number;
+    }>;
+  };
+  /** Net profit = Gross Profit - Expenses */
+  net_profit: number;
+  net_margin_pct: number;
+}
+
+/** Service type breakdown for filtering and analysis */
+export interface ServiceBreakdown {
+  service_name: string;
+  service_count: number;
+  total_revenue: number;
+  avg_price: number;
+  percentage_of_revenue: number;
+}
+
+/** Enhanced report filters */
+export interface ReportFilters {
+  mechanic_id?: string | null;
+  service_type?: string | null;
+  date_from?: string;
+  date_to?: string;
+  period?: "daily" | "weekly" | "monthly";
 }
 
 export interface EndOfDaySummary {

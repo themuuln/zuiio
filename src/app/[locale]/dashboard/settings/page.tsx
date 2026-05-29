@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
+  Car,
   Database,
   Globe,
   Palette,
@@ -36,6 +37,7 @@ import { OrganizationCard } from "./_organization-card";
 import { CommissionRulesSection } from "./_commission-rules-section";
 import { DataSharingForm } from "./_data-sharing-form";
 import { DiagnosisLabelsSection } from "./_diagnosis-labels-section";
+import { VehicleNicheForm } from "./_vehicle-niche-form";
 import { Typography } from "@/components/ui/typography";
 
 function SectionHeading({
@@ -327,6 +329,19 @@ export default function SettingsPage() {
             description="Manage reusable labels for work order complaints (e.g., engine, brake, electrical)."
           />
           <DiagnosisLabelsSection orgId={orgId ?? ""} />
+        </section>
+      )}
+
+      {activeTab === "niche" && (
+        <section>
+          <SectionHeading
+            icon={Car}
+            title="Vehicle Niche"
+            description="Restrict your workshop to specific vehicle brands and models."
+          />
+          <div className="mt-4">
+            <VehicleNicheForm organization={organization} onRefetch={refetch} />
+          </div>
         </section>
       )}
 

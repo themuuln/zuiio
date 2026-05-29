@@ -2,6 +2,7 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { toastRetry } from "@/lib/toast-utils";
+import { createOrgQuery } from "./factory";
 import type { CustomerCommunication } from "@/lib/types";
 import type { CreateCustomerCommunicationParams } from "@/lib/types";
 import { customerCommunicationKeys } from "./keys";
@@ -14,16 +15,12 @@ export function useCustomerCommunications(
   orgId: string | undefined,
   customerId: string | undefined,
 ): UseQueryResult<CustomerCommunication[], Error> {
+  const fetchCommunications = createOrgQuery<CustomerCommunication[]>(
+    `/customers/${customerId ?? ""}/communications`,
+  );
   return useQuery({
     queryKey: customerCommunicationKeys.list(orgId ?? "", customerId ?? ""),
-    queryFn: async () => {
-      const url = `/api/organizations/${orgId}/customers/${customerId}/communications`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to load customer communications");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as CustomerCommunication[];
-    },
+    queryFn: () => fetchCommunications(orgId!),
     enabled: !!orgId && !!customerId,
     staleTime: 30_000,
   });

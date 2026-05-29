@@ -54,14 +54,13 @@ export function MechanicBadge({
     );
   }
 
-  const initials = mechanic.full_name
-    ? mechanic.full_name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "?";
+  // "Temuulen Undrakhbayar" → "Temuulen U."
+  const shortName = (() => {
+    if (!mechanic.full_name) return "?";
+    const parts = mechanic.full_name.trim().split(/\s+/);
+    if (parts.length <= 1) return parts[0] ?? "?";
+    return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
+  })();
 
   return (
     <div
@@ -88,7 +87,7 @@ export function MechanicBadge({
             "bg-primary/10 text-primary",
           )}
         >
-          {initials}
+          {shortName}
         </AvatarFallback>
       </Avatar>
       <span
@@ -97,7 +96,7 @@ export function MechanicBadge({
           "font-medium truncate",
         )}
       >
-        {mechanic.full_name}
+        {shortName}
       </span>
     </div>
   );

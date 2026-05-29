@@ -101,6 +101,7 @@ export function PartsSection() {
         />
         {ctx.partSearch && (
           <div className="flex flex-col gap-1 border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+            {/* Org-level parts */}
             {filteredParts.slice(0, 12).map((part) => {
               const isAdded = ctx.partLines.some(
                 (p) =>
@@ -142,11 +143,81 @@ export function PartsSection() {
                 </Button>
               );
             })}
-            {filteredParts.length === 0 && (
-              <div className="p-4 text-sm text-muted-foreground text-center">
-                {t("noPartsMatch")}
-              </div>
-            )}
+            {/* Global catalog suggestions (if not in org catalog) */}
+            {ctx.globalParts
+              .filter(
+                (p) =>
+                  !ctx.partsCatalog.some(
+                    (c) => c.name.toLowerCase() === p.name.toLowerCase(),
+                  ) &&
+                  (p.name
+                    .toLowerCase()
+                    .includes(ctx.partSearch.toLowerCase()) ||
+                    (p.part_number &&
+                      p.part_number
+                        .toLowerCase()
+                        .includes(ctx.partSearch.toLowerCase())) ||
+                    (p.category &&
+                      p.category
+                        .toLowerCase()
+                        .includes(ctx.partSearch.toLowerCase()))),
+              )
+              .slice(0, 6)
+              .map((part) => (
+                <Button
+                  variant="ghost"
+                  key={`global-${part.id}`}
+                  onClick={() => {
+                    // Add as custom part (from global reference)
+                    ctx.setPartLines((prev) => [
+                      ...prev,
+                      {
+                        part_name: part.name,
+                        part_number: part.part_number ?? "",
+                        quantity: 1,
+                        unit_price: 0,
+                        final_price: 0,
+                      },
+                    ]);
+                    ctx.setPartSearch("");
+                  }}
+                  className="w-full justify-between p-3 min-h-[48px] h-auto border-dashed border border-muted-foreground/20"
+                >
+                  <div className="min-w-0 flex-1">
+                    <span className="text-sm font-medium">{part.name}</span>
+                    {part.part_number && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        #{part.part_number}
+                      </span>
+                    )}
+                    {part.category && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {part.category}
+                      </span>
+                    )}
+                    <span className="ml-2 text-xs text-muted-foreground italic">
+                      global
+                    </span>
+                  </div>
+                </Button>
+              ))}
+            {filteredParts.length === 0 &&
+              ctx.globalParts.filter(
+                (p) =>
+                  p.name.toLowerCase().includes(ctx.partSearch.toLowerCase()) ||
+                  (p.part_number &&
+                    p.part_number
+                      .toLowerCase()
+                      .includes(ctx.partSearch.toLowerCase())) ||
+                  (p.category &&
+                    p.category
+                      .toLowerCase()
+                      .includes(ctx.partSearch.toLowerCase())),
+              ).length === 0 && (
+                <div className="p-4 text-sm text-muted-foreground text-center">
+                  {t("noPartsMatch")}
+                </div>
+              )}
           </div>
         )}
 

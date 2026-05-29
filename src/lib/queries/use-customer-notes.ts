@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { toastRetry } from "@/lib/toast-utils";
+import { createOrgQuery } from "./factory";
 import type { CustomerNote, CustomerNoteType } from "@/lib/types";
 import { customerNoteKeys } from "./keys";
 
@@ -17,16 +18,12 @@ export function useCustomerNotes(
   orgId: string | undefined,
   customerId: string | undefined,
 ): UseQueryResult<CustomerNote[], Error> {
+  const fetchNotes = createOrgQuery<CustomerNote[]>(
+    `/customers/${customerId ?? ""}/notes`,
+  );
   return useQuery({
     queryKey: customerNoteKeys.list(orgId ?? "", customerId ?? ""),
-    queryFn: async () => {
-      const url = `/api/organizations/${orgId}/customers/${customerId}/notes`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to load customer notes");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as CustomerNote[];
-    },
+    queryFn: () => fetchNotes(orgId!),
     enabled: !!orgId && !!customerId,
     staleTime: 30_000,
   });

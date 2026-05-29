@@ -9,6 +9,21 @@ import type {
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import { sendInvoiceEmail } from "@/lib/services/email-service";
+import { buildUpdates, type FieldMap } from "./build-updates";
+
+const invoiceItemFieldMap: FieldMap<Partial<AddInvoiceItemParams>> = {
+  columns: {
+    description: "description",
+    item_type: "item_type",
+    quantity: "quantity",
+    unit_price: "unit_price",
+    discount_amount: "discount_amount",
+    sort_order: "sort_order",
+  },
+  transforms: {
+    description: (v) => (v as string).trim(),
+  },
+};
 
 // ── Generate the next invoice number for an org ───
 export async function generateInvoiceNumber(orgId: string): Promise<string> {
@@ -796,20 +811,11 @@ export async function updateInvoiceItem(
 ): Promise<InvoiceItem> {
   const supabase = await createClient();
 
-  const updates: Record<string, unknown> = {};
-
-  if (params.description !== undefined) {
-    if (!params.description.trim()) {
-      throw new ValidationError("Item description cannot be empty");
-    }
-    updates.description = params.description.trim();
+  if (params.description !== undefined && !params.description.trim()) {
+    throw new ValidationError("Item description cannot be empty");
   }
-  if (params.item_type !== undefined) updates.item_type = params.item_type;
-  if (params.quantity !== undefined) updates.quantity = params.quantity;
-  if (params.unit_price !== undefined) updates.unit_price = params.unit_price;
-  if (params.discount_amount !== undefined)
-    updates.discount_amount = params.discount_amount;
-  if (params.sort_order !== undefined) updates.sort_order = params.sort_order;
+
+  const updates = buildUpdates(params, invoiceItemFieldMap);
 
   if (Object.keys(updates).length === 0) {
     throw new ValidationError("No fields to update");

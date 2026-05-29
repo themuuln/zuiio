@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Customer, ServiceCatalog, Vehicle } from "@/lib/types";
+import { createOrgQuery } from "./factory";
 import {
   customerKeys,
   mechanicKeys,
@@ -110,11 +111,13 @@ export async function fetchVehiclePartPrice(
   orgId: string,
   partName: string,
   vehicleMake: string,
+  vehicleModel?: string,
 ): Promise<number | null> {
   try {
     const params = new URLSearchParams();
     params.set("part_name", partName);
     params.set("vehicle_make", vehicleMake);
+    if (vehicleModel) params.set("vehicle_model", vehicleModel);
     const res = await fetch(
       `/api/organizations/${orgId}/price-history/part?${params}`,
     );
@@ -128,6 +131,40 @@ export async function fetchVehiclePartPrice(
   }
 }
 
+// ── Fetchers ──────────────────────────────────────────────────
+
+const fetchServiceCatalog = createOrgQuery<ServiceCatalog[]>("/services");
+
+const fetchMechanicsReport =
+  createOrgQuery<{ id: string; full_name: string | null }[]>("/reports");
+
+const fetchWorkOrders =
+  createOrgQuery<{ status: string; mechanic_id: string | null }[]>(
+    "/work-orders",
+  );
+
+const fetchCustomers = createOrgQuery<Customer[]>("/customers", {
+  unwrap: "paginated",
+});
+
+const fetchCustomersByPlate = createOrgQuery<Customer[]>("/customers/by-plate");
+
+const fetchVehicles = createOrgQuery<Vehicle[]>("/vehicles");
+
+const fetchVehicleLastVisit = createOrgQuery<
+  (LastVisitInfo & { owner: Customer | null }) | null
+>("/price-history/last-visit");
+
+const fetchPriceHistory = createOrgQuery<PriceHistoryData>("/price-history");
+
+const fetchVehicleServicePrices = createOrgQuery<VehicleServicePriceEntry[]>(
+  "/price-history/service",
+);
+
+const fetchVehiclePartPrices = createOrgQuery<VehiclePartPriceEntry[]>(
+  "/price-history/part",
+);
+
 // ── Queries ────────────────────────────────────────────────────
 
 /**
@@ -138,13 +175,7 @@ export function useServiceCatalog(
 ): UseQueryResult<ServiceCatalog[], Error> {
   return useQuery({
     queryKey: serviceKeys.list(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/services`);
-      if (!res.ok) throw new Error("Failed to load service catalog");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as ServiceCatalog[];
-    },
+    queryFn: () => fetchServiceCatalog(orgId!).then((d) => d ?? []),
     enabled: !!orgId,
     staleTime: 60_000,
     retry: 1,
@@ -160,36 +191,32 @@ export function useMechanicsWithJobCount(
   return useQuery({
     queryKey: mechanicKeys.list(orgId ?? ""),
     queryFn: async () => {
-      const [mechRes, woRes, mechJson, woJson] = await Promise.all([
-        fetch(`/api/organizations/${orgId}/reports?type=mechanics`),
-        fetch(`/api/organizations/${orgId}/work-orders`),
-      ]).then(async ([mr, wr]) => {
-        if (!mr.ok) throw new Error("Failed to load mechanics");
-        return [mr, wr, await mr.json(), await wr.json()] as const;
-      });
+      const [mechanicsList, workOrders] = await Promise.all([
+        fetchMechanicsReport(orgId!, {
+          params: { type: "mechanics" },
+          errorMessage: "Failed to load mechanics",
+        }),
+        fetchWorkOrders(orgId!),
+      ]);
 
-      const mechanicsList = mechJson.data ?? [];
       const activeStatuses = [
         "New",
         "Diagnosing",
         "In Progress",
         "Ready for Pickup",
       ];
-      const activeWorkOrders = (woJson.data ?? []).filter(
-        (wo: { status: string }) => activeStatuses.includes(wo.status),
+      const activeWorkOrders = workOrders.filter((wo) =>
+        activeStatuses.includes(wo.status),
       );
 
-      return mechanicsList.map(
-        (mechanic: { id: string; full_name: string | null }) => ({
-          id: mechanic.id,
-          fullName: mechanic.full_name ?? null,
-          email: "",
-          current_jobs: activeWorkOrders.filter(
-            (wo: { mechanic_id: string | null }) =>
-              wo.mechanic_id === mechanic.id,
-          ).length,
-        }),
-      ) as MechanicOption[];
+      return mechanicsList.map((mechanic) => ({
+        id: mechanic.id,
+        fullName: mechanic.full_name ?? null,
+        email: "",
+        current_jobs: activeWorkOrders.filter(
+          (wo) => wo.mechanic_id === mechanic.id,
+        ).length,
+      })) as MechanicOption[];
     },
     enabled: !!orgId,
     staleTime: 60_000,
@@ -206,15 +233,7 @@ export function useCustomerSearch(
 ): UseQueryResult<Customer[], Error> {
   return useQuery({
     queryKey: customerKeys.list(orgId ?? "", query),
-    queryFn: async () => {
-      const url = `/api/organizations/${orgId}/customers?q=${encodeURIComponent(query)}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to search customers");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      // API returns { data: PaginatedResponse<Customer> }, unwrap .data.data
-      return (json.data?.data ?? json.data ?? []) as Customer[];
-    },
+    queryFn: () => fetchCustomers(orgId!, { params: { q: query } }),
     enabled: !!orgId && query.length > 0,
     staleTime: 30_000,
     retry: 1,
@@ -230,14 +249,11 @@ export function useCustomersByPlate(
 ): UseQueryResult<Customer[], Error> {
   return useQuery({
     queryKey: wizardKeys.customersByPlate(orgId ?? "", plateQuery),
-    queryFn: async () => {
-      const url = `/api/organizations/${orgId}/customers/by-plate?plate=${encodeURIComponent(plateQuery)}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to search customers by plate");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as Customer[];
-    },
+    queryFn: () =>
+      fetchCustomersByPlate(orgId!, {
+        params: { plate: plateQuery },
+        errorMessage: "Failed to search customers by plate",
+      }),
     enabled: !!orgId && plateQuery.length > 0,
     staleTime: 30_000,
     retry: 1,
@@ -257,18 +273,12 @@ export function useVehicleSearch(
       orgId ?? "",
       `${customerId ?? ""}__${plateQuery}`,
     ),
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (customerId) params.set("customer", customerId);
+    queryFn: () => {
       // Normalize plate: strip dashes/spaces, uppercase for consistent matching
       const normalPlate = plateQuery.replace(/[\s-]/g, "").toUpperCase();
-      if (normalPlate) params.set("plate", normalPlate);
-      const url = `/api/organizations/${orgId}/vehicles?${params.toString()}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to search vehicles");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as Vehicle[];
+      return fetchVehicles(orgId!, {
+        params: { customer: customerId, plate: normalPlate || undefined },
+      });
     },
     enabled:
       !!orgId && (plateQuery.length >= 2 || (!!customerId && !plateQuery)),
@@ -288,17 +298,10 @@ export function useVehicleLastVisit(
   return useQuery({
     queryKey: priceMemoryKeys.lastVisit(orgId ?? "", vehicleId ?? ""),
     queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/price-history/last-visit?vehicle_id=${vehicleId}`,
-      );
-      if (!res.ok) throw new Error("Failed to load vehicle last visit");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-
-      const data = json.data as
-        | (LastVisitInfo & { owner: Customer | null })
-        | null
-        | undefined;
+      const data = await fetchVehicleLastVisit(orgId!, {
+        params: { vehicle_id: vehicleId! },
+        errorMessage: "Failed to load vehicle last visit",
+      });
 
       if (!data) return { owner: null, lastVisit: null };
 
@@ -335,16 +338,14 @@ export function usePriceHistory(
 ): UseQueryResult<PriceHistoryData, Error> {
   return useQuery({
     queryKey: wizardKeys.priceHistory(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/price-history`);
-      if (!res.ok) throw new Error("Failed to load price history");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return {
-        services: json.data?.services ?? {},
-        parts: json.data?.parts ?? {},
-      } as PriceHistoryData;
-    },
+    queryFn: () =>
+      fetchPriceHistory(orgId!).then(
+        (d) =>
+          ({
+            services: d?.services ?? {},
+            parts: d?.parts ?? {},
+          }) as PriceHistoryData,
+      ),
     enabled: !!orgId,
     staleTime: 60_000,
     retry: 1,
@@ -368,19 +369,15 @@ export function useVehicleServicePrices(
       vehicleMake,
       vehicleModel,
     ),
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (serviceCatalogId) params.set("service_catalog_id", serviceCatalogId);
-      if (vehicleMake) params.set("vehicle_make", vehicleMake);
-      if (vehicleModel) params.set("vehicle_model", vehicleModel);
-      const res = await fetch(
-        `/api/organizations/${orgId}/price-history/service?${params}`,
-      );
-      if (!res.ok) throw new Error("Failed to load vehicle service prices");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as VehicleServicePriceEntry[];
-    },
+    queryFn: () =>
+      fetchVehicleServicePrices(orgId!, {
+        params: {
+          service_catalog_id: serviceCatalogId,
+          vehicle_make: vehicleMake,
+          vehicle_model: vehicleModel,
+        },
+        errorMessage: "Failed to load vehicle service prices",
+      }).then((d) => d ?? []),
     enabled: !!orgId && !!serviceCatalogId && !!vehicleMake,
     staleTime: 60_000,
     retry: 1,
@@ -395,6 +392,7 @@ export function useVehiclePartPrices(
   orgId: string | undefined,
   partName: string | undefined,
   vehicleMake: string | undefined,
+  vehicleModel?: string,
 ): UseQueryResult<VehiclePartPriceEntry[], Error> {
   return useQuery({
     queryKey: priceMemoryKeys.partPrices(
@@ -402,18 +400,15 @@ export function useVehiclePartPrices(
       partName ?? "",
       vehicleMake,
     ),
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (partName) params.set("part_name", partName);
-      if (vehicleMake) params.set("vehicle_make", vehicleMake);
-      const res = await fetch(
-        `/api/organizations/${orgId}/price-history/part?${params}`,
-      );
-      if (!res.ok) throw new Error("Failed to load vehicle part prices");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as VehiclePartPriceEntry[];
-    },
+    queryFn: () =>
+      fetchVehiclePartPrices(orgId!, {
+        params: {
+          part_name: partName,
+          vehicle_make: vehicleMake,
+          vehicle_model: vehicleModel,
+        },
+        errorMessage: "Failed to load vehicle part prices",
+      }).then((d) => d ?? []),
     enabled: !!orgId && !!partName && !!vehicleMake,
     staleTime: 60_000,
     retry: 1,

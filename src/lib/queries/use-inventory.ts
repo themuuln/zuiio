@@ -12,18 +12,56 @@ import type {
   StockThreshold,
   Supplier,
 } from "@/lib/types";
+import { createOrgQuery } from "./factory";
 import { inventoryKeys } from "./keys";
+
+// ── Module-level fetchers ────────────────────────────────────
+
+const fetchPartsCatalog = createOrgQuery<PartsCatalogItem[]>(
+  "/inventory/parts",
+  { unwrap: "paginated" },
+);
+
+const fetchInventoryBalances = createOrgQuery<InventoryBalanceWithAvgCost[]>(
+  "/inventory/balances",
+  { unwrap: "paginated" },
+);
+
+const fetchInventoryMovements = createOrgQuery<InventoryMovement[]>(
+  "/inventory/movements",
+  { unwrap: "paginated" },
+);
+
+const fetchSuppliers = createOrgQuery<Supplier[]>("/inventory/suppliers", {
+  unwrap: "paginated",
+});
+
+const fetchStockThresholds = createOrgQuery<StockThreshold[]>(
+  "/inventory/thresholds",
+  { unwrap: "paginated" },
+);
+
+const fetchPartsCars = createOrgQuery<PartsCars[]>("/inventory/parts-cars", {
+  unwrap: "paginated",
+});
+
+// ── Shared type ──────────────────────────────────────────────
+
+export type PurchaseOrderWithSupplier = PurchaseOrder & {
+  supplier?: { name: string } | null;
+};
+
+const fetchPurchaseOrders = createOrgQuery<PurchaseOrderWithSupplier[]>(
+  "/inventory/purchase-orders",
+  { unwrap: "paginated" },
+);
+
+// ── Query hooks ──────────────────────────────────────────────
 
 export function usePartsCatalog(orgId: string | undefined) {
   return useQuery({
     queryKey: inventoryKeys.parts(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/inventory/parts`);
-      if (!res.ok) throw new Error("Failed to load parts");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as PartsCatalogItem[];
-    },
+    queryFn: () => fetchPartsCatalog(orgId ?? ""),
     enabled: !!orgId,
     staleTime: 60_000,
   });
@@ -32,13 +70,7 @@ export function usePartsCatalog(orgId: string | undefined) {
 export function useInventoryBalances(orgId: string | undefined) {
   return useQuery({
     queryKey: inventoryKeys.balances(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/inventory/balances`);
-      if (!res.ok) throw new Error("Failed to load balances");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as InventoryBalanceWithAvgCost[];
-    },
+    queryFn: () => fetchInventoryBalances(orgId ?? ""),
     enabled: !!orgId,
     staleTime: 30_000,
   });
@@ -50,19 +82,99 @@ export function useInventoryMovements(
 ) {
   return useQuery({
     queryKey: [...inventoryKeys.movements(orgId ?? ""), type ?? "all"],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (type) params.set("movement_type", type);
-      const url = `/api/organizations/${orgId}/inventory/movements${params.toString() ? `?${params.toString()}` : ""}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to load movements");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as InventoryMovement[];
-    },
+    queryFn: () =>
+      fetchInventoryMovements(orgId ?? "", {
+        params: type ? { movement_type: type } : undefined,
+      }),
     enabled: !!orgId,
   });
 }
+
+export function useSuppliers(orgId: string | undefined) {
+  return useQuery({
+    queryKey: inventoryKeys.suppliers(orgId ?? ""),
+    queryFn: () => fetchSuppliers(orgId ?? ""),
+    enabled: !!orgId,
+  });
+}
+
+export function usePurchaseOrders(orgId: string | undefined) {
+  return useQuery({
+    queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
+    queryFn: () => fetchPurchaseOrders(orgId ?? ""),
+    enabled: !!orgId,
+    staleTime: 30_000,
+  });
+}
+
+export function usePurchaseOrderItems(
+  orgId: string | undefined,
+  poId: string | undefined,
+) {
+  const fetchPOItems = createOrgQuery<
+    (PurchaseOrderItem & { part_name: string })[]
+  >(`/inventory/purchase-orders/${poId}/items`, { unwrap: "paginated" });
+
+  return useQuery({
+    queryKey: inventoryKeys.purchaseOrderItems(poId ?? ""),
+    queryFn: () => fetchPOItems(orgId ?? ""),
+    enabled: !!orgId && !!poId,
+    staleTime: 30_000,
+  });
+}
+
+export function useStockThresholds(orgId: string | undefined) {
+  return useQuery({
+    queryKey: inventoryKeys.thresholds(orgId ?? ""),
+    queryFn: () => fetchStockThresholds(orgId ?? ""),
+    enabled: !!orgId,
+    staleTime: 60_000,
+  });
+}
+
+// ── Parts Cars ────────────────────────────────────────────────
+
+export function usePartsCars(orgId: string | undefined) {
+  return useQuery({
+    queryKey: inventoryKeys.partsCars(orgId ?? ""),
+    queryFn: () => fetchPartsCars(orgId ?? ""),
+    enabled: !!orgId,
+    staleTime: 30_000,
+  });
+}
+
+export function usePartsCar(
+  orgId: string | undefined,
+  carId: string | undefined,
+) {
+  const fetchPartCar = createOrgQuery<PartsCars>(
+    `/inventory/parts-cars/${carId}`,
+  );
+
+  return useQuery({
+    queryKey: inventoryKeys.partsCar(orgId ?? "", carId ?? ""),
+    queryFn: () => fetchPartCar(orgId ?? ""),
+    enabled: !!orgId && !!carId,
+  });
+}
+
+export function usePartsCarParts(
+  orgId: string | undefined,
+  carId: string | undefined,
+) {
+  const fetchCarParts = createOrgQuery<PartsCarParts[]>(
+    `/inventory/parts-cars/${carId}/parts`,
+    { unwrap: "paginated" },
+  );
+
+  return useQuery({
+    queryKey: inventoryKeys.partsCarParts(orgId ?? "", carId ?? ""),
+    queryFn: () => fetchCarParts(orgId ?? ""),
+    enabled: !!orgId && !!carId,
+  });
+}
+
+// ── Mutation hooks (unchanged) ──────────────────────────────
 
 export function useCreateMovement(orgId: string | undefined) {
   const qc = useQueryClient();
@@ -94,23 +206,6 @@ export function useCreateMovement(orgId: string | undefined) {
       qc.invalidateQueries({ queryKey: inventoryKeys.balances(orgId ?? "") });
       qc.invalidateQueries({ queryKey: inventoryKeys.parts(orgId ?? "") });
     },
-  });
-}
-
-export function useSuppliers(orgId: string | undefined) {
-  return useQuery({
-    queryKey: inventoryKeys.suppliers(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/suppliers`,
-      );
-      if (!res.ok) throw new Error("Failed to load suppliers");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      // API returns { data: PaginatedResponse<Supplier> }, unwrap .data.data
-      return (json.data?.data ?? json.data ?? []) as Supplier[];
-    },
-    enabled: !!orgId,
   });
 }
 
@@ -279,50 +374,6 @@ export function useDeleteSupplier(orgId: string | undefined) {
   return mutation;
 }
 
-export type PurchaseOrderWithSupplier = PurchaseOrder & {
-  supplier?: { name: string } | null;
-};
-
-export function usePurchaseOrders(orgId: string | undefined) {
-  return useQuery({
-    queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/purchase-orders`,
-      );
-      if (!res.ok) throw new Error("Failed to load purchase orders");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      // API returns { data: PaginatedResponse<PurchaseOrder> }, unwrap .data.data
-      return (json.data?.data ??
-        json.data ??
-        []) as PurchaseOrderWithSupplier[];
-    },
-    enabled: !!orgId,
-    staleTime: 30_000,
-  });
-}
-
-export function usePurchaseOrderItems(
-  orgId: string | undefined,
-  poId: string | undefined,
-) {
-  return useQuery({
-    queryKey: inventoryKeys.purchaseOrderItems(poId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/items`,
-      );
-      if (!res.ok) throw new Error("Failed to load PO items");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as (PurchaseOrderItem & { part_name: string })[];
-    },
-    enabled: !!orgId && !!poId,
-    staleTime: 30_000,
-  });
-}
-
 export function useCreatePurchaseOrder(orgId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
@@ -410,80 +461,6 @@ export function useReceivePurchaseOrder(orgId: string | undefined) {
       qc.invalidateQueries({ queryKey: inventoryKeys.parts(orgId ?? "") });
       qc.invalidateQueries({ queryKey: inventoryKeys.movements(orgId ?? "") });
     },
-  });
-}
-
-export function useStockThresholds(orgId: string | undefined) {
-  return useQuery({
-    queryKey: inventoryKeys.thresholds(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/thresholds`,
-      );
-      if (!res.ok) throw new Error("Failed to load thresholds");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as StockThreshold[];
-    },
-    enabled: !!orgId,
-    staleTime: 60_000,
-  });
-}
-
-// ── Parts Cars ────────────────────────────────────────────────
-
-export function usePartsCars(orgId: string | undefined) {
-  return useQuery({
-    queryKey: inventoryKeys.partsCars(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/parts-cars`,
-      );
-      if (!res.ok) throw new Error("Failed to load parts cars");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as PartsCars[];
-    },
-    enabled: !!orgId,
-    staleTime: 30_000,
-  });
-}
-
-export function usePartsCar(
-  orgId: string | undefined,
-  carId: string | undefined,
-) {
-  return useQuery({
-    queryKey: inventoryKeys.partsCar(orgId ?? "", carId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/parts-cars/${carId}`,
-      );
-      if (!res.ok) throw new Error("Failed to load parts car");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as PartsCars;
-    },
-    enabled: !!orgId && !!carId,
-  });
-}
-
-export function usePartsCarParts(
-  orgId: string | undefined,
-  carId: string | undefined,
-) {
-  return useQuery({
-    queryKey: inventoryKeys.partsCarParts(orgId ?? "", carId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/parts-cars/${carId}/parts`,
-      );
-      if (!res.ok) throw new Error("Failed to load parts car parts");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as PartsCarParts[];
-    },
-    enabled: !!orgId && !!carId,
   });
 }
 

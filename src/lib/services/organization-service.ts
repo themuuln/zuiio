@@ -7,6 +7,7 @@ import type {
   CreateOrganizationParams,
   UpdateOrganizationParams,
 } from "@/lib/types";
+import { buildUpdates, type FieldMap } from "./build-updates";
 
 export async function createOrganization(
   params: CreateOrganizationParams,
@@ -189,13 +190,21 @@ export async function updateOrganization(
 ): Promise<Organization> {
   const supabase = await createClient();
 
-  const updates: Record<string, unknown> = {};
-  if (params.name !== undefined) updates.name = params.name.trim();
-  if (params.logoUrl !== undefined) updates.logo_url = params.logoUrl;
-  if (params.settings !== undefined) updates.settings = params.settings;
-  if (params.sharingEnabled !== undefined)
-    updates.sharing_enabled = params.sharingEnabled;
+  const trim = (v: unknown) => (v as string).trim() || null;
 
+  const fieldMap: FieldMap<UpdateOrganizationParams> = {
+    columns: {
+      name: "name",
+      logoUrl: "logo_url",
+      settings: "settings",
+      sharingEnabled: "sharing_enabled",
+    },
+    transforms: {
+      name: trim,
+    },
+  };
+
+  const updates = buildUpdates(params, fieldMap);
   updates.updated_by = (await supabase.auth.getUser()).data.user?.id;
 
   if (Object.keys(updates).length <= 1) {

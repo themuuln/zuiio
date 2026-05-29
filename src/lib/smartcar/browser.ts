@@ -4,6 +4,12 @@
  * Uses a shared browser instance (lazy singleton) to avoid spawning
  * a new Chromium per request. Scrapes the DOM after the SPA renders.
  *
+ * Optimizations:
+ *  - Pre-warms browser on module load (no cold-start penalty)
+ *  - Navigates directly to /vehicle/{plate} (skips home page fill+click)
+ *  - Reuses pages via a pool (avoids page creation overhead per request)
+ *  - Uses waitForSelector instead of fixed sleep
+ *
  * Dependencies: playwright (npm install -D playwright)
  */
 
@@ -40,7 +46,7 @@ export type SmartCarLookupResult =
   | { ok: false; error: string };
 
 // ---------------------------------------------------------------------------
-// Browser singleton
+// Browser singleton + eager pre-warm
 // ---------------------------------------------------------------------------
 
 let _browser: Browser | null = null;
@@ -66,12 +72,64 @@ async function getBrowser(): Promise<Browser> {
 
     browser.on("disconnected", () => {
       _browser = null;
+      _pagePool = [];
     });
 
     return browser;
   })();
 
   return _launching;
+}
+
+// Pre-warm browser on module load so the first request has no cold start
+void getBrowser();
+
+// ---------------------------------------------------------------------------
+// Page pool — reuse pages to avoid creation overhead per request
+// ---------------------------------------------------------------------------
+
+const PAGE_POOL_MAX = 3;
+let _pagePool: Page[] = [];
+
+async function acquirePage(): Promise<Page> {
+  // Reuse an idle page from the pool
+  while (_pagePool.length > 0) {
+    const page = _pagePool.pop()!;
+    if (page.isClosed()) continue;
+    // Clear stale routes from previous request before reuse
+    await page.unrouteAll();
+    return page;
+  }
+  // Pool empty — create a new page
+  const browser = await getBrowser();
+  return browser.newPage();
+}
+
+// Patterns to block on every page (heavy resources, trackers)
+const BLOCKED_PATTERNS = [
+  "**/*.{png,jpg,jpeg,gif,svg,woff,woff2,ttf}",
+  "**/analytics**",
+  "**/gtag**",
+  "**/facebook**",
+  "**/socket**",
+];
+
+async function applyBlockRoutes(page: Page) {
+  for (const pattern of BLOCKED_PATTERNS) {
+    await page.route(pattern, (route: { abort: () => Promise<unknown> }) =>
+      route.abort(),
+    );
+  }
+}
+
+function releasePage(page: Page) {
+  if (page.isClosed()) return;
+  if (_pagePool.length >= PAGE_POOL_MAX) {
+    // Pool full — close the oldest page
+    const oldest = _pagePool.shift();
+    oldest?.close().catch(() => {});
+  }
+  _pagePool.push(page);
 }
 
 // ---------------------------------------------------------------------------
@@ -174,51 +232,26 @@ export async function lookupPlate(
   let page: Page | null = null;
 
   try {
-    const browser = await getBrowser();
-    page = await browser.newPage();
+    page = await acquirePage();
 
     // Block heavy resources to speed up load
-    await page.route(
-      "**/*.{png,jpg,jpeg,gif,svg,woff,woff2,ttf}",
-      (route: { abort: () => Promise<unknown> }) => route.abort(),
-    );
-    await page.route(
-      "**/analytics**",
-      (route: { abort: () => Promise<unknown> }) => route.abort(),
-    );
-    await page.route("**/gtag**", (route: { abort: () => Promise<unknown> }) =>
-      route.abort(),
-    );
-    await page.route(
-      "**/facebook**",
-      (route: { abort: () => Promise<unknown> }) => route.abort(),
-    );
-    await page.route(
-      "**/socket**",
-      (route: { abort: () => Promise<unknown> }) => route.abort(),
-    );
+    await applyBlockRoutes(page);
 
-    // Navigate to home
-    await page.goto("https://smartcar.mn/home", {
+    // Navigate directly to the vehicle page (skips home → fill → click)
+    await page.goto(`https://smartcar.mn/vehicle/${normalized}`, {
       waitUntil: "domcontentloaded",
       timeout: TIMEOUT_MS,
     });
 
-    // Fill plate number and search
-    const input = page.getByRole("textbox", { name: "ААА" });
-    await input.fill(normalized, { timeout: SELECTOR_TIMEOUT });
-    await page
-      .getByRole("button", { name: "search" })
-      .click({ timeout: SELECTOR_TIMEOUT });
-
-    // Wait for vehicle data to render
+    // Wait for vehicle data to render (poll instead of fixed sleep)
+    // The SPA fetches data after mount — wait for the first info card value
     await page
       .locator(".vehicleComponentInfoCard__value")
       .first()
       .waitFor({ state: "visible", timeout: SELECTOR_TIMEOUT });
 
-    // Extra settle time for SPA data fetch
-    await page.waitForTimeout(1500);
+    // Short settle for remaining fields to populate
+    await page.waitForTimeout(300);
 
     const data = await parseVehicleFromDOM(page);
 
@@ -235,6 +268,9 @@ export async function lookupPlate(
     const msg = err instanceof Error ? err.message : String(err);
     return { ok: false, error: msg };
   } finally {
-    await page?.close();
+    // Return page to pool for reuse (don't close it)
+    if (page && !page.isClosed()) {
+      releasePage(page);
+    }
   }
 }

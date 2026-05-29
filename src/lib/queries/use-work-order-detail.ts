@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { toastRetry } from "@/lib/toast-utils";
+import { createOrgQuery } from "./factory";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
 import { mechanicKeys, serviceKeys, workOrderKeys } from "./keys";
 
@@ -51,49 +52,41 @@ export async function fetchPartPriceHistory(
 }
 
 export function useWorkOrderDetail(orgId: string | undefined, woId: string) {
+  const fetchWorkOrder = createOrgQuery<WorkOrderDetail>(
+    `/work-orders/${woId}`,
+  );
   return useQuery({
     queryKey: workOrderKeys.detail(orgId ?? "", woId),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}`,
-      );
-      if (!res.ok) throw new Error("Failed to load work order");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as WorkOrderDetail;
-    },
+    queryFn: () => fetchWorkOrder(orgId!),
     enabled: !!orgId,
     staleTime: 15_000,
   });
 }
 
+const fetchServiceCatalog = createOrgQuery<ServiceCatalog[]>("/services");
+
 export function useServiceCatalog(orgId: string | undefined) {
   return useQuery({
     queryKey: serviceKeys.list(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/services`);
-      if (!res.ok) throw new Error("Failed to load service catalog");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as ServiceCatalog[];
-    },
+    queryFn: () => fetchServiceCatalog(orgId!),
     enabled: !!orgId,
     staleTime: 60_000,
   });
 }
 
+const fetchMechanicsList =
+  createOrgQuery<
+    {
+      id: string;
+      full_name: string;
+    }[]
+  >("/reports");
+
 export function useMechanicsList(orgId: string | undefined) {
   return useQuery({
     queryKey: mechanicKeys.list(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/reports?type=mechanics`,
-      );
-      if (!res.ok) throw new Error("Failed to load mechanics");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as { id: string; full_name: string }[];
-    },
+    queryFn: () =>
+      fetchMechanicsList(orgId!, { params: { type: "mechanics" } }),
     enabled: !!orgId,
     staleTime: 60_000,
   });

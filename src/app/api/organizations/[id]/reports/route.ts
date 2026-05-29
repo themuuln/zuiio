@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
 import {
+  generateReportInsights,
+  getCustomerRetention,
   getDailyReport,
   getDailyTimeline,
   getDashboardData,
@@ -9,7 +11,12 @@ import {
   getMechanicPerformanceTrend,
   getMechanicsList,
   getMonthlyReport,
+  getPnLSummary,
+  getRevenueForecast,
+  getRevenueTargets,
+  getServiceBreakdown,
   getWeeklyReport,
+  setRevenueTarget,
 } from "@/lib/services/report-service";
 
 export const GET = createRouteHandler(async ({ request, orgId }) => {
@@ -17,6 +24,8 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
   const type = searchParams.get("type") ?? "daily";
   const mechanicId = searchParams.get("mechanic");
   const date = searchParams.get("date") ?? new Date().toISOString().split("T")[0];
+  const dateFrom = searchParams.get("date_from") ?? date;
+  const dateTo = searchParams.get("date_to") ?? date;
 
   if (type === "mechanics") {
     const mechanics = await getMechanicsList(orgId);
@@ -64,9 +73,49 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
       const trend = await getMechanicPerformanceTrend(orgId, mid, period, startDate, endDate);
       return NextResponse.json({ data: trend });
     }
+    // ── ERP-Grade endpoints ────────────────────────────────
+    case "insights": {
+      const insights = await generateReportInsights(orgId, dateFrom, dateTo);
+      return NextResponse.json({ data: insights });
+    }
+    case "forecast": {
+      const periodType = (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ?? "monthly";
+      const forecast = await getRevenueForecast(orgId, periodType, date);
+      return NextResponse.json({ data: forecast });
+    }
+    case "targets": {
+      const periodType = (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ?? "monthly";
+      const targets = await getRevenueTargets(orgId, periodType, date);
+      return NextResponse.json({ data: targets });
+    }
+    case "retention": {
+      const retention = await getCustomerRetention(orgId, dateFrom, dateTo);
+      return NextResponse.json({ data: retention });
+    }
+    case "pnl": {
+      const pnl = await getPnLSummary(orgId, dateFrom, dateTo);
+      return NextResponse.json({ data: pnl });
+    }
+    case "service-breakdown": {
+      const breakdown = await getServiceBreakdown(orgId, dateFrom, dateTo);
+      return NextResponse.json({ data: breakdown });
+    }
     default:
       throw new ValidationError(
-        "Invalid report type. Use: daily, weekly, monthly, eod, dashboard, mechanics, mechanic-trend",
+        "Invalid report type. Use: daily, weekly, monthly, eod, dashboard, mechanics, mechanic-trend, insights, forecast, targets, retention, pnl, service-breakdown",
       );
   }
+});
+
+/** POST /api/organizations/[id]/reports — Set revenue target */
+export const POST = createRouteHandler(async ({ request, orgId }) => {
+  const body = await request.json();
+  const { period_type, period_start, period_end, target_revenue } = body;
+
+  if (!period_type || !period_start || !period_end || target_revenue === undefined) {
+    throw new ValidationError("period_type, period_start, period_end, and target_revenue are required");
+  }
+
+  const target = await setRevenueTarget(orgId, period_type, period_start, period_end, Number(target_revenue));
+  return NextResponse.json({ data: target });
 });

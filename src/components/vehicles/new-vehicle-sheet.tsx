@@ -36,8 +36,8 @@ import {
 import { ColorSelect } from "@/components/vehicles/color-select";
 import {
   carCatalogKeys,
-  useCarBrands,
-  useCarModels,
+  useFilteredCarBrands,
+  useFilteredCarModels,
 } from "@/lib/queries/use-car-catalog";
 import { useCustomerSearch } from "@/lib/queries/use-wizard-data";
 import { QuickCreateCustomerSheet } from "@/components/customers/quick-create-customer-sheet";
@@ -48,6 +48,7 @@ import {
 import { formatPlateInput, inputProps } from "@/lib/form-ux";
 import { vehicleKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import type { Customer, VehicleWithOwner } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
 
@@ -148,12 +149,18 @@ export function NewVehicleSheet({
   // Quick create customer
   const [showQuickCustomer, setShowQuickCustomer] = useState(false);
 
-  // Car catalog dropdowns
-  const { data: brands = [] } = useCarBrands();
+  // Car catalog dropdowns (niche-filtered)
+  const orgSettingsRes = useOrgSettings(orgId ?? undefined);
+  const { data: brands = [] } = useFilteredCarBrands(
+    orgSettingsRes.settings as Record<string, unknown> | undefined,
+  );
   const selectedBrand = brands.find(
     (b) => b.name.toLowerCase() === form.make.toLowerCase(),
   );
-  const { data: models = [] } = useCarModels(selectedBrand?.id ?? null);
+  const { data: models = [] } = useFilteredCarModels(
+    selectedBrand?.id ?? null,
+    orgSettingsRes.settings as Record<string, unknown> | undefined,
+  );
 
   const handleModelSelect = (modelName: string) => {
     setForm((current) => {

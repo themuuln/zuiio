@@ -1,21 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { toastRetry } from "@/lib/toast-utils";
+import { createOrgQuery } from "./factory";
 import type { WorkOrderAttachment } from "@/lib/types";
 import { attachmentKeys } from "./keys";
 
 export function useAttachments(orgId: string | undefined, woId: string) {
+  const fetchAttachments = createOrgQuery<WorkOrderAttachment[]>(
+    `/work-orders/${woId}/attachments`,
+  );
   return useQuery({
     queryKey: attachmentKeys.list(orgId ?? "", woId),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}/attachments`,
-      );
-      if (!res.ok) throw new Error("Failed to load attachments");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as WorkOrderAttachment[];
-    },
+    queryFn: () => fetchAttachments(orgId!),
     enabled: !!orgId && !!woId,
     staleTime: 15_000,
   });

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { toastRetry } from "@/lib/toast-utils";
+import { createOrgQuery } from "./factory";
 import { expenseKeys } from "@/lib/queries/keys";
 import type {
   ExpenseWithCategory,
@@ -21,6 +22,8 @@ interface ExpenseListParams {
 }
 
 // ── List expenses ──
+const fetchExpenses = createOrgQuery<ExpenseWithCategory[]>("/expenses");
+
 export function useExpenses(
   orgId: string | undefined,
   params?: ExpenseListParams,
@@ -31,18 +34,13 @@ export function useExpenses(
   if (params?.startDate) filters.startDate = params.startDate;
   if (params?.endDate) filters.endDate = params.endDate;
   if (params?.paid !== undefined) filters.paid = String(params.paid);
-  const searchParams = new URLSearchParams(filters).toString();
 
   return useQuery({
     queryKey: expenseKeys.list(orgId ?? "", filters),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/expenses${searchParams ? `?${searchParams}` : ""}`,
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as ExpenseWithCategory[];
-    },
+    queryFn: () =>
+      fetchExpenses(orgId!, {
+        params: Object.keys(filters).length ? filters : undefined,
+      }),
     enabled: !!orgId,
   });
 }
@@ -52,46 +50,36 @@ export function useExpense(
   orgId: string | undefined,
   expenseId: string | undefined,
 ) {
+  const fetchExpense = createOrgQuery<ExpenseWithCategory>(
+    `/expenses/${expenseId ?? ""}`,
+  );
   return useQuery({
     queryKey: expenseKeys.detail(orgId ?? "", expenseId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/expenses/${expenseId}`,
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as ExpenseWithCategory;
-    },
+    queryFn: () => fetchExpense(orgId!),
     enabled: !!orgId && !!expenseId,
   });
 }
 
 // ── Expense stats ──
+const fetchExpenseStats = createOrgQuery<ExpenseStats>("/expenses");
+
 export function useExpenseStats(orgId: string | undefined) {
   return useQuery({
     queryKey: expenseKeys.stats(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/expenses?type=stats`,
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as ExpenseStats;
-    },
+    queryFn: () => fetchExpenseStats(orgId!, { params: { type: "stats" } }),
     enabled: !!orgId,
   });
 }
 
 // ── Expense categories ──
+const fetchExpenseCategories = createOrgQuery<ExpenseCategory[]>(
+  "/expense-categories",
+);
+
 export function useExpenseCategories(orgId: string | undefined) {
   return useQuery({
     queryKey: expenseKeys.categories(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/expense-categories`);
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as ExpenseCategory[];
-    },
+    queryFn: () => fetchExpenseCategories(orgId!),
     enabled: !!orgId,
   });
 }

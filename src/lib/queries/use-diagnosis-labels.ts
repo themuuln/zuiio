@@ -1,18 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { toastRetry } from "@/lib/toast-utils";
+import { createOrgQuery } from "./factory";
 import { diagnosisLabelKeys } from "@/lib/queries/keys";
 import type { DiagnosisLabel } from "@/lib/types";
+
+const fetchDiagnosisLabels =
+  createOrgQuery<DiagnosisLabel[]>("/diagnosis-labels");
 
 export function useDiagnosisLabels(orgId: string | undefined) {
   return useQuery({
     queryKey: diagnosisLabelKeys.list(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/diagnosis-labels`);
-      if (!res.ok) throw new Error("Failed to load diagnosis labels");
-      const json = await res.json();
-      return (json.data ?? []) as DiagnosisLabel[];
-    },
+    queryFn: () => fetchDiagnosisLabels(orgId!),
     enabled: !!orgId,
   });
 }

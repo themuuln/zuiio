@@ -2,6 +2,7 @@ import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { createClient } from "@/lib/supabase/server";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { buildUpdates, type FieldMap } from "./build-updates";
 import type {
   CreatePartParams,
   CreateMovementParams,
@@ -21,6 +22,61 @@ import type {
   UpdatePurchaseOrderParams,
   UpdateSupplierParams,
 } from "@/lib/types";
+
+const trim = (v: unknown) => (v as string).trim() || null;
+
+const partFieldMap: FieldMap<UpdatePartParams> = {
+  columns: {
+    name: "name",
+    name_mn: "name_mn",
+    part_number: "part_number",
+    category: "category",
+    description: "description",
+    unit: "unit",
+    default_price: "default_price",
+    is_active: "is_active",
+  },
+  transforms: {
+    name: (v) => (v as string).trim(),
+    name_mn: trim,
+    part_number: (v) => (v as string) || null,
+    category: (v) => (v as string) || null,
+    description: (v) => (v as string) || null,
+  },
+};
+
+const supplierFieldMap: FieldMap<UpdateSupplierParams> = {
+  columns: {
+    name: "name",
+    contact_person: "contact_person",
+    phone: "phone",
+    email: "email",
+    address: "address",
+    tax_id: "tax_id",
+    payment_terms: "payment_terms",
+    notes: "notes",
+    is_active: "is_active",
+  },
+  transforms: {
+    name: (v) => (v as string).trim(),
+    contact_person: (v) => (v as string) || null,
+    phone: (v) => (v as string) || null,
+    email: (v) => (v as string) || null,
+    address: (v) => (v as string) || null,
+    tax_id: (v) => (v as string) || null,
+    payment_terms: (v) => (v as string) || null,
+    notes: (v) => (v as string) || null,
+  },
+};
+
+const purchaseOrderFieldMap: FieldMap<UpdatePurchaseOrderParams> = {
+  columns: {
+    status: "status",
+    notes: "notes",
+    expected_at: "expected_at",
+    received_at: "received_at",
+  },
+};
 
 // ── Parts Catalog ─────────────────────────────────────────────
 
@@ -147,19 +203,8 @@ export async function updatePart(
 ): Promise<PartsCatalogItem> {
   const supabase = await createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
-  const updates: Record<string, unknown> = { updated_by: userId };
-  if (params.name !== undefined) updates.name = params.name.trim();
-  if (params.name_mn !== undefined)
-    updates.name_mn = params.name_mn?.trim() || null;
-  if (params.part_number !== undefined)
-    updates.part_number = params.part_number || null;
-  if (params.category !== undefined) updates.category = params.category || null;
-  if (params.description !== undefined)
-    updates.description = params.description || null;
-  if (params.unit !== undefined) updates.unit = params.unit;
-  if (params.default_price !== undefined)
-    updates.default_price = params.default_price;
-  if (params.is_active !== undefined) updates.is_active = params.is_active;
+  const updates = buildUpdates(params, partFieldMap);
+  updates.updated_by = userId;
 
   const { data, error } = await supabase
     .from("parts_catalog")
@@ -426,18 +471,8 @@ export async function updateSupplier(
 ): Promise<Supplier> {
   const supabase = await createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
-  const updates: Record<string, unknown> = { updated_by: userId };
-  if (params.name !== undefined) updates.name = params.name.trim();
-  if (params.contact_person !== undefined)
-    updates.contact_person = params.contact_person || null;
-  if (params.phone !== undefined) updates.phone = params.phone || null;
-  if (params.email !== undefined) updates.email = params.email || null;
-  if (params.address !== undefined) updates.address = params.address || null;
-  if (params.tax_id !== undefined) updates.tax_id = params.tax_id || null;
-  if (params.payment_terms !== undefined)
-    updates.payment_terms = params.payment_terms || null;
-  if (params.notes !== undefined) updates.notes = params.notes || null;
-  if (params.is_active !== undefined) updates.is_active = params.is_active;
+  const updates = buildUpdates(params, supplierFieldMap);
+  updates.updated_by = userId;
 
   const { data, error } = await supabase
     .from("suppliers")
@@ -579,13 +614,8 @@ export async function updatePurchaseOrder(
 ): Promise<PurchaseOrder> {
   const supabase = await createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
-  const updates: Record<string, unknown> = { updated_by: userId };
-  if (params.status !== undefined) updates.status = params.status;
-  if (params.notes !== undefined) updates.notes = params.notes;
-  if (params.expected_at !== undefined)
-    updates.expected_at = params.expected_at;
-  if (params.received_at !== undefined)
-    updates.received_at = params.received_at;
+  const updates = buildUpdates(params, purchaseOrderFieldMap);
+  updates.updated_by = userId;
 
   const { data, error } = await supabase
     .from("purchase_orders")

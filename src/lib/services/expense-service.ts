@@ -2,6 +2,7 @@ import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags, cacheDurations } from "@/lib/cache/keys";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { buildUpdates, type FieldMap } from "./build-updates";
 import { createClient } from "@/lib/supabase/server";
 import type {
   CreateExpenseCategoryParams,
@@ -13,6 +14,50 @@ import type {
   UpdateExpenseCategoryParams,
   UpdateExpenseParams,
 } from "@/lib/types";
+
+const trim = (v: unknown) => (v as string).trim() || null;
+
+const expenseFieldMap: FieldMap<UpdateExpenseParams> = {
+  columns: {
+    categoryId: "category_id",
+    vendorName: "vendor_name",
+    description: "description",
+    amount: "amount",
+    taxAmount: "tax_amount",
+    expenseDate: "expense_date",
+    dueDate: "due_date",
+    paidAt: "paid_at",
+    paymentMethod: "payment_method",
+    referenceNumber: "reference_number",
+    receiptUrl: "receipt_url",
+    notes: "notes",
+    isRecurring: "is_recurring",
+    recurrenceInterval: "recurrence_interval",
+  },
+  transforms: {
+    vendorName: trim,
+    description: (v) => (v as string).trim(),
+    referenceNumber: trim,
+    notes: trim,
+    paymentMethod: (v) => (v as string) || null,
+    recurrenceInterval: (v) => (v as string) || null,
+  },
+};
+
+const expenseCategoryFieldMap: FieldMap<UpdateExpenseCategoryParams> = {
+  columns: {
+    name: "name",
+    description: "description",
+    color: "color",
+    icon: "icon",
+    sortOrder: "sort_order",
+    isActive: "is_active",
+  },
+  transforms: {
+    name: (v) => (v as string).trim(),
+    description: trim,
+  },
+};
 
 const DEFAULT_CATEGORIES = [
   {
@@ -347,28 +392,7 @@ export async function updateExpense(
     throw new NotFoundError("Expense not found");
   }
 
-  const updates: Record<string, unknown> = {};
-  if (params.categoryId !== undefined) updates.category_id = params.categoryId;
-  if (params.vendorName !== undefined)
-    updates.vendor_name = params.vendorName?.trim() || null;
-  if (params.description !== undefined)
-    updates.description = params.description.trim();
-  if (params.amount !== undefined) updates.amount = params.amount;
-  if (params.taxAmount !== undefined) updates.tax_amount = params.taxAmount;
-  if (params.expenseDate !== undefined)
-    updates.expense_date = params.expenseDate;
-  if (params.dueDate !== undefined) updates.due_date = params.dueDate;
-  if (params.paidAt !== undefined) updates.paid_at = params.paidAt;
-  if (params.paymentMethod !== undefined)
-    updates.payment_method = params.paymentMethod || null;
-  if (params.referenceNumber !== undefined)
-    updates.reference_number = params.referenceNumber?.trim() || null;
-  if (params.receiptUrl !== undefined) updates.receipt_url = params.receiptUrl;
-  if (params.notes !== undefined) updates.notes = params.notes?.trim() || null;
-  if (params.isRecurring !== undefined)
-    updates.is_recurring = params.isRecurring;
-  if (params.recurrenceInterval !== undefined)
-    updates.recurrence_interval = params.recurrenceInterval || null;
+  const updates = buildUpdates(params, expenseFieldMap);
   updates.updated_by = userId;
 
   if (Object.keys(updates).length <= 1) {
@@ -524,14 +548,7 @@ export async function updateExpenseCategory(
 ): Promise<ExpenseCategory> {
   const supabase = await createClient();
 
-  const updates: Record<string, unknown> = {};
-  if (params.name !== undefined) updates.name = params.name.trim();
-  if (params.description !== undefined)
-    updates.description = params.description?.trim() || null;
-  if (params.color !== undefined) updates.color = params.color;
-  if (params.icon !== undefined) updates.icon = params.icon;
-  if (params.sortOrder !== undefined) updates.sort_order = params.sortOrder;
-  if (params.isActive !== undefined) updates.is_active = params.isActive;
+  const updates = buildUpdates(params, expenseCategoryFieldMap);
   updates.updated_by = userId;
 
   if (Object.keys(updates).length <= 1) {

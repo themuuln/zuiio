@@ -3,6 +3,7 @@ import { cacheTags } from "@/lib/cache/keys";
 import type { ServiceCatalog, ServicePriceHistory } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import { buildUpdates, type FieldMap } from "./build-updates";
 
 export async function getServices(
   orgId: string,
@@ -100,15 +101,25 @@ export async function updateService(
   const supabase = await createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
-  const updates: Record<string, unknown> = { updated_by: userId };
-  if (params.name !== undefined) updates.name = params.name.trim();
-  if (params.category !== undefined)
-    updates.category = params.category?.trim() ?? null;
-  if (params.description !== undefined)
-    updates.description = params.description?.trim() ?? null;
-  if (params.default_price !== undefined)
-    updates.default_price = params.default_price;
-  if (params.is_active !== undefined) updates.is_active = params.is_active;
+  const trim = (v: unknown) => (v as string).trim() || null;
+
+  const fieldMap: FieldMap<typeof params> = {
+    columns: {
+      name: "name",
+      category: "category",
+      description: "description",
+      default_price: "default_price",
+      is_active: "is_active",
+    },
+    transforms: {
+      name: trim,
+      category: trim,
+      description: trim,
+    },
+  };
+
+  const updates = buildUpdates(params, fieldMap);
+  updates.updated_by = userId;
 
   const { data, error } = await supabase
     .from("service_catalog")

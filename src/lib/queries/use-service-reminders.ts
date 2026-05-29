@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryResult } from "@tanstack/react-query";
+import { createOrgQuery } from "./factory";
 import { serviceReminderKeys } from "./keys";
 
 export interface ServiceScheduleItem {
@@ -44,24 +45,19 @@ export interface ReminderLogItem {
   } | null;
 }
 
+const fetchSchedules =
+  createOrgQuery<ServiceScheduleItem[]>("/service-reminders");
+
 export function useServiceSchedules(
   orgId: string | undefined,
   vehicleId?: string,
 ): UseQueryResult<ServiceScheduleItem[], Error> {
   return useQuery({
     queryKey: serviceReminderKeys.list(orgId ?? "", vehicleId),
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (vehicleId) params.set("vehicle_id", vehicleId);
-      const qs = params.toString();
-      const url = `/api/organizations/${orgId}/service-reminders${qs ? `?${qs}` : ""}`;
-      const res = await fetch(url);
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? `Failed to load (${res.status})`);
-      }
-      return (json.data ?? []) as ServiceScheduleItem[];
-    },
+    queryFn: () =>
+      fetchSchedules(orgId!, {
+        params: vehicleId ? { vehicle_id: vehicleId } : undefined,
+      }),
     enabled: !!orgId,
     staleTime: 15_000,
   });
@@ -71,20 +67,19 @@ export function useServiceSchedule(
   orgId: string | undefined,
   id: string,
 ): UseQueryResult<ServiceScheduleItem, Error> {
+  const fetchSchedule = createOrgQuery<ServiceScheduleItem>(
+    `/service-reminders/${id}`,
+  );
   return useQuery({
     queryKey: serviceReminderKeys.detail(orgId ?? "", id),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/service-reminders/${id}`,
-      );
-      if (!res.ok) throw new Error("Failed to load service schedule");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as ServiceScheduleItem;
-    },
+    queryFn: () => fetchSchedule(orgId!),
     enabled: !!orgId && !!id,
   });
 }
+
+const fetchReminderLogs = createOrgQuery<ReminderLogItem[]>(
+  "/service-reminder-logs",
+);
 
 export function useReminderLogs(
   orgId: string | undefined,
@@ -92,17 +87,10 @@ export function useReminderLogs(
 ): UseQueryResult<ReminderLogItem[], Error> {
   return useQuery({
     queryKey: serviceReminderKeys.logs(orgId ?? "", vehicleId),
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (vehicleId) params.set("vehicle_id", vehicleId);
-      const qs = params.toString();
-      const url = `/api/organizations/${orgId}/service-reminder-logs${qs ? `?${qs}` : ""}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to load reminder logs");
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as ReminderLogItem[];
-    },
+    queryFn: () =>
+      fetchReminderLogs(orgId!, {
+        params: vehicleId ? { vehicle_id: vehicleId } : undefined,
+      }),
     enabled: !!orgId,
     staleTime: 30_000,
   });

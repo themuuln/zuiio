@@ -31,6 +31,12 @@ import {
   useVehicleSearch,
 } from "@/lib/queries/use-wizard-data";
 import { usePartsCatalog } from "@/lib/queries/use-inventory";
+import {
+  useGlobalServiceCatalog,
+  useGlobalPartsCatalog,
+  type GlobalService,
+  type GlobalPart,
+} from "@/lib/queries/use-global-catalog";
 import { Typography } from "@/components/ui/typography";
 import type {
   Customer,
@@ -98,6 +104,8 @@ interface WizardState {
   vehicleCreateError: string | null;
 
   catalog: ServiceCatalog[];
+  globalServices: GlobalService[];
+  globalParts: GlobalPart[];
   serviceLines: ServiceLine[];
   priceHistory: Record<
     string,
@@ -216,6 +224,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   );
 
   const [catalog, setCatalog] = useState<ServiceCatalog[]>([]);
+  const [globalServices, setGlobalServices] = useState<GlobalService[]>([]);
+  const [globalParts, setGlobalParts] = useState<GlobalPart[]>([]);
   const [serviceLines, setServiceLines] = useState<ServiceLine[]>([]);
   const [priceHistory, setPriceHistory] = useState<
     Record<
@@ -316,6 +326,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     useServiceCatalog(orgId);
   const { data: partsCatalogData, isInitialLoading: partsCatalogLoading } =
     usePartsCatalog(orgId);
+  const { data: globalServicesData } = useGlobalServiceCatalog();
+  const { data: globalPartsData } = useGlobalPartsCatalog();
   const { data: mechanicsData, isInitialLoading: mechanicsLoading } =
     useMechanicsWithJobCount(orgId);
   const { data: priceHistoryData, isInitialLoading: priceHistoryLoading } =
@@ -369,6 +381,14 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (catalogData) setCatalog(catalogData);
   }, [catalogData]);
+
+  useEffect(() => {
+    if (globalServicesData) setGlobalServices(globalServicesData);
+  }, [globalServicesData]);
+
+  useEffect(() => {
+    if (globalPartsData) setGlobalParts(globalPartsData);
+  }, [globalPartsData]);
 
   useEffect(() => {
     if (partsCatalogData) setPartsCatalog(partsCatalogData);
@@ -704,21 +724,67 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const addPartFromCatalog = useCallback((part: PartsCatalogItem) => {
-    const price = part.default_price ?? 0;
-    setPartLines((prev) => [
-      ...prev,
-      {
-        part_name: part.name,
-        part_number: part.part_number ?? "",
-        quantity: 1,
-        unit_price: price,
-        final_price: price,
-        last_price: undefined,
-      },
-    ]);
-    setPartSearch("");
-  }, []);
+  const addPartFromCatalog = useCallback(
+    (part: PartsCatalogItem) => {
+      const price = part.default_price ?? 0;
+      const pname = part.name.toLowerCase();
+      // Optimistically use catalog price; upgrade to vehicle-specific if available
+      setPartLines((prev) => [
+        ...prev,
+        {
+          part_name: part.name,
+          part_number: part.part_number ?? "",
+          quantity: 1,
+          unit_price: price,
+          final_price: price,
+          last_price: undefined,
+        },
+      ]);
+      setPartSearch("");
+      // Fetch vehicle-specific price in background and upgrade if found
+      if (
+        orgId &&
+        selectedVehicle?.make &&
+        !vehiclePartsFetchedRef.current.has(pname)
+      ) {
+        vehiclePartsFetchedRef.current.add(pname);
+        void fetchVehiclePartPrice(
+          orgId,
+          part.name,
+          selectedVehicle.make,
+          selectedVehicle.model ?? undefined,
+        ).then((vehiclePrice) => {
+          if (vehiclePrice !== null) {
+            setVehiclePartPrices((prev) => ({
+              ...prev,
+              [pname]: vehiclePrice,
+            }));
+            setPartLines((prev) => {
+              // Find the most recently added part with this name (last in array)
+              let idx = -1;
+              for (let i = prev.length - 1; i >= 0; i--) {
+                if (prev[i].part_name.toLowerCase() === pname) {
+                  idx = i;
+                  break;
+                }
+              }
+              if (idx === -1) return prev;
+              const updated = [...prev];
+              // Always upgrade to vehicle-specific price when adding from catalog
+              updated[idx] = {
+                ...updated[idx],
+                unit_price: vehiclePrice,
+                final_price: vehiclePrice * updated[idx].quantity,
+                last_price: vehiclePrice,
+              };
+              return updated;
+            });
+          }
+        });
+      }
+    },
+    [orgId, selectedVehicle],
+  );
 
   const addPart = useCallback(() => {
     setPartLines((prev) => [
@@ -771,6 +837,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
           orgId,
           value.trim(),
           selectedVehicle.make,
+          selectedVehicle.model ?? undefined,
         ).then((vehiclePrice) => {
           if (vehiclePrice !== null) {
             setVehiclePartPrices((prev) => ({
@@ -908,6 +975,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     creatingVehicle,
     vehicleCreateError,
     catalog,
+    globalServices,
+    globalParts,
     serviceLines,
     priceHistory,
     vehicleServicePrices,

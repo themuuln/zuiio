@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 export type CarBrand = {
   id: string;
@@ -20,6 +21,12 @@ export type CarModel = {
   year_end: number | null;
   engine_options: string | null;
   is_active: boolean;
+};
+
+export type NicheSettings = {
+  enabled: boolean;
+  brand_ids: string[];
+  model_ids: string[];
 };
 
 export const carCatalogKeys = {
@@ -59,6 +66,64 @@ export function useCarModels(brandId: string | null) {
 }
 
 // ---------------------------------------------------------------------------
+// Niche-filtered variants
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns brands filtered by the org's vehicle niche settings.
+ * If niche is disabled or absent, returns all brands.
+ */
+export function useFilteredCarBrands(
+  orgSettings: Record<string, unknown> | undefined | null,
+) {
+  const { data: allBrands = [], ...rest } = useCarBrands();
+
+  const niche = orgSettings?.vehicle_niche as NicheSettings | undefined;
+
+  const filteredBrands = useMemo(() => {
+    if (!niche?.enabled || niche.brand_ids.length === 0) {
+      return allBrands;
+    }
+    return allBrands.filter((b) => niche.brand_ids.includes(b.id));
+  }, [allBrands, niche]);
+
+  return { data: filteredBrands, ...rest };
+}
+
+/**
+ * Returns models filtered by the org's vehicle niche settings.
+ * If niche is disabled, no model_ids are set, or brand not in niche, returns all models for the brand.
+ */
+export function useFilteredCarModels(
+  brandId: string | null,
+  orgSettings: Record<string, unknown> | undefined | null,
+) {
+  const { data: allModels = [], ...rest } = useCarModels(brandId);
+
+  const niche = orgSettings?.vehicle_niche as NicheSettings | undefined;
+
+  const filteredModels = useMemo(() => {
+    if (!niche?.enabled) return allModels;
+    // If brand not in niche brand_ids, return all (brand shouldn't appear,
+    // but if it does somehow, don't filter models)
+    if (
+      niche.brand_ids.length > 0 &&
+      brandId &&
+      !niche.brand_ids.includes(brandId)
+    ) {
+      return allModels;
+    }
+    // If model_ids are set, filter to only those models
+    if (niche.model_ids.length > 0) {
+      return allModels.filter((m) => niche.model_ids.includes(m.id));
+    }
+    return allModels;
+  }, [allModels, niche, brandId]);
+
+  return { data: filteredModels, ...rest };
+}
+
+// ---------------------------------------------------------------------------
 // SmartCar plate lookup
 // ---------------------------------------------------------------------------
 
@@ -88,7 +153,9 @@ export function useSmartCarLookup(plateNumber: string | null) {
   return useQuery({
     queryKey: ["smartcar-lookup", plateNumber],
     queryFn: async (): Promise<SmartCarLookupData> => {
-      const res = await fetch(`/api/smartcar/lookup?plate=${encodeURIComponent(plateNumber!)}`);
+      const res = await fetch(
+        `/api/smartcar/lookup?plate=${encodeURIComponent(plateNumber!)}`,
+      );
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Lookup failed");
       return json.data;

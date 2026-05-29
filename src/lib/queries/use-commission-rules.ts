@@ -1,18 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { toastRetry } from "@/lib/toast-utils";
+import { createOrgQuery } from "./factory";
 import { commissionKeys } from "@/lib/queries/keys";
 import type { MechanicCommissionRule } from "@/lib/types";
+
+const fetchCommissionRules =
+  createOrgQuery<MechanicCommissionRule[]>("/commission-rules");
 
 export function useCommissionRules(orgId: string | undefined) {
   return useQuery({
     queryKey: commissionKeys.list(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/commission-rules`);
-      if (!res.ok) throw new Error("Failed to load commission rules");
-      const json = await res.json();
-      return (json.data ?? []) as MechanicCommissionRule[];
-    },
+    queryFn: () => fetchCommissionRules(orgId!),
     enabled: !!orgId,
   });
 }

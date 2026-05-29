@@ -4,6 +4,7 @@ import type { Branch } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import type { CreateBranchParams, UpdateBranchParams } from "@/lib/types";
+import { buildUpdates, type FieldMap } from "./build-updates";
 
 /**
  * Creates a new branch for the given organization.
@@ -78,13 +79,23 @@ export async function updateBranch(
   const supabase = await createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
-  const updates: Record<string, unknown> = {};
-  if (params.name !== undefined) updates.name = params.name.trim();
-  if (params.address !== undefined) updates.address = params.address;
-  if (params.phone !== undefined) updates.phone = params.phone;
-  if (params.email !== undefined) updates.email = params.email;
-  if (params.isMain !== undefined) updates.is_main = params.isMain;
-  if (params.settings !== undefined) updates.settings = params.settings;
+  const trim = (v: unknown) => (v as string).trim() || null;
+
+  const fieldMap: FieldMap<UpdateBranchParams> = {
+    columns: {
+      name: "name",
+      address: "address",
+      phone: "phone",
+      email: "email",
+      isMain: "is_main",
+      settings: "settings",
+    },
+    transforms: {
+      name: trim,
+    },
+  };
+
+  const updates = buildUpdates(params, fieldMap);
   updates.updated_by = userId;
 
   if (Object.keys(updates).length <= 1) {

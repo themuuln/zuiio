@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
-import { handleApiError, UnauthorizedError } from "@/lib/errors";
+import { UnauthorizedError, toApiErrorResponse } from "@/lib/errors";
 import { authRateLimiter } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
@@ -106,7 +106,8 @@ export function createPortalRouteHandler(handler: PortalRouteHandler) {
 
       return await handler({ request, customer, supabase, params });
     } catch (error) {
-      return handleApiError(error);
+      const { status, body, headers } = toApiErrorResponse(error);
+      return NextResponse.json(body, { status, headers });
     }
   };
 }
