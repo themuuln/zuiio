@@ -18,10 +18,10 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
-import type { Profile } from "@/lib/types";
-import { cn } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
 import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
+import type { Profile } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface MechanicItemProps {
   mechanic: Profile & { current_jobs: number };
@@ -59,7 +59,7 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
         !isDragging && "hover:border-border hover:bg-muted/20",
       )}
     >
-      <Avatar className="size-6 shrink-0">
+      <Avatar className="size-6 shrink-0 after:hidden">
         <AvatarFallback
           className={cn("text-[8px] font-medium", color.bg, color.text)}
         >
@@ -120,9 +120,9 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() =>
-                (window.location.href = "/dashboard/organization/members")
-              }
+              onClick={() => {
+                window.location.href = "/dashboard/organization/members";
+              }}
               className="mt-2 gap-1.5"
             >
               <UserPlus className="size-3.5" />

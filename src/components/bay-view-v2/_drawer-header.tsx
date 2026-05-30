@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import type { WorkOrderDetail } from "@/lib/types";
 import { StatusPill } from "./status-pill";
+import { MongolianLicensePlate } from "./bay-card";
 
 interface DrawerHeaderProps {
   wo: WorkOrderDetail | null;
@@ -39,8 +40,9 @@ export function DrawerHeaderSection({
   })();
 
   return (
-    <DrawerHeader className="border-b border-border px-4 py-3 text-left shrink-0">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <DrawerHeader className="border-b border-border px-4 py-3 text-left shrink-0 bg-muted/5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center justify-between">
+        {/* Column 1: Vehicle & WO Info */}
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
             {loading ? (
@@ -49,57 +51,59 @@ export function DrawerHeaderSection({
               <Car className="size-5 text-primary" />
             )}
           </div>
-          <div className="min-w-0">
-            <DrawerTitle className="text-base">
-              {wo ? (
-                <span className="truncate block">
-                  {wo.vehicle?.plate_number ?? t("workOrder")}
-                </span>
+          <div className="min-w-0 flex flex-col gap-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              {wo && wo.vehicle?.plate_number ? (
+                <MongolianLicensePlate plate={wo.vehicle.plate_number} />
               ) : (
-                t("workOrder")
+                <span className="font-bold text-sm">{t("workOrder")}</span>
               )}
-            </DrawerTitle>
-            {wo && (
-              <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
-                <span className="font-mono">WO#{wo.id.slice(0, 8)}</span>
-                {wo.created_at && (
-                  <>
-                    <span className="text-muted-foreground/30">·</span>
-                    <span>{new Date(wo.created_at).toLocaleDateString()}</span>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-        {wo && (
-          <div className="flex min-w-[260px] flex-1 flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-border/50 bg-muted/30 px-3.5 py-2.5 text-sm">
-            <div className="flex items-center gap-1.5">
-              <span className="text-muted-foreground/60">
-                {wo.vehicle?.make}
-              </span>
-              <span className="font-medium">{wo.vehicle?.model}</span>
-              {wo.vehicle?.year && (
-                <span className="text-muted-foreground/50 text-xs">
-                  · {wo.vehicle.year}
+              {wo && (
+                <span className="font-mono text-xs text-muted-foreground/80 font-medium">
+                  WO#{wo.id.slice(0, 8)}
                 </span>
               )}
             </div>
-            {wo.customer && (
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <User className="size-3" />
-                <span>
-                  {wo.customer.first_name} {wo.customer.last_name ?? ""}
-                </span>
-                {wo.customer.phone && (
-                  <span className="text-muted-foreground/50 text-xs">
-                    {wo.customer.phone}
-                  </span>
+            {wo && wo.vehicle && (
+              <div className="text-xs font-semibold text-foreground/90 flex items-center gap-1">
+                <span>{wo.vehicle.make} {wo.vehicle.model}</span>
+                {wo.vehicle.year && (
+                  <span className="text-muted-foreground/60 font-normal">({wo.vehicle.year})</span>
                 )}
               </div>
             )}
-            <div className="ml-auto flex items-center gap-1.5 text-muted-foreground">
-              <Wrench className="size-3 shrink-0" />
+            {wo && wo.created_at && (
+              <span className="text-[10px] text-muted-foreground/60 mt-0.5">
+                Opened {new Date(wo.created_at).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Column 2: Customer Info */}
+        <div className="min-w-0 md:justify-self-center">
+          {wo && wo.customer ? (
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-1.5 text-xs text-foreground/80 font-bold">
+                <User className="size-3.5 text-muted-foreground/75" />
+                <span>{wo.customer.first_name} {wo.customer.last_name ?? ""}</span>
+              </div>
+              {wo.customer.phone && (
+                <span className="text-[11px] text-muted-foreground font-semibold pl-5 font-mono">
+                  {wo.customer.phone}
+                </span>
+              )}
+            </div>
+          ) : wo ? (
+            <span className="text-xs text-muted-foreground italic pl-1">No customer data</span>
+          ) : null}
+        </div>
+
+        {/* Column 3: Status & Mechanic Assignment */}
+        <div className="flex items-center md:justify-end gap-3 flex-wrap">
+          {wo && (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Wrench className="size-3.5 shrink-0" />
               <MechanicSelect
                 value={wo.mechanic_id ?? ""}
                 onChange={onAssignMechanic}
@@ -108,9 +112,7 @@ export function DrawerHeaderSection({
                 size="sm"
               />
             </div>
-          </div>
-        )}
-        <div className="flex items-center gap-2 shrink-0">
+          )}
           {wo?.status && <StatusPill status={wo.status} />}
           <Button
             variant="ghost"

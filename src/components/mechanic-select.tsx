@@ -1,17 +1,16 @@
 "use client";
 
-import { User } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Combobox,
-  ComboboxInput,
   ComboboxContent,
-  ComboboxList,
-  ComboboxItem,
   ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
 } from "@/components/ui/combobox";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
 import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
+import { cn } from "@/lib/utils";
 
 interface Mechanic {
   id: string;
@@ -90,7 +89,7 @@ export function MechanicSelect({
               const initials = getMechanicInitials(getMechanicName(mechanic));
               return (
                 <ComboboxItem key={mechanic.id} value={mechanic}>
-                  <Avatar className="size-5 shrink-0">
+                  <Avatar className="size-5 shrink-0 after:hidden">
                     <AvatarFallback
                       className={cn(
                         "text-[9px] font-medium",

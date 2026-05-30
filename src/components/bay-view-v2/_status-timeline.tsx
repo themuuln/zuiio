@@ -11,6 +11,15 @@ interface StatusTimelineProps {
   t: (key: string) => string;
 }
 
+const STATUS_DOT_CLASS: Record<string, string> = {
+  New: "bg-amber-500",
+  Diagnosing: "bg-blue-500",
+  "In Progress": "bg-indigo-500",
+  "Ready for Pickup": "bg-emerald-500",
+  Completed: "bg-emerald-500",
+  Cancelled: "bg-rose-500",
+};
+
 export function StatusTimeline({ statusHistory, t }: StatusTimelineProps) {
   return (
     <section className="rounded-lg border border-border/60 bg-card/40 p-3">
@@ -43,14 +52,7 @@ export function StatusTimeline({ statusHistory, t }: StatusTimelineProps) {
                   <div
                     className={cn(
                       "size-5 rounded-full ring-2 ring-background flex items-center justify-center",
-                      h.status === "Completed"
-                        ? "bg-green-500"
-                        : h.status === "Cancelled"
-                          ? "bg-red-400"
-                          : h.status === "In Progress" ||
-                              h.status === "Ready for Pickup"
-                            ? "bg-amber-500"
-                            : "bg-blue-500",
+                      STATUS_DOT_CLASS[h.status] ?? "bg-slate-500",
                     )}
                   >
                     {h.status === "Completed" ||

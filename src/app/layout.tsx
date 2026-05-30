@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
@@ -54,6 +55,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${sfProDisplay.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+      </head>
       <body className="flex min-h-dvh flex-col">
         <SwCleanup />
         <ThemeProvider>{children}</ThemeProvider>

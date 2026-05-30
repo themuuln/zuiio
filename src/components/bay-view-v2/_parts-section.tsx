@@ -1,16 +1,18 @@
 "use client";
 
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Package, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+
 import { Input } from "@/components/ui/input";
-import type { WorkOrderPart } from "@/lib/types";
+import type { PartsCatalogItem, WorkOrderPart } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
 
 interface PartsSectionProps {
   parts: WorkOrderPart[];
+  partsCatalog: PartsCatalogItem[];
+  partSearch: string;
   newPartName: string;
   newPartQty: number;
   newPartPrice: number;
@@ -23,6 +25,7 @@ interface PartsSectionProps {
   } | null;
   editingPriceId: string | null;
   editingPriceVal: string;
+  onPartSearchChange: (val: string) => void;
   onNewPartNameChange: (val: string) => void;
   onNewPartQtyChange: (val: number) => void;
   onNewPartPriceChange: (val: number) => void;
@@ -38,6 +41,8 @@ interface PartsSectionProps {
 
 export function PartsSection({
   parts,
+  partsCatalog,
+  partSearch,
   newPartName,
   newPartQty,
   newPartPrice,
@@ -46,6 +51,7 @@ export function PartsSection({
   pendingPartPreview,
   editingPriceId,
   editingPriceVal,
+  onPartSearchChange,
   onNewPartNameChange,
   onNewPartQtyChange,
   onNewPartPriceChange,
@@ -76,11 +82,12 @@ export function PartsSection({
 
       {/* Parts list */}
       {(parts ?? []).length === 0 && !pendingPartPreview ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyTitle>{t("noPartsYet")}</EmptyTitle>
-          </EmptyHeader>
-        </Empty>
+        <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
+          <Package className="size-4 text-muted-foreground/40 mb-1.5" />
+          <span className="text-xs text-muted-foreground">
+            {t("noPartsYet")}
+          </span>
+        </div>
       ) : (
         <div className="-mx-0.5">
           {/* Header row */}
@@ -180,15 +187,62 @@ export function PartsSection({
 
       {/* Add part form */}
       {showAddPart && (
-        <div className="mt-2 flex flex-col gap-1.5 rounded-lg border border-border bg-muted/30 p-2">
+        <div className="mt-2 flex flex-col gap-1.5 rounded-lg border border-border bg-muted/30 p-2 relative">
           <Input
             value={newPartName}
-            onChange={(e) => onNewPartNameChange(e.target.value)}
+            onChange={(e) => {
+              onNewPartNameChange(e.target.value);
+              onPartSearchChange(e.target.value);
+            }}
             placeholder={t("partName")}
             className="h-8 text-xs"
             autoFocus
             disabled={addingPart}
           />
+          {partSearch && (
+            <div className="absolute top-full left-0 right-0 z-50 mt-1 border rounded-lg bg-background shadow-lg max-h-40 overflow-y-auto">
+              {partsCatalog
+                .filter((p) =>
+                  p.name.toLowerCase().includes(partSearch.toLowerCase()) ||
+                  (p.part_number && p.part_number.toLowerCase().includes(partSearch.toLowerCase()))
+                )
+                .slice(0, 8)
+                .map((part) => (
+                  <Button
+                    variant="ghost"
+                    key={part.id}
+                    onClick={() => {
+                      onNewPartNameChange(part.name);
+                      onNewPartPriceChange(Number(part.default_price ?? 0));
+                      onPartSearchChange("");
+                    }}
+                    className="w-full justify-start px-2.5 py-2 text-xs h-auto text-left"
+                  >
+                    <div className="flex flex-col items-start min-w-0 flex-1">
+                      <span className="font-medium truncate w-full">
+                        {part.name}
+                      </span>
+                      {part.part_number && (
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {part.part_number}
+                        </span>
+                      )}
+                    </div>
+                    <span className="tabular-nums font-medium shrink-0 ml-2">
+                      {formatMNT(Number(part.default_price ?? 0))}
+                    </span>
+                  </Button>
+                ))}
+              {partsCatalog.filter((p) =>
+                p.name.toLowerCase().includes(partSearch.toLowerCase()) ||
+                (p.part_number && p.part_number.toLowerCase().includes(partSearch.toLowerCase()))
+              ).length === 0 && (
+                <div className="p-3 text-xs text-muted-foreground text-center">
+                  No parts match
+                </div>
+              )}
+            </div>
+          )}
           <div className="flex gap-1.5">
             <Input
               type="number"

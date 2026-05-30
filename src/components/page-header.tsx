@@ -110,7 +110,7 @@ export function PageHeader({
   return (
     <>
       <header className="sticky top-0 z-20 flex shrink-0 flex-col border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="flex min-h-14 items-center gap-3 px-4">
+        <div className="flex h-14 items-center gap-3 px-4">
           <div className="flex min-w-0 items-center gap-3 self-stretch">
             <SidebarTrigger className="-ml-1 rounded-xl" />
           </div>

@@ -3,20 +3,16 @@
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import {
   Car,
-  Clock,
-  Loader2,
-  Plus,
-  Play,
-  Wrench,
   Check,
   CheckCircle,
+  Clock,
+  Loader2,
+  Play,
+  Plus,
   Trash2,
-  ArrowRight,
-  UserPlus,
+  Wrench,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import type { BaySlotData } from "@/lib/services/bay-view-service";
-import { cn, formatPlateNumber } from "@/lib/utils";
+import { useEffect, useId, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,8 +21,10 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { MechanicBadge } from "./mechanic-badge";
 import { Typography } from "@/components/ui/typography";
+import type { BaySlotData } from "@/lib/services/bay-view-service";
+import { cn, formatPlateNumber } from "@/lib/utils";
+import { MechanicBadge } from "./mechanic-badge";
 
 function formatDuration(ms: number): string {
   const minutes = Math.floor(ms / 60000);
@@ -65,6 +63,7 @@ export function MongolianLicensePlate({
 }: {
   plate: string | null | undefined;
 }) {
+  const soyomboMaskId = useId();
   if (!plate) return null;
   const formatted = formatPlateNumber(plate);
 
@@ -80,7 +79,7 @@ export function MongolianLicensePlate({
   } else {
     // Fallback: split digits and letters
     const digitMatch = formatted.match(/^(\d+)(.*)$/);
-    if (digitMatch && digitMatch[1] && digitMatch[2]) {
+    if (digitMatch?.[1] && digitMatch[2]) {
       digits = digitMatch[1];
       letters = digitMatch[2];
     } else {
@@ -89,34 +88,32 @@ export function MongolianLicensePlate({
   }
 
   return (
-    <div className="inline-flex items-center select-none shadow-sm rounded border border-slate-900 bg-white text-slate-900 px-2 py-0.5 font-mono text-[12px] font-bold h-6 min-w-[90px] justify-center gap-1.5 dark:border-slate-800 dark:shadow-md dark:shadow-black/25">
+    <div className="inline-flex items-center select-none shadow-sm rounded border border-slate-900 bg-white text-slate-900 px-2 py-0.5 font-mono text-[13px] font-bold h-7 min-w-[95px] justify-center gap-1.5 dark:border-slate-800 dark:shadow-md dark:shadow-black/25">
       {/* Soyombo Symbol Red Strip */}
       <div className="flex flex-col items-center justify-center border-r border-slate-200 pr-1.5 h-full select-none">
         <svg
-          viewBox="0 0 10 16"
-          className="w-2.5 h-4 fill-[#E02424]"
+          viewBox="0 0 440 900"
+          className="w-3 h-5 fill-[#E02424]"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <circle cx="5" cy="2" r="1.2" />
-          <polygon points="5,4.5 2.5,7 7.5,7" />
-          <rect x="3.8" y="7.5" width="2.4" height="4" />
-          <line
-            x1="2.5"
-            y1="7.5"
-            x2="2.5"
-            y2="11.5"
-            stroke="#E02424"
-            strokeWidth="0.8"
-          />
-          <line
-            x1="7.5"
-            y1="7.5"
-            x2="7.5"
-            y2="11.5"
-            stroke="#E02424"
-            strokeWidth="0.8"
-          />
-          <circle cx="5" cy="13" r="1" />
+          <title>Soyombo Symbol</title>
+          <defs>
+            <mask id={soyomboMaskId}>
+              <path d="M0 0h400v600h-400z" fill="#fff" />
+              <g fill="#000">
+                <circle cx="200" cy="180" r="60" />
+                <circle cx="200" cy="363.5" r="10" />
+                <circle cx="200" cy="416.5" r="10" />
+                <path d="M200 334a29.5 29.5 0 0 1 0 59 23.5 23.5 0 0 0 0 47v6a29.5 29.5 0 0 1 0-59 23.5 23.5 0 0 0 0-47z" />
+              </g>
+            </mask>
+          </defs>
+          <g transform="scale(2) translate(-90 -60)">
+            <circle cx="200" cy="205" r="55" mask={`url(#${soyomboMaskId})`} />
+            <circle cx="200" cy="190" r="40" />
+            <path d="M204.2035 60c-4.97 2.255-6.827 6.321-7.227 10.371-.25 3.41 1.255 7.251 1.405 10.586 0 5.739-5.938 7.629-5.938 15.82 0 2.815 2.6 5.917 2.6 13.223-.45 3.835-2.59 4.7-5 5a5 5 0 0 1-5-5 5 5 0 0 1 1.385-3.44 5 5 0 0 1 .51-.5c1.14-1.15 2.705-1.595 2.695-4.63 0-1.56-1.01-2.98-1.975-5.742-.91-2.68-.25-7.16 1.915-9.805-3.5 1.35-5.657 4.705-6.757 7.715-1.16 3.7-.15 5.831-1.74 8.906-.97 1.99-2.125 2.815-3.22 4.475-1.295 1.81-2.815 6.043-2.815 8.008a25 25 0 0 0 50 0c0-1.965-1.5-6.198-2.795-8.008-1.095-1.66-2.27-2.485-3.24-4.475-1.57-3.075-.56-5.206-1.72-8.906-1.1-3.01-3.26-6.364-6.758-7.715 2.165 2.645 2.825 7.125 1.915 9.805-.97 2.76-1.99 4.18-1.99 5.742 0 3.035 1.555 3.48 2.695 4.63a5 5 0 0 1 .51.5 5 5 0 0 1 1.385 3.44 5 5 0 0 1-5 5c-2.765-.35-4.75-1.64-5-5 0-9.626 4.12-10.24 4.12-17.363 0-10.171-9.121-14.986-9.121-22.422 0-2.52.59-6.815 4.16-10.2275zM90 270h50v240H90zm170 0h50v240h-50zm-110 0h100l-50 30zm0 40h100v20H150zm0 140h100v20H150zm0 30h100l-50 30z" />
+            <circle cx="200" cy="390" r="50" mask={`url(#${soyomboMaskId})`} />
+          </g>
         </svg>
         <span className="text-[5px] font-sans font-black text-slate-500 scale-75 leading-none select-none">
           MNG
@@ -124,9 +121,9 @@ export function MongolianLicensePlate({
       </div>
       {/* License Text */}
       <div className="flex items-center gap-1 leading-none text-slate-950 font-black">
-        <span className="text-[13px] tracking-tight font-black">{digits}</span>
+        <span className="text-[14px] tracking-tight font-black">{digits}</span>
         {letters && (
-          <span className="text-[11px] tracking-normal text-slate-800 font-extrabold">
+          <span className="text-[12px] tracking-normal text-slate-800 font-extrabold">
             {letters}
           </span>
         )}
@@ -159,8 +156,8 @@ function ElapsedTimer({ startedAt }: { startedAt: string | null | undefined }) {
   if (!display) return null;
 
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/65 px-1.5 py-0.5 rounded font-mono tabular-nums select-none border border-border/30">
-      <Clock className="size-2.5 animate-pulse text-primary/70" />
+    <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/60 px-2 py-0.5 rounded font-mono tabular-nums select-none border border-border/30">
+      <Clock className="size-3 animate-pulse text-primary/70" />
       {display}
     </span>
   );
@@ -196,7 +193,7 @@ function DraggableVehicleWrapper({
       {...attributes}
       style={style}
       className={cn(
-        "flex flex-1 items-center gap-3 cursor-grab active:cursor-grabbing select-none touch-manipulation hover:bg-muted/40 rounded-lg p-1.5 transition-all border border-transparent hover:border-border/40",
+        "flex flex-1 items-center gap-3.5 cursor-grab active:cursor-grabbing select-none touch-manipulation hover:bg-muted/40 rounded-xl p-2 transition-all border border-transparent hover:border-border/40",
         isDragging &&
           "opacity-50 shadow-md bg-muted/20 border-dashed border-primary/30",
       )}
@@ -259,7 +256,7 @@ export function BayCard({
 
         {wo ? (
           <>
-            <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 pl-4 pr-3 py-2 w-full select-none bg-muted/5">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 pl-4 pr-3 py-2.5 w-full select-none bg-muted/5">
               <span className="text-[11px] font-mono font-black text-foreground/80 tracking-wider">
                 BAY {String(bay.bayNumber).padStart(2, "0")}
               </span>
@@ -282,12 +279,12 @@ export function BayCard({
               </div>
             </CardHeader>
 
-            <CardContent className="flex flex-col gap-2.5 px-4 py-3 flex-1 justify-between">
+            <CardContent className="flex flex-col gap-3.5 px-4 py-3.5 flex-1 justify-between">
               <DraggableVehicleWrapper workOrderId={wo.id} disabled={isPending}>
-                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 text-primary shadow-sm">
-                  <Car className="size-3.5" />
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary shadow-sm">
+                  <Car className="size-5" />
                 </div>
-                <div className="flex-1 min-w-0 flex flex-col gap-1 text-left">
+                <div className="flex-1 min-w-0 flex flex-col gap-1.5 text-left">
                   {v ? (
                     <>
                       <div className="flex flex-wrap items-center gap-1.5">
@@ -297,18 +294,18 @@ export function BayCard({
                         />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-foreground/95 truncate">
+                        <span className="text-sm font-bold text-foreground/95 truncate">
                           {v.make} {v.model}
                         </span>
                         {v.year && (
-                          <span className="text-[10px] text-muted-foreground font-medium">
+                          <span className="text-xs text-muted-foreground font-semibold">
                             Year: {v.year}
                           </span>
                         )}
                       </div>
                     </>
                   ) : (
-                    <Typography.Muted className="text-[10px] text-muted-foreground italic leading-none">
+                    <Typography.Muted className="text-xs text-muted-foreground italic leading-none">
                       No vehicle data
                     </Typography.Muted>
                   )}
@@ -316,8 +313,36 @@ export function BayCard({
               </DraggableVehicleWrapper>
 
               {/* Status Stepper Progression */}
-              <div className="mt-1 flex items-center justify-between w-full relative px-1 select-none">
-                <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-border/60 -translate-y-1/2 -z-10" />
+              <div className="mt-1 flex items-center justify-between w-full relative px-1 select-none isolate">
+                {/* Background Line */}
+                <div className="absolute top-[10px] left-2.5 right-2.5 h-0.5 bg-border -z-10" />
+                {/* Active Progress Line */}
+                <div
+                  className={cn(
+                    "absolute top-[10px] left-2.5 h-0.5 -z-10 transition-all duration-500 ease-in-out rounded-full",
+                    wo.status === "Diagnosing" && "bg-blue-500",
+                    wo.status === "In Progress" && "bg-indigo-500",
+                    (wo.status === "Ready for Pickup" ||
+                      wo.status === "Completed") &&
+                      "bg-emerald-500",
+                  )}
+                  style={{
+                    width: (() => {
+                      const stepOrder = [
+                        "New",
+                        "Diagnosing",
+                        "In Progress",
+                        "Ready for Pickup",
+                      ];
+                      let currentIdx = stepOrder.indexOf(wo.status);
+                      if (wo.status === "Completed") currentIdx = 3;
+                      if (currentIdx <= 0) return "0%";
+                      const pct = (currentIdx / (stepOrder.length - 1)) * 100;
+                      const offset = (currentIdx / (stepOrder.length - 1)) * 20;
+                      return `calc(${pct}% - ${offset}px)`;
+                    })(),
+                  }}
+                />
                 {["New", "Diagnosing", "In Progress", "Ready for Pickup"].map(
                   (step, idx) => {
                     const stepOrder = [
@@ -334,11 +359,11 @@ export function BayCard({
                     return (
                       <div
                         key={step}
-                        className="flex flex-col items-center gap-1"
+                        className="flex flex-col items-center gap-1.5"
                       >
                         <div
                           className={cn(
-                            "size-4 rounded-full border flex items-center justify-center text-[8px] font-black transition-all duration-300",
+                            "size-5 rounded-full border flex items-center justify-center text-[9px] font-black transition-all duration-300",
                             isPast &&
                               "bg-emerald-500 border-emerald-500 text-white shadow-sm",
                             isCurrent &&
@@ -351,9 +376,9 @@ export function BayCard({
                         </div>
                         <span
                           className={cn(
-                            "text-[8px] font-medium leading-none tracking-tight transition-colors",
+                            "text-[9px] font-bold leading-none tracking-tight transition-colors",
                             isCurrent &&
-                              "text-indigo-600 dark:text-indigo-400 font-bold",
+                              "text-indigo-600 dark:text-indigo-400 font-extrabold",
                             !isCurrent && "text-muted-foreground/45",
                           )}
                         >
@@ -366,15 +391,14 @@ export function BayCard({
               </div>
 
               {/* Assign Mechanic area */}
-              <div className="mt-1 flex items-center gap-1.5 border-t border-border/30 pt-2.5">
+              <div className="mt-1 flex items-center gap-2 border-t border-border/30 pt-2.5">
                 <MechanicBadge
                   workOrderId={wo.id}
                   mechanic={wo.mechanic}
                   disabled={isPending}
-                  compact
                 />
                 {!wo.mechanic && (
-                  <span className="text-[10px] text-muted-foreground/50 font-medium select-none">
+                  <span className="text-xs text-muted-foreground/50 font-bold select-none">
                     Unassigned tech
                   </span>
                 )}

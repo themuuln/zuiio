@@ -92,10 +92,10 @@ export function DrawerFooter({
       )}
 
       {/* Primary status flow + secondary actions */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 justify-end">
         {wo.status === "New" && (
           <Button
-            className="flex-1 h-9 text-xs font-semibold"
+            className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"
             onClick={() => onChangeStatus("Diagnosing")}
             disabled={saving}
           >
@@ -105,7 +105,7 @@ export function DrawerFooter({
         )}
         {wo.status === "Diagnosing" && (
           <Button
-            className="flex-1 h-9 text-xs font-semibold"
+            className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"
             onClick={() => onChangeStatus("In Progress")}
             disabled={saving}
           >
@@ -116,7 +116,7 @@ export function DrawerFooter({
         {wo.status === "In Progress" && (
           <>
             <Button
-              className="flex-1 h-9 text-xs font-semibold"
+              className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"
               onClick={onMarkReady}
               disabled={saving}
             >
@@ -125,7 +125,7 @@ export function DrawerFooter({
             </Button>
             <Button
               variant="outline"
-              className="h-9 px-3 text-xs font-semibold"
+              className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"
               onClick={onComplete}
               disabled={saving}
             >
@@ -136,12 +136,26 @@ export function DrawerFooter({
         )}
         {wo.status === "Ready for Pickup" && (
           <Button
-            className="flex-1 h-9 text-xs font-semibold"
+            className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"
             onClick={onComplete}
             disabled={saving}
           >
             <CheckCircle2 className="size-3.5" />
             {t("complete")}
+          </Button>
+        )}
+
+        {/* Invoice */}
+        {canInvoice && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 px-3 text-xs"
+            onClick={onCreateInvoice}
+            disabled={saving || creatingInvoice}
+          >
+            <FileText className="size-3.5" />
+            {creatingInvoice ? t("creating") : t("invoice")}
           </Button>
         )}
 
@@ -152,24 +166,10 @@ export function DrawerFooter({
             size="sm"
             onClick={() => onChangeStatus("Cancelled")}
             disabled={saving}
-            className="h-7 text-[10px] text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50"
+            className="h-9 px-3 text-xs text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50"
           >
-            <X className="size-3" />
+            <X className="size-3.5" />
             {t("cancel")}
-          </Button>
-        )}
-
-        {/* Invoice */}
-        {canInvoice && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-[10px]"
-            onClick={onCreateInvoice}
-            disabled={saving || creatingInvoice}
-          >
-            <FileText className="size-3" />
-            {creatingInvoice ? t("creating") : t("invoice")}
           </Button>
         )}
       </div>

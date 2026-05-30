@@ -3,8 +3,8 @@
 import { useDraggable } from "@dnd-kit/core";
 import { User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
 import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
+import { cn } from "@/lib/utils";
 
 interface MechanicBadgeProps {
   workOrderId: string;
@@ -73,13 +73,19 @@ export function MechanicBadge({
       className={cn(
         "flex items-center select-none transition-all touch-manipulation",
         compact
-          ? "gap-1 rounded-full border border-border/40 bg-background/60 px-2 py-0.5 text-[10px] cursor-grab active:cursor-grabbing"
-          : "gap-1.5 rounded-full border border-border/60 bg-background/80 backdrop-blur-sm px-2.5 py-1 cursor-grab active:cursor-grabbing min-h-[32px]",
+          ? "gap-1 rounded-full border border-border/40 bg-background/60 pl-0.5 pr-2 py-0.5 text-[10px] cursor-grab active:cursor-grabbing"
+          : "gap-1.5 rounded-full border border-border/60 bg-background/80 backdrop-blur-sm pl-1 pr-2.5 py-1 cursor-grab active:cursor-grabbing min-h-[32px]",
         isDragging && "opacity-50 shadow-lg",
         !isDragging && "hover:shadow-sm hover:border-primary/30",
       )}
     >
-      <Avatar className={cn(compact ? "size-5" : "size-6", "shrink-0")}>
+      <Avatar
+        className={cn(
+          compact ? "size-5" : "size-6",
+          "shrink-0",
+          "after:hidden",
+        )}
+      >
         {mechanic.avatar_url && (
           <AvatarImage src={mechanic.avatar_url} alt="" />
         )}

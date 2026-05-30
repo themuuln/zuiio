@@ -10,7 +10,7 @@ import {
   saveCompletionData,
   savePostServiceData,
 } from "@/lib/services/post-service-service";
-import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
+import type { PartsCatalogItem, ServiceCatalog, WorkOrderDetail } from "@/lib/types";
 import type { PickupCompleteData } from "./pickup-complete-form";
 import { PickupCompleteForm } from "./pickup-complete-form";
 import type { PostServiceFormData } from "./post-service-form";
@@ -70,6 +70,8 @@ export function WorkOrderDetailDrawer({
     quantity: number;
     unitPrice: number;
   } | null>(null);
+  const [partsCatalog, setPartsCatalog] = useState<PartsCatalogItem[]>([]);
+  const [partSearch, setPartSearch] = useState("");
 
   // Inline price edit state
   const [editingServicePriceId, setEditingServicePriceId] = useState<
@@ -163,6 +165,18 @@ export function WorkOrderDetailDrawer({
             .catch((err) => {
               if (!signal.aborted)
                 console.error("Failed to load services:", err);
+            });
+          fetch(`/api/organizations/${id}/inventory/parts`, { signal })
+            .then((r) => r.json())
+            .then((res) => {
+              if (!signal.aborted && res.data) {
+                const partsData = Array.isArray(res.data) ? res.data : (res.data.data ?? []);
+                setPartsCatalog(partsData);
+              }
+            })
+            .catch((err) => {
+              if (!signal.aborted)
+                console.error("Failed to load parts:", err);
             });
           fetch(`/api/organizations/${id}/reports?type=mechanics`, { signal })
             .then((r) => r.json())
@@ -711,7 +725,7 @@ export function WorkOrderDetailDrawer({
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent className="flex max-h-[90vh] w-full flex-col gap-0 p-0">
+      <DrawerContent className="flex max-h-[90vh] md:max-h-[85vh] w-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl flex-col gap-0 p-0 mx-auto md:bottom-4 md:rounded-xl md:border border-border/80 shadow-2xl">
         <DrawerHeaderSection
           wo={wo}
           loading={loading}
@@ -773,6 +787,8 @@ export function WorkOrderDetailDrawer({
 
                             <PartsSection
                               parts={wo.parts ?? []}
+                              partsCatalog={partsCatalog}
+                              partSearch={partSearch}
                               newPartName={newPartName}
                               newPartQty={newPartQty}
                               newPartPrice={newPartPrice}
@@ -781,6 +797,7 @@ export function WorkOrderDetailDrawer({
                               pendingPartPreview={pendingPartPreview}
                               editingPriceId={editingPartPriceId}
                               editingPriceVal={editingPartPriceVal}
+                              onPartSearchChange={setPartSearch}
                               onNewPartNameChange={setNewPartName}
                               onNewPartQtyChange={setNewPartQty}
                               onNewPartPriceChange={setNewPartPrice}
@@ -820,12 +837,14 @@ export function WorkOrderDetailDrawer({
                     </div>
                   </div>
 
-                  <TotalsSummary
-                    servicesTotal={servicesTotal}
-                    partsTotal={partsTotal}
-                    grandTotal={Number(wo.total)}
-                    t={t}
-                  />
+                  <div className="mx-3 mb-3">
+                    <TotalsSummary
+                      servicesTotal={servicesTotal}
+                      partsTotal={partsTotal}
+                      grandTotal={Number(wo.total)}
+                      t={t}
+                    />
+                  </div>
 
                   <DrawerFooter
                     wo={wo}

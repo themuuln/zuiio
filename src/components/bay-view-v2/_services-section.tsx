@@ -1,12 +1,7 @@
 "use client";
 
 import { Loader2, Plus, Trash2, Wrench } from "lucide-react";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,16 +65,13 @@ export function ServicesSection({
         </div>
       </div>
 
-      {/* Service list */}
       {(services ?? []).length === 0 && !pendingServicePreview ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Wrench />
-            </EmptyMedia>
-            <EmptyTitle>{t("noServicesYet")}</EmptyTitle>
-          </EmptyHeader>
-        </Empty>
+        <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
+          <Wrench className="size-4 text-muted-foreground/40 mb-1.5" />
+          <span className="text-xs text-muted-foreground">
+            {t("noServicesYet")}
+          </span>
+        </div>
       ) : (
         <div className="-mx-0.5">
           {/* Header row */}
@@ -182,7 +174,7 @@ export function ServicesSection({
             disabled={!!addingServiceId}
           />
           {serviceSearch && (
-            <div className="absolute bottom-full left-0 right-0 z-10 mb-1 border rounded-lg bg-background shadow-lg max-h-40 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 z-50 mt-1 border rounded-lg bg-background shadow-lg max-h-40 overflow-y-auto">
               {catalog
                 .filter((s) =>
                   s.name.toLowerCase().includes(serviceSearch.toLowerCase()),
