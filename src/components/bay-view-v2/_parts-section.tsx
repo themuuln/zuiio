@@ -5,13 +5,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { Input } from "@/components/ui/input";
-import type { PartsCatalogItem, WorkOrderPart } from "@/lib/types";
+import type {
+  PartsCatalogItem,
+  WorkOrderPart,
+  GlobalPartCatalog,
+} from "@/lib/types";
+
+// Extended type for catalog items that may come from global or org catalog
+type CatalogPartItem = PartsCatalogItem & { _source?: "org" | "global" };
 import { formatMNT } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
 
 interface PartsSectionProps {
   parts: WorkOrderPart[];
-  partsCatalog: PartsCatalogItem[];
+  partsCatalog: CatalogPartItem[];
   partSearch: string;
   newPartName: string;
   newPartQty: number;
@@ -202,9 +209,13 @@ export function PartsSection({
           {partSearch && (
             <div className="absolute top-full left-0 right-0 z-50 mt-1 border rounded-lg bg-background shadow-lg max-h-40 overflow-y-auto">
               {partsCatalog
-                .filter((p) =>
-                  p.name.toLowerCase().includes(partSearch.toLowerCase()) ||
-                  (p.part_number && p.part_number.toLowerCase().includes(partSearch.toLowerCase()))
+                .filter(
+                  (p) =>
+                    p.name.toLowerCase().includes(partSearch.toLowerCase()) ||
+                    (p.part_number &&
+                      p.part_number
+                        .toLowerCase()
+                        .includes(partSearch.toLowerCase())),
                 )
                 .slice(0, 8)
                 .map((part) => (
@@ -233,9 +244,13 @@ export function PartsSection({
                     </span>
                   </Button>
                 ))}
-              {partsCatalog.filter((p) =>
-                p.name.toLowerCase().includes(partSearch.toLowerCase()) ||
-                (p.part_number && p.part_number.toLowerCase().includes(partSearch.toLowerCase()))
+              {partsCatalog.filter(
+                (p) =>
+                  p.name.toLowerCase().includes(partSearch.toLowerCase()) ||
+                  (p.part_number &&
+                    p.part_number
+                      .toLowerCase()
+                      .includes(partSearch.toLowerCase())),
               ).length === 0 && (
                 <div className="p-3 text-xs text-muted-foreground text-center">
                   No parts match

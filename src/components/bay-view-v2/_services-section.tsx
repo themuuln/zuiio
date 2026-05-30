@@ -5,14 +5,17 @@ import { Loader2, Plus, Trash2, Wrench } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { ServiceCatalog } from "@/lib/types";
+import type { ServiceCatalog, GlobalServiceCatalog } from "@/lib/types";
+
+// Extended type for catalog items that may come from global or org catalog
+type CatalogServiceItem = ServiceCatalog & { _source?: "org" | "global" };
 import type { WorkOrderService } from "@/lib/types";
 import { cn, formatMNT } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
 
 interface ServicesSectionProps {
   services: WorkOrderService[];
-  catalog: ServiceCatalog[];
+  catalog: CatalogServiceItem[];
   serviceSearch: string;
   showAddService: boolean;
   addingServiceId: string | null;
@@ -21,7 +24,7 @@ interface ServicesSectionProps {
   editingPriceVal: string;
   onServiceSearchChange: (val: string) => void;
   onToggleAddService: () => void;
-  onAddService: (svc: ServiceCatalog) => Promise<void>;
+  onAddService: (svc: CatalogServiceItem) => Promise<void>;
   onRemoveService: (serviceId: string) => Promise<void>;
   onEditPriceStart: (id: string, val: string) => void;
   onEditPriceChange: (val: string) => void;

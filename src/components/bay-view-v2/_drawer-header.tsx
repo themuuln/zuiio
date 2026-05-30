@@ -41,6 +41,11 @@ export function DrawerHeaderSection({
 
   return (
     <DrawerHeader className="border-b border-border px-4 py-3 text-left shrink-0 bg-muted/5">
+      <DrawerTitle className="sr-only">
+        {wo
+          ? `Work Order — ${wo.vehicle?.plate_number ?? wo.id.slice(0, 8)}`
+          : "Work Order"}
+      </DrawerTitle>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center justify-between">
         {/* Column 1: Vehicle & WO Info */}
         <div className="flex min-w-0 items-center gap-3">
@@ -66,9 +71,13 @@ export function DrawerHeaderSection({
             </div>
             {wo && wo.vehicle && (
               <div className="text-xs font-semibold text-foreground/90 flex items-center gap-1">
-                <span>{wo.vehicle.make} {wo.vehicle.model}</span>
+                <span>
+                  {wo.vehicle.make} {wo.vehicle.model}
+                </span>
                 {wo.vehicle.year && (
-                  <span className="text-muted-foreground/60 font-normal">({wo.vehicle.year})</span>
+                  <span className="text-muted-foreground/60 font-normal">
+                    ({wo.vehicle.year})
+                  </span>
                 )}
               </div>
             )}
@@ -86,7 +95,9 @@ export function DrawerHeaderSection({
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-1.5 text-xs text-foreground/80 font-bold">
                 <User className="size-3.5 text-muted-foreground/75" />
-                <span>{wo.customer.first_name} {wo.customer.last_name ?? ""}</span>
+                <span>
+                  {wo.customer.first_name} {wo.customer.last_name ?? ""}
+                </span>
               </div>
               {wo.customer.phone && (
                 <span className="text-[11px] text-muted-foreground font-semibold pl-5 font-mono">
@@ -95,7 +106,9 @@ export function DrawerHeaderSection({
               )}
             </div>
           ) : wo ? (
-            <span className="text-xs text-muted-foreground italic pl-1">No customer data</span>
+            <span className="text-xs text-muted-foreground italic pl-1">
+              No customer data
+            </span>
           ) : null}
         </div>
 

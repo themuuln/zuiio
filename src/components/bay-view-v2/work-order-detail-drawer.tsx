@@ -10,7 +10,13 @@ import {
   saveCompletionData,
   savePostServiceData,
 } from "@/lib/services/post-service-service";
-import type { PartsCatalogItem, ServiceCatalog, WorkOrderDetail } from "@/lib/types";
+import type {
+  PartsCatalogItem,
+  ServiceCatalog,
+  WorkOrderDetail,
+  GlobalPartCatalog,
+  GlobalServiceCatalog,
+} from "@/lib/types";
 import type { PickupCompleteData } from "./pickup-complete-form";
 import { PickupCompleteForm } from "./pickup-complete-form";
 import type { PostServiceFormData } from "./post-service-form";
@@ -25,6 +31,10 @@ import { ServicesSection } from "./_services-section";
 import { PartsSection } from "./_parts-section";
 import { DrawerFooter } from "./_drawer-footer";
 import { DrawerCelebration } from "./_drawer-celebration";
+
+// Extended types that accept both org and global catalog items
+type CatalogServiceItem = ServiceCatalog & { _source?: "org" | "global" };
+type CatalogPartItem = PartsCatalogItem & { _source?: "org" | "global" };
 
 // ── Props ────────────────────────────────────────────────────
 
@@ -51,7 +61,7 @@ export function WorkOrderDetailDrawer({
   const [saving, setSaving] = useState(false);
 
   // Add service state
-  const [catalog, setCatalog] = useState<ServiceCatalog[]>([]);
+  const [catalog, setCatalog] = useState<CatalogServiceItem[]>([]);
   const [serviceSearch, setServiceSearch] = useState("");
   const [showAddService, setShowAddService] = useState(false);
   const [addingServiceId, setAddingServiceId] = useState<string | null>(null);
@@ -70,7 +80,7 @@ export function WorkOrderDetailDrawer({
     quantity: number;
     unitPrice: number;
   } | null>(null);
-  const [partsCatalog, setPartsCatalog] = useState<PartsCatalogItem[]>([]);
+  const [partsCatalog, setPartsCatalog] = useState<CatalogPartItem[]>([]);
   const [partSearch, setPartSearch] = useState("");
 
   // Inline price edit state
@@ -157,26 +167,87 @@ export function WorkOrderDetailDrawer({
         if (id) {
           orgIdRef.current = id;
           fetchWo();
-          fetch(`/api/organizations/${id}/services`, { signal })
-            .then((r) => r.json())
-            .then((res) => {
-              if (!signal.aborted && res.data) setCatalog(res.data);
-            })
+          // Fetch org-specific and global catalogs in parallel
+          Promise.all([
+            fetch(`/api/organizations/${id}/services`, { signal }).then((r) =>
+              r.json(),
+            ),
+            fetch(`/api/organizations/${id}/inventory/parts`, { signal }).then(
+              (r) => r.json(),
+            ),
+            fetch("/api/global-catalog/services", { signal }).then((r) =>
+              r.json(),
+            ),
+            fetch("/api/global-catalog/parts", { signal }).then((r) =>
+              r.json(),
+            ),
+          ])
+            .then(
+              ([
+                orgServicesRes,
+                orgPartsRes,
+                globalServicesRes,
+                globalPartsRes,
+              ]) => {
+                if (signal.aborted) return;
+
+                // Merge services: org first, then global (deduplicated by name)
+                const orgServices: CatalogServiceItem[] =
+                  orgServicesRes.data ?? [];
+                const globalServices: GlobalServiceCatalog[] =
+                  globalServicesRes.data ?? [];
+                const seenNames = new Set(
+                  orgServices.map((s) => s.name.toLowerCase()),
+                );
+                const mergedServices: CatalogServiceItem[] = [
+                  ...orgServices,
+                  ...globalServices
+                    .filter((gs) => !seenNames.has(gs.name.toLowerCase()))
+                    .map((gs) => ({
+                      id: gs.id,
+                      name: gs.name,
+                      category: gs.category,
+                      description: gs.description,
+                      default_price: 0,
+                      is_active: true,
+                      estimated_duration_minutes: gs.estimated_duration_minutes,
+                      interval_km: null,
+                      interval_months: null,
+                      // Mark as global so add handler knows not to use ID as catalog_id
+                      _source: "global" as const,
+                    })),
+                ];
+                setCatalog(mergedServices);
+
+                // Merge parts: org first, then global (deduplicated by name)
+                const orgParts: CatalogPartItem[] =
+                  orgPartsRes.data?.data ?? orgPartsRes.data ?? [];
+                const globalParts: GlobalPartCatalog[] =
+                  globalPartsRes.data ?? [];
+                const seenPartNames = new Set(
+                  orgParts.map((p) => p.name.toLowerCase()),
+                );
+                const mergedParts: CatalogPartItem[] = [
+                  ...orgParts,
+                  ...globalParts
+                    .filter((gp) => !seenPartNames.has(gp.name.toLowerCase()))
+                    .map((gp) => ({
+                      id: gp.id,
+                      name: gp.name,
+                      category: gp.category,
+                      description: gp.description,
+                      part_number: gp.part_number,
+                      default_price: 0,
+                      is_active: true,
+                      _source: "global" as const,
+                    })),
+                ];
+                setPartsCatalog(mergedParts);
+              },
+            )
             .catch((err) => {
               if (!signal.aborted)
-                console.error("Failed to load services:", err);
-            });
-          fetch(`/api/organizations/${id}/inventory/parts`, { signal })
-            .then((r) => r.json())
-            .then((res) => {
-              if (!signal.aborted && res.data) {
-                const partsData = Array.isArray(res.data) ? res.data : (res.data.data ?? []);
-                setPartsCatalog(partsData);
-              }
-            })
-            .catch((err) => {
-              if (!signal.aborted)
-                console.error("Failed to load parts:", err);
+                console.error("Failed to load catalogs:", err);
             });
           fetch(`/api/organizations/${id}/reports?type=mechanics`, { signal })
             .then((r) => r.json())
@@ -292,7 +363,7 @@ export function WorkOrderDetailDrawer({
 
   // ── Services ─────────────────────────────────────────────
 
-  async function addService(svc: ServiceCatalog) {
+  async function addService(svc: CatalogServiceItem) {
     const orgId = orgIdRef.current;
     if (!orgId || !workOrderId || addingServiceId) return;
     setAddingServiceId(svc.id);
@@ -303,13 +374,15 @@ export function WorkOrderDetailDrawer({
     setServiceSearch("");
     setShowAddService(false);
     try {
+      // For global services, don't send service_catalog_id (FK would fail)
+      const isGlobal = svc._source === "global";
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/services`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            service_catalog_id: svc.id,
+            service_catalog_id: isGlobal ? null : svc.id,
             service_name: svc.name,
             quantity: 1,
             unit_price: svc.default_price ?? 0,
@@ -771,7 +844,7 @@ export function WorkOrderDetailDrawer({
                               onToggleAddService={() =>
                                 setShowAddService(!showAddService)
                               }
-                              onAddService={addService}
+                              onAddService={addService as any}
                               onRemoveService={removeService}
                               onEditPriceStart={(id, val) => {
                                 setEditingServicePriceId(id);
@@ -787,7 +860,7 @@ export function WorkOrderDetailDrawer({
 
                             <PartsSection
                               parts={wo.parts ?? []}
-                              partsCatalog={partsCatalog}
+                              partsCatalog={partsCatalog as any}
                               partSearch={partSearch}
                               newPartName={newPartName}
                               newPartQty={newPartQty}
