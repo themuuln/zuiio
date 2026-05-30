@@ -1,7 +1,7 @@
 "use client";
 
-import { Fragment } from "react";
 import { useTranslations } from "next-intl";
+import { Fragment } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useNavigation } from "@/hooks/use-navigation";
 import { Link } from "@/lib/i18n/navigation";
+import { onLinkHover } from "@/lib/prefetch";
 import { MechanicSwitcher } from "./_mechanic-switcher";
 import { OrgBranding } from "./_org-branding";
 
@@ -37,7 +38,12 @@ export function AppSidebar() {
               {primaryItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
-                    render={<Link href={item.href} />}
+                    render={
+                      <Link
+                        href={item.href}
+                        onMouseEnter={onLinkHover(item.href)}
+                      />
+                    }
                     isActive={isActive(item.href)}
                     tooltip={t(item.labelKey)}
                   >
@@ -62,7 +68,12 @@ export function AppSidebar() {
                   {group.children.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
-                        render={<Link href={item.href} />}
+                        render={
+                          <Link
+                            href={item.href}
+                            onMouseEnter={onLinkHover(item.href)}
+                          />
+                        }
                         isActive={isActive(item.href)}
                         tooltip={t(item.labelKey)}
                       >
@@ -87,7 +98,12 @@ export function AppSidebar() {
                 {utilityItems.map((item) => (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
-                      render={<Link href={item.href} />}
+                      render={
+                        <Link
+                          href={item.href}
+                          onMouseEnter={onLinkHover(item.href)}
+                        />
+                      }
                       isActive={isActive(item.href)}
                       tooltip={t(item.labelKey)}
                     >

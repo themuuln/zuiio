@@ -87,6 +87,15 @@ import {
   ItemDescription,
   ItemActions,
 } from "@/components/ui/item";
+import { useVehicles } from "@/lib/queries/use-vehicles";
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxEmpty,
+} from "@/components/ui/combobox";
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("mn-MN", {
     year: "numeric",
@@ -180,6 +189,8 @@ export default function ServiceRemindersPage() {
     refetch,
   } = useServiceSchedules(orgId);
 
+  const { data: vehicles = [] } = useVehicles(orgId);
+
   const createSchedule = useCreateServiceSchedule(orgId);
   const deleteSchedule = useDeleteServiceSchedule(orgId);
   const updateSchedule = useUpdateServiceSchedule(orgId);
@@ -243,6 +254,11 @@ export default function ServiceRemindersPage() {
   const handleAdd = async () => {
     if (!orgId || !newSchedule.service_name.trim()) {
       toast.error(t("common.noResults"));
+      return;
+    }
+
+    if (!newSchedule.vehicle_id) {
+      toast.error(t("serviceReminders.searchVehicle"));
       return;
     }
 
@@ -545,6 +561,46 @@ export default function ServiceRemindersPage() {
                 </DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="vehicle_id">
+                    {t("serviceReminders.vehicle")}
+                  </Label>
+                  <Combobox
+                    items={vehicles}
+                    value={vehicles.find((v) => v.id === newSchedule.vehicle_id) ?? null}
+                    onValueChange={(v) => {
+                      setNewSchedule((p) => ({
+                        ...p,
+                        vehicle_id: v?.id ?? "",
+                      }));
+                    }}
+                    isItemEqualToValue={(a, b) => a?.id === b?.id}
+                    itemToStringLabel={(v) => v ? `${v.make} ${v.model} (${v.plate_number})` : ""}
+                  >
+                    <ComboboxInput
+                      placeholder={t("serviceReminders.searchVehicle")}
+                      showTrigger
+                      showClear={!!newSchedule.vehicle_id}
+                      className="h-9 text-xs"
+                    />
+                    <ComboboxContent>
+                      <ComboboxList>
+                        {(v) => (
+                          <ComboboxItem key={v.id} value={v} className="text-xs">
+                            <span>{v.make} {v.model}</span>
+                            <span className="ml-2 font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+                              {v.plate_number}
+                            </span>
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                      <ComboboxEmpty className="text-xs">
+                        {t("serviceReminders.noVehicles")}
+                      </ComboboxEmpty>
+                    </ComboboxContent>
+                  </Combobox>
+                </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="service_name">
                     {t("serviceReminders.serviceName")}

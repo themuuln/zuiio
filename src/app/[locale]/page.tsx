@@ -13,6 +13,7 @@ import {
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 import { LandingNav } from "@/components/landing-nav";
 import { PartnersSlider } from "@/components/partners-slider";
 import { Badge } from "@/components/ui/badge";
@@ -30,33 +31,26 @@ import { cn } from "@/lib/utils";
 import { AuthGate } from "./_landing-auth-gate";
 
 // Lazy-load below-the-fold sections — they only load when scrolled into view
-const HowItWorksSection = dynamic(
-  () => import("./_landing-sections").then((m) => m.HowItWorksSection),
-  { ssr: false },
+const HowItWorksSection = dynamic(() =>
+  import("./_landing-sections").then((m) => m.HowItWorksSection),
 );
-const WorkflowSection = dynamic(
-  () => import("./_landing-sections").then((m) => m.WorkflowSection),
-  { ssr: false },
+const WorkflowSection = dynamic(() =>
+  import("./_landing-sections").then((m) => m.WorkflowSection),
 );
-const DifferentiatorsSection = dynamic(
-  () => import("./_landing-sections").then((m) => m.DifferentiatorsSection),
-  { ssr: false },
+const DifferentiatorsSection = dynamic(() =>
+  import("./_landing-sections").then((m) => m.DifferentiatorsSection),
 );
-const TestimonialsSection = dynamic(
-  () => import("./_landing-sections").then((m) => m.TestimonialsSection),
-  { ssr: false },
+const TestimonialsSection = dynamic(() =>
+  import("./_landing-sections").then((m) => m.TestimonialsSection),
 );
-const PricingSection = dynamic(
-  () => import("./_landing-sections").then((m) => m.PricingSection),
-  { ssr: false },
+const PricingSection = dynamic(() =>
+  import("./_landing-sections").then((m) => m.PricingSection),
 );
-const CtaSection = dynamic(
-  () => import("./_landing-sections").then((m) => m.CtaSection),
-  { ssr: false },
+const CtaSection = dynamic(() =>
+  import("./_landing-sections").then((m) => m.CtaSection),
 );
-const LandingFooter = dynamic(
-  () => import("./_landing-footer").then((m) => m.LandingFooter),
-  { ssr: false },
+const LandingFooter = dynamic(() =>
+  import("./_landing-footer").then((m) => m.LandingFooter),
 );
 
 const FEATURES = [
@@ -112,7 +106,9 @@ export default function HomePage() {
   const appT = useTranslations("app");
 
   // Prefetch critical routes for instant navigation
-  prefetchCriticalRoutes();
+  useEffect(() => {
+    prefetchCriticalRoutes();
+  }, []);
 
   return (
     <AuthGate>

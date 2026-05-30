@@ -864,6 +864,8 @@
     "reminderLogs": "Reminder Logs",
     "scheduleList": "Schedules",
     "vehicle": "Vehicle",
+    "searchVehicle": "Search vehicle...",
+    "noVehicles": "No vehicles found",
     "serviceName": "Service",
     "intervalMonths": "Interval (months)",
     "intervalKm": "Interval (km)",
@@ -1800,7 +1802,8 @@
       "incrementAria": "Increase quantity",
       "price": "Price (₮)",
       "searchCatalog": "Select from Catalog (Optional)",
-      "catalogEmpty": "No catalog parts found"
+      "catalogEmpty": "No catalog parts found",
+      "condition": "Condition"
     },
     "partsSection": {
       "title": "Parts",

@@ -867,6 +867,8 @@
     "reminderLogs": "Сануулгын түүх",
     "scheduleList": "Хуваариуд",
     "vehicle": "Машин",
+    "searchVehicle": "Машин хайх...",
+    "noVehicles": "Машин олдсонгүй",
     "serviceName": "Үйлчилгээ",
     "intervalMonths": "Завсар (сар)",
     "intervalKm": "Завсар (км)",
@@ -1803,7 +1805,8 @@
       "incrementAria": "Тоо хэмжээ нэмэх",
       "price": "Үнэ (₮)",
       "searchCatalog": "Үндсэн каталогоос сонгох (Сонголттой)",
-      "catalogEmpty": "Каталогт сэлбэг олдсонгүй"
+      "catalogEmpty": "Каталогт сэлбэг олдсонгүй",
+      "condition": "Нөхцөл байдал"
     },
     "partsSection": {
       "title": "Сэлбэгүүд",

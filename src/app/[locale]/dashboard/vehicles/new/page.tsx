@@ -1,10 +1,9 @@
 "use client";
 
 import { ArrowLeft, CarFront, Loader2, User } from "lucide-react";
-// TODO: wrap component using useSearchParams in <Suspense>
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, Suspense } from "react";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -83,7 +82,7 @@ function getCustomerLabel(customer: Customer, t?: (key: string) => string) {
   );
 }
 
-export default function NewVehiclePage() {
+function NewVehicleForm() {
   const t = useTranslations("vehicles");
   const { replace } = useRouter();
   const { setDetailVehicleId } = usePageHeader();
@@ -755,5 +754,13 @@ export default function NewVehiclePage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NewVehiclePage() {
+  return (
+    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+      <NewVehicleForm />
+    </Suspense>
   );
 }

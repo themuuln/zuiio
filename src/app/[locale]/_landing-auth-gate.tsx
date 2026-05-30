@@ -14,6 +14,11 @@ interface AuthGateProps {
   ) => React.ReactNode;
 }
 
+/**
+ * AuthGate renders content immediately (no blocking spinner).
+ * If the user is logged in, it redirects to /dashboard in the background.
+ * Marketing content is always visible — auth check is non-blocking.
+ */
 export function AuthGate({ children }: AuthGateProps) {
   const router = useRouter();
   const [stats, setStats] = useState<{
@@ -21,33 +26,39 @@ export function AuthGate({ children }: AuthGateProps) {
     totalCustomers: number;
     totalVehicles: number;
   } | null>(null);
-  const [ready, setReady] = useState(false);
 
+  // Redirect logged-in users to dashboard (non-blocking, delayed for router init)
   useEffect(() => {
+    let cancelled = false;
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        router.replace("/dashboard");
-      } else {
-        setReady(true);
-      }
-    });
+
+    supabase.auth
+      .getUser()
+      .then(({ data: { user } }) => {
+        if (!cancelled && user) {
+          // Delay router navigation to ensure router is initialized
+          const timeout = setTimeout(() => {
+            if (!cancelled) router.replace("/dashboard");
+          }, 100);
+          return () => clearTimeout(timeout);
+        }
+      })
+      .catch(() => {
+        // Auth check failed — stay on marketing page
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
+  // Fetch public stats (non-blocking)
   useEffect(() => {
     fetch("/api/public/stats")
       .then((res) => res.json())
       .then(setStats)
       .catch(() => {});
   }, []);
-
-  if (!ready) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <div className="size-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
-      </div>
-    );
-  }
 
   return <>{children(stats)}</>;
 }

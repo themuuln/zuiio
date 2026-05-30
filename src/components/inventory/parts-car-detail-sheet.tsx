@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectItem } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Sheet,
   SheetContent,
@@ -97,6 +98,8 @@ export function PartsCarDetailSheet({
   const [partLocation, setPartLocation] =
     useState<PartsCarLocationGroup>("other");
   const [partQty, setPartQty] = useState(1);
+  const [partCondition, setPartCondition] =
+    useState<"good" | "fair" | "damaged">("good");
   const [partPrice, setPartPrice] = useState(0);
   const [adding, setAdding] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -138,11 +141,13 @@ export function PartsCarDetailSheet({
           part_id: selectedPartId ?? undefined,
           location_group: partLocation,
           quantity: partQty,
+          condition: partCondition,
           estimated_price: partPrice,
         });
         setPartName("");
         setPartQty(1);
         setPartPrice(0);
+        setPartCondition("good");
         setSelectedPartId(null);
         nameInputRef.current?.focus();
       } catch (err) {
@@ -151,7 +156,17 @@ export function PartsCarDetailSheet({
         setAdding(false);
       }
     },
-    [addPart, carId, partName, partLocation, partQty, partPrice, selectedPartId, t],
+    [
+      addPart,
+      carId,
+      partName,
+      partLocation,
+      partQty,
+      partPrice,
+      partCondition,
+      selectedPartId,
+      t,
+    ],
   );
 
   const handleRemovePart = useCallback(
@@ -413,6 +428,31 @@ export function PartsCarDetailSheet({
                       ))}
                     </select>
                   </div>
+
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t("partForm.condition")}
+                    </span>
+                    <ToggleGroup
+                      value={[partCondition]}
+                      onValueChange={(vals) => {
+                        const val = vals[0] as "good" | "fair" | "damaged" | undefined;
+                        if (val) setPartCondition(val);
+                      }}
+                      className="w-full grid grid-cols-3 border border-input rounded-md overflow-hidden p-0.5 bg-muted/20"
+                    >
+                      <ToggleGroupItem value="good" className="text-xs py-1 hover:bg-muted data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-sm transition-all cursor-pointer">
+                        {t("conditions.good")}
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="fair" className="text-xs py-1 hover:bg-muted data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-sm transition-all cursor-pointer">
+                        {t("conditions.fair")}
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="damaged" className="text-xs py-1 hover:bg-muted data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-sm transition-all cursor-pointer">
+                        {t("conditions.damaged")}
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+
                   <div className="flex gap-2">
                     <Input
                       type="number"
@@ -516,9 +556,15 @@ export function PartsCarDetailSheet({
                                   </Badge>
                                 )}
                               </div>
-                              <div className="text-xs text-muted-foreground">
-                                {part.quantity}× ·{" "}
-                                {formatMNT(part.estimated_price ?? 0)}
+                              <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap mt-0.5">
+                                <span>
+                                  {part.quantity}× ·{" "}
+                                  {formatMNT(part.estimated_price ?? 0)}
+                                </span>
+                                <span>·</span>
+                                <Badge variant="outline" className="text-[10px] py-0 px-1 font-normal border-border">
+                                  {t(`conditions.${part.condition}`)}
+                                </Badge>
                               </div>
                             </div>
                             {canAddParts && (

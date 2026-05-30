@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Script from "next/script";
-import localFont from "next/font/local";
 import { JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import ThemeProvider from "@/components/theme-provider";
+import { SwCleanup } from "@/components/sw-cleanup";
 import "./globals.css";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
@@ -54,16 +54,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${sfProDisplay.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
-        {process.env.NODE_ENV === "development" && (
-          <Script
-            src="//unpkg.com/react-grab/dist/index.global.js"
-            crossOrigin="anonymous"
-            strategy="beforeInteractive"
-          />
-        )}
-      </head>
       <body className="flex min-h-dvh flex-col">
+        <SwCleanup />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

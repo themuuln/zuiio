@@ -6,7 +6,7 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
 import NuqsProvider from "@/components/nuqs-provider";
 import QueryProvider from "@/components/query-provider";
-import { ServiceWorkerProvider } from "@/components/service-worker-provider";
+import { SwCleanup } from "@/components/sw-cleanup";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/lib/i18n/routing";
 import "../globals.css";
@@ -72,7 +72,7 @@ export default async function LocaleLayout({
           </NuqsProvider>
         </NextIntlClientProvider>
       </TooltipProvider>
-      <ServiceWorkerProvider />
+      <SwCleanup />
     </div>
   );
 }
