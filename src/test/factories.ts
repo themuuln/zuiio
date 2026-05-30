@@ -122,6 +122,7 @@ export function createMockWorkOrder(
     total: 0,
     started_at: null,
     completed_at: null,
+    loss_reason: null,
     created_at: "2025-01-01T00:00:00.000Z",
     updated_at: "2025-01-01T00:00:00.000Z",
     created_by: null,

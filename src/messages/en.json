@@ -2143,5 +2143,28 @@
     "ctaTitle": "Try TOLOM today",
     "ctaSubtitle": "14-day free trial. No credit card required.",
     "ctaButton": "Get started free"
+  },
+  "eodClose": {
+    "title": "End of Day Summary",
+    "print": "Print Report",
+    "closeDay": "Close Day",
+    "dayClosed": "Day Closed ✓",
+    "dayClosedMessage": "Day closed — report captured for your records",
+    "streak": "{count}-day streak",
+    "revenue": "Total Revenue",
+    "paymentBreakdown": "Payment Breakdown",
+    "cash": "Cash",
+    "card": "Card",
+    "bankTransfer": "Bank Transfer",
+    "other": "Other",
+    "completedJobs": "Completed Today",
+    "openJobs": "Open Jobs",
+    "unpaidInvoices": "Unpaid Invoices",
+    "lowStock": "Low Stock",
+    "bestMechanic": "Best Mechanic",
+    "noMechanicData": "No mechanic data today",
+    "biggestIssue": "Biggest Issue",
+    "noIssues": "No outstanding issues 🎉",
+    "viewJob": "View job →"
   }
 }

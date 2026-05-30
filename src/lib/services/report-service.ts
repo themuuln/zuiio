@@ -1096,11 +1096,11 @@ export async function getEndOfDaySummary(
     }
   }
 
-  // Unpaid invoices total
+  // Unpaid invoices total (balance_due)
   const unpaidInvData = (unpaidInvoicesResult as any)?.data ?? [];
   const unpaidInvCount = unpaidInvData.length;
   const unpaidInvTotal = unpaidInvData.reduce(
-    (sum: number, inv: any) => sum + Number(inv.total ?? 0),
+    (sum: number, inv: any) => sum + Number(inv.balance_due ?? 0),
     0,
   );
 
@@ -1118,14 +1118,14 @@ export async function getEndOfDaySummary(
         }
       : null;
 
-  // Biggest issue: oldest open work order
+  // Biggest issue: oldest open work order with customer info
   const biData = (biggestIssueResult as any)?.data;
   const biggestIssue =
-    biData && !Array.isArray(biData) && biData.id
+    biData && !Array.isArray(biData) && biData?.id
       ? {
           description: biData.description ?? "Open work order",
           work_order_id: biData.id,
-          customer: "",
+          customer: (biData as any).customers?.full_name ?? "",
           days_open: Math.floor(
             (Date.now() - new Date(biData.created_at).getTime()) /
               (1000 * 60 * 60 * 24),

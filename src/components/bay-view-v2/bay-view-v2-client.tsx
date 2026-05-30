@@ -344,6 +344,10 @@ export function BayViewV2Client() {
     handleDragEnd(event);
   }
 
+  function onDragCancel() {
+    setActiveDrag(null);
+  }
+
   const {
     handleStatusClick: rawHandleStatusClick,
     handleStatusChangeConfirm,
@@ -645,6 +649,7 @@ export function BayViewV2Client() {
       sensors={sensors}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onDragCancel={onDragCancel}
     >
       <div className="flex h-full flex-col bg-muted/20 overflow-hidden rounded-2xl border border-border/40 shadow-sm">
         {/* Sleek Controls Toolbar */}

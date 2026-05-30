@@ -1,4 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
+import { getEndOfDaySummary } from "@/lib/services/report-service";
+
+function localDateStr(date?: Date): string {
+  const d = date ?? new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 export async function closeDay(
   orgId: string,
@@ -7,13 +16,17 @@ export async function closeDay(
 ): Promise<{ success: boolean; streak: number }> {
   const supabase = await createClient();
 
-  // Upsert day_close_logs (unique constraint on org_id + date)
+  // Capture EOD snapshot before closing
+  const eodSummary = await getEndOfDaySummary(orgId, date);
+
+  // Upsert day_close_logs with snapshot
   const { error } = await supabase.from("day_close_logs").upsert(
     {
       organization_id: orgId,
       closed_by: userId,
       date,
       closed_at: new Date().toISOString(),
+      summary: eodSummary as unknown as Record<string, unknown>,
       created_by: userId,
     },
     { onConflict: "organization_id, date" },
@@ -39,13 +52,12 @@ export async function getCloseStreak(orgId: string): Promise<number> {
   if (!logs || logs.length === 0) return 0;
 
   let streak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const todayLocal = localDateStr();
 
   for (let i = 0; i < logs.length; i++) {
-    const expectedDate = new Date(today);
+    const expectedDate = new Date();
     expectedDate.setDate(expectedDate.getDate() - i);
-    const expectedStr = expectedDate.toISOString().split("T")[0];
+    const expectedStr = localDateStr(expectedDate);
 
     if (logs[i].date === expectedStr) {
       streak++;

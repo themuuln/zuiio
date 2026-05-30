@@ -245,7 +245,8 @@ export default function PricingPage() {
                   ₮3M – ₮15M / month
                 </Typography.H3>
                 <Typography.Text className="mt-1 text-sm text-muted-foreground">
-                  Lost work orders · Inventory leakage · Unpaid invoices · Untracked mechanics
+                  Lost work orders · Inventory leakage · Unpaid invoices ·
+                  Untracked mechanics
                 </Typography.Text>
               </div>
               <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-5 sm:p-6">
@@ -256,7 +257,8 @@ export default function PricingPage() {
                   ₮699,000 / month
                 </Typography.H3>
                 <Typography.Text className="mt-1 text-sm text-muted-foreground">
-                  Full visibility · Mechanic accountability · Inventory control · Repeat customers
+                  Full visibility · Mechanic accountability · Inventory control
+                  · Repeat customers
                 </Typography.Text>
               </div>
             </div>
@@ -270,7 +272,10 @@ export default function PricingPage() {
               const price = annual
                 ? `${plan.annualPrice}/жил`
                 : `${plan.monthlyPrice}/сар`;
-              const perUnit = annual && plan.annualPerMonth ? `${plan.annualPerMonth}/сар` : null;
+              const perUnit =
+                annual && plan.annualPerMonth
+                  ? `${plan.annualPerMonth}/сар`
+                  : null;
               const isStarter = plan.key === "starter";
               const isEnterprise = plan.key === "enterprise";
 

@@ -40,7 +40,7 @@ export interface WorkOrderDetail extends Record<string, unknown> {
   discount_total: number;
   subtotal: number;
   total: number;
-  loss_reason: string | null;
+  loss_reason?: string | null;
   completed_at: string | null;
   started_at: string | null;
   created_at: string;

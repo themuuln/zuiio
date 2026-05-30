@@ -126,6 +126,10 @@ export function useBayDragHandlers({
       if (activeData?.type === "vehicle" && overId.startsWith("bay-")) {
         const bayNumber = Number.parseInt(overId.replace("bay-", ""), 10);
         const woId = activeData.workOrderId;
+
+        const currentBay = data?.bays.find((b) => b.workOrder?.id === woId);
+        if (currentBay?.bayNumber === bayNumber) return; // Dropped on its current bay, do nothing!
+
         markPending(woId);
 
         setData((d) => {
@@ -376,6 +380,8 @@ export function useBayDragHandlers({
       if (activeData?.type === "vehicle" && overId.startsWith("vehicle-")) {
         const activeWoId = activeData.workOrderId;
         const targetWoId = overId.replace("vehicle-", "");
+
+        if (activeWoId === targetWoId) return; // Dropped on itself, do nothing!
 
         const queue = data?.waitingQueue ?? [];
         const queueIds = queue.map((w) => w.id);
