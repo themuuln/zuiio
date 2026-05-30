@@ -11,9 +11,20 @@ import type {
   PurchaseOrderItem,
   StockThreshold,
   Supplier,
+  UpdatePartParams,
+  GlobalPartCatalog,
 } from "@/lib/types";
 import { createOrgQuery } from "./factory";
-import { inventoryKeys } from "./keys";
+import { inventoryKeys, globalCatalogKeys } from "./keys";
+
+// ── Global Catalog Fetcher ───────────────────────────────────
+
+async function fetchGlobalPartsCatalog(): Promise<GlobalPartCatalog[]> {
+  const res = await fetch("/api/global-catalog/parts");
+  const json = await res.json();
+  if (json.error) throw new Error(json.error.message);
+  return json.data ?? [];
+}
 
 // ── Module-level fetchers ────────────────────────────────────
 
@@ -64,6 +75,14 @@ export function usePartsCatalog(orgId: string | undefined) {
     queryFn: () => fetchPartsCatalog(orgId ?? ""),
     enabled: !!orgId,
     staleTime: 60_000,
+  });
+}
+
+export function useGlobalPartsCatalog() {
+  return useQuery({
+    queryKey: globalCatalogKeys.parts(),
+    queryFn: fetchGlobalPartsCatalog,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
@@ -369,6 +388,63 @@ export function useDeleteSupplier(orgId: string | undefined) {
     onSuccess: () => toast.success("Supplier deleted"),
     onSettled: () => {
       qc.invalidateQueries({ queryKey: inventoryKeys.suppliers(orgId ?? "") });
+    },
+  });
+  return mutation;
+}
+
+export function useUpdatePart(orgId: string | undefined) {
+  const qc = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: async ({
+      id,
+      body,
+    }: {
+      id: string;
+      body: UpdatePartParams;
+    }) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/parts/${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data as PartsCatalogItem;
+    },
+    onMutate: async ({ id, body }) => {
+      const key = inventoryKeys.parts(orgId ?? "");
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<PartsCatalogItem[]>(key);
+      if (previous) {
+        qc.setQueryData<PartsCatalogItem[]>(
+          key,
+          previous.map((p) =>
+            p.id === id
+              ? { ...p, ...body, updated_at: new Date().toISOString() }
+              : p,
+          ),
+        );
+      }
+      return { previous };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previous)
+        qc.setQueryData<PartsCatalogItem[]>(
+          inventoryKeys.parts(orgId ?? ""),
+          context.previous,
+        );
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
+    },
+    onSuccess: () => toast.success("Part updated"),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: inventoryKeys.parts(orgId ?? "") });
+      qc.invalidateQueries({
+        queryKey: inventoryKeys.balances(orgId ?? ""),
+      });
     },
   });
   return mutation;

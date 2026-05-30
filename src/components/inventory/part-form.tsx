@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
+import { useUpdatePart } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreatePart } from "@/lib/queries/use-wizard-data";
 import type { CreatePartParams, PartsCatalogItem } from "@/lib/types";
@@ -41,6 +42,7 @@ type PartFormValues = z.infer<typeof partSchema>;
 export type PartFormProps = {
   mode?: "quick" | "full";
   initialData?: Partial<CreatePartParams>;
+  partId?: string; // when present, switches to update mode
   onSuccess?: (part: PartsCatalogItem) => void;
   onCancel?: () => void;
 };
@@ -48,6 +50,7 @@ export type PartFormProps = {
 export function PartForm({
   mode = "full",
   initialData,
+  partId,
   onSuccess,
   onCancel,
 }: PartFormProps) {
@@ -59,6 +62,9 @@ export function PartForm({
   const [error, setError] = useState<string | null>(null);
 
   const createPartMutation = useCreatePart(orgId);
+  const updatePartMutation = useUpdatePart(orgId);
+  const isUpdate = !!partId;
+  const mutation = isUpdate ? updatePartMutation : createPartMutation;
 
   const form = useForm<PartFormValues>({
     resolver: zodResolver(partSchema),
@@ -107,12 +113,21 @@ export function PartForm({
           currentMode === "full" && data.purchase_price?.trim()
             ? Number(data.purchase_price)
             : undefined,
+        global_part_id: initialData?.global_part_id ?? undefined,
       };
 
-      const part = await createPartMutation.mutateAsync(payload);
+      let part: PartsCatalogItem;
+      if (isUpdate && partId) {
+        part = await updatePartMutation.mutateAsync({
+          id: partId,
+          body: payload,
+        });
+      } else {
+        part = await createPartMutation.mutateAsync(payload);
+      }
       onSuccess?.(part);
-    } catch (err: any) {
-      setError(err.message || "Failed to save part");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Failed to save part");
     }
   });
 
@@ -275,14 +290,16 @@ export function PartForm({
         )}
         <Button
           type="submit"
-          disabled={createPartMutation.isPending}
+          disabled={mutation.isPending}
           className="h-11 px-6 min-w-[140px]"
         >
-          {createPartMutation.isPending ? (
+          {mutation.isPending ? (
             <span className="flex items-center gap-2 justify-center">
               <Loader2 className="size-4 animate-spin" />
               Saving...
             </span>
+          ) : isUpdate ? (
+            "Update Part"
           ) : (
             "Create Part"
           )}

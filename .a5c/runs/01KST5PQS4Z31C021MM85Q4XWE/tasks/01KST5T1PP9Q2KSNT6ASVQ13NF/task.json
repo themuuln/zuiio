@@ -113,10 +113,7 @@
           "type": "array"
         }
       },
-      "required": [
-        "tools",
-        "workflows"
-      ],
+      "required": ["tools", "workflows"],
       "type": "object"
     },
     "prompt": {
@@ -158,12 +155,7 @@
     "outputJsonPath": "tasks/01KST5T1PP9Q2KSNT6ASVQ13NF/result.json"
   },
   "kind": "agent",
-  "labels": [
-    "agent",
-    "analysis",
-    "cradle",
-    "tools"
-  ],
+  "labels": ["agent", "analysis", "cradle", "tools"],
   "title": "Analyze tools, services, and workflows",
   "schemaVersion": "2026.01.tasks-v1",
   "effectId": "01KST5T1PP9Q2KSNT6ASVQ13NF",

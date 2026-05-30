@@ -11,12 +11,7 @@
     "kind": "agent",
     "label": "agent",
     "taskDefRef": "tasks/01KST5T1NQDK54NM9Q4QJ2X4H9/task.json",
-    "labels": [
-      "agent",
-      "cradle",
-      "analysis",
-      "repo"
-    ]
+    "labels": ["agent", "cradle", "analysis", "repo"]
   },
   "checksum": "fbd2828212f44a6d07625592c8e735306eff464516a3506bfd05e46232174405"
 }

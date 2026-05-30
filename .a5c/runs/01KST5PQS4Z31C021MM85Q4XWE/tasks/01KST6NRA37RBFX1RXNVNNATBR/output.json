@@ -38,11 +38,32 @@
     "diagnose": "Recurring schema/type issues need structured debugging"
   },
   "prioritized": {
-    "mustHave": ["gsd/verify", "supabase", "tdd", "next-best-practices", "shadcn"],
-    "niceToHave": ["gsd/audit", "gsd/map-codebase", "uiux", "karpathy-guidelines", "react-doctor", "webapp-testing"]
+    "mustHave": [
+      "gsd/verify",
+      "supabase",
+      "tdd",
+      "next-best-practices",
+      "shadcn"
+    ],
+    "niceToHave": [
+      "gsd/audit",
+      "gsd/map-codebase",
+      "uiux",
+      "karpathy-guidelines",
+      "react-doctor",
+      "webapp-testing"
+    ]
   },
   "remediations": [
-    {"painPointId": "pp-schema-drift-0", "recommendation": "Remove continue-on-error: true from CI typecheck, add post-migration type sync verification script", "process": "gsd/verify"},
-    {"painPointId": "pp-i18n-burden-0", "recommendation": "Add CI parity check that diffs mn.json vs en.json keys", "process": "gsd/audit"}
+    {
+      "painPointId": "pp-schema-drift-0",
+      "recommendation": "Remove continue-on-error: true from CI typecheck, add post-migration type sync verification script",
+      "process": "gsd/verify"
+    },
+    {
+      "painPointId": "pp-i18n-burden-0",
+      "recommendation": "Add CI parity check that diffs mn.json vs en.json keys",
+      "process": "gsd/audit"
+    }
   ]
 }

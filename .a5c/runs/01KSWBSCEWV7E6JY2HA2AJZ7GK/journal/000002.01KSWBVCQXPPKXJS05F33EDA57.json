@@ -1,0 +1,17 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-30T11:55:58.589Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSWBVCM8TYP0ZQWM32DYZZJ1",
+    "invocationKey": "feature/edit-parts-catalog:S000001:create-update-part-hook",
+    "invocationHash": "8266fb2d3106878b8348ccfcf606dd63543c33b4b093331f6a2a04b433b32f10",
+    "stepId": "S000001",
+    "taskId": "create-update-part-hook",
+    "kind": "agent",
+    "label": "feature",
+    "taskDefRef": "tasks/01KSWBVCM8TYP0ZQWM32DYZZJ1/task.json",
+    "labels": ["feature", "react-query", "parts", "mutation"]
+  },
+  "checksum": "73f5f1a579fd4426af9b2a860122d8d2d5db9f58590fba9f5aa64c8f04ddb6f8"
+}

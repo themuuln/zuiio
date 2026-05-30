@@ -48,12 +48,7 @@
       "messageFormat": {
         "conventionalPercentage": 58,
         "nonConventionalPercentage": 42,
-        "topPrefixes": [
-          "fix(",
-          "feat(",
-          "chore(",
-          "docs("
-        ]
+        "topPrefixes": ["fix(", "feat(", "chore(", "docs("]
       },
       "timeSpan": {
         "days": 18,
@@ -68,9 +63,7 @@
     },
     "contributors": [
       {
-        "areas": [
-          "all"
-        ],
+        "areas": ["all"],
         "commitCount": 125,
         "name": "Temuulen Undrakhbayar"
       }
@@ -203,12 +196,7 @@
       "messageFormat": {
         "conventionalPercentage": 58,
         "nonConventionalPercentage": 42,
-        "topPrefixes": [
-          "fix(",
-          "feat(",
-          "chore(",
-          "docs("
-        ]
+        "topPrefixes": ["fix(", "feat(", "chore(", "docs("]
       },
       "timeSpan": {
         "days": 18,
@@ -223,9 +211,7 @@
     },
     "contributors": [
       {
-        "areas": [
-          "all"
-        ],
+        "areas": ["all"],
         "commitCount": 125,
         "name": "Temuulen Undrakhbayar"
       }

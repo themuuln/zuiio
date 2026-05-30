@@ -13,20 +13,12 @@
       "pipelines": [
         {
           "name": "CI",
-          "stages": [
-            "lint",
-            "typecheck",
-            "test",
-            "build"
-          ],
+          "stages": ["lint", "typecheck", "test", "build"],
           "trigger": "pull_request + push to main"
         },
         {
           "name": "React Doctor",
-          "stages": [
-            "diff analysis",
-            "PR comment"
-          ],
+          "stages": ["diff analysis", "PR comment"],
           "trigger": "pull_request + push to main"
         }
       ],
@@ -141,39 +133,20 @@
       {
         "description": "Local dev with hot reload",
         "name": "Development",
-        "steps": [
-          "pnpm install",
-          "pnpm dev"
-        ],
-        "triggers": [
-          "manual"
-        ]
+        "steps": ["pnpm install", "pnpm dev"],
+        "triggers": ["manual"]
       },
       {
         "description": "Automated quality gates",
         "name": "CI/CD",
-        "steps": [
-          "lint",
-          "typecheck",
-          "test",
-          "build"
-        ],
-        "triggers": [
-          "PR",
-          "push to main"
-        ]
+        "steps": ["lint", "typecheck", "test", "build"],
+        "triggers": ["PR", "push to main"]
       },
       {
         "description": "Vercel auto-deploy on merge",
         "name": "Deployment",
-        "steps": [
-          "merge to main",
-          "Vercel build",
-          "Vercel deploy"
-        ],
-        "triggers": [
-          "merge to main"
-        ]
+        "steps": ["merge to main", "Vercel build", "Vercel deploy"],
+        "triggers": ["merge to main"]
       }
     ]
   },
@@ -188,20 +161,12 @@
       "pipelines": [
         {
           "name": "CI",
-          "stages": [
-            "lint",
-            "typecheck",
-            "test",
-            "build"
-          ],
+          "stages": ["lint", "typecheck", "test", "build"],
           "trigger": "pull_request + push to main"
         },
         {
           "name": "React Doctor",
-          "stages": [
-            "diff analysis",
-            "PR comment"
-          ],
+          "stages": ["diff analysis", "PR comment"],
           "trigger": "pull_request + push to main"
         }
       ],
@@ -316,39 +281,20 @@
       {
         "description": "Local dev with hot reload",
         "name": "Development",
-        "steps": [
-          "pnpm install",
-          "pnpm dev"
-        ],
-        "triggers": [
-          "manual"
-        ]
+        "steps": ["pnpm install", "pnpm dev"],
+        "triggers": ["manual"]
       },
       {
         "description": "Automated quality gates",
         "name": "CI/CD",
-        "steps": [
-          "lint",
-          "typecheck",
-          "test",
-          "build"
-        ],
-        "triggers": [
-          "PR",
-          "push to main"
-        ]
+        "steps": ["lint", "typecheck", "test", "build"],
+        "triggers": ["PR", "push to main"]
       },
       {
         "description": "Vercel auto-deploy on merge",
         "name": "Deployment",
-        "steps": [
-          "merge to main",
-          "Vercel build",
-          "Vercel deploy"
-        ],
-        "triggers": [
-          "merge to main"
-        ]
+        "steps": ["merge to main", "Vercel build", "Vercel deploy"],
+        "triggers": ["merge to main"]
       }
     ]
   }

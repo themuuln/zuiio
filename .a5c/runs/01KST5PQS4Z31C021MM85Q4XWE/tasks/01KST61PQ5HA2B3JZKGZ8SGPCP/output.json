@@ -1,10 +1,17 @@
 {
   "commitPatterns": {
     "totalCommits": 125,
-    "timeSpan": {"first": "2026-05-11", "last": "2026-05-29", "days": 18},
-    "velocity": {"avgPerDay": 6.9, "peakDay": "2026-05-28 with 19 commits"},
-    "messageFormat": {"conventionalPercentage": 58, "topPrefixes": ["fix(", "feat(", "chore(", "docs("], "nonConventionalPercentage": 42},
-    "averageCommitSize": {"medianEstimated": "8-12 files", "giantCommitMax": 365}
+    "timeSpan": { "first": "2026-05-11", "last": "2026-05-29", "days": 18 },
+    "velocity": { "avgPerDay": 6.9, "peakDay": "2026-05-28 with 19 commits" },
+    "messageFormat": {
+      "conventionalPercentage": 58,
+      "topPrefixes": ["fix(", "feat(", "chore(", "docs("],
+      "nonConventionalPercentage": 42
+    },
+    "averageCommitSize": {
+      "medianEstimated": "8-12 files",
+      "giantCommitMax": 365
+    }
   },
   "branchPatterns": {
     "strategy": "trunk-based (single main branch)",
@@ -18,19 +25,64 @@
   },
   "evolution": {
     "majorEvents": [
-      {"date": "2026-05-11", "description": "Project initialization — foundation setup"},
-      {"date": "2026-05-16", "description": "Feature bootstrapping — expenses, CRM, reminders, subscription system"},
-      {"date": "2026-05-22", "description": "UI polish — Base UI adoption, react-doctor fixes, shadcn updates"},
-      {"date": "2026-05-28", "description": "Stabilization — vehicle model search overhaul, form validation overhaul"}
+      {
+        "date": "2026-05-11",
+        "description": "Project initialization — foundation setup"
+      },
+      {
+        "date": "2026-05-16",
+        "description": "Feature bootstrapping — expenses, CRM, reminders, subscription system"
+      },
+      {
+        "date": "2026-05-22",
+        "description": "UI polish — Base UI adoption, react-doctor fixes, shadcn updates"
+      },
+      {
+        "date": "2026-05-28",
+        "description": "Stabilization — vehicle model search overhaul, form validation overhaul"
+      }
     ],
-    "technologyChanges": ["Base UI migration from Radix (asChild → render prop)", "React Compiler enabled", "Supabase MCP integration"],
-    "growthAreas": ["Dashboard modules (14 features)", "Service catalog", "Inventory ledger", "Vehicle models global catalog"]
+    "technologyChanges": [
+      "Base UI migration from Radix (asChild → render prop)",
+      "React Compiler enabled",
+      "Supabase MCP integration"
+    ],
+    "growthAreas": [
+      "Dashboard modules (14 features)",
+      "Service catalog",
+      "Inventory ledger",
+      "Vehicle models global catalog"
+    ]
   },
   "bottlenecks": [
-    {"id": "bn-i18n-0", "description": "Both mn.json and en.json changed in lockstep (24 commits each)", "impact": "Doubles cost of every UI text change", "location": "src/messages/", "frequency": "every feature"},
-    {"id": "bn-types-0", "description": "src/lib/types/index.ts changed 18 times — central type hub", "impact": "Every new table/column/enum ripples here", "location": "src/lib/types/", "frequency": "every migration"},
-    {"id": "bn-schema-0", "description": "Schema drift between local and remote DB", "impact": "5+ commits specifically fixing drift", "location": "supabase/migrations/", "frequency": "recurring"},
-    {"id": "bn-backup-0", "description": "21 'backup' commits with 100-365 files each", "impact": "Obscures development history, makes git blame useless", "location": "entire repo", "frequency": "frequently"}
+    {
+      "id": "bn-i18n-0",
+      "description": "Both mn.json and en.json changed in lockstep (24 commits each)",
+      "impact": "Doubles cost of every UI text change",
+      "location": "src/messages/",
+      "frequency": "every feature"
+    },
+    {
+      "id": "bn-types-0",
+      "description": "src/lib/types/index.ts changed 18 times — central type hub",
+      "impact": "Every new table/column/enum ripples here",
+      "location": "src/lib/types/",
+      "frequency": "every migration"
+    },
+    {
+      "id": "bn-schema-0",
+      "description": "Schema drift between local and remote DB",
+      "impact": "5+ commits specifically fixing drift",
+      "location": "supabase/migrations/",
+      "frequency": "recurring"
+    },
+    {
+      "id": "bn-backup-0",
+      "description": "21 'backup' commits with 100-365 files each",
+      "impact": "Obscures development history, makes git blame useless",
+      "location": "entire repo",
+      "frequency": "frequently"
+    }
   ],
   "implicitRules": [
     "All work goes to main directly — no feature branches",
@@ -40,12 +92,44 @@
     "Phase-gated development model (Phase 0→1→2) per MASTER_PLAN.md"
   ],
   "painPoints": [
-    {"id": "pp-branching-0", "description": "No branching strategy — no code review, no safe experimentation", "severity": "high", "category": "workflow"},
-    {"id": "pp-backup-0", "description": "Giant 'backup' commits obscure development history", "severity": "high", "category": "workflow"},
-    {"id": "pp-commit-quality-0", "description": "Commit message quality degrades under time pressure", "severity": "medium", "category": "quality"},
-    {"id": "pp-schema-drift-0", "description": "Recurring schema drift between local and remote DB", "severity": "medium", "category": "tooling"},
-    {"id": "pp-i18n-burden-0", "description": "i18n double-touch burden slows feature velocity", "severity": "medium", "category": "productivity"},
-    {"id": "pp-no-versioning-0", "description": "No release/versioning strategy — no tags, no CHANGELOG", "severity": "medium", "category": "release"}
+    {
+      "id": "pp-branching-0",
+      "description": "No branching strategy — no code review, no safe experimentation",
+      "severity": "high",
+      "category": "workflow"
+    },
+    {
+      "id": "pp-backup-0",
+      "description": "Giant 'backup' commits obscure development history",
+      "severity": "high",
+      "category": "workflow"
+    },
+    {
+      "id": "pp-commit-quality-0",
+      "description": "Commit message quality degrades under time pressure",
+      "severity": "medium",
+      "category": "quality"
+    },
+    {
+      "id": "pp-schema-drift-0",
+      "description": "Recurring schema drift between local and remote DB",
+      "severity": "medium",
+      "category": "tooling"
+    },
+    {
+      "id": "pp-i18n-burden-0",
+      "description": "i18n double-touch burden slows feature velocity",
+      "severity": "medium",
+      "category": "productivity"
+    },
+    {
+      "id": "pp-no-versioning-0",
+      "description": "No release/versioning strategy — no tags, no CHANGELOG",
+      "severity": "medium",
+      "category": "release"
+    }
   ],
-  "contributors": [{"name": "Temuulen Undrakhbayar", "areas": ["all"], "commitCount": 125}]
+  "contributors": [
+    { "name": "Temuulen Undrakhbayar", "areas": ["all"], "commitCount": 125 }
+  ]
 }

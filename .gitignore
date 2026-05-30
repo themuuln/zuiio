@@ -63,3 +63,4 @@ docs/.vitepress/dist/
 .a5c/logs/
 # --- end babysitter managed ---
 /.a5c/node_modules
+/.rpiv/artifacts/discover

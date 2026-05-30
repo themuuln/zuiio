@@ -45,6 +45,7 @@ export default defineConfig({
         items: [
           { text: "Хяналтын самбар", link: "/dashboard" },
           { text: "Засварын булан", link: "/bay-view" },
+          { text: "Механикийн самбар", link: "/mechanic" },
           { text: "Ажлын захиалга", link: "/work-orders" },
           { text: "Харилцагчид", link: "/customers" },
           { text: "Тээврийн хэрэгсэл", link: "/vehicles" },

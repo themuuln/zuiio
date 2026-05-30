@@ -1,15 +1,12 @@
 "use client";
 
+import { useLocale } from "next-intl";
 import { Loader2, Package, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { Input } from "@/components/ui/input";
-import type {
-  PartsCatalogItem,
-  WorkOrderPart,
-  GlobalPartCatalog,
-} from "@/lib/types";
+import type { PartsCatalogItem, WorkOrderPart } from "@/lib/types";
 
 // Extended type for catalog items that may come from global or org catalog
 type CatalogPartItem = PartsCatalogItem & { _source?: "org" | "global" };
@@ -71,12 +68,13 @@ export function PartsSection({
   onEditPriceCancel,
   t,
 }: PartsSectionProps) {
+  const locale = useLocale();
   return (
     <section className="rounded-lg border border-border/60 bg-card/40 p-3">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <div className="flex items-center justify-center size-5 rounded-md bg-amber-500/10">
-            <span className="text-[10px] font-semibold text-amber-600">P</span>
+          <div className="flex items-center justify-center size-5 rounded-md bg-primary/10">
+            <span className="text-[10px] font-semibold text-primary">P</span>
           </div>
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {t("parts")}
@@ -146,7 +144,7 @@ export function PartsSection({
                           String(Number(part.final_price)),
                         );
                       }}
-                      className="font-semibold tabular-nums h-auto px-1 -mx-1 rounded-sm"
+                      className="font-semibold tabular-nums h-auto px-1 -mx-1 rounded-sm hover:underline hover:decoration-dashed hover:underline-offset-2"
                     >
                       {formatMNT(Number(part.final_price))}
                     </Button>
@@ -157,7 +155,7 @@ export function PartsSection({
                     variant="ghost"
                     size="icon-xs"
                     onClick={() => onRemovePart(part.id)}
-                    className="text-destructive/60 hover:text-destructive size-6 opacity-0 group-hover:opacity-100"
+                    className="text-destructive/60 hover:text-destructive size-6 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                     aria-label="Remove part"
                   >
                     <Trash2 className="size-3" />
@@ -209,14 +207,15 @@ export function PartsSection({
           {partSearch && (
             <div className="absolute top-full left-0 right-0 z-50 mt-1 border rounded-lg bg-background shadow-lg max-h-40 overflow-y-auto">
               {partsCatalog
-                .filter(
-                  (p) =>
-                    p.name.toLowerCase().includes(partSearch.toLowerCase()) ||
-                    (p.part_number &&
-                      p.part_number
-                        .toLowerCase()
-                        .includes(partSearch.toLowerCase())),
-                )
+                .filter((p) => {
+                  const q = partSearch.toLowerCase();
+                  const matchName = p.name.toLowerCase().includes(q);
+                  const matchNameMn =
+                    p.name_mn?.toLowerCase().includes(q) ?? false;
+                  const matchPartNumber =
+                    p.part_number?.toLowerCase().includes(q) ?? false;
+                  return matchName || matchNameMn || matchPartNumber;
+                })
                 .slice(0, 8)
                 .map((part) => (
                   <Button
@@ -227,11 +226,13 @@ export function PartsSection({
                       onNewPartPriceChange(Number(part.default_price ?? 0));
                       onPartSearchChange("");
                     }}
-                    className="w-full justify-start px-2.5 py-2 text-xs h-auto text-left"
+                    className="w-full justify-start px-2.5 py-1.5 text-xs h-auto text-left"
                   >
                     <div className="flex flex-col items-start min-w-0 flex-1">
                       <span className="font-medium truncate w-full">
-                        {part.name}
+                        {locale === "mn" && part.name_mn
+                          ? part.name_mn
+                          : part.name}
                       </span>
                       {part.part_number && (
                         <span className="text-[10px] text-muted-foreground font-mono">
@@ -239,19 +240,20 @@ export function PartsSection({
                         </span>
                       )}
                     </div>
-                    <span className="tabular-nums font-medium shrink-0 ml-2">
+                    <span className="tabular-nums font-medium shrink-0 ml-auto text-muted-foreground group-hover/button:text-foreground">
                       {formatMNT(Number(part.default_price ?? 0))}
                     </span>
                   </Button>
                 ))}
-              {partsCatalog.filter(
-                (p) =>
-                  p.name.toLowerCase().includes(partSearch.toLowerCase()) ||
-                  (p.part_number &&
-                    p.part_number
-                      .toLowerCase()
-                      .includes(partSearch.toLowerCase())),
-              ).length === 0 && (
+              {partsCatalog.filter((p) => {
+                const q = partSearch.toLowerCase();
+                const matchName = p.name.toLowerCase().includes(q);
+                const matchNameMn =
+                  p.name_mn?.toLowerCase().includes(q) ?? false;
+                const matchPartNumber =
+                  p.part_number?.toLowerCase().includes(q) ?? false;
+                return matchName || matchNameMn || matchPartNumber;
+              }).length === 0 && (
                 <div className="p-3 text-xs text-muted-foreground text-center">
                   No parts match
                 </div>
@@ -312,12 +314,12 @@ export function PartsSection({
         variant="outline"
         onClick={onToggleAddPart}
         disabled={addingPart}
-        className="mt-2 w-full border-dashed py-2 text-xs"
+        className="mt-2 w-full border-dashed text-xs h-9 gap-1.5 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-200"
       >
         {addingPart ? (
-          <Loader2 className="size-4 animate-spin" />
+          <Loader2 className="size-3.5 animate-spin" />
         ) : (
-          <Plus className="size-4" />
+          <Plus className="size-3.5" />
         )}
         {addingPart ? "Adding part..." : t("addPart")}
       </Button>

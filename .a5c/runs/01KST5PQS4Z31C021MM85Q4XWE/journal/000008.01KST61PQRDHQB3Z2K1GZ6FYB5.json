@@ -11,12 +11,7 @@
     "kind": "agent",
     "label": "agent",
     "taskDefRef": "tasks/01KST61PQ5HA2B3JZKGZ8SGPCP/task.json",
-    "labels": [
-      "agent",
-      "cradle",
-      "mining",
-      "git-history"
-    ]
+    "labels": ["agent", "cradle", "mining", "git-history"]
   },
   "checksum": "eacb5d5fe22e0f7208341d604990e13df50a46bbdcf930ae629202734c1c9dc0"
 }

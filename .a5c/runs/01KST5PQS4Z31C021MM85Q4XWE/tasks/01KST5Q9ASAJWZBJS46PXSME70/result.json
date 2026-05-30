@@ -6,9 +6,7 @@
   "status": "ok",
   "result": {
     "a5cDirExists": true,
-    "a5cFiles": [
-      "runs/"
-    ],
+    "a5cFiles": ["runs/"],
     "cicdConfigFiles": [
       ".github/workflows/ci.yml",
       ".github/workflows/react-doctor.yml"
@@ -25,9 +23,7 @@
   "finishedAt": "2026-05-29T15:31:37.277Z",
   "value": {
     "a5cDirExists": true,
-    "a5cFiles": [
-      "runs/"
-    ],
+    "a5cFiles": ["runs/"],
     "cicdConfigFiles": [
       ".github/workflows/ci.yml",
       ".github/workflows/react-doctor.yml"

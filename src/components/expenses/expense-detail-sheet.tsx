@@ -67,6 +67,7 @@ const expenseSchema = z.object({
       return !Number.isNaN(n) && n > 0;
     }, "Enter a valid amount"),
   expenseDate: z.string().optional(),
+  dueDate: z.string().optional(),
   categoryId: z.string().optional(),
   vendorName: z.string().optional(),
   taxAmount: z.string().optional(),
@@ -82,6 +83,7 @@ const emptyForm: ExpenseFormValues = {
   description: "",
   amount: "",
   expenseDate: "",
+  dueDate: "",
   categoryId: "",
   vendorName: "",
   taxAmount: "0",
@@ -100,6 +102,7 @@ function syncForm(expense: ExpenseWithCategory): ExpenseFormValues {
     expenseDate:
       expense.expense_date?.split("T")[0] ??
       new Date().toISOString().split("T")[0],
+    dueDate: expense.due_date?.split("T")[0] ?? "",
     categoryId: expense.category_id ?? "",
     vendorName: expense.vendor_name ?? "",
     taxAmount: String(expense.tax_amount ?? 0),
@@ -178,6 +181,7 @@ export function ExpenseDetailSheet({
         amount: Number.isNaN(amount) ? 0 : amount,
         taxAmount: Number.isNaN(taxAmount) ? 0 : taxAmount,
         expenseDate: data.expenseDate || undefined,
+        dueDate: data.dueDate || null,
         categoryId: data.categoryId || null,
         vendorName: data.vendorName || null,
         paymentMethod: data.paymentMethod || null,
@@ -407,6 +411,18 @@ export function ExpenseDetailSheet({
                     </FieldContent>
                   </Field>
 
+                  {/* Due Date — optional */}
+                  <Field>
+                    <FieldLabel>Due Date</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="eds-due-date"
+                        type="date"
+                        {...form.register("dueDate")}
+                      />
+                    </FieldContent>
+                  </Field>
+
                   {/* Category — optional */}
                   <Field>
                     <FieldLabel>{t("category")}</FieldLabel>
@@ -553,6 +569,24 @@ export function ExpenseDetailSheet({
                   </span>
                   <span>
                     {new Date(expense.expense_date).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+              {expense.due_date && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Due Date</span>
+                  <span
+                    className={
+                      !expense.paid_at &&
+                      new Date(expense.due_date) < new Date()
+                        ? "font-medium text-destructive"
+                        : ""
+                    }
+                  >
+                    {new Date(expense.due_date).toLocaleDateString()}
+                    {!expense.paid_at &&
+                      new Date(expense.due_date) < new Date() &&
+                      " (Overdue)"}
                   </span>
                 </div>
               )}

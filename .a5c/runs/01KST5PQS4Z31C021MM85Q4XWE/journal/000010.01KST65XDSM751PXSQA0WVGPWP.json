@@ -11,9 +11,7 @@
     "kind": "breakpoint",
     "label": "breakpoint",
     "taskDefRef": "tasks/01KST65XD4MG13TCT7YWFBH5EQ/task.json",
-    "labels": [
-      "breakpoint"
-    ]
+    "labels": ["breakpoint"]
   },
   "checksum": "b8188844203781f4b4934acd6256f905883616bc956b86478704af53ff0b93b5"
 }

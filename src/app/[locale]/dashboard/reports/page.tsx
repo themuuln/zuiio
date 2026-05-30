@@ -117,7 +117,11 @@ function periodTitle(type: ReportType, date: string, dateTo?: string): string {
     const fromDate = new Date(date);
     const toDate = new Date(dateTo);
     const formatD = (d: Date) =>
-      d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
     if (fromDate.toDateString() === toDate.toDateString()) {
       return formatD(fromDate);
     }
@@ -413,7 +417,9 @@ export default function ReportsPage() {
   // ── Data hooks ───────────────────────────────────────
   const reportQ = useReport(orgId, reportType, {
     date: dateParam,
-    ...(reportType === "custom" ? { date_from: dateFrom, date_to: dateTo } : {}),
+    ...(reportType === "custom"
+      ? { date_from: dateFrom, date_to: dateTo }
+      : {}),
     ...(mechanicFilter ? { mechanic: mechanicFilter } : {}),
   });
   const mechanicsQ = useMechanics(orgId);

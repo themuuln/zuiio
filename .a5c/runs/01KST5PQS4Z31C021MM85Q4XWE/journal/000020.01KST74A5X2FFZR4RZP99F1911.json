@@ -11,12 +11,7 @@
     "kind": "agent",
     "label": "agent",
     "taskDefRef": "tasks/01KST74A561K63HCW5X9D6C82K/task.json",
-    "labels": [
-      "agent",
-      "cradle",
-      "claude-md",
-      "documentation"
-    ]
+    "labels": ["agent", "cradle", "claude-md", "documentation"]
   },
   "checksum": "8344070e9b6cc3301520a21729b61b3af78e961e3798fda86d45900d0277a4a4"
 }

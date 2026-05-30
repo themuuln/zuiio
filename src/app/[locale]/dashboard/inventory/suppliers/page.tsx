@@ -149,6 +149,19 @@ export default function SuppliersPage() {
               data={filtered}
               getRowId={(row) => row.id}
               pageSize={20}
+              renderMobileCard={(s) => (
+                <div className="flex flex-col gap-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="size-4 shrink-0 text-muted-foreground/60" />
+                    <span className="font-medium truncate">{s.name}</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                    <span>{s.contact_person || "—"}</span>
+                    <span>{s.phone || "—"}</span>
+                    <span className="truncate">{s.email || "—"}</span>
+                  </div>
+                </div>
+              )}
             />
           )}
         </CardContent>

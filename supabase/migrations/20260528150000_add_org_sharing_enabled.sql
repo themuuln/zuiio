@@ -10,6 +10,8 @@ ADD COLUMN IF NOT EXISTS sharing_enabled boolean NOT NULL DEFAULT false;
 -- 2. Update RLS SELECT policies on customers
 DROP POLICY IF EXISTS "Users can view customers in their org" ON customers;
 DROP POLICY IF EXISTS "customers_select" ON customers;
+DROP POLICY IF EXISTS "customers_select_own" ON customers;
+DROP POLICY IF EXISTS "customers_select_shared" ON customers;
 
 CREATE POLICY "customers_select_own"
   ON customers FOR SELECT
@@ -32,6 +34,8 @@ CREATE POLICY "customers_select_shared"
 -- 3. Update RLS SELECT policies on vehicles
 DROP POLICY IF EXISTS "Users can view vehicles in their org" ON vehicles;
 DROP POLICY IF EXISTS "vehicles_select" ON vehicles;
+DROP POLICY IF EXISTS "vehicles_select_own" ON vehicles;
+DROP POLICY IF EXISTS "vehicles_select_shared" ON vehicles;
 
 CREATE POLICY "vehicles_select_own"
   ON vehicles FOR SELECT
@@ -55,6 +59,8 @@ CREATE POLICY "vehicles_select_shared"
 DROP POLICY IF EXISTS "Users can view work orders in their org" ON work_orders;
 DROP POLICY IF EXISTS "work_orders_select" ON work_orders;
 DROP POLICY IF EXISTS "wo_select" ON work_orders;
+DROP POLICY IF EXISTS "work_orders_select_own" ON work_orders;
+DROP POLICY IF EXISTS "work_orders_select_shared" ON work_orders;
 
 CREATE POLICY "work_orders_select_own"
   ON work_orders FOR SELECT
@@ -78,6 +84,8 @@ CREATE POLICY "work_orders_select_shared"
 DROP POLICY IF EXISTS "Users can view work_order_services in their org" ON work_order_services;
 DROP POLICY IF EXISTS "work_order_services_select" ON work_order_services;
 DROP POLICY IF EXISTS "wos_select" ON work_order_services;
+DROP POLICY IF EXISTS "work_order_services_select_own" ON work_order_services;
+DROP POLICY IF EXISTS "work_order_services_select_shared" ON work_order_services;
 
 CREATE POLICY "work_order_services_select_own"
   ON work_order_services FOR SELECT
@@ -101,6 +109,8 @@ CREATE POLICY "work_order_services_select_shared"
 DROP POLICY IF EXISTS "Users can view work_order_parts in their org" ON work_order_parts;
 DROP POLICY IF EXISTS "work_order_parts_select" ON work_order_parts;
 DROP POLICY IF EXISTS "wop_select" ON work_order_parts;
+DROP POLICY IF EXISTS "work_order_parts_select_own" ON work_order_parts;
+DROP POLICY IF EXISTS "work_order_parts_select_shared" ON work_order_parts;
 
 CREATE POLICY "work_order_parts_select_own"
   ON work_order_parts FOR SELECT
@@ -123,6 +133,8 @@ CREATE POLICY "work_order_parts_select_shared"
 -- 7. Update RLS SELECT policies on work_order_status_history
 DROP POLICY IF EXISTS "Users can view status history in their org" ON work_order_status_history;
 DROP POLICY IF EXISTS "wosh_select" ON work_order_status_history;
+DROP POLICY IF EXISTS "work_order_status_history_select_own" ON work_order_status_history;
+DROP POLICY IF EXISTS "work_order_status_history_select_shared" ON work_order_status_history;
 
 CREATE POLICY "work_order_status_history_select_own"
   ON work_order_status_history FOR SELECT
@@ -143,6 +155,7 @@ CREATE POLICY "work_order_status_history_select_shared"
   );
 
 -- 8. Add cross-org SELECT policies on invoices (existing ALL policy handles own-org)
+DROP POLICY IF EXISTS "invoices_select_shared" ON invoices;
 CREATE POLICY "invoices_select_shared"
   ON invoices FOR SELECT
   TO public
@@ -159,6 +172,7 @@ CREATE POLICY "invoices_select_shared"
   );
 
 -- 9. Add cross-org SELECT policies on invoice_items
+DROP POLICY IF EXISTS "invoice_items_select_shared" ON invoice_items;
 CREATE POLICY "invoice_items_select_shared"
   ON invoice_items FOR SELECT
   TO public

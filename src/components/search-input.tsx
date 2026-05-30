@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 interface SearchInputProps extends Omit<ComponentProps<"input">, "onChange"> {
   onSearch?: (value: string) => void;
+  onValueChange?: (value: string) => void;
   loading?: boolean;
   placeholder?: string;
   debounceMs?: number;
@@ -25,16 +26,19 @@ interface SearchInputProps extends Omit<ComponentProps<"input">, "onChange"> {
   value?: string;
   /** Shortcut key to focus this input, e.g. "k" for Cmd+K. Set to false to disable. */
   focusShortcut?: string | false;
+  clearOnEscape?: boolean;
 }
 
 export function SearchInput({
   onSearch = () => {},
+  onValueChange,
   loading = false,
   placeholder = "Search...",
   debounceMs,
   className,
   value: externalValue,
   focusShortcut = "k",
+  clearOnEscape = true,
   ...inputProps
 }: SearchInputProps) {
   const { onFocus, ...restInputProps } = inputProps;
@@ -71,6 +75,7 @@ export function SearchInput({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
       setValue(newValue);
+      onValueChange?.(newValue);
 
       if (debounceMs && debounceMs > 0) {
         if (timerRef.current) clearTimeout(timerRef.current);
@@ -79,7 +84,7 @@ export function SearchInput({
         }, debounceMs);
       }
     },
-    [debounceMs, onSearch],
+    [debounceMs, onSearch, onValueChange],
   );
 
   const handleKeyDown = useCallback(
@@ -87,16 +92,26 @@ export function SearchInput({
       if (e.key === "Enter") {
         if (timerRef.current) clearTimeout(timerRef.current);
         onSearch(value);
+        return;
+      }
+
+      if (e.key === "Escape" && clearOnEscape && value) {
+        if (timerRef.current) clearTimeout(timerRef.current);
+        e.preventDefault();
+        setValue("");
+        onValueChange?.("");
+        onSearch("");
       }
     },
-    [onSearch, value],
+    [clearOnEscape, onSearch, onValueChange, value],
   );
 
   const handleClear = useCallback(() => {
     setValue("");
+    onValueChange?.("");
     onSearch("");
     inputRef.current?.focus();
-  }, [onSearch]);
+  }, [onSearch, onValueChange]);
 
   return (
     <InputGroup className={cn("h-11 rounded-xl bg-background", className)}>

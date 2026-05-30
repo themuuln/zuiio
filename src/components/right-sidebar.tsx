@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRightSidebar, type SidebarTab } from "@/hooks/use-right-sidebar";
+import { type SidebarTab, useRightSidebar } from "@/hooks/use-right-sidebar";
 import { cn } from "@/lib/utils";
 
 function RightSidebarRail({
@@ -107,6 +107,10 @@ export function RightSidebar() {
   if (state.tabs.length === 0) return null;
 
   const handleSelect = (value: string) => {
+    if (state.isOpen && state.activeTab === value) {
+      setOpen(false);
+      return;
+    }
     setActiveTab(value);
     setOpen(true);
   };

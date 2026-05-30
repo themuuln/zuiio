@@ -100,6 +100,7 @@ export interface ExpenseStats {
   totalTax: number;
   paidAmount: number;
   unpaidAmount: number;
+  overdueCount: number;
   byCategory: {
     category_id: string | null;
     category_name: string;

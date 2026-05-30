@@ -1,8 +1,8 @@
 "use client";
 
-import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import { SearchInput } from "./search-input";
 
 describe("SearchInput", () => {
@@ -90,5 +90,32 @@ describe("SearchInput", () => {
     render(<SearchInput focusShortcut={false} />);
     const badge = screen.queryByText("Cmd+K");
     expect(badge).toBeNull();
+  });
+
+  it("calls onValueChange while typing", async () => {
+    const onValueChange = vi.fn();
+    const user = userEvent.setup();
+    render(<SearchInput onValueChange={onValueChange} />);
+    const input = screen.getByPlaceholderText("Search...");
+    await user.type(input, "abc");
+    expect(onValueChange).toHaveBeenLastCalledWith("abc");
+  });
+
+  it("clears on escape when enabled", async () => {
+    const onSearch = vi.fn();
+    const onValueChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <SearchInput
+        value="query"
+        onSearch={onSearch}
+        onValueChange={onValueChange}
+      />,
+    );
+    const input = screen.getByPlaceholderText("Search...");
+    await user.click(input);
+    await user.keyboard("{Escape}");
+    expect(onSearch).toHaveBeenCalledWith("");
+    expect(onValueChange).toHaveBeenCalledWith("");
   });
 });

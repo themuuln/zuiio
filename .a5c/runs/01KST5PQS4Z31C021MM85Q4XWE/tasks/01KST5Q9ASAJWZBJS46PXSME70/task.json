@@ -47,11 +47,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "existingProfile",
-        "isFirstRun",
-        "isNewProject"
-      ],
+      "required": ["existingProfile", "isFirstRun", "isNewProject"],
       "type": "object"
     },
     "prompt": {
@@ -87,12 +83,7 @@
     "outputJsonPath": "tasks/01KST5Q9ASAJWZBJS46PXSME70/result.json"
   },
   "kind": "agent",
-  "labels": [
-    "agent",
-    "cradle",
-    "read-only",
-    "setup"
-  ],
+  "labels": ["agent", "cradle", "read-only", "setup"],
   "title": "Check existing project setup",
   "schemaVersion": "2026.01.tasks-v1",
   "effectId": "01KST5Q9ASAJWZBJS46PXSME70",

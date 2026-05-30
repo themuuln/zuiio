@@ -1,6 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { cacheTags } from "@/lib/cache/keys";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { buildUpdates, type FieldMap } from "./build-updates";
 import { createClient } from "@/lib/supabase/server";
@@ -136,6 +136,7 @@ export async function getExpenses(
     paid?: boolean;
     limit?: number;
     offset?: number;
+    overdue?: boolean;
   },
 ): Promise<ExpenseWithCategory[]> {
   const supabase = await createClient();
@@ -236,7 +237,7 @@ export async function getExpenseStats(orgId: string): Promise<ExpenseStats> {
   const { data: allExpenses } = await supabase
     .from("expenses")
     .select(
-      "id, amount, tax_amount, paid_at, expense_date, category_id, expense_categories(name)",
+      "id, amount, tax_amount, paid_at, due_date, expense_date, category_id, expense_categories(name)",
     )
     .eq("organization_id", orgId)
     .is("deleted_at", null);
@@ -245,6 +246,7 @@ export async function getExpenseStats(orgId: string): Promise<ExpenseStats> {
     Record<string, unknown>
   >;
   const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, "0")}`;
@@ -264,6 +266,7 @@ export async function getExpenseStats(orgId: string): Promise<ExpenseStats> {
   let paidAmount = 0;
   let thisMonthTotal = 0;
   let lastMonthTotal = 0;
+  let overdueCount = 0;
 
   for (const exp of expenses) {
     const amount = Number(exp.amount ?? 0);
@@ -276,7 +279,15 @@ export async function getExpenseStats(orgId: string): Promise<ExpenseStats> {
     totalAmount += amount;
     totalTax += tax;
 
-    if (exp.paid_at) paidAmount += amount;
+    if (exp.paid_at) {
+      paidAmount += amount;
+    } else {
+      // Count overdue: unpaid and due_date is in the past
+      const dueDate = exp.due_date as string | null;
+      if (dueDate && dueDate < todayStr) {
+        overdueCount++;
+      }
+    }
 
     const expenseMonth = String(exp.expense_date ?? "").slice(0, 7);
     if (expenseMonth === thisMonth) thisMonthTotal += amount;
@@ -299,6 +310,7 @@ export async function getExpenseStats(orgId: string): Promise<ExpenseStats> {
     totalTax,
     paidAmount,
     unpaidAmount: totalAmount - paidAmount,
+    overdueCount,
     byCategory: Array.from(byCategoryMap.values()).sort(
       (a, b) => b.total - a.total,
     ),

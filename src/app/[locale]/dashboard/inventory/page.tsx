@@ -1,9 +1,9 @@
 "use client";
 
-import { Building2, ClipboardList, Package, Plus, Truck } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { AlertTriangle, Package } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/lib/i18n/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useClientNow } from "@/hooks/use-client-now";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
   useInventoryBalances,
@@ -12,8 +12,7 @@ import {
 } from "@/lib/queries/use-inventory";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { QuickActions } from "@/components/sidebar-tabs/quick-actions";
-import { Card, CardContent } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Tab } from "./_components/constants";
@@ -108,17 +107,27 @@ export default function InventoryPage() {
 
   return (
     <div className="tablet-touch flex flex-col gap-6">
-      <div>
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          {t("title")}
-        </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">
-          {t("subtitleParts")}
-        </Typography.Muted>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
+            {t("title")}
+          </Typography.H1>
+          <Typography.Muted className="text-muted-foreground">
+            {t("subtitleParts")}
+          </Typography.Muted>
+        </div>
+        <Button
+          render={<Link href="/dashboard/inventory/alerts" />}
+          variant="outline"
+          size="sm"
+        >
+          <AlertTriangle className="size-4" />
+          Alerts
+        </Button>
       </div>
 
       {/* Tab navigation */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:flex-wrap sm:px-0">
         {tabs.map((tabItem) => {
           const Icon = tabItem.icon;
           return (

@@ -9,16 +9,8 @@
     "auth": "Supabase Auth",
     "orm": "Supabase JS v2 + @supabase/ssr",
     "styling": "Tailwind CSS + shadcn/ui",
-    "state": [
-      "React Query",
-      "Zustand",
-      "nuqs",
-      "react-hook-form"
-    ],
-    "testing": [
-      "vitest",
-      "Playwright"
-    ],
+    "state": ["React Query", "Zustand", "nuqs", "react-hook-form"],
+    "testing": ["vitest", "Playwright"],
     "hosting": "Vercel",
     "monitoring": "Sentry",
     "i18n": "next-intl (mn.json + en.json)"
@@ -111,13 +103,8 @@
   ],
   "phases": {
     "current": "Phase 1 complete, Phase 2 in progress",
-    "completed": [
-      "Phase 0 — Foundation",
-      "Phase 1 — Tablet-First Startup CRM"
-    ],
-    "inProgress": [
-      "Phase 2 — Inventory + Staff Control"
-    ],
+    "completed": ["Phase 0 — Foundation", "Phase 1 — Tablet-First Startup CRM"],
+    "inProgress": ["Phase 2 — Inventory + Staff Control"],
     "upcoming": [
       "Phase 3 — Payments + Reminders + Reports",
       "Phase 4 — Multi-Branch + Accounting",

@@ -25,24 +25,14 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "configured",
-        "level",
-        "entriesAdded"
-      ],
+      "required": ["configured", "level", "entriesAdded"],
       "type": "object"
     },
     "prompt": {
       "context": {
         "entriesMap": {
-          "entire": [
-            ".a5c/"
-          ],
-          "logs": [
-            ".a5c/creds.env",
-            ".a5c/creds.env.tmp.*",
-            ".a5c/logs/"
-          ],
+          "entire": [".a5c/"],
+          "logs": [".a5c/creds.env", ".a5c/creds.env.tmp.*", ".a5c/logs/"],
           "logs-runs": [
             ".a5c/creds.env",
             ".a5c/creds.env.tmp.*",
@@ -56,10 +46,7 @@
             ".a5c/runs/",
             ".a5c/processes/"
           ],
-          "nothing": [
-            ".a5c/creds.env",
-            ".a5c/creds.env.tmp.*"
-          ]
+          "nothing": [".a5c/creds.env", ".a5c/creds.env.tmp.*"]
         },
         "projectRoot": "/Users/themuuln/coding/personal/tolom/tolom",
         "sectionMarkerEnd": "# --- end babysitter managed ---",
@@ -103,12 +90,7 @@
     "outputJsonPath": "tasks/01KST7R9GVX7KY32JVB1F3HXXP/result.json"
   },
   "kind": "agent",
-  "labels": [
-    "agent",
-    "configuration",
-    "cradle",
-    "gitignore"
-  ],
+  "labels": ["agent", "configuration", "cradle", "gitignore"],
   "title": "Configure .gitignore for babysitter files",
   "schemaVersion": "2026.01.tasks-v1",
   "effectId": "01KST7R9GVX7KY32JVB1F3HXXP",

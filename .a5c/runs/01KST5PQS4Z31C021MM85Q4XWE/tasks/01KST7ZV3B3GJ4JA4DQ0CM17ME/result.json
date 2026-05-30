@@ -6,9 +6,7 @@
   "status": "ok",
   "result": {
     "bytesWritten": 5703,
-    "filesWritten": [
-      ".a5c/project-profile.json"
-    ],
+    "filesWritten": [".a5c/project-profile.json"],
     "profileJsonPath": ".a5c/project-profile.json",
     "profileMdPath": null,
     "savedProfile": {
@@ -21,9 +19,7 @@
   "finishedAt": "2026-05-29T16:13:47.869Z",
   "value": {
     "bytesWritten": 5703,
-    "filesWritten": [
-      ".a5c/project-profile.json"
-    ],
+    "filesWritten": [".a5c/project-profile.json"],
     "profileJsonPath": ".a5c/project-profile.json",
     "profileMdPath": null,
     "savedProfile": {

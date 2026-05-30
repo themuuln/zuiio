@@ -1,16 +1,20 @@
 "use client";
 
+import { useLocale } from "next-intl";
 import { Loader2, Plus, Trash2, Wrench } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { ServiceCatalog, GlobalServiceCatalog } from "@/lib/types";
+import type { ServiceCatalog } from "@/lib/types";
 
 // Extended type for catalog items that may come from global or org catalog
-type CatalogServiceItem = ServiceCatalog & { _source?: "org" | "global" };
+type CatalogServiceItem = ServiceCatalog & {
+  _source?: "org" | "global";
+  name_mn?: string | null;
+};
 import type { WorkOrderService } from "@/lib/types";
-import { cn, formatMNT } from "@/lib/utils";
+import { formatMNT } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
 
 interface ServicesSectionProps {
@@ -52,12 +56,13 @@ export function ServicesSection({
   onEditPriceCancel,
   t,
 }: ServicesSectionProps) {
+  const locale = useLocale();
   return (
     <section className="rounded-lg border border-border/60 bg-card/40 p-3">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <div className="flex items-center justify-center size-5 rounded-md bg-blue-500/10">
-            <Wrench className="size-3 text-blue-500" />
+          <div className="flex items-center justify-center size-5 rounded-md bg-primary/10">
+            <Wrench className="size-3 text-primary" />
           </div>
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {t("services")}
@@ -122,7 +127,7 @@ export function ServicesSection({
                           String(Number(svc.final_price)),
                         );
                       }}
-                      className="font-semibold tabular-nums h-auto px-1 -mx-1 rounded-sm"
+                      className="font-semibold tabular-nums h-auto px-1 -mx-1 rounded-sm hover:underline hover:decoration-dashed hover:underline-offset-2"
                     >
                       {formatMNT(Number(svc.final_price))}
                     </Button>
@@ -133,7 +138,7 @@ export function ServicesSection({
                     variant="ghost"
                     size="icon-xs"
                     onClick={() => onRemoveService(svc.id)}
-                    className="text-destructive/60 hover:text-destructive size-6 opacity-0 group-hover:opacity-100"
+                    className="text-destructive/60 hover:text-destructive size-6 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                     aria-label="Remove service"
                   >
                     <Trash2 className="size-3" />
@@ -179,9 +184,13 @@ export function ServicesSection({
           {serviceSearch && (
             <div className="absolute top-full left-0 right-0 z-50 mt-1 border rounded-lg bg-background shadow-lg max-h-40 overflow-y-auto">
               {catalog
-                .filter((s) =>
-                  s.name.toLowerCase().includes(serviceSearch.toLowerCase()),
-                )
+                .filter((s) => {
+                  const q = serviceSearch.toLowerCase();
+                  const matchName = s.name.toLowerCase().includes(q);
+                  const matchNameMn =
+                    s.name_mn?.toLowerCase().includes(q) ?? false;
+                  return matchName || matchNameMn;
+                })
                 .slice(0, 8)
                 .map((svc) => {
                   const added = services?.some(
@@ -197,12 +206,14 @@ export function ServicesSection({
                         }
                       }}
                       disabled={added || !!addingServiceId}
-                      className="w-full justify-start px-2.5 py-2 text-xs h-auto"
+                      className="w-full justify-start px-2.5 py-1.5 text-xs h-9"
                     >
-                      <span className="font-medium truncate mr-2">
-                        {svc.name}
+                      <span className="font-medium truncate mr-2 flex-1 text-left">
+                        {locale === "mn" && svc.name_mn
+                          ? svc.name_mn
+                          : svc.name}
                       </span>
-                      <span className="flex items-center gap-1.5 shrink-0">
+                      <span className="flex items-center gap-1.5 shrink-0 ml-auto text-muted-foreground group-hover/button:text-foreground">
                         {addingServiceId === svc.id && (
                           <Loader2 className="size-3 animate-spin text-primary" />
                         )}
@@ -213,9 +224,13 @@ export function ServicesSection({
                     </Button>
                   );
                 })}
-              {catalog.filter((s) =>
-                s.name.toLowerCase().includes(serviceSearch.toLowerCase()),
-              ).length === 0 && (
+              {catalog.filter((s) => {
+                const q = serviceSearch.toLowerCase();
+                const matchName = s.name.toLowerCase().includes(q);
+                const matchNameMn =
+                  s.name_mn?.toLowerCase().includes(q) ?? false;
+                return matchName || matchNameMn;
+              }).length === 0 && (
                 <div className="p-3 text-xs text-muted-foreground text-center">
                   {t("noMatchService")}
                 </div>
@@ -230,12 +245,12 @@ export function ServicesSection({
         variant="outline"
         onClick={onToggleAddService}
         disabled={!!addingServiceId}
-        className="mt-2 w-full border-dashed py-2 text-xs"
+        className="mt-2 w-full border-dashed text-xs h-9 gap-1.5 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-200"
       >
         {addingServiceId ? (
-          <Loader2 className="size-4 animate-spin" />
+          <Loader2 className="size-3.5 animate-spin" />
         ) : (
-          <Plus className="size-4" />
+          <Plus className="size-3.5" />
         )}
         {addingServiceId ? "Adding service..." : t("addService")}
       </Button>

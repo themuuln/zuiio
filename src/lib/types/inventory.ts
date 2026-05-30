@@ -25,6 +25,7 @@ export interface PartsCatalogItem {
   purchase_price: number | null;
   is_active: boolean;
   popularity_score?: number;
+  global_part_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -38,6 +39,7 @@ export interface CreatePartParams {
   unit?: string;
   default_price?: number;
   purchase_price?: number;
+  global_part_id?: string | null;
 }
 
 export interface UpdatePartParams {
@@ -50,6 +52,7 @@ export interface UpdatePartParams {
   default_price?: number;
   purchase_price?: number;
   is_active?: boolean;
+  global_part_id?: string | null;
 }
 
 export interface CreateMovementParams {

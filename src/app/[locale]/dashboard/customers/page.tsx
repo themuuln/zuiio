@@ -1,14 +1,22 @@
 "use client";
 
-import { BarChart3, Clock, Globe, Plus, Users } from "lucide-react";
+import {
+  BarChart3,
+  Building2,
+  Clock,
+  Globe,
+  Plus,
+  User,
+  Users,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
-import { useClientNow } from "@/hooks/use-client-now";
+import { useEffect, useMemo } from "react";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "@/components/ui/data-table";
 import {
   Empty,
@@ -17,23 +25,27 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import type { ExportColumn } from "@/lib/export";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Typography } from "@/components/ui/typography";
+import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import type { ExportColumn } from "@/lib/export";
+import { useTableFilters } from "@/lib/hooks/use-url-filters";
 import { useCustomers, useSharedCustomers } from "@/lib/queries/use-customers";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { columns, sharedColumns } from "./_columns";
 import type { CustomerRow } from "./_columns";
-import { Typography } from "@/components/ui/typography";
+import { columns, sharedColumns } from "./_columns";
 
 export default function CustomersPage() {
   const t = useTranslations("customers");
   const now = useClientNow();
-  const [search, setSearch] = useState("");
-  const [view, setView] = useState<"my" | "shared">("my");
+  const { search, setSearch, view, setView } = useTableFilters("customers", {
+    view: "my",
+  });
   const { setNewCustomerDialogOpen, setDetailCustomerId } = usePageHeader();
+  const activeView = view === "shared" ? "shared" : "my";
 
   const exportColumns: ExportColumn<CustomerRow>[] = useMemo(
     () => [
@@ -69,20 +81,21 @@ export default function CustomersPage() {
     isError,
     error,
     refetch,
-  } = useCustomers(org?.orgId, view === "my" ? search : "");
+  } = useCustomers(org?.orgId, activeView === "my" ? search : "");
 
   const { data: rawSharedCustomers, isFetching: sharedFetching } =
-    useSharedCustomers(org?.orgId, view === "shared" ? search : "");
+    useSharedCustomers(org?.orgId, activeView === "shared" ? search : "");
 
   const customers =
-    view === "my"
+    activeView === "my"
       ? Array.isArray(rawCustomers)
         ? rawCustomers
         : []
       : Array.isArray(rawSharedCustomers)
         ? rawSharedCustomers
         : [];
-  const activeFetching = view === "my" ? customersFetching : sharedFetching;
+  const activeFetching =
+    activeView === "my" ? customersFetching : sharedFetching;
 
   const { registerTab } = useRightSidebar();
 
@@ -194,40 +207,37 @@ export default function CustomersPage() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => setView("my")}
-          className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-            view === "my"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
-          }`}
-        >
+      <ToggleGroup
+        multiple={false}
+        value={[activeView]}
+        onValueChange={(value) => {
+          if (value.length > 0) setView(value[0]);
+        }}
+        spacing={1}
+      >
+        <ToggleGroupItem value="my">
           <Users className="size-3.5" />
           My Customers
-        </button>
-        <button
-          onClick={() => setView("shared")}
-          className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-            view === "shared"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
-          }`}
-        >
+        </ToggleGroupItem>
+        <ToggleGroupItem value="shared">
           <Globe className="size-3.5" />
           Shared
-        </button>
-      </div>
+        </ToggleGroupItem>
+      </ToggleGroup>
 
       <ListToolbar
         search={{
           placeholder:
-            view === "my"
+            activeView === "my"
               ? t("searchPlaceholder")
               : "Search shared customers...",
           value: search,
           onChange: setSearch,
           loading: activeFetching,
+          resultLabel: customers.length
+            ? `${customers.length} result${customers.length === 1 ? "" : "s"}`
+            : undefined,
+          emptyLabel: search ? `No matches for "${search}"` : undefined,
         }}
         stats={
           <span>
@@ -235,7 +245,7 @@ export default function CustomersPage() {
           </span>
         }
         actions={
-          view === "my" ? (
+          activeView === "my" ? (
             <ExportButton
               data={customers}
               columns={exportColumns}
@@ -267,11 +277,69 @@ export default function CustomersPage() {
             </Empty>
           ) : (
             <DataTable
-              columns={view === "shared" ? sharedColumns : columns}
+              columns={activeView === "shared" ? sharedColumns : columns}
               data={customers}
               getRowId={(row) => row.id}
               pageSize={20}
               onRowClick={(row) => setDetailCustomerId(row.id)}
+              renderMobileCard={(customer) => {
+                const displayName =
+                  [customer.first_name, customer.last_name]
+                    .filter(Boolean)
+                    .join(" ") ||
+                  customer.company_name ||
+                  customer.phone ||
+                  "No name";
+                const lastVisit = customer.last_visit_at
+                  ? (() => {
+                      const lastVisitAt = customer.last_visit_at;
+                      if (!lastVisitAt) return null;
+                      const diff = Math.floor(
+                        (Date.now() - new Date(lastVisitAt).getTime()) /
+                          (1000 * 60 * 60 * 24),
+                      );
+                      if (diff === 0) return "Today";
+                      if (diff === 1) return "Yesterday";
+                      return `${diff} days ago`;
+                    })()
+                  : null;
+                return (
+                  <div className="flex flex-col gap-2 text-sm">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 ring-1 ring-border">
+                        {customer.type === "company" ? (
+                          <Building2 className="size-4 text-muted-foreground/70" />
+                        ) : (
+                          <User className="size-4 text-muted-foreground/70" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="font-medium truncate block">
+                          {displayName}
+                        </span>
+                        <span className="text-xs text-muted-foreground capitalize">
+                          {customer.type}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                      <span>{customer.phone || customer.email || "—"}</span>
+                      <div className="flex items-center gap-3">
+                        <span>
+                          {customer.vehicle_count ?? 0} vehicle
+                          {customer.vehicle_count !== 1 ? "s" : ""}
+                        </span>
+                        {lastVisit && (
+                          <>
+                            <span>·</span>
+                            <span>{lastVisit}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              }}
             />
           )}
         </CardContent>

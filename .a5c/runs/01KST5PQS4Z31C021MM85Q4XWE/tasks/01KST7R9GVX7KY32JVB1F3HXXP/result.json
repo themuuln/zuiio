@@ -6,11 +6,7 @@
   "status": "ok",
   "result": {
     "configured": true,
-    "entriesAdded": [
-      ".a5c/creds.env",
-      ".a5c/creds.env.tmp.*",
-      ".a5c/logs/"
-    ],
+    "entriesAdded": [".a5c/creds.env", ".a5c/creds.env.tmp.*", ".a5c/logs/"],
     "existedBefore": true,
     "gitignorePath": ".gitignore",
     "level": "logs",
@@ -20,11 +16,7 @@
   "finishedAt": "2026-05-29T16:07:34.477Z",
   "value": {
     "configured": true,
-    "entriesAdded": [
-      ".a5c/creds.env",
-      ".a5c/creds.env.tmp.*",
-      ".a5c/logs/"
-    ],
+    "entriesAdded": [".a5c/creds.env", ".a5c/creds.env.tmp.*", ".a5c/logs/"],
     "existedBefore": true,
     "gitignorePath": ".gitignore",
     "level": "logs",

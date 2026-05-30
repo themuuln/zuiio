@@ -5,11 +5,14 @@ import {
   DragOverlay,
   PointerSensor,
   TouchSensor,
+  useDroppable,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 import {
+  Activity,
   Car,
+  CheckCircle2,
   Columns3,
   GripVertical,
   KeyRound,
@@ -20,22 +23,12 @@ import {
   Plus,
   RefreshCw,
   Users,
-  Wrench,
-  TrendingUp,
-  CheckCircle2,
-  Activity,
   Wallet,
-  Clock,
-  Sparkles,
+  Wrench,
 } from "lucide-react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useBayActionHandlers } from "./_bay-action-handlers";
-import { useBayDragHandlers } from "./_bay-drag-handlers";
-import { StatusNotesModal } from "./status-notes-modal";
-import { ToastMessage } from "./toast-message";
-import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,23 +42,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Typography } from "@/components/ui/typography";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import type { Vehicle, WorkOrder } from "@/lib/types";
-import type { BayViewData, ShiftReport } from "@/lib/services/bay-view-service";
+import type {
+  BaySlotData,
+  BayViewData,
+  ShiftReport,
+} from "@/lib/services/bay-view-service";
 import {
   assignVehicleToBay,
   getBayViewDataFresh,
   getShiftReport,
 } from "@/lib/services/bay-view-service";
-import { cn, formatPlateNumber, formatMNT } from "@/lib/utils";
+import type { Vehicle, WorkOrder } from "@/lib/types";
+import { cn, formatMNT, formatPlateNumber } from "@/lib/utils";
+import { useBayActionHandlers } from "./_bay-action-handlers";
+import { useBayDragHandlers } from "./_bay-drag-handlers";
 import { AssignDialog } from "./assign-dialog";
-import { BayCard, MongolianLicensePlate, STATUS_BADGE_CLASS } from "./bay-card";
+import {
+  BayCard,
+  BayCardDragPreview,
+  MongolianLicensePlate,
+  STATUS_BADGE_CLASS,
+} from "./bay-card";
 import { MechanicPanel } from "./mechanic-panel";
 import { MechanicRegistrationDialog } from "./mechanic-registration-dialog";
 import type { PickupCompleteData } from "./pickup-complete-dialog";
@@ -75,8 +79,10 @@ import type { PostServiceFormData } from "./post-service-dialog";
 import { PostServiceDialog } from "./post-service-dialog";
 import { QueuePanel } from "./queue-panel";
 import { ShiftReportDialog } from "./shift-report-dialog";
+import { StatusNotesModal } from "./status-notes-modal";
+import { ToastMessage } from "./toast-message";
 import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
-import { Typography } from "@/components/ui/typography";
+import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
 
 type ViewMode = "grid" | "kanban" | "list";
 
@@ -123,16 +129,46 @@ interface ToastState {
   variant: "info" | "error";
 }
 
+interface ActiveDragState {
+  type: string;
+  label: string;
+  previewBay?: BaySlotData | null;
+}
+
+function KanbanDropColumn({
+  status,
+  children,
+  className,
+}: {
+  status: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `kanban-status-${encodeURIComponent(status)}`,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "transition-colors duration-200 rounded-xl",
+        isOver && "bg-primary/5 ring-1 ring-primary/20",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function BayViewV2Client() {
   const t = useTranslations("bayView");
   const [data, setData] = useState<BayViewData | null>(null);
   const [shiftReport, setShiftReport] = useState<ShiftReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeDrag, setActiveDrag] = useState<{
-    type: string;
-    label: string;
-  } | null>(null);
+  const [activeDrag, setActiveDrag] = useState<ActiveDragState | null>(null);
   const [pendingWoIds, setPendingWoIds] = useState<Record<string, boolean>>({});
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -247,11 +283,11 @@ export function BayViewV2Client() {
 
   useEffect(() => {
     if (data) bayCountValueRef.current = data.bayCount;
-  }, [data?.bayCount]);
+  }, [data]);
 
   useEffect(() => {
     if (data) setBayCountInputValue(data.bayCount);
-  }, [data?.bayCount]);
+  }, [data]);
 
   const pointerSensor = useSensor(GuardedPointerSensor, {
     activationConstraint: { distance: 8 },
@@ -265,6 +301,7 @@ export function BayViewV2Client() {
     data,
     setData,
     setActiveDrag,
+    onStatusChange: handleStatusClick,
     markPending,
     clearPending,
     fetchData,
@@ -279,11 +316,13 @@ export function BayViewV2Client() {
       const wo =
         data?.waitingQueue.find((w) => w.id === id) ??
         data?.bays.find((b) => b.workOrder?.id === id)?.workOrder;
+      const previewBay = data?.bays.find((b) => b.workOrder?.id === id) ?? null;
       const plate = wo?.vehicle?.plate_number;
       if (plate) {
         setActiveDrag({
           type: "vehicle",
           label: formatPlateNumber(plate),
+          previewBay,
         });
       }
     } else if (
@@ -468,7 +507,7 @@ export function BayViewV2Client() {
         clearPending(workOrderId);
       }
     },
-    [data, t, markPending, clearPending, fetchData, setToast],
+    [data, t, markPending, clearPending, fetchData],
   );
 
   async function handleAssignToBay(workOrderId: string, mechanicId?: string) {
@@ -551,6 +590,7 @@ export function BayViewV2Client() {
     pendingWoIds,
     handleQuickAssign,
     handleQueueItemClick,
+    registerTab,
     t,
     unregisterTab,
   ]);
@@ -595,7 +635,10 @@ export function BayViewV2Client() {
   }
 
   const occupiedBays = data.bays.filter((b) => b.workOrder).length;
-  const availableBays = data.bayCount - occupiedBays;
+  const pendingPostServiceBay = pendingPostService
+    ? (data.bays.find((b) => b.workOrder?.id === pendingPostService.woId) ??
+      null)
+    : null;
 
   return (
     <DndContext
@@ -791,7 +834,7 @@ export function BayViewV2Client() {
                       const raw = e.target.value;
                       setBayCountInputValue(raw);
                       const next = parseInt(raw, 10);
-                      if (isNaN(next) || next < 1 || next > 50) return;
+                      if (Number.isNaN(next) || next < 1 || next > 50) return;
 
                       if (bayCountDebounceRef.current)
                         clearTimeout(bayCountDebounceRef.current);
@@ -805,7 +848,7 @@ export function BayViewV2Client() {
                         bayCountDebounceRef.current = null;
                       }
                       const next = parseInt(String(bayCountInputValue), 10);
-                      if (isNaN(next) || next < 1 || next > 50) {
+                      if (Number.isNaN(next) || next < 1 || next > 50) {
                         setBayCountInputValue(data.bayCount);
                         return;
                       }
@@ -947,6 +990,7 @@ export function BayViewV2Client() {
                   isPending={
                     bay.workOrder ? !!pendingWoIds[bay.workOrder.id] : false
                   }
+                  isKanbanMode={false}
                   onStatusChange={handleStatusClick}
                   onRemoveFromBay={handleRemoveFromBay}
                   onOpenDetail={handleOpenDetail}
@@ -957,7 +1001,7 @@ export function BayViewV2Client() {
           )}
 
           {viewMode === "kanban" && (
-            <div className="flex h-full gap-4 overflow-x-auto overflow-y-hidden p-4 items-start w-full">
+            <div className="flex h-full gap-4 overflow-x-auto overflow-y-hidden p-4 w-full">
               {["New", "Diagnosing", "In Progress", "Ready for Pickup"].map(
                 (status) => {
                   const baysWithStatus = filteredBays.filter(
@@ -972,10 +1016,11 @@ export function BayViewV2Client() {
                   };
 
                   return (
-                    <div
+                    <KanbanDropColumn
                       key={status}
+                      status={status}
                       className={cn(
-                        "flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-3.5 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 shadow-sm h-full",
+                        "flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-3.5 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 shadow-sm",
                         columnColors[status] ?? "border-t-primary",
                       )}
                     >
@@ -1020,7 +1065,7 @@ export function BayViewV2Client() {
                         {baysWithStatus.map((bay) => (
                           <div
                             key={bay.bayNumber}
-                            className="h-[180px] shrink-0"
+                            className="flex flex-col shrink-0"
                           >
                             <BayCard
                               bay={bay}
@@ -1029,6 +1074,7 @@ export function BayViewV2Client() {
                                   ? !!pendingWoIds[bay.workOrder.id]
                                   : false
                               }
+                              isKanbanMode
                               onStatusChange={handleStatusClick}
                               onRemoveFromBay={handleRemoveFromBay}
                               onOpenDetail={handleOpenDetail}
@@ -1062,13 +1108,13 @@ export function BayViewV2Client() {
                           </button>
                         )}
                       </div>
-                    </div>
+                    </KanbanDropColumn>
                   );
                 },
               )}
 
               {/* Kanban Column: Vacant Bays */}
-              <div className="flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-3.5 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 border-t-slate-300 dark:border-t-slate-800 shadow-sm h-full">
+              <div className="flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-3.5 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 border-t-slate-300 dark:border-t-slate-800 shadow-sm">
                 <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-4 pb-2.5 select-none">
                   <div className="font-heading text-xs uppercase tracking-wider font-bold text-muted-foreground">
                     {t("available")}
@@ -1106,10 +1152,14 @@ export function BayViewV2Client() {
                   {filteredBays
                     .filter((b) => !b.workOrder)
                     .map((bay) => (
-                      <div key={bay.bayNumber} className="h-[180px] shrink-0">
+                      <div
+                        key={bay.bayNumber}
+                        className="flex flex-col shrink-0"
+                      >
                         <BayCard
                           bay={bay}
                           isPending={false}
+                          isKanbanMode
                           onStatusChange={handleStatusClick}
                           onRemoveFromBay={handleRemoveFromBay}
                           onOpenDetail={handleOpenDetail}
@@ -1262,7 +1312,7 @@ export function BayViewV2Client() {
           onCancel={() => setPendingStatusChange(null)}
         />
       )}
-      {pendingPostService && (
+      {pendingPostService && pendingPostServiceBay && (
         <PostServiceDialog
           open={!!pendingPostService}
           onOpenChange={(open) => {
@@ -1272,9 +1322,7 @@ export function BayViewV2Client() {
           vehicleId={pendingPostService.vehicleId}
           vehiclePlate={pendingPostService.vehiclePlate}
           currentOdometer={pendingPostService.currentOdometer}
-          bayData={
-            data.bays.find((b) => b.workOrder?.id === pendingPostService.woId)!
-          }
+          bayData={pendingPostServiceBay}
           newStatus={pendingPostService.newStatus}
           onConfirm={handlePostServiceConfirm}
         />
@@ -1305,12 +1353,17 @@ export function BayViewV2Client() {
       />
 
       <DragOverlay dropAnimation={null}>
-        {activeDrag && (
-          <div className="flex items-center gap-2 border-2 border-primary/60 bg-card px-3 py-2 text-sm font-semibold shadow-xl rounded-lg">
-            <GripVertical className="size-4 text-muted-foreground/40" />
-            {activeDrag.label}
-          </div>
-        )}
+        {activeDrag &&
+          (activeDrag.type === "vehicle" && activeDrag.previewBay ? (
+            <div className="origin-top-left rotate-[1deg] scale-[1.02]">
+              <BayCardDragPreview bay={activeDrag.previewBay} />
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg border-2 border-primary/60 bg-card px-3 py-2 text-sm font-semibold shadow-xl">
+              <GripVertical className="size-4 text-muted-foreground/40" />
+              {activeDrag.label}
+            </div>
+          ))}
       </DragOverlay>
 
       <ErrorBoundary>
@@ -1387,7 +1440,7 @@ export function BayViewV2Client() {
   );
 }
 
-const STATUS_VARIANT: Record<
+const _STATUS_VARIANT: Record<
   string,
   "default" | "secondary" | "outline" | "destructive"
 > = {

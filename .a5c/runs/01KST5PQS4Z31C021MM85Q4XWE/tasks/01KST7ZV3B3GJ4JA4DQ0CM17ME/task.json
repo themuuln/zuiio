@@ -47,9 +47,7 @@
           "triggerEvents": []
         },
         "claudeMdResult": {
-          "addedSections": [
-            "Babysitter"
-          ],
+          "addedSections": ["Babysitter"],
           "additions": "## Babysitter section added with quick commands, recommended processes, methodology, key skills, and pain point remediations.",
           "claudeMdInstructions": [
             "Use babysitter run:create to start orchestration runs",
@@ -70,10 +68,7 @@
         "profile": {
           "architecture": {
             "dataFlow": "Page → React Query hook → API route → Service → Supabase",
-            "entryPoints": [
-              "src/app/[locale]/page.tsx",
-              "src/app/layout.tsx"
-            ],
+            "entryPoints": ["src/app/[locale]/page.tsx", "src/app/layout.tsx"],
             "modules": [
               {
                 "description": "CRM",
@@ -176,19 +171,12 @@
             "pipelines": [
               {
                 "name": "CI",
-                "stages": [
-                  "lint",
-                  "typecheck",
-                  "test",
-                  "build"
-                ],
+                "stages": ["lint", "typecheck", "test", "build"],
                 "trigger": "PR + push to main"
               },
               {
                 "name": "React Doctor",
-                "stages": [
-                  "diff analysis"
-                ],
+                "stages": ["diff analysis"],
                 "trigger": "PR + push to main"
               }
             ],
@@ -269,9 +257,7 @@
             }
           ],
           "installedAgents": [],
-          "installedProcesses": [
-            "cradle/project-install"
-          ],
+          "installedProcesses": ["cradle/project-install"],
           "installedSkills": [],
           "painPoints": [
             {
@@ -324,12 +310,7 @@
             }
           ],
           "techStack": {
-            "buildTools": [
-              "Next.js",
-              "Turbopack",
-              "PostCSS",
-              "Tailwind CSS"
-            ],
+            "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
             "databases": [
               {
                 "name": "PostgreSQL",
@@ -409,9 +390,7 @@
                 "version": "5.9"
               }
             ],
-            "packageManagers": [
-              "pnpm"
-            ]
+            "packageManagers": ["pnpm"]
           },
           "tools": {
             "formatting": [
@@ -447,13 +426,8 @@
             {
               "description": "Local dev with hot reload",
               "name": "Development",
-              "steps": [
-                "pnpm install",
-                "pnpm dev"
-              ],
-              "triggers": [
-                "manual"
-              ]
+              "steps": ["pnpm install", "pnpm dev"],
+              "triggers": ["manual"]
             },
             {
               "description": "Automated quality gates",
@@ -464,21 +438,13 @@
                 "vitest run --coverage",
                 "next build"
               ],
-              "triggers": [
-                "PR",
-                "push to main"
-              ]
+              "triggers": ["PR", "push to main"]
             },
             {
               "description": "Vercel auto-deploy",
               "name": "Deployment",
-              "steps": [
-                "merge to main",
-                "Vercel build + deploy"
-              ],
-              "triggers": [
-                "merge to main"
-              ]
+              "steps": ["merge to main", "Vercel build + deploy"],
+              "triggers": ["merge to main"]
             }
           ]
         },
@@ -579,12 +545,7 @@
     "outputJsonPath": "tasks/01KST7ZV3B3GJ4JA4DQ0CM17ME/result.json"
   },
   "kind": "agent",
-  "labels": [
-    "agent",
-    "atomic",
-    "cradle",
-    "save"
-  ],
+  "labels": ["agent", "atomic", "cradle", "save"],
   "title": "Save project profile via babysitter CLI",
   "schemaVersion": "2026.01.tasks-v1",
   "effectId": "01KST7ZV3B3GJ4JA4DQ0CM17ME",
@@ -604,9 +565,7 @@
       "triggerEvents": []
     },
     "claudeMdResult": {
-      "addedSections": [
-        "Babysitter"
-      ],
+      "addedSections": ["Babysitter"],
       "additions": "## Babysitter section added with quick commands, recommended processes, methodology, key skills, and pain point remediations.",
       "claudeMdInstructions": [
         "Use babysitter run:create to start orchestration runs",
@@ -625,10 +584,7 @@
     "profile": {
       "architecture": {
         "dataFlow": "Page → React Query hook → API route → Service → Supabase",
-        "entryPoints": [
-          "src/app/[locale]/page.tsx",
-          "src/app/layout.tsx"
-        ],
+        "entryPoints": ["src/app/[locale]/page.tsx", "src/app/layout.tsx"],
         "modules": [
           {
             "description": "CRM",
@@ -731,19 +687,12 @@
         "pipelines": [
           {
             "name": "CI",
-            "stages": [
-              "lint",
-              "typecheck",
-              "test",
-              "build"
-            ],
+            "stages": ["lint", "typecheck", "test", "build"],
             "trigger": "PR + push to main"
           },
           {
             "name": "React Doctor",
-            "stages": [
-              "diff analysis"
-            ],
+            "stages": ["diff analysis"],
             "trigger": "PR + push to main"
           }
         ],
@@ -762,12 +711,7 @@
           "quotes": "single"
         },
         "errorHandling": "AppError hierarchy + createRouteHandler wrapper",
-        "importOrder": [
-          "@/lib/*",
-          "@/components/*",
-          "@/hooks/*",
-          "external"
-        ],
+        "importOrder": ["@/lib/*", "@/components/*", "@/hooks/*", "external"],
         "naming": {
           "components": "PascalCase",
           "database": "snake_case",
@@ -824,9 +768,7 @@
         }
       ],
       "installedAgents": [],
-      "installedProcesses": [
-        "cradle/project-install"
-      ],
+      "installedProcesses": ["cradle/project-install"],
       "installedSkills": [],
       "painPoints": [
         {
@@ -879,12 +821,7 @@
         }
       ],
       "techStack": {
-        "buildTools": [
-          "Next.js",
-          "Turbopack",
-          "PostCSS",
-          "Tailwind CSS"
-        ],
+        "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
         "databases": [
           {
             "name": "PostgreSQL",
@@ -964,9 +901,7 @@
             "version": "5.9"
           }
         ],
-        "packageManagers": [
-          "pnpm"
-        ]
+        "packageManagers": ["pnpm"]
       },
       "tools": {
         "formatting": [
@@ -1002,13 +937,8 @@
         {
           "description": "Local dev with hot reload",
           "name": "Development",
-          "steps": [
-            "pnpm install",
-            "pnpm dev"
-          ],
-          "triggers": [
-            "manual"
-          ]
+          "steps": ["pnpm install", "pnpm dev"],
+          "triggers": ["manual"]
         },
         {
           "description": "Automated quality gates",
@@ -1019,21 +949,13 @@
             "vitest run --coverage",
             "next build"
           ],
-          "triggers": [
-            "PR",
-            "push to main"
-          ]
+          "triggers": ["PR", "push to main"]
         },
         {
           "description": "Vercel auto-deploy",
           "name": "Deployment",
-          "steps": [
-            "merge to main",
-            "Vercel build + deploy"
-          ],
-          "triggers": [
-            "merge to main"
-          ]
+          "steps": ["merge to main", "Vercel build + deploy"],
+          "triggers": ["merge to main"]
         }
       ]
     },

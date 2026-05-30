@@ -243,6 +243,16 @@ export function SuppliersTab({
               data={filteredSuppliers}
               getRowId={(row) => row.id}
               pageSize={20}
+              renderMobileCard={(s) => (
+                <div className="flex flex-col gap-2 text-sm">
+                  <span className="font-medium">{s.name}</span>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                    <span>{s.contact_person || "—"}</span>
+                    <span>{s.phone || "—"}</span>
+                    <span className="truncate">{s.email || "—"}</span>
+                  </div>
+                </div>
+              )}
             />
           </CardContent>
         </Card>

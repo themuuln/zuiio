@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { SearchInput } from "./search-input";
 import { cn } from "@/lib/utils";
+import { SearchInput } from "./search-input";
 
 interface ListToolbarProps {
   /** Search config — omit to hide search */
@@ -10,7 +10,11 @@ interface ListToolbarProps {
     placeholder?: string;
     value: string;
     onChange: (value: string) => void;
+    onValueChange?: (value: string) => void;
     loading?: boolean;
+    resultLabel?: string;
+    emptyLabel?: string;
+    focusShortcut?: string | false;
   };
   /** Filter chips or any filter UI slot */
   filters?: ReactNode;
@@ -45,8 +49,10 @@ export function ListToolbar({
                 placeholder={search.placeholder}
                 value={search.value}
                 onSearch={search.onChange}
+                onValueChange={search.onValueChange}
                 loading={search.loading}
                 debounceMs={400}
+                focusShortcut={search.focusShortcut ?? false}
               />
             </div>
           )}
@@ -59,7 +65,15 @@ export function ListToolbar({
       {/* Filters + Stats row */}
       {(filters || stats) && (
         <div className="flex flex-wrap items-center justify-between gap-3">
-          {filters}
+          <div className="flex flex-wrap items-center gap-3">
+            {filters}
+            {search?.value && (search.resultLabel || search.emptyLabel) && (
+              <span className="text-sm text-muted-foreground">
+                {stats ? "· " : ""}
+                {search.resultLabel ?? search.emptyLabel}
+              </span>
+            )}
+          </div>
           {stats && (
             <div className="text-sm text-muted-foreground">{stats}</div>
           )}

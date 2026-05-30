@@ -1,20 +1,26 @@
 import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 
-export const GET = createSimpleRouteHandler(async ({ supabase }) => {
+export const GET = createSimpleRouteHandler(async ({ user, supabase }) => {
+  console.log("[Global Catalog API] Querying as user:", user?.email);
+
   const { data, error } = await supabase
     .from("global_parts_catalog")
-    .select("id, name, category, description, part_number")
+    .select(
+      "id, name, name_mn, category, description, part_number, unit, is_active",
+    )
     .eq("is_active", true)
     .order("category")
     .order("name");
 
   if (error) {
+    console.error("[Global Catalog API] Query error:", error);
     return NextResponse.json(
       { error: { message: error.message } },
       { status: 500 },
     );
   }
 
+  console.log("[Global Catalog API] Query returned items count:", data?.length);
   return NextResponse.json({ data });
 });

@@ -1,12 +1,11 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Car, ChevronDown, ChevronRight, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
-import type { ExportColumn } from "@/lib/export";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,10 +19,13 @@ import {
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { vehicleModelKeys } from "@/lib/queries/keys";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Typography } from "@/components/ui/typography";
+import { useClientNow } from "@/hooks/use-client-now";
+import type { ExportColumn } from "@/lib/export";
+import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import { vehicleModelKeys } from "@/lib/queries/keys";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { HighlightText } from "@/lib/utils/search-utils";
 
 interface VehicleModelItem {
   id: string;
@@ -51,10 +53,17 @@ interface MakeGroup {
 function buildTree(items: VehicleModelItem[]): MakeGroup[] {
   const map = new Map<string, Map<string, VariantItem[]>>();
   for (const item of items) {
-    if (!map.has(item.make)) map.set(item.make, new Map());
-    const models = map.get(item.make)!;
-    if (!models.has(item.model)) models.set(item.model, []);
-    models.get(item.model)!.push(item);
+    let models = map.get(item.make);
+    if (!models) {
+      models = new Map();
+      map.set(item.make, models);
+    }
+    let variants = models.get(item.model);
+    if (!variants) {
+      variants = [];
+      models.set(item.model, variants);
+    }
+    variants.push(item);
   }
   return Array.from(map.entries())
     .sort(([a], [b]) => a.localeCompare(b))
@@ -423,17 +432,19 @@ export default function VehicleModelsPage() {
 
   // ── Filtering & tree building ─────────────────────────────────
 
-  const tree = buildTree(
-    models.filter(
-      (m) =>
-        !search ||
-        m.make.toLowerCase().includes(search.toLowerCase()) ||
-        m.model.toLowerCase().includes(search.toLowerCase()) ||
-        (m.generation ?? "").toLowerCase().includes(search.toLowerCase()) ||
-        (m.engine ?? "").toLowerCase().includes(search.toLowerCase()) ||
-        (m.body_type ?? "").toLowerCase().includes(search.toLowerCase()),
-    ),
-  );
+  const filteredModels = useFuzzySearch(models, search, {
+    keys: [
+      { name: "make", weight: 0.35 },
+      { name: "model", weight: 0.3 },
+      { name: "generation", weight: 0.15 },
+      { name: "engine", weight: 0.1 },
+      { name: "body_type", weight: 0.1 },
+    ],
+    threshold: 0.35,
+    minQueryLength: 1,
+  });
+
+  const tree = buildTree(filteredModels);
 
   const totalCount = models.length;
 
@@ -456,6 +467,10 @@ export default function VehicleModelsPage() {
           placeholder: t("searchPlaceholder"),
           value: search,
           onChange: setSearch,
+          resultLabel: filteredModels.length
+            ? `${filteredModels.length} variant${filteredModels.length === 1 ? "" : "s"}`
+            : undefined,
+          emptyLabel: search ? `No matches for "${search}"` : undefined,
         }}
         stats={
           <span>
@@ -742,7 +757,7 @@ export default function VehicleModelsPage() {
                       ) : (
                         <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                       )}
-                      {makeGroup.make}
+                      <HighlightText text={makeGroup.make} query={search} />
                       <span className="text-xs font-normal text-muted-foreground">
                         {t("modelCount", { count: makeGroup.models.length })} ·{" "}
                         {t("variantCount", { count: variantCount })}
@@ -774,7 +789,10 @@ export default function VehicleModelsPage() {
                                   <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
                                 )}
                                 <span className="font-medium text-sm">
-                                  {modelGroup.model}
+                                  <HighlightText
+                                    text={modelGroup.model}
+                                    query={search}
+                                  />
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                   {t("variantCount", {
@@ -795,11 +813,17 @@ export default function VehicleModelsPage() {
                                         <Typography.Muted className="text-sm text-muted-foreground">
                                           {variantLabel(v) ? (
                                             <>
-                                              {variantLabel(v)}
+                                              <HighlightText
+                                                text={variantLabel(v)}
+                                                query={search}
+                                              />
                                               <span className="mx-1.5 text-muted-foreground/40">
                                                 ·
                                               </span>
-                                              {variantShortLabel(v)}
+                                              <HighlightText
+                                                text={variantShortLabel(v)}
+                                                query={search}
+                                              />
                                             </>
                                           ) : (
                                             <span className="italic text-muted-foreground/60">

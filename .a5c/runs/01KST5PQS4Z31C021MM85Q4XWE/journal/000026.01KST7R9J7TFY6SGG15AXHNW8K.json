@@ -11,12 +11,7 @@
     "kind": "agent",
     "label": "agent",
     "taskDefRef": "tasks/01KST7R9GVX7KY32JVB1F3HXXP/task.json",
-    "labels": [
-      "agent",
-      "cradle",
-      "gitignore",
-      "configuration"
-    ]
+    "labels": ["agent", "cradle", "gitignore", "configuration"]
   },
   "checksum": "247d3197d0de6791a1eb3e19f0bba91b9a98926d78f95a0f4b3b2e396cb220c7"
 }

@@ -19,19 +19,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { Badge } from "@/components/ui/badge";
 import type { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import type { ExportColumn } from "@/lib/export";
 import { useDashboard } from "@/lib/queries/use-dashboard";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { dashboardKeys, workOrderKeys } from "@/lib/queries/keys";
+import { dashboardKeys } from "@/lib/queries/keys";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import type { WorkOrderDetail } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { DailyTimeline } from "./_daily-timeline";
 import { EmptyDashboardState } from "./_empty-state";
 import { KpiCard } from "./_kpi-cards";
+import { LowStockCard } from "./_low-stock-card";
 import { type Period, PeriodBar } from "./_period-bar";
 import { RecentWorkOrdersTable } from "./_recent-work-orders";
 import { SectionHeader } from "./_section-header";
@@ -60,7 +60,9 @@ export default function DashboardPage() {
   const t = useTranslations();
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("all");
-  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(undefined);
+  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(
+    undefined,
+  );
   // ── React Query hooks ───────────────────────────────
   const { data: org, isPending: orgLoading, error: orgError } = useCurrentOrg();
   const orgId = org?.orgId;
@@ -69,11 +71,31 @@ export default function DashboardPage() {
   useRealtimeMulti({
     enabled: !!orgId,
     tables: [
-      { table: "work_orders", queryKey: dashboardKeys.all(orgId ?? ""), filter: `organization_id=eq.${orgId}` },
-      { table: "invoices", queryKey: dashboardKeys.all(orgId ?? ""), filter: `organization_id=eq.${orgId}` },
-      { table: "work_order_services", queryKey: dashboardKeys.all(orgId ?? ""), filter: `organization_id=eq.${orgId}` },
-      { table: "work_order_parts", queryKey: dashboardKeys.all(orgId ?? ""), filter: `organization_id=eq.${orgId}` },
-      { table: "customers", queryKey: dashboardKeys.all(orgId ?? ""), filter: `organization_id=eq.${orgId}` },
+      {
+        table: "work_orders",
+        queryKey: dashboardKeys.all(orgId ?? ""),
+        filter: `organization_id=eq.${orgId}`,
+      },
+      {
+        table: "invoices",
+        queryKey: dashboardKeys.all(orgId ?? ""),
+        filter: `organization_id=eq.${orgId}`,
+      },
+      {
+        table: "work_order_services",
+        queryKey: dashboardKeys.all(orgId ?? ""),
+        filter: `organization_id=eq.${orgId}`,
+      },
+      {
+        table: "work_order_parts",
+        queryKey: dashboardKeys.all(orgId ?? ""),
+        filter: `organization_id=eq.${orgId}`,
+      },
+      {
+        table: "customers",
+        queryKey: dashboardKeys.all(orgId ?? ""),
+        filter: `organization_id=eq.${orgId}`,
+      },
     ],
   });
 
@@ -258,18 +280,6 @@ export default function DashboardPage() {
     });
   }, [recentWorkOrders, selectedRange]);
 
-  const rangeLabel = useMemo(() => {
-    if (!selectedRange || !selectedRange.from) return "";
-    const { from, to } = selectedRange;
-    const formatD = (d: Date) =>
-      d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-
-    if (!to || from.toDateString() === to.toDateString()) {
-      return formatD(from);
-    }
-    return `${formatD(from)} – ${formatD(to)}`;
-  }, [selectedRange]);
-
   const hasRevenue = summary ? summary.totalRevenue > 0 : false;
   const hasActiveWos = summary ? summary.activeWorkOrders > 0 : false;
 
@@ -299,7 +309,9 @@ export default function DashboardPage() {
           {t("dashboard.subtitle")}
         </Typography.Muted>
       </div>
-      <PeriodBar value={period} onChange={handlePeriodChange} />
+      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <PeriodBar value={period} onChange={handlePeriodChange} />
+      </div>
     </div>
   );
 
@@ -428,6 +440,7 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+      {orgId && <LowStockCard orgId={orgId} />}
       {insightElements}
       {hasRevenue && data ? <ChartsSection data={data} /> : null}
       <div className="grid gap-6 lg:grid-cols-3 items-start">
@@ -438,11 +451,11 @@ export default function DashboardPage() {
                 title={t("dashboard.recentWorkOrders")}
                 description={t("dashboard.recentWorkOrdersDesc")}
               />
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <DateRangePicker
                   value={selectedRange}
                   onChange={setSelectedRange}
-                  className="w-[260px]"
+                  className="w-full sm:w-[260px]"
                   align="end"
                 />
                 {selectedRange && selectedRange.from && (

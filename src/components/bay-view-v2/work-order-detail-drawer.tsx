@@ -11,30 +11,42 @@ import {
   savePostServiceData,
 } from "@/lib/services/post-service-service";
 import type {
+  GlobalPartCatalog,
+  GlobalServiceCatalog,
   PartsCatalogItem,
   ServiceCatalog,
   WorkOrderDetail,
-  GlobalPartCatalog,
-  GlobalServiceCatalog,
 } from "@/lib/types";
-import type { PickupCompleteData } from "./pickup-complete-form";
-import { PickupCompleteForm } from "./pickup-complete-form";
-import type { PostServiceFormData } from "./post-service-form";
-import { PostServiceForm } from "./post-service-form";
+import { DrawerCelebration } from "./_drawer-celebration";
+import { DrawerFooter } from "./_drawer-footer";
 import { DrawerHeaderSection } from "./_drawer-header";
 import { DrawerLoading, DrawerSkeleton } from "./_drawer-loading";
 import { UnsavedWarning } from "./_drawer-unsaved-warning";
 import { NotesSection } from "./_notes-section";
-import { TotalsSummary } from "./_totals-summary";
-import { StatusTimeline } from "./_status-timeline";
-import { ServicesSection } from "./_services-section";
 import { PartsSection } from "./_parts-section";
-import { DrawerFooter } from "./_drawer-footer";
-import { DrawerCelebration } from "./_drawer-celebration";
+import { ServicesSection } from "./_services-section";
+import { StatusTimeline } from "./_status-timeline";
+import { TotalsSummary } from "./_totals-summary";
+import type { PickupCompleteData } from "./pickup-complete-form";
+import { PickupCompleteForm } from "./pickup-complete-form";
+import type { PostServiceFormData } from "./post-service-form";
+import { PostServiceForm } from "./post-service-form";
 
 // Extended types that accept both org and global catalog items
-type CatalogServiceItem = ServiceCatalog & { _source?: "org" | "global" };
-type CatalogPartItem = PartsCatalogItem & { _source?: "org" | "global" };
+type CatalogServiceItem = Partial<ServiceCatalog> & {
+  id: string;
+  name: string;
+  name_mn?: string | null;
+  default_price: number;
+  _source?: "org" | "global";
+};
+type CatalogPartItem = Partial<PartsCatalogItem> & {
+  id: string;
+  name: string;
+  name_mn?: string | null;
+  default_price: number;
+  _source?: "org" | "global";
+};
 
 // ── Props ────────────────────────────────────────────────────
 
@@ -206,6 +218,7 @@ export function WorkOrderDetailDrawer({
                     .map((gs) => ({
                       id: gs.id,
                       name: gs.name,
+                      name_mn: gs.name_mn,
                       category: gs.category,
                       description: gs.description,
                       default_price: 0,
@@ -234,6 +247,7 @@ export function WorkOrderDetailDrawer({
                     .map((gp) => ({
                       id: gp.id,
                       name: gp.name,
+                      name_mn: gp.name_mn,
                       category: gp.category,
                       description: gp.description,
                       part_number: gp.part_number,
@@ -522,16 +536,34 @@ export function WorkOrderDetailDrawer({
     }
   }
 
-  // ── Inline price update handlers ──────────────────────────
-
   async function handleServicePriceSave(serviceId: string) {
     const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
     const numVal = Number(editingServicePriceVal);
-    if (isNaN(numVal) || numVal < 0) {
+    if (Number.isNaN(numVal) || numVal < 0) {
       toast.error("Invalid price");
       return;
     }
+
+    // Capture the original price for rollback in case of failure
+    const originalService = wo?.services?.find((s) => s.id === serviceId);
+    const oldPrice = originalService
+      ? Number(originalService.final_price)
+      : null;
+
+    // Apply optimistic update immediately
+    setWo((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        services: (prev.services ?? []).map((service) =>
+          service.id === serviceId
+            ? { ...service, final_price: numVal }
+            : service,
+        ),
+      };
+    });
+
     setEditingServicePriceId(null);
     try {
       const res = await fetch(
@@ -545,23 +577,40 @@ export function WorkOrderDetailDrawer({
       const json = await res.json();
       if (json.error) {
         toast.error(json.error.message ?? "Failed to update price");
+        // Rollback optimistic update
+        if (oldPrice !== null) {
+          setWo((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              services: (prev.services ?? []).map((service) =>
+                service.id === serviceId
+                  ? { ...service, final_price: oldPrice }
+                  : service,
+              ),
+            };
+          });
+        }
         return;
       }
-      setWo((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          services: (prev.services ?? []).map((service) =>
-            service.id === serviceId
-              ? { ...service, final_price: numVal }
-              : service,
-          ),
-        };
-      });
       toast.success("Price updated");
       onRefresh();
     } catch {
       toast.error("Failed to update price");
+      // Rollback optimistic update
+      if (oldPrice !== null) {
+        setWo((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            services: (prev.services ?? []).map((service) =>
+              service.id === serviceId
+                ? { ...service, final_price: oldPrice }
+                : service,
+            ),
+          };
+        });
+      }
     }
   }
 
@@ -569,10 +618,26 @@ export function WorkOrderDetailDrawer({
     const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
     const numVal = Number(editingPartPriceVal);
-    if (isNaN(numVal) || numVal < 0) {
+    if (Number.isNaN(numVal) || numVal < 0) {
       toast.error("Invalid price");
       return;
     }
+
+    // Capture the original price for rollback in case of failure
+    const originalPart = wo?.parts?.find((p) => p.id === partId);
+    const oldPrice = originalPart ? Number(originalPart.final_price) : null;
+
+    // Apply optimistic update immediately
+    setWo((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        parts: (prev.parts ?? []).map((part) =>
+          part.id === partId ? { ...part, final_price: numVal } : part,
+        ),
+      };
+    });
+
     setEditingPartPriceId(null);
     try {
       const res = await fetch(
@@ -586,21 +651,36 @@ export function WorkOrderDetailDrawer({
       const json = await res.json();
       if (json.error) {
         toast.error(json.error.message ?? "Failed to update price");
+        // Rollback optimistic update
+        if (oldPrice !== null) {
+          setWo((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              parts: (prev.parts ?? []).map((part) =>
+                part.id === partId ? { ...part, final_price: oldPrice } : part,
+              ),
+            };
+          });
+        }
         return;
       }
-      setWo((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          parts: (prev.parts ?? []).map((part) =>
-            part.id === partId ? { ...part, final_price: numVal } : part,
-          ),
-        };
-      });
       toast.success("Price updated");
       onRefresh();
     } catch {
       toast.error("Failed to update price");
+      // Rollback optimistic update
+      if (oldPrice !== null) {
+        setWo((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            parts: (prev.parts ?? []).map((part) =>
+              part.id === partId ? { ...part, final_price: oldPrice } : part,
+            ),
+          };
+        });
+      }
     }
   }
 
@@ -833,7 +913,7 @@ export function WorkOrderDetailDrawer({
                           <div className="flex flex-col gap-3">
                             <ServicesSection
                               services={wo.services ?? []}
-                              catalog={catalog}
+                              catalog={catalog as any}
                               serviceSearch={serviceSearch}
                               showAddService={showAddService}
                               addingServiceId={addingServiceId}

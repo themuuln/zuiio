@@ -1,0 +1,16 @@
+{
+  "command": "npx tsc --noEmit 2>&1",
+  "cwd": "/Users/themuuln/coding/personal/tolom/tolom",
+  "io": {
+    "outputJsonPath": "tasks/01KSWNFNB5BNCJ0KYGS9EZ4XE7/result.json"
+  },
+  "kind": "shell",
+  "labels": ["build", "quality", "typescript"],
+  "title": "Verify TypeScript compilation",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSWNFNB5BNCJ0KYGS9EZ4XE7",
+  "taskId": "verify-build",
+  "invocationKey": "feature/edit-parts-catalog:S000004:verify-build",
+  "stepId": "S000004",
+  "inputs": {}
+}

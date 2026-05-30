@@ -8,19 +8,12 @@
         "existingPipelines": [
           {
             "name": "CI",
-            "stages": [
-              "lint",
-              "typecheck",
-              "test",
-              "build"
-            ],
+            "stages": ["lint", "typecheck", "test", "build"],
             "trigger": "PR + push to main"
           },
           {
             "name": "React Doctor",
-            "stages": [
-              "diff analysis"
-            ],
+            "stages": ["diff analysis"],
             "trigger": "PR + push to main"
           }
         ]
@@ -44,19 +37,12 @@
         "existingPipelines": [
           {
             "name": "CI",
-            "stages": [
-              "lint",
-              "typecheck",
-              "test",
-              "build"
-            ],
+            "stages": ["lint", "typecheck", "test", "build"],
             "trigger": "PR + push to main"
           },
           {
             "name": "React Doctor",
-            "stages": [
-              "diff analysis"
-            ],
+            "stages": ["diff analysis"],
             "trigger": "PR + push to main"
           }
         ]

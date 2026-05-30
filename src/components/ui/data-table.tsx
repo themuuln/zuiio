@@ -98,6 +98,12 @@ export interface DataTableProps<TData, TValue> {
   };
   /** Additional class name */
   className?: string;
+  /**
+   * Render each row as a mobile-friendly card instead of a table row
+   * on small screens (<768px). When provided, the table is hidden on
+   * mobile and replaced with card-based layout.
+   */
+  renderMobileCard?: (row: TData) => React.ReactNode;
 }
 
 // ─── DataTable (self-contained) ────────────────────────────────
@@ -115,6 +121,7 @@ export function DataTable<TData, TValue>({
   enableRowSelection = false,
   search,
   className,
+  renderMobileCard,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -250,8 +257,37 @@ export function DataTable<TData, TValue>({
         </div>
       )}
 
+      {/* ── Mobile Card View ──────────────────────────────── */}
+      {renderMobileCard && (
+        <div className="grid gap-3 sm:gap-4 md:hidden">
+          {table.getRowModel().rows.length > 0 ? (
+            table.getRowModel().rows.map((row) => (
+              <div
+                key={row.id}
+                onClick={() => onRowClick?.(row.original)}
+                className={cn(
+                  "rounded-lg border border-border bg-card p-4 transition-colors",
+                  onRowClick && "cursor-pointer active:bg-muted/50",
+                )}
+              >
+                {renderMobileCard(row.original)}
+              </div>
+            ))
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              No results.
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Table ──────────────────────────────────────────── */}
-      <div className="overflow-hidden rounded-none border">
+      <div
+        className={cn(
+          "overflow-x-auto rounded-none border",
+          renderMobileCard && "hidden md:block",
+        )}
+      >
         <Table>
           <TableHeader className="bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (

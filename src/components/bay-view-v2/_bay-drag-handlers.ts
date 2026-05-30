@@ -2,8 +2,7 @@
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import type { BayViewData } from "@/lib/services/bay-view-service";
-import type { Vehicle, WorkOrder } from "@/lib/types";
+import type { BaySlotData, BayViewData } from "@/lib/services/bay-view-service";
 import {
   assignMechanicToWorkOrder,
   assignVehicleToBay,
@@ -11,6 +10,7 @@ import {
   reorderQueue,
   unassignMechanicFromWorkOrder,
 } from "@/lib/services/bay-view-service";
+import type { Vehicle, WorkOrder } from "@/lib/types";
 
 interface ToastState {
   message: string;
@@ -21,8 +21,13 @@ interface UseBayDragHandlersParams {
   data: BayViewData | null;
   setData: React.Dispatch<React.SetStateAction<BayViewData | null>>;
   setActiveDrag: React.Dispatch<
-    React.SetStateAction<{ type: string; label: string } | null>
+    React.SetStateAction<{
+      type: string;
+      label: string;
+      previewBay?: BaySlotData | null;
+    } | null>
   >;
+  onStatusChange: (woId: string, status: string) => void;
   markPending: (...ids: string[]) => void;
   clearPending: (...ids: string[]) => void;
   fetchData: (showLoader?: boolean) => Promise<void>;
@@ -33,6 +38,7 @@ export function useBayDragHandlers({
   data,
   setData,
   setActiveDrag,
+  onStatusChange,
   markPending,
   clearPending,
   fetchData,
@@ -96,6 +102,26 @@ export function useBayDragHandlers({
     const overId = String(over.id);
 
     try {
+      // Case 0: Dragging a bay card between kanban status columns
+      if (
+        activeData?.type === "vehicle" &&
+        overId.startsWith("kanban-status-") &&
+        data?.bays.some((b) => b.workOrder?.id === activeData.workOrderId)
+      ) {
+        const woId = activeData.workOrderId;
+        const nextStatus = decodeURIComponent(
+          overId.replace("kanban-status-", ""),
+        );
+        const currentStatus =
+          data.bays.find((b) => b.workOrder?.id === woId)?.workOrder?.status ??
+          null;
+
+        if (!currentStatus || currentStatus === nextStatus) return;
+
+        onStatusChange(woId, nextStatus);
+        return;
+      }
+
       // Case 1: Dragging a vehicle to a bay
       if (activeData?.type === "vehicle" && overId.startsWith("bay-")) {
         const bayNumber = Number.parseInt(overId.replace("bay-", ""), 10);

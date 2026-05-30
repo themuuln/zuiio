@@ -18,7 +18,13 @@
       "releaseCadence": "continuous (Vercel auto-deploy)"
     },
     "cicdNeeds": "GitHub Actions CI already configured (lint, typecheck, test, build). No babysitter CI integration needed.",
-    "externalIntegrations": ["Supabase", "Vercel", "Sentry", "Resend", "SmartCar.mn"],
+    "externalIntegrations": [
+      "Supabase",
+      "Vercel",
+      "Sentry",
+      "Resend",
+      "SmartCar.mn"
+    ],
     "conventions": "Follow existing AGENTS.md conventions — Biome formatting, kebab-case files, PascalCase components, snake_case DB, shadcn mandatory, semantic color tokens only",
     "babysitterPreferences": {
       "autonomyLevel": "autonomous",

@@ -21,8 +21,8 @@ export function NotesSection({
   return (
     <section className="rounded-lg border border-border/60 bg-card/40 p-3">
       <div className="flex items-center gap-1.5 mb-3">
-        <div className="flex items-center justify-center size-5 rounded-md bg-emerald-500/10">
-          <FileText className="size-3 text-emerald-500" />
+        <div className="flex items-center justify-center size-5 rounded-md bg-primary/10">
+          <FileText className="size-3 text-primary" />
         </div>
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           {t("complaintAndNotes")}

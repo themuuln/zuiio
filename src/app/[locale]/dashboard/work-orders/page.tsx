@@ -3,17 +3,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Activity, BarChart3, ClipboardList, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
-import { useClientNow } from "@/hooks/use-client-now";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { usePageHeader } from "@/hooks/use-page-header";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
-import { DataTable } from "@/components/ui/data-table";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,9 +20,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable } from "@/components/ui/data-table";
 import {
   Empty,
   EmptyContent,
@@ -35,7 +32,14 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
+import { useClientNow } from "@/hooks/use-client-now";
+import { usePageHeader } from "@/hooks/use-page-header";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
+import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
+import { useTableFilters } from "@/lib/hooks/use-url-filters";
 import { useRouter } from "@/lib/i18n/navigation";
 import { workOrderKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -44,9 +48,7 @@ import {
   useWorkOrders,
   type WorkOrderListItem,
 } from "@/lib/queries/use-work-orders";
-import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { createColumns } from "./_columns";
-import { Typography } from "@/components/ui/typography";
 
 // ── Status helpers ────────────────────────────────────────────
 
@@ -157,8 +159,12 @@ export default function WorkOrdersPage() {
   const { push } = useRouter();
   const now = useClientNow();
   const queryClient = useQueryClient();
-  const [statusIdx, setStatusIdx] = useState(0);
-  const [search, setSearch] = useState("");
+  const {
+    search,
+    setSearch,
+    status: statusFilter,
+    setStatus,
+  } = useTableFilters("work-orders");
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const { setNewWorkOrderSheetOpen } = usePageHeader();
@@ -169,21 +175,41 @@ export default function WorkOrdersPage() {
   useRealtimeMulti({
     enabled: !!org?.orgId,
     tables: [
-      { table: "work_orders", queryKey: workOrderKeys.all(org?.orgId ?? ""), filter: `organization_id=eq.${org?.orgId}` },
-      { table: "work_order_services", queryKey: workOrderKeys.all(org?.orgId ?? ""), filter: `organization_id=eq.${org?.orgId}` },
-      { table: "work_order_parts", queryKey: workOrderKeys.all(org?.orgId ?? ""), filter: `organization_id=eq.${org?.orgId}` },
-      { table: "mechanic_assignments", queryKey: workOrderKeys.all(org?.orgId ?? ""), filter: `organization_id=eq.${org?.orgId}` },
+      {
+        table: "work_orders",
+        queryKey: workOrderKeys.all(org?.orgId ?? ""),
+        filter: `organization_id=eq.${org?.orgId}`,
+      },
+      {
+        table: "work_order_services",
+        queryKey: workOrderKeys.all(org?.orgId ?? ""),
+        filter: `organization_id=eq.${org?.orgId}`,
+      },
+      {
+        table: "work_order_parts",
+        queryKey: workOrderKeys.all(org?.orgId ?? ""),
+        filter: `organization_id=eq.${org?.orgId}`,
+      },
+      {
+        table: "mechanic_assignments",
+        queryKey: workOrderKeys.all(org?.orgId ?? ""),
+        filter: `organization_id=eq.${org?.orgId}`,
+      },
     ],
   });
 
-  const status = statusIdx > 0 ? STATUS_KEYS[statusIdx] : "";
+  const statusIdx = Math.max(
+    0,
+    STATUS_KEYS.indexOf(statusFilter as (typeof STATUS_KEYS)[number]),
+  );
+  const activeStatus = statusIdx > 0 ? STATUS_KEYS[statusIdx] : "";
   const {
     data: orders,
     isLoading,
     isFetching,
     error,
     refetch,
-  } = useWorkOrders(org?.orgId, status, search);
+  } = useWorkOrders(org?.orgId, activeStatus, search);
 
   useEffect(() => {
     if (orders) {
@@ -275,13 +301,12 @@ export default function WorkOrdersPage() {
     );
   }, [registerTab, statusCounts, todayWOs]);
 
-  const handleSearch = (value: string) => {
-    setSearch(value);
-  };
-
-  const handleStatusChange = (woId: string, newStatus: string) => {
-    updateStatus.mutate({ woId, status: newStatus });
-  };
+  const handleStatusChange = useCallback(
+    (woId: string, newStatus: string) => {
+      updateStatus.mutate({ woId, status: newStatus });
+    },
+    [updateStatus],
+  );
 
   const statusChips: FilterChip[] = useMemo(() => {
     // Only show chips for statuses that have at least one order
@@ -297,11 +322,11 @@ export default function WorkOrdersPage() {
         key: key || "all",
         label: i === 0 ? t("common.all") : translateStatus(t, key),
         active: statusIdx === i,
-        onClick: () => setStatusIdx(i),
+        onClick: () => setStatus(key),
         colorDot: i > 0 ? (STATUS_COLORS[key] ?? "bg-gray-500") : undefined,
       };
     });
-  }, [statusIdx, t, statusCounts]);
+  }, [setStatus, statusIdx, t, statusCounts]);
 
   // Build column definitions with callbacks (stable reference)
   const columns = useMemo(
@@ -403,8 +428,12 @@ export default function WorkOrdersPage() {
             t("workOrders.searchPlaceholder") ||
             "Search by customer, plate, or ID...",
           value: search,
-          onChange: handleSearch,
+          onChange: setSearch,
           loading: isFetching,
+          resultLabel: list.length
+            ? `${list.length} result${list.length === 1 ? "" : "s"}`
+            : undefined,
+          emptyLabel: search ? `No matches for "${search}"` : undefined,
         }}
         filters={<FilterChips items={statusChips} />}
         stats={
@@ -468,6 +497,62 @@ export default function WorkOrdersPage() {
               pageSize={20}
               onRowClick={(row) => push(`/dashboard/work-orders/${row.id}`)}
               showColumnVisibility
+              renderMobileCard={(wo) => {
+                const customerName =
+                  [wo.customer?.first_name, wo.customer?.last_name]
+                    .filter(Boolean)
+                    .join(" ") || "—";
+                const vehicleDisplay = wo.vehicle
+                  ? [wo.vehicle.make, wo.vehicle.model, wo.vehicle.plate_number]
+                      .filter(Boolean)
+                      .join(" ")
+                  : "—";
+                const daysSince = Math.floor(
+                  (Date.now() - new Date(wo.created_at).getTime()) /
+                    (1000 * 60 * 60 * 24),
+                );
+                const ageDisplay =
+                  daysSince === 0
+                    ? "Today"
+                    : daysSince === 1
+                      ? "Yesterday"
+                      : `${daysSince} days ago`;
+                return (
+                  <div className="flex flex-col gap-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs text-muted-foreground">
+                        #{wo.id.slice(0, 8)}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] px-1.5 py-0"
+                      >
+                        {wo.status}
+                      </Badge>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-medium truncate">
+                        {customerName}
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {vehicleDisplay}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-border/50 pt-2 mt-1">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>{wo.mechanic?.full_name ?? "—"}</span>
+                        <span>·</span>
+                        <span>{ageDisplay}</span>
+                      </div>
+                      <span className="text-sm font-semibold tabular-nums">
+                        {wo.grand_total !== undefined
+                          ? `₮${wo.grand_total.toLocaleString()}`
+                          : "—"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }}
             />
           </CardContent>
         </Card>

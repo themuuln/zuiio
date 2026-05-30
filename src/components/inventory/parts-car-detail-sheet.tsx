@@ -98,8 +98,9 @@ export function PartsCarDetailSheet({
   const [partLocation, setPartLocation] =
     useState<PartsCarLocationGroup>("other");
   const [partQty, setPartQty] = useState(1);
-  const [partCondition, setPartCondition] =
-    useState<"good" | "fair" | "damaged">("good");
+  const [partCondition, setPartCondition] = useState<
+    "good" | "fair" | "damaged"
+  >("good");
   const [partPrice, setPartPrice] = useState(0);
   const [adding, setAdding] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -189,9 +190,7 @@ export function PartsCarDetailSheet({
       const result = await publishToCatalog.mutateAsync(carId);
       toast.success(t("toast.published", { count: result.publishedCount }));
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : t("toast.publishError"),
-      );
+      toast.error(err instanceof Error ? err.message : t("toast.publishError"));
     }
   }, [publishToCatalog, carId, t]);
 
@@ -359,13 +358,24 @@ export function PartsCarDetailSheet({
                     </span>
                     <Combobox
                       items={catalogItems}
-                      value={catalogItems.find((item) => item.id === selectedPartId) ?? null}
+                      value={
+                        catalogItems.find(
+                          (item) => item.id === selectedPartId,
+                        ) ?? null
+                      }
                       onValueChange={(item) => {
                         if (item) {
                           setSelectedPartId(item.id);
                           setPartName(item.name);
-                          if (item.category && LOCATION_GROUPS.includes(item.category as PartsCarLocationGroup)) {
-                            setPartLocation(item.category as PartsCarLocationGroup);
+                          if (
+                            item.category &&
+                            LOCATION_GROUPS.includes(
+                              item.category as PartsCarLocationGroup,
+                            )
+                          ) {
+                            setPartLocation(
+                              item.category as PartsCarLocationGroup,
+                            );
                           }
                           if (item.default_price) {
                             setPartPrice(item.default_price);
@@ -386,7 +396,11 @@ export function PartsCarDetailSheet({
                       <ComboboxContent>
                         <ComboboxList>
                           {(item) => (
-                            <ComboboxItem key={item.id} value={item} className="text-xs">
+                            <ComboboxItem
+                              key={item.id}
+                              value={item}
+                              className="text-xs"
+                            >
                               <span>{item.name}</span>
                               {item.part_number && (
                                 <span className="text-[10px] text-muted-foreground ml-1.5 font-mono">
@@ -436,18 +450,31 @@ export function PartsCarDetailSheet({
                     <ToggleGroup
                       value={[partCondition]}
                       onValueChange={(vals) => {
-                        const val = vals[0] as "good" | "fair" | "damaged" | undefined;
+                        const val = vals[0] as
+                          | "good"
+                          | "fair"
+                          | "damaged"
+                          | undefined;
                         if (val) setPartCondition(val);
                       }}
                       className="w-full grid grid-cols-3 border border-input rounded-md overflow-hidden p-0.5 bg-muted/20"
                     >
-                      <ToggleGroupItem value="good" className="text-xs py-1 hover:bg-muted data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-sm transition-all cursor-pointer">
+                      <ToggleGroupItem
+                        value="good"
+                        className="text-xs py-1 hover:bg-muted data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-sm transition-all cursor-pointer"
+                      >
                         {t("conditions.good")}
                       </ToggleGroupItem>
-                      <ToggleGroupItem value="fair" className="text-xs py-1 hover:bg-muted data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-sm transition-all cursor-pointer">
+                      <ToggleGroupItem
+                        value="fair"
+                        className="text-xs py-1 hover:bg-muted data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-sm transition-all cursor-pointer"
+                      >
                         {t("conditions.fair")}
                       </ToggleGroupItem>
-                      <ToggleGroupItem value="damaged" className="text-xs py-1 hover:bg-muted data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-sm transition-all cursor-pointer">
+                      <ToggleGroupItem
+                        value="damaged"
+                        className="text-xs py-1 hover:bg-muted data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-sm transition-all cursor-pointer"
+                      >
                         {t("conditions.damaged")}
                       </ToggleGroupItem>
                     </ToggleGroup>
@@ -551,7 +578,10 @@ export function PartsCarDetailSheet({
                               <div className="text-sm font-medium truncate flex items-center gap-1.5 flex-wrap">
                                 <span>{part.name}</span>
                                 {part.part_id && (
-                                  <Badge variant="outline" className="text-[10px] py-0 px-1 border-primary/20 text-primary bg-primary/5 font-normal shrink-0">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] py-0 px-1 border-primary/20 text-primary bg-primary/5 font-normal shrink-0"
+                                  >
                                     {t("inCatalog")}
                                   </Badge>
                                 )}
@@ -562,7 +592,10 @@ export function PartsCarDetailSheet({
                                   {formatMNT(part.estimated_price ?? 0)}
                                 </span>
                                 <span>·</span>
-                                <Badge variant="outline" className="text-[10px] py-0 px-1 font-normal border-border">
+                                <Badge
+                                  variant="outline"
+                                  className="text-[10px] py-0 px-1 font-normal border-border"
+                                >
                                   {t(`conditions.${part.condition}`)}
                                 </Badge>
                               </div>

@@ -14,10 +14,14 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
-import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
-import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
+import { ExportButton } from "@/components/export-button";
+import { ListToolbar } from "@/components/list-toolbar";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Empty,
   EmptyContent,
@@ -25,10 +29,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { ExportButton } from "@/components/export-button";
-import { SearchInput } from "@/components/search-input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -38,19 +38,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Link } from "@/lib/i18n/navigation";
+import { Typography } from "@/components/ui/typography";
+import { useClientNow } from "@/hooks/use-client-now";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
+import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import { useTableFilters } from "@/lib/hooks/use-url-filters";
+import { Link } from "@/lib/i18n/navigation";
+import { useExpenseStats, useExpenses } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useExpenses, useExpenseStats } from "@/lib/queries/use-expenses";
 import type { DashboardData } from "@/lib/types";
 import { formatCurrency, formatMNT } from "@/lib/utils";
+import { HighlightText } from "@/lib/utils/search-utils";
 import { KpiCard } from "./_kpi-card";
 import { OverviewTab } from "./_overview-tab";
 import { TransactionsTab } from "./_transactions-tab";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { Typography } from "@/components/ui/typography";
 
 type Period = "today" | "week" | "month" | "all";
 type Tab = "overview" | "transactions" | "invoices" | "expenses";
@@ -226,14 +228,18 @@ function invoiceDataReducer(
 function InvoicesTab({ orgId }: { orgId: string | null }) {
   const t = useTranslations();
   const now = useClientNow();
+  const {
+    search,
+    setSearch,
+    status: filter,
+    setStatus: setFilter,
+  } = useTableFilters("finance-invoices");
   const [invoiceData, dispatchInvoice] = useReducer(invoiceDataReducer, {
     loading: true,
     stats: null,
     invoices: [],
   } satisfies InvoiceDataState);
   const { loading, stats, invoices } = invoiceData;
-  const [filter, setFilter] = useState<string>("");
-  const [search, setSearch] = useState("");
   const [sendingId, setSendingId] = useState<string | null>(null);
 
   const fetchInvoices = useCallback(
@@ -291,7 +297,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
         setSendingId(null);
       }
     },
-    [orgId, fetchInvoices, filter],
+    [orgId, fetchInvoices, filter, setSendingId],
   );
 
   const filtered = useFuzzySearch(invoices, search, {
@@ -361,10 +367,27 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
           loading={isLoading}
         />
       </div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2 flex-wrap">
-          {["", "draft", "sent", "paid", "overdue", "partial", "cancelled"].map(
-            (s) => (
+      <ListToolbar
+        search={{
+          placeholder: "Search by invoice #, customer, or plate...",
+          value: search,
+          onChange: setSearch,
+          resultLabel: filtered.length
+            ? `${filtered.length} result${filtered.length === 1 ? "" : "s"}`
+            : undefined,
+          emptyLabel: search ? `No matches for "${search}"` : undefined,
+        }}
+        filters={
+          <div className="flex gap-2 flex-wrap">
+            {[
+              "",
+              "draft",
+              "sent",
+              "paid",
+              "overdue",
+              "partial",
+              "cancelled",
+            ].map((s) => (
               <Button
                 key={s}
                 variant={filter === s ? "default" : "ghost"}
@@ -373,22 +396,19 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
               >
                 {s ? s.charAt(0).toUpperCase() + s.slice(1) : "All"}
               </Button>
-            ),
-          )}
-        </div>
-        <div className="flex gap-2">
-          <ExportButton
-            data={invoices}
-            columns={invoiceExportColumns}
-            filename={`invoices-${now.toISOString().split("T")[0]}.xlsx`}
-            sheetName="Invoices"
-          />
-        </div>
-      </div>
-      <SearchInput
-        placeholder="Search by invoice #, customer, or plate..."
-        onSearch={setSearch}
-        debounceMs={300}
+            ))}
+          </div>
+        }
+        actions={
+          <div className="flex gap-2">
+            <ExportButton
+              data={invoices}
+              columns={invoiceExportColumns}
+              filename={`invoices-${now.toISOString().split("T")[0]}.xlsx`}
+              sheetName="Invoices"
+            />
+          </div>
+        }
       />
       <Card>
         <CardContent className="p-0">
@@ -442,13 +462,30 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
                       className="border-b border-border transition-colors hover:bg-muted/30"
                     >
                       <TableCell className="px-5 py-3.5 font-mono text-xs font-medium">
-                        {inv.invoice_number}
+                        <HighlightText
+                          text={inv.invoice_number}
+                          query={search}
+                        />
                       </TableCell>
                       <TableCell className="px-5 py-3.5">
-                        {inv.customer_name ?? "\u2014"}
+                        {inv.customer_name ? (
+                          <HighlightText
+                            text={inv.customer_name}
+                            query={search}
+                          />
+                        ) : (
+                          "\u2014"
+                        )}
                       </TableCell>
                       <TableCell className="px-5 py-3.5 text-muted-foreground">
-                        {inv.vehicle_plate ?? "\u2014"}
+                        {inv.vehicle_plate ? (
+                          <HighlightText
+                            text={inv.vehicle_plate}
+                            query={search}
+                          />
+                        ) : (
+                          "\u2014"
+                        )}
                       </TableCell>
                       <TableCell className="px-5 py-3.5">
                         <InvoiceStatusBadge status={inv.status} />
@@ -518,7 +555,6 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
 
 // ── Expenses Tab ──────────────────────────────────
 function ExpensesTab({ orgId }: { orgId: string | null }) {
-  const t = useTranslations();
   const { data: expenses, isLoading: expLoading } = useExpenses(
     orgId ?? undefined,
   );
@@ -710,7 +746,6 @@ function financeDataReducer(
 
 export default function FinancePage() {
   const t = useTranslations();
-  const now = useClientNow();
   const [financeData, dispatchFinance] = useReducer(financeDataReducer, {
     loading: false,
     error: null,
@@ -813,7 +848,7 @@ export default function FinancePage() {
     return `${formatCurrency(rev)} revenue · ${profitPart} (${margin.toFixed(1)}%) · ${summary.completedToday} completed · ${wo} active · avg ${formatCurrency(avg)}/WO`;
   }, [summary, loading, hasRevenue]);
 
-  const filteredWorkOrders = useMemo(() => {
+  const filteredWorkOrders = useMemo<DashboardData["recentWorkOrders"]>(() => {
     if (!data?.recentWorkOrders) return [];
     if (!search) return data.recentWorkOrders;
     const q = search.toLowerCase();
@@ -929,8 +964,8 @@ export default function FinancePage() {
           hasAnyData={hasAnyData}
           search={search}
           onSearchChange={setSearch}
-          filteredWorkOrders={filteredWorkOrders as any}
-          data={data as any}
+          filteredWorkOrders={filteredWorkOrders}
+          data={data}
         />
       )}
 

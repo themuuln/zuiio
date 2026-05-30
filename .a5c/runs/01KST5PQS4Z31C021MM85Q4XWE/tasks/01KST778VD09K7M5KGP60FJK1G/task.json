@@ -19,10 +19,7 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "packageJsonCreated",
-        "sdkInstalled"
-      ],
+      "required": ["packageJsonCreated", "sdkInstalled"],
       "type": "object"
     },
     "prompt": {
@@ -31,10 +28,7 @@
         "profile": {
           "architecture": {
             "dataFlow": "Page → React Query hook → API route → Service → Supabase",
-            "entryPoints": [
-              "src/app/[locale]/page.tsx",
-              "src/app/layout.tsx"
-            ],
+            "entryPoints": ["src/app/[locale]/page.tsx", "src/app/layout.tsx"],
             "modules": [
               {
                 "description": "CRM",
@@ -137,19 +131,12 @@
             "pipelines": [
               {
                 "name": "CI",
-                "stages": [
-                  "lint",
-                  "typecheck",
-                  "test",
-                  "build"
-                ],
+                "stages": ["lint", "typecheck", "test", "build"],
                 "trigger": "PR + push to main"
               },
               {
                 "name": "React Doctor",
-                "stages": [
-                  "diff analysis"
-                ],
+                "stages": ["diff analysis"],
                 "trigger": "PR + push to main"
               }
             ],
@@ -230,9 +217,7 @@
             }
           ],
           "installedAgents": [],
-          "installedProcesses": [
-            "cradle/project-install"
-          ],
+          "installedProcesses": ["cradle/project-install"],
           "installedSkills": [],
           "painPoints": [
             {
@@ -285,12 +270,7 @@
             }
           ],
           "techStack": {
-            "buildTools": [
-              "Next.js",
-              "Turbopack",
-              "PostCSS",
-              "Tailwind CSS"
-            ],
+            "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
             "databases": [
               {
                 "name": "PostgreSQL",
@@ -370,9 +350,7 @@
                 "version": "5.9"
               }
             ],
-            "packageManagers": [
-              "pnpm"
-            ]
+            "packageManagers": ["pnpm"]
           },
           "tools": {
             "formatting": [
@@ -408,13 +386,8 @@
             {
               "description": "Local dev with hot reload",
               "name": "Development",
-              "steps": [
-                "pnpm install",
-                "pnpm dev"
-              ],
-              "triggers": [
-                "manual"
-              ]
+              "steps": ["pnpm install", "pnpm dev"],
+              "triggers": ["manual"]
             },
             {
               "description": "Automated quality gates",
@@ -425,21 +398,13 @@
                 "vitest run --coverage",
                 "next build"
               ],
-              "triggers": [
-                "PR",
-                "push to main"
-              ]
+              "triggers": ["PR", "push to main"]
             },
             {
               "description": "Vercel auto-deploy",
               "name": "Deployment",
-              "steps": [
-                "merge to main",
-                "Vercel build + deploy"
-              ],
-              "triggers": [
-                "merge to main"
-              ]
+              "steps": ["merge to main", "Vercel build + deploy"],
+              "triggers": ["merge to main"]
             }
           ]
         },
@@ -542,12 +507,7 @@
     "outputJsonPath": "tasks/01KST778VD09K7M5KGP60FJK1G/result.json"
   },
   "kind": "agent",
-  "labels": [
-    "agent",
-    "cradle",
-    "infrastructure",
-    "quality-gates"
-  ],
+  "labels": ["agent", "cradle", "infrastructure", "quality-gates"],
   "title": "Initialize .a5c infrastructure and quality gates",
   "schemaVersion": "2026.01.tasks-v1",
   "effectId": "01KST778VD09K7M5KGP60FJK1G",
@@ -559,10 +519,7 @@
     "profile": {
       "architecture": {
         "dataFlow": "Page → React Query hook → API route → Service → Supabase",
-        "entryPoints": [
-          "src/app/[locale]/page.tsx",
-          "src/app/layout.tsx"
-        ],
+        "entryPoints": ["src/app/[locale]/page.tsx", "src/app/layout.tsx"],
         "modules": [
           {
             "description": "CRM",
@@ -665,19 +622,12 @@
         "pipelines": [
           {
             "name": "CI",
-            "stages": [
-              "lint",
-              "typecheck",
-              "test",
-              "build"
-            ],
+            "stages": ["lint", "typecheck", "test", "build"],
             "trigger": "PR + push to main"
           },
           {
             "name": "React Doctor",
-            "stages": [
-              "diff analysis"
-            ],
+            "stages": ["diff analysis"],
             "trigger": "PR + push to main"
           }
         ],
@@ -696,12 +646,7 @@
           "quotes": "single"
         },
         "errorHandling": "AppError hierarchy + createRouteHandler wrapper",
-        "importOrder": [
-          "@/lib/*",
-          "@/components/*",
-          "@/hooks/*",
-          "external"
-        ],
+        "importOrder": ["@/lib/*", "@/components/*", "@/hooks/*", "external"],
         "naming": {
           "components": "PascalCase",
           "database": "snake_case",
@@ -758,9 +703,7 @@
         }
       ],
       "installedAgents": [],
-      "installedProcesses": [
-        "cradle/project-install"
-      ],
+      "installedProcesses": ["cradle/project-install"],
       "installedSkills": [],
       "painPoints": [
         {
@@ -813,12 +756,7 @@
         }
       ],
       "techStack": {
-        "buildTools": [
-          "Next.js",
-          "Turbopack",
-          "PostCSS",
-          "Tailwind CSS"
-        ],
+        "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
         "databases": [
           {
             "name": "PostgreSQL",
@@ -898,9 +836,7 @@
             "version": "5.9"
           }
         ],
-        "packageManagers": [
-          "pnpm"
-        ]
+        "packageManagers": ["pnpm"]
       },
       "tools": {
         "formatting": [
@@ -936,13 +872,8 @@
         {
           "description": "Local dev with hot reload",
           "name": "Development",
-          "steps": [
-            "pnpm install",
-            "pnpm dev"
-          ],
-          "triggers": [
-            "manual"
-          ]
+          "steps": ["pnpm install", "pnpm dev"],
+          "triggers": ["manual"]
         },
         {
           "description": "Automated quality gates",
@@ -953,21 +884,13 @@
             "vitest run --coverage",
             "next build"
           ],
-          "triggers": [
-            "PR",
-            "push to main"
-          ]
+          "triggers": ["PR", "push to main"]
         },
         {
           "description": "Vercel auto-deploy",
           "name": "Deployment",
-          "steps": [
-            "merge to main",
-            "Vercel build + deploy"
-          ],
-          "triggers": [
-            "merge to main"
-          ]
+          "steps": ["merge to main", "Vercel build + deploy"],
+          "triggers": ["merge to main"]
         }
       ]
     },

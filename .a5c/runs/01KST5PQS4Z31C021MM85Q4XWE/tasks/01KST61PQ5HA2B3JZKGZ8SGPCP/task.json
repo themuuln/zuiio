@@ -147,10 +147,7 @@
           "type": "object"
         }
       },
-      "required": [
-        "commitPatterns",
-        "bottlenecks"
-      ],
+      "required": ["commitPatterns", "bottlenecks"],
       "type": "object"
     },
     "prompt": {
@@ -293,12 +290,7 @@
             }
           ],
           "techStack": {
-            "buildTools": [
-              "Next.js",
-              "Turbopack",
-              "PostCSS",
-              "Tailwind CSS"
-            ],
+            "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
             "databases": [
               {
                 "name": "PostgreSQL",
@@ -354,9 +346,7 @@
                 "version": "5.9"
               }
             ],
-            "packageManagers": [
-              "pnpm"
-            ]
+            "packageManagers": ["pnpm"]
           }
         }
       },
@@ -404,12 +394,7 @@
     "outputJsonPath": "tasks/01KST61PQ5HA2B3JZKGZ8SGPCP/result.json"
   },
   "kind": "agent",
-  "labels": [
-    "agent",
-    "cradle",
-    "git-history",
-    "mining"
-  ],
+  "labels": ["agent", "cradle", "git-history", "mining"],
   "title": "Mine git history for process patterns",
   "schemaVersion": "2026.01.tasks-v1",
   "effectId": "01KST61PQ5HA2B3JZKGZ8SGPCP",
@@ -555,12 +540,7 @@
         }
       ],
       "techStack": {
-        "buildTools": [
-          "Next.js",
-          "Turbopack",
-          "PostCSS",
-          "Tailwind CSS"
-        ],
+        "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
         "databases": [
           {
             "name": "PostgreSQL",
@@ -616,9 +596,7 @@
             "version": "5.9"
           }
         ],
-        "packageManagers": [
-          "pnpm"
-        ]
+        "packageManagers": ["pnpm"]
       }
     }
   }

@@ -138,10 +138,7 @@
           "type": "array"
         }
       },
-      "required": [
-        "profile",
-        "changesSummary"
-      ],
+      "required": ["profile", "changesSummary"],
       "type": "object"
     },
     "prompt": {
@@ -193,12 +190,7 @@
             "messageFormat": {
               "conventionalPercentage": 58,
               "nonConventionalPercentage": 42,
-              "topPrefixes": [
-                "fix(",
-                "feat(",
-                "chore(",
-                "docs("
-              ]
+              "topPrefixes": ["fix(", "feat(", "chore(", "docs("]
             },
             "timeSpan": {
               "days": 18,
@@ -213,9 +205,7 @@
           },
           "contributors": [
             {
-              "areas": [
-                "all"
-              ],
+              "areas": ["all"],
               "commitCount": 125,
               "name": "Temuulen Undrakhbayar"
             }
@@ -462,12 +452,7 @@
             }
           ],
           "techStack": {
-            "buildTools": [
-              "Next.js",
-              "Turbopack",
-              "PostCSS",
-              "Tailwind CSS"
-            ],
+            "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
             "databases": [
               {
                 "name": "PostgreSQL",
@@ -523,9 +508,7 @@
                 "version": "5.9"
               }
             ],
-            "packageManagers": [
-              "pnpm"
-            ]
+            "packageManagers": ["pnpm"]
           }
         },
         "toolsAndServices": {
@@ -537,20 +520,12 @@
             "pipelines": [
               {
                 "name": "CI",
-                "stages": [
-                  "lint",
-                  "typecheck",
-                  "test",
-                  "build"
-                ],
+                "stages": ["lint", "typecheck", "test", "build"],
                 "trigger": "pull_request + push to main"
               },
               {
                 "name": "React Doctor",
-                "stages": [
-                  "diff analysis",
-                  "PR comment"
-                ],
+                "stages": ["diff analysis", "PR comment"],
                 "trigger": "pull_request + push to main"
               }
             ],
@@ -665,39 +640,20 @@
             {
               "description": "Local dev with hot reload",
               "name": "Development",
-              "steps": [
-                "pnpm install",
-                "pnpm dev"
-              ],
-              "triggers": [
-                "manual"
-              ]
+              "steps": ["pnpm install", "pnpm dev"],
+              "triggers": ["manual"]
             },
             {
               "description": "Automated quality gates",
               "name": "CI/CD",
-              "steps": [
-                "lint",
-                "typecheck",
-                "test",
-                "build"
-              ],
-              "triggers": [
-                "PR",
-                "push to main"
-              ]
+              "steps": ["lint", "typecheck", "test", "build"],
+              "triggers": ["PR", "push to main"]
             },
             {
               "description": "Vercel auto-deploy on merge",
               "name": "Deployment",
-              "steps": [
-                "merge to main",
-                "Vercel build",
-                "Vercel deploy"
-              ],
-              "triggers": [
-                "merge to main"
-              ]
+              "steps": ["merge to main", "Vercel build", "Vercel deploy"],
+              "triggers": ["merge to main"]
             }
           ]
         }
@@ -735,12 +691,7 @@
     "outputJsonPath": "tasks/01KST6F3P6EK6MKVB5GF66A58Z/result.json"
   },
   "kind": "agent",
-  "labels": [
-    "agent",
-    "build",
-    "cradle",
-    "profile"
-  ],
+  "labels": ["agent", "build", "cradle", "profile"],
   "title": "Build comprehensive project profile",
   "schemaVersion": "2026.01.tasks-v1",
   "effectId": "01KST6F3P6EK6MKVB5GF66A58Z",
@@ -795,12 +746,7 @@
         "messageFormat": {
           "conventionalPercentage": 58,
           "nonConventionalPercentage": 42,
-          "topPrefixes": [
-            "fix(",
-            "feat(",
-            "chore(",
-            "docs("
-          ]
+          "topPrefixes": ["fix(", "feat(", "chore(", "docs("]
         },
         "timeSpan": {
           "days": 18,
@@ -815,9 +761,7 @@
       },
       "contributors": [
         {
-          "areas": [
-            "all"
-          ],
+          "areas": ["all"],
           "commitCount": 125,
           "name": "Temuulen Undrakhbayar"
         }
@@ -1041,12 +985,7 @@
         }
       ],
       "techStack": {
-        "buildTools": [
-          "Next.js",
-          "Turbopack",
-          "PostCSS",
-          "Tailwind CSS"
-        ],
+        "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
         "databases": [
           {
             "name": "PostgreSQL",
@@ -1102,9 +1041,7 @@
             "version": "5.9"
           }
         ],
-        "packageManagers": [
-          "pnpm"
-        ]
+        "packageManagers": ["pnpm"]
       }
     },
     "toolsAndServices": {
@@ -1116,20 +1053,12 @@
         "pipelines": [
           {
             "name": "CI",
-            "stages": [
-              "lint",
-              "typecheck",
-              "test",
-              "build"
-            ],
+            "stages": ["lint", "typecheck", "test", "build"],
             "trigger": "pull_request + push to main"
           },
           {
             "name": "React Doctor",
-            "stages": [
-              "diff analysis",
-              "PR comment"
-            ],
+            "stages": ["diff analysis", "PR comment"],
             "trigger": "pull_request + push to main"
           }
         ],
@@ -1244,39 +1173,20 @@
         {
           "description": "Local dev with hot reload",
           "name": "Development",
-          "steps": [
-            "pnpm install",
-            "pnpm dev"
-          ],
-          "triggers": [
-            "manual"
-          ]
+          "steps": ["pnpm install", "pnpm dev"],
+          "triggers": ["manual"]
         },
         {
           "description": "Automated quality gates",
           "name": "CI/CD",
-          "steps": [
-            "lint",
-            "typecheck",
-            "test",
-            "build"
-          ],
-          "triggers": [
-            "PR",
-            "push to main"
-          ]
+          "steps": ["lint", "typecheck", "test", "build"],
+          "triggers": ["PR", "push to main"]
         },
         {
           "description": "Vercel auto-deploy on merge",
           "name": "Deployment",
-          "steps": [
-            "merge to main",
-            "Vercel build",
-            "Vercel deploy"
-          ],
-          "triggers": [
-            "merge to main"
-          ]
+          "steps": ["merge to main", "Vercel build", "Vercel deploy"],
+          "triggers": ["merge to main"]
         }
       ]
     }

@@ -30,6 +30,7 @@ interface ExpenseFormState {
   description: string;
   amount: string;
   expenseDate: string;
+  dueDate: string;
   categoryId: string;
   vendorName: string;
   taxAmount: string;
@@ -43,6 +44,7 @@ const initialForm: ExpenseFormState = {
   description: "",
   amount: "",
   expenseDate: new Date().toISOString().split("T")[0],
+  dueDate: "",
   categoryId: "",
   vendorName: "",
   taxAmount: "0",
@@ -95,6 +97,7 @@ export default function NewExpensePage() {
         vendorName: form.vendorName || undefined,
         paymentMethod: form.paymentMethod || undefined,
         referenceNumber: form.referenceNumber || undefined,
+        dueDate: form.dueDate || null,
         paidAt: form.paid ? new Date().toISOString() : null,
         notes: form.notes || undefined,
       },
@@ -247,6 +250,24 @@ export default function NewExpensePage() {
                       ...prev,
                       expenseDate: e.target.value,
                     }))
+                  }
+                  className="h-11"
+                />
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="dueDate"
+                  className="mb-1 block text-sm font-medium"
+                >
+                  Due Date
+                </Label>
+                <Input
+                  id="dueDate"
+                  type="date"
+                  value={form.dueDate}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, dueDate: e.target.value }))
                   }
                   className="h-11"
                 />

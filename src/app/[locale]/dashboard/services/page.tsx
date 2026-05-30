@@ -1,16 +1,17 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
-import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
+import { ServiceForm } from "@/components/services/service-form";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Empty,
   EmptyDescription,
@@ -18,17 +19,18 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import type { ExportColumn } from "@/lib/export";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { serviceKeys } from "@/lib/queries/keys";
-import { useServiceLastUsedPrices } from "@/lib/queries/use-price-memory";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatMNT } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { ServiceForm } from "@/components/services/service-form";
+import { useClientNow } from "@/hooks/use-client-now";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import type { ExportColumn } from "@/lib/export";
+import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import { serviceKeys } from "@/lib/queries/keys";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useServiceLastUsedPrices } from "@/lib/queries/use-price-memory";
+import { formatMNT } from "@/lib/utils";
+import { HighlightText } from "@/lib/utils/search-utils";
 
 interface ServiceItem {
   id: string;
@@ -66,12 +68,6 @@ export default function ServicesPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const [newService, setNewService] = useState({
-    name: "",
-    description: "",
-    default_price: "",
-    category: "",
-  });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -90,68 +86,6 @@ export default function ServicesPage() {
     ],
     [],
   );
-
-  const addMutation = useMutation({
-    mutationFn: async (formData: typeof newService) => {
-      const r = await fetch(`/api/organizations/${orgId}/services`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description || null,
-          default_price: parseFloat(formData.default_price) || 0,
-          category: formData.category || null,
-        }),
-      });
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-      return d.data as ServiceItem;
-    },
-    onMutate: async (formData) => {
-      await queryClient.cancelQueries({
-        queryKey: serviceKeys.list(orgId ?? ""),
-      });
-      const previous = queryClient.getQueryData<ServiceItem[]>(
-        serviceKeys.list(orgId ?? ""),
-      );
-      const optimistic: ServiceItem = {
-        id: `temp-${Date.now()}`,
-        name: formData.name,
-        description: formData.description || null,
-        default_price: parseFloat(formData.default_price) || 0,
-        category: formData.category || null,
-      };
-      queryClient.setQueryData<ServiceItem[]>(
-        serviceKeys.list(orgId ?? ""),
-        (old) => [...(old ?? []), optimistic],
-      );
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(
-          serviceKeys.list(orgId ?? ""),
-          context.previous,
-        );
-      }
-      toast.error("Failed to create service");
-    },
-    onSuccess: () => {
-      toast.success("Service created");
-      setShowAdd(false);
-      setNewService({
-        name: "",
-        description: "",
-        default_price: "",
-        category: "",
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: serviceKeys.list(orgId ?? ""),
-      });
-    },
-  });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -263,11 +197,6 @@ export default function ServicesPage() {
     },
   });
 
-  const handleAdd = () => {
-    if (!orgId || !newService.name.trim()) return;
-    addMutation.mutate(newService);
-  };
-
   const handleDelete = (id: string) => {
     if (!orgId) return;
     deleteMutation.mutate(id);
@@ -298,12 +227,15 @@ export default function ServicesPage() {
     updateMutation.mutate({ id: editingId, formData: editForm });
   };
 
-  const filtered = services.filter(
-    (s) =>
-      !search ||
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      (s.category ?? "").toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = useFuzzySearch(services, search, {
+    keys: [
+      { name: "name", weight: 0.7 },
+      { name: "category", weight: 0.2 },
+      { name: "description", weight: 0.1 },
+    ],
+    threshold: 0.35,
+    minQueryLength: 1,
+  });
 
   const sidebar = useRightSidebar();
 
@@ -350,7 +282,12 @@ export default function ServicesPage() {
       sidebar.unregisterTab("categories");
       sidebar.unregisterTab("popular");
     };
-  }, [services]);
+  }, [
+    services,
+    sidebar.registerTab,
+    sidebar.setActiveTab,
+    sidebar.unregisterTab,
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -368,6 +305,10 @@ export default function ServicesPage() {
           placeholder: "Search services...",
           value: search,
           onChange: setSearch,
+          resultLabel: filtered.length
+            ? `${filtered.length} result${filtered.length === 1 ? "" : "s"}`
+            : undefined,
+          emptyLabel: search ? `No matches for "${search}"` : undefined,
         }}
         stats={
           <span>
@@ -521,10 +462,14 @@ export default function ServicesPage() {
                     <>
                       <div className="flex-1 min-w-0">
                         <Typography.Text className="font-medium truncate">
-                          {s.name}
+                          <HighlightText text={s.name} query={search} />
                         </Typography.Text>
                         <Typography.Muted className="text-sm text-muted-foreground">
-                          {s.category ?? t("services.uncategorized")}
+                          {s.category ? (
+                            <HighlightText text={s.category} query={search} />
+                          ) : (
+                            t("services.uncategorized")
+                          )}
                         </Typography.Muted>
                       </div>
                       <span className="font-medium text-lg tabular-nums shrink-0">

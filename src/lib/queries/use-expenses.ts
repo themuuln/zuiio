@@ -19,6 +19,7 @@ interface ExpenseListParams {
   startDate?: string;
   endDate?: string;
   paid?: boolean;
+  overdue?: boolean;
 }
 
 // ── List expenses ──
@@ -34,6 +35,7 @@ export function useExpenses(
   if (params?.startDate) filters.startDate = params.startDate;
   if (params?.endDate) filters.endDate = params.endDate;
   if (params?.paid !== undefined) filters.paid = String(params.paid);
+  if (params?.overdue) filters.overdue = "true";
 
   return useQuery({
     queryKey: expenseKeys.list(orgId ?? "", filters),

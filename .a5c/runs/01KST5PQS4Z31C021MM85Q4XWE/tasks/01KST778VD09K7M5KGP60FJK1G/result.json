@@ -8,16 +8,8 @@
     "packageJsonCreated": true,
     "packageJsonPath": ".a5c/package.json",
     "qualityGates": {
-      "commitChecks": [
-        "biome check",
-        "tsc --noEmit",
-        "vitest run"
-      ],
-      "deployGates": [
-        "biome check",
-        "vitest run",
-        "next build"
-      ],
+      "commitChecks": ["biome check", "tsc --noEmit", "vitest run"],
+      "deployGates": ["biome check", "vitest run", "next build"],
       "formatting": "biome format --write",
       "linting": "biome check",
       "qualityThreshold": 80,
@@ -37,16 +29,8 @@
     "packageJsonCreated": true,
     "packageJsonPath": ".a5c/package.json",
     "qualityGates": {
-      "commitChecks": [
-        "biome check",
-        "tsc --noEmit",
-        "vitest run"
-      ],
-      "deployGates": [
-        "biome check",
-        "vitest run",
-        "next build"
-      ],
+      "commitChecks": ["biome check", "tsc --noEmit", "vitest run"],
+      "deployGates": ["biome check", "vitest run", "next build"],
       "formatting": "biome format --write",
       "linting": "biome check",
       "qualityThreshold": 80,

@@ -1,0 +1,17 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-30T12:00:25.822Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSWC3HHSWNGD0ZFB91Z954NA",
+    "invocationKey": "feature/edit-parts-catalog:S000002:add-edit-button-parts-table",
+    "invocationHash": "0e0342e2b7d2e5568061bb9567154ec8b5e45280cfd69cfbe7e6071bc8ac099e",
+    "stepId": "S000002",
+    "taskId": "add-edit-button-parts-table",
+    "kind": "agent",
+    "label": "feature",
+    "taskDefRef": "tasks/01KSWC3HHSWNGD0ZFB91Z954NA/task.json",
+    "labels": ["feature", "ui", "parts", "table"]
+  },
+  "checksum": "77d87c0bc19987782ad115b6e4967c9a7bab74af609efe8e420e470a23b12c07"
+}

@@ -11,12 +11,7 @@
     "kind": "agent",
     "label": "agent",
     "taskDefRef": "tasks/01KST735T4Z00PET82KFB2WZN1/task.json",
-    "labels": [
-      "agent",
-      "cradle",
-      "cicd",
-      "configuration"
-    ]
+    "labels": ["agent", "cradle", "cicd", "configuration"]
   },
   "checksum": "b53747ce3c7eb3f4f11d4770b9aefc3b01e691b0d1a1cdb826688670e3743de8"
 }

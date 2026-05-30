@@ -296,6 +296,34 @@ export function MovementsTab({
               data={filteredMovements}
               getRowId={(row) => row.id}
               pageSize={20}
+              renderMobileCard={(m) => (
+                <div className="flex flex-col gap-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(m.created_at)}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] px-1.5 py-0"
+                    >
+                      {MOVEMENT_LABELS[m.movement_type] ?? m.movement_type}
+                    </Badge>
+                  </div>
+                  <span className="font-medium">{m.part_name}</span>
+                  <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <span className="tabular-nums">Qty: {m.quantity}</span>
+                      <span>·</span>
+                      <span className="tabular-nums">
+                        {m.unit_cost ? formatMNT(m.unit_cost) : "—"}
+                      </span>
+                    </div>
+                    <span className="truncate max-w-[120px]">
+                      {m.reference_type || m.notes || "—"}
+                    </span>
+                  </div>
+                </div>
+              )}
             />
           </CardContent>
         </Card>

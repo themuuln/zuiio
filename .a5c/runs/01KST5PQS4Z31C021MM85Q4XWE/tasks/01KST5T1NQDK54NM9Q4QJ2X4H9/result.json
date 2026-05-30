@@ -140,12 +140,7 @@
       }
     ],
     "techStack": {
-      "buildTools": [
-        "Next.js",
-        "Turbopack",
-        "PostCSS",
-        "Tailwind CSS"
-      ],
+      "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
       "databases": [
         {
           "name": "PostgreSQL",
@@ -201,9 +196,7 @@
           "version": "5.9"
         }
       ],
-      "packageManagers": [
-        "pnpm"
-      ]
+      "packageManagers": ["pnpm"]
     }
   },
   "startedAt": "2026-05-29T15:35:17.304Z",
@@ -344,12 +337,7 @@
       }
     ],
     "techStack": {
-      "buildTools": [
-        "Next.js",
-        "Turbopack",
-        "PostCSS",
-        "Tailwind CSS"
-      ],
+      "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
       "databases": [
         {
           "name": "PostgreSQL",
@@ -405,9 +393,7 @@
           "version": "5.9"
         }
       ],
-      "packageManagers": [
-        "pnpm"
-      ]
+      "packageManagers": ["pnpm"]
     }
   }
 }

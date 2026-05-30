@@ -50,6 +50,7 @@ const expenseSchema = z.object({
       return !Number.isNaN(n) && n > 0;
     }, "Enter a valid amount"),
   expenseDate: z.string().optional(),
+  dueDate: z.string().optional(),
   categoryId: z.string().optional(),
   vendorName: z.string().optional(),
   taxAmount: z.string().optional(),
@@ -65,6 +66,7 @@ const defaultExpenseValues: ExpenseFormValues = {
   description: "",
   amount: "",
   expenseDate: new Date().toISOString().split("T")[0],
+  dueDate: "",
   categoryId: "",
   vendorName: "",
   taxAmount: "0",
@@ -113,6 +115,7 @@ export function NewExpenseSheet({ open, onOpenChange }: NewExpenseSheetProps) {
         amount,
         taxAmount: Number.isNaN(taxAmount) ? 0 : taxAmount,
         expenseDate: data.expenseDate || undefined,
+        dueDate: data.dueDate || null,
         categoryId: data.categoryId || undefined,
         vendorName: data.vendorName || undefined,
         paymentMethod: data.paymentMethod || undefined,
@@ -214,6 +217,19 @@ export function NewExpenseSheet({ open, onOpenChange }: NewExpenseSheetProps) {
                             type="date"
                             className="h-11"
                             {...form.register("expenseDate")}
+                          />
+                        </FieldContent>
+                      </Field>
+
+                      {/* Due Date — optional */}
+                      <Field>
+                        <FieldLabel>Due Date</FieldLabel>
+                        <FieldContent>
+                          <Input
+                            id="sheet-expense-due-date"
+                            type="date"
+                            className="h-11"
+                            {...form.register("dueDate")}
                           />
                         </FieldContent>
                       </Field>

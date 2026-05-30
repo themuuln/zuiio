@@ -567,7 +567,10 @@ export default function ServiceRemindersPage() {
                   </Label>
                   <Combobox
                     items={vehicles}
-                    value={vehicles.find((v) => v.id === newSchedule.vehicle_id) ?? null}
+                    value={
+                      vehicles.find((v) => v.id === newSchedule.vehicle_id) ??
+                      null
+                    }
                     onValueChange={(v) => {
                       setNewSchedule((p) => ({
                         ...p,
@@ -575,7 +578,9 @@ export default function ServiceRemindersPage() {
                       }));
                     }}
                     isItemEqualToValue={(a, b) => a?.id === b?.id}
-                    itemToStringLabel={(v) => v ? `${v.make} ${v.model} (${v.plate_number})` : ""}
+                    itemToStringLabel={(v) =>
+                      v ? `${v.make} ${v.model} (${v.plate_number})` : ""
+                    }
                   >
                     <ComboboxInput
                       placeholder={t("serviceReminders.searchVehicle")}
@@ -586,8 +591,14 @@ export default function ServiceRemindersPage() {
                     <ComboboxContent>
                       <ComboboxList>
                         {(v) => (
-                          <ComboboxItem key={v.id} value={v} className="text-xs">
-                            <span>{v.make} {v.model}</span>
+                          <ComboboxItem
+                            key={v.id}
+                            value={v}
+                            className="text-xs"
+                          >
+                            <span>
+                              {v.make} {v.model}
+                            </span>
                             <span className="ml-2 font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
                               {v.plate_number}
                             </span>

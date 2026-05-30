@@ -7,17 +7,22 @@ import { globalCatalogKeys } from "./keys";
 export interface GlobalService {
   id: string;
   name: string;
+  name_mn: string | null;
   category: string | null;
   description: string | null;
   estimated_duration_minutes: number | null;
+  interval_months: number | null;
+  interval_km: number | null;
 }
 
 export interface GlobalPart {
   id: string;
   name: string;
+  name_mn: string | null;
   category: string | null;
   description: string | null;
   part_number: string | null;
+  unit: string | null;
 }
 
 // ── Hooks ──────────────────────────────────────────────────────

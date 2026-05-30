@@ -4,6 +4,6 @@
   "configFilesWritten": [],
   "triggerEvents": [],
   "processIds": [],
-  "babysitterIntegration": {"enabled": false},
+  "babysitterIntegration": { "enabled": false },
   "skippedReason": "User chose to skip CI/CD integration — existing GitHub Actions CI is sufficient"
 }

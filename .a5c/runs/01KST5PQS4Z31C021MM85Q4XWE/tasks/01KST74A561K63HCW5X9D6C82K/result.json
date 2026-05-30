@@ -5,9 +5,7 @@
   "invocationKey": "project-install:S000010:update-claude-md",
   "status": "ok",
   "result": {
-    "addedSections": [
-      "Babysitter"
-    ],
+    "addedSections": ["Babysitter"],
     "additions": "## Babysitter section added with quick commands, recommended processes, methodology, key skills, and pain point remediations.",
     "claudeMdInstructions": [
       "Use babysitter run:create to start orchestration runs",
@@ -25,9 +23,7 @@
   "startedAt": "2026-05-29T15:56:24.913Z",
   "finishedAt": "2026-05-29T15:56:24.913Z",
   "value": {
-    "addedSections": [
-      "Babysitter"
-    ],
+    "addedSections": ["Babysitter"],
     "additions": "## Babysitter section added with quick commands, recommended processes, methodology, key skills, and pain point remediations.",
     "claudeMdInstructions": [
       "Use babysitter run:create to start orchestration runs",

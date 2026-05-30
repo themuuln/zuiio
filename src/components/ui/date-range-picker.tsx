@@ -18,7 +18,11 @@ import type { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 
 interface DateRangePickerProps {
@@ -39,7 +43,9 @@ export function DateRangePicker({
   const t = useTranslations("dateRangePicker");
   const defaultPlaceholder = placeholder || t("placeholder");
   const [isOpen, setIsOpen] = React.useState(false);
-  const [month, setMonth] = React.useState<Date>(() => value?.from || new Date());
+  const [month, setMonth] = React.useState<Date>(
+    () => value?.from || new Date(),
+  );
 
   React.useEffect(() => {
     if (value?.from) {
@@ -175,7 +181,7 @@ export function DateRangePicker({
             className={cn(
               "w-full justify-between text-left font-normal h-9 px-3 gap-2",
               !value && "text-muted-foreground",
-              className
+              className,
             )}
           />
         }
@@ -186,18 +192,23 @@ export function DateRangePicker({
         </span>
         <ChevronDown className="size-3.5 text-muted-foreground shrink-0" />
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 flex flex-col md:flex-row" align={align}>
+      <PopoverContent
+        className="w-auto p-0 flex flex-col md:flex-row"
+        align={align}
+      >
         {/* Left Side: Presets panel */}
         <div className="flex flex-row md:flex-col gap-0.5 p-1.5 border-b md:border-b-0 md:border-r border-border/50 bg-muted/20 md:w-[140px] shrink-0 overflow-x-auto md:overflow-x-visible md:max-h-[330px] md:overflow-y-auto">
           {presets.map((preset, index) => {
             const isSelected =
               value?.from &&
               value?.to &&
-              preset.getValue().from.toDateString() === value.from.toDateString() &&
+              preset.getValue().from.toDateString() ===
+                value.from.toDateString() &&
               preset.getValue().to.toDateString() === value.to.toDateString();
 
             const showGroupHeader = index === 0;
-            const showGroupSeparator = index > 0 && presets[index - 1].group !== preset.group;
+            const showGroupSeparator =
+              index > 0 && presets[index - 1].group !== preset.group;
 
             return (
               <React.Fragment key={preset.label}>
@@ -218,7 +229,8 @@ export function DateRangePicker({
                   variant={isSelected ? "secondary" : "ghost"}
                   className={cn(
                     "h-8 text-xs font-normal justify-center md:justify-start px-2.5 py-1.5 rounded-md w-full shrink-0",
-                    isSelected && "bg-primary/10 text-primary font-medium hover:bg-primary/15"
+                    isSelected &&
+                      "bg-primary/10 text-primary font-medium hover:bg-primary/15",
                   )}
                   onClick={() => handlePresetSelect(preset.getValue)}
                 >

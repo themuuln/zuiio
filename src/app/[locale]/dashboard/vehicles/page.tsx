@@ -3,13 +3,10 @@
 import { BarChart3, Car, Clock, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useClientNow } from "@/hooks/use-client-now";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { DataTable } from "@/components/ui/data-table";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +17,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
 import {
   Empty,
   EmptyContent,
@@ -28,18 +28,19 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import type { ExportColumn } from "@/lib/export";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useVehicles, useDeleteVehicle } from "@/lib/queries/use-vehicles";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { usePageHeader } from "@/hooks/use-page-header";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
+import { useClientNow } from "@/hooks/use-client-now";
+import { usePageHeader } from "@/hooks/use-page-header";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import type { ExportColumn } from "@/lib/export";
+import { useTableFilters } from "@/lib/hooks/use-url-filters";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useDeleteVehicle, useVehicles } from "@/lib/queries/use-vehicles";
 import { createColumns, type VehicleRow } from "./_columns";
 
 export default function VehiclesPage() {
-  const [search, setSearch] = useState("");
+  const { search, setSearch } = useTableFilters("vehicles");
   const { setNewVehicleDialogOpen, setDetailVehicleId } = usePageHeader();
   const t = useTranslations("vehicles");
   const now = useClientNow();
@@ -69,16 +70,19 @@ export default function VehiclesPage() {
     [setDetailVehicleId],
   );
 
-  const handleDelete = useCallback((vehicle: VehicleRow) => {
-    setVehicleToDelete(vehicle);
-  }, []);
+  const handleDelete = useCallback(
+    (vehicle: VehicleRow) => {
+      setVehicleToDelete(vehicle);
+    },
+    [setVehicleToDelete],
+  );
 
   const confirmDelete = useCallback(() => {
     if (!vehicleToDelete) return;
     deleteVehicle.mutate(vehicleToDelete.id, {
       onSettled: () => setVehicleToDelete(null),
     });
-  }, [vehicleToDelete, deleteVehicle]);
+  }, [vehicleToDelete, deleteVehicle, setVehicleToDelete]);
 
   const columns = useMemo(
     () => createColumns({ onEdit: handleEdit, onDelete: handleDelete }),
@@ -200,6 +204,10 @@ export default function VehiclesPage() {
           value: search,
           onChange: setSearch,
           loading: isFetching,
+          resultLabel: list.length
+            ? `${list.length} result${list.length === 1 ? "" : "s"}`
+            : undefined,
+          emptyLabel: search ? `No matches for "${search}"` : undefined,
         }}
         stats={<span>{t("searchResults", { count: list.length })}</span>}
         actions={
@@ -252,6 +260,27 @@ export default function VehiclesPage() {
               getRowId={(row) => row.id}
               pageSize={20}
               onRowClick={(row) => setDetailVehicleId(row.id)}
+              renderMobileCard={(v) => (
+                <div className="flex flex-col gap-2 text-sm">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 ring-1 ring-border">
+                      <Car className="size-4 text-muted-foreground/70" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-mono text-sm font-semibold tracking-wide truncate block">
+                        {v.plate_number}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {[v.year, v.make, v.model].filter(Boolean).join(" ")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                    <span className="truncate font-mono">{v.vin || "—"}</span>
+                    <span>{v.owner_name ?? "—"}</span>
+                  </div>
+                </div>
+              )}
             />
           )}
         </CardContent>

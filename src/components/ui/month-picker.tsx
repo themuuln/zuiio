@@ -4,7 +4,11 @@ import * as React from "react";
 import { ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 interface MonthPickerProps {
@@ -79,7 +83,7 @@ export function MonthPicker({
             className={cn(
               "w-full justify-start text-left font-normal h-9",
               !value && "text-muted-foreground",
-              className
+              className,
             )}
           />
         }
@@ -113,9 +117,11 @@ export function MonthPicker({
           {/* Month grid */}
           <div className="grid grid-cols-3 gap-2">
             {MONTHS.map((month, idx) => {
-              const isSelected = selectedYear === currentYear && selectedMonth === idx;
+              const isSelected =
+                selectedYear === currentYear && selectedMonth === idx;
               const isCurrentMonth =
-                new Date().getFullYear() === currentYear && new Date().getMonth() === idx;
+                new Date().getFullYear() === currentYear &&
+                new Date().getMonth() === idx;
 
               return (
                 <Button
@@ -123,7 +129,9 @@ export function MonthPicker({
                   variant={isSelected ? "default" : "ghost"}
                   className={cn(
                     "h-9 w-full text-xs font-normal",
-                    isCurrentMonth && !isSelected && "border border-primary/30 bg-primary/5 text-primary"
+                    isCurrentMonth &&
+                      !isSelected &&
+                      "border border-primary/30 bg-primary/5 text-primary",
                   )}
                   onClick={() => handleMonthSelect(idx)}
                 >

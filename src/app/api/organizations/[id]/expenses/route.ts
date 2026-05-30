@@ -6,7 +6,6 @@ import {
   getExpenses,
   createExpense,
   getExpenseStats,
-  seedDefaultExpenseCategories,
 } from "@/lib/services/expense-service";
 
 export const GET = createRouteHandler(async ({ request, orgId }) => {
@@ -22,9 +21,16 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
   const categoryId = searchParams.get("categoryId") ?? undefined;
   const startDate = searchParams.get("startDate") ?? undefined;
   const endDate = searchParams.get("endDate") ?? undefined;
-  const paid = searchParams.has("paid")
-    ? searchParams.get("paid") === "true"
+  const paidParam = searchParams.get("paid");
+  const paid =
+    paidParam === "true" ? true : paidParam === "false" ? false : undefined;
+  const limit = searchParams.get("limit")
+    ? Number(searchParams.get("limit"))
     : undefined;
+  const offset = searchParams.get("offset")
+    ? Number(searchParams.get("offset"))
+    : undefined;
+  const overdue = searchParams.get("overdue") === "true" ? true : undefined;
 
   const expenses = await getExpenses(orgId, {
     search: q,
@@ -32,6 +38,9 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
     startDate,
     endDate,
     paid,
+    limit,
+    offset,
+    overdue,
   });
   return NextResponse.json({ data: expenses });
 });
@@ -54,7 +63,6 @@ export const POST = createRouteHandler(async ({ request, orgId, user }) => {
     );
   }
   const body = await request.json();
-  await seedDefaultExpenseCategories(orgId, user.id);
   const expense = await createExpense(orgId, body, user.id);
   return NextResponse.json({ data: expense }, { status: 201 });
 });

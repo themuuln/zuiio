@@ -1,14 +1,13 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import { createClient } from "@/lib/supabase/server";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { buildUpdates, type FieldMap } from "./build-updates";
+import { createClient } from "@/lib/supabase/server";
 import type {
-  CreatePartParams,
   CreateMovementParams,
+  CreatePartParams,
   CreatePurchaseOrderParams,
-  CreateSupplierParams,
   CreateStockThresholdParams,
+  CreateSupplierParams,
   InventoryBalance,
   InventoryMovement,
   PaginatedResponse,
@@ -22,6 +21,7 @@ import type {
   UpdatePurchaseOrderParams,
   UpdateSupplierParams,
 } from "@/lib/types";
+import { buildUpdates, type FieldMap } from "./build-updates";
 
 const trim = (v: unknown) => (v as string).trim() || null;
 
@@ -35,6 +35,7 @@ const partFieldMap: FieldMap<UpdatePartParams> = {
     unit: "unit",
     default_price: "default_price",
     is_active: "is_active",
+    global_part_id: "global_part_id",
   },
   transforms: {
     name: (v) => (v as string).trim(),
@@ -42,6 +43,7 @@ const partFieldMap: FieldMap<UpdatePartParams> = {
     part_number: (v) => (v as string) || null,
     category: (v) => (v as string) || null,
     description: (v) => (v as string) || null,
+    global_part_id: (v) => (v as string) || null,
   },
 };
 
@@ -95,7 +97,7 @@ export async function getPartsCatalog(
   let query = supabase
     .from("parts_catalog")
     .select(
-      "id, organization_id, name, part_number, category, unit, default_price, is_active, purchase_price, created_at, deleted_at",
+      "id, organization_id, name, name_mn, part_number, category, unit, default_price, is_active, purchase_price, created_at, deleted_at, global_part_id",
       usePagination ? { count: "exact" } : undefined,
     )
     .eq("organization_id", orgId)
@@ -156,7 +158,7 @@ export async function getPart(id: string): Promise<PartsCatalogItem> {
   const { data, error } = await supabase
     .from("parts_catalog")
     .select(
-      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by",
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -183,11 +185,12 @@ export async function createPart(
       description: params.description?.trim() || null,
       unit: params.unit || "piece",
       default_price: params.default_price ?? null,
+      global_part_id: params.global_part_id || null,
       created_by: userId,
       updated_by: userId,
     })
     .select(
-      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, is_active, created_at, updated_at, created_by, updated_by",
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .single();
   if (error || !data)
@@ -212,7 +215,7 @@ export async function updatePart(
     .eq("id", id)
     .eq("organization_id", orgId)
     .select(
-      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by",
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .single();
   if (error || !data) throw new NotFoundError("Part not found");

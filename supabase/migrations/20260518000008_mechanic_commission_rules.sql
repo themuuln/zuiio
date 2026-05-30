@@ -20,27 +20,32 @@ create table if not exists mechanic_commission_rules (
 alter table mechanic_commission_rules enable row level security;
 
 -- RLS policies
+drop policy if exists "Users can view their org's commission rules" on mechanic_commission_rules;
 create policy "Users can view their org's commission rules"
   on mechanic_commission_rules for select
   using (organization_id = (select organization_id from organization_users where user_id = auth.uid() limit 1));
 
+drop policy if exists "Users can insert commission rules in their org" on mechanic_commission_rules;
 create policy "Users can insert commission rules in their org"
   on mechanic_commission_rules for insert
   with check (organization_id = (select organization_id from organization_users where user_id = auth.uid() limit 1));
 
+drop policy if exists "Users can update commission rules in their org" on mechanic_commission_rules;
 create policy "Users can update commission rules in their org"
   on mechanic_commission_rules for update
   using (organization_id = (select organization_id from organization_users where user_id = auth.uid() limit 1));
 
+drop policy if exists "Users can delete commission rules in their org" on mechanic_commission_rules;
 create policy "Users can delete commission rules in their org"
   on mechanic_commission_rules for delete
   using (organization_id = (select organization_id from organization_users where user_id = auth.uid() limit 1));
 
 -- Indexes
-create index idx_commission_rules_org on mechanic_commission_rules(organization_id);
-create index idx_commission_rules_mechanic on mechanic_commission_rules(mechanic_id);
+create index if not exists idx_commission_rules_org on mechanic_commission_rules(organization_id);
+create index if not exists idx_commission_rules_mechanic on mechanic_commission_rules(mechanic_id);
 
 -- Trigger for updated_at
+drop trigger if exists set_mechanic_commission_rules_updated_at on mechanic_commission_rules;
 create trigger set_mechanic_commission_rules_updated_at
   before update on mechanic_commission_rules
   for each row execute function update_updated_at_column();

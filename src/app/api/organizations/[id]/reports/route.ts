@@ -50,7 +50,12 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
       return NextResponse.json({ data: report });
     }
     case "custom": {
-      const report = await getCustomReport(orgId, mid || null, dateFrom, dateTo);
+      const report = await getCustomReport(
+        orgId,
+        mid || null,
+        dateFrom,
+        dateTo,
+      );
       return NextResponse.json({ data: report });
     }
     case "weekly": {

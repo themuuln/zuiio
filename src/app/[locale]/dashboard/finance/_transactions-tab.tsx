@@ -1,15 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import { useClientNow } from "@/hooks/use-client-now";
+import { useMemo } from "react";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
+import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import { formatCurrency } from "@/lib/utils";
+import { HighlightText } from "@/lib/utils/search-utils";
 import { EmptyFinanceState } from "./_empty-finance-state";
 
 interface WorkOrderRow {
@@ -55,9 +56,6 @@ export function TransactionsTab({
   data,
 }: TransactionsTabProps) {
   const now = useClientNow();
-  if (!hasAnyData) {
-    return <EmptyFinanceState />;
-  }
 
   const exportColumns: ExportColumn<WorkOrderRow>[] = [
     { key: "id", label: "WO #", value: (wo) => wo.id.slice(0, 8) },
@@ -110,7 +108,10 @@ export function TransactionsTab({
         ),
         cell: ({ row }) => (
           <span className="font-mono text-xs">
-            {row.original.id.slice(0, 8)}...
+            <HighlightText
+              text={`${row.original.id.slice(0, 8)}...`}
+              query={search}
+            />
           </span>
         ),
       },
@@ -123,6 +124,13 @@ export function TransactionsTab({
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Customer" />
         ),
+        cell: ({ row }) => {
+          const c = row.original.customer;
+          const name = c
+            ? `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim()
+            : "";
+          return name ? <HighlightText text={name} query={search} /> : "—";
+        },
       },
       {
         id: "vehicle",
@@ -130,11 +138,17 @@ export function TransactionsTab({
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Vehicle" />
         ),
-        cell: ({ row }) => (
-          <span className="text-muted-foreground">
-            {row.original.vehicle?.plate_number ?? "\u2014"}
-          </span>
-        ),
+        cell: ({ row }) =>
+          row.original.vehicle?.plate_number ? (
+            <span className="text-muted-foreground">
+              <HighlightText
+                text={row.original.vehicle.plate_number}
+                query={search}
+              />
+            </span>
+          ) : (
+            <span className="text-muted-foreground">\u2014</span>
+          ),
       },
       {
         accessorKey: "status",
@@ -207,8 +221,12 @@ export function TransactionsTab({
         ),
       },
     ],
-    [],
+    [search],
   );
+
+  if (!hasAnyData) {
+    return <EmptyFinanceState />;
+  }
 
   const emptyMessage =
     filteredWorkOrders.length === 0 && search
@@ -224,6 +242,10 @@ export function TransactionsTab({
           placeholder: "Search by customer, plate, or ID...",
           value: search,
           onChange: onSearchChange,
+          resultLabel: filteredWorkOrders.length
+            ? `${filteredWorkOrders.length} result${filteredWorkOrders.length === 1 ? "" : "s"}`
+            : undefined,
+          emptyLabel: search ? `No matches for "${search}"` : undefined,
         }}
         stats={
           <span>
@@ -259,6 +281,47 @@ export function TransactionsTab({
                 </div>
               ) : undefined
             }
+            renderMobileCard={(wo) => {
+              const customerName =
+                [wo.customer?.first_name, wo.customer?.last_name]
+                  .filter(Boolean)
+                  .join(" ") || "—";
+              const vehicleDisplay = wo.vehicle?.plate_number || "—";
+              const total =
+                (wo.services ?? []).reduce(
+                  (s, x) => s + Number(x.final_price),
+                  0,
+                ) +
+                (wo.parts ?? []).reduce((s, x) => s + Number(x.final_price), 0);
+              return (
+                <div className="flex flex-col gap-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs text-muted-foreground">
+                      #{wo.id.slice(0, 8)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {wo.status || "—"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-medium truncate">{customerName}</span>
+                    <span className="text-xs text-muted-foreground truncate">
+                      {vehicleDisplay}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-border/50 pt-2">
+                    <span className="text-xs text-muted-foreground">
+                      {wo.created_at
+                        ? new Date(wo.created_at).toLocaleDateString()
+                        : "—"}
+                    </span>
+                    <span className="text-sm font-semibold tabular-nums">
+                      {formatCurrency(total)}
+                    </span>
+                  </div>
+                </div>
+              );
+            }}
           />
         </CardContent>
       </Card>

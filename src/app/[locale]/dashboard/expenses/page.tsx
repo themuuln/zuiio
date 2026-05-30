@@ -1,15 +1,26 @@
 "use client";
 
-import { Clock, DollarSign, Plus, Tag, TrendingUp, Wallet } from "lucide-react";
+import {
+  AlertCircle,
+  Clock,
+  DollarSign,
+  Plus,
+  Tag,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
-import { useClientNow } from "@/hooks/use-client-now";
+import { useEffect, useMemo } from "react";
+import type { DateRange } from "react-day-picker";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "@/components/ui/data-table";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import {
   Empty,
   EmptyContent,
@@ -17,23 +28,30 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Typography } from "@/components/ui/typography";
+import { useClientNow } from "@/hooks/use-client-now";
+import { usePageHeader } from "@/hooks/use-page-header";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
+import { useTableFilters } from "@/lib/hooks/use-url-filters";
 import {
   useExpenseCategories,
   useExpenseStats,
   useExpenses,
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { usePageHeader } from "@/hooks/use-page-header";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import type { ExpenseWithCategory } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 import { columns } from "./_columns";
-import { Typography } from "@/components/ui/typography";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
-import type { DateRange } from "react-day-picker";
 
 // ── Inline KPI Card ──
 
@@ -87,24 +105,38 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
 
 // ── Page Component ──
 
-type PaidFilter = "all" | "paid" | "unpaid";
+type PaidFilter = "all" | "paid" | "unpaid" | "overdue";
 
 const PAID_FILTER_OPTIONS: { key: PaidFilter; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "paid", label: "Paid" },
   { key: "unpaid", label: "Unpaid" },
+  { key: "overdue", label: "Overdue" },
+  { key: "paid", label: "Paid" },
 ];
 
 export default function ExpensesPage() {
   const t = useTranslations();
   const now = useClientNow();
 
-  const [search, setSearch] = useState("");
+  const {
+    search,
+    setSearch,
+    category,
+    setCategory,
+    status,
+    setStatus,
+    dateFrom,
+    setDateFrom,
+    dateTo,
+    setDateTo,
+    activeCount,
+    resetAll,
+  } = useTableFilters("expenses");
   const { setNewExpenseSheetOpen, setDetailExpenseId } = usePageHeader();
-  const [categoryId, setCategoryId] = useState("");
-  const [paidFilter, setPaidFilter] = useState<PaidFilter>("all");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const paidFilter = (status as PaidFilter) || "all";
+  const categoryId = category;
+  const startDate = dateFrom;
+  const endDate = dateTo;
 
   const rangeValue = useMemo<DateRange | undefined>(() => {
     return {
@@ -118,18 +150,18 @@ export default function ExpensesPage() {
       const y = range.from.getFullYear();
       const m = String(range.from.getMonth() + 1).padStart(2, "0");
       const d = String(range.from.getDate()).padStart(2, "0");
-      setStartDate(`${y}-${m}-${d}`);
+      setDateFrom(`${y}-${m}-${d}`);
     } else {
-      setStartDate("");
+      setDateFrom("");
     }
 
     if (range?.to) {
       const y = range.to.getFullYear();
       const m = String(range.to.getMonth() + 1).padStart(2, "0");
       const d = String(range.to.getDate()).padStart(2, "0");
-      setEndDate(`${y}-${m}-${d}`);
+      setDateTo(`${y}-${m}-${d}`);
     } else {
-      setEndDate("");
+      setDateTo("");
     }
   };
 
@@ -137,6 +169,7 @@ export default function ExpensesPage() {
   const orgId = org?.orgId;
 
   const paidParam = paidFilter === "all" ? undefined : paidFilter === "paid";
+  const overdueParam = paidFilter === "overdue";
 
   const {
     data: expenses,
@@ -148,6 +181,7 @@ export default function ExpensesPage() {
     q: search || undefined,
     categoryId: categoryId || undefined,
     paid: paidParam,
+    overdue: overdueParam || undefined,
     startDate: startDate || undefined,
     endDate: endDate || undefined,
   });
@@ -193,7 +227,13 @@ export default function ExpensesPage() {
       sidebar.unregisterTab("summary");
       sidebar.unregisterTab("categories");
     };
-  }, [stats, categories]);
+  }, [
+    categories,
+    sidebar.registerTab,
+    sidebar.setActiveTab,
+    sidebar.unregisterTab,
+    stats,
+  ]);
 
   const isFirstLoad =
     !expenses && !search && !categoryId && paidFilter === "all";
@@ -296,7 +336,7 @@ export default function ExpensesPage() {
       </div>
 
       {/* ── KPI Cards ── */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         <KpiCard
           label="Total Expenses"
           value={stats ? String(stats.totalExpenses) : "\u2014"}
@@ -316,6 +356,12 @@ export default function ExpensesPage() {
           loading={statsLoading}
         />
         <KpiCard
+          label="Overdue"
+          value={stats ? String(stats.overdueCount) : "\u2014"}
+          icon={AlertCircle}
+          loading={statsLoading}
+        />
+        <KpiCard
           label="Unpaid"
           value={stats ? formatMNT(stats.unpaidAmount) : "\u2014"}
           icon={Clock}
@@ -330,56 +376,62 @@ export default function ExpensesPage() {
           value: search,
           onChange: setSearch,
           loading: expensesFetching,
+          resultLabel: expenses?.length
+            ? `${expenses.length} result${expenses.length === 1 ? "" : "s"}`
+            : undefined,
+          emptyLabel: search ? `No matches for "${search}"` : undefined,
         }}
         filters={
           <div className="flex flex-wrap items-center gap-3">
-            {/* Category select */}
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className="h-9 rounded-lg border border-input bg-background px-3 text-xs font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            <Select
+              value={categoryId || "all"}
+              onValueChange={(value) =>
+                setCategory(value === "all" ? "" : value)
+              }
             >
-              <option value="">All Categories</option>
-              {categories?.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger size="sm" className="min-w-44">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent align="start">
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories?.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            {/* Date range */}
             <DateRangePicker
               value={rangeValue}
               onChange={handleRangeChange}
               className="w-[240px]"
             />
-            {(startDate || endDate) && (
+            {activeCount > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-9 px-2 text-muted-foreground hover:text-foreground text-xs"
-                onClick={() => {
-                  setStartDate("");
-                  setEndDate("");
-                }}
+                onClick={resetAll}
               >
-                Clear
+                Clear filters
               </Button>
             )}
 
-            {/* Paid / Unpaid toggle */}
-            <div className="flex gap-1">
+            <ToggleGroup
+              multiple={false}
+              value={[paidFilter]}
+              onValueChange={(value) => {
+                if (value.length > 0) setStatus(value[0]);
+              }}
+              spacing={1}
+            >
               {PAID_FILTER_OPTIONS.map((opt) => (
-                <Button
-                  key={opt.key}
-                  onClick={() => setPaidFilter(opt.key)}
-                  variant={paidFilter === opt.key ? "default" : "ghost"}
-                  size="sm"
-                >
+                <ToggleGroupItem key={opt.key} value={opt.key}>
                   {opt.label}
-                </Button>
+                </ToggleGroupItem>
               ))}
-            </div>
+            </ToggleGroup>
           </div>
         }
         actions={
@@ -425,6 +477,44 @@ export default function ExpensesPage() {
               getRowId={(row) => row.id}
               pageSize={20}
               onRowClick={(row) => setDetailExpenseId(row.id)}
+              renderMobileCard={(expense) => {
+                const dateStr = (() => {
+                  try {
+                    return new Date(expense.expense_date).toLocaleDateString(
+                      "en-US",
+                      { month: "short", day: "numeric" },
+                    );
+                  } catch {
+                    return expense.expense_date;
+                  }
+                })();
+                return (
+                  <div className="flex flex-col gap-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        {dateStr}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] px-1.5 py-0"
+                      >
+                        {expense.paid_at ? "Paid" : "Unpaid"}
+                      </Badge>
+                    </div>
+                    <span className="font-medium truncate">
+                      {expense.description}
+                    </span>
+                    <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                      <span>
+                        {expense.vendor_name || expense.category?.name || "—"}
+                      </span>
+                      <span className="text-sm font-semibold tabular-nums">
+                        {formatMNT(expense.amount)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }}
             />
           )}
         </CardContent>
