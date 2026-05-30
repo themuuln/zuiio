@@ -42,6 +42,7 @@ export const PATCH = createRouteHandler(async ({ request, params, orgId }) => {
       orgId,
       body.status,
       body.notes,
+      body.loss_reason,
     );
     return NextResponse.json({ data: wo });
   }

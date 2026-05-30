@@ -150,6 +150,11 @@ const exportColumns: ExportColumn<WorkOrderListItem>[] = [
         ? `${wo.margin_percent.toFixed(1)}%`
         : "—",
   },
+  {
+    key: "loss_reason",
+    label: "Loss Reason",
+    value: (wo) => wo.loss_reason ?? "—",
+  },
 ];
 
 // ── Page ──────────────────────────────────────────────────────

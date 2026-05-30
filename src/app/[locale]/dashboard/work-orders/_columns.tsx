@@ -16,6 +16,7 @@ import { DataTableColumnHeader } from "@/components/ui/data-table";
 import type { WorkOrderListItem } from "@/lib/queries/use-work-orders";
 import { formatMNT } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 // ── Status helpers ────────────────────────────────────────────
 
@@ -245,9 +246,10 @@ export function createColumns(
       ),
       cell: ({ row }) => {
         const val = row.original.gross_profit;
+        const lossReason = row.original.loss_reason;
         if (val === undefined)
           return <span className="text-muted-foreground">—</span>;
-        return (
+        const displayVal = (
           <span
             className={`text-sm font-medium tabular-nums ${
               val > 0
@@ -260,6 +262,22 @@ export function createColumns(
             {formatMNT(val)}
           </span>
         );
+
+        if (val < 0 && lossReason) {
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>{displayVal}</TooltipTrigger>
+              <TooltipContent className="max-w-[240px] text-xs">
+                <span className="font-semibold text-destructive block mb-0.5">
+                  Loss Reason:
+                </span>
+                {lossReason}
+              </TooltipContent>
+            </Tooltip>
+          );
+        }
+
+        return displayVal;
       },
     },
     {
@@ -268,9 +286,10 @@ export function createColumns(
       header: "Margin",
       cell: ({ row }) => {
         const val = row.original.margin_percent;
+        const lossReason = row.original.loss_reason;
         if (val === undefined)
           return <span className="text-muted-foreground">–</span>;
-        return (
+        const displayVal = (
           <span
             className={`text-sm tabular-nums ${
               val > 0
@@ -281,6 +300,38 @@ export function createColumns(
             }`}
           >
             {val.toFixed(1)}%
+          </span>
+        );
+
+        if (val < 0 && lossReason) {
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>{displayVal}</TooltipTrigger>
+              <TooltipContent className="max-w-[240px] text-xs">
+                <span className="font-semibold text-destructive block mb-0.5">
+                  Loss Reason:
+                </span>
+                {lossReason}
+              </TooltipContent>
+            </Tooltip>
+          );
+        }
+
+        return displayVal;
+      },
+    },
+    {
+      id: "loss_reason",
+      accessorKey: "loss_reason",
+      header: "Loss Reason",
+      cell: ({ row }) => {
+        const val = row.original.loss_reason;
+        return (
+          <span
+            className="text-xs text-muted-foreground truncate max-w-[150px] block"
+            title={val ?? undefined}
+          >
+            {val || "—"}
           </span>
         );
       },

@@ -87,7 +87,7 @@ export async function getWorkOrders(
         complaint, description, bay_number, created_at, updated_at,
         mechanic_id, total, subtotal, discount_total, discount_amount,
         discount_percentage, odometer_at_service, queue_order, notes,
-        completed_at, started_at,
+        completed_at, started_at, loss_reason,
         customer:customers(first_name, last_name, phone),
         vehicle:vehicles(plate_number, make, model)
       `,
@@ -306,18 +306,23 @@ export async function updateWorkOrderStatus(
   orgId: string,
   newStatus: string,
   notes?: string,
+  lossReason?: string,
 ): Promise<WorkOrder> {
   const supabase = await createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const { data, error } = await supabase
     .from("work_orders")
-    .update({ status: newStatus, updated_by: userId })
+    .update({
+      status: newStatus,
+      updated_by: userId,
+      loss_reason: lossReason || null,
+    })
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
     .select(
-      "id, organization_id, status, mechanic_id, customer_id, vehicle_id, complaint, description, bay_number, notes, odometer_at_service, discount_amount, discount_percentage, discount_total, subtotal, total, queue_order, completed_at, started_at, created_at, updated_at, created_by, updated_by, branch_id, diagnosis_label_id",
+      "id, organization_id, status, mechanic_id, customer_id, vehicle_id, complaint, description, bay_number, notes, odometer_at_service, discount_amount, discount_percentage, discount_total, subtotal, total, queue_order, completed_at, started_at, created_at, updated_at, created_by, updated_by, branch_id, diagnosis_label_id, loss_reason",
     )
     .single();
 

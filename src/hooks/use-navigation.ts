@@ -157,6 +157,11 @@ const navGroups: NavGroup[] = [
         href: "/dashboard/reports",
         icon: BarChart3,
       },
+      {
+        labelKey: "nav.endOfDay",
+        href: "/dashboard/eod-close",
+        icon: ClipboardList,
+      },
     ],
     isCollapsible: false,
   },

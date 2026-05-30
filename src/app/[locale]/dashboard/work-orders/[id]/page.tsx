@@ -37,6 +37,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -109,6 +110,7 @@ export default function WorkOrderDetailPage() {
 
   const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
   const [statusNotes, setStatusNotes] = useState("");
+  const [lossReasonText, setLossReasonText] = useState("");
 
   const [existingInvoiceId, setExistingInvoiceId] = useState<string | null>(
     null,
@@ -296,22 +298,29 @@ export default function WorkOrderDetailPage() {
     [],
   );
 
-  const changeStatus = (newStatus: string) => {
+  const changeStatus = (newStatus: string, lossReason?: string) => {
     if (
       (newStatus === "Completed" || newStatus === "Cancelled") &&
       confirmStatus !== newStatus
     ) {
       setConfirmStatus(newStatus);
       setStatusNotes("");
+      setLossReasonText("");
       return;
     }
 
     updateStatus.mutate(
-      { woId, status: newStatus, notes: statusNotes || undefined },
+      {
+        woId,
+        status: newStatus,
+        notes: statusNotes || undefined,
+        loss_reason: lossReason || undefined,
+      },
       {
         onSuccess: () => {
           setConfirmStatus(null);
           setStatusNotes("");
+          setLossReasonText("");
         },
       },
     );
@@ -564,12 +573,26 @@ export default function WorkOrderDetailPage() {
                 onChange={(e) => setStatusNotes(e.target.value)}
                 className="h-11"
               />
+              {grossProfit < 0 && (confirmStatus === "Completed" || confirmStatus === "Cancelled") && (
+                <div className="flex flex-col gap-1.5">
+                  <Typography.Text className="text-sm font-medium text-destructive">
+                    Loss Reason (Required)
+                  </Typography.Text>
+                  <Textarea
+                    placeholder="Describe why this work order is closed at a loss (e.g. parts sold at cost, rework, discount)..."
+                    value={lossReasonText}
+                    onChange={(e) => setLossReasonText(e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                </div>
+              )}
               <div className="flex gap-2 justify-end">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setConfirmStatus(null);
                     setStatusNotes("");
+                    setLossReasonText("");
                   }}
                 >
                   Cancel
@@ -578,8 +601,8 @@ export default function WorkOrderDetailPage() {
                   variant={
                     confirmStatus === "Cancelled" ? "destructive" : "default"
                   }
-                  disabled={saving}
-                  onClick={() => changeStatus(confirmStatus)}
+                  disabled={saving || (grossProfit < 0 && !lossReasonText.trim() && (confirmStatus === "Completed" || confirmStatus === "Cancelled"))}
+                  onClick={() => changeStatus(confirmStatus, lossReasonText)}
                 >
                   {saving
                     ? t("updating")
@@ -1378,6 +1401,15 @@ export default function WorkOrderDetailPage() {
                 {marginPercent.toFixed(1)}%
               </span>
             </div>
+            {wo.loss_reason && (
+              <>
+                <Separator />
+                <div className="flex flex-col gap-1 rounded bg-destructive/5 p-2 text-xs border border-destructive/20 mt-1">
+                  <span className="font-semibold text-destructive">Loss Reason:</span>
+                  <span className="text-muted-foreground">{wo.loss_reason}</span>
+                </div>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>

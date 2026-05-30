@@ -25,6 +25,7 @@ const SEGMENT_TO_NAV_KEY: Record<string, string> = {
   finance: "nav.finance",
   expenses: "nav.expenses",
   reports: "nav.reports",
+  "eod-close": "nav.endOfDay",
   guide: "nav.guide",
   services: "nav.services",
   movements: "nav.inventoryMovements",

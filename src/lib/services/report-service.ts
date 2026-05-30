@@ -849,12 +849,59 @@ export async function getEndOfDaySummary(
     .is("deleted_at", null);
 
   if (!workOrders?.length) {
+    // Still fetch open_work_orders, unpaid_invoices, issues for empty-day case
+    const [openWoEmpty, unpaidInvEmpty, biggestIssueEmpty] = await Promise.all([
+      supabase
+        .from("work_orders")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", orgId)
+        .not("status", "in", '("Completed","Cancelled")')
+        .is("deleted_at", null),
+      supabase
+        .from("invoices")
+        .select("total", { count: "exact", head: true })
+        .eq("organization_id", orgId)
+        .in("status", ["sent", "overdue", "draft"])
+        .is("deleted_at", null),
+      supabase
+        .from("work_orders")
+        .select("id, description, created_at")
+        .eq("organization_id", orgId)
+        .not("status", "in", '("Completed","Cancelled")')
+        .is("deleted_at", null)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .single(),
+    ]);
+    const daysOpen = biggestIssueEmpty.data?.created_at
+      ? Math.floor(
+          (Date.now() - new Date(biggestIssueEmpty.data.created_at).getTime()) /
+            (1000 * 60 * 60 * 24),
+        )
+      : 0;
     return {
       date,
       mechanics: [],
       total_work_orders: 0,
       total_revenue: 0,
       total_commission: 0,
+      open_work_orders: openWoEmpty.count ?? 0,
+      payment_breakdown: { cash: 0, card: 0, bank_transfer: 0, other: 0 },
+      unpaid_invoices: {
+        count: unpaidInvEmpty.count ?? 0,
+        total: 0,
+      },
+      best_mechanic: null,
+      biggest_issue:
+        biggestIssueEmpty.data && !Array.isArray(biggestIssueEmpty.data)
+          ? {
+              description:
+                biggestIssueEmpty.data.description ?? "Open work order",
+              work_order_id: biggestIssueEmpty.data.id,
+              customer: "",
+              days_open: daysOpen,
+            }
+          : null,
     };
   }
 
@@ -893,7 +940,17 @@ export async function getEndOfDaySummary(
   }
 
   const woIds = workOrders.map((w) => w.id);
-  const [servicesData, partsData, commissionsData] = await Promise.all([
+
+  // ── Extra EOD queries ──────────────────────────────────────
+  const [
+    servicesData,
+    partsData,
+    commissionsData,
+    openWoResult,
+    paymentsResult,
+    unpaidInvoicesResult,
+    biggestIssueResult,
+  ] = await Promise.all([
     woIds.length > 0
       ? supabase
           .from("work_order_services")
@@ -912,6 +969,37 @@ export async function getEndOfDaySummary(
           .select("mechanic_id, commission_amount")
           .in("work_order_id", woIds)
       : { data: [] as any[] },
+    // Open work orders count
+    supabase
+      .from("work_orders")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", orgId)
+      .not("status", "in", '("Completed","Cancelled")')
+      .is("deleted_at", null),
+    // Payment method breakdown (payments on today's work orders)
+    woIds.length > 0
+      ? supabase
+          .from("payments")
+          .select("payment_method, amount")
+          .in("work_order_id", woIds)
+      : { data: [] as any[] },
+    // Unpaid invoices (need data to sum totals)
+    supabase
+      .from("invoices")
+      .select("total")
+      .eq("organization_id", orgId)
+      .in("status", ["sent", "overdue", "draft"])
+      .is("deleted_at", null),
+    // Biggest issue: oldest open work order
+    supabase
+      .from("work_orders")
+      .select("id, description, created_at")
+      .eq("organization_id", orgId)
+      .not("status", "in", '("Completed","Cancelled")')
+      .is("deleted_at", null)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .single(),
   ]);
 
   const woDataMap = new Map<string, { services: any[]; parts: any[] }>();
@@ -984,12 +1072,72 @@ export async function getEndOfDaySummary(
     0,
   );
 
+  // ── Process extra EOD data ──────────────────────────────────
+  const paymentBreakdown = { cash: 0, card: 0, bank_transfer: 0, other: 0 };
+  for (const p of (paymentsResult as any)?.data ?? []) {
+    const method = (p.payment_method ?? "other")
+      .toLowerCase()
+      .replace(/[^a-z_]/g, "");
+    if (method in paymentBreakdown) {
+      paymentBreakdown[method as keyof typeof paymentBreakdown] += Number(
+        p.amount ?? 0,
+      );
+    } else {
+      paymentBreakdown.other += Number(p.amount ?? 0);
+    }
+  }
+
+  // Unpaid invoices total
+  const unpaidInvData = (unpaidInvoicesResult as any)?.data ?? [];
+  const unpaidInvCount = unpaidInvData.length;
+  const unpaidInvTotal = unpaidInvData.reduce(
+    (sum: number, inv: any) => sum + Number(inv.total ?? 0),
+    0,
+  );
+
+  // Best mechanic (highest revenue)
+  const sortedMechanics = [...mechanics].sort(
+    (a, b) => b.total_revenue - a.total_revenue,
+  );
+  const bestMechanic =
+    sortedMechanics.length > 0 && sortedMechanics[0].total_revenue > 0
+      ? {
+          id: sortedMechanics[0].mechanic_id,
+          name: sortedMechanics[0].mechanic_name,
+          revenue: sortedMechanics[0].total_revenue,
+          jobs: sortedMechanics[0].work_orders_completed,
+        }
+      : null;
+
+  // Biggest issue: oldest open work order
+  const biData = (biggestIssueResult as any)?.data;
+  const biggestIssue =
+    biData && !Array.isArray(biData) && biData.id
+      ? {
+          description: biData.description ?? "Open work order",
+          work_order_id: biData.id,
+          customer: "",
+          days_open: Math.floor(
+            (Date.now() - new Date(biData.created_at).getTime()) /
+              (1000 * 60 * 60 * 24),
+          ),
+        }
+      : null;
+
   return {
     date,
     mechanics,
     total_work_orders: totalWorkOrders,
     total_revenue: totalRevenue,
     total_commission: totalCommission,
+    open_work_orders: (openWoResult as any)?.count ?? 0,
+    payment_breakdown: paymentBreakdown,
+    unpaid_invoices: {
+      count: unpaidInvCount,
+      total: unpaidInvTotal,
+    },
+    best_mechanic: bestMechanic,
+    biggest_issue: biggestIssue,
   };
 }
 

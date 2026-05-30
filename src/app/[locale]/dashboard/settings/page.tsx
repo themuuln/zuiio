@@ -6,6 +6,7 @@ import {
   Car,
   Database,
   Globe,
+  MessageCircle,
   Palette,
   Percent,
   Settings2,
@@ -19,33 +20,34 @@ import { toast } from "sonner";
 import { applyBrandThemePreview } from "@/components/brand-theme-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
 import { usePageHeader } from "@/hooks/use-page-header";
 import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization } from "@/lib/types";
 import { setCookie } from "@/lib/utils";
+import { AppearanceCustomization } from "./_appearance-customization";
 import {
-  DEFAULT_FORM,
+  BusinessDefaultsForm,
   buildFormFromOrganization,
+  DEFAULT_FORM,
   type SettingsForm,
 } from "./_business-defaults-form";
-import { BusinessDefaultsForm } from "./_business-defaults-form";
-import { AppearanceCustomization } from "./_appearance-customization";
-import { DataExportSection } from "./_data-export-section";
-import { OrganizationCard } from "./_organization-card";
 import { CommissionRulesSection } from "./_commission-rules-section";
+import { DataExportSection } from "./_data-export-section";
 import { DataSharingForm } from "./_data-sharing-form";
 import { DiagnosisLabelsSection } from "./_diagnosis-labels-section";
+import { OrganizationCard } from "./_organization-card";
+import { TelegramSection } from "./_telegram-section";
 import { VehicleNicheForm } from "./_vehicle-niche-form";
-import { Typography } from "@/components/ui/typography";
-import {
-  Item,
-  ItemMedia,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
-} from "@/components/ui/item";
 
 function SectionHeading({
   icon: Icon,
@@ -145,7 +147,6 @@ function ErrorState({
 }
 
 export default function SettingsPage() {
-  const t = useTranslations();
   const { replace } = useRouter();
   const currentLocale = useLocale();
   const { theme, setTheme } = useTheme();
@@ -253,7 +254,7 @@ export default function SettingsPage() {
     }
   }
 
-  const { state: pageHeader, setActiveTab: setPageTab } = usePageHeader();
+  const { state: pageHeader } = usePageHeader();
   const activeTab = pageHeader.activeTab;
 
   if (orgInfoQuery.isLoading || loading) {
@@ -335,6 +336,19 @@ export default function SettingsPage() {
             description="Manage reusable labels for work order complaints (e.g., engine, brake, electrical)."
           />
           <DiagnosisLabelsSection orgId={orgId ?? ""} />
+        </section>
+      )}
+
+      {activeTab === "telegram" && (
+        <section>
+          <SectionHeading
+            icon={MessageCircle}
+            title="Telegram Bot"
+            description="Connect your Telegram to get service reminder summaries and revenue reports."
+          />
+          <div className="mt-4">
+            <TelegramSection />
+          </div>
         </section>
       )}
 

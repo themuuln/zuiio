@@ -26,7 +26,7 @@ export async function getWorkOrderDetail(
   const { data: wo, error: woError } = await supabase
     .from("work_orders")
     .select(
-      "id, organization_id, branch_id, customer_id, vehicle_id, bay_number, status, description, notes, mechanic_id, complaint, diagnosis, mechanic_notes, subtotal, discount_total, total, discount_amount, discount_percentage, odometer_at_service, queue_order, diagnosis_label_id, started_at, completed_at, created_at, updated_at, created_by, updated_by, deleted_at",
+      "id, organization_id, branch_id, customer_id, vehicle_id, bay_number, status, description, notes, mechanic_id, complaint, diagnosis, mechanic_notes, subtotal, discount_total, total, discount_amount, discount_percentage, odometer_at_service, queue_order, diagnosis_label_id, started_at, completed_at, created_at, updated_at, created_by, updated_by, deleted_at, loss_reason",
     )
     .eq("id", id)
     .is("deleted_at", null)

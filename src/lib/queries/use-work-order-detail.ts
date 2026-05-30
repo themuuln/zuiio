@@ -147,17 +147,19 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
       woId,
       status,
       notes,
+      loss_reason,
     }: {
       woId: string;
       status: string;
       notes?: string;
+      loss_reason?: string;
     }) => {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${woId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status, notes }),
+          body: JSON.stringify({ status, notes, loss_reason }),
         },
       );
       const json = await res.json();
@@ -173,6 +175,7 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
           ...previous,
           status: variables.status,
           notes: variables.notes ?? previous.notes,
+          loss_reason: variables.loss_reason ?? previous.loss_reason,
           updated_at: new Date().toISOString(),
         });
       }

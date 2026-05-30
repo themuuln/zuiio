@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ClipboardList,
-  GitFork,
   Package,
   Pencil,
   Plus,
@@ -704,21 +703,13 @@ export function PartsTab({
                           )}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-center">
-                          {localPart ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingPart(localPart)}
-                              className="w-full gap-1 h-8"
-                            >
-                              <Pencil className="size-3" />
-                              {t("editLocalCopy")}
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={() => {
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (localPart) {
+                                setEditingPart(localPart);
+                              } else {
                                 setForkingData({
                                   name: gp.name,
                                   name_mn: gp.name_mn ?? undefined,
@@ -729,13 +720,13 @@ export function PartsTab({
                                   global_part_id: gp.id,
                                 });
                                 setShowAddPart(true);
-                              }}
-                              className="w-full gap-1 h-8"
-                            >
-                              <GitFork className="size-3" />
-                              {t("forkToOrg")}
-                            </Button>
-                          )}
+                              }
+                            }}
+                            className="w-full gap-1 h-8"
+                          >
+                            <Pencil className="size-3" />
+                            {t("editLocalCopy")}
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -751,7 +742,7 @@ export function PartsTab({
         <Modal
           title={
             forkingData
-              ? `Fork Part: ${locale === "mn" && forkingData.name_mn ? forkingData.name_mn : forkingData.name}`
+              ? `${t("edit")}: ${locale === "mn" && forkingData.name_mn ? forkingData.name_mn : forkingData.name}`
               : t("addPart")
           }
           onClose={() => {
@@ -783,7 +774,7 @@ export function PartsTab({
       {/* Edit Part Modal */}
       {editingPart && (
         <Modal
-          title={`Edit: ${editingPart.name}`}
+          title={`${t("edit")}: ${locale === "mn" && editingPart.name_mn ? editingPart.name_mn : editingPart.name}`}
           onClose={() => setEditingPart(null)}
         >
           <PartForm

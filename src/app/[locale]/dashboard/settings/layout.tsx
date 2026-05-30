@@ -7,6 +7,7 @@ import { usePageHeader, type PageTab } from "@/hooks/use-page-header";
 const SETTINGS_TABS: PageTab[] = [
   { value: "general", label: "General" },
   { value: "appearance", label: "Appearance" },
+  { value: "telegram", label: "Telegram Bot" },
   { value: "niche", label: "Vehicle Niche" },
   { value: "sharing", label: "Data Sharing" },
   { value: "commission", label: "Commission Rules" },

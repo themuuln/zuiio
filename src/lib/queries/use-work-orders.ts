@@ -21,6 +21,7 @@ export interface WorkOrderListItem {
   parts_revenue?: number;
   gross_profit?: number;
   margin_percent?: number;
+  loss_reason?: string | null;
 }
 
 const fetchWorkOrders = createOrgQuery<WorkOrderListItem[]>("/work-orders");

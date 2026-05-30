@@ -69,7 +69,10 @@ export default defineConfig({
       },
       {
         text: "Үйлчилгээний сануулга",
-        items: [{ text: "Үйлчилгээний сануулга", link: "/service-reminders" }],
+        items: [
+          { text: "Үйлчилгээний сануулга", link: "/service-reminders" },
+          { text: "Telegram Bot", link: "/telegram-bot" },
+        ],
       },
       {
         text: "Тохиргоо",

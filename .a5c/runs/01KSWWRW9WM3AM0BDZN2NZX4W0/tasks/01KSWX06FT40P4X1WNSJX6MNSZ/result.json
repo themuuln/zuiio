@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSWX06FT40P4X1WNSJX6MNSZ",
+  "taskId": "build-eod-close-page",
+  "invocationKey": "feature/eod-close-ritual:S000003:build-eod-close-page",
+  "status": "ok",
+  "result": {
+    "pageCreated": true,
+    "pagePath": "src/app/[locale]/dashboard/eod-close/page.tsx"
+  },
+  "startedAt": "2026-05-30T16:58:42.615Z",
+  "finishedAt": "2026-05-30T16:58:42.615Z",
+  "value": {
+    "pageCreated": true,
+    "pagePath": "src/app/[locale]/dashboard/eod-close/page.tsx"
+  }
+}

@@ -368,6 +368,34 @@ export interface EndOfDaySummary {
   total_work_orders: number;
   total_revenue: number;
   total_commission: number;
+  /** Count of non-completed, non-cancelled work orders */
+  open_work_orders: number;
+  /** Payment method breakdown for completed jobs today */
+  payment_breakdown: {
+    cash: number;
+    card: number;
+    bank_transfer: number;
+    other: number;
+  };
+  /** Unpaid invoices summary */
+  unpaid_invoices: {
+    count: number;
+    total: number;
+  };
+  /** Mechanic with highest revenue today */
+  best_mechanic: {
+    id: string;
+    name: string;
+    revenue: number;
+    jobs: number;
+  } | null;
+  /** Oldest open job (biggest issue) */
+  biggest_issue: {
+    description: string;
+    work_order_id: string;
+    customer: string;
+    days_open: number;
+  } | null;
 }
 
 // ── Commission ─────────────────────────────────────────────────
