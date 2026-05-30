@@ -19,11 +19,11 @@ alter table day_close_logs enable row level security;
 
 create policy "Users can view their org's day close logs"
   on day_close_logs for select
-  using (organization_id = auth_org_id());
+  using (organization_id = get_user_organization_id());
 
 create policy "Users can insert day close logs for their org"
   on day_close_logs for insert
-  with check (organization_id = auth_org_id());
+  with check (organization_id = get_user_organization_id());
 
 -- Indexes
 create index idx_day_close_logs_org_date on day_close_logs(organization_id, date desc);

@@ -1002,6 +1002,82 @@ export function BayViewV2Client() {
 
           {viewMode === "kanban" && (
             <div className="flex h-full gap-4 overflow-x-auto overflow-y-hidden p-4 w-full">
+              {/* Kanban Column: Vacant Bays */}
+              <div className="flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-3.5 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 border-t-slate-300 dark:border-t-slate-800 shadow-sm">
+                <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-4 pb-2.5 select-none">
+                  <div className="font-heading text-xs uppercase tracking-wider font-bold text-muted-foreground">
+                    {t("available")}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={() => {
+                        const emptyBay = data?.bays.find((b) => !b.workOrder);
+                        if (emptyBay) {
+                          setAssignBay(emptyBay.bayNumber);
+                        } else {
+                          setToast({
+                            message: "No empty bays available",
+                            variant: "error",
+                          });
+                        }
+                      }}
+                      className="size-5 rounded hover:bg-muted text-muted-foreground/80 hover:text-foreground cursor-pointer"
+                      title="Assign vehicle to an empty bay"
+                    >
+                      <Plus className="size-3" />
+                    </Button>
+                    <Badge
+                      variant="outline"
+                      className="font-mono font-bold text-[10px] rounded-full h-5"
+                    >
+                      {filteredBays.filter((b) => !b.workOrder).length}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex flex-1 flex-col gap-3 px-3 overflow-y-auto no-scrollbar">
+                  {filteredBays
+                    .filter((b) => !b.workOrder)
+                    .map((bay) => (
+                      <div
+                        key={bay.bayNumber}
+                        className="flex flex-col shrink-0"
+                      >
+                        <BayCard
+                          bay={bay}
+                          isPending={false}
+                          isKanbanMode
+                          onStatusChange={handleStatusClick}
+                          onRemoveFromBay={handleRemoveFromBay}
+                          onOpenDetail={handleOpenDetail}
+                          onAssignClick={(n) => setAssignBay(n)}
+                        />
+                      </div>
+                    ))}
+                  {filteredBays.filter((b) => !b.workOrder).length === 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setToast({
+                          message: "No empty bays available",
+                          variant: "error",
+                        });
+                      }}
+                      className="flex flex-col items-center justify-center border border-dashed border-border/40 bg-muted/10 py-12 rounded-xl text-center select-none p-4 w-full cursor-not-allowed opacity-60 group/empty"
+                    >
+                      <div className="flex size-8 items-center justify-center rounded-full border border-dashed border-muted-foreground/45 bg-background mb-2 shadow-sm">
+                        <Plus className="size-3.5 text-muted-foreground/60" />
+                      </div>
+                      <Typography.Muted className="text-[10px] text-muted-foreground/45 font-semibold">
+                        No Vacant Bays
+                      </Typography.Muted>
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {["New", "Diagnosing", "In Progress", "Ready for Pickup"].map(
                 (status) => {
                   const baysWithStatus = filteredBays.filter(
@@ -1112,82 +1188,6 @@ export function BayViewV2Client() {
                   );
                 },
               )}
-
-              {/* Kanban Column: Vacant Bays */}
-              <div className="flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-3.5 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 border-t-slate-300 dark:border-t-slate-800 shadow-sm">
-                <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-4 pb-2.5 select-none">
-                  <div className="font-heading text-xs uppercase tracking-wider font-bold text-muted-foreground">
-                    {t("available")}
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      type="button"
-                      size="icon-xs"
-                      variant="ghost"
-                      onClick={() => {
-                        const emptyBay = data?.bays.find((b) => !b.workOrder);
-                        if (emptyBay) {
-                          setAssignBay(emptyBay.bayNumber);
-                        } else {
-                          setToast({
-                            message: "No empty bays available",
-                            variant: "error",
-                          });
-                        }
-                      }}
-                      className="size-5 rounded hover:bg-muted text-muted-foreground/80 hover:text-foreground cursor-pointer"
-                      title="Assign vehicle to an empty bay"
-                    >
-                      <Plus className="size-3" />
-                    </Button>
-                    <Badge
-                      variant="outline"
-                      className="font-mono font-bold text-[10px] rounded-full h-5"
-                    >
-                      {filteredBays.filter((b) => !b.workOrder).length}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex flex-1 flex-col gap-3 px-3 overflow-y-auto no-scrollbar">
-                  {filteredBays
-                    .filter((b) => !b.workOrder)
-                    .map((bay) => (
-                      <div
-                        key={bay.bayNumber}
-                        className="flex flex-col shrink-0"
-                      >
-                        <BayCard
-                          bay={bay}
-                          isPending={false}
-                          isKanbanMode
-                          onStatusChange={handleStatusClick}
-                          onRemoveFromBay={handleRemoveFromBay}
-                          onOpenDetail={handleOpenDetail}
-                          onAssignClick={(n) => setAssignBay(n)}
-                        />
-                      </div>
-                    ))}
-                  {filteredBays.filter((b) => !b.workOrder).length === 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setToast({
-                          message: "No empty bays available",
-                          variant: "error",
-                        });
-                      }}
-                      className="flex flex-col items-center justify-center border border-dashed border-border/40 bg-muted/10 py-12 rounded-xl text-center select-none p-4 w-full cursor-not-allowed opacity-60 group/empty"
-                    >
-                      <div className="flex size-8 items-center justify-center rounded-full border border-dashed border-muted-foreground/45 bg-background mb-2 shadow-sm">
-                        <Plus className="size-3.5 text-muted-foreground/60" />
-                      </div>
-                      <Typography.Muted className="text-[10px] text-muted-foreground/45 font-semibold">
-                        No Vacant Bays
-                      </Typography.Muted>
-                    </button>
-                  )}
-                </div>
-              </div>
             </div>
           )}
 

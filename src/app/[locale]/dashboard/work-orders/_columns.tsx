@@ -266,7 +266,7 @@ export function createColumns(
         if (val < 0 && lossReason) {
           return (
             <Tooltip>
-              <TooltipTrigger asChild>{displayVal}</TooltipTrigger>
+              <TooltipTrigger>{displayVal}</TooltipTrigger>
               <TooltipContent className="max-w-[240px] text-xs">
                 <span className="font-semibold text-destructive block mb-0.5">
                   Loss Reason:
@@ -306,7 +306,7 @@ export function createColumns(
         if (val < 0 && lossReason) {
           return (
             <Tooltip>
-              <TooltipTrigger asChild>{displayVal}</TooltipTrigger>
+              <TooltipTrigger>{displayVal}</TooltipTrigger>
               <TooltipContent className="max-w-[240px] text-xs">
                 <span className="font-semibold text-destructive block mb-0.5">
                   Loss Reason:

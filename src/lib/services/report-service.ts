@@ -843,8 +843,8 @@ export async function getEndOfDaySummary(
     .from("work_orders")
     .select("id, mechanic_id")
     .eq("organization_id", orgId)
-    .gte("created_at", `${date}T00:00:00`)
-    .lte("created_at", `${date}T23:59:59`)
+    .gte("completed_at", `${date}T00:00:00`)
+    .lte("completed_at", `${date}T23:59:59`)
     .eq("status", "Completed")
     .is("deleted_at", null);
 
@@ -855,30 +855,35 @@ export async function getEndOfDaySummary(
         .from("work_orders")
         .select("id", { count: "exact", head: true })
         .eq("organization_id", orgId)
-        .not("status", "in", '("Completed","Cancelled")')
+        .neq("status", "Completed")
+        .neq("status", "Cancelled")
         .is("deleted_at", null),
       supabase
         .from("invoices")
-        .select("total", { count: "exact", head: true })
+        .select("balance_due")
         .eq("organization_id", orgId)
-        .in("status", ["sent", "overdue", "draft"])
+        .in("status", ["sent", "overdue", "partial"])
         .is("deleted_at", null),
+      // Biggest issue: oldest open work order with customer name
       supabase
         .from("work_orders")
-        .select("id, description, created_at")
+        .select("id, description, created_at, customer_id, customers!inner(full_name)")
         .eq("organization_id", orgId)
-        .not("status", "in", '("Completed","Cancelled")')
+        .neq("status", "Completed")
+        .neq("status", "Cancelled")
         .is("deleted_at", null)
         .order("created_at", { ascending: true })
         .limit(1)
-        .single(),
+        .maybeSingle(),
     ]);
-    const daysOpen = biggestIssueEmpty.data?.created_at
+    const biEmptyData = biggestIssueEmpty.data;
+    const daysOpen = biEmptyData?.created_at
       ? Math.floor(
-          (Date.now() - new Date(biggestIssueEmpty.data.created_at).getTime()) /
+          (Date.now() - new Date(biEmptyData.created_at).getTime()) /
             (1000 * 60 * 60 * 24),
         )
       : 0;
+    const unpaidInvEmptyData = unpaidInvEmpty.data ?? [];
     return {
       date,
       mechanics: [],
@@ -888,17 +893,19 @@ export async function getEndOfDaySummary(
       open_work_orders: openWoEmpty.count ?? 0,
       payment_breakdown: { cash: 0, card: 0, bank_transfer: 0, other: 0 },
       unpaid_invoices: {
-        count: unpaidInvEmpty.count ?? 0,
-        total: 0,
+        count: unpaidInvEmptyData.length,
+        total: unpaidInvEmptyData.reduce(
+          (s: number, inv: any) => s + Number(inv.balance_due ?? 0),
+          0,
+        ),
       },
       best_mechanic: null,
       biggest_issue:
-        biggestIssueEmpty.data && !Array.isArray(biggestIssueEmpty.data)
+        biEmptyData && !Array.isArray(biEmptyData)
           ? {
-              description:
-                biggestIssueEmpty.data.description ?? "Open work order",
-              work_order_id: biggestIssueEmpty.data.id,
-              customer: "",
+              description: biEmptyData.description ?? "Open work order",
+              work_order_id: biEmptyData.id,
+              customer: (biEmptyData as any).customers?.full_name ?? "",
               days_open: daysOpen,
             }
           : null,
@@ -974,7 +981,8 @@ export async function getEndOfDaySummary(
       .from("work_orders")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgId)
-      .not("status", "in", '("Completed","Cancelled")')
+      .neq("status", "Completed")
+      .neq("status", "Cancelled")
       .is("deleted_at", null),
     // Payment method breakdown (payments on today's work orders)
     woIds.length > 0
@@ -983,23 +991,24 @@ export async function getEndOfDaySummary(
           .select("payment_method, amount")
           .in("work_order_id", woIds)
       : { data: [] as any[] },
-    // Unpaid invoices (need data to sum totals)
+    // Unpaid invoices (balance_due)
     supabase
       .from("invoices")
-      .select("total")
+      .select("balance_due")
       .eq("organization_id", orgId)
-      .in("status", ["sent", "overdue", "draft"])
+      .in("status", ["sent", "overdue", "partial"])
       .is("deleted_at", null),
-    // Biggest issue: oldest open work order
+    // Biggest issue: oldest open work order with customer name
     supabase
       .from("work_orders")
-      .select("id, description, created_at")
+      .select("id, description, created_at, customer_id, customers!inner(full_name)")
       .eq("organization_id", orgId)
-      .not("status", "in", '("Completed","Cancelled")')
+      .neq("status", "Completed")
+      .neq("status", "Cancelled")
       .is("deleted_at", null)
       .order("created_at", { ascending: true })
       .limit(1)
-      .single(),
+      .maybeSingle(),
   ]);
 
   const woDataMap = new Map<string, { services: any[]; parts: any[] }>();

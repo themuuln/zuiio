@@ -36,7 +36,7 @@ interface PlanData {
   key: string;
   monthlyPrice: string;
   annualPrice: string;
-  annualPerMonth: string;
+  annualPerMonth: string | null;
   features: PlanFeature[];
   ctaVariant: "default" | "outline";
   popular: boolean;
@@ -44,28 +44,33 @@ interface PlanData {
 
 const PLAN_DATA: PlanData[] = [
   {
-    key: "starter",
-    monthlyPrice: "₮299,000",
-    annualPrice: "₮2,990,000",
-    annualPerMonth: "₮249,000",
+    key: "enterprise",
+    monthlyPrice: "Custom",
+    annualPrice: "Custom",
+    annualPerMonth: "",
     features: [
-      { text: "1 branch", included: true },
-      { text: "3 users", included: true },
-      { text: "300 work orders / month", included: true },
-      { text: "1,000 customer records", included: true },
-      { text: "1 GB storage", included: true },
-      { text: "Tablet-first workflow", included: true },
-      { text: "Customer & vehicle CRM", included: true },
-      { text: "Work orders & service history", included: true },
-      { text: "Service catalog & pricing memory", included: true },
-      { text: "Mechanic daily / weekly / monthly reports", included: true },
-      { text: "Basic reports", included: true },
-      { text: "Email support", included: true },
-      { text: "Inventory management", included: false },
-      { text: "SMS reminders", included: false },
-      { text: "API access", included: false },
-      { text: "Multi-branch dashboard", included: false },
-      { text: "Advanced reports & BI", included: false },
+      { text: "For chains, dealerships & fleets", included: true },
+      { text: "Unlimited branches & users", included: true },
+      { text: "Custom integrations & API access", included: true },
+      { text: "Dedicated database & infra options", included: true },
+      { text: "Fleet management module", included: true },
+      { text: "Custom reporting & priority SLA", included: true },
+    ],
+    ctaVariant: "outline",
+    popular: false,
+  },
+  {
+    key: "business",
+    monthlyPrice: "₮1,590,000",
+    annualPrice: "₮15,900,000",
+    annualPerMonth: "₮1,325,000",
+    features: [
+      { text: "3 branches · 25 users · 5,000 WOs/mo", included: true },
+      { text: "Everything in Pro", included: true },
+      { text: "Multi-branch dashboard & inventory transfer", included: true },
+      { text: "API access & advanced BI", included: true },
+      { text: "Custom invoice templates", included: true },
+      { text: "Dedicated onboarding specialist", included: true },
     ],
     ctaVariant: "outline",
     popular: false,
@@ -76,50 +81,31 @@ const PLAN_DATA: PlanData[] = [
     annualPrice: "₮6,990,000",
     annualPerMonth: "₮583,000",
     features: [
-      { text: "1 branch", included: true },
-      { text: "10 users", included: true },
-      { text: "1,500 work orders / month", included: true },
-      { text: "10,000 customer records", included: true },
-      { text: "10 GB storage", included: true },
-      { text: "Tablet-first workflow", included: true },
-      { text: "Customer & vehicle CRM", included: true },
-      { text: "Work orders & service history", included: true },
-      { text: "Service catalog & pricing memory", included: true },
-      { text: "Mechanic daily / weekly / monthly reports", included: true },
-      { text: "Dashboard analytics", included: true },
-      { text: "Priority support", included: true },
-      { text: "Inventory management", included: true },
-      { text: "SMS reminders", included: true },
-      { text: "API access", included: false },
-      { text: "Multi-branch dashboard", included: false },
-      { text: "Advanced reports & BI", included: false },
+      { text: "1 branch · 10 users · 1,500 WOs/mo", included: true },
+      { text: "Tablet-first workflow & CRM", included: true },
+      { text: "Inventory management & stock control", included: true },
+      {
+        text: "Mechanic accountability & performance tracking",
+        included: true,
+      },
+      { text: "SMS reminders & customer retention", included: true },
+      { text: "Dashboard analytics & priority support", included: true },
     ],
     ctaVariant: "default",
     popular: true,
   },
   {
-    key: "business",
-    monthlyPrice: "₮1,590,000",
-    annualPrice: "₮15,900,000",
-    annualPerMonth: "₮1,325,000",
+    key: "starter",
+    monthlyPrice: "₮299,000",
+    annualPrice: "₮2,990,000",
+    annualPerMonth: "₮249,000",
     features: [
-      { text: "3 branches", included: true },
-      { text: "25 users", included: true },
-      { text: "5,000 work orders / month", included: true },
-      { text: "50,000 customer records", included: true },
-      { text: "50 GB storage", included: true },
+      { text: "1 branch · 3 users · 300 WOs/mo", included: true },
       { text: "Tablet-first workflow", included: true },
       { text: "Customer & vehicle CRM", included: true },
       { text: "Work orders & service history", included: true },
-      { text: "Service catalog & pricing memory", included: true },
-      { text: "Mechanic daily / weekly / monthly reports", included: true },
-      { text: "Dashboard analytics", included: true },
-      { text: "Priority support", included: true },
-      { text: "Inventory management", included: true },
-      { text: "SMS reminders", included: true },
-      { text: "API access", included: true },
-      { text: "Multi-branch dashboard", included: true },
-      { text: "Advanced reports & BI", included: true },
+      { text: "Mechanic reports & pricing memory", included: true },
+      { text: "Basic reports & email support", included: true },
     ],
     ctaVariant: "outline",
     popular: false,
@@ -205,7 +191,7 @@ function FeatureIcon({ status }: { status: FeatureStatus }) {
 export default function PricingPage() {
   const t = useTranslations("pricing");
   const appT = useTranslations("app");
-  const _authT = useTranslations("auth");
+
   const [annual, setAnnual] = useState(false);
 
   return (
@@ -244,15 +230,49 @@ export default function PricingPage() {
           </div>
         </section>
 
+        {/* ── ROI Section ──────────────────────────────── */}
+        <section className="border-b bg-gradient-to-r from-destructive/5 via-destructive/[3%] to-background px-4 py-10 sm:px-6">
+          <div className="mx-auto max-w-4xl">
+            <Typography.H2 className="mb-6 text-center text-xl font-semibold tracking-tight sm:text-2xl">
+              {t("roiTitle")}
+            </Typography.H2>
+            <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-5 sm:p-6">
+                <Typography.Muted className="text-xs font-semibold uppercase tracking-wider text-destructive">
+                  {t("roiBefore")}
+                </Typography.Muted>
+                <Typography.H3 className="mt-2 text-2xl font-bold text-destructive sm:text-3xl">
+                  ₮3M – ₮15M / month
+                </Typography.H3>
+                <Typography.Text className="mt-1 text-sm text-muted-foreground">
+                  Lost work orders · Inventory leakage · Unpaid invoices · Untracked mechanics
+                </Typography.Text>
+              </div>
+              <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-5 sm:p-6">
+                <Typography.Muted className="text-xs font-semibold uppercase tracking-wider text-emerald-600">
+                  {t("roiAfter")}
+                </Typography.Muted>
+                <Typography.H3 className="mt-2 text-2xl font-bold text-emerald-600 sm:text-3xl">
+                  ₮699,000 / month
+                </Typography.H3>
+                <Typography.Text className="mt-1 text-sm text-muted-foreground">
+                  Full visibility · Mechanic accountability · Inventory control · Repeat customers
+                </Typography.Text>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── Pricing Cards ───────────────────────────────────── */}
         <section className="px-4 py-12 sm:px-6 sm:py-16">
-          <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-3 lg:gap-8">
+          <div className="mx-auto grid max-w-7xl gap-4 sm:gap-6 lg:grid-cols-4">
             {PLAN_DATA.map((plan) => {
               const price = annual
                 ? `${plan.annualPrice}/жил`
                 : `${plan.monthlyPrice}/сар`;
-              const perUnit = annual ? `${plan.annualPerMonth}/сар` : null;
+              const perUnit = annual && plan.annualPerMonth ? `${plan.annualPerMonth}/сар` : null;
               const isStarter = plan.key === "starter";
+              const isEnterprise = plan.key === "enterprise";
 
               return (
                 <Card
@@ -262,7 +282,9 @@ export default function PricingPage() {
                     "relative flex flex-col",
                     plan.popular
                       ? "overflow-visible ring-2 ring-primary shadow-md"
-                      : "",
+                      : isEnterprise
+                        ? "border-dashed border-muted-foreground/30"
+                        : "",
                   )}
                 >
                   {plan.popular && (
@@ -318,49 +340,21 @@ export default function PricingPage() {
                     <Button
                       variant={plan.ctaVariant}
                       className="w-full"
-                      render={<Link href="/auth/signup" />}
+                      render={
+                        <Link
+                          href={isEnterprise ? "/contact" : "/auth/signup"}
+                        />
+                      }
                     >
-                      {t(isStarter ? "getStarted" : "startTrial")}
+                      {isEnterprise
+                        ? t("contactSales")
+                        : t(isStarter ? "getStarted" : "startTrial")}
                       <ArrowRight className="ml-1 size-4" />
                     </Button>
                   </CardFooter>
                 </Card>
               );
             })}
-          </div>
-        </section>
-
-        {/* ── Enterprise ──────────────────────────────────────── */}
-        <section className="border-t bg-muted/20 px-4 py-12 sm:px-6 sm:py-16">
-          <div className="mx-auto max-w-3xl text-center">
-            <Typography.H2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              {t("enterpriseTitle")}
-            </Typography.H2>
-            <Typography.Muted className="mt-3 text-muted-foreground">
-              {t("enterpriseDesc")}
-            </Typography.Muted>
-            <Typography.Muted className="mt-1 text-sm text-muted-foreground">
-              ₮3M – ₮10M+ / month · Setup: ₮50M – ₮150M+
-            </Typography.Muted>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:text-left">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div
-                  key={`skeleton-${i}`}
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <Check className="size-4 shrink-0 text-emerald-500" />
-                  <span>{t(`enterpriseFeature${i}`)}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8">
-              <Button size="lg" render={<Link href="/auth/signup" />}>
-                {t("enterpriseCta")}
-                <ArrowRight className="ml-2 size-4" />
-              </Button>
-            </div>
           </div>
         </section>
 
