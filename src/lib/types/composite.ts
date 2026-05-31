@@ -3,8 +3,11 @@
  * Used by detail queries and API responses.
  */
 import type {
+  Appointment,
   Customer,
   DiagnosisLabel,
+  Estimate,
+  EstimateItem,
   InventoryBalance,
   Invoice,
   InvoiceItem,
@@ -111,6 +114,38 @@ export interface CustomerWithVehicleCount extends Customer {
 export interface InvoiceWithItems extends Invoice {
   items: InvoiceItem[];
   payments: InvoicePayment[];
+}
+
+// ── Appointment Composites ───────────────────────────────────
+
+export interface AppointmentDetail extends Appointment {
+  customer: Customer | null;
+  vehicle: Vehicle | null;
+  estimate: {
+    id: string;
+    estimate_number: string;
+    status: string;
+    grand_total: number;
+  } | null;
+  mechanic: { id: string; full_name: string | null } | null;
+}
+
+// ── Estimate Composites ────────────────────────────────────────
+
+export interface EstimateDetail extends Estimate {
+  customer: Customer | null;
+  vehicle: Vehicle | null;
+  items: EstimateItem[];
+  converted_work_order: {
+    id: string;
+    status: string;
+    total: number;
+  } | null;
+  appointment: {
+    id: string;
+    title: string;
+    scheduled_at: string;
+  } | null;
 }
 
 // ── Inventory Composites ───────────────────────────────────────

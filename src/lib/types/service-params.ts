@@ -3,7 +3,7 @@
  */
 
 import type { WorkOrderDetail } from "./composite";
-import type { WorkOrderStatus } from "./core";
+import type { AppointmentStatus, EstimateStatus, WorkOrderStatus } from "./core";
 
 // ── Organization ───────────────────────────────────────────────
 
@@ -71,6 +71,80 @@ export interface SubscriptionStatus {
 
 export interface UpdateSubscriptionParams {
   planType: string;
+}
+
+// ── Appointments ──────────────────────────────────────────────
+
+export interface CreateAppointmentParams {
+  customer_id: string;
+  vehicle_id: string;
+  title: string;
+  scheduled_at: string;
+  branch_id?: string | null;
+  description?: string | null;
+  end_at?: string | null;
+  mechanic_id?: string | null;
+  notes?: string | null;
+  source_estimate_id?: string | null;
+}
+
+export interface UpdateAppointmentParams {
+  title?: string;
+  scheduled_at?: string;
+  end_at?: string | null;
+  description?: string | null;
+  notes?: string | null;
+  mechanic_id?: string | null;
+  status?: AppointmentStatus;
+}
+
+// ── Estimates ──────────────────────────────────────────────────
+
+export interface CreateEstimateParams {
+  customer_id: string;
+  vehicle_id: string;
+  branch_id?: string | null;
+  notes?: string | null;
+  terms?: string | null;
+  valid_until?: string | null;
+  discount_amount?: number;
+  discount_percentage?: number;
+  tax_total?: number;
+  appointment_id?: string | null;
+  items: Array<{
+    item_type: "service" | "part" | "custom";
+    source_service_id?: string | null;
+    source_part_id?: string | null;
+    description: string;
+    quantity?: number;
+    unit_price: number;
+    discount_amount?: number;
+    discount_percentage?: number;
+    sort_order?: number;
+    notes?: string | null;
+  }>;
+}
+
+export interface UpdateEstimateParams {
+  notes?: string | null;
+  terms?: string | null;
+  valid_until?: string;
+  status?: EstimateStatus;
+  discount_amount?: number;
+  discount_percentage?: number;
+  tax_total?: number;
+  items?: Array<{
+    item_type: "service" | "part" | "custom";
+    source_service_id?: string | null;
+    source_part_id?: string | null;
+    description: string;
+    quantity?: number;
+    unit_price: number;
+    discount_amount?: number;
+    discount_percentage?: number;
+    sort_order?: number;
+    notes?: string | null;
+  }>;
 }
 
 // ── Work Orders ────────────────────────────────────────────────

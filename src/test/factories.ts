@@ -129,6 +129,7 @@ export function createMockWorkOrder(
     created_by: null,
     updated_by: null,
     deleted_at: null,
+    source_estimate_id: null,
     services: [],
     parts: [],
     status_history: [],

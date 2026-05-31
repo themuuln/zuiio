@@ -55,6 +55,10 @@ export const cacheTags = {
   // Appointments
   appointments: (orgId: string) => `appointments:${orgId}`,
 
+  // Estimates
+  estimates: (orgId: string) => `estimates:${orgId}`,
+  estimate: (id: string) => `estimate:${id}`,
+
   // Service Reminders
   serviceSchedules: (orgId: string) => `service-schedules:${orgId}`,
   serviceSchedule: (id: string) => `service-schedule:${id}`,
@@ -71,6 +75,9 @@ export const cacheTags = {
   // Parts Cars / Disassembly
   partsCars: (orgId: string) => `parts-cars:${orgId}`,
   partsCarParts: (carId: string) => `parts-car-parts:${carId}`,
+
+  // Mechanic Devices
+  mechanicDevices: (orgId: string) => `mechanic-devices:${orgId}`,
 
   // Time Tracking
   timeTracking: (orgId: string, mechanicId: string) =>

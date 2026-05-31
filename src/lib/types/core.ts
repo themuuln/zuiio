@@ -20,6 +20,23 @@ export type WorkOrderStatus =
   | "Ready for Pickup"
   | "Completed"
   | "Cancelled";
+export type Appointment = Tables<"appointments">;
+export type AppointmentStatus =
+  | "scheduled"
+  | "checked_in"
+  | "in_progress"
+  | "completed"
+  | "cancelled"
+  | "no_show";
+export type Estimate = Tables<"estimates">;
+export type EstimateItem = Tables<"estimate_items">;
+export type EstimateStatus =
+  | "draft"
+  | "sent"
+  | "approved"
+  | "declined"
+  | "expired"
+  | "converted";
 export type DiagnosisLabel = Tables<"diagnosis_labels">;
 export type InventoryMovementType = Enums<"inventory_movement_type">;
 export type InventoryBalance = Tables<"inventory_balances">;
