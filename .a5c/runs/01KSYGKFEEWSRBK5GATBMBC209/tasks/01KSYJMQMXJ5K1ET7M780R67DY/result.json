@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSYJMQMXJ5K1ET7M780R67DY",
+  "taskId": "execute-phase",
+  "invocationKey": "rbac-system:S000005:execute-phase",
+  "status": "ok",
+  "result": {
+    "buildPassing": true,
+    "changes": [
+      "src/app/[locale]/dashboard/organization/roles/page.tsx - new roles management page with role cards, member counts, descriptions",
+      "src/app/api/organizations/[id]/roles/route.ts - extended select to return description, is_system",
+      "src/app/[locale]/dashboard/organization/page.tsx - added View Roles button to members card"
+    ],
+    "status": "completed"
+  },
+  "startedAt": "2026-05-31T08:34:32.930Z",
+  "finishedAt": "2026-05-31T08:34:32.930Z",
+  "value": {
+    "buildPassing": true,
+    "changes": [
+      "src/app/[locale]/dashboard/organization/roles/page.tsx - new roles management page with role cards, member counts, descriptions",
+      "src/app/api/organizations/[id]/roles/route.ts - extended select to return description, is_system",
+      "src/app/[locale]/dashboard/organization/page.tsx - added View Roles button to members card"
+    ],
+    "status": "completed"
+  }
+}

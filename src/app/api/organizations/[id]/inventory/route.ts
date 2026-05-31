@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { requirePermission } from "@/lib/supabase/role-guard";
 
 /**
  * Backward-compat redirect for old `?type=` inventory API.
@@ -16,6 +17,13 @@ import { createRouteHandler } from "@/lib/api-handler";
  * This file can be removed once all consumers migrate off ?type=.
  */
 const inventoryRedirect = createRouteHandler(async ({ request, orgId }) => {
+  // Permission check: GET needs read, mutations need update
+  await requirePermission(
+    "inventory",
+    request.method === "GET" ? "read" : "update",
+    orgId,
+  );
+
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type") ?? "parts";
   const method = request.method;

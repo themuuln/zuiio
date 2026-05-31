@@ -4,7 +4,7 @@ import { createRouteHandler } from "@/lib/api-handler";
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   const { data: roles, error } = await supabase
     .from("roles")
-    .select("id, name")
+    .select("id, name, description, is_system")
     .eq("organization_id", orgId)
     .is("deleted_at", null);
 

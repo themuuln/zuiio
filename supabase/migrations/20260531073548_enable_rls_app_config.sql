@@ -22,28 +22,28 @@ drop policy if exists "Super admins can delete app_config" on public.app_config;
 create policy "Super admins can read app_config"
   on public.app_config for select
   using (
-    auth.uid() in (select user_id from public.super_admins)
+    (select auth.uid()) in (select user_id from public.super_admins)
   );
 
 -- Super admins can insert app_config rows
 create policy "Super admins can insert app_config"
   on public.app_config for insert
   with check (
-    auth.uid() in (select user_id from public.super_admins)
+    (select auth.uid()) in (select user_id from public.super_admins)
   );
 
 -- Super admins can update app_config rows
 create policy "Super admins can update app_config"
   on public.app_config for update
   using (
-    auth.uid() in (select user_id from public.super_admins)
+    (select auth.uid()) in (select user_id from public.super_admins)
   );
 
 -- Super admins can delete app_config rows
 create policy "Super admins can delete app_config"
   on public.app_config for delete
   using (
-    auth.uid() in (select user_id from public.super_admins)
+    (select auth.uid()) in (select user_id from public.super_admins)
   );
 
 -- Note: Edge functions use the service_role key which bypasses all RLS policies.

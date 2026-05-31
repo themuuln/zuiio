@@ -228,14 +228,14 @@ export async function removeUser(userId: string, orgId: string): Promise<void> {
     .from("organization_users")
     .select("user_id, roles!inner(name)")
     .eq("organization_id", orgId)
-    .eq("roles.name", "Admin");
+    .eq("roles.name", "Org Owner");
 
   const adminCount = allAdmins?.length ?? 0;
   const isTargetAdmin = allAdmins?.some((a) => a.user_id === userId);
 
   if (isTargetAdmin && adminCount <= 1) {
     throw new ForbiddenError(
-      "Cannot remove the last admin of the organization",
+      "Cannot remove the last owner of the organization",
     );
   }
 

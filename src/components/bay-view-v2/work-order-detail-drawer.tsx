@@ -1014,6 +1014,18 @@ export function WorkOrderDetailDrawer({
     onOpenChange(nextOpen);
   }
 
+  function handleSaveAndClose() {
+    // Save pending part, then close
+    if (showAddPart && newPartName.trim()) {
+      addPartLine();
+    }
+    setShowAddPart(false);
+    setShowAddService(false);
+    setNewPartName("");
+    setShowUnsavedWarning(false);
+    onOpenChange(false);
+  }
+
   function handleDiscard() {
     setShowAddPart(false);
     setShowAddService(false);
@@ -1210,6 +1222,7 @@ export function WorkOrderDetailDrawer({
           show={showUnsavedWarning}
           onDiscard={handleDiscard}
           onKeepEditing={() => setShowUnsavedWarning(false)}
+          onSaveAndClose={handleSaveAndClose}
         />
 
         <DrawerCelebration show={showCelebration} message="Completed!" />

@@ -8,6 +8,7 @@ import {
   Palette,
   Pencil,
   Save,
+  Shield,
   Users,
   X,
 } from "lucide-react";
@@ -17,6 +18,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -204,6 +206,21 @@ export default function OrganizationPage() {
                   {formatDate(subscription.expiresAt)}
                 </Typography.Text>
               </div>
+            )}
+            {subscription.planType !== "enterprise" && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-1 w-full h-8 text-xs"
+                render={<Link href="/pricing" />}
+              >
+                Upgrade Plan
+              </Button>
+            )}
+            {subscription.planType === "enterprise" && (
+              <Badge variant="secondary" className="mt-1 w-fit text-[10px]">
+                Current Plan
+              </Badge>
             )}
           </>
         ) : (
@@ -441,14 +458,20 @@ export default function OrganizationPage() {
                       )}
                     </Typography.Text>
                   </div>
-                  {subscription.planType !== "enterprise" && (
+                  {subscription.planType !== "enterprise" ? (
                     <Button
                       variant="default"
                       size="sm"
-                      render={<Link href="/pricing" />}
+                      render={
+                        <Link href={`/pricing?plan=${subscription.planType}`} />
+                      }
                     >
-                      Upgrade
+                      {t("subscription.upgradePlan")}
                     </Button>
+                  ) : (
+                    <Badge variant="secondary">
+                      {t("subscription.currentPlan")}
+                    </Badge>
                   )}
                 </div>
                 <div>
@@ -506,6 +529,14 @@ export default function OrganizationPage() {
             >
               <Users className="mr-2 size-4" />
               Manage Members
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full"
+              render={<Link href="/dashboard/organization/roles" />}
+            >
+              <Shield className="mr-2 size-4" />
+              View Roles
             </Button>
           </CardContent>
         </Card>

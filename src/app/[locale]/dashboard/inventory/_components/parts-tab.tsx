@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ClipboardList,
+  Eye,
+  Gauge,
   Package,
   Pencil,
   Plus,
@@ -19,6 +21,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -40,6 +49,7 @@ import {
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
 import type { CreatePartParams, PartsCatalogItem } from "@/lib/types";
+import { Link } from "@/lib/i18n/navigation";
 import { formatMNT } from "@/lib/utils";
 import type { SortKey } from "./constants";
 import { Modal } from "./modal";
@@ -96,6 +106,8 @@ export function PartsTab({
   const [editingPart, setEditingPart] = useState<PartsCatalogItem | null>(null);
   const [editingThreshold, setEditingThreshold] = useState<string | null>(null);
   const [thresholdValue, setThresholdValue] = useState("");
+  const [showDefaultThreshold, setShowDefaultThreshold] = useState(false);
+  const [defaultThresholdValue, setDefaultThresholdValue] = useState("5");
 
   // Local sorting
   const [sortKey, setSortKey] = useState<SortKey>("popularity");
@@ -264,6 +276,10 @@ export function PartsTab({
     return sorted;
   }, [globalParts, search, globalSortKey, globalSortDir, locale]);
 
+  const partsWithoutThresholdCount = useMemo(() => {
+    return sortedParts.filter((p) => !thresholdMap[p.id]).length;
+  }, [sortedParts, thresholdMap]);
+
   const partExportColumns: ExportColumn<
     PartRow & { quantity_on_hand?: number; stock_status?: string }
   >[] = useMemo(
@@ -320,6 +336,11 @@ export function PartsTab({
             {partsView === "inventory"
               ? `${sortedParts.length} parts`
               : `${sortedGlobalParts.length} parts in global catalog`}
+            {partsView === "inventory" && partsWithoutThresholdCount > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {t("partsNoThreshold", { count: partsWithoutThresholdCount })}
+              </Badge>
+            )}
           </span>
         }
         actions={
@@ -359,6 +380,14 @@ export function PartsTab({
               >
                 <Plus className="size-4" />
                 Add Part
+              </Button>
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => setShowDefaultThreshold(true)}
+              >
+                <Gauge className="size-4" />
+                {t("setDefaultThreshold")}
               </Button>
             </div>
           ) : null
@@ -473,9 +502,14 @@ export function PartsTab({
                         className="border-b border-border transition-colors hover:bg-muted/30"
                       >
                         <TableCell className="px-4 py-3 font-medium">
-                          {locale === "mn" && part.name_mn
-                            ? part.name_mn
-                            : part.name}
+                          <Link
+                            href={`/dashboard/inventory/parts/${part.id}`}
+                            className="hover:underline text-foreground"
+                          >
+                            {locale === "mn" && part.name_mn
+                              ? part.name_mn
+                              : part.name}
+                          </Link>
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           {part.popularity_score != null && (
@@ -498,10 +532,10 @@ export function PartsTab({
                         <TableCell
                           className={`px-4 py-3 text-right font-semibold tabular-nums ${
                             status === "out"
-                              ? "text-red-600"
+                              ? "text-destructive"
                               : status === "low"
                                 ? "text-amber-600"
-                                : "text-green-600"
+                                : ""
                           }`}
                         >
                           {qty} {part.unit}
@@ -563,14 +597,28 @@ export function PartsTab({
                           {part.part_number ?? "—"}
                         </TableCell>
                         <TableCell className="px-1 py-3">
-                          <Button
-                            variant="ghost"
-                            size="xs"
-                            onClick={() => setEditingPart(part)}
-                            title="Edit"
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="xs"
+                              render={
+                                <Link
+                                  href={`/dashboard/inventory/parts/${part.id}`}
+                                />
+                              }
+                              title="View"
+                            >
+                              <Eye className="size-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="xs"
+                              onClick={() => setEditingPart(part)}
+                              title="Edit"
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -684,10 +732,7 @@ export function PartsTab({
                         <TableCell className="px-4 py-3">
                           {localPart ? (
                             <div className="flex flex-col gap-1 items-start">
-                              <Badge
-                                variant="outline"
-                                className="bg-green-50 text-green-700 border-green-200"
-                              >
+                              <Badge variant="secondary">
                                 {t("inInventory")}
                               </Badge>
                               <span className="text-xs text-muted-foreground truncate max-w-[150px]">
@@ -792,6 +837,90 @@ export function PartsTab({
             onCancel={() => setEditingPart(null)}
           />
         </Modal>
+      )}
+
+      {/* Set Default Threshold Dialog */}
+      {showDefaultThreshold && (
+        <Dialog
+          open={showDefaultThreshold}
+          onOpenChange={setShowDefaultThreshold}
+        >
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>{t("setDefaultThreshold")}</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              {t("defaultThresholdDescription")}
+            </p>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">
+                {t("defaultThreshold")}
+              </label>
+              <Input
+                type="number"
+                min={0}
+                value={defaultThresholdValue}
+                onChange={(e) => setDefaultThresholdValue(e.target.value)}
+                className="h-10 w-24"
+                autoFocus
+              />
+            </div>
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowDefaultThreshold(false)}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                onClick={() => {
+                  const val = Number(defaultThresholdValue);
+                  if (val < 0) return;
+                  const partsNoThreshold = sortedParts.filter(
+                    (p) => !thresholdMap[p.id],
+                  );
+                  if (partsNoThreshold.length === 0) {
+                    toast.success("All parts already have thresholds");
+                    setShowDefaultThreshold(false);
+                    return;
+                  }
+                  Promise.all(
+                    partsNoThreshold.map((p) =>
+                      fetch(
+                        `/api/organizations/${orgId}/inventory/thresholds`,
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            part_id: p.id,
+                            minimum_quantity: val,
+                          }),
+                        },
+                      ).then((r) => r.json()),
+                    ),
+                  )
+                    .then((results) => {
+                      const error = results.find((r) => r.error);
+                      if (error) throw new Error(error.error.message);
+                      qc.invalidateQueries({
+                        queryKey: inventoryKeys.thresholds(orgId),
+                      });
+                      toast.success(
+                        `${t("thresholdSet", { count: partsNoThreshold.length })}`,
+                      );
+                      setShowDefaultThreshold(false);
+                    })
+                    .catch((err: Error) => toast.error(err.message));
+                }}
+                disabled={Number(defaultThresholdValue) < 0}
+              >
+                {t("confirm")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

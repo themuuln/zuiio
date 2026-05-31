@@ -1,0 +1,13 @@
+{
+  "type": "EFFECT_RESOLVED",
+  "recordedAt": "2026-05-31T07:53:57.783Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYE9S2FABGB97KF2EBF6DQX",
+    "status": "ok",
+    "resultRef": "tasks/01KSYE9S2FABGB97KF2EBF6DQX/result.json",
+    "startedAt": "2026-05-31T07:53:57.741Z",
+    "finishedAt": "2026-05-31T07:53:57.741Z"
+  },
+  "checksum": "df06c60c7f5e82bacb56ef38b2bf498066c86e822cc1a4769096bb94468c1505"
+}

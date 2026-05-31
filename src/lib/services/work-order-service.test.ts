@@ -335,24 +335,77 @@ describe("updateWorkOrderStatus", () => {
     expect(result.status).toBe("In Progress");
   });
 
-  it('when status is "Completed" — updates completed_at, calls syncWorkOrderToSchedules', async () => {
-    mockClient.from("work_orders").single.mockResolvedValueOnce({
-      data: {
-        id: "wo-1",
-        organization_id: "org-1",
-        status: "Completed",
-      },
-      error: null,
-    });
+  it('when status is "Completed" — updates completed_at, calls syncWorkOrderToSchedules, creates inventory movements', async () => {
+    // Mock completed_at update
+    mockClient
+      .from("work_orders")
+      .select()
+      .single.mockResolvedValueOnce({
+        data: {
+          id: "wo-1",
+          organization_id: "org-1",
+          status: "Completed",
+        },
+        error: null,
+      });
+
+    // Mock work_order_parts query — one part with catalog link, one without
+    mockClient.from("work_order_parts").not.mockReturnValueOnce(
+      Promise.resolve({
+        data: [
+          { part_id: "part-1", quantity: 2, unit_price: 15 },
+          { part_id: "part-2", quantity: 1, unit_price: 50 },
+        ],
+        error: null,
+      }),
+    );
 
     await updateWorkOrderStatus("wo-1", "org-1", "Completed");
 
+    // Completed_at updated
     expect(mockClient.from("work_orders").update).toHaveBeenCalledWith(
       expect.objectContaining({
         completed_at: expect.any(String),
       }),
     );
     expect(syncWorkOrderToSchedules).toHaveBeenCalledWith("wo-1");
+
+    // Inventory movements created
+    expect(mockClient.from).toHaveBeenCalledWith("inventory_movements");
+    expect(mockClient.from("inventory_movements").insert).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          organization_id: "org-1",
+          part_id: "part-1",
+          movement_type: "sale",
+          quantity: 2,
+          unit_price: 15,
+          reference_type: "work_order",
+          reference_id: "wo-1",
+          created_by: "test-user-id",
+        }),
+        expect.objectContaining({
+          organization_id: "org-1",
+          part_id: "part-2",
+          movement_type: "sale",
+          quantity: 1,
+          unit_price: 50,
+          reference_type: "work_order",
+          reference_id: "wo-1",
+          created_by: "test-user-id",
+        }),
+      ]),
+    );
+
+    // Inventory cache tags revalidated
+    expect(revalidateTag).toHaveBeenCalledWith(
+      "inventory-movements:org-1",
+      "max",
+    );
+    expect(revalidateTag).toHaveBeenCalledWith(
+      "inventory-balances:org-1",
+      "max",
+    );
   });
 
   it("throws NotFoundError when work order not found", async () => {
@@ -667,43 +720,6 @@ describe("addPartToWorkOrder", () => {
         organization_id: "org-1",
         part_name: "Oil Filter",
         work_order_id: "wo-1",
-      }),
-    );
-  });
-
-  it("with part_data.part_id — creates inventory_movement with sale", async () => {
-    // Use mockResolvedValue (not Once) so that any number of .single() calls
-    // through the shared builder will resolve correctly.
-    mockClient.from("work_orders").single.mockResolvedValue({
-      data: {
-        id: "wp-1",
-        work_order_id: "wo-1",
-        part_name: "Oil Filter",
-        quantity: 2,
-        unit_price: 15,
-        final_price: 30,
-      },
-      error: null,
-    });
-
-    await addPartToWorkOrder("wo-1", "org-1", {
-      part_id: "part-1",
-      part_name: "Oil Filter",
-      unit_price: 15,
-      quantity: 2,
-    });
-
-    expect(mockClient.from).toHaveBeenCalledWith("inventory_movements");
-    expect(mockClient.from("inventory_movements").insert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        organization_id: "org-1",
-        part_id: "part-1",
-        movement_type: "sale",
-        quantity: 2,
-        unit_price: 15,
-        reference_type: "work_order",
-        reference_id: "wo-1",
-        created_by: "test-user-id",
       }),
     );
   });

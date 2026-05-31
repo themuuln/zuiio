@@ -1,0 +1,151 @@
+"use client";
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, Check, Pencil } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { inventoryKeys } from "@/lib/queries/keys";
+
+interface ThresholdCardProps {
+  orgId: string;
+  partId: string;
+  currentMinimum: number;
+  onHand: number;
+  isLoading: boolean;
+}
+
+export function ThresholdCard({
+  orgId,
+  partId,
+  currentMinimum,
+  onHand,
+  isLoading,
+}: ThresholdCardProps) {
+  const t = useTranslations("inventory");
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(String(currentMinimum));
+
+  const saveThreshold = useMutation({
+    mutationFn: async (minimumQuantity: number) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/thresholds`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            part_id: partId,
+            minimum_quantity: minimumQuantity,
+          }),
+        },
+      );
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: inventoryKeys.thresholds(orgId) });
+      toast.success("Threshold saved");
+      setEditing(false);
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const isLow = onHand < currentMinimum && onHand > 0;
+  const isOut = onHand <= 0;
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base font-semibold">
+          {t("stockThreshold")}
+        </CardTitle>
+        {!editing && (
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={() => {
+              setValue(String(currentMinimum));
+              setEditing(true);
+            }}
+          >
+            <Pencil className="size-3.5" />
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+        {isLoading ? (
+          <Skeleton className="h-10 w-full" />
+        ) : editing ? (
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className="h-10 w-24 text-center"
+              min={0}
+              autoFocus
+            />
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => saveThreshold.mutate(Number(value) || 0)}
+              disabled={saveThreshold.isPending}
+            >
+              <Check className="size-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-semibold tabular-nums">
+                {currentMinimum}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                units minimum
+              </span>
+              {(isLow || isOut) && (
+                <Badge
+                  variant="outline"
+                  className={
+                    isOut
+                      ? "bg-red-50 text-red-700 border-red-200"
+                      : "bg-amber-50 text-amber-700 border-amber-200"
+                  }
+                >
+                  <AlertTriangle className="size-3 mr-1" />
+                  {isOut ? t("outOfStock") : t("lowStock")}
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    isOut
+                      ? "bg-red-500"
+                      : isLow
+                        ? "bg-amber-500"
+                        : "bg-green-500"
+                  }`}
+                  style={{
+                    width: `${Math.min(100, (onHand / Math.max(currentMinimum, 1)) * 100)}%`,
+                  }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+                {onHand} / {currentMinimum}
+              </span>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

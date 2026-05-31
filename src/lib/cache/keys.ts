@@ -27,6 +27,9 @@ export const cacheTags = {
   stockThresholds: (orgId: string) => `stock-thresholds:${orgId}`,
   suppliers: (orgId: string) => `suppliers:${orgId}`,
 
+  // Pricing Rules
+  priceRules: (orgId: string) => `price-rules:${orgId}`,
+
   // Invoices
   invoices: (orgId: string) => `invoices:${orgId}`,
   invoice: (id: string) => `invoice:${id}`,

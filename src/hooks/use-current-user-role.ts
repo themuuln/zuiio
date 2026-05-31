@@ -10,7 +10,7 @@ interface UserProfile {
   branchId: string | null;
 }
 
-type RoleName = "Admin" | "Mechanic" | null;
+type RoleName = "Org Owner" | "Manager" | "Mechanic" | "Guest" | null;
 
 const profileKeys = {
   current: () => ["profile", "current"] as const,
@@ -36,7 +36,10 @@ export function useCurrentUserRole() {
   });
 
   const role: RoleName =
-    profile?.roleName === "Admin" || profile?.roleName === "Mechanic"
+    profile?.roleName === "Org Owner" ||
+    profile?.roleName === "Manager" ||
+    profile?.roleName === "Mechanic" ||
+    profile?.roleName === "Guest"
       ? profile.roleName
       : null;
 
@@ -44,7 +47,10 @@ export function useCurrentUserRole() {
     profile,
     role,
     loading,
-    isAdmin: role === "Admin",
+    isOrgOwner: role === "Org Owner",
+    isAdmin: role === "Org Owner",
+    isManager: role === "Manager",
     isMechanic: role === "Mechanic",
+    isGuest: role === "Guest",
   };
 }

@@ -8,6 +8,15 @@ function normalizePathname(pathname: string): string {
   return pathname.replace(/^\/(mn|en)(?=\/|$)/, "") || "/";
 }
 
+/** Role level required for a route */
+export type RequiredRoleLevel =
+  | "super_admin"
+  | "owner"
+  | "manager"
+  | "mechanic"
+  | "guest"
+  | "public";
+
 export interface RouteMatch {
   isAuthRoute: boolean;
   isInvoiceRoute: boolean;
@@ -16,29 +25,63 @@ export interface RouteMatch {
   isPricingRoute: boolean;
   isPublicRoute: boolean;
   isLoginRoute: boolean;
+  isOwnerRoute: boolean;
+  isManagerRoute: boolean;
+  isMechanicRoute: boolean;
+  isAdminRoute: boolean;
+  requiredRoleLevel: RequiredRoleLevel;
 }
 
 /** Classify a pathname into route categories for auth middleware. */
 export function matchRoutes(pathname: string): RouteMatch {
   const p = normalizePathname(pathname);
 
+  const isAuthRoute = p.includes("/auth/");
+  const isInvoiceRoute = p.startsWith("/invoice/");
+  const isPortalRoute = p.startsWith("/portal");
+  const isInviteRoute = p.startsWith("/invite/");
+  const isPricingRoute = p.startsWith("/pricing");
+  const isPublicRoute =
+    p === "/" ||
+    p.startsWith("/features") ||
+    p.startsWith("/products") ||
+    p.startsWith("/about") ||
+    p.startsWith("/contact") ||
+    p.startsWith("/faq") ||
+    p.startsWith("/blog") ||
+    p.startsWith("/status") ||
+    p.startsWith("/integrations") ||
+    p.startsWith("/services");
+  const isLoginRoute = p.includes("/auth/login");
+  const isAdminRoute =
+    p.startsWith("/dashboard/admin") || p.startsWith("/super-admin");
+  const isOwnerRoute = p.startsWith("/dashboard/organization");
+  // Manager+ and Mechanic+ role levels are reserved for future use
+  const isManagerRoute = false;
+  const isMechanicRoute = false;
+
+  // Determine the required role level
+  let requiredRoleLevel: RequiredRoleLevel = "public";
+  if (isAdminRoute) {
+    requiredRoleLevel = "super_admin";
+  } else if (isOwnerRoute) {
+    requiredRoleLevel = "owner";
+  } else if (isPortalRoute) {
+    requiredRoleLevel = "guest";
+  }
+
   return {
-    isAuthRoute: p.includes("/auth/"),
-    isInvoiceRoute: p.startsWith("/invoice/"),
-    isPortalRoute: p.startsWith("/portal"),
-    isInviteRoute: p.startsWith("/invite/"),
-    isPricingRoute: p.startsWith("/pricing"),
-    isPublicRoute:
-      p === "/" ||
-      p.startsWith("/features") ||
-      p.startsWith("/products") ||
-      p.startsWith("/about") ||
-      p.startsWith("/contact") ||
-      p.startsWith("/faq") ||
-      p.startsWith("/blog") ||
-      p.startsWith("/status") ||
-      p.startsWith("/integrations") ||
-      p.startsWith("/services"),
-    isLoginRoute: p.includes("/auth/login"),
+    isAuthRoute,
+    isInvoiceRoute,
+    isPortalRoute,
+    isInviteRoute,
+    isPricingRoute,
+    isPublicRoute,
+    isLoginRoute,
+    isOwnerRoute,
+    isManagerRoute,
+    isMechanicRoute,
+    isAdminRoute,
+    requiredRoleLevel,
   };
 }

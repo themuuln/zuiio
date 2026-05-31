@@ -3,8 +3,7 @@ import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { NotFoundError } from "@/lib/errors";
 
-const TELEGRAM_BOT_USERNAME =
-  process.env.TELEGRAM_BOT_USERNAME ?? "tolomerpbot";
+const TELEGRAM_BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME ?? "tolom_bot";
 
 export const POST = createSimpleRouteHandler(async ({ user, supabase }) => {
   // Get user's organization

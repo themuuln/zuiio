@@ -18,26 +18,32 @@ export const MOVEMENT_LABELS: Record<string, string> = {
   transfer_out: "Transfer Out",
   return: "Return",
   waste: "Damage",
+  disassembly: "Disassembly",
 };
 
 export const MOVEMENT_COLORS: Record<string, string> = {
-  purchase: "text-green-600 bg-green-50",
-  sale: "text-red-600 bg-red-50",
-  adjustment: "text-blue-600 bg-blue-50",
-  transfer_in: "text-purple-600 bg-purple-50",
-  transfer_out: "text-purple-600 bg-purple-50",
-  return: "text-amber-600 bg-amber-50",
-  waste: "text-gray-600 bg-gray-50",
+  purchase:
+    "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30",
+  sale: "text-destructive bg-destructive/10",
+  adjustment: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30",
+  transfer_in:
+    "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30",
+  transfer_out:
+    "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30",
+  return: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30",
+  waste: "text-muted-foreground bg-muted/50",
 };
 
 // ── PO Status labels ─────────────────────────────────────────
 
 export const PO_STATUS_COLORS: Record<string, string> = {
-  draft: "bg-gray-100 text-gray-700",
-  ordered: "bg-blue-100 text-blue-700",
-  partial: "bg-amber-100 text-amber-700",
-  received: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
+  draft: "bg-muted text-muted-foreground",
+  ordered: "bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400",
+  partial:
+    "bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400",
+  received:
+    "bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400",
+  cancelled: "bg-destructive/10 text-destructive",
 };
 
 export const PO_STATUS_LABELS: Record<string, string> = {
@@ -52,11 +58,14 @@ export const PO_STATUS_LABELS: Record<string, string> = {
 
 export const MOVEMENT_FILTERS = [
   { key: "all", label: "All" },
-  { key: "sale", label: "Sale" },
   { key: "purchase", label: "Purchase" },
+  { key: "sale", label: "Sale" },
   { key: "adjustment", label: "Adjustment" },
-  { key: "transfer", label: "Transfer" },
-  { key: "damage", label: "Damage" },
+  { key: "transfer_in", label: "Transfer In" },
+  { key: "transfer_out", label: "Transfer Out" },
+  { key: "return", label: "Return" },
+  { key: "waste", label: "Damage" },
+  { key: "disassembly", label: "Disassembly" },
 ] as const;
 
 // ── Tab config ───────────────────────────────────────────────

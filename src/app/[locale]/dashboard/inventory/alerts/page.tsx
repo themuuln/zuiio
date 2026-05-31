@@ -131,7 +131,7 @@ export default function AlertsPage() {
                   key={a.part_id}
                   className="flex items-center gap-4 p-4 min-h-[64px]"
                 >
-                  <AlertTriangle className="size-5 text-red-500 shrink-0" />
+                  <AlertTriangle className="size-5 text-destructive shrink-0" />
                   <div className="flex-1 min-w-0">
                     <Typography.Text className="font-medium text-sm truncate">
                       {a.part_name}
@@ -143,7 +143,7 @@ export default function AlertsPage() {
                   <span className="text-sm tabular-nums">
                     {a.quantity_on_hand} / {a.min} {a.unit}
                   </span>
-                  <span className="text-sm font-semibold text-red-600 tabular-nums shrink-0">
+                  <span className="text-sm font-semibold text-destructive tabular-nums shrink-0">
                     -{a.shortage}
                   </span>
                   <Link

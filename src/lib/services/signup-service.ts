@@ -199,7 +199,7 @@ async function bootstrapOrganization(
     .from("roles")
     .insert({
       organization_id: org.id,
-      name: "Admin",
+      name: "Org Owner",
       is_system: true,
       created_by: userId,
       updated_by: userId,
@@ -208,7 +208,9 @@ async function bootstrapOrganization(
     .single();
 
   if (adminRoleError || !adminRole) {
-    throw new Error(adminRoleError?.message ?? "Failed to create Admin role");
+    throw new Error(
+      adminRoleError?.message ?? "Failed to create Org Owner role",
+    );
   }
 
   const { error: mechanicRoleError } = await adminClient.from("roles").insert({
@@ -224,6 +226,22 @@ async function bootstrapOrganization(
       mechanicRoleError?.message ?? "Failed to create Mechanic role",
     );
   }
+
+  await adminClient.from("roles").insert({
+    organization_id: org.id,
+    name: "Manager",
+    is_system: true,
+    created_by: userId,
+    updated_by: userId,
+  });
+
+  await adminClient.from("roles").insert({
+    organization_id: org.id,
+    name: "Guest",
+    is_system: true,
+    created_by: userId,
+    updated_by: userId,
+  });
 
   const { data: branch, error: branchError } = await adminClient
     .from("branches")

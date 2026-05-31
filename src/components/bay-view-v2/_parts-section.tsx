@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Package, Plus, Trash2 } from "lucide-react";
+import { Loader2, Package, Plus, Trash2, TriangleAlert } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -124,8 +124,9 @@ export function PartsSection({
                       {t("perUnit")}
                     </Typography.Muted>
                     {lowInfo && (
-                      <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0 text-[10px] font-medium text-amber-700 dark:text-amber-400">
-                        Only {lowInfo.quantity} in stock
+                      <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                        <TriangleAlert className="size-3 shrink-0" />
+                        Low stock: {lowInfo.quantity} remaining
                       </span>
                     )}
                   </div>
@@ -255,8 +256,9 @@ export function PartsSection({
                           </span>
                         )}
                         {lowInfo && (
-                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                            Only {lowInfo.quantity} in stock
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                            <TriangleAlert className="size-3 shrink-0" />
+                            Low stock: {lowInfo.quantity} remaining
                           </span>
                         )}
                       </div>

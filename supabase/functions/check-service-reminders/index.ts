@@ -269,6 +269,17 @@ Deno.serve({ timeout: 300000 }, async () => {
             chat_id: tgData.chatId,
             text: message,
             parse_mode: "Markdown",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "📊 Миний үйлчилгээ",
+                    callback_data: "customer_status",
+                  },
+                  { text: "🛑 Зогсоох", callback_data: "unlink_customer" },
+                ],
+              ],
+            },
           }),
         });
 

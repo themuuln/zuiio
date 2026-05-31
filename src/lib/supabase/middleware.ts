@@ -58,5 +58,44 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Role-based access control for owner-only and admin routes
+  if (user && (routes.isOwnerRoute || routes.isAdminRoute)) {
+    const { data: membership } = await supabase
+      .from("organization_users")
+      .select("role_id, roles!inner(name)")
+      .eq("user_id", user.sub)
+      .eq("is_primary", true)
+      .maybeSingle();
+
+    const rawRoles = membership?.roles;
+    const roleName =
+      rawRoles === null || rawRoles === undefined
+        ? null
+        : Array.isArray(rawRoles)
+          ? (rawRoles[0]?.name ?? null)
+          : ((rawRoles as unknown as { name: string }).name ?? null);
+
+    // Owner-only routes — redirect non-owners to dashboard
+    if (routes.isOwnerRoute && roleName !== "Org Owner") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+
+    // Super admin routes — check super_admins table
+    if (routes.isAdminRoute) {
+      const { data: superAdmin } = await supabase
+        .from("super_admins")
+        .select("user_id")
+        .eq("user_id", user.sub)
+        .maybeSingle();
+      if (!superAdmin) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/dashboard";
+        return NextResponse.redirect(url);
+      }
+    }
+  }
+
   return supabaseResponse;
 }

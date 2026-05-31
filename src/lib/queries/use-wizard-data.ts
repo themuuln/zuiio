@@ -85,7 +85,8 @@ export interface VehiclePartPriceEntry {
 }
 
 /**
- * Fetch the most recent service price for a specific vehicle make/model.
+ * Resolve the best service price using the price rules engine.
+ * Fallback chain: specific_price → price_rule → price_history → default_price
  * Used inside callbacks where hooks can't be called.
  */
 export async function fetchVehicleServicePrice(
@@ -94,6 +95,34 @@ export async function fetchVehicleServicePrice(
   vehicleMake: string,
   vehicleModel?: string,
 ): Promise<number | null> {
+  // Try the price rules engine first
+  try {
+    const res = await fetch(`/api/organizations/${orgId}/price-rules`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "resolve",
+        input: {
+          type: "service",
+          basePrice: 0,
+          vehicle: {
+            make: vehicleMake,
+            model: vehicleModel ?? "",
+          },
+        },
+      }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data?.price && json.data.source !== "default_price") {
+        return Number(json.data.price);
+      }
+    }
+  } catch {
+    // Fall through to history
+  }
+
+  // Fallback: price history
   try {
     const params = new URLSearchParams();
     params.set("service_catalog_id", serviceCatalogId);
@@ -113,7 +142,8 @@ export async function fetchVehicleServicePrice(
 }
 
 /**
- * Fetch the most recent part price for a specific vehicle make.
+ * Resolve the best part price using the price rules engine.
+ * Fallback chain: specific_price → price_rule → price_history → default_price
  * Used inside callbacks where hooks can't be called.
  */
 export async function fetchVehiclePartPrice(
@@ -122,6 +152,37 @@ export async function fetchVehiclePartPrice(
   vehicleMake: string,
   vehicleModel?: string,
 ): Promise<number | null> {
+  // Try the price rules engine first
+  try {
+    const res = await fetch(`/api/organizations/${orgId}/price-rules`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "resolve",
+        input: {
+          type: "part",
+          basePrice: 0,
+          vehicle: {
+            make: vehicleMake,
+            model: vehicleModel ?? "",
+          },
+          part: {
+            name: partName,
+          },
+        },
+      }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data?.price && json.data.source !== "default_price") {
+        return Number(json.data.price);
+      }
+    }
+  } catch {
+    // Fall through to history
+  }
+
+  // Fallback: price history
   try {
     const params = new URLSearchParams();
     params.set("part_name", partName);

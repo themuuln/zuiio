@@ -5,14 +5,17 @@ import type {
   GlobalPartCatalog,
   InventoryBalanceWithAvgCost,
   InventoryMovement,
+  InventoryTurnover,
   PartsCarParts,
   PartsCars,
   PartsCatalogItem,
   PurchaseOrder,
   PurchaseOrderItem,
+  SlowMovingItem,
   StockThreshold,
   Supplier,
   UpdatePartParams,
+  UsageTrend,
 } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import { globalCatalogKeys, inventoryKeys } from "./keys";
@@ -190,6 +193,44 @@ export function usePartsCarParts(
     queryKey: inventoryKeys.partsCarParts(orgId ?? "", carId ?? ""),
     queryFn: () => fetchCarParts(orgId ?? ""),
     enabled: !!orgId && !!carId,
+  });
+}
+
+// ── Inventory Report Hooks ──────────────────────────────────
+
+export function useInventoryTurnover(orgId: string | undefined) {
+  return useQuery({
+    queryKey: inventoryKeys.turnover(orgId ?? ""),
+    queryFn: () =>
+      createOrgQuery<InventoryTurnover>("/inventory/reports/turnover")(
+        orgId ?? "",
+      ),
+    enabled: !!orgId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUsageTrends(orgId: string | undefined) {
+  return useQuery({
+    queryKey: inventoryKeys.usageTrends(orgId ?? ""),
+    queryFn: () =>
+      createOrgQuery<UsageTrend[]>("/inventory/reports/usage-trends")(
+        orgId ?? "",
+      ),
+    enabled: !!orgId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useSlowMovingStock(orgId: string | undefined) {
+  return useQuery({
+    queryKey: inventoryKeys.slowMoving(orgId ?? ""),
+    queryFn: () =>
+      createOrgQuery<SlowMovingItem[]>("/inventory/reports/slow-moving")(
+        orgId ?? "",
+      ),
+    enabled: !!orgId,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

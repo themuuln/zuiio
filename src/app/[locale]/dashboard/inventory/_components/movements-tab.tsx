@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
-import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,11 +17,13 @@ import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import {
   useCreateMovement,
+  useInventoryBalances,
   useInventoryMovements,
 } from "@/lib/queries/use-inventory";
 import type { InventoryMovement, PartsCatalogItem } from "@/lib/types";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatMNT } from "@/lib/utils";
-import { formatDate, MOVEMENT_LABELS } from "./constants";
+import { formatDate, MOVEMENT_FILTERS, MOVEMENT_LABELS } from "./constants";
 import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
 
@@ -50,6 +51,7 @@ export function MovementsTab({
 
   const { data: movements = [], isLoading } = useInventoryMovements(orgId);
   const createMovement = useCreateMovement(orgId);
+  const { data: balances = [] } = useInventoryBalances(orgId);
 
   const [showAddMovement, setShowAddMovement] = useState(false);
   const [movementForm, setMovementForm] = useState({
@@ -60,24 +62,16 @@ export function MovementsTab({
     movement_type: "purchase",
     notes: "",
   });
+  const balanceMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const b of balances) {
+      if (b.part_id) map.set(b.part_id, b.quantity_on_hand ?? 0);
+    }
+    return map;
+  }, [balances]);
+
   const [parts, setParts] = useState<PartsCatalogItem[]>([]);
   const [partsSearch, setPartsSearch] = useState("");
-
-  const movementFilterChips: FilterChip[] = useMemo(
-    () =>
-      ["all", "purchase", "sale", "adjustment", "return", "waste"].map(
-        (key) => ({
-          key,
-          label:
-            key === "all"
-              ? "All"
-              : (MOVEMENT_LABELS[key as keyof typeof MOVEMENT_LABELS] ?? key),
-          active: movementFilter === key,
-          onClick: () => onMovementFilterChange(key),
-        }),
-      ),
-    [movementFilter, onMovementFilterChange],
-  );
 
   const filteredMovements = useMemo(() => {
     let list = movements;
@@ -256,7 +250,24 @@ export function MovementsTab({
           value: search,
           onChange: onSearchChange,
         }}
-        filters={<FilterChips items={movementFilterChips} />}
+        filters={
+          <ToggleGroup
+            variant="outline"
+            size="sm"
+            value={[movementFilter]}
+            onValueChange={(values) => {
+              const next = values[0] ?? "all";
+              if (next !== movementFilter) onMovementFilterChange(next);
+            }}
+            className="flex-wrap gap-1.5"
+          >
+            {MOVEMENT_FILTERS.map((filter) => (
+              <ToggleGroupItem key={filter.key} value={filter.key}>
+                {filter.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        }
         stats={
           <span>
             {filteredMovements.length} {t("movements")}
@@ -379,9 +390,17 @@ export function MovementsTab({
                 </div>
               )}
               {movementForm.part_id && !partsSearch && (
-                <Typography.Muted className="text-sm text-muted-foreground">
-                  Selected: {movementForm.part_name}
-                </Typography.Muted>
+                <div className="flex items-center justify-between">
+                  <Typography.Muted className="text-sm text-muted-foreground">
+                    Selected: {movementForm.part_name}
+                  </Typography.Muted>
+                  <Badge variant="outline" className="gap-1.5">
+                    {t("currentBalance")}:{" "}
+                    <span className="font-semibold tabular-nums">
+                      {balanceMap.get(movementForm.part_id) ?? 0}
+                    </span>
+                  </Badge>
+                </div>
               )}
             </div>
             <div className="grid grid-cols-2 gap-3">

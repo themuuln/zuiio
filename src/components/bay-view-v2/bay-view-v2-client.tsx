@@ -15,6 +15,7 @@ import {
   ArrowUp,
   Car,
   CheckCircle2,
+  Clock,
   Columns3,
   GripVertical,
   KeyRound,
@@ -34,11 +35,22 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "@/components/error-boundary";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -223,6 +235,59 @@ export function BayViewV2Client() {
     newStatus: string;
     totalCost: number;
   } | null>(null);
+
+  const [batchCompletePending, setBatchCompletePending] = useState(false);
+  const [batchCompleteDialogOpen, setBatchCompleteDialogOpen] = useState(false);
+
+  const readyWosCount = useMemo(
+    () =>
+      data?.bays.filter((b) => b.workOrder?.status === "Ready for Pickup")
+        .length ?? 0,
+    [data],
+  );
+
+  async function handleBatchComplete() {
+    if (!data || batchCompletePending) return;
+    setBatchCompletePending(true);
+    const readyWos = data.bays
+      .filter((b) => b.workOrder?.status === "Ready for Pickup")
+      .map((b) => b.workOrder!.id);
+
+    const { updateWorkOrderStatus } = await import(
+      "@/lib/services/bay-view-service"
+    );
+
+    const results = await Promise.allSettled(
+      readyWos.map((woId) => updateWorkOrderStatus(woId, "Completed")),
+    );
+
+    const succeeded = results.filter((r) => r.status === "fulfilled").length;
+    const failed = results.filter((r) => r.status === "rejected").length;
+
+    if (succeeded === readyWos.length) {
+      setToast({
+        message: t("batchCompleteSuccess", { count: succeeded }),
+        variant: "info",
+      });
+    } else if (failed === readyWos.length) {
+      setToast({
+        message: t("batchCompleteError"),
+        variant: "error",
+      });
+    } else {
+      setToast({
+        message: t("batchCompletePartial", {
+          successCount: succeeded,
+          totalCount: readyWos.length,
+          failCount: failed,
+        }),
+        variant: "error",
+      });
+    }
+
+    setBatchCompletePending(false);
+    await fetchData(false);
+  }
 
   const { registerTab, unregisterTab } = useRightSidebar();
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -813,6 +878,27 @@ export function BayViewV2Client() {
 
             {/* Right Controls (Action Buttons & Bay Count) */}
             <div className="flex flex-wrap items-center gap-3">
+              {/* Batch Complete Button — only when 2+ ready items */}
+              {readyWosCount >= 2 && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="default"
+                  disabled={batchCompletePending}
+                  onClick={() => setBatchCompleteDialogOpen(true)}
+                  className="h-8 gap-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold shadow-sm hover:bg-emerald-700 cursor-pointer"
+                >
+                  {batchCompletePending ? (
+                    <Spinner className="size-3.5" />
+                  ) : (
+                    <CheckCircle2 className="size-3.5" />
+                  )}
+                  {batchCompletePending
+                    ? t("batchCompleteProcessing")
+                    : t("batchComplete", { count: readyWosCount })}
+                </Button>
+              )}
+
               {/* Quick Admin Actions Box */}
               <div className="flex items-center gap-1 rounded-lg border border-border/50 bg-card px-1 shadow-sm h-8">
                 <Tooltip>
@@ -1202,47 +1288,27 @@ export function BayViewV2Client() {
                       variant="outline"
                       className="font-mono font-bold text-[10px] rounded-full h-5"
                     >
-                      {searchedBays.filter((b) => !b.workOrder).length}
+                      {filteredQueue.length}
                     </Badge>
                   </div>
                 </div>
-                <div className="flex flex-1 flex-col gap-3 px-3 overflow-y-auto no-scrollbar">
-                  {searchedBays
-                    .filter((b) => !b.workOrder)
-                    .map((bay) => (
-                      <div
-                        key={bay.bayNumber}
-                        className="flex flex-col shrink-0"
-                      >
-                        <BayCard
-                          bay={bay}
-                          isPending={false}
-                          isKanbanMode
-                          onStatusChange={handleStatusClick}
-                          onRemoveFromBay={handleRemoveFromBay}
-                          onOpenDetail={handleOpenDetail}
-                          onAssignClick={(n) => setAssignBay(n)}
-                        />
-                      </div>
-                    ))}
-                  {searchedBays.filter((b) => !b.workOrder).length === 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setToast({
-                          message: "No empty bays available",
-                          variant: "error",
-                        });
-                      }}
-                      className="flex flex-col items-center justify-center border border-dashed border-border/40 bg-muted/10 py-12 rounded-xl text-center select-none p-4 w-full cursor-not-allowed opacity-60 group/empty"
-                    >
+                <div className="flex flex-1 flex-col gap-2 px-3 overflow-y-auto no-scrollbar">
+                  {filteredQueue.map((wo) => (
+                    <CondensedQueueItem
+                      key={wo.id}
+                      workOrder={wo}
+                      onClick={() => handleQueueItemClick(wo)}
+                    />
+                  ))}
+                  {filteredQueue.length === 0 && (
+                    <div className="flex flex-col items-center justify-center border border-dashed border-border/40 bg-muted/10 py-12 rounded-xl text-center p-4 w-full opacity-60">
                       <div className="flex size-8 items-center justify-center rounded-full border border-dashed border-muted-foreground/45 bg-background mb-2 shadow-sm">
                         <Plus className="size-3.5 text-muted-foreground/60" />
                       </div>
                       <Typography.Muted className="text-[10px] text-muted-foreground/45 font-semibold">
                         No Vacant Bays
                       </Typography.Muted>
-                    </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1511,6 +1577,36 @@ export function BayViewV2Client() {
         />
       )}
 
+      <AlertDialog
+        open={batchCompleteDialogOpen}
+        onOpenChange={setBatchCompleteDialogOpen}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("batchCompleteConfirmTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("batchCompleteConfirmDesc", { count: readyWosCount })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setBatchCompleteDialogOpen(false);
+                await handleBatchComplete();
+              }}
+              disabled={batchCompletePending}
+            >
+              {batchCompletePending
+                ? t("batchCompleteProcessing")
+                : t("batchComplete", { count: readyWosCount })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AssignDialog
         key={assignBay ?? "closed"}
         open={assignBay !== null}
@@ -1608,6 +1704,88 @@ export function BayViewV2Client() {
         />
       )}
     </DndContext>
+  );
+}
+
+/** Compute wait time text and urgency from a created_at timestamp. */
+function _getWaitTime(createdAt: string): { text: string; urgent: boolean } {
+  const minutes = Math.floor(
+    (Date.now() - new Date(createdAt).getTime()) / 60000,
+  );
+  if (minutes < 15) return { text: `${minutes}m`, urgent: false };
+  if (minutes < 60) return { text: `${minutes}m`, urgent: minutes > 30 };
+  const hours = Math.floor(minutes / 60);
+  return { text: `${hours}h+`, urgent: true };
+}
+
+interface CondensedQueueItemProps {
+  workOrder: WorkOrder & { vehicle: Vehicle | null };
+  onClick: () => void;
+}
+
+/**
+ * A compact queue preview item used in the kanban "Available" column.
+ * Shows plate number (large, bold) and wait time — no buttons, badges, or mechanic avatar.
+ */
+function CondensedQueueItem({ workOrder, onClick }: CondensedQueueItemProps) {
+  const v = workOrder.vehicle;
+  const [waitInfo, setWaitInfo] = useState(() =>
+    _getWaitTime(workOrder.created_at),
+  );
+
+  useEffect(() => {
+    const ref = new Date(workOrder.created_at).getTime();
+    const tick = () => {
+      const minutes = Math.floor((Date.now() - ref) / 60000);
+      if (minutes < 15) setWaitInfo({ text: `${minutes}m`, urgent: false });
+      else if (minutes < 60)
+        setWaitInfo({ text: `${minutes}m`, urgent: minutes > 30 });
+      else
+        setWaitInfo({
+          text: `${Math.floor(minutes / 60)}h+`,
+          urgent: true,
+        });
+    };
+    tick();
+    const interval = setInterval(tick, 30000);
+    return () => clearInterval(interval);
+  }, [workOrder.created_at]);
+
+  if (!v) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex flex-col gap-0.5 rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-left shadow-sm hover:bg-accent/30 transition-colors cursor-pointer w-full shrink-0"
+      >
+        <span className="text-sm font-bold font-mono tracking-tight text-foreground">
+          WO {workOrder.id.slice(0, 8)}
+        </span>
+        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+          <Clock className="size-2.5" />
+          {waitInfo.text} wait
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex flex-col gap-0.5 rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-left shadow-sm hover:border-primary/30 hover:bg-accent/30 transition-colors cursor-pointer w-full shrink-0"
+    >
+      <span className="text-sm font-bold font-mono tracking-tight text-foreground">
+        {formatPlateNumber(v.plate_number)}
+      </span>
+      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+        <Clock className="size-2.5" />
+        {waitInfo.text} wait
+        {waitInfo.urgent && (
+          <span className="size-1.5 rounded-full bg-amber-500" />
+        )}
+      </span>
+    </button>
   );
 }
 

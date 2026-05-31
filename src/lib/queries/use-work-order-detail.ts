@@ -3,7 +3,12 @@ import { toast } from "sonner";
 import { toastRetry } from "@/lib/toast-utils";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
 import { createOrgQuery } from "./factory";
-import { mechanicKeys, serviceKeys, workOrderKeys } from "./keys";
+import {
+  inventoryKeys,
+  mechanicKeys,
+  serviceKeys,
+  workOrderKeys,
+} from "./keys";
 
 export async function fetchServicePriceHistory(
   orgId: string,
@@ -188,6 +193,18 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: workOrderKeys.all(orgId ?? ""),
       });
+
+      // Invalidate inventory cache when WO is completed
+      // (inventory movements are created server-side at completion)
+      if (variables.status === "Completed") {
+        queryClient.invalidateQueries({
+          queryKey: inventoryKeys.balances(orgId ?? ""),
+        });
+        queryClient.invalidateQueries({
+          queryKey: inventoryKeys.movements(orgId ?? ""),
+        });
+      }
+
       toast.success(`Status changed to ${variables.status}`);
     },
     onError: (err: Error, variables, context) => {

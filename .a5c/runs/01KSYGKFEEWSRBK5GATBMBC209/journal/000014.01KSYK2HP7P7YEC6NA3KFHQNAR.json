@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T08:40:41.927Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYK2HNFQ48PWKPM27S3AEBY",
+    "invocationKey": "rbac-system:S000007:execute-phase",
+    "invocationHash": "1f0bf308e0ae02c9038c55431cce87e8021247379014d1efe0569acda726b45f",
+    "stepId": "S000007",
+    "taskId": "execute-phase",
+    "kind": "agent",
+    "label": "Execute phase: Add app-layer permission checks",
+    "taskDefRef": "tasks/01KSYK2HNFQ48PWKPM27S3AEBY/task.json"
+  },
+  "checksum": "bdd35ee7f172ddcafd399c5233d12c1846c4b4ee7f3d6d0c2091583b42cf488d"
+}

@@ -5,6 +5,7 @@ import {
   toApiErrorResponse,
   UnauthorizedError,
 } from "@/lib/errors";
+import { requirePermission, requireRole } from "@/lib/supabase/role-guard";
 import { createClient } from "@/lib/supabase/server";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -26,6 +27,10 @@ type RouteHandler = (ctx: HandlerContext) => Promise<NextResponse>;
 interface RouteHandlerOptions {
   /** If false, orgId won't be extracted (use for non-org routes like /api/profile) */
   requireOrg?: boolean;
+  /** Minimum role level required for this route */
+  minimumRole?: "Org Owner" | "Manager" | "Mechanic" | "Guest";
+  /** Specific permission required for this route (checked after minimumRole) */
+  requiredPermission?: { resource: string; action: string };
 }
 
 // ── Route Handler Factory ─────────────────────────────────────
@@ -73,6 +78,20 @@ export function createRouteHandler(
         if (!membership) {
           throw new ForbiddenError("Not a member of this organization");
         }
+      }
+
+      // Check role requirements
+      if (options?.minimumRole) {
+        await requireRole(options.minimumRole);
+      }
+
+      // Check specific permission requirements
+      if (options?.requiredPermission) {
+        await requirePermission(
+          options.requiredPermission.resource,
+          options.requiredPermission.action,
+          orgId,
+        );
       }
 
       return await handler({ request, params, orgId, user, supabase });

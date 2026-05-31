@@ -55,7 +55,7 @@ export async function createOrganization(
     .from("roles")
     .insert({
       organization_id: org.id,
-      name: "Admin",
+      name: "Org Owner",
       is_system: true,
       created_by: userId,
       updated_by: userId,
@@ -65,7 +65,9 @@ export async function createOrganization(
 
   if (adminRoleError || !adminRole) {
     await supabase.from("organizations").delete().eq("id", org.id);
-    throw new Error(adminRoleError?.message ?? "Failed to create Admin role");
+    throw new Error(
+      adminRoleError?.message ?? "Failed to create Org Owner role",
+    );
   }
 
   const { error: mechanicRoleError } = await supabase.from("roles").insert({
@@ -81,6 +83,34 @@ export async function createOrganization(
     throw new Error(
       mechanicRoleError?.message ?? "Failed to create Mechanic role",
     );
+  }
+
+  const { error: managerRoleError } = await supabase.from("roles").insert({
+    organization_id: org.id,
+    name: "Manager",
+    is_system: true,
+    created_by: userId,
+    updated_by: userId,
+  });
+
+  if (managerRoleError) {
+    await supabase.from("organizations").delete().eq("id", org.id);
+    throw new Error(
+      managerRoleError?.message ?? "Failed to create Manager role",
+    );
+  }
+
+  const { error: guestRoleError } = await supabase.from("roles").insert({
+    organization_id: org.id,
+    name: "Guest",
+    is_system: true,
+    created_by: userId,
+    updated_by: userId,
+  });
+
+  if (guestRoleError) {
+    await supabase.from("organizations").delete().eq("id", org.id);
+    throw new Error(guestRoleError?.message ?? "Failed to create Guest role");
   }
 
   const { data: branch, error: branchError } = await supabase

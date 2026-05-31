@@ -20,117 +20,120 @@ import {
   setRevenueTarget,
 } from "@/lib/services/report-service";
 
-export const GET = createRouteHandler(async ({ request, orgId }) => {
-  const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type") ?? "daily";
-  const mechanicId = searchParams.get("mechanic");
-  const date =
-    searchParams.get("date") ?? new Date().toISOString().split("T")[0];
-  const dateFrom = searchParams.get("date_from") ?? date;
-  const dateTo = searchParams.get("date_to") ?? date;
+export const GET = createRouteHandler(
+  async ({ request, orgId }) => {
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get("type") ?? "daily";
+    const mechanicId = searchParams.get("mechanic");
+    const date =
+      searchParams.get("date") ?? new Date().toISOString().split("T")[0];
+    const dateFrom = searchParams.get("date_from") ?? date;
+    const dateTo = searchParams.get("date_to") ?? date;
 
-  if (type === "mechanics") {
-    const mechanics = await getMechanicsList(orgId);
-    return NextResponse.json({ data: mechanics });
-  }
+    if (type === "mechanics") {
+      const mechanics = await getMechanicsList(orgId);
+      return NextResponse.json({ data: mechanics });
+    }
 
-  if (type === "dashboard") {
-    const period =
-      (searchParams.get("period") as "today" | "week" | "month" | "all") ??
-      "all";
-    const dashboard = await getDashboardData(orgId, period);
-    return NextResponse.json({ data: dashboard });
-  }
-
-  const mid = mechanicId ?? "";
-
-  switch (type) {
-    case "daily": {
-      const report = await getDailyReport(orgId, mid || null, date);
-      return NextResponse.json({ data: report });
-    }
-    case "custom": {
-      const report = await getCustomReport(
-        orgId,
-        mid || null,
-        dateFrom,
-        dateTo,
-      );
-      return NextResponse.json({ data: report });
-    }
-    case "weekly": {
-      const report = await getWeeklyReport(orgId, mid || null, date);
-      return NextResponse.json({ data: report });
-    }
-    case "monthly": {
-      const [year, month] = date.split("-").map(Number);
-      const report = await getMonthlyReport(orgId, mid || null, year, month);
-      return NextResponse.json({ data: report });
-    }
-    case "eod": {
-      const summary = await getEndOfDaySummary(orgId, date);
-      return NextResponse.json({ data: summary });
-    }
-    case "timeline": {
-      const timeline = await getDailyTimeline(orgId);
-      return NextResponse.json({ data: timeline });
-    }
-    case "mechanic-trend": {
-      if (!mid) {
-        throw new ValidationError(
-          "mechanic parameter is required for mechanic-trend",
-        );
-      }
+    if (type === "dashboard") {
       const period =
-        (searchParams.get("period") as "weekly" | "monthly") ?? "weekly";
-      const startDate = searchParams.get("startDate") ?? date;
-      const endDate = searchParams.get("endDate") ?? date;
-      const trend = await getMechanicPerformanceTrend(
-        orgId,
-        mid,
-        period,
-        startDate,
-        endDate,
-      );
-      return NextResponse.json({ data: trend });
+        (searchParams.get("period") as "today" | "week" | "month" | "all") ??
+        "all";
+      const dashboard = await getDashboardData(orgId, period);
+      return NextResponse.json({ data: dashboard });
     }
-    // ── ERP-Grade endpoints ────────────────────────────────
-    case "insights": {
-      const insights = await generateReportInsights(orgId, dateFrom, dateTo);
-      return NextResponse.json({ data: insights });
+
+    const mid = mechanicId ?? "";
+
+    switch (type) {
+      case "daily": {
+        const report = await getDailyReport(orgId, mid || null, date);
+        return NextResponse.json({ data: report });
+      }
+      case "custom": {
+        const report = await getCustomReport(
+          orgId,
+          mid || null,
+          dateFrom,
+          dateTo,
+        );
+        return NextResponse.json({ data: report });
+      }
+      case "weekly": {
+        const report = await getWeeklyReport(orgId, mid || null, date);
+        return NextResponse.json({ data: report });
+      }
+      case "monthly": {
+        const [year, month] = date.split("-").map(Number);
+        const report = await getMonthlyReport(orgId, mid || null, year, month);
+        return NextResponse.json({ data: report });
+      }
+      case "eod": {
+        const summary = await getEndOfDaySummary(orgId, date);
+        return NextResponse.json({ data: summary });
+      }
+      case "timeline": {
+        const timeline = await getDailyTimeline(orgId);
+        return NextResponse.json({ data: timeline });
+      }
+      case "mechanic-trend": {
+        if (!mid) {
+          throw new ValidationError(
+            "mechanic parameter is required for mechanic-trend",
+          );
+        }
+        const period =
+          (searchParams.get("period") as "weekly" | "monthly") ?? "weekly";
+        const startDate = searchParams.get("startDate") ?? date;
+        const endDate = searchParams.get("endDate") ?? date;
+        const trend = await getMechanicPerformanceTrend(
+          orgId,
+          mid,
+          period,
+          startDate,
+          endDate,
+        );
+        return NextResponse.json({ data: trend });
+      }
+      // ── ERP-Grade endpoints ────────────────────────────────
+      case "insights": {
+        const insights = await generateReportInsights(orgId, dateFrom, dateTo);
+        return NextResponse.json({ data: insights });
+      }
+      case "forecast": {
+        const periodType =
+          (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ??
+          "monthly";
+        const forecast = await getRevenueForecast(orgId, periodType, date);
+        return NextResponse.json({ data: forecast });
+      }
+      case "targets": {
+        const periodType =
+          (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ??
+          "monthly";
+        const targets = await getRevenueTargets(orgId, periodType, date);
+        return NextResponse.json({ data: targets });
+      }
+      case "retention": {
+        const retention = await getCustomerRetention(orgId, dateFrom, dateTo);
+        return NextResponse.json({ data: retention });
+      }
+      case "pnl": {
+        const pnl = await getPnLSummary(orgId, dateFrom, dateTo);
+        return NextResponse.json({ data: pnl });
+      }
+      case "service-breakdown": {
+        const breakdown = await getServiceBreakdown(orgId, dateFrom, dateTo);
+        return NextResponse.json({ data: breakdown });
+      }
+      default:
+        throw new ValidationError(
+          "Invalid report type. Use: daily, weekly, monthly, eod, dashboard, mechanics, mechanic-trend, insights, forecast, targets, retention, pnl, service-breakdown",
+        );
     }
-    case "forecast": {
-      const periodType =
-        (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ??
-        "monthly";
-      const forecast = await getRevenueForecast(orgId, periodType, date);
-      return NextResponse.json({ data: forecast });
-    }
-    case "targets": {
-      const periodType =
-        (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ??
-        "monthly";
-      const targets = await getRevenueTargets(orgId, periodType, date);
-      return NextResponse.json({ data: targets });
-    }
-    case "retention": {
-      const retention = await getCustomerRetention(orgId, dateFrom, dateTo);
-      return NextResponse.json({ data: retention });
-    }
-    case "pnl": {
-      const pnl = await getPnLSummary(orgId, dateFrom, dateTo);
-      return NextResponse.json({ data: pnl });
-    }
-    case "service-breakdown": {
-      const breakdown = await getServiceBreakdown(orgId, dateFrom, dateTo);
-      return NextResponse.json({ data: breakdown });
-    }
-    default:
-      throw new ValidationError(
-        "Invalid report type. Use: daily, weekly, monthly, eod, dashboard, mechanics, mechanic-trend, insights, forecast, targets, retention, pnl, service-breakdown",
-      );
-  }
-});
+  },
+  { requiredPermission: { resource: "reports", action: "read" } },
+);
 
 /** POST /api/organizations/[id]/reports — Set revenue target */
 export const POST = createRouteHandler(async ({ request, orgId }) => {

@@ -44,13 +44,6 @@ interface PaymentBreakdown {
   other: number;
 }
 
-interface MechanicEntry {
-  mechanic_id: string;
-  mechanic_name: string;
-  work_orders_completed: number;
-  total_revenue: number;
-}
-
 interface IssueEntry {
   description: string;
   work_order_id: string;
@@ -308,6 +301,8 @@ export default function EodClosePage() {
   const close = closeStatus;
   const isClosed = close?.isClosed ?? false;
   const streak = close?.streak ?? 0;
+  const openCount = eod?.open_work_orders ?? 0;
+  const biggestIssue = eod?.biggest_issue ?? null;
 
   return (
     <div id="eod-report" className="flex flex-col gap-6 pb-8 print:gap-4">
@@ -332,6 +327,13 @@ export default function EodClosePage() {
               >
                 🔥 {streak}-day streak
               </Badge>
+              <Typography.Muted className="text-[11px] text-muted-foreground/60 ml-1">
+                {streak >= 5
+                  ? "Amazing consistency!"
+                  : streak >= 3
+                    ? "Getting consistent!"
+                    : "Keep it going!"}
+              </Typography.Muted>
             </div>
           )}
         </div>
@@ -485,36 +487,46 @@ export default function EodClosePage() {
                 {t("eodClose.biggestIssue") ?? "Biggest Issue"}
               </Typography.Text>
             </div>
-            {eod?.biggest_issue ? (
+            {openCount > 0 ? (
               <div>
-                <Typography.Text className="text-sm font-medium line-clamp-1">
-                  {eod.biggest_issue.description}
-                </Typography.Text>
-                <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>
-                    {eod.biggest_issue.days_open > 0
-                      ? `${eod.biggest_issue.days_open} day${eod.biggest_issue.days_open === 1 ? "" : "s"} open`
-                      : "Opened today"}
-                  </span>
-                  {eod.biggest_issue.customer && (
-                    <>
-                      <span>·</span>
-                      <span>{eod.biggest_issue.customer}</span>
-                    </>
-                  )}
-                </div>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="mt-1 h-auto p-0 text-xs"
-                  render={
-                    <Link
-                      href={`/dashboard/work-orders/${eod.biggest_issue.work_order_id}`}
-                    />
-                  }
-                >
-                  {t("eodClose.viewJob") ?? "View job →"}
-                </Button>
+                {biggestIssue && (
+                  <>
+                    <Typography.Text className="text-sm font-medium line-clamp-1">
+                      {biggestIssue.description}
+                    </Typography.Text>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>
+                        {biggestIssue.days_open > 0
+                          ? `${biggestIssue.days_open} day${biggestIssue.days_open === 1 ? "" : "s"} open`
+                          : "Opened today"}
+                      </span>
+                      {biggestIssue.customer && (
+                        <>
+                          <span>·</span>
+                          <span>{biggestIssue.customer}</span>
+                        </>
+                      )}
+                    </div>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="mt-1 h-auto p-0 text-xs"
+                      render={
+                        <Link
+                          href={`/dashboard/work-orders/${biggestIssue.work_order_id}`}
+                        />
+                      }
+                    >
+                      {t("eodClose.viewJob") ?? "View job →"}
+                    </Button>
+                  </>
+                )}
+                {openCount > 1 && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    + {openCount - 1} more open work order
+                    {openCount - 1 !== 1 ? "s" : ""}
+                  </div>
+                )}
               </div>
             ) : (
               <Typography.Muted className="text-sm">

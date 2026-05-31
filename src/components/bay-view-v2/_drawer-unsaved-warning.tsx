@@ -8,12 +8,14 @@ interface UnsavedWarningProps {
   show: boolean;
   onDiscard: () => void;
   onKeepEditing: () => void;
+  onSaveAndClose?: () => void;
 }
 
 export function UnsavedWarning({
   show,
   onDiscard,
   onKeepEditing,
+  onSaveAndClose,
 }: UnsavedWarningProps) {
   if (!show) return null;
 
@@ -30,6 +32,16 @@ export function UnsavedWarning({
           </Typography.Muted>
         </div>
         <div className="flex gap-2">
+          {onSaveAndClose && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onSaveAndClose}
+              className="h-8 text-xs"
+            >
+              Save & Close
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"

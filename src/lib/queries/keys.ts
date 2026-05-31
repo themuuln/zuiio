@@ -165,6 +165,13 @@ export const inventoryKeys = {
     [...inventoryKeys.partsCars(orgId), carId] as const,
   partsCarParts: (orgId: string, carId: string) =>
     [...inventoryKeys.partsCars(orgId), carId, "parts"] as const,
+  reports: (orgId: string) => [...inventoryKeys.all(orgId), "reports"] as const,
+  turnover: (orgId: string) =>
+    [...inventoryKeys.reports(orgId), "turnover"] as const,
+  usageTrends: (orgId: string) =>
+    [...inventoryKeys.reports(orgId), "usage-trends"] as const,
+  slowMoving: (orgId: string) =>
+    [...inventoryKeys.reports(orgId), "slow-moving"] as const,
 };
 
 export const serviceReminderKeys = {

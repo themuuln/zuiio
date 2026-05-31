@@ -1,0 +1,7 @@
+{
+  "status": "completed",
+  "buildPassing": true,
+  "changes": [],
+  "buildError": null,
+  "note": "All 4 cross-cutting items (#75 usePolling hook, #76 undo toasts, #78 hasLoadedOnce, #79 human errors) already verified as implemented in codebase."
+}

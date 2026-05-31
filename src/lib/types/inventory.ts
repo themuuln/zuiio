@@ -113,3 +113,30 @@ export interface CreateStockThresholdParams {
   minimum_quantity: number;
   notes?: string;
 }
+
+// ── Inventory Reports ────────────────────────────────────────────
+
+export interface InventoryTurnover {
+  cogs: number;
+  averageInventoryValue: number;
+  turnoverRate: number;
+}
+
+export interface UsageTrend {
+  month: string;
+  part_id: string;
+  partName: string;
+  category: string | null;
+  quantity: number;
+  totalAmount: number;
+}
+
+export interface SlowMovingItem {
+  partId: string;
+  partName: string | null;
+  partNumber: string | null;
+  quantity: number;
+  category: string | null;
+  lastMovementDate: string | null;
+  daysSinceLastMove: number;
+}

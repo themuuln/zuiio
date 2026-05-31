@@ -1,17 +1,27 @@
 "use client";
 
-import { AlertCircle, AlertTriangle, Package } from "lucide-react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  BarChart3,
+  Clock,
+  Package,
+  TrendingDown,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { Link } from "@/lib/i18n/navigation";
 import {
   useInventoryBalances,
+  useInventoryTurnover,
   usePartsCatalog,
+  useSlowMovingStock,
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -43,6 +53,9 @@ export default function InventoryPage() {
     orgId ?? undefined,
   );
   const inventoryError = partsError || balancesError || thresholdsError;
+
+  const { data: turnover } = useInventoryTurnover(orgId ?? undefined);
+  const { data: slowMoving = [] } = useSlowMovingStock(orgId ?? undefined);
 
   const handleTabChange = useCallback((newTab: string) => {
     setTab(newTab as Tab);
@@ -155,6 +168,66 @@ export default function InventoryPage() {
           <AlertTriangle className="size-4" />
           Alerts
         </Button>
+      </div>
+
+      {/* ── Reports KPI Cards ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card>
+          <CardContent className="flex flex-col gap-1 p-3">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Package className="size-3" />
+              {t("totalSKUs")}
+            </span>
+            <span className="text-xl font-semibold tabular-nums">
+              {parts.length}
+            </span>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex flex-col gap-1 p-3">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <BarChart3 className="size-3" />
+              {t("totalStockValue")}
+            </span>
+            <span className="text-xl font-semibold tabular-nums">
+              {balances
+                .reduce(
+                  (sum, b) =>
+                    sum + (b.quantity_on_hand ?? 0) * (b.default_price ?? 0),
+                  0,
+                )
+                .toLocaleString()}{" "}
+              ₮
+            </span>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex flex-col gap-1 p-3">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <TrendingDown className="size-3" />
+              {t("turnoverRate")}
+            </span>
+            <span className="text-xl font-semibold tabular-nums">
+              {turnover?.turnoverRate != null
+                ? `${turnover.turnoverRate.toFixed(1)}x`
+                : "—"}
+            </span>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex flex-col gap-1 p-3">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Clock className="size-3" />
+              {t("reports")}
+            </span>
+            <span className="text-xl font-semibold tabular-nums">
+              {slowMoving.length}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {t("slowMovers")}
+            </span>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Tab navigation */}

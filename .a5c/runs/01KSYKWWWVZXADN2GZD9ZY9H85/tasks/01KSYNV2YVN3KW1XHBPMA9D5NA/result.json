@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSYNV2YVN3KW1XHBPMA9D5NA",
+  "taskId": "execute-inventory-phase",
+  "invocationKey": "inventory-improvement:S000005:execute-inventory-phase",
+  "status": "ok",
+  "result": {
+    "buildPassing": true,
+    "error": null,
+    "status": "completed",
+    "summary": "Phase 3: Work Order Inventory Integration implemented. Moved inventory deduction from add-part time to WO completion time. When a work order reaches 'Completed' status, the system queries catalog-linked parts (part_id IS NOT NULL) and creates 'sale' inventory_movements with reference_type='work_order'. Graceful degradation via try/catch — errors are logged but don't block completion. Inventory cache tags (inventoryMovements, inventoryBalances) revalidated on both server and client sides."
+  },
+  "startedAt": "2026-05-31T09:35:49.508Z",
+  "finishedAt": "2026-05-31T09:35:49.508Z",
+  "value": {
+    "buildPassing": true,
+    "error": null,
+    "status": "completed",
+    "summary": "Phase 3: Work Order Inventory Integration implemented. Moved inventory deduction from add-part time to WO completion time. When a work order reaches 'Completed' status, the system queries catalog-linked parts (part_id IS NOT NULL) and creates 'sale' inventory_movements with reference_type='work_order'. Graceful degradation via try/catch — errors are logged but don't block completion. Inventory cache tags (inventoryMovements, inventoryBalances) revalidated on both server and client sides."
+  }
+}

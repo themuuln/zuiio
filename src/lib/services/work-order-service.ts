@@ -18,20 +18,6 @@ import type {
   WorkOrderService,
 } from "@/lib/types";
 
-// ── Helper: get current user's org ────────────────────────────
-async function _getOrgId(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-): Promise<string> {
-  const { data: membership } = await supabase
-    .from("organization_users")
-    .select("organization_id")
-    .eq("user_id", (await supabase.auth.getUser()).data.user?.id ?? "")
-    .maybeSingle();
-  if (!membership?.organization_id)
-    throw new ValidationError("Organization not found");
-  return membership.organization_id;
-}
-
 // ── Helper: insert status history ──────────────────────────────
 async function insertStatusHistory(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -337,6 +323,50 @@ export async function updateWorkOrderStatus(
     syncWorkOrderToSchedules(id).catch((err) =>
       console.error("Failed to sync work order to schedules:", err),
     );
+
+    // ── Deduct inventory for catalog-linked parts ───────────
+    // When a WO completes, create 'sale' movements for every part
+    // that has a catalog link (part_id IS NOT NULL). This ensures
+    // the inventory ledger accurately reflects stock consumption.
+    // Graceful degradation: log errors but don't block completion.
+    try {
+      const { data: parts } = await supabase
+        .from("work_order_parts")
+        .select("part_id, quantity, unit_price")
+        .eq("work_order_id", id)
+        .not("part_id", "is", null);
+
+      if (parts?.length) {
+        const movements = parts
+          .filter((p) => p.part_id)
+          .map((p) => ({
+            organization_id: orgId,
+            part_id: p.part_id,
+            movement_type: "sale" as const,
+            quantity: p.quantity,
+            unit_price: Number(p.unit_price),
+            reference_type: "work_order" as const,
+            reference_id: id,
+            created_by: userId,
+          }));
+
+        const { error: mvError } = await supabase
+          .from("inventory_movements")
+          .insert(movements);
+
+        if (mvError) {
+          console.error(
+            "Failed to create inventory movements for completed WO:",
+            mvError.message,
+          );
+        }
+      }
+    } catch (err) {
+      console.error(
+        "Failed to deduct inventory for completed WO:",
+        err instanceof Error ? err.message : err,
+      );
+    }
   }
 
   // Invalidate caches
@@ -347,6 +377,12 @@ export async function updateWorkOrderStatus(
     cacheTags.dailyWorkOrders(orgId, new Date().toISOString().split("T")[0]),
     "max",
   );
+
+  // Revalidate inventory caches if status changed to Completed
+  if (newStatus === "Completed") {
+    revalidateTag(cacheTags.inventoryMovements(orgId), "max");
+    revalidateTag(cacheTags.inventoryBalances(orgId), "max");
+  }
 
   return data as unknown as WorkOrder;
 }
@@ -645,22 +681,11 @@ export async function addPartToWorkOrder(
     final_price: finalPrice,
   });
 
-  // ── Record inventory deduction ────────────────────────────
-  // If the part is linked to the catalog, create a 'sale' movement
-  // so the inventory ledger reflects actual stock consumption.
-  if (partData.part_id) {
-    const userId = (await supabase.auth.getUser()).data.user?.id;
-    await supabase.from("inventory_movements").insert({
-      organization_id: orgId,
-      part_id: partData.part_id,
-      movement_type: "sale",
-      quantity: quantity,
-      unit_price: unitPrice,
-      reference_type: "work_order",
-      reference_id: workOrderId,
-      created_by: userId,
-    });
-  }
+  // ── Inventory deduction happens on WO completion ───────────
+  // Movements for catalog-linked parts are created when the work
+  // order reaches "Completed" status (see updateWorkOrderStatus).
+  // This avoids orphan movements for parts that get removed or WOs
+  // that never complete.
 
   // Recalculate totals and invalidate caches
   await recalculateWorkOrderTotals(workOrderId);

@@ -31,180 +31,154 @@ function tgApi(token: string): string {
   return `https://api.telegram.org/bot${token}`;
 }
 
-function sendMessage(chat_id: number, text: string) {
+interface InlineButton {
+  text: string;
+  callback_data?: string;
+  url?: string;
+}
+
+function inlineKeyboard(rows: InlineButton[][]): {
+  inline_keyboard: InlineButton[][];
+} {
+  return { inline_keyboard: rows };
+}
+
+function sendMessage(
+  chat_id: number,
+  text: string,
+  opts: Record<string, unknown> = {},
+) {
   return fetch(`${tgApi(TELEGRAM_BOT_TOKEN)}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id, text, parse_mode: "Markdown" }),
+    body: JSON.stringify({ chat_id, text, parse_mode: "Markdown", ...opts }),
   });
 }
 
-// ── Money Impact Metrics ─────────────────────────────────────────
+// ── Daily Business Metrics ───────────────────────────────────────
 
-interface MoneyImpactSummary {
-  remindersSent: number;
-  customersReturned: number;
-  revenueRecovered: number;
-  upcomingDueServices: number;
-  estimatedUpcomingRevenue: number;
-  missedOpportunityValue: number;
+interface DailySummary {
+  revenue: number;
+  expenses: number;
+  netProfit: number;
+  activeJobs: number;
+  newJobs: number;
+  diagnosing: number;
+  inProgress: number;
+  completedToday: number;
+  totalCustomers: number;
+  upcomingServices: number;
+  unpaidInvoices: number;
+  unpaidAmount: number;
 }
 
 /**
- * Compute the service-reminder money impact summary for an org.
- * All numbers are scoped to the relevant time window (daily or weekly).
+ * Compute a practical daily/weekly business summary for an org.
  */
-async function computeMoneyImpact(
+async function computeDailySummary(
   supabase: ReturnType<typeof createClient>,
   orgId: string,
-  period: "daily" | "weekly",
-): Promise<MoneyImpactSummary> {
+  period: "daily" | "weekly" | "monthly",
+): Promise<DailySummary> {
   const now = new Date();
-  const periodDays = period === "daily" ? 1 : 7;
-
-  // ── Time boundaries ──────────────────────────────────────────
-  const lookbackStart = new Date(
+  const periodDays = period === "daily" ? 1 : period === "weekly" ? 7 : 30;
+  const periodStart = new Date(
     now.getTime() - periodDays * 24 * 60 * 60 * 1000,
-  ).toISOString();
-  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+  );
+  const periodStartStr = periodStart.toISOString();
+  const todayStr = now.toISOString().split("T")[0];
+  const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
     .toISOString()
     .split("T")[0];
-  const nextPeriodEnd = new Date(
-    now.getTime() + periodDays * 24 * 60 * 60 * 1000,
-  )
-    .toISOString()
-    .split("T")[0];
-  const today = now.toISOString().split("T")[0];
-  const reminderLookbackDays = 60;
-  const reminderLookbackStart = new Date(
-    now.getTime() - reminderLookbackDays * 24 * 60 * 60 * 1000,
-  ).toISOString();
 
-  // ── 1. Reminders sent ────────────────────────────────────────
-  const { count: remindersSent } = await supabase
-    .from("reminder_logs")
-    .select("*", { count: "exact", head: true })
-    .eq("organization_id", orgId)
-    .eq("status", "sent")
-    .gte("sent_at", lookbackStart);
-
-  // ── 2. Upcoming due services ─────────────────────────────────
-  const { data: upcomingSchedules } = await supabase
-    .from("vehicle_service_schedules")
-    .select("id, service_catalog_id, service_catalog!left(default_price)")
-    .eq("organization_id", orgId)
-    .eq("reminder_enabled", true)
-    .is("deleted_at", null)
-    .gte("next_due_date", tomorrow)
-    .lte("next_due_date", nextPeriodEnd);
-
-  const upcomingDueServices = upcomingSchedules?.length ?? 0;
-
-  // ── 3. Estimated upcoming revenue ────────────────────────────
-  let estimatedUpcomingRevenue = 0;
-  if (upcomingSchedules && upcomingSchedules.length > 0) {
-    for (const s of upcomingSchedules) {
-      const svc = s as unknown as {
-        service_catalog_id: string | null;
-        service_catalog: { default_price: number } | null;
-      };
-      if (svc.service_catalog?.default_price) {
-        estimatedUpcomingRevenue += svc.service_catalog.default_price;
-      }
-    }
-
-    // Fallback: for services without catalog price, use org average
-    const withoutPrice = upcomingSchedules.filter(
-      (s) =>
-        !(s as unknown as { service_catalog: { default_price: number } | null })
-          .service_catalog?.default_price,
-    );
-    if (withoutPrice.length > 0) {
-      const avgOrderValue = await getAvgOrderValue(supabase, orgId);
-      estimatedUpcomingRevenue += withoutPrice.length * avgOrderValue;
-    }
-  }
-
-  // ── 4. Customers returned + Revenue recovered ────────────────
-  const { data: sentReminders } = await supabase
-    .from("reminder_logs")
-    .select("customer_id, sent_at")
-    .eq("organization_id", orgId)
-    .eq("status", "sent")
-    .gte("sent_at", reminderLookbackStart)
-    .not("customer_id", "is", null);
-
-  let customersReturned = 0;
-  let revenueRecovered = 0;
-  const processedCustomers = new Set<string>();
-
-  if (sentReminders && sentReminders.length > 0) {
-    for (const reminder of sentReminders) {
-      if (!reminder.customer_id || processedCustomers.has(reminder.customer_id))
-        continue;
-      processedCustomers.add(reminder.customer_id);
-
-      const sentAt = new Date(reminder.sent_at).toISOString();
-      const sentPlus60 = new Date(
-        new Date(reminder.sent_at).getTime() + 60 * 24 * 60 * 60 * 1000,
-      ).toISOString();
-
-      const { data: completedWOs } = await supabase
-        .from("work_orders")
-        .select("id, total")
-        .eq("organization_id", orgId)
-        .eq("customer_id", reminder.customer_id)
-        .eq("status", "Completed")
-        .gte("completed_at", sentAt)
-        .lte("completed_at", sentPlus60)
-        .is("deleted_at", null);
-
-      if (completedWOs && completedWOs.length > 0) {
-        customersReturned++;
-        for (const wo of completedWOs) {
-          revenueRecovered += wo.total;
-        }
-      }
-    }
-  }
-
-  // ── 5. Missed opportunity value ─────────────────────────────
-  const { count: overdueCount } = await supabase
-    .from("vehicle_service_schedules")
-    .select("*", { count: "exact", head: true })
-    .eq("organization_id", orgId)
-    .eq("reminder_enabled", true)
-    .is("deleted_at", null)
-    .lt("next_due_date", today);
-
-  const avgOrderValue = await getAvgOrderValue(supabase, orgId);
-  const missedOpportunityValue = (overdueCount ?? 0) * avgOrderValue;
-
-  return {
-    remindersSent: remindersSent ?? 0,
-    customersReturned,
-    revenueRecovered,
-    upcomingDueServices,
-    estimatedUpcomingRevenue,
-    missedOpportunityValue,
-  };
-}
-
-async function getAvgOrderValue(
-  supabase: ReturnType<typeof createClient>,
-  orgId: string,
-): Promise<number> {
-  const { data: recent } = await supabase
+  // 1. Revenue from completed work orders
+  const { data: completedWOs } = await supabase
     .from("work_orders")
     .select("total")
     .eq("organization_id", orgId)
     .eq("status", "Completed")
     .is("deleted_at", null)
-    .order("completed_at", { ascending: false })
-    .limit(100);
+    .gte("completed_at", periodStartStr);
 
-  if (!recent || recent.length === 0) return 0;
-  return recent.reduce((sum, wo) => sum + wo.total, 0) / recent.length;
+  const revenue =
+    completedWOs?.reduce((sum, wo) => sum + (wo.total ?? 0), 0) ?? 0;
+  const completedToday = completedWOs?.length ?? 0;
+
+  // 2. Expenses in the period
+  const { data: expenses } = await supabase
+    .from("expenses")
+    .select("amount")
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .gte("expense_date", periodStartStr);
+
+  const totalExpenses =
+    expenses?.reduce((sum, e) => sum + (e.amount ?? 0), 0) ?? 0;
+
+  // 3. Active jobs
+  const { data: activeJobsRaw } = await supabase
+    .from("work_orders")
+    .select("status")
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .in("status", ["New", "Diagnosing", "In Progress"]);
+
+  const newJobs = activeJobsRaw?.filter((j) => j.status === "New").length ?? 0;
+  const diagnosing =
+    activeJobsRaw?.filter((j) => j.status === "Diagnosing").length ?? 0;
+  const inProgress =
+    activeJobsRaw?.filter((j) => j.status === "In Progress").length ?? 0;
+  const activeJobs = activeJobsRaw?.length ?? 0;
+
+  // 4. Unique customers
+  const { data: customers } = await supabase
+    .from("work_orders")
+    .select("customer_id")
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .gte("created_at", periodStartStr);
+
+  const uniqueCustomers = customers
+    ? new Set(customers.map((c) => c.customer_id)).size
+    : 0;
+
+  // 5. Upcoming services
+  const { count: upcomingServices } = await supabase
+    .from("vehicle_service_schedules")
+    .select("*", { count: "exact", head: true })
+    .eq("organization_id", orgId)
+    .eq("reminder_enabled", true)
+    .is("deleted_at", null)
+    .gte("next_due_date", todayStr)
+    .lte("next_due_date", sevenDaysFromNow);
+
+  // 6. Unpaid invoices
+  const { data: unpaidInvoices } = await supabase
+    .from("invoices")
+    .select("balance_due")
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .neq("status", "paid")
+    .neq("status", "cancelled");
+
+  const unpaidCount = unpaidInvoices?.length ?? 0;
+  const unpaidAmount =
+    unpaidInvoices?.reduce((sum, inv) => sum + (inv.balance_due ?? 0), 0) ?? 0;
+
+  return {
+    revenue,
+    expenses: totalExpenses,
+    netProfit: revenue - totalExpenses,
+    activeJobs,
+    newJobs,
+    diagnosing,
+    inProgress,
+    completedToday,
+    totalCustomers: uniqueCustomers,
+    upcomingServices: upcomingServices ?? 0,
+    unpaidInvoices: unpaidCount,
+    unpaidAmount,
+  };
 }
 
 function formatMoney(amount: number): string {
@@ -233,57 +207,66 @@ function formatDate(iso: string): string {
 
 // ── Message Builders ─────────────────────────────────────────────
 
-function buildDailySummary(orgName: string, m: MoneyImpactSummary): string {
+function buildDailyMessage(orgName: string, d: DailySummary): string {
   const lines = [
     `📊 *Өдрийн хураангуй — ${orgName}*`,
     `📅 ${formatDate(new Date().toISOString())}`,
     "",
-    m.remindersSent > 0
-      ? `📨 Өчигдөр илгээгдсэн сануулга: **${m.remindersSent}**`
-      : `📨 Өчигдөр сануулга илгээгдээгүй`,
-    m.customersReturned > 0
-      ? `👥 Сануулга авсны дараа ирсэн үйлчлүүлэгч: **${m.customersReturned}**`
-      : "",
-    m.revenueRecovered > 0
-      ? `💰 Сэргээгдсэн орлого: **${formatMoney(m.revenueRecovered)}**`
-      : "",
+    `💰 *Орлого:* ${formatMoney(d.revenue)}`,
+    `💸 *Зарлага:* ${formatMoney(d.expenses)}`,
+    d.netProfit >= 0
+      ? `📈 *Цэвэр ашиг:* ${formatMoney(d.netProfit)}`
+      : `📉 *Цэвэр алдагдал:* ${formatMoney(d.netProfit)}`,
     "",
-    m.upcomingDueServices > 0
-      ? `📅 Өнөөдөр дуусах үйлчилгээ: **${m.upcomingDueServices}**, тооцоолсон орлого: **${formatMoney(m.estimatedUpcomingRevenue)}**`
-      : `📅 Өнөөдөр дуусах үйлчилгээ байхгүй`,
-    m.missedOpportunityValue > 0
-      ? `⚠️ Хугацаа хэтэрсэн үйлчилгээнээс алдсан орлого: **${formatMoney(m.missedOpportunityValue)}**`
-      : "",
+    `🔧 *Идэвхтэй захиалга:* ${d.activeJobs}`,
+    `   📋 Шинэ: ${d.newJobs} | 🔍 Онош: ${d.diagnosing} | ⚙️ Хийж буй: ${d.inProgress}`,
+    `✅ Өнөөдөр гүйцэтгэсэн: ${d.completedToday}`,
+    "",
+    `🚗 Нийт үйлчлүүлэгч: ${d.totalCustomers}`,
+    d.upcomingServices > 0
+      ? `📅 Ойрын 7 хоногт дуусах: **${d.upcomingServices}** үйлчилгээ`
+      : `📅 Ойрын 7 хоногт дуусах үйлчилгээ байхгүй`,
+    d.unpaidInvoices > 0
+      ? `💳 Төлөгдөөгүй нэхэмжлэх: ${d.unpaidInvoices} (${formatMoney(d.unpaidAmount)})`
+      : `💳 Төлөгдөөгүй нэхэмжлэх: 0`,
   ];
 
   return lines.filter(Boolean).join("\n");
 }
 
-function buildWeeklySummary(orgName: string, m: MoneyImpactSummary): string {
+function buildWeeklyMessage(
+  orgName: string,
+  d: DailySummary,
+  period: "weekly" | "monthly" = "weekly",
+): string {
   const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const weekEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-  const summaryLine =
-    m.upcomingDueServices > 0
-      ? `│ **${m.upcomingDueServices}** үйлчлүүлэгч энэ долоо хоногт үйлчилгээнд дуусах хугацаатай. Тооцоолсон орлого: **${formatMoney(m.estimatedUpcomingRevenue)}**`
-      : "";
+  const periodDays = period === "weekly" ? 7 : 30;
+  const periodStart = new Date(
+    now.getTime() - periodDays * 24 * 60 * 60 * 1000,
+  );
+  const label = period === "weekly" ? "7 хоногт" : "сард";
 
   const lines = [
-    `📊 *Долоо хоногийн хураангуй — ${orgName}*`,
-    `📅 ${formatDate(weekAgo.toISOString())} → ${formatDate(weekEnd.toISOString())}`,
+    `📊 *${period === "weekly" ? "Долоо хоногийн" : "Сарын"} хураангуй — ${orgName}*`,
+    `📅 ${formatDate(periodStart.toISOString())} → ${formatDate(now.toISOString())}`,
     "",
-    `📨 Илгээгдсэн сануулга: **${m.remindersSent}**`,
-    m.customersReturned > 0
-      ? `👥 Буцаж ирсэн үйлчлүүлэгч: **${m.customersReturned}**`
-      : `👥 Буцаж ирсэн үйлчлүүлэгч: **0**`,
-    m.revenueRecovered > 0
-      ? `💰 Сэргээгдсэн орлого: **${formatMoney(m.revenueRecovered)}**`
-      : `💰 Сэргээгдсэн орлого: **₮0**`,
-    `📅 Долоо хоногт дуусах үйлчилгээ: **${m.upcomingDueServices}**`,
-    `💵 Ашиглагдаагүй боломж: **${formatMoney(m.missedOpportunityValue)}**`,
+    `💰 *Орлого:* ${formatMoney(d.revenue)}`,
+    `💸 *Зарлага:* ${formatMoney(d.expenses)}`,
+    d.netProfit >= 0
+      ? `📈 *Цэвэр ашиг:* ${formatMoney(d.netProfit)}`
+      : `📉 *Цэвэр алдагдал:* ${formatMoney(d.netProfit)}`,
     "",
-    summaryLine,
+    `🔧 *Идэвхтэй захиалга:* ${d.activeJobs}`,
+    `   📋 Шинэ: ${d.newJobs} | 🔍 Онош: ${d.diagnosing} | ⚙️ Хийж буй: ${d.inProgress}`,
+    `✅ Энэ ${label} гүйцэтгэсэн: ${d.completedToday}`,
+    "",
+    `🚗 Нийт үйлчлүүлэгч: ${d.totalCustomers}`,
+    d.upcomingServices > 0
+      ? `📅 Ойрын 7 хоногт дуусах: **${d.upcomingServices}** үйлчилгээ`
+      : `📅 Ойрын 7 хоногт дуусах үйлчилгээ байхгүй`,
+    d.unpaidInvoices > 0
+      ? `💳 Төлөгдөөгүй нэхэмжлэх: ${d.unpaidInvoices} (${formatMoney(d.unpaidAmount)})`
+      : `💳 Төлөгдөөгүй нэхэмжлэх: 0`,
   ];
 
   return lines.filter(Boolean).join("\n");
@@ -297,8 +280,13 @@ Deno.serve(async (req: Request) => {
 
   // Determine notification type from request
   const url = new URL(req.url);
-  const period =
-    url.searchParams.get("period") === "weekly" ? "weekly" : "daily";
+  const periodParam = url.searchParams.get("period");
+  const period: "daily" | "weekly" | "monthly" =
+    periodParam === "weekly"
+      ? "weekly"
+      : periodParam === "monthly"
+        ? "monthly"
+        : "daily";
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -351,15 +339,22 @@ Deno.serve(async (req: Request) => {
 
   for (const [orgId, entry] of orgMap) {
     try {
-      const summary = await computeMoneyImpact(supabase, orgId, period);
+      const summary = await computeDailySummary(supabase, orgId, period);
       const message =
-        period === "weekly"
-          ? buildWeeklySummary(entry.name, summary)
-          : buildDailySummary(entry.name, summary);
+        period === "daily"
+          ? buildDailyMessage(entry.name, summary)
+          : buildWeeklyMessage(entry.name, summary, period);
 
       for (const link of entry.links) {
         try {
-          const res = await sendMessage(link.chat_id, message);
+          const res = await sendMessage(link.chat_id, message, {
+            reply_markup: inlineKeyboard([
+              [
+                { text: "📊 Хураангуй", callback_data: "status" },
+                { text: "🔕 Зогсоох", callback_data: "stop" },
+              ],
+            ]),
+          });
           if (!res.ok) {
             const body = await res.text();
             console.error(`Failed to send to chat ${link.chat_id}:`, body);

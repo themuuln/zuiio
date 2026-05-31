@@ -14,7 +14,7 @@ export async function getVehicleModels(
   let query = supabase
     .from("vehicle_models")
     .select(
-      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_at, updated_at, deleted_at",
+      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, class, is_active, created_at, updated_at, deleted_at",
     )
     .eq("organization_id", orgId)
     .is("deleted_at", null)
@@ -36,7 +36,7 @@ export async function getVehicleModel(id: string): Promise<VehicleModel> {
   const { data, error } = await supabase
     .from("vehicle_models")
     .select(
-      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at, deleted_at",
+      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, class, is_active, created_by, updated_by, created_at, updated_at, deleted_at",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -72,6 +72,7 @@ export async function createVehicleModel(
     year_end?: number | null;
     engine?: string | null;
     body_type?: string | null;
+    class?: string | null;
   },
 ): Promise<VehicleModel> {
   if (!params.make?.trim()) throw new ValidationError("Make is required");
@@ -91,12 +92,13 @@ export async function createVehicleModel(
       year_end: params.year_end ?? null,
       engine: params.engine?.trim() ?? null,
       body_type: params.body_type?.trim() ?? null,
+      class: params.class?.trim() ?? null,
       is_active: true,
       created_by: userId,
       updated_by: userId,
     })
     .select(
-      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at",
+      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, class, is_active, created_by, updated_by, created_at, updated_at",
     )
     .single();
 
@@ -119,6 +121,7 @@ export async function updateVehicleModel(
     year_end?: number | null;
     engine?: string | null;
     body_type?: string | null;
+    class?: string | null;
     is_active?: boolean;
   },
 ): Promise<VehicleModel> {
@@ -136,6 +139,7 @@ export async function updateVehicleModel(
       year_end: "year_end",
       engine: "engine",
       body_type: "body_type",
+      class: "class",
       is_active: "is_active",
     },
     transforms: {
@@ -144,6 +148,7 @@ export async function updateVehicleModel(
       generation: trim,
       engine: trim,
       body_type: trim,
+      class: trim,
     },
   };
 
@@ -155,7 +160,7 @@ export async function updateVehicleModel(
     .update(updates)
     .eq("id", id)
     .select(
-      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, is_active, created_by, updated_by, created_at, updated_at",
+      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, class, is_active, created_by, updated_by, created_at, updated_at",
     )
     .single();
 

@@ -37,7 +37,7 @@ export async function getService(id: string): Promise<ServiceCatalog> {
   const { data, error } = await supabase
     .from("service_catalog")
     .select(
-      "id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at, deleted_at",
+      "id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, global_service_id, branch_id, created_by, updated_by, created_at, updated_at, deleted_at",
     )
     .eq("id", id)
     .is("deleted_at", null)

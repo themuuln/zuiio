@@ -249,6 +249,7 @@ export function CustomerForm({
   const watchedType = form.watch("type");
   const watchedSource = form.watch("source");
   const phoneValue = form.watch("phone");
+  const selectedTypeLabel = t(watchedType);
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
@@ -312,7 +313,7 @@ export function CustomerForm({
                   className="w-full h-11"
                   aria-label="Customer type"
                 >
-                  <SelectValue />
+                  <SelectValue>{selectedTypeLabel}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="individual">{t("individual")}</SelectItem>

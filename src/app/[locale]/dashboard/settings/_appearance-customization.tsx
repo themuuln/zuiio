@@ -40,6 +40,7 @@ interface AppearanceCustomizationProps {
   theme: string | undefined;
   setTheme: (theme: string) => void;
   preview: (color: string) => void;
+  savedBrandColor?: string;
 }
 
 export function AppearanceCustomization({
@@ -48,6 +49,7 @@ export function AppearanceCustomization({
   theme,
   setTheme,
   preview,
+  savedBrandColor,
 }: AppearanceCustomizationProps) {
   return (
     <Card>
@@ -149,6 +151,21 @@ export function AppearanceCustomization({
               maxLength={7}
             />
           </div>
+          {savedBrandColor && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setForm((prev) => ({ ...prev, brandColor: savedBrandColor }));
+                  preview(savedBrandColor);
+                }}
+                className="h-6 text-[11px] px-2 text-muted-foreground"
+              >
+                Reset to saved
+              </Button>
+            </div>
+          )}
           <div className="flex flex-wrap gap-2">
             {BRAND_COLOR_PRESETS.map((preset) => (
               <button

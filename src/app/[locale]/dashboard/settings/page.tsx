@@ -12,6 +12,7 @@ import {
   Search,
   Settings2,
   Stethoscope,
+  Tags,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -51,6 +52,8 @@ import {
   type SettingsForm,
 } from "./_business-defaults-form";
 import { CommissionRulesSection } from "./_commission-rules-section";
+import { PricingRulesSection } from "./_pricing-rules-section";
+
 import { DataExportSection } from "./_data-export-section";
 import { DataSharingForm } from "./_data-sharing-form";
 import { DiagnosisLabelsSection } from "./_diagnosis-labels-section";
@@ -78,6 +81,13 @@ const SETTINGS_SECTIONS = [
     title: "Commission Rules",
     description: "Configure how mechanics earn commissions on work orders.",
     icon: Percent,
+  },
+  {
+    value: "pricing",
+    title: "Pricing Rules",
+    description:
+      "Auto-adjust part and service prices based on vehicle type, class, and fuel type.",
+    icon: Tags,
   },
   {
     value: "diagnosis",
@@ -546,6 +556,10 @@ export default function SettingsPage() {
               theme={theme}
               setTheme={setTheme}
               preview={preview}
+              savedBrandColor={
+                (organization?.settings as Record<string, unknown>)
+                  ?.brand_color as string | undefined
+              }
             />
           </div>
         </section>
@@ -559,6 +573,17 @@ export default function SettingsPage() {
             description="Configure how mechanics earn commissions on work orders."
           />
           <CommissionRulesSection orgId={orgId ?? ""} />
+        </section>
+      )}
+
+      {filteredSections.length > 0 && activeTab === "pricing" && (
+        <section className="flex flex-col gap-4">
+          <SectionHeading
+            icon={Tags}
+            title="Pricing Rules"
+            description="Auto-adjust part and service prices based on vehicle type, class, and fuel type."
+          />
+          <PricingRulesSection orgId={orgId ?? ""} />
         </section>
       )}
 

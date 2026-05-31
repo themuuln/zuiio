@@ -1,0 +1,1 @@
+{"status":"completed","buildPassing":true,"changes":["src/lib/supabase/role-guard.ts - added requirePermission/hasPermission","src/lib/api-handler.ts - added requiredPermission option","6 API routes updated with permission checks"]}

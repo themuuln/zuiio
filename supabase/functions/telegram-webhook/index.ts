@@ -8,6 +8,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY =
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
+let commandsRegistered = false;
+
 // ── Config loader (env var → DB fallback) ────────────────────────
 async function loadAppConfig(): Promise<void> {
   if (TELEGRAM_BOT_TOKEN && TELEGRAM_WEBHOOK_SECRET) return;
@@ -36,6 +38,20 @@ function tgApi(token: string): string {
   return `https://api.telegram.org/bot${token}`;
 }
 
+// ── Telegram API Helpers ─────────────────────────────────────────
+
+interface InlineButton {
+  text: string;
+  callback_data?: string;
+  url?: string;
+}
+
+function inlineKeyboard(rows: InlineButton[][]): {
+  inline_keyboard: InlineButton[][];
+} {
+  return { inline_keyboard: rows };
+}
+
 async function sendMessage(
   chat_id: number,
   text: string,
@@ -48,9 +64,55 @@ async function sendMessage(
   });
 }
 
+async function answerCallbackQuery(
+  callback_query_id: string,
+  opts: { text?: string; show_alert?: boolean } = {},
+) {
+  return fetch(`${tgApi(TELEGRAM_BOT_TOKEN)}/answerCallbackQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ callback_query_id, ...opts }),
+  });
+}
+
+async function registerBotCommands(): Promise<void> {
+  if (!TELEGRAM_BOT_TOKEN) return;
+  try {
+    const res = await fetch(`${tgApi(TELEGRAM_BOT_TOKEN)}/setMyCommands`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        commands: [
+          {
+            command: "start",
+            description: "🔗 TOLOM-тэй холбох (токен хамт)",
+          },
+          { command: "status", description: "📊 Орлогын хураангуй харах" },
+          {
+            command: "link",
+            description: "📱 Утасны дугаараар холбогдох (харилцагч)",
+          },
+          {
+            command: "unlink",
+            description: "🛑 Сануулгын холболтыг салгах (харилцагч)",
+          },
+          { command: "stop", description: "🔕 Мэдэгдлийг зогсоох" },
+        ],
+      }),
+    });
+    if (res.ok) {
+      commandsRegistered = true;
+      console.log("Bot commands registered successfully");
+    } else {
+      console.error("Failed to register commands:", await res.text());
+    }
+  } catch (e) {
+    console.error("Failed to register commands:", e);
+  }
+}
+
 // ── Types ────────────────────────────────────────────────────────
 
-/** Telegram Update object — only the fields we care about. */
 interface TelegramUpdate {
   update_id: number;
   message?: {
@@ -71,6 +133,22 @@ interface TelegramUpdate {
     };
     text?: string;
     entities?: { type: string; offset: number; length: number }[];
+  };
+  callback_query?: {
+    id: string;
+    from: {
+      id: number;
+      is_bot: boolean;
+      first_name?: string;
+      last_name?: string;
+      username?: string;
+    };
+    message?: {
+      message_id: number;
+      chat: { id: number; type: string };
+      text?: string;
+    };
+    data?: string;
   };
 }
 
@@ -98,6 +176,11 @@ async function handleStart(
         "2. Тохиргоо → Telegram хэсэгт орох\n" +
         '3. "Холбох" товчийг дарж токен үүсгэх\n' +
         "4. Энэ чатад /start командыг токены хамт илгээх",
+      {
+        reply_markup: inlineKeyboard([
+          [{ text: "🔗 Хэрхэн холбогдох?", callback_data: "how_to_link" }],
+        ]),
+      },
     );
     return;
   }
@@ -125,7 +208,18 @@ async function handleStart(
     console.error("Token lookup failed:", tokenError);
     await sendMessage(
       chatId,
-      "❌ Токен хүчингүй эсвэл хугацаа нь дууссан байна. Системээс шинэ токен үүсгэнэ үү.",
+      "❌ Токен хүчингүй эсвэл хугацаа нь дууссан байна.\n\n" +
+        "Системээс шинэ токен үүсгэнэ үү.",
+      {
+        reply_markup: inlineKeyboard([
+          [
+            {
+              text: "🔄 Шинэ токен авах",
+              url: "https://app.tolom.mn/settings",
+            },
+          ],
+        ]),
+      },
     );
     return;
   }
@@ -175,18 +269,25 @@ async function handleStart(
     `✅ *Амжилттай холбогдлоо!*\n\n` +
       `Таны TOLOM данс \`${org?.name ?? "байгууллага"}\`-тай холбогдлоо.\n\n` +
       `Энэ чатаар та дараах мэдэгдлүүдийг хүлээн авах болно:\n` +
-      `📊 Өдөр тутмын хураангуй\n` +
-      `📈 Долоо хоногийн тайлан\n` +
+      `📊 Өдөр тутмын хураангуй (22:00)\n` +
+      `📈 Долоо хоногийн тайлан (Даваа 22:00)\n` +
       `🔔 Яаралтай үйлчилгээний сануулга\n\n` +
-      `Тушаалууд:\n` +
-      `/status — Одоогийн үзүүлэлтүүд\n` +
-      `/stop — Мэдэгдлийг зогсоох`,
+      `Тушаалуудыг ашиглахдаа / дарж эсвэл доорх товчнуудыг ашиглана уу.`,
+    {
+      reply_markup: inlineKeyboard([
+        [
+          { text: "📊 Хураангуй", callback_data: "status" },
+          { text: "🔔 Сануулга", callback_data: "reminders" },
+        ],
+        [{ text: "❌ Мэдэгдэл зогсоох", callback_data: "stop" }],
+      ]),
+    },
   );
 }
 
 /**
  * /status
- * Sends a quick money-impact summary for the linked org.
+ * Sends a daily business summary for the linked org.
  */
 async function handleStatus(
   supabase: ReturnType<typeof createClient>,
@@ -195,25 +296,42 @@ async function handleStatus(
   const link = await getActiveLink(supabase, chatId);
   if (!link) return;
 
-  const summary = await computeOrgSummary(supabase, link.organization_id);
+  const today = await computeDailySummary(supabase, link.organization_id);
 
   const lines = [
-    `📊 *Тайлан — ${link.org_name}*`,
+    `📊 *Өдрийн хураангуй — ${link.org_name}*`,
+    `📅 ${new Date().toLocaleDateString("mn-MN", { year: "numeric", month: "long", day: "numeric" })}`,
     "",
-    `📨 Илгээгдсэн сануулга: **${summary.remindersSent}**`,
-    `👥 Буцаж ирсэн үйлчлүүлэгч: **${summary.customersReturned}**`,
-    `💰 Орлого: **${formatMoney(summary.revenueRecovered)}**`,
-    `📅 Долоо хоногт дуусах үйлчилгээ: **${summary.upcomingDueServices}**`,
-    `💵 Ашиглагдаагүй боломж: **${formatMoney(summary.missedOpportunityValue)}**`,
+    `💰 *Орлого:* ${formatMoney(today.revenue)}`,
+    `💸 *Зарлага:* ${formatMoney(today.expenses)}`,
+    today.netProfit >= 0
+      ? `📈 *Цэвэр ашиг:* ${formatMoney(today.netProfit)}`
+      : `📉 *Цэвэр алдагдал:* ${formatMoney(today.netProfit)}`,
+    "",
+    `🔧 *Идэвхтэй захиалга:* ${today.activeJobs}`,
+    `   📋 Шинэ: ${today.newJobs} | 🔍 Онош: ${today.diagnosing} | ⚙️ Хийж буй: ${today.inProgress}`,
+    `✅ Өнөөдөр гүйцэтгэсэн: ${today.completedToday}`,
+    "",
+    `🚗 Нийт үйлчлүүлэгч: ${today.totalCustomers}`,
+    `📅 Ойрын 7 хоногт дуусах: ${today.upcomingServices}`,
+    today.unpaidInvoices > 0
+      ? `💳 Төлөгдөөгүй нэхэмжлэх: ${today.unpaidInvoices} (${formatMoney(today.unpaidAmount)})`
+      : `💳 Төлөгдөөгүй нэхэмжлэх: 0`,
   ];
 
-  await sendMessage(chatId, lines.join("\n"));
+  await sendMessage(chatId, lines.filter(Boolean).join("\n"), {
+    reply_markup: inlineKeyboard([
+      [
+        { text: "🔄 Сэргээх", callback_data: "refresh_status" },
+        { text: "🔕 Зогсоох", callback_data: "stop" },
+      ],
+    ]),
+  });
 }
 
 /**
  * /link <phone>
  * Links this Telegram chat to a customer record by phone number.
- * Once linked, service reminders will be sent here instead of email.
  */
 async function handleLink(
   supabase: ReturnType<typeof createClient>,
@@ -226,6 +344,16 @@ async function handleLink(
       "📱 *Утасны дугаараа илгээнэ үү*\n\n" +
         "Жишээ: /link 99112233\n\n" +
         "Таны утасны дугаар системд бүртгэлтэй байх шаардлагатай.",
+      {
+        reply_markup: inlineKeyboard([
+          [
+            {
+              text: "ℹ️ Хэрхэн холбогдох?",
+              callback_data: "how_to_link_customer",
+            },
+          ],
+        ]),
+      },
     );
     return;
   }
@@ -276,9 +404,15 @@ async function handleLink(
     chatId,
     `✅ *Амжилттай холбогдлоо!*\n\n` +
       `Сайн байна уу ${name}? Та үйлчилгээний сануулгыг Телеграмаар хүлээн авах болно.\n\n` +
-      `🔔 Тос солих, шүүгч солих зэрэг тогтмол үйлчилгээний хугацаа ойртоход энэ чатаар мэдэгдэл ирнэ.\n\n` +
+      `🔔 Үйлчилгээний хугацаа ойртоход энэ чатаар мэдэгдэл ирнэ.\n\n` +
       `/unlink — Холболтыг салгах\n` +
       `/status — Одоогийн үзүүлэлтүүд`,
+    {
+      reply_markup: inlineKeyboard([
+        [{ text: "📊 Миний үйлчилгээ", callback_data: "customer_status" }],
+        [{ text: "🛑 Холболт салгах", callback_data: "unlink_customer" }],
+      ]),
+    },
   );
 
   // Also handle orgs with multiple customers matching
@@ -325,6 +459,11 @@ async function handleUnlink(
     chatId,
     "🛑 Холболт салгагдлаа.\n\n" +
       "Дахин холбохын тулд /link командыг утасны дугаарын хамт илгээнэ үү.",
+    {
+      reply_markup: inlineKeyboard([
+        [{ text: "🔗 Дахин холбох", callback_data: "prompt_link" }],
+      ]),
+    },
   );
 }
 
@@ -352,7 +491,179 @@ async function handleStop(
     chatId,
     "🛑 Мэдэгдэл зогслоо.\n\n" +
       "Мэдэгдлийг дахин идэвхжүүлэхийн тулд TOLOM системээс шинэ токен үүсгэн /start командыг илгээнэ үү.",
+    {
+      reply_markup: inlineKeyboard([
+        [{ text: "🔄 Дахин идэвхжүүлэх", callback_data: "reactivate" }],
+      ]),
+    },
   );
+}
+
+// ── Callback Query Handler ───────────────────────────────────────
+
+async function handleCallbackQuery(
+  supabase: ReturnType<typeof createClient>,
+  cb: NonNullable<TelegramUpdate["callback_query"]>,
+) {
+  const chatId = cb.message?.chat.id;
+  const data = cb.data;
+  const callbackId = cb.id;
+
+  if (!chatId || !data) {
+    await answerCallbackQuery(callbackId, { text: "Алдаа гарлаа" });
+    return;
+  }
+
+  // Acknowledge the button press immediately (dismiss loading spinner)
+  await answerCallbackQuery(callbackId, {});
+
+  switch (data) {
+    case "status":
+    case "refresh_status":
+      await handleStatus(supabase, chatId);
+      break;
+
+    case "stop":
+      await handleStop(supabase, chatId);
+      break;
+
+    case "reminders":
+      await sendMessage(
+        chatId,
+        "🔔 *Сануулгын түүх*\n\n" +
+          "Таны сануулгын бүртгэлийг харахыг хүсвэл системд нэвтрэх: https://app.tolom.mn",
+      );
+      break;
+
+    case "how_to_link":
+      await sendMessage(
+        chatId,
+        "🔗 *Хэрхэн холбогдох вэ?*\n\n" +
+          "1. TOLOM системд нэвтрэх\n" +
+          "2. Тохиргоо → Telegram хэсэгт орох\n" +
+          '3. "Холбох" товчийг дарж токен үүсгэх\n' +
+          "4. Энэ чатад /start командыг токены хамт илгээх\n\n" +
+          "Токен 15 минутын хугацаанд хүчинтэй.",
+      );
+      break;
+
+    case "how_to_link_customer":
+      await sendMessage(
+        chatId,
+        "📱 *Харилцагч хэрхэн холбогдох вэ?*\n\n" +
+          "Өөрийн утасны дугаараа /link командын хамт илгээнэ үү.\n\n" +
+          "Жишээ: `/link 99112233`\n\n" +
+          "Дугаараа олон янзаар бичиж болно:\n" +
+          "• 99112233\n" +
+          "• +97699112233\n" +
+          "• 97699112233\n" +
+          "• 99-11-22-33",
+      );
+      break;
+
+    case "customer_status":
+      await handleCustomerStatus(supabase, chatId);
+      break;
+
+    case "unlink_customer":
+      await handleUnlink(supabase, chatId);
+      break;
+
+    case "prompt_link":
+      await sendMessage(
+        chatId,
+        "📱 Утасны дугаараа илгээнэ үү.\n\n" + "Жишээ: /link 99112233",
+      );
+      break;
+
+    case "reactivate":
+      await sendMessage(
+        chatId,
+        "🔄 *Дахин идэвхжүүлэх*\n\n" +
+          "TOLOM системээс шинэ токен үүсгэн /start командыг илгээнэ үү.",
+      );
+      break;
+
+    default:
+      await answerCallbackQuery(callbackId, {
+        text: "Танигдаагүй үйлдэл",
+        show_alert: true,
+      });
+  }
+}
+
+/**
+ * Shows a customer their current service information.
+ */
+async function handleCustomerStatus(
+  supabase: ReturnType<typeof createClient>,
+  chatId: number,
+) {
+  // Find customer by telegram_chat_id
+  const { data: customer } = await supabase
+    .from("customers")
+    .select("id, first_name, full_name")
+    .eq("telegram_chat_id", chatId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (!customer) {
+    await sendMessage(
+      chatId,
+      "❓ Таны холбоотой харилцагчийн бүртгэл олдсонгүй.\n\n/link 99112233 — утасны дугаараа илгээнэ үү.",
+    );
+    return;
+  }
+
+  const name = customer.full_name || customer.first_name || "Харилцагч";
+
+  // Find upcoming services for vehicles owned by this customer
+  const today = new Date().toISOString().split("T")[0];
+  const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+
+  const { data: schedules } = await supabase
+    .from("vehicle_service_schedules")
+    .select(
+      `
+      service_name,
+      next_due_date,
+      vehicle:vehicles!inner(plate_number)
+    `,
+    )
+    .eq("vehicle:vehicles.customer_id", customer.id)
+    .eq("reminder_enabled", true)
+    .is("deleted_at", null)
+    .gte("next_due_date", today)
+    .lte("next_due_date", thirtyDaysFromNow)
+    .order("next_due_date", { ascending: true })
+    .limit(10);
+
+  let message = `📊 *Сайн байна уу ${name}?*\n\n`;
+
+  if (!schedules || schedules.length === 0) {
+    message +=
+      "✅ Таньд ойрын 30 хоногт дуусах үйлчилгээ байхгүй байна.\n\n" +
+      "Шинэ үйлчилгээ нэмэхийг хүсвэл үйлчилгээний газартай холбогдоно уу.";
+  } else {
+    message += `🔔 Таньд **${schedules.length}** үйлчилгээ дуусах хугацаа ойртож байна:\n\n`;
+    for (const s of schedules) {
+      const svc = s as unknown as {
+        service_name: string;
+        next_due_date: string;
+        vehicle: { plate_number: string };
+      };
+      const dueDate = new Date(svc.next_due_date).toLocaleDateString("mn-MN");
+      message += `• *${svc.service_name}* — ${svc.vehicle.plate_number}\n  ⏰ ${dueDate}\n\n`;
+    }
+  }
+
+  await sendMessage(chatId, message, {
+    reply_markup: inlineKeyboard([
+      [{ text: "🛑 Холболт салгах", callback_data: "unlink_customer" }],
+    ]),
+  });
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -393,180 +704,124 @@ async function getActiveLink(
   };
 }
 
-interface OrgSummary {
-  remindersSent: number;
-  customersReturned: number;
-  revenueRecovered: number;
-  upcomingDueServices: number;
-  estimatedUpcomingRevenue: number;
-  missedOpportunityValue: number;
+interface DailySummary {
+  revenue: number; // today's completed work orders total
+  expenses: number; // today's expenses total
+  netProfit: number; // revenue - expenses
+  activeJobs: number; // In Progress + Diagnosing
+  newJobs: number; // New work orders
+  diagnosing: number; // Diagnosing
+  inProgress: number; // In Progress
+  completedToday: number; // completed today
+  totalCustomers: number; // unique customers this period
+  upcomingServices: number; // due in next 7 days
+  unpaidInvoices: number; // unpaid invoice count
+  unpaidAmount: number; // total unpaid amount
 }
 
-async function computeOrgSummary(
+async function computeDailySummary(
   supabase: ReturnType<typeof createClient>,
   orgId: string,
-): Promise<OrgSummary> {
+  period: "daily" | "weekly" = "daily",
+): Promise<DailySummary> {
   const now = new Date();
-  const sevenDaysAgo = new Date(
-    now.getTime() - 7 * 24 * 60 * 60 * 1000,
-  ).toISOString();
-  const today = now.toISOString().split("T")[0]; // YYYY-MM-DD
+  const periodDays = period === "daily" ? 1 : 7;
+  const periodStart = new Date(
+    now.getTime() - periodDays * 24 * 60 * 60 * 1000,
+  );
+  const periodStartStr = periodStart.toISOString();
+  const todayStr = now.toISOString().split("T")[0];
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
     .toISOString()
     .split("T")[0];
-  const sixtyDaysAgo = new Date(
-    now.getTime() - 60 * 24 * 60 * 60 * 1000,
-  ).toISOString();
 
-  // 1. Reminders sent in last 7 days
-  const { count: remindersSent } = await supabase
-    .from("reminder_logs")
-    .select("*", { count: "exact", head: true })
-    .eq("organization_id", orgId)
-    .eq("status", "sent")
-    .gte("sent_at", sevenDaysAgo);
-
-  // 2. Upcoming due services (next 7 days)
-  const { data: upcomingSchedules } = await supabase
-    .from("vehicle_service_schedules")
-    .select("id, service_catalog_id")
-    .eq("organization_id", orgId)
-    .eq("reminder_enabled", true)
-    .is("deleted_at", null)
-    .gte("next_due_date", today)
-    .lte("next_due_date", sevenDaysFromNow);
-
-  const upcomingDueServices = upcomingSchedules?.length ?? 0;
-
-  // 3. Estimated upcoming revenue — use service_catalog.default_price when available
-  let estimatedUpcomingRevenue = 0;
-  if (upcomingSchedules && upcomingSchedules.length > 0) {
-    const catalogIds = upcomingSchedules
-      .filter((s) => s.service_catalog_id)
-      .map((s) => s.service_catalog_id);
-
-    if (catalogIds.length > 0) {
-      const { data: prices } = await supabase
-        .from("service_catalog")
-        .select("id, default_price")
-        .in("id", catalogIds);
-
-      const priceMap = new Map(
-        prices?.map((p) => [p.id, p.default_price]) ?? [],
-      );
-      const withPrice = upcomingSchedules.filter(
-        (s) => s.service_catalog_id && priceMap.has(s.service_catalog_id),
-      );
-      const withoutPrice = upcomingSchedules.filter(
-        (s) => !s.service_catalog_id,
-      );
-
-      for (const s of withPrice) {
-        estimatedUpcomingRevenue += priceMap.get(s.service_catalog_id!) ?? 0;
-      }
-
-      // For schedules without a catalog price, use org average work order total
-      if (withoutPrice.length > 0) {
-        const { data: avgResult } = await supabase
-          .from("work_orders")
-          .select("total")
-          .eq("organization_id", orgId)
-          .eq("status", "Completed")
-          .is("deleted_at", null)
-          .order("completed_at", { ascending: false })
-          .limit(100);
-
-        const avgTotal =
-          avgResult && avgResult.length > 0
-            ? avgResult.reduce((sum, wo) => sum + wo.total, 0) /
-              avgResult.length
-            : 0;
-
-        estimatedUpcomingRevenue += withoutPrice.length * avgTotal;
-      }
-    }
-  }
-
-  // 4. Customers returned after reminder (sent reminder → completed work order within 60 days)
-  const { data: sentReminders } = await supabase
-    .from("reminder_logs")
-    .select("customer_id, sent_at")
-    .eq("organization_id", orgId)
-    .eq("status", "sent")
-    .gte("sent_at", sixtyDaysAgo)
-    .not("customer_id", "is", null);
-
-  let customersReturned = 0;
-  let revenueRecovered = 0;
-
-  if (sentReminders && sentReminders.length > 0) {
-    const customerIds = [
-      ...new Set(sentReminders.map((r) => r.customer_id)),
-    ] as string[];
-
-    // Find completed work orders for these customers after reminder was sent
-    for (const reminder of sentReminders) {
-      if (!reminder.customer_id) continue;
-      const reminderSentAt = reminder.sent_at;
-
-      const { data: completedWOs } = await supabase
-        .from("work_orders")
-        .select("id, total, completed_at")
-        .eq("organization_id", orgId)
-        .eq("customer_id", reminder.customer_id)
-        .eq("status", "Completed")
-        .gte("completed_at", reminderSentAt)
-        .lte(
-          "completed_at",
-          new Date(
-            new Date(reminderSentAt).getTime() + 60 * 24 * 60 * 60 * 1000,
-          ).toISOString(),
-        )
-        .is("deleted_at", null);
-
-      if (completedWOs && completedWOs.length > 0) {
-        customersReturned++;
-        for (const wo of completedWOs) {
-          revenueRecovered += wo.total;
-        }
-      }
-    }
-  }
-
-  // 5. Missed opportunity value (overdue schedules × avg service value)
-  const { count: overdueCount } = await supabase
-    .from("vehicle_service_schedules")
-    .select("*", { count: "exact", head: true })
-    .eq("organization_id", orgId)
-    .eq("reminder_enabled", true)
-    .is("deleted_at", null)
-    .lt("next_due_date", today);
-
-  // Use org average work order total for missed opportunity
-  const { data: recentCompleted } = await supabase
+  // 1. Revenue from work orders completed in the period
+  const { data: completedWOs } = await supabase
     .from("work_orders")
     .select("total")
     .eq("organization_id", orgId)
     .eq("status", "Completed")
     .is("deleted_at", null)
-    .order("completed_at", { ascending: false })
-    .limit(50);
+    .gte("completed_at", periodStartStr);
 
-  const avgOrderValue =
-    recentCompleted && recentCompleted.length > 0
-      ? recentCompleted.reduce((sum, wo) => sum + wo.total, 0) /
-        recentCompleted.length
-      : 0;
+  const revenue =
+    completedWOs?.reduce((sum, wo) => sum + (wo.total ?? 0), 0) ?? 0;
+  const completedToday = completedWOs?.length ?? 0;
 
-  const missedOpportunityValue = (overdueCount ?? 0) * avgOrderValue;
+  // 2. Expenses in the period
+  const { data: expenses } = await supabase
+    .from("expenses")
+    .select("amount")
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .gte("expense_date", todayStr);
+
+  const totalExpenses =
+    expenses?.reduce((sum, e) => sum + (e.amount ?? 0), 0) ?? 0;
+
+  // 3. Active jobs (In Progress, Diagnosing)
+  const { data: activeJobsRaw } = await supabase
+    .from("work_orders")
+    .select("status")
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .in("status", ["New", "Diagnosing", "In Progress"]);
+
+  const newJobs = activeJobsRaw?.filter((j) => j.status === "New").length ?? 0;
+  const diagnosing =
+    activeJobsRaw?.filter((j) => j.status === "Diagnosing").length ?? 0;
+  const inProgress =
+    activeJobsRaw?.filter((j) => j.status === "In Progress").length ?? 0;
+  const activeJobs = activeJobsRaw?.length ?? 0;
+
+  // 4. Unique customers this period
+  const { data: customers } = await supabase
+    .from("work_orders")
+    .select("customer_id", { head: false, count: "exact" })
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .gte("created_at", periodStartStr);
+
+  const uniqueCustomers = customers
+    ? new Set(customers.map((c) => c.customer_id)).size
+    : 0;
+
+  // 5. Upcoming services (next 7 days)
+  const { count: upcomingServices } = await supabase
+    .from("vehicle_service_schedules")
+    .select("*", { count: "exact", head: true })
+    .eq("organization_id", orgId)
+    .eq("reminder_enabled", true)
+    .is("deleted_at", null)
+    .gte("next_due_date", todayStr)
+    .lte("next_due_date", sevenDaysFromNow);
+
+  // 6. Unpaid invoices
+  const { data: unpaidInvoices } = await supabase
+    .from("invoices")
+    .select("balance_due")
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .neq("status", "paid")
+    .neq("status", "cancelled");
+
+  const unpaidCount = unpaidInvoices?.length ?? 0;
+  const unpaidAmount =
+    unpaidInvoices?.reduce((sum, inv) => sum + (inv.balance_due ?? 0), 0) ?? 0;
 
   return {
-    remindersSent: remindersSent ?? 0,
-    customersReturned,
-    revenueRecovered,
-    upcomingDueServices,
-    estimatedUpcomingRevenue,
-    missedOpportunityValue,
+    revenue,
+    expenses: totalExpenses,
+    netProfit: revenue - totalExpenses,
+    activeJobs,
+    newJobs,
+    diagnosing,
+    inProgress,
+    completedToday,
+    totalCustomers: uniqueCustomers,
+    upcomingServices: upcomingServices ?? 0,
+    unpaidInvoices: unpaidCount,
+    unpaidAmount,
   };
 }
 
@@ -586,6 +841,11 @@ Deno.serve(async (req: Request) => {
   // Load app config from env vars or DB fallback
   await loadAppConfig();
 
+  // Register commands on first invocation
+  if (!commandsRegistered && TELEGRAM_BOT_TOKEN) {
+    await registerBotCommands();
+  }
+
   // Verify webhook secret token
   const secretToken = req.headers.get("X-Telegram-Bot-Api-Secret-Token");
   if (TELEGRAM_WEBHOOK_SECRET && secretToken !== TELEGRAM_WEBHOOK_SECRET) {
@@ -600,7 +860,15 @@ Deno.serve(async (req: Request) => {
     return new Response("Bad Request", { status: 400 });
   }
 
-  // Ignore non-message updates (channel posts, callback queries, etc.)
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+  // Handle callback queries (inline button presses)
+  if (update.callback_query) {
+    await handleCallbackQuery(supabase, update.callback_query);
+    return new Response("OK");
+  }
+
+  // Ignore non-message updates (channel posts, etc.)
   if (!update.message?.text) {
     return new Response("OK");
   }
@@ -613,7 +881,6 @@ Deno.serve(async (req: Request) => {
     return new Response("OK");
   }
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   const text = msg.text.trim();
   const fromId = msg.from?.id ?? 0;
   const username = msg.chat.username;
@@ -622,7 +889,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     if (text.startsWith("/start")) {
-      const args = text.slice(6).trim(); // "/start " or "/start<token>"
+      const args = text.slice(6).trim();
       await handleStart(
         supabase,
         chatId,
@@ -644,13 +911,19 @@ Deno.serve(async (req: Request) => {
     } else {
       await sendMessage(
         chatId,
-        "❓ Танигдаагүй тушаал.\n\n" +
-          `Боломжтой тушаалууд:\n` +
-          `/start [токен] — TOLOM-тэй холбох\n` +
-          `/link [утасны дугаар] — Үйлчилгээний сануулга хүлээн авах\n` +
-          `/unlink — Сануулгын холболтыг салгах\n` +
-          `/status — Одоогийн үзүүлэлтүүд\n` +
-          `/stop — Мэдэгдлийг зогсоох`,
+        "❓ *Танигдаагүй тушаал*\n\n" + "Дараах тушаалуудыг ашиглана уу:",
+        {
+          reply_markup: inlineKeyboard([
+            [{ text: "📊 Хураангуй", callback_data: "status" }],
+            [{ text: "🔗 Хэрхэн холбогдох?", callback_data: "how_to_link" }],
+            [
+              {
+                text: "📱 Харилцагч холбох",
+                callback_data: "how_to_link_customer",
+              },
+            ],
+          ]),
+        },
       );
     }
   } catch (err) {

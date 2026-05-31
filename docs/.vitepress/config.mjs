@@ -79,6 +79,7 @@ export default defineConfig({
         items: [
           { text: "Системийн тохиргоо", link: "/settings" },
           { text: "Байгууллагын удирдлага", link: "/organization" },
+          { text: "Үнийн дүрмүүд", link: "/pricing-rules" },
           { text: "Нөөц, экспорт", link: "/backup" },
           { text: "Алсын синхрончлол", link: "/sync" },
         ],
