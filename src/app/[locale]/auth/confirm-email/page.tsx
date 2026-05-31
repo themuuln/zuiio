@@ -4,9 +4,9 @@ import { CheckCircle2, ChevronDown, Loader2, Mail } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Typography } from "@/components/ui/typography";
 
 export default function ConfirmEmailPage() {
   const t = useTranslations("auth.confirmEmail");

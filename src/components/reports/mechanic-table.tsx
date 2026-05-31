@@ -1,6 +1,8 @@
 /**
  * MechanicTable — Per-mechanic KPI breakdown table with export.
  */
+
+import { ExportButton } from "@/components/export-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -11,23 +13,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ExportButton } from "@/components/export-button";
+import { TrendingDown, TrendingUp } from "lucide-react";
+import { DeltaIndicator } from "@/components/reports/delta-indicator";
 import type { ExportColumn } from "@/lib/export";
+import type { ReportComparison, ReportMechanicKpi } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
-import type { ReportMechanicKpi } from "@/lib/types";
 
 interface MechanicTableProps {
   kpis: ReportMechanicKpi[];
   exportCols: ExportColumn<ReportMechanicKpi>[];
   exportFile: string;
+  /** Optional comparison data for the "Change" column */
+  comparison?: ReportComparison | null;
 }
 
 export function MechanicTable({
   kpis,
   exportCols,
   exportFile,
+  comparison,
 }: MechanicTableProps) {
   if (!kpis.length) return null;
+
+  const totalPrevRevenue = comparison?.total_revenue ?? null;
+  const totalCurRevenue = kpis.reduce((s, m) => s + m.total_revenue, 0);
 
   return (
     <Card>
@@ -64,34 +73,64 @@ export function MechanicTable({
               <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
                 Avg/WO
               </TableHead>
+              {comparison && (
+                <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
+                  vs Prev
+                </TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {kpis.map((m, i) => (
-              <TableRow
-                key={m.mechanic_id}
-                className={`border-b border-border hover:bg-muted/30 ${i === 0 ? "bg-muted/10" : ""}`}
-              >
-                <TableCell className="px-4 py-3 font-medium">
-                  {m.mechanic_name}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right tabular-nums">
-                  {m.work_orders_completed}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right tabular-nums">
-                  {m.services_count}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right tabular-nums">
-                  {m.parts_count}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right font-medium tabular-nums">
-                  {formatCurrency(m.total_revenue)}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                  {formatCurrency(m.avg_revenue_per_wo)}
-                </TableCell>
-              </TableRow>
-            ))}
+            {kpis.map((m, i) => {
+              const mechPct =
+                totalCurRevenue > 0 ? m.total_revenue / totalCurRevenue : 0;
+              const mechPrevRevenue =
+                totalPrevRevenue != null
+                  ? Math.round(totalPrevRevenue * mechPct * 100) / 100
+                  : null;
+              const mechRevenueDelta =
+                mechPrevRevenue != null && mechPrevRevenue > 0
+                  ? Math.round(
+                      ((m.total_revenue - mechPrevRevenue) / mechPrevRevenue) *
+                        1000,
+                    ) / 10
+                  : null;
+
+              return (
+                <TableRow
+                  key={m.mechanic_id}
+                  className={`border-b border-border hover:bg-muted/30 ${i === 0 ? "bg-muted/10" : ""}`}
+                >
+                  <TableCell className="px-4 py-3 font-medium">
+                    {m.mechanic_name}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-right tabular-nums">
+                    {m.work_orders_completed}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-right tabular-nums">
+                    {m.services_count}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-right tabular-nums">
+                    {m.parts_count}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-right font-medium tabular-nums">
+                    {formatCurrency(m.total_revenue)}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                    {formatCurrency(m.avg_revenue_per_wo)}
+                  </TableCell>
+                  {comparison && (
+                    <TableCell className="px-4 py-3 text-right tabular-nums">
+                      {mechRevenueDelta != null ? (
+                        <DeltaIndicator value={mechRevenueDelta} showPercent />
+                      ) : (
+                        <span className="text-muted-foreground">&mdash;</span>
+                      )}
+                    </TableCell>
+                  )}
+                </TableRow>
+              );
+            })}
           </TableBody>
           <TableFooter>
             <TableRow className="bg-muted/30 font-semibold">
@@ -106,9 +145,21 @@ export function MechanicTable({
                 {kpis.reduce((s, m) => s + m.parts_count, 0)}
               </TableCell>
               <TableCell className="px-4 py-3 text-right tabular-nums">
-                {formatCurrency(kpis.reduce((s, m) => s + m.total_revenue, 0))}
+                {formatCurrency(totalCurRevenue)}
               </TableCell>
               <TableCell className="px-4 py-3" />
+              {comparison && (
+                <TableCell className="px-4 py-3 text-right tabular-nums">
+                  {comparison.revenue_change_pct != null ? (
+                    <DeltaIndicator
+                      value={comparison.revenue_change_pct}
+                      showPercent
+                    />
+                  ) : (
+                    <span className="text-muted-foreground">&mdash;</span>
+                  )}
+                </TableCell>
+              )}
             </TableRow>
           </TableFooter>
         </Table>

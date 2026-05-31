@@ -9,17 +9,26 @@ import {
   MessageCircle,
   Palette,
   Percent,
+  Search,
   Settings2,
   Stethoscope,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { applyBrandThemePreview } from "@/components/brand-theme-provider";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Item,
   ItemContent,
@@ -48,6 +57,63 @@ import { DiagnosisLabelsSection } from "./_diagnosis-labels-section";
 import { OrganizationCard } from "./_organization-card";
 import { TelegramSection } from "./_telegram-section";
 import { VehicleNicheForm } from "./_vehicle-niche-form";
+
+const SETTINGS_SECTIONS = [
+  {
+    value: "general",
+    title: "General",
+    description:
+      "Basic business information and default values for new invoices.",
+    icon: Building2,
+  },
+  {
+    value: "appearance",
+    title: "Appearance",
+    description:
+      "Customize colors, theme, and interface density to match your brand.",
+    icon: Palette,
+  },
+  {
+    value: "commission",
+    title: "Commission Rules",
+    description: "Configure how mechanics earn commissions on work orders.",
+    icon: Percent,
+  },
+  {
+    value: "diagnosis",
+    title: "Diagnosis Labels",
+    description:
+      "Manage reusable labels for work order complaints (e.g., engine, brake, electrical).",
+    icon: Stethoscope,
+  },
+  {
+    value: "telegram",
+    title: "Telegram Bot",
+    description:
+      "Connect your Telegram to get service reminder summaries and revenue reports.",
+    icon: MessageCircle,
+  },
+  {
+    value: "niche",
+    title: "Vehicle Niche",
+    description:
+      "Restrict your workshop to specific vehicle brands and models.",
+    icon: Car,
+  },
+  {
+    value: "sharing",
+    title: "Data Sharing",
+    description:
+      "Control whether other organizations can view your customer and vehicle data.",
+    icon: Globe,
+  },
+  {
+    value: "export",
+    title: "Data & Export",
+    description: "Download your data or run database backups.",
+    icon: Database,
+  },
+] as const;
 
 function SectionHeading({
   icon: Icon,
@@ -254,8 +320,35 @@ export default function SettingsPage() {
     }
   }
 
-  const { state: pageHeader } = usePageHeader();
+  const { state: pageHeader, setActiveTab } = usePageHeader();
   const activeTab = pageHeader.activeTab;
+
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredSections = useMemo(() => {
+    if (!searchQuery.trim()) return SETTINGS_SECTIONS;
+    const q = searchQuery.toLowerCase();
+    return SETTINGS_SECTIONS.filter(
+      (s) =>
+        s.title.toLowerCase().includes(q) ||
+        s.description.toLowerCase().includes(q),
+    );
+  }, [searchQuery]);
+
+  // Auto-select first matching section when current is hidden by search
+  useEffect(() => {
+    if (
+      searchQuery.trim() &&
+      !filteredSections.find((s) => s.value === activeTab)
+    ) {
+      const firstMatch = filteredSections[0]?.value;
+      if (firstMatch) setActiveTab(firstMatch);
+    }
+  }, [filteredSections, activeTab, setActiveTab, searchQuery]);
+
+  const activeSection =
+    SETTINGS_SECTIONS.find((section) => section.value === activeTab) ??
+    SETTINGS_SECTIONS[0];
 
   if (orgInfoQuery.isLoading || loading) {
     return <LoadingSkeleton />;
@@ -272,14 +365,155 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {activeTab === "general" && (
-        <section>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_320px]">
+        <Card className="overflow-hidden border-border/70 bg-card/95 shadow-sm">
+          <CardContent className="flex flex-col gap-5 p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15">
+                  <Settings2 className="size-5" />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Typography.Text className="text-lg font-semibold tracking-tight">
+                      Settings
+                    </Typography.Text>
+                    <Badge variant="secondary">{activeSection.title}</Badge>
+                  </div>
+                  <Typography.Muted className="max-w-2xl text-sm text-muted-foreground">
+                    {activeSection.description}
+                  </Typography.Muted>
+                </div>
+              </div>
+              <Badge variant="outline" className="w-fit">
+                {SETTINGS_SECTIONS.length} sections
+              </Badge>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search settings..."
+                  className="h-9 pl-9 text-sm"
+                />
+              </div>
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchQuery("")}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {filteredSections.map((section) => {
+                const Icon = section.icon;
+                const isActive = activeSection.value === section.value;
+
+                return (
+                  <Button
+                    key={section.value}
+                    type="button"
+                    variant={isActive ? "secondary" : "ghost"}
+                    className="h-auto items-start justify-start rounded-2xl border border-border/60 px-4 py-3 text-left hover:bg-muted/60"
+                    onClick={() => setActiveTab(section.value)}
+                  >
+                    <div className="flex w-full items-start gap-3">
+                      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-background/80 ring-1 ring-border/60">
+                        <Icon className="size-4" />
+                      </div>
+                      <div className="flex min-w-0 flex-col gap-1">
+                        <span className="text-sm font-medium leading-none">
+                          {section.title}
+                        </span>
+                        <span className="line-clamp-2 text-xs text-muted-foreground">
+                          {section.description}
+                        </span>
+                      </div>
+                    </div>
+                  </Button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/70 bg-card/95 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold">
+              Workspace defaults
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Quick summary of the values that shape new invoices and reports.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {[
+              { label: "Organization", value: organization?.name ?? "\u2014" },
+              {
+                label: "Language",
+                value: form.language || DEFAULT_FORM.language,
+              },
+              {
+                label: "Timezone",
+                value: form.timezone || DEFAULT_FORM.timezone,
+              },
+              {
+                label: "Currency",
+                value: form.defaultCurrency || DEFAULT_FORM.defaultCurrency,
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-xl border border-border/60 bg-muted/25 px-3 py-3"
+              >
+                <Typography.Muted className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground/80">
+                  {item.label}
+                </Typography.Muted>
+                <Typography.Text className="mt-1 text-sm font-medium">
+                  {item.value}
+                </Typography.Text>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {filteredSections.length === 0 && searchQuery.trim() && (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-12">
+            <Search className="size-10 text-muted-foreground/40" />
+            <Typography.Text className="text-center text-sm text-muted-foreground">
+              No settings match your search
+            </Typography.Text>
+            <Typography.Muted className="text-xs text-muted-foreground/70">
+              Try a different keyword or browse all sections
+            </Typography.Muted>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSearchQuery("")}
+            >
+              Clear search
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {filteredSections.length > 0 && activeTab === "general" && (
+        <section className="flex flex-col gap-4">
           <SectionHeading
             icon={Building2}
             title="General"
             description="Basic business information and default values for new invoices."
           />
-          <div className="mt-4 grid gap-6 lg:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-3">
             <OrganizationCard
               orgId={orgId ?? ""}
               organization={organization}
@@ -298,14 +532,14 @@ export default function SettingsPage() {
         </section>
       )}
 
-      {activeTab === "appearance" && (
-        <section>
+      {filteredSections.length > 0 && activeTab === "appearance" && (
+        <section className="flex flex-col gap-4">
           <SectionHeading
             icon={Palette}
             title="Appearance"
             description="Customize colors, theme, and interface density to match your brand."
           />
-          <div className="mt-4">
+          <div>
             <AppearanceCustomization
               form={form}
               setForm={setForm}
@@ -317,8 +551,8 @@ export default function SettingsPage() {
         </section>
       )}
 
-      {activeTab === "commission" && (
-        <section>
+      {filteredSections.length > 0 && activeTab === "commission" && (
+        <section className="flex flex-col gap-4">
           <SectionHeading
             icon={Percent}
             title="Commission Rules"
@@ -328,8 +562,8 @@ export default function SettingsPage() {
         </section>
       )}
 
-      {activeTab === "diagnosis" && (
-        <section>
+      {filteredSections.length > 0 && activeTab === "diagnosis" && (
+        <section className="flex flex-col gap-4">
           <SectionHeading
             icon={Stethoscope}
             title="Diagnosis Labels"
@@ -339,53 +573,53 @@ export default function SettingsPage() {
         </section>
       )}
 
-      {activeTab === "telegram" && (
-        <section>
+      {filteredSections.length > 0 && activeTab === "telegram" && (
+        <section className="flex flex-col gap-4">
           <SectionHeading
             icon={MessageCircle}
             title="Telegram Bot"
             description="Connect your Telegram to get service reminder summaries and revenue reports."
           />
-          <div className="mt-4">
+          <div>
             <TelegramSection />
           </div>
         </section>
       )}
 
-      {activeTab === "niche" && (
-        <section>
+      {filteredSections.length > 0 && activeTab === "niche" && (
+        <section className="flex flex-col gap-4">
           <SectionHeading
             icon={Car}
             title="Vehicle Niche"
             description="Restrict your workshop to specific vehicle brands and models."
           />
-          <div className="mt-4">
+          <div>
             <VehicleNicheForm organization={organization} onRefetch={refetch} />
           </div>
         </section>
       )}
 
-      {activeTab === "sharing" && (
-        <section>
+      {filteredSections.length > 0 && activeTab === "sharing" && (
+        <section className="flex flex-col gap-4">
           <SectionHeading
             icon={Globe}
             title="Data Sharing"
             description="Control whether other organizations can view your customer and vehicle data."
           />
-          <div className="mt-4">
+          <div>
             <DataSharingForm organization={organization} onRefetch={refetch} />
           </div>
         </section>
       )}
 
-      {activeTab === "export" && (
-        <section>
+      {filteredSections.length > 0 && activeTab === "export" && (
+        <section className="flex flex-col gap-4">
           <SectionHeading
             icon={Database}
             title="Data & Export"
             description="Download your data or run database backups."
           />
-          <div className="mt-4">
+          <div>
             <DataExportSection orgId={orgId ?? ""} />
           </div>
         </section>

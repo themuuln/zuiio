@@ -1,17 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createClient } from "@/lib/supabase/server";
-import { withCache } from "@/lib/cache/with-cache";
 import { revalidateTag } from "next/cache";
-import { createMockSupabaseClient } from "@/test/mocks/supabase";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
+import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
-  getServices,
-  getService,
   createService,
-  updateService,
   deleteService,
   getLastSoldPrice,
+  getService,
   getServicePriceHistory,
+  getServices,
+  updateService,
 } from "./service-catalog-service";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));

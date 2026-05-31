@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { AdminOrg } from "@/lib/services/admin-service";
 import { Typography } from "@/components/ui/typography";
+import type { AdminOrg } from "@/lib/services/admin-service";
 
 const PLAN_COLORS: Record<string, string> = {
   starter: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",

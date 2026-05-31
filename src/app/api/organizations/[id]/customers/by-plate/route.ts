@@ -5,9 +5,8 @@ import type { Customer } from "@/lib/types";
 
 export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
   const url = new URL(request.url);
-  const plate = url.searchParams.get("plate")?.trim()
-    ? transliterateMongolianPlate(url.searchParams.get("plate")!.trim())
-    : undefined;
+  const rawPlate = url.searchParams.get("plate")?.trim();
+  const plate = rawPlate ? transliterateMongolianPlate(rawPlate) : undefined;
 
   if (!plate) return NextResponse.json({ data: [] });
 

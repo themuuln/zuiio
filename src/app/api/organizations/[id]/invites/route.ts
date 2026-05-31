@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   cancelInvite,
   createInvite,
   getOrgInvites,
   resendInvite,
 } from "@/lib/services/invite-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ orgId }) => {
   const invites = await getOrgInvites(orgId);

@@ -4,27 +4,26 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { toast } from "sonner";
 import type {
+  CreateCustomerParams,
+  CreatePartParams,
+  CreateServiceCatalogParams,
+  CreateVehicleParams,
   Customer,
+  PartsCatalogItem,
   ServiceCatalog,
   Vehicle,
-  CreateCustomerParams,
-  CreateVehicleParams,
-  CreateServiceCatalogParams,
-  CreatePartParams,
-  PartsCatalogItem,
 } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import {
   customerKeys,
+  inventoryKeys,
   mechanicKeys,
   priceMemoryKeys,
   serviceKeys,
   vehicleKeys,
   wizardKeys,
   workOrderKeys,
-  inventoryKeys,
 } from "./keys";
 
 // ── Types ──────────────────────────────────────────────────────

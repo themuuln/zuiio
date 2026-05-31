@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
 import { useRouter } from "@/lib/i18n/navigation";
 import {
   useCreatePurchaseOrder,
@@ -15,7 +16,6 @@ import {
   useSuppliers,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { Typography } from "@/components/ui/typography";
 
 interface LineItem {
   id: string;
@@ -223,7 +223,7 @@ export default function NewPurchaseOrderPage() {
                         }}
                         onBlur={(e) => {
                           const n = Number(e.target.value);
-                          if (isNaN(n) || n < 1)
+                          if (Number.isNaN(n) || n < 1)
                             updateItem(item.id, { quantity_ordered: 1 });
                         }}
                         className="h-9 text-center"

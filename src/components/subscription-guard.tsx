@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { SubscriptionExpiredDialog } from "./subscription-expired-dialog";
 import type { SubscriptionStatus } from "@/lib/types";
+import { SubscriptionExpiredDialog } from "./subscription-expired-dialog";
 
 interface Props {
   orgId: string;

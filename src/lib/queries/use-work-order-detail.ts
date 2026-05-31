@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { toastRetry } from "@/lib/toast-utils";
-import { createOrgQuery } from "./factory";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
+import { createOrgQuery } from "./factory";
 import { mechanicKeys, serviceKeys, workOrderKeys } from "./keys";
 
 export async function fetchServicePriceHistory(

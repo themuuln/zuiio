@@ -12,12 +12,18 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-
 import {
-  type LastVisitInfo,
-  type MechanicOption,
+  type GlobalPart,
+  type GlobalService,
+  useGlobalPartsCatalog,
+  useGlobalServiceCatalog,
+} from "@/lib/queries/use-global-catalog";
+import { usePartsCatalog } from "@/lib/queries/use-inventory";
+import {
   fetchVehiclePartPrice,
   fetchVehicleServicePrice,
+  type LastVisitInfo,
+  type MechanicOption,
   useCreateWorkOrder,
   useCustomerSearch,
   useCustomersByPlate,
@@ -27,13 +33,6 @@ import {
   useVehicleLastVisit,
   useVehicleSearch,
 } from "@/lib/queries/use-wizard-data";
-import { usePartsCatalog } from "@/lib/queries/use-inventory";
-import {
-  useGlobalServiceCatalog,
-  useGlobalPartsCatalog,
-  type GlobalService,
-  type GlobalPart,
-} from "@/lib/queries/use-global-catalog";
 
 import type {
   Customer,
@@ -245,7 +244,7 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
   // ── Draft auto-save state ──────────────────────────────────────
   const [draftData, setDraftData] = useState<WizardDraft | null>(null);
 
-  const [draftRestored, setDraftRestored] = useState(false);
+  const [_draftRestored, setDraftRestored] = useState(false);
   const draftCheckedRef = useRef(false);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -282,7 +281,7 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
     if (preselectedCustomer && !selectedCustomer) {
       setSelectedCustomer(preselectedCustomer);
     }
-  }, [preselectedCustomer]);
+  }, [preselectedCustomer, selectedCustomer]);
 
   // Auto-select vehicle from URL param
   const { data: preselectedVehicle } = useQuery({
@@ -297,12 +296,6 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
     enabled: !!orgId && !!preselectedVehicleId,
     staleTime: 30_000,
   });
-
-  useEffect(() => {
-    if (preselectedVehicle && !selectedVehicle) {
-      handleSelectVehicle(preselectedVehicle);
-    }
-  }, [preselectedVehicle]);
 
   const { data: catalogData, isInitialLoading: catalogLoading } =
     useServiceCatalog(orgId);
@@ -837,7 +830,7 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
     );
   };
 
-  const handleDiscardDraft = useCallback(() => {
+  const _handleDiscardDraft = useCallback(() => {
     if (!orgId) return;
     try {
       localStorage.removeItem(DRAFT_KEY(orgId));
@@ -848,7 +841,7 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
     setDraftRestored(false);
   }, [orgId]);
 
-  const handleRestoreDraft = useCallback(() => {
+  const _handleRestoreDraft = useCallback(() => {
     if (!draftData) return;
     setComplaint(draftData.complaint ?? "");
     setDiagnosisLabelId(draftData.diagnosisLabelId ?? "");

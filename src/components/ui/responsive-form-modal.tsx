@@ -1,7 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import type * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,13 +9,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
   Drawer,
   DrawerContent,
   DrawerDescription,
@@ -24,6 +16,14 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 export type ResponsiveFormModalProps = {

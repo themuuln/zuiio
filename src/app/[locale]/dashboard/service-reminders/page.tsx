@@ -1,13 +1,11 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import {
   AlertCircle,
   Bell,
   BellOff,
   Calendar,
   History,
-  Mail,
   Pencil,
   Plus,
   Send,
@@ -17,8 +15,20 @@ import {
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -26,9 +36,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Empty,
+  EmptyContent,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/components/ui/item";
 import { Label } from "@/components/ui/label";
-import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -47,18 +70,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import {
-  useOrgSettings,
-  useUpdateOrgSettings,
-} from "@/lib/queries/use-org-settings";
-import {
   Table,
   TableBody,
   TableCell,
@@ -67,35 +78,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Typography } from "@/components/ui/typography";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import {
+  useOrgSettings,
+  useUpdateOrgSettings,
+} from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
+  type ServiceScheduleItem,
   useCreateServiceSchedule,
   useDeleteServiceSchedule,
   useReminderLogs,
   useServiceSchedules,
   useUpdateServiceSchedule,
-  type ServiceScheduleItem,
 } from "@/lib/queries/use-service-reminders";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { Typography } from "@/components/ui/typography";
-import {
-  Item,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
-  ItemActions,
-} from "@/components/ui/item";
 import { useVehicles } from "@/lib/queries/use-vehicles";
-import {
-  Combobox,
-  ComboboxInput,
-  ComboboxContent,
-  ComboboxList,
-  ComboboxItem,
-  ComboboxEmpty,
-} from "@/components/ui/combobox";
+
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("mn-MN", {
     year: "numeric",
@@ -373,12 +372,16 @@ export default function ServiceRemindersPage() {
 
     registerTab(
       "due-soon",
-      "Due Soon",
+      t("sidebar.dueSoon"),
       <StatusSummary
-        title="Reminder Status"
+        title={t("sidebar.reminderStatus")}
         items={[
-          { label: "Overdue", count: overdue, color: "destructive" },
-          { label: "Due in 7 Days", count: dueSoon },
+          {
+            label: t("sidebar.overdue"),
+            count: overdue,
+            color: "destructive" as const,
+          },
+          { label: t("sidebar.dueIn7Days"), count: dueSoon },
         ]}
       />,
     );
@@ -395,14 +398,14 @@ export default function ServiceRemindersPage() {
 
     registerTab(
       "history",
-      "History",
+      t("serviceReminders.reminderLogs"),
       <RecentList
         items={recent}
-        title="Recent Sends"
-        emptyMessage="No reminder history yet"
+        title={t("sidebar.recentSends")}
+        emptyMessage={t("sidebar.noReminderHistory")}
       />,
     );
-  }, [schedules, reminderLogs.data, registerTab]);
+  }, [schedules, reminderLogs.data, registerTab, t]);
 
   return (
     <div className="flex flex-col gap-4 p-4">

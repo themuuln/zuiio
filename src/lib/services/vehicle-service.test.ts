@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { revalidateTag } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuditLog } from "@/lib/audit";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 
 import {
@@ -52,7 +52,7 @@ describe("createVehicle", () => {
     client.from("vehicles").single.mockResolvedValueOnce({
       data: {
         id: "v-1",
-        plate_number: "ABC123",
+        plate_number: "4444УНА",
         make: "Toyota",
         model: "Camry",
         year: 2020,
@@ -66,7 +66,7 @@ describe("createVehicle", () => {
     const result = await createVehicle(
       ORG_ID,
       {
-        plateNumber: "ABC123",
+        plateNumber: "4444УНА",
         make: "Toyota",
         model: "Camry",
         year: 2020,
@@ -75,7 +75,7 @@ describe("createVehicle", () => {
       USER_ID,
     );
 
-    expect(result.plate_number).toBe("ABC123");
+    expect(result.plate_number).toBe("4444УНА");
     expect(result.make).toBe("Toyota");
     expect(result.model).toBe("Camry");
     expect(result.year).toBe(2020);
@@ -118,7 +118,7 @@ describe("createVehicle", () => {
     await expect(
       createVehicle(
         ORG_ID,
-        { plateNumber: "ABC123", make: "", model: "Camry" },
+        { plateNumber: "4444УНА", make: "", model: "Camry" },
         USER_ID,
       ),
     ).rejects.toThrow("Make is required");
@@ -129,7 +129,7 @@ describe("createVehicle", () => {
     await expect(
       createVehicle(
         ORG_ID,
-        { plateNumber: "ABC123", make: "Toyota", model: "" },
+        { plateNumber: "4444УНА", make: "Toyota", model: "" },
         USER_ID,
       ),
     ).rejects.toThrow("Model is required");
@@ -138,14 +138,14 @@ describe("createVehicle", () => {
   it("rejects duplicate plate number within same org", async () => {
     const client = setupMockClient();
     client.from("vehicles").maybeSingle.mockResolvedValueOnce({
-      data: { id: "existing", plate_number: "ABC123" },
+      data: { id: "existing", plate_number: "4444УНА" },
       error: null,
     });
 
     await expect(
       createVehicle(
         ORG_ID,
-        { plateNumber: "ABC123", make: "Toyota", model: "Camry" },
+        { plateNumber: "4444УНА", make: "Toyota", model: "Camry" },
         USER_ID,
       ),
     ).rejects.toThrow(ConflictError);
@@ -160,7 +160,7 @@ describe("createVehicle", () => {
     client.from("vehicles").single.mockResolvedValueOnce({
       data: {
         id: "v-2",
-        plate_number: "XYZ789",
+        plate_number: "5555УНА",
         make: "Honda",
         model: "Civic",
         organization_id: ORG_ID,
@@ -173,7 +173,7 @@ describe("createVehicle", () => {
     await createVehicle(
       ORG_ID,
       {
-        plateNumber: "XYZ789",
+        plateNumber: "5555УНА",
         make: "Honda",
         model: "Civic",
         customerId: "c-2",
@@ -201,7 +201,7 @@ describe("createVehicle", () => {
     client.from("vehicles").single.mockResolvedValueOnce({
       data: {
         id: "v-3",
-        plate_number: "DEF456",
+        plate_number: "6666УНА",
         make: "Ford",
         model: "Focus",
         organization_id: ORG_ID,
@@ -213,7 +213,7 @@ describe("createVehicle", () => {
 
     await createVehicle(
       ORG_ID,
-      { plateNumber: "DEF456", make: "Ford", model: "Focus" },
+      { plateNumber: "6666УНА", make: "Ford", model: "Focus" },
       USER_ID,
     );
 
@@ -230,13 +230,13 @@ describe("createVehicle", () => {
       error: null,
     });
     client.from("vehicles").single.mockResolvedValueOnce({
-      data: { id: "v-4", plate_number: "GHI789", make: "BMW", model: "X5" },
+      data: { id: "v-4", plate_number: "7777УНА", make: "BMW", model: "X5" },
       error: null,
     });
 
     await createVehicle(
       ORG_ID,
-      { plateNumber: "GHI789", make: "BMW", model: "X5" },
+      { plateNumber: "7777УНА", make: "BMW", model: "X5" },
       USER_ID,
     );
 
@@ -258,13 +258,13 @@ describe("createVehicle", () => {
       error: null,
     });
     client.from("vehicles").single.mockResolvedValueOnce({
-      data: { id: "v-5", plate_number: "JKL012", make: "Audi", model: "A4" },
+      data: { id: "v-5", plate_number: "8888УНА", make: "Audi", model: "A4" },
       error: null,
     });
 
     await createVehicle(
       ORG_ID,
-      { plateNumber: "JKL012", make: "Audi", model: "A4" },
+      { plateNumber: "8888УНА", make: "Audi", model: "A4" },
       USER_ID,
     );
 
@@ -478,7 +478,7 @@ describe("updateVehicle", () => {
     client.from("vehicles").single.mockResolvedValueOnce({
       data: {
         id: "v-1",
-        plate_number: "OLD123",
+        plate_number: "1111УНА",
         make: "OldMake",
         model: "OldModel",
         year: 2019,
@@ -488,7 +488,7 @@ describe("updateVehicle", () => {
     client.from("vehicles").single.mockResolvedValueOnce({
       data: {
         id: "v-1",
-        plate_number: "NEW456",
+        plate_number: "2222УНА",
         make: "NewMake",
         model: "NewModel",
         year: 2023,
@@ -501,7 +501,7 @@ describe("updateVehicle", () => {
       "v-1",
       ORG_ID,
       {
-        plateNumber: "NEW456",
+        plateNumber: "2222УНА",
         make: "NewMake",
         model: "NewModel",
         year: 2023,
@@ -510,7 +510,7 @@ describe("updateVehicle", () => {
       USER_ID,
     );
 
-    expect(result.plate_number).toBe("NEW456");
+    expect(result.plate_number).toBe("2222УНА");
     expect(result.make).toBe("NewMake");
     expect(result.model).toBe("NewModel");
     expect(result.year).toBe(2023);
@@ -534,7 +534,7 @@ describe("updateVehicle", () => {
     client.from("vehicles").single.mockResolvedValueOnce({
       data: {
         id: "v-1",
-        plate_number: "ABC123",
+        plate_number: "4444УНА",
         make: "Toyota",
         model: "Camry",
       },
@@ -551,7 +551,7 @@ describe("updateVehicle", () => {
     client.from("vehicles").single.mockResolvedValueOnce({
       data: {
         id: "v-1",
-        plate_number: "ABC123",
+        plate_number: "4444УНА",
         make: "Toyota",
         model: "Camry",
       },
@@ -560,7 +560,7 @@ describe("updateVehicle", () => {
     client.from("vehicles").single.mockResolvedValueOnce({
       data: {
         id: "v-1",
-        plate_number: "ABC123",
+        plate_number: "4444УНА",
         make: "Toyota",
         model: "Camry",
       },
@@ -570,7 +570,7 @@ describe("updateVehicle", () => {
     await updateVehicle(
       "v-1",
       ORG_ID,
-      { plateNumber: "NEW123", customerId: "c-2" },
+      { plateNumber: "2222УНА", customerId: "c-2" },
       USER_ID,
     );
 
@@ -594,7 +594,7 @@ describe("updateVehicle", () => {
     client.from("vehicles").single.mockResolvedValueOnce({
       data: {
         id: "v-1",
-        plate_number: "ABC123",
+        plate_number: "4444УНА",
         make: "Toyota",
         model: "Camry",
       },
@@ -603,14 +603,14 @@ describe("updateVehicle", () => {
     client.from("vehicles").single.mockResolvedValueOnce({
       data: {
         id: "v-1",
-        plate_number: "XYZ999",
+        plate_number: "3333УНА",
         make: "Toyota",
         model: "Camry",
       },
       error: null,
     });
 
-    await updateVehicle("v-1", ORG_ID, { plateNumber: "XYZ999" }, USER_ID);
+    await updateVehicle("v-1", ORG_ID, { plateNumber: "3333УНА" }, USER_ID);
 
     expect(createAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({

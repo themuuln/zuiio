@@ -211,6 +211,124 @@ async function handleStatus(
 }
 
 /**
+ * /link <phone>
+ * Links this Telegram chat to a customer record by phone number.
+ * Once linked, service reminders will be sent here instead of email.
+ */
+async function handleLink(
+  supabase: ReturnType<typeof createClient>,
+  chatId: number,
+  phone: string,
+) {
+  if (!phone) {
+    await sendMessage(
+      chatId,
+      "📱 *Утасны дугаараа илгээнэ үү*\n\n" +
+        "Жишээ: /link 99112233\n\n" +
+        "Таны утасны дугаар системд бүртгэлтэй байх шаардлагатай.",
+    );
+    return;
+  }
+
+  // Normalize phone: remove spaces, dashes, leading 976/+
+  let normalized = phone.replace(/[\s-]/g, "");
+  if (normalized.startsWith("+976")) normalized = normalized.slice(4);
+  else if (normalized.startsWith("976")) normalized = normalized.slice(3);
+  else if (normalized.startsWith("+")) normalized = normalized.slice(1);
+
+  // Find customer by phone across all orgs
+  const { data: customers, error: customerError } = await supabase
+    .from("customers")
+    .select("id, organization_id, first_name, last_name, full_name")
+    .or(`phone.eq.${normalized},phone.eq.+976${normalized}`)
+    .is("deleted_at", null);
+
+  if (customerError || !customers?.length) {
+    console.error("Customer lookup failed:", customerError);
+    await sendMessage(
+      chatId,
+      "❌ Таны утасны дугаар системд олдсонгүй.\n\n" +
+        "Танай үйлчилгээний газрын админаас утасны дугаараа шалгуулна уу.",
+    );
+    return;
+  }
+
+  // If multiple orgs matched, use the most recently created customer
+  const customer = customers[0];
+  const name = customer.full_name || customer.first_name || "Харилцагч";
+
+  // Store telegram_chat_id on the customer record
+  const { error: updateError } = await supabase
+    .from("customers")
+    .update({ telegram_chat_id: chatId })
+    .eq("id", customer.id);
+
+  if (updateError) {
+    console.error("Failed to link customer:", updateError);
+    await sendMessage(
+      chatId,
+      "❌ Холболт амжилтгүй боллоо. Дараа дахин оролдоно уу.",
+    );
+    return;
+  }
+
+  await sendMessage(
+    chatId,
+    `✅ *Амжилттай холбогдлоо!*\n\n` +
+      `Сайн байна уу ${name}? Та үйлчилгээний сануулгыг Телеграмаар хүлээн авах болно.\n\n` +
+      `🔔 Тос солих, шүүгч солих зэрэг тогтмол үйлчилгээний хугацаа ойртоход энэ чатаар мэдэгдэл ирнэ.\n\n` +
+      `/unlink — Холболтыг салгах\n` +
+      `/status — Одоогийн үзүүлэлтүүд`,
+  );
+
+  // Also handle orgs with multiple customers matching
+  if (customers.length > 1) {
+    for (let i = 1; i < customers.length; i++) {
+      await supabase
+        .from("customers")
+        .update({ telegram_chat_id: chatId })
+        .eq("id", customers[i].id);
+    }
+  }
+}
+
+/**
+ * /unlink
+ * Removes Telegram chat_id from the customer record.
+ */
+async function handleUnlink(
+  supabase: ReturnType<typeof createClient>,
+  chatId: number,
+) {
+  const { data: customers } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("telegram_chat_id", chatId)
+    .is("deleted_at", null);
+
+  if (!customers?.length) {
+    await sendMessage(
+      chatId,
+      "❓ Таны Телеграм холбогдоогүй байна.\n\n/link 99112233 — утасны дугаараа илгээнэ үү.",
+    );
+    return;
+  }
+
+  for (const c of customers) {
+    await supabase
+      .from("customers")
+      .update({ telegram_chat_id: null })
+      .eq("id", c.id);
+  }
+
+  await sendMessage(
+    chatId,
+    "🛑 Холболт салгагдлаа.\n\n" +
+      "Дахин холбохын тулд /link командыг утасны дугаарын хамт илгээнэ үү.",
+  );
+}
+
+/**
  * /stop
  * Deactivates the link for this chat.
  */
@@ -378,7 +496,7 @@ async function computeOrgSummary(
     .gte("sent_at", sixtyDaysAgo)
     .not("customer_id", "is", null);
 
-  const customersReturned = 0;
+  let customersReturned = 0;
   let revenueRecovered = 0;
 
   if (sentReminders && sentReminders.length > 0) {
@@ -516,6 +634,11 @@ Deno.serve(async (req: Request) => {
       );
     } else if (text === "/status") {
       await handleStatus(supabase, chatId);
+    } else if (text.startsWith("/link ") || text === "/link") {
+      const args = text === "/link" ? "" : text.slice(6).trim();
+      await handleLink(supabase, chatId, args);
+    } else if (text === "/unlink") {
+      await handleUnlink(supabase, chatId);
     } else if (text === "/stop") {
       await handleStop(supabase, chatId);
     } else {
@@ -524,6 +647,8 @@ Deno.serve(async (req: Request) => {
         "❓ Танигдаагүй тушаал.\n\n" +
           `Боломжтой тушаалууд:\n` +
           `/start [токен] — TOLOM-тэй холбох\n` +
+          `/link [утасны дугаар] — Үйлчилгээний сануулга хүлээн авах\n` +
+          `/unlink — Сануулгын холболтыг салгах\n` +
           `/status — Одоогийн үзүүлэлтүүд\n` +
           `/stop — Мэдэгдлийг зогсоох`,
       );

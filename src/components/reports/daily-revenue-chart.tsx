@@ -3,8 +3,9 @@
  *
  * Used on weekly and monthly report tabs.
  */
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { BarChart } from "@/components/charts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface DailyRevenueChartProps {
   data: Array<{ date: string; revenue: number; label: string }>;

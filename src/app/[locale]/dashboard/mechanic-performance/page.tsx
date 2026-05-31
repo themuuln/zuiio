@@ -1,0 +1,482 @@
+"use client";
+
+import {
+  BarChart3,
+  Clock,
+  Crown,
+  DollarSign,
+  Loader2,
+  Users,
+  Wrench,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { BarChart } from "@/components/charts";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Typography } from "@/components/ui/typography";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { formatMNT } from "@/lib/utils";
+
+type Period = "week" | "month" | "quarter";
+
+interface MechanicPerf {
+  mechanic_id: string;
+  mechanic_name: string;
+  work_orders_completed: number;
+  services_count: number;
+  parts_count: number;
+  total_revenue: number;
+  avg_revenue_per_wo: number;
+  hours_worked: number;
+  total_commission: number;
+  revenue_per_hour: number;
+}
+
+const PERIODS: { key: Period; label: string }[] = [
+  { key: "week", label: "This Week" },
+  { key: "month", label: "This Month" },
+  { key: "quarter", label: "This Quarter" },
+];
+
+function KpiCard({
+  label,
+  value,
+  icon: Icon,
+  loading,
+}: {
+  label: string;
+  value: string;
+  icon: React.ComponentType<{ className?: string }>;
+  loading?: boolean;
+}) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <Typography.Muted className="text-xs font-medium text-muted-foreground">
+          {label}
+        </Typography.Muted>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-2">
+          {loading ? (
+            <Skeleton className="h-8 w-24" />
+          ) : (
+            <Typography.Text className="text-2xl font-semibold tabular-nums">
+              {value}
+            </Typography.Text>
+          )}
+          <Icon className="ml-auto size-5 text-muted-foreground/40" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function MechanicPerformancePage() {
+  const { data: org, isLoading: orgLoading } = useCurrentOrg();
+  const orgId = org?.orgId;
+  const [period, setPeriod] = useState<Period>("month");
+  const { registerTab } = useRightSidebar();
+
+  // ── Compute date range ────────────────────────────
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    const end = now.toISOString().slice(0, 10);
+    let start: string;
+    switch (period) {
+      case "week": {
+        const d = new Date(now);
+        d.setDate(d.getDate() - 7);
+        start = d.toISOString().slice(0, 10);
+        break;
+      }
+      case "month": {
+        const d = new Date(now);
+        d.setMonth(d.getMonth() - 1);
+        start = d.toISOString().slice(0, 10);
+        break;
+      }
+      case "quarter": {
+        const d = new Date(now);
+        d.setMonth(d.getMonth() - 3);
+        start = d.toISOString().slice(0, 10);
+        break;
+      }
+    }
+    return { start, end };
+  }, [period]);
+
+  // ── Fetch mechanic KPIs from the reports API ──────
+  const [mechanics, setMechanics] = useState<MechanicPerf[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    if (!orgId) return;
+    setLoading(true);
+    try {
+      const [reportRes, hoursRes] = await Promise.all([
+        fetch(
+          `/api/organizations/${orgId}/reports?type=custom&date_from=${dateRange.start}&date_to=${dateRange.end}`,
+        ).then((r) => r.json()),
+        fetch(
+          `/api/organizations/${orgId}/mechanic-hours?startDate=${dateRange.start}&endDate=${dateRange.end}`,
+        ).then((r) => r.json().catch(() => ({ data: [] }))),
+      ]);
+
+      const kpis: ReportMechanicKpi[] = reportRes.data?.mechanic_kpis ?? [];
+      const hoursMap = new Map<string, number>();
+      for (const h of hoursRes.data ?? []) {
+        hoursMap.set(h.mechanic_id, h.total_hours);
+      }
+
+      const perf: MechanicPerf[] = kpis.map((k) => {
+        const hours = hoursMap.get(k.mechanic_id) ?? 0;
+        return {
+          ...k,
+          hours_worked: hours,
+          total_commission: 0, // Will be populated from commission endpoint
+          revenue_per_hour: hours > 0 ? k.total_revenue / hours : 0,
+        };
+      });
+
+      // Fetch commission data
+      try {
+        const commRes = await fetch(
+          `/api/organizations/${orgId}/mechanic-commissions?startDate=${dateRange.start}&endDate=${dateRange.end}`,
+        );
+        const commJson = await commRes.json();
+        const commMap = new Map<string, number>();
+        for (const c of commJson.data ?? []) {
+          commMap.set(c.mechanic_id, c.total_commission);
+        }
+        for (const m of perf) {
+          m.total_commission = commMap.get(m.mechanic_id) ?? 0;
+          m.revenue_per_hour =
+            m.hours_worked > 0 ? m.total_revenue / m.hours_worked : 0;
+        }
+      } catch {
+        // Commission endpoint may not exist yet, that's fine
+      }
+
+      setMechanics(perf);
+    } catch {
+      setMechanics([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [orgId, dateRange]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // ── Sidebar ───────────────────────────────────────
+  useEffect(() => {
+    if (!mechanics.length) return;
+    const totalJobs = mechanics.reduce(
+      (s, m) => s + m.work_orders_completed,
+      0,
+    );
+    const totalHours = mechanics.reduce((s, m) => s + m.hours_worked, 0);
+    const totalRevenue = mechanics.reduce((s, m) => s + m.total_revenue, 0);
+    const topMech = mechanics[0];
+
+    registerTab(
+      "summary",
+      "Summary",
+      <StatusSummary
+        title="Period Summary"
+        items={[
+          { label: "Active Mechanics", count: mechanics.length },
+          { label: "Total Jobs", count: totalJobs },
+          { label: "Total Hours", count: Math.round(totalHours * 10) / 10 },
+          { label: "Total Revenue", count: totalRevenue },
+          ...(topMech
+            ? [
+                {
+                  label: `Top: ${topMech.mechanic_name.split(" ")[0]}`,
+                  count: topMech.total_revenue,
+                },
+              ]
+            : []),
+        ]}
+      />,
+      <BarChart3 className="size-4" />,
+    );
+    registerTab(
+      "leaderboard",
+      "Rankings",
+      <RecentList
+        items={mechanics.map((m) => ({
+          id: m.mechanic_id,
+          primary: m.mechanic_name,
+          secondary: `${m.work_orders_completed} jobs · ${formatMNT(m.total_revenue)}`,
+        }))}
+        emptyMessage="No data"
+      />,
+    );
+    return () => {
+      registerTab("summary", "Summary", null as any);
+      registerTab("leaderboard", "Rankings", null as any);
+    };
+  }, [mechanics, registerTab]);
+
+  const totals = useMemo(
+    () => ({
+      mechanics: mechanics.length,
+      jobs: mechanics.reduce((s, m) => s + m.work_orders_completed, 0),
+      hours: mechanics.reduce((s, m) => s + m.hours_worked, 0),
+      revenue: mechanics.reduce((s, m) => s + m.total_revenue, 0),
+      commission: mechanics.reduce((s, m) => s + m.total_commission, 0),
+    }),
+    [mechanics],
+  );
+
+  const chartData = useMemo(
+    () =>
+      mechanics.slice(0, 8).map((m) => ({
+        name: m.mechanic_name.split(" ")[0] ?? m.mechanic_name,
+        value: m.total_revenue,
+      })),
+    [mechanics],
+  );
+
+  if (orgLoading) {
+    return (
+      <div className="flex flex-col gap-6">
+        <Skeleton className="h-8 w-56" />
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-20" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Header */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
+            Mechanic Performance
+          </Typography.H1>
+          <Typography.Muted className="text-muted-foreground">
+            Cross-mechanic comparison for{" "}
+            {period === "week"
+              ? "the last 7 days"
+              : period === "month"
+                ? "the last 30 days"
+                : "the last quarter"}
+          </Typography.Muted>
+        </div>
+        <div className="flex gap-1.5">
+          {PERIODS.map((p) => (
+            <Button
+              key={p.key}
+              variant={period === p.key ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setPeriod(p.key)}
+            >
+              {p.label}
+            </Button>
+          ))}
+          <Button variant="outline" size="sm" onClick={fetchData}>
+            <Loader2 className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
+        <KpiCard
+          label="Active Mechanics"
+          value={loading ? "—" : String(totals.mechanics)}
+          icon={Users}
+          loading={loading}
+        />
+        <KpiCard
+          label="Jobs Completed"
+          value={loading ? "—" : String(totals.jobs)}
+          icon={Wrench}
+          loading={loading}
+        />
+        <KpiCard
+          label="Total Hours"
+          value={loading ? "—" : String(Math.round(totals.hours * 10) / 10)}
+          icon={Clock}
+          loading={loading}
+        />
+        <KpiCard
+          label="Total Revenue"
+          value={loading ? "—" : formatMNT(totals.revenue)}
+          icon={DollarSign}
+          loading={loading}
+        />
+      </div>
+
+      {/* Chart + Leaderboard */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Bar Chart */}
+        <Card className="lg:col-span-1">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <BarChart3 className="size-4" />
+              Revenue by Mechanic
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-[220px] w-full" />
+            ) : chartData.length === 0 ? (
+              <Typography.Muted className="text-sm text-center py-12">
+                No data for this period
+              </Typography.Muted>
+            ) : (
+              <BarChart
+                data={chartData}
+                config={{
+                  value: { label: "Revenue", color: "var(--chart-1)" },
+                }}
+                xKey="name"
+                series={[{ key: "value", color: "var(--chart-1)" }]}
+                height={220}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Leaderboard Table */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Crown className="size-4" />
+              Mechanic Leaderboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="p-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-10 w-full mb-2" />
+                ))}
+              </div>
+            ) : mechanics.length === 0 ? (
+              <Typography.Muted className="text-sm text-center py-12">
+                No mechanic data for this period
+              </Typography.Muted>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="px-4 py-3 w-8">#</TableHead>
+                    <TableHead className="px-4 py-3">Mechanic</TableHead>
+                    <TableHead className="px-4 py-3 text-right">Jobs</TableHead>
+                    <TableHead className="px-4 py-3 text-right">
+                      Hours
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-right">
+                      Revenue
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-right">
+                      Rev/Hr
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-right">
+                      Commission
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mechanics.map((m, i) => (
+                    <TableRow
+                      key={m.mechanic_id}
+                      className={`border-b border-border hover:bg-muted/30 ${
+                        i === 0 ? "bg-amber-50/40 dark:bg-amber-950/10" : ""
+                      }`}
+                    >
+                      <TableCell className="px-4 py-3">
+                        {i === 0 ? (
+                          <Crown className="size-4 text-amber-500" />
+                        ) : (
+                          <span className="text-muted-foreground text-sm">
+                            {i + 1}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-4 py-3 font-medium">
+                        <div className="flex items-center gap-2">
+                          <span>{m.mechanic_name}</span>
+                          {i === 0 && (
+                            <span className="text-[10px] font-medium text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded-full">
+                              Top
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right tabular-nums">
+                        {m.work_orders_completed}
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                        {m.hours_worked > 0
+                          ? Math.round(m.hours_worked * 10) / 10
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right font-medium tabular-nums">
+                        {formatMNT(m.total_revenue)}
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                        {m.revenue_per_hour > 0
+                          ? formatMNT(Math.round(m.revenue_per_hour))
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right tabular-nums">
+                        {m.total_commission > 0 ? (
+                          <span className="text-green-600">
+                            {formatMNT(m.total_commission)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground/50">—</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// Re-export the type for the report service response
+interface ReportMechanicKpi {
+  mechanic_id: string;
+  mechanic_name: string;
+  work_orders_completed: number;
+  services_count: number;
+  parts_count: number;
+  total_revenue: number;
+  avg_revenue_per_wo: number;
+}

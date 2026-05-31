@@ -1,7 +1,7 @@
 "use client";
 
-import { useLocale } from "next-intl";
 import { Loader2, Package, Plus, Trash2 } from "lucide-react";
+import { useLocale } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -10,12 +10,14 @@ import type { PartsCatalogItem, WorkOrderPart } from "@/lib/types";
 
 // Extended type for catalog items that may come from global or org catalog
 type CatalogPartItem = PartsCatalogItem & { _source?: "org" | "global" };
-import { formatMNT } from "@/lib/utils";
+
 import { Typography } from "@/components/ui/typography";
+import { formatMNT } from "@/lib/utils";
 
 interface PartsSectionProps {
   parts: WorkOrderPart[];
   partsCatalog: CatalogPartItem[];
+  lowStockMap?: Record<string, { quantity: number; threshold: number }>;
   partSearch: string;
   newPartName: string;
   newPartQty: number;
@@ -46,6 +48,7 @@ interface PartsSectionProps {
 export function PartsSection({
   parts,
   partsCatalog,
+  lowStockMap,
   partSearch,
   newPartName,
   newPartQty,
@@ -103,66 +106,76 @@ export function PartsSection({
             <div className="w-7" />
           </div>
           <div className="flex flex-col gap-px">
-            {parts?.map((part) => (
-              <div
-                key={part.id}
-                className="group flex items-center gap-2 rounded-md p-1.5 hover:bg-muted/40 transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <Typography.Text className="text-sm font-medium truncate">
-                    {part.part_name}
-                  </Typography.Text>
-                  <Typography.Muted className="text-[10px] text-muted-foreground/60">
-                    {formatMNT(Number(part.unit_price))}
-                    {t("perUnit")}
-                  </Typography.Muted>
-                </div>
-                <div className="w-14 text-right text-xs text-muted-foreground tabular-nums">
-                  {part.quantity}
-                </div>
-                <div className="w-20 text-right">
-                  {editingPriceId === part.id ? (
-                    <Input
-                      type="number"
-                      className="w-20 h-7 text-right text-xs font-semibold tabular-nums rounded-sm border-primary/60 bg-background px-1 [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      value={editingPriceVal}
-                      onChange={(e) => onEditPriceChange(e.target.value)}
-                      onBlur={() => onEditPriceSave(part.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") onEditPriceSave(part.id);
-                        if (e.key === "Escape") onEditPriceCancel();
-                      }}
-                      autoFocus
-                    />
-                  ) : (
+            {parts?.map((part) => {
+              const lowInfo = part.part_id
+                ? lowStockMap?.[part.part_id]
+                : undefined;
+              return (
+                <div
+                  key={part.id}
+                  className="group flex items-center gap-2 rounded-md p-1.5 hover:bg-muted/40 transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <Typography.Text className="text-sm font-medium truncate">
+                      {part.part_name}
+                    </Typography.Text>
+                    <Typography.Muted className="text-[10px] text-muted-foreground/60">
+                      {formatMNT(Number(part.unit_price))}
+                      {t("perUnit")}
+                    </Typography.Muted>
+                    {lowInfo && (
+                      <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                        Only {lowInfo.quantity} in stock
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-14 text-right text-xs text-muted-foreground tabular-nums">
+                    {part.quantity}
+                  </div>
+                  <div className="w-20 text-right">
+                    {editingPriceId === part.id ? (
+                      <Input
+                        type="number"
+                        className="w-20 h-7 text-right text-xs font-semibold tabular-nums rounded-sm border-primary/60 bg-background px-1 [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        value={editingPriceVal}
+                        onChange={(e) => onEditPriceChange(e.target.value)}
+                        onBlur={() => onEditPriceSave(part.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") onEditPriceSave(part.id);
+                          if (e.key === "Escape") onEditPriceCancel();
+                        }}
+                        autoFocus
+                      />
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          onEditPriceStart(
+                            part.id,
+                            String(Number(part.final_price)),
+                          );
+                        }}
+                        className="font-semibold tabular-nums h-auto px-1 -mx-1 rounded-sm hover:underline hover:decoration-dashed hover:underline-offset-2"
+                      >
+                        {formatMNT(Number(part.final_price))}
+                      </Button>
+                    )}
+                  </div>
+                  <div className="w-7 flex justify-center">
                     <Button
                       variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        onEditPriceStart(
-                          part.id,
-                          String(Number(part.final_price)),
-                        );
-                      }}
-                      className="font-semibold tabular-nums h-auto px-1 -mx-1 rounded-sm hover:underline hover:decoration-dashed hover:underline-offset-2"
+                      size="icon-xs"
+                      onClick={() => onRemovePart(part.id)}
+                      className="text-destructive/60 hover:text-destructive size-6 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                      aria-label="Remove part"
                     >
-                      {formatMNT(Number(part.final_price))}
+                      <Trash2 className="size-3" />
                     </Button>
-                  )}
+                  </div>
                 </div>
-                <div className="w-7 flex justify-center">
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => onRemovePart(part.id)}
-                    className="text-destructive/60 hover:text-destructive size-6 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
-                    aria-label="Remove part"
-                  >
-                    <Trash2 className="size-3" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {pendingPartPreview && (
               <div className="flex items-center gap-2 rounded-md border border-dashed border-amber-500/30 bg-amber-500/5 p-1.5">
                 <div className="flex-1 min-w-0">
@@ -217,34 +230,42 @@ export function PartsSection({
                   return matchName || matchNameMn || matchPartNumber;
                 })
                 .slice(0, 8)
-                .map((part) => (
-                  <Button
-                    variant="ghost"
-                    key={part.id}
-                    onClick={() => {
-                      onNewPartNameChange(part.name);
-                      onNewPartPriceChange(Number(part.default_price ?? 0));
-                      onPartSearchChange("");
-                    }}
-                    className="w-full justify-start px-2.5 py-1.5 text-xs h-auto text-left"
-                  >
-                    <div className="flex flex-col items-start min-w-0 flex-1">
-                      <span className="font-medium truncate w-full">
-                        {locale === "mn" && part.name_mn
-                          ? part.name_mn
-                          : part.name}
-                      </span>
-                      {part.part_number && (
-                        <span className="text-[10px] text-muted-foreground font-mono">
-                          {part.part_number}
+                .map((part) => {
+                  const lowInfo = lowStockMap?.[part.id];
+                  return (
+                    <Button
+                      variant="ghost"
+                      key={part.id}
+                      onClick={() => {
+                        onNewPartNameChange(part.name);
+                        onNewPartPriceChange(Number(part.default_price ?? 0));
+                        onPartSearchChange("");
+                      }}
+                      className="w-full justify-start px-2.5 py-1.5 text-xs h-auto text-left"
+                    >
+                      <div className="flex flex-col items-start min-w-0 flex-1">
+                        <span className="font-medium truncate w-full">
+                          {locale === "mn" && part.name_mn
+                            ? part.name_mn
+                            : part.name}
                         </span>
-                      )}
-                    </div>
-                    <span className="tabular-nums font-medium shrink-0 ml-auto text-muted-foreground group-hover/button:text-foreground">
-                      {formatMNT(Number(part.default_price ?? 0))}
-                    </span>
-                  </Button>
-                ))}
+                        {part.part_number && (
+                          <span className="text-[10px] text-muted-foreground font-mono">
+                            {part.part_number}
+                          </span>
+                        )}
+                        {lowInfo && (
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                            Only {lowInfo.quantity} in stock
+                          </span>
+                        )}
+                      </div>
+                      <span className="tabular-nums font-medium shrink-0 ml-auto text-muted-foreground group-hover/button:text-foreground">
+                        {formatMNT(Number(part.default_price ?? 0))}
+                      </span>
+                    </Button>
+                  );
+                })}
               {partsCatalog.filter((p) => {
                 const q = partSearch.toLowerCase();
                 const matchName = p.name.toLowerCase().includes(q);
@@ -271,11 +292,11 @@ export function PartsSection({
                   return;
                 }
                 const n = Number(v);
-                if (!isNaN(n)) onNewPartQtyChange(n);
+                if (!Number.isNaN(n)) onNewPartQtyChange(n);
               }}
               onBlur={(e) => {
                 const n = Number(e.target.value);
-                if (isNaN(n) || n < 1) onNewPartQtyChange(1);
+                if (Number.isNaN(n) || n < 1) onNewPartQtyChange(1);
               }}
               placeholder={t("qty")}
               className="h-8 w-14 text-center text-xs"
@@ -291,7 +312,7 @@ export function PartsSection({
                   return;
                 }
                 const n = Number(v);
-                if (!isNaN(n)) onNewPartPriceChange(n);
+                if (!Number.isNaN(n)) onNewPartPriceChange(n);
               }}
               placeholder={t("unitPrice")}
               className="h-8 flex-1 text-xs"

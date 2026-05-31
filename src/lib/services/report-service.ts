@@ -1,4 +1,4 @@
-import { cacheTags, cacheDurations } from "@/lib/cache/keys";
+import { cacheDurations, cacheTags } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
 import { createClient } from "@/lib/supabase/server";
 
@@ -867,7 +867,9 @@ export async function getEndOfDaySummary(
       // Biggest issue: oldest open work order with customer name
       supabase
         .from("work_orders")
-        .select("id, description, created_at, customer_id, customers!inner(full_name)")
+        .select(
+          "id, description, created_at, customer_id, customers!inner(full_name)",
+        )
         .eq("organization_id", orgId)
         .neq("status", "Completed")
         .neq("status", "Cancelled")
@@ -1001,7 +1003,9 @@ export async function getEndOfDaySummary(
     // Biggest issue: oldest open work order with customer name
     supabase
       .from("work_orders")
-      .select("id, description, created_at, customer_id, customers!inner(full_name)")
+      .select(
+        "id, description, created_at, customer_id, customers!inner(full_name)",
+      )
       .eq("organization_id", orgId)
       .neq("status", "Completed")
       .neq("status", "Cancelled")
@@ -1153,7 +1157,7 @@ export async function getEndOfDaySummary(
 // ── Mechanic Performance Trend ─────────────────────────────
 
 function getWeekKey(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
+  const d = new Date(`${dateStr}T00:00:00`);
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
@@ -1248,11 +1252,14 @@ export async function getMechanicPerformanceTrend(
       );
 
       const sortedKeys = Array.from(trendMap.keys()).sort();
-      const weeklyTrend = sortedKeys.map((week) => ({
-        week,
-        orders: trendMap.get(week)!.orders,
-        revenue: Math.round(trendMap.get(week)!.revenue * 100) / 100,
-      }));
+      const weeklyTrend = sortedKeys.map((week) => {
+        const entry = trendMap.get(week);
+        return {
+          week,
+          orders: entry?.orders ?? 0,
+          revenue: Math.round((entry?.revenue ?? 0) * 100) / 100,
+        };
+      });
 
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -1531,7 +1538,7 @@ export async function getDashboardData(
 
 export async function getWorkOrderProfit(
   workOrderId: string,
-  orgId: string,
+  _orgId: string,
 ): Promise<WorkOrderProfit> {
   const supabase = await createClient();
 
@@ -1699,7 +1706,7 @@ async function getPreviousPeriodSummary(
 
   const now = new Date();
   const currentStart = new Date(now);
-  const currentEnd = new Date(now);
+  const _currentEnd = new Date(now);
   const durationMs =
     period === "today"
       ? 24 * 60 * 60 * 1000
@@ -1874,8 +1881,8 @@ function generateInsights(
 }
 
 function formatNum(n: number): string {
-  if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(1) + "k";
+  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
   return String(n);
 }
 

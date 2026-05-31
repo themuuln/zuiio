@@ -1,9 +1,12 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import type { Branch } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import type { CreateBranchParams, UpdateBranchParams } from "@/lib/types";
+import type {
+  Branch,
+  CreateBranchParams,
+  UpdateBranchParams,
+} from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
 
 /**

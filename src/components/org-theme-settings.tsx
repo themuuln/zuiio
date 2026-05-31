@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Check } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useOrgTheme } from "@/components/org-theme-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { useOrgTheme } from "@/components/org-theme-provider";
 import type { OrgTheme } from "@/lib/types";
 
 // shadcn base color presets (from official docs)

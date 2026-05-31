@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import { receivePurchaseOrder } from "@/lib/services/inventory-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ supabase, params, orgId }) => {
   const { purchaseOrderId } = params;
@@ -56,7 +56,7 @@ export const PATCH = createRouteHandler(
     const { purchaseOrderId } = params;
     const body = await request.json();
 
-    const allowedFields = ["status", "expectedAt", "notes"];
+    const _allowedFields = ["status", "expectedAt", "notes"];
     const updates: Record<string, unknown> = { updated_by: user.id };
 
     if (body.status !== undefined) updates.status = body.status;

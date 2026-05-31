@@ -26,6 +26,13 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -35,13 +42,6 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
-import {
-  Item,
-  ItemMedia,
-  ItemContent,
-  ItemTitle,
-  ItemActions,
-} from "@/components/ui/item";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { formatPlateInput, inputProps } from "@/lib/form-ux";
 import {

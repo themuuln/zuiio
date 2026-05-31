@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { AppError } from "@/lib/errors";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 // ── Types ─────────────────────────────────────────────────────
 

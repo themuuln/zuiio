@@ -25,7 +25,7 @@ Deno.serve({ timeout: 300000 }, async () => {
       vehicle:vehicles!inner(
         plate_number,
         customer_id,
-        customer:customers!left(email)
+        customer:customers!left(email, telegram_chat_id)
       ),
       organization:organizations!inner(
         name,
@@ -81,11 +81,19 @@ Deno.serve({ timeout: 300000 }, async () => {
   }
 
   // Create reminder_log entries for each due schedule
-  // Also collect email data for sending later
+  // Also collect delivery data for sending later
   const emailDataMap = new Map<
     string,
     {
       customerEmail: string;
+      vehicleLabel: string;
+      orgName: string;
+    }
+  >();
+  const telegramDataMap = new Map<
+    string,
+    {
+      chatId: number;
       vehicleLabel: string;
       orgName: string;
     }
@@ -95,7 +103,10 @@ Deno.serve({ timeout: 300000 }, async () => {
     const vehicle = schedule.vehicle as unknown as {
       plate_number: string;
       customer_id: string | null;
-      customer: { email: string | null } | null;
+      customer: {
+        email: string | null;
+        telegram_chat_id: number | null;
+      } | null;
     };
     const org = schedule.organization as unknown as {
       name: string;
@@ -103,6 +114,7 @@ Deno.serve({ timeout: 300000 }, async () => {
 
     const customer = vehicle?.customer;
     const hasEmail = !!customer?.email;
+    const hasTelegram = !!customer?.telegram_chat_id;
     const orgName = org?.name ?? "Your Garage";
 
     // Store email data for later sending
@@ -114,8 +126,21 @@ Deno.serve({ timeout: 300000 }, async () => {
       });
     }
 
-    // Email-only channel — route to email if possible, otherwise in_app
-    const channel: "email" | "in_app" = hasEmail ? "email" : "in_app";
+    // Store telegram data for later sending
+    if (hasTelegram && customer?.telegram_chat_id) {
+      telegramDataMap.set(schedule.id, {
+        chatId: customer.telegram_chat_id,
+        vehicleLabel: `${vehicle.plate_number}`,
+        orgName,
+      });
+    }
+
+    // Determine channel priority: telegram > email > in_app
+    const channel: "email" | "telegram" | "in_app" = hasTelegram
+      ? "telegram"
+      : hasEmail
+        ? "email"
+        : "in_app";
 
     return {
       organization_id: schedule.organization_id,
@@ -210,8 +235,71 @@ Deno.serve({ timeout: 300000 }, async () => {
     }
   }
 
+  // Try to send Telegram messages for any pending logs with channel='telegram'
+  const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
+  if (TELEGRAM_BOT_TOKEN && createdLogs) {
+    const tgApi = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
+
+    for (const log of createdLogs) {
+      if (log.channel !== "telegram") continue;
+
+      const scheduleId = log.vehicle_service_schedule_id;
+      if (!scheduleId) continue;
+
+      const tgData = telegramDataMap.get(scheduleId);
+      if (!tgData) continue;
+
+      try {
+        const message = [
+          `🔔 *${log.service_name}*`,
+          "",
+          `Машин: ${tgData.vehicleLabel}`,
+          `Үйлчилгээ: ${log.service_name}`,
+          `Хугацаа: ${new Date().toLocaleDateString("mn-MN", { year: "numeric", month: "long", day: "numeric" })}`,
+          "",
+          "Засвар үйлчилгээнд цаг товлохыг хүсвэл бидэнтэй холбогдоно уу.",
+          "",
+          `— ${tgData.orgName}`,
+        ].join("\n");
+
+        const res = await fetch(`${tgApi}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: tgData.chatId,
+            text: message,
+            parse_mode: "Markdown",
+          }),
+        });
+
+        if (res.ok) {
+          await supabase
+            .from("reminder_logs")
+            .update({ status: "sent", sent_at: new Date().toISOString() })
+            .eq("id", log.id);
+          sentCount++;
+        } else {
+          const errBody = await res.text();
+          console.error(`Telegram API error for log ${log.id}:`, errBody);
+          // If bot blocked by user, mark as failed but don't disable
+          if (res.status === 403) {
+            await supabase
+              .from("reminder_logs")
+              .update({
+                status: "failed",
+                error_message: "Bot blocked by user",
+              })
+              .eq("id", log.id);
+          }
+        }
+      } catch (e) {
+        console.error(`Failed to send Telegram reminder for log ${log.id}:`, e);
+      }
+    }
+  }
+
   console.log(
-    `Created ${reminders.length} reminder(s), sent ${sentCount} email(s)`,
+    `Created ${reminders.length} reminder(s), sent ${sentCount} total`,
   );
   return new Response(
     JSON.stringify({

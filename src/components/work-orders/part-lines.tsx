@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2, Package } from "lucide-react";
+import { Package, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -78,11 +78,12 @@ export function PartLines({
                         return;
                       }
                       const n = parseInt(v, 10);
-                      if (!isNaN(n)) onUpdate(idx, "quantity", n);
+                      if (!Number.isNaN(n)) onUpdate(idx, "quantity", n);
                     }}
                     onBlur={(e) => {
                       const n = Number(e.target.value);
-                      if (isNaN(n) || n < 1) onUpdate(idx, "quantity", 1);
+                      if (Number.isNaN(n) || n < 1)
+                        onUpdate(idx, "quantity", 1);
                     }}
                     className="w-14 h-10 text-center"
                     min={1}
@@ -98,7 +99,7 @@ export function PartLines({
                         return;
                       }
                       const n = parseFloat(v);
-                      if (!isNaN(n)) onUpdate(idx, "unit_price", n);
+                      if (!Number.isNaN(n)) onUpdate(idx, "unit_price", n);
                     }}
                     className="w-20 h-10 text-right"
                     min={0}

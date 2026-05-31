@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { InvoiceDocument } from "@/lib/pdf/invoice-document";
-import { renderToPdfBuffer, pdfFilename } from "@/lib/utils/pdf";
+import { pdfFilename, renderToPdfBuffer } from "@/lib/utils/pdf";
 
 export async function GET(
   _request: Request,

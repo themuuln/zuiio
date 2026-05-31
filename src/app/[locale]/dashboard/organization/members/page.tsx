@@ -4,16 +4,16 @@ import { UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ApiResponse, UserProfile } from "@/lib/types";
 import { InviteForm } from "./_invite-form";
 import { MemberList } from "./_member-list";
 import { PendingInvites } from "./_pending-invites";
 import type { InviteWithEmail } from "./types";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { Typography } from "@/components/ui/typography";
 
 // ── Page data state (useReducer to batch related loading/data updates) ──
 

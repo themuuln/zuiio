@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   getOrganization,
   updateOrganization,
 } from "@/lib/services/organization-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 /**
  * GET /api/organizations/[id]

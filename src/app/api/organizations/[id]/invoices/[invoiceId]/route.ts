@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { createClient } from "@/lib/supabase/server";
 import {
   addInvoiceItem,
   deleteInvoice,
@@ -15,6 +14,7 @@ import {
   updateInvoiceStatus,
 } from "@/lib/services/invoice-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
+import { createClient } from "@/lib/supabase/server";
 
 export const GET = createRouteHandler(async ({ params }) => {
   const { invoiceId } = params;

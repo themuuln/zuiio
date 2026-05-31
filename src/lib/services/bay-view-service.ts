@@ -2,7 +2,6 @@
 
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import type { Profile, Vehicle, WorkOrder } from "@/lib/types";
 import {
   NotFoundError,
   UnauthorizedError,
@@ -10,6 +9,7 @@ import {
 } from "@/lib/errors";
 import { createWorkOrder } from "@/lib/services/work-order-service";
 import { createClient } from "@/lib/supabase/server";
+import type { Profile, Vehicle, WorkOrder } from "@/lib/types";
 
 // ── Types ──────────────────────────────────────────────────────
 

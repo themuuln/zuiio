@@ -17,7 +17,7 @@ export const MOVEMENT_LABELS: Record<string, string> = {
   transfer_in: "Transfer In",
   transfer_out: "Transfer Out",
   return: "Return",
-  waste: "Waste",
+  waste: "Damage",
 };
 
 export const MOVEMENT_COLORS: Record<string, string> = {
@@ -50,13 +50,13 @@ export const PO_STATUS_LABELS: Record<string, string> = {
 
 // ── Movement type filter chips ───────────────────────────────
 
-export const MOVEMENT_FILTER_TYPES = [
-  "",
-  "purchase",
-  "sale",
-  "adjustment",
-  "return",
-  "waste",
+export const MOVEMENT_FILTERS = [
+  { key: "all", label: "All" },
+  { key: "sale", label: "Sale" },
+  { key: "purchase", label: "Purchase" },
+  { key: "adjustment", label: "Adjustment" },
+  { key: "transfer", label: "Transfer" },
+  { key: "damage", label: "Damage" },
 ] as const;
 
 // ── Tab config ───────────────────────────────────────────────

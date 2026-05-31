@@ -1,14 +1,14 @@
-import type { WorkOrderDetail } from "@/lib/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { NotFoundError } from "@/lib/errors";
 import type {
   Customer,
   DiagnosisLabel,
   Vehicle,
+  WorkOrderDetail,
   WorkOrderPart,
   WorkOrderService,
   WorkOrderStatusHistory,
 } from "@/lib/types";
-import { NotFoundError } from "@/lib/errors";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Fetches a single work order with all its related data:

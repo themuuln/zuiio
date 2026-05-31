@@ -8,7 +8,6 @@ vi.mock("@/lib/cache/with-cache", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 
-import type { DailyReport } from "@/lib/types";
 import {
   getDailyReport,
   getDailyTimeline,
@@ -52,8 +51,14 @@ function createQueryBuilder<TData = unknown>(response?: {
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     range: vi.fn().mockReturnThis(),
-    single: vi.fn(),
-    maybeSingle: vi.fn(),
+    single: vi.fn().mockResolvedValue({
+      data: response?.data ?? null,
+      error: response?.error ?? null,
+    }),
+    maybeSingle: vi.fn().mockResolvedValue({
+      data: response?.data ?? null,
+      error: response?.error ?? null,
+    }),
     throwOnError: vi.fn().mockReturnThis(),
     setHeader: vi.fn().mockReturnThis(),
     textSearch: vi.fn().mockReturnThis(),
@@ -69,7 +74,7 @@ function setupFromMock(
   builders: ReturnType<typeof createQueryBuilder>[],
 ) {
   let i = 0;
-  const origFrom = mockClient.from;
+  const _origFrom = mockClient.from;
   Object.assign(mockClient, {
     from: vi
       .fn()

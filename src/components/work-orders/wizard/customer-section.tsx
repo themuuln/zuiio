@@ -2,19 +2,19 @@
 
 import { Plus, User } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { CustomerForm } from "@/components/customers/customer-form";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CustomerForm } from "@/components/customers/customer-form";
-import { Typography } from "@/components/ui/typography";
 import {
   Item,
-  ItemMedia,
-  ItemContent,
-  ItemTitle,
   ItemActions,
+  ItemContent,
+  ItemMedia,
+  ItemTitle,
 } from "@/components/ui/item";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
 import { useWizardContext } from "./wizard-context";
 
 export function CustomerSection() {

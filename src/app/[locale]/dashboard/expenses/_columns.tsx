@@ -4,9 +4,9 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { AlertCircle, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
+import { Typography } from "@/components/ui/typography";
 import type { ExpenseWithCategory } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 
 // ── Category Badge ──
 

@@ -3,20 +3,20 @@
 import { Trash2, Wrench } from "lucide-react";
 import { useState } from "react";
 import { SearchInput } from "@/components/search-input";
-import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
-import { HighlightText } from "@/lib/utils/search-utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import type { ServiceCatalog } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 import {
   Item,
+  ItemActions,
   ItemContent,
   ItemTitle,
-  ItemActions,
 } from "@/components/ui/item";
+import { Typography } from "@/components/ui/typography";
+import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import type { ServiceCatalog } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
+import { HighlightText } from "@/lib/utils/search-utils";
 
 export interface ServiceLine {
   service_catalog_id: string | null;
@@ -169,11 +169,12 @@ export function ServiceLines({
                           return;
                         }
                         const n = parseInt(v, 10);
-                        if (!isNaN(n)) onUpdate(idx, "quantity", n);
+                        if (!Number.isNaN(n)) onUpdate(idx, "quantity", n);
                       }}
                       onBlur={(e) => {
                         const n = Number(e.target.value);
-                        if (isNaN(n) || n < 1) onUpdate(idx, "quantity", 1);
+                        if (Number.isNaN(n) || n < 1)
+                          onUpdate(idx, "quantity", 1);
                       }}
                       className="w-14 h-10 text-center"
                       min={1}

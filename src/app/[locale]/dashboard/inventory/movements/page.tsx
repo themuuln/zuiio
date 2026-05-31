@@ -1,16 +1,21 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { ClipboardList, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { useClientNow } from "@/hooks/use-client-now";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Empty,
   EmptyContent,
@@ -18,15 +23,11 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
+import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import {
   useCreateMovement,
@@ -35,7 +36,6 @@ import {
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { InventoryMovement } from "@/lib/types";
-import { Typography } from "@/components/ui/typography";
 
 const MOVEMENT_TYPES = [
   "",
@@ -46,7 +46,7 @@ const MOVEMENT_TYPES = [
   "waste",
 ];
 
-const MOVEMENT_COLORS: Record<string, string> = {
+const _MOVEMENT_COLORS: Record<string, string> = {
   purchase: "text-green-600 bg-green-50",
   sale: "text-red-600 bg-red-50",
   adjustment: "text-blue-600 bg-blue-50",

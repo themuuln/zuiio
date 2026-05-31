@@ -5,10 +5,10 @@
 import type {
   Customer,
   DiagnosisLabel,
+  InventoryBalance,
   Invoice,
   InvoiceItem,
   InvoicePayment,
-  InventoryBalance,
   Vehicle,
   WorkOrder,
   WorkOrderPart,

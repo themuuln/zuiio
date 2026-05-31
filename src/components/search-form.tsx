@@ -1,8 +1,8 @@
 "use client";
 
+import { SearchIcon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { SidebarInput } from "@/components/ui/sidebar";
-import { SearchIcon } from "lucide-react";
 
 export function SearchForm({ ...props }: React.ComponentProps<"form">) {
   return (

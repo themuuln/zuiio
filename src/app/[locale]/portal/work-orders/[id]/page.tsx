@@ -8,7 +8,7 @@ import {
   History,
   Wrench,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useRealtime } from "@/lib/hooks/use-realtime";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -18,10 +18,11 @@ import {
   PageShellSkeleton,
 } from "@/components/page-state";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Typography } from "@/components/ui/typography";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { cn, formatMNT } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 
 const STATUS_STYLES: Record<string, { dot: string; bg: string }> = {
   Completed: { dot: "bg-gray-400", bg: "bg-gray-50" },
@@ -139,6 +140,14 @@ export default function PortalWorkOrderDetailPage() {
       const json = await res.json();
       return json.data as WorkOrderDetail;
     },
+    enabled: !!customer && !!workOrderId,
+  });
+
+  // Subscribe to real-time work order status changes
+  useRealtime({
+    table: "work_orders",
+    queryKey: ["portal", "work-order", workOrderId],
+    filter: `id=eq.${workOrderId}`,
     enabled: !!customer && !!workOrderId,
   });
 

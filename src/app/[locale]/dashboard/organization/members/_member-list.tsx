@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal, Shield, UserMinus, Users } from "lucide-react";
+import { MoreHorizontal, UserMinus, Users } from "lucide-react";
 import type { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,16 +13,19 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { UserProfile } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
+import type { UserProfile } from "@/lib/types";
 
 interface Role {
   id: string;
@@ -84,12 +87,32 @@ export function MemberList({
                     {(member.fullName ?? member.email ?? "?").slice(0, 2)}
                   </div>
                   <div>
-                    <Typography.Text className="text-sm font-medium">
-                      {member.fullName ?? t("unnamed")}
-                    </Typography.Text>
-                    <Typography.Muted className="text-xs text-muted-foreground">
-                      {member.roleName ?? t("noRole")}
-                    </Typography.Muted>
+                    <div className="flex flex-col gap-1">
+                      <Typography.Text className="text-sm font-medium">
+                        {member.fullName ?? t("unnamed")}
+                      </Typography.Text>
+                      <Select
+                        value={member.roleId ?? ""}
+                        onValueChange={(val) => {
+                          if (val) onRoleChange(member.id, val);
+                        }}
+                      >
+                        <SelectTrigger className="h-7 min-w-[130px] text-xs px-2 py-0">
+                          <SelectValue placeholder={t("noRole")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {roles.map((role) => (
+                            <SelectItem
+                              key={role.id}
+                              value={role.id}
+                              className="text-xs"
+                            >
+                              {role.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
                 <DropdownMenu>
@@ -99,31 +122,13 @@ export function MemberList({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuGroup>
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                          <Shield className="mr-2 size-4" />
-                          {t("changeRole")}
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent>
-                          {roles.map((role) => (
-                            <DropdownMenuItem
-                              key={role.id}
-                              onClick={() => onRoleChange(member.id, role.id)}
-                            >
-                              {role.name}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => onRemove(member.id)}
-                      >
-                        <UserMinus className="mr-2 size-4" />
-                        {t("removeMember")}
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => onRemove(member.id)}
+                    >
+                      <UserMinus className="mr-2 size-4" />
+                      {t("removeMember")}
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

@@ -20,8 +20,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { Typography } from "@/components/ui/typography";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 interface Role {
   id: string;

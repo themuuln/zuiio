@@ -1,8 +1,8 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import type { VehicleModel } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import type { VehicleModel } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
 
 export async function getVehicleModels(

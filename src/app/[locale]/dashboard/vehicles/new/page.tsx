@@ -1,13 +1,15 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CarFront, Loader2, User } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState, Suspense } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -15,21 +17,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ColorSelect } from "@/components/vehicles/color-select";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link, useRouter } from "@/lib/i18n/navigation";
+import { Typography } from "@/components/ui/typography";
+import { ColorSelect } from "@/components/vehicles/color-select";
 import { usePageHeader } from "@/hooks/use-page-header";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { customerKeys } from "@/lib/queries/keys";
-import { useQuery } from "@tanstack/react-query";
 import { formatPlateInput, inputProps } from "@/lib/form-ux";
 import {
   isValidMongolianPlate,
   transliterateMongolianPlate,
 } from "@/lib/form-validation";
+import { Link, useRouter } from "@/lib/i18n/navigation";
+import { customerKeys } from "@/lib/queries/keys";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Customer } from "@/lib/types";
-import { Typography } from "@/components/ui/typography";
 
 type VehicleFormState = {
   plateNumber: string;
@@ -122,14 +122,6 @@ function NewVehicleForm() {
     }
   }, [preselectedCustomer, selectedCustomer]);
 
-  // Load all customers when no customer is selected yet
-  useEffect(() => {
-    if (!selectedCustomer) {
-      searchCustomers("");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCustomer]);
-
   const searchCustomers = useCallback(
     async (query: string) => {
       if (!orgId) {
@@ -155,6 +147,14 @@ function NewVehicleForm() {
     [orgId],
   );
 
+  // Load all customers on mount when no customer is selected
+  useEffect(() => {
+    if (!selectedCustomer) {
+      searchCustomers("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCustomer, searchCustomers]);
+
   // Clear errors on any input change
   useEffect(() => {
     if (error || Object.keys(fieldErrors).length > 0) {
@@ -162,7 +162,7 @@ function NewVehicleForm() {
       setFieldErrors({});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form]);
+  }, [error, fieldErrors]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

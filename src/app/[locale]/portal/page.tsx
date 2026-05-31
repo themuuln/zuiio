@@ -6,8 +6,8 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { PageErrorState, PageShellSkeleton } from "@/components/page-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { Typography } from "@/components/ui/typography";
+import { usePortalAuth } from "@/hooks/use-portal-auth";
 
 export default function PortalDashboardPage() {
   const t = useTranslations();

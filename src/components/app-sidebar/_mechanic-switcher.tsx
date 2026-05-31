@@ -1,8 +1,9 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Wrench, UserPlus } from "lucide-react";
+import { UserPlus, Wrench } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -10,19 +11,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
-import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
-import { mechanicKeys } from "@/lib/queries/keys";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { cn, getInitials } from "@/lib/utils";
-import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
 import {
   Item,
-  ItemMedia,
-  ItemContent,
-  ItemTitle,
   ItemActions,
+  ItemContent,
+  ItemMedia,
+  ItemTitle,
 } from "@/components/ui/item";
+import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
+import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
+import { mechanicKeys } from "@/lib/queries/keys";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { cn } from "@/lib/utils";
 
 const MECHANIC_STORAGE_KEY = "tolom_active_mechanic";
 

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import type { WorkOrderStatus } from "@/lib/types";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   createWorkOrder,
   getWorkOrders,
 } from "@/lib/services/work-order-service";
+import type { WorkOrderStatus } from "@/lib/types";
 
 export const GET = createRouteHandler(async ({ request, orgId }) => {
   const { searchParams } = new URL(request.url);

@@ -1,15 +1,16 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, X } from "lucide-react";
+import { Check, Pencil, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { ServiceForm } from "@/components/services/service-form";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -69,6 +70,9 @@ export default function ServicesPage() {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const originalValuesRef = useRef<ServiceItem | null>(null);
+
   const [editForm, setEditForm] = useState({
     name: "",
     description: "",
@@ -77,6 +81,14 @@ export default function ServicesPage() {
   });
 
   const lastUsedPrices = useServiceLastUsedPrices(orgId ?? undefined);
+
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    for (const s of services) {
+      if (s.category) cats.add(s.category);
+    }
+    return Array.from(cats).sort();
+  }, [services]);
 
   const exportColumns: ExportColumn<ServiceItem>[] = useMemo(
     () => [
@@ -189,6 +201,7 @@ export default function ServicesPage() {
         default_price: "",
         category: "",
       });
+      originalValuesRef.current = null;
     },
     onSettled: () => {
       queryClient.invalidateQueries({
@@ -204,6 +217,7 @@ export default function ServicesPage() {
 
   const handleStartEdit = (service: ServiceItem) => {
     setEditingId(service.id);
+    originalValuesRef.current = service;
     setEditForm({
       name: service.name,
       description: service.description ?? "",
@@ -220,6 +234,7 @@ export default function ServicesPage() {
       default_price: "",
       category: "",
     });
+    originalValuesRef.current = null;
   };
 
   const handleUpdate = () => {
@@ -227,7 +242,12 @@ export default function ServicesPage() {
     updateMutation.mutate({ id: editingId, formData: editForm });
   };
 
-  const filtered = useFuzzySearch(services, search, {
+  const categoryFiltered = useMemo(() => {
+    if (!selectedCategory) return services;
+    return services.filter((s) => s.category === selectedCategory);
+  }, [services, selectedCategory]);
+
+  const filtered = useFuzzySearch(categoryFiltered, search, {
     keys: [
       { name: "name", weight: 0.7 },
       { name: "category", weight: 0.2 },
@@ -352,6 +372,28 @@ export default function ServicesPage() {
         </Card>
       )}
 
+      {categories.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge
+            variant={!selectedCategory ? "default" : "outline"}
+            className="cursor-pointer select-none"
+            onClick={() => setSelectedCategory(null)}
+          >
+            All ({services.length})
+          </Badge>
+          {categories.map((cat) => (
+            <Badge
+              key={cat}
+              variant={selectedCategory === cat ? "default" : "outline"}
+              className="cursor-pointer select-none"
+              onClick={() => setSelectedCategory(cat)}
+            >
+              {cat}
+            </Badge>
+          ))}
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-0">
           {orgQuery.isLoading || loading ? (
@@ -385,11 +427,11 @@ export default function ServicesPage() {
               {filtered.map((s) => (
                 <div
                   key={s.id}
-                  className={`flex items-center gap-4 p-4 ${editingId === s.id ? "flex-col items-stretch" : "min-h-[64px]"}`}
+                  className="flex items-center gap-4 p-4 min-h-[64px]"
                 >
-                  {editingId === s.id ? (
-                    <div className="flex-1 grid gap-3">
-                      <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex-1 min-w-0">
+                    {editingId === s.id ? (
+                      <div className="flex flex-col gap-1">
                         <Input
                           placeholder="Service Name *"
                           value={editForm.name}
@@ -399,7 +441,7 @@ export default function ServicesPage() {
                               name: e.target.value,
                             }))
                           }
-                          className="h-11"
+                          className="h-8 text-sm font-medium"
                         />
                         <Input
                           placeholder="Category (e.g. Oil, Brakes)"
@@ -410,57 +452,11 @@ export default function ServicesPage() {
                               category: e.target.value,
                             }))
                           }
-                          className="h-11"
-                        />
-                        <Input
-                          type="number"
-                          min="0"
-                          placeholder="Default Price (₮) *"
-                          value={editForm.default_price}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              default_price: e.target.value,
-                            }))
-                          }
-                          className="h-11"
-                        />
-                        <Input
-                          placeholder="Description"
-                          value={editForm.description}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              description: e.target.value,
-                            }))
-                          }
-                          className="h-11"
+                          className="h-8 text-sm text-muted-foreground"
                         />
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={handleUpdate}
-                          disabled={
-                            updateMutation.isPending || !editForm.name.trim()
-                          }
-                          size="default"
-                        >
-                          {updateMutation.isPending
-                            ? t("services.saving")
-                            : "Save"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="default"
-                          onClick={handleCancelEdit}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex-1 min-w-0">
+                    ) : (
+                      <>
                         <Typography.Text className="font-medium truncate">
                           <HighlightText text={s.name} query={search} />
                         </Typography.Text>
@@ -471,10 +467,53 @@ export default function ServicesPage() {
                             t("services.uncategorized")
                           )}
                         </Typography.Muted>
-                      </div>
-                      <span className="font-medium text-lg tabular-nums shrink-0">
-                        {formatMNT(Number(s.default_price))}
-                      </span>
+                      </>
+                    )}
+                  </div>
+
+                  {editingId === s.id ? (
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="Price"
+                      value={editForm.default_price}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          default_price: e.target.value,
+                        }))
+                      }
+                      className="h-8 w-24 text-right font-medium tabular-nums shrink-0"
+                    />
+                  ) : (
+                    <span className="font-medium text-lg tabular-nums shrink-0">
+                      {formatMNT(Number(s.default_price))}
+                    </span>
+                  )}
+
+                  {editingId === s.id ? (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        size="icon-xs"
+                        onClick={handleUpdate}
+                        disabled={
+                          updateMutation.isPending || !editForm.name.trim()
+                        }
+                        aria-label="Save"
+                      >
+                        <Check className="size-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon-xs"
+                        onClick={handleCancelEdit}
+                        aria-label="Cancel"
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
                       {lastUsedPrices.data?.[s.id] && (
                         <span className="hidden text-xs text-amber-600 tabular-nums md:inline">
                           {t("services.lastUsedPrice")}:{" "}

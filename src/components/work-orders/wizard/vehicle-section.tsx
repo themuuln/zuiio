@@ -5,16 +5,16 @@ import { useTranslations } from "next-intl";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { VehicleForm } from "@/components/vehicles/vehicle-form";
-import { Typography } from "@/components/ui/typography";
 import {
   Item,
-  ItemMedia,
-  ItemContent,
-  ItemTitle,
   ItemActions,
+  ItemContent,
+  ItemMedia,
+  ItemTitle,
 } from "@/components/ui/item";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
+import { VehicleForm } from "@/components/vehicles/vehicle-form";
 import { useWizardContext } from "./wizard-context";
 
 export function VehicleSection() {

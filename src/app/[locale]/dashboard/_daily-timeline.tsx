@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { Clock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { TimelineEvent } from "@/lib/services/report-service";
 import { Typography } from "@/components/ui/typography";
+import type { TimelineEvent } from "@/lib/services/report-service";
 
 const STATUS_DOT: Record<string, string> = {
   New: "bg-blue-500",

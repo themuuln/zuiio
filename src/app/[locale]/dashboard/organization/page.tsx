@@ -1,22 +1,22 @@
 "use client";
 
-import Image from "next/image";
-import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
   CalendarClock,
   CreditCard,
+  Palette,
   Pencil,
   Save,
   Users,
-  Palette,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,12 +33,12 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization, SubscriptionPlanInfo } from "@/lib/types";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { Typography } from "@/components/ui/typography";
 
 export default function OrganizationPage() {
   const t = useTranslations();
@@ -224,7 +224,7 @@ export default function OrganizationPage() {
       unregisterTab("subscription");
       unregisterTab("team");
     };
-  }, [registerTab, subscription, unregisterTab]);
+  }, [registerTab, subscription, unregisterTab, formatDate, formatPlanType]);
 
   if (loading) {
     return (
@@ -427,18 +427,29 @@ export default function OrganizationPage() {
           <CardContent className="flex flex-col gap-3">
             {subscription ? (
               <>
-                <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">
-                    Plan
-                  </Typography.Muted>
-                  <Typography.Text className="font-medium">
-                    {formatPlanType(subscription.planType)}
-                    {subscription.trial && (
-                      <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                        Trial
-                      </span>
-                    )}
-                  </Typography.Text>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Typography.Muted className="text-sm text-muted-foreground">
+                      Plan
+                    </Typography.Muted>
+                    <Typography.Text className="font-medium">
+                      {formatPlanType(subscription.planType)}
+                      {subscription.trial && (
+                        <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                          Trial
+                        </span>
+                      )}
+                    </Typography.Text>
+                  </div>
+                  {subscription.planType !== "enterprise" && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      render={<Link href="/pricing" />}
+                    >
+                      Upgrade
+                    </Button>
+                  )}
                 </div>
                 <div>
                   <Typography.Muted className="text-sm text-muted-foreground">

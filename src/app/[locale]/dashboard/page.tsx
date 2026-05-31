@@ -7,29 +7,31 @@ import {
   DollarSign,
   Lightbulb,
   Percent,
+  Plus,
   TrendingUp,
   Users,
   Wrench,
 } from "lucide-react";
 import dynamicImport from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/lib/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import type { DateRange } from "react-day-picker";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
 import type { ExportColumn } from "@/lib/export";
+import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
+import { dashboardKeys } from "@/lib/queries/keys";
 import { useDashboard } from "@/lib/queries/use-dashboard";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { dashboardKeys } from "@/lib/queries/keys";
-import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import type { WorkOrderDetail } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { DailyTimeline } from "./_daily-timeline";
-import { EmptyDashboardState } from "./_empty-state";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { KpiCard } from "./_kpi-cards";
 import { LowStockCard } from "./_low-stock-card";
 import { type Period, PeriodBar } from "./_period-bar";
@@ -58,8 +60,12 @@ const ChartsSection = dynamicImport(() => import("./_charts"), {
 
 export default function DashboardPage() {
   const t = useTranslations();
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const [period, setPeriod] = useState<Period>("all");
+  const { setNewWorkOrderSheetOpen } = usePageHeader();
+  const [period, setPeriod] = useState<Period>(
+    () => (searchParams.get("period") as Period) ?? "all",
+  );
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(
     undefined,
   );
@@ -130,9 +136,22 @@ export default function DashboardPage() {
     }
   }, [orgId, orgLoading, dashboardLoading, dashboardError, router]);
 
-  const handlePeriodChange = useCallback((p: Period) => {
-    setPeriod(p);
-  }, []);
+  const handlePeriodChange = useCallback(
+    (p: Period) => {
+      setPeriod(p);
+      const params = new URLSearchParams(searchParams.toString());
+      if (p === "all") {
+        params.delete("period");
+      } else {
+        params.set("period", p);
+      }
+      const qs = params.toString();
+      router.replace(qs ? `?${qs}` : window.location.pathname, {
+        scroll: false,
+      });
+    },
+    [searchParams, router],
+  );
 
   const dashboardExportColumns: ExportColumn<WorkOrderDetail>[] = useMemo(
     () => [
@@ -177,7 +196,7 @@ export default function DashboardPage() {
         format: "date" as const,
       },
     ],
-    [],
+    [t],
   );
 
   // ── Org Loading State ───────────────────────────────
@@ -288,25 +307,24 @@ export default function DashboardPage() {
     });
   }, [recentWorkOrders, selectedRange]);
 
+  function getTrend(
+    current: number,
+    previous: number,
+    formatAsCurrency: boolean,
+  ): { direction: "up" | "down" | "neutral"; value: string } | null {
+    if (!summaryComparison) return null;
+    const direction =
+      current > previous ? "up" : current < previous ? "down" : "neutral";
+    return {
+      direction,
+      value: formatAsCurrency
+        ? formatCurrency(Math.abs(current - previous))
+        : String(Math.abs(current - previous)),
+    };
+  }
+
   const hasRevenue = summary ? summary.totalRevenue > 0 : false;
   const hasActiveWos = summary ? summary.activeWorkOrders > 0 : false;
-
-  // Only show empty state when we have real data confirming emptiness
-  if (data && !hasRevenue && !hasActiveWos) {
-    return (
-      <div className="flex flex-col gap-6 pb-8">
-        <div>
-          <Typography.H2 className="m-0">
-            {t("dashboard.welcome")}
-          </Typography.H2>
-          <Typography.Muted className="mt-1">
-            {t("dashboard.subtitle")}
-          </Typography.Muted>
-        </div>
-        <EmptyDashboardState onRetry={() => refetchDashboard()} />
-      </div>
-    );
-  }
 
   // ── Header (shared across partial and full states) ──
   const header = (
@@ -397,6 +415,11 @@ export default function DashboardPage() {
               icon={TrendingUp}
               loading={isDataLoading}
               accentKey="avgRepairOrder"
+              trend={getTrend(
+                summary?.avgRepairOrderValue ?? 0,
+                summaryComparison?.avgRepairOrderValue ?? 0,
+                true,
+              )}
             />
           </>
         )}
@@ -406,6 +429,11 @@ export default function DashboardPage() {
           icon={Clock}
           loading={isDataLoading}
           accentKey="activeWorkOrders"
+          trend={getTrend(
+            summary?.activeWorkOrders ?? 0,
+            summaryComparison?.activeWorkOrders ?? 0,
+            false,
+          )}
         />
         <KpiCard
           label={t("dashboard.totalCustomers")}
@@ -422,6 +450,11 @@ export default function DashboardPage() {
               icon={Wrench}
               loading={isDataLoading}
               accentKey="serviceRevenue"
+              trend={getTrend(
+                summary?.serviceRevenue ?? 0,
+                summaryComparison?.serviceRevenue ?? 0,
+                true,
+              )}
             />
             <KpiCard
               label={t("dashboard.partsRevenue")}
@@ -429,6 +462,11 @@ export default function DashboardPage() {
               icon={ClipboardList}
               loading={isDataLoading}
               accentKey="partsRevenue"
+              trend={getTrend(
+                summary?.partsRevenue ?? 0,
+                summaryComparison?.partsRevenue ?? 0,
+                true,
+              )}
             />
             <KpiCard
               label={t("dashboard.totalVehicles")}
@@ -447,47 +485,56 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          onClick={() => setNewWorkOrderSheetOpen(true)}
+        >
+          <Plus className="mr-2 size-4" />
+          {t("workOrders.newWorkOrder")}
+        </Button>
+      </div>
+      {data ? <ChartsSection data={data} /> : null}
+      {/* ── Timeline (horizontal strip) ── */}
+      {orgId && (
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <DailyTimeline orgId={orgId} />
+        </div>
+      )}
       {orgId && <LowStockCard orgId={orgId} />}
       {insightElements}
-      {hasRevenue && data ? <ChartsSection data={data} /> : null}
-      <div className="grid gap-6 lg:grid-cols-3 items-start">
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          <div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
-              <SectionHeader
-                title={t("dashboard.recentWorkOrders")}
-                description={t("dashboard.recentWorkOrdersDesc")}
-              />
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <DateRangePicker
-                  value={selectedRange}
-                  onChange={setSelectedRange}
-                  className="w-full sm:w-[260px]"
-                  align="end"
-                />
-                {selectedRange && selectedRange.from && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 px-2 text-muted-foreground hover:text-foreground text-xs"
-                    onClick={() => setSelectedRange(undefined)}
-                  >
-                    {t("common.clearFilter")}
-                  </Button>
-                )}
-              </div>
-            </div>
-            <RecentWorkOrdersTable
-              workOrders={filteredWorkOrders}
-              router={router}
-              t={t}
-              workOrdersForExport={dashboardExportColumns}
+      {/* ── Recent Work Orders ── */}
+      <div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <SectionHeader
+            title={t("dashboard.recentWorkOrders")}
+            description={t("dashboard.recentWorkOrdersDesc")}
+          />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <DateRangePicker
+              value={selectedRange}
+              onChange={setSelectedRange}
+              className="w-full sm:w-[260px]"
+              align="end"
             />
+            {selectedRange?.from && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 px-2 text-muted-foreground hover:text-foreground text-xs"
+                onClick={() => setSelectedRange(undefined)}
+              >
+                {t("common.clearFilter")}
+              </Button>
+            )}
           </div>
         </div>
-        <div className="flex flex-col gap-6">
-          <DailyTimeline orgId={orgId ?? ""} />
-        </div>
+        <RecentWorkOrdersTable
+          workOrders={filteredWorkOrders}
+          router={router}
+          t={t}
+          workOrdersForExport={dashboardExportColumns}
+        />
       </div>
     </div>
   );

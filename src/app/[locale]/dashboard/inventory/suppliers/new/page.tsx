@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
+import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
 import { useRouter } from "@/lib/i18n/navigation";
 import { useCreateSupplier } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
-import { Typography } from "@/components/ui/typography";
 
 export default function NewSupplierPage() {
   const t = useTranslations("inventory");

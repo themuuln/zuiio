@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { createClient } from "@/lib/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 interface UseRealtimeOptions {
   /** Supabase table name to subscribe to. */

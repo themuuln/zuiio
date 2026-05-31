@@ -1,14 +1,14 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
+import { NotFoundError, ValidationError } from "@/lib/errors";
+import { sendInvoiceEmail } from "@/lib/services/email-service";
+import { createClient } from "@/lib/supabase/server";
 import type {
   Invoice,
-  InvoiceWithItems,
   InvoiceItem,
   InvoicePayment,
+  InvoiceWithItems,
 } from "@/lib/types";
-import { NotFoundError, ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
-import { sendInvoiceEmail } from "@/lib/services/email-service";
 import { buildUpdates, type FieldMap } from "./build-updates";
 
 const invoiceItemFieldMap: FieldMap<Partial<AddInvoiceItemParams>> = {
@@ -511,7 +511,7 @@ export async function updateInvoiceStatus(
   id: string,
   orgId: string,
   status: string,
-  notes?: string,
+  _notes?: string,
 ): Promise<Invoice> {
   const supabase = await createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;

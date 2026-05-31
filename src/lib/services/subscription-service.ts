@@ -1,10 +1,10 @@
 import { NotFoundError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import type { SubscriptionPlan } from "@/lib/types";
 import type {
+  SubscriptionPlan,
   SubscriptionPlanInfo,
-  UpdateSubscriptionParams,
   SubscriptionStatus,
+  UpdateSubscriptionParams,
 } from "@/lib/types";
 
 export { checkSubscriptionExpired } from "./subscription-enforcement";

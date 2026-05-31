@@ -12,9 +12,9 @@ import {
 } from "@/components/page-state";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Typography } from "@/components/ui/typography";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { cn, formatMNT } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 
 const STATUS_STYLES: Record<string, { dot: string; bg: string }> = {
   Completed: { dot: "bg-gray-400", bg: "bg-gray-50" },

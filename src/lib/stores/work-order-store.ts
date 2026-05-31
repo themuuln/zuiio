@@ -67,7 +67,7 @@ const initialState: WorkOrderState = {
 export const useWorkOrderStore = create<WorkOrderStore>()(
   devtools(
     persist(
-      immer((set, get) => ({
+      immer((set, _get) => ({
         ...initialState,
 
         setStep: (step) =>

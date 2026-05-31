@@ -1,12 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { finalizeSignup } from "@/lib/services/signup-service";
 import type { ActionState } from "@/lib/form-validation";
 import { flattenFieldErrors } from "@/lib/form-validation";
-import { signupSchema, isPhone } from "@/lib/validation/auth-schemas";
+import { finalizeSignup } from "@/lib/services/signup-service";
+import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { isPhone, signupSchema } from "@/lib/validation/auth-schemas";
 
 type SignupState = ActionState<{
   organizationName: string;

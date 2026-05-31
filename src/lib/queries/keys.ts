@@ -201,6 +201,12 @@ export const attachmentKeys = {
     [...attachmentKeys.all(orgId, woId), "list"] as const,
 };
 
+export const dayCloseKeys = {
+  all: (orgId: string) => ["organizations", orgId, "day-close"] as const,
+  status: (orgId: string, date: string) =>
+    [...dayCloseKeys.all(orgId), "status", date] as const,
+};
+
 export const expenseKeys = {
   all: (orgId: string) => ["organizations", orgId, "expenses"] as const,
   list: (orgId: string, filters?: Record<string, string>) =>

@@ -1,9 +1,9 @@
 "use client";
 
 import { CheckCircle2, History } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { WorkOrderStatusHistory } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
+import type { WorkOrderStatusHistory } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface StatusTimelineProps {
   statusHistory: WorkOrderStatusHistory[];

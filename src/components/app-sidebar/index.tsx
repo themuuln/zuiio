@@ -23,7 +23,11 @@ import { OrgBranding } from "./_org-branding";
 
 export function AppSidebar() {
   const t = useTranslations();
-  const { isActive, groups, utilityItems, primaryItems } = useNavigation();
+  const { isActive, groups, utilityItems, primaryItems, settingsItems } =
+    useNavigation();
+  const settingsShortcut = settingsItems.find(
+    (item) => item.href === "/dashboard/settings",
+  );
 
   return (
     <Sidebar collapsible="icon">
@@ -119,6 +123,23 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          {settingsShortcut && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={
+                  <Link
+                    href={settingsShortcut.href}
+                    onMouseEnter={onLinkHover(settingsShortcut.href)}
+                  />
+                }
+                isActive={isActive(settingsShortcut.href)}
+                tooltip={t(settingsShortcut.labelKey)}
+              >
+                <settingsShortcut.icon className="size-4" />
+                <span>{t(settingsShortcut.labelKey)}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <MechanicSwitcher />
           </SidebarMenuItem>

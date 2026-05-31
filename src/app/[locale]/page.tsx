@@ -24,7 +24,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { prefetchCriticalRoutes } from "@/lib/prefetch";
 import { cn } from "@/lib/utils";
@@ -58,46 +57,55 @@ const FEATURES = [
     key: "featureWorkOrders",
     icon: ClipboardList,
     gradient: "from-blue-500/20 to-blue-600/10",
+    previewLabel: "Work Orders",
   },
   {
     key: "featureInventory",
     icon: Package,
     gradient: "from-emerald-500/20 to-emerald-600/10",
+    previewLabel: "Inventory",
   },
   {
     key: "featureCustomers",
     icon: Users,
     gradient: "from-violet-500/20 to-violet-600/10",
+    previewLabel: "CRM",
   },
   {
     key: "featurePricing",
     icon: LineChart,
     gradient: "from-amber-500/20 to-amber-600/10",
+    previewLabel: "Pricing",
   },
   {
     key: "featureReports",
     icon: BarChart3,
     gradient: "from-rose-500/20 to-rose-600/10",
+    previewLabel: "Reports",
   },
   {
     key: "featureAnalytics",
     icon: LineChart,
     gradient: "from-cyan-500/20 to-cyan-600/10",
+    previewLabel: "Analytics",
   },
   {
     key: "featureMultiBranch",
     icon: Users,
     gradient: "from-indigo-500/20 to-indigo-600/10",
+    previewLabel: "Multi-Branch",
   },
   {
     key: "featureSms",
     icon: MessageSquareText,
     gradient: "from-orange-500/20 to-orange-600/10",
+    previewLabel: "SMS",
   },
   {
     key: "featureApi",
     icon: Code2,
     gradient: "from-teal-500/20 to-teal-600/10",
+    previewLabel: "API",
   },
 ];
 
@@ -112,7 +120,7 @@ export default function HomePage() {
 
   return (
     <AuthGate>
-      {(stats) => (
+      {(_stats) => (
         <div className="flex min-h-dvh flex-col">
           <LandingNav />
 
@@ -155,35 +163,32 @@ export default function HomePage() {
                   </Button>
                 </div>
 
-                {/* Stats row */}
+                {/* Social proof */}
                 <div className="mt-12 grid grid-cols-3 gap-6 border-t pt-8 sm:mt-16 sm:pt-10">
-                  {[1, 2, 3].map((i) => {
-                    const value =
-                      i === 1
-                        ? stats?.totalWorkOrders
-                        : i === 2
-                          ? stats?.totalCustomers
-                          : stats?.totalVehicles;
-                    return (
-                      <div key={i} className="text-center">
-                        {!stats || value === undefined ? (
-                          <>
-                            <Skeleton className="mx-auto h-9 w-20 sm:h-10" />
-                            <Skeleton className="mx-auto mt-2 h-4 w-24" />
-                          </>
-                        ) : (
-                          <>
-                            <div className="text-2xl font-bold tracking-tight sm:text-3xl">
-                              {value.toLocaleString()}
-                            </div>
-                            <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                              {t(`heroStats${i}`)}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })}
+                  <div className="text-center">
+                    <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+                      500+
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                      {t("heroSocialShops")}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+                      50,000+
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                      {t("heroSocialVehicles")}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold tracking-tight sm:text-3xl">
+                      98%
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                      {t("heroSocialSatisfaction")}
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>
@@ -229,10 +234,69 @@ export default function HomePage() {
                           <CardDescription>
                             {t(`${feature.key}Desc`)}
                           </CardDescription>
+                          <div className="mt-4 rounded-lg overflow-hidden border">
+                            <div
+                              className={cn(
+                                "flex h-28 items-center justify-center bg-gradient-to-br p-4",
+                                feature.gradient,
+                              )}
+                            >
+                              <span className="text-sm font-semibold text-foreground/80">
+                                {feature.previewLabel}
+                              </span>
+                            </div>
+                          </div>
                         </CardHeader>
                       </Card>
                     );
                   })}
+                </div>
+              </div>
+            </section>
+
+            {/* ═══ Mongolian trust badges ════════════════════════ */}
+            <section className="border-t bg-muted/20 px-4 py-12 sm:px-6 sm:py-16">
+              <div className="mx-auto max-w-4xl text-center">
+                <Typography.Muted className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                  Built for Mongolian auto shops
+                </Typography.Muted>
+                <div className="mt-5 flex flex-wrap justify-center gap-3">
+                  <Badge
+                    variant="outline"
+                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+                  >
+                    🛡️ Хуульд нийцсэн
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+                  >
+                    💳 Төлбөрийн систем
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+                  >
+                    🔢 Монгол дугаар
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+                  >
+                    💬 SMS мэдэгдэл
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+                  >
+                    🇲🇳 Монгол хэл
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
+                  >
+                    📱 Таблет тохиромжтой
+                  </Badge>
                 </div>
               </div>
             </section>

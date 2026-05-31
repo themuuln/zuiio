@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { ForbiddenError } from "@/lib/errors";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
   checkSuperAdmin,
   extendSubscriptionTrial,
   updateOrgSubscription,
 } from "@/lib/services/admin-service";
-import { ForbiddenError } from "@/lib/errors";
 
 async function guard(request: Request) {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";

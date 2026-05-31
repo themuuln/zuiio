@@ -1,10 +1,9 @@
 "use client";
 
+import { Info, Shield } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Globe, Info, Shield } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";

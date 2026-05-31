@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { useWorkOrderStore, type WorkOrderStep } from "./work-order-store";
 
 const STEPS: WorkOrderStep[] = [

@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
 import {
   ComplaintSection,
   CustomerSection,
@@ -16,7 +17,6 @@ import {
   WizardProvider,
 } from "@/components/work-orders/wizard";
 import { Link } from "@/lib/i18n/navigation";
-import { Typography } from "@/components/ui/typography";
 
 function NewWorkOrderForm() {
   const t = useTranslations("workOrders");

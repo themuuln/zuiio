@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
-  getPurchaseOrders,
   createPurchaseOrder,
+  getPurchaseOrders,
   updatePurchaseOrder,
 } from "@/lib/services/inventory-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ orgId }) => {
   const pos = await getPurchaseOrders(orgId);

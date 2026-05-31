@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AuditLogInsert } from "@/lib/types";
 import type { Database, Json } from "@/lib/database.types";
+import type { AuditLogInsert } from "@/lib/types";
 
 /**
  * Parameters for creating an audit log entry.

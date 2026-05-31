@@ -2,6 +2,7 @@
  * Core DB type aliases, enums, API wrappers, and foundational types.
  * Every other types/* file can import from here.
  */
+// biome-ignore lint/style/noRestrictedImports: Central types mapping file
 import type { Enums, Tables, TablesInsert } from "@/lib/database.types";
 
 // ── DB Aliases ──────────────────────────────────────────────────

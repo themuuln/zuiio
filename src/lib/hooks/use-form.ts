@@ -16,13 +16,13 @@
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm as useRHFForm } from "react-hook-form";
 import type {
+  FieldError,
+  FieldErrors,
   UseFormProps,
   UseFormReturn,
-  FieldErrors,
-  FieldError,
 } from "react-hook-form";
+import { useForm as useRHFForm } from "react-hook-form";
 
 export { zodResolver };
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { ResponsiveFormModal } from "@/components/ui/responsive-form-modal";
-import { CustomerForm } from "./customer-form";
 import type { Customer } from "@/lib/types";
+import { CustomerForm } from "./customer-form";
 
 type QuickCreateCustomerSheetProps = {
   open: boolean;

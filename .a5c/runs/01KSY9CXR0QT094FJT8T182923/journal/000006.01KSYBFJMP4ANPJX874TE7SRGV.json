@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T06:28:00.278Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYBFJM2Y92DDW52CYYQYFB2",
+    "invocationKey": "tolom-ux-improvements:S000003:execute-phase",
+    "invocationHash": "ccfa60ca16d707e70b8f43168e124d56df7525ee1de90b50f3a68f14a22f2cf0",
+    "stepId": "S000003",
+    "taskId": "execute-phase",
+    "kind": "agent",
+    "label": "Execute phase: Work Orders UX fixes",
+    "taskDefRef": "tasks/01KSYBFJM2Y92DDW52CYYQYFB2/task.json"
+  },
+  "checksum": "3fe2c34dd1bf9b8fd4d5152a9cb0fa5557cd7c968788d2af77175a50c4f1dba0"
+}

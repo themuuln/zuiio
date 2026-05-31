@@ -212,8 +212,8 @@ export async function lookupVehicleByPlate(
     if (!servicesByWo.has(s.work_order_id))
       servicesByWo.set(s.work_order_id, []);
     servicesByWo
-      .get(s.work_order_id)!
-      .push({ name: s.service_name, price: Number(s.final_price) });
+      .get(s.work_order_id)
+      ?.push({ name: s.service_name, price: Number(s.final_price) });
   }
 
   const serviceHistory = (workOrders ?? []).map((wo) => ({
@@ -560,8 +560,8 @@ export async function getVehicleServiceTimeline(
     if (!servicesByWo.has(s.work_order_id))
       servicesByWo.set(s.work_order_id, []);
     servicesByWo
-      .get(s.work_order_id)!
-      .push({ name: s.service_name, price: Number(s.final_price) });
+      .get(s.work_order_id)
+      ?.push({ name: s.service_name, price: Number(s.final_price) });
   }
 
   return (workOrders ?? []).map((wo) => ({

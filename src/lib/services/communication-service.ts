@@ -1,10 +1,12 @@
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
-import type { CustomerCommunication } from "@/lib/types";
 import { NotFoundError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import type { CreateCustomerCommunicationParams } from "@/lib/types";
+import type {
+  CreateCustomerCommunicationParams,
+  CustomerCommunication,
+} from "@/lib/types";
 
 /** Communication with staff display name joined from profiles. */
 export interface CustomerCommunicationWithStaff extends CustomerCommunication {

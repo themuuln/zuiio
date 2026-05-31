@@ -7,9 +7,9 @@ import { useTranslations } from "next-intl";
 import { PageErrorState, PageShellSkeleton } from "@/components/page-state";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Typography } from "@/components/ui/typography";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { formatMNT } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 
 const STATUS_VARIANTS: Record<
   string,

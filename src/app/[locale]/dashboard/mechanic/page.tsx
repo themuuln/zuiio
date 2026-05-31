@@ -14,28 +14,17 @@ import {
   Wrench,
   X,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useClientNow } from "@/hooks/use-client-now";
-import { Badge } from "@/components/ui/badge";
 import { MechanicSelect } from "@/components/mechanic-select";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { useCurrentUserRole } from "@/hooks/use-current-user-role";
-import { cn, formatMNT } from "@/lib/utils";
-import dynamic from "next/dynamic";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,9 +32,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
+import { useClientNow } from "@/hooks/use-client-now";
+import { useCurrentUserRole } from "@/hooks/use-current-user-role";
+import { usePolling } from "@/hooks/use-polling";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
+import type { PickupCompleteData } from "@/components/bay-view-v2/pickup-complete-dialog";
+import { PickupCompleteDialog } from "@/components/bay-view-v2/pickup-complete-dialog";
+import { cn, formatMNT } from "@/lib/utils";
 
 const MechanicTrendChart = dynamic(
   () => import("../_charts").then((m) => m.MechanicTrendChart),
@@ -70,6 +73,7 @@ interface WorkOrderRow {
   total: number;
   customer_name: string | null;
   vehicle_plate: string | null;
+  vehicle_id: string | null;
   created_at: string;
 }
 
@@ -464,6 +468,12 @@ function MechanicDashboard({
     todayHours: number;
   }>({ clockedIn: false, since: null, todayHours: 0 });
   const [clockLoading, setClockLoading] = useState(false);
+  const [pendingPickupComplete, setPendingPickupComplete] = useState<{
+    woId: string;
+    vehicleId: string;
+    vehiclePlate: string;
+    totalCost: number;
+  } | null>(null);
 
   const fetchData = useCallback(
     async (showLoader = false) => {
@@ -517,9 +527,9 @@ function MechanicDashboard({
 
   useEffect(() => {
     fetchData(true);
-    const interval = setInterval(() => fetchData(false), 30000);
-    return () => clearInterval(interval);
   }, [fetchData]);
+
+  usePolling(() => fetchData(false), 30000);
 
   // Sort: active/pickup first, then new, then rest
   const sortedWos = useMemo(() => {
@@ -543,7 +553,7 @@ function MechanicDashboard({
       unregisterTab("jobs");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [registerTab, unregisterTab]);
 
   // ── Data: update tab content without reopening ─────────
   useEffect(() => {
@@ -617,7 +627,46 @@ function MechanicDashboard({
     }
   };
 
+  const handlePickupCompleteConfirm = async (data: PickupCompleteData) => {
+    if (!pendingPickupComplete) return;
+    const { woId } = pendingPickupComplete;
+
+    try {
+      const { saveCompletionData } = await import(
+        "@/lib/services/post-service-service"
+      );
+      await saveCompletionData({
+        workOrderId: woId,
+        vehicleId: pendingPickupComplete.vehicleId,
+        customerSatisfaction: data.customerSatisfaction,
+        customerFeedback: data.customerFeedback,
+        nextAppointmentDate: data.nextAppointmentDate,
+      });
+
+      await updateStatus.mutateAsync({ woId, status: "Completed" });
+      toast.success("Completed");
+    } catch {
+      toast.error("Failed to complete work order");
+    } finally {
+      setPendingPickupComplete(null);
+    }
+  };
+
   const handleStatusChange = async (woId: string, newStatus: string) => {
+    // Intercept Completed — show PickupCompleteDialog instead of direct update
+    if (newStatus === "Completed") {
+      const wo = assignedWos.find((w) => w.id === woId);
+      if (wo) {
+        setPendingPickupComplete({
+          woId,
+          vehicleId: wo.vehicle_id ?? "",
+          vehiclePlate: wo.vehicle_plate ?? "",
+          totalCost: Number(wo.total),
+        });
+        return;
+      }
+    }
+
     setAssignedWos((prev) =>
       prev.map((wo) => (wo.id === woId ? { ...wo, status: newStatus } : wo)),
     );
@@ -787,6 +836,19 @@ function MechanicDashboard({
           </div>
         )}
       </div>
+
+      {pendingPickupComplete && (
+        <PickupCompleteDialog
+          open={!!pendingPickupComplete}
+          onOpenChange={(open) => {
+            if (!open) setPendingPickupComplete(null);
+          }}
+          woId={pendingPickupComplete.woId}
+          vehiclePlate={pendingPickupComplete.vehiclePlate}
+          totalCost={pendingPickupComplete.totalCost}
+          onConfirm={handlePickupCompleteConfirm}
+        />
+      )}
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import {
   Field,
   FieldContent,
@@ -41,7 +42,6 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
-import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 
 import { usePageHeader } from "@/hooks/use-page-header";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";

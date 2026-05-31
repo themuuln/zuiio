@@ -1,8 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { useEffect, type ReactNode } from "react";
-import { usePageHeader, type PageTab } from "@/hooks/use-page-header";
+import { type ReactNode, useEffect } from "react";
+import { type PageTab, usePageHeader } from "@/hooks/use-page-header";
 
 const SETTINGS_TABS: PageTab[] = [
   { value: "general", label: "General" },
@@ -16,7 +15,6 @@ const SETTINGS_TABS: PageTab[] = [
 ];
 
 export default function SettingsLayout({ children }: { children: ReactNode }) {
-  const t = useTranslations();
   const { setTabs, setActiveTab } = usePageHeader();
 
   useEffect(() => {
@@ -29,6 +27,8 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
   }, [setTabs, setActiveTab]);
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">{children}</div>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+      {children}
+    </div>
   );
 }

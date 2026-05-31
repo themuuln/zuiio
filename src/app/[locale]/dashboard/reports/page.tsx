@@ -6,19 +6,21 @@
  */
 "use client";
 
+import { subDays } from "date-fns";
 import {
   BarChart3,
   Calendar,
+  CheckCircle2,
   ClipboardList,
   type LucideIcon,
   RefreshCw,
   TrendingUp,
+  Trophy,
   Wallet,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
-import { subDays } from "date-fns";
-
+import type { DateRange } from "react-day-picker";
 import { Cell, Pie, PieChart as RechartsPieChart } from "recharts";
 import { ExportButton } from "@/components/export-button";
 import { MechanicSelect } from "@/components/mechanic-select";
@@ -43,9 +45,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { DatePicker } from "@/components/ui/date-picker";
-import { MonthPicker } from "@/components/ui/month-picker";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import type { DateRange } from "react-day-picker";
+import { MonthPicker } from "@/components/ui/month-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -165,38 +166,64 @@ function getDateRange(
 // ── EOD Report View ───────────────────────────────────────
 
 function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
+  const bestMechanic =
+    data.mechanics.length > 0
+      ? data.mechanics.reduce((a, b) =>
+          a.total_revenue > b.total_revenue ? a : b,
+        )
+      : null;
+
+  const avgRevenuePerWo =
+    data.total_work_orders > 0
+      ? Math.round(data.total_revenue / data.total_work_orders)
+      : 0;
+
   return (
     <div className="flex flex-col gap-6">
+      {/* Dashboard-style KPI cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <ReportKpiCard
-          label={t("reports.totalWorkOrders")}
-          value={String(data.total_work_orders)}
-          icon={ClipboardList}
-        />
         <ReportKpiCard
           label={t("reports.totalRevenueLabel")}
           value={formatCurrency(data.total_revenue)}
           icon={Wallet}
           subtitle={`${data.mechanics.length} ${t("reports.mechanic")}`}
+          cls="text-emerald-600 dark:text-emerald-400"
         />
         <ReportKpiCard
-          label={t("reports.avgRevenuePerWo")}
-          value={
-            data.total_work_orders > 0
-              ? formatCurrency(
-                  Math.round(data.total_revenue / data.total_work_orders),
-                )
-              : formatCurrency(0)
-          }
-          icon={TrendingUp}
+          label={t("reports.totalWorkOrders")}
+          value={String(data.total_work_orders)}
+          icon={CheckCircle2}
+          cls="text-blue-600 dark:text-blue-400"
+          subtitle={`${t("reports.avgRevenuePerWo")}: ${formatCurrency(avgRevenuePerWo)}`}
         />
         <ReportKpiCard
           label={t("reports.commission")}
           value={formatCurrency(data.total_commission ?? 0)}
-          icon={Wallet}
-          cls="text-emerald-600 dark:text-emerald-400"
+          icon={BarChart3}
+          subtitle={`${t("reports.avgRevenuePerWo")}: ${formatCurrency(Math.round((data.total_commission ?? 0) / Math.max(data.total_work_orders, 1)))}`}
+        />
+        <ReportKpiCard
+          label={
+            bestMechanic
+              ? bestMechanic.mechanic_name
+              : t("reports.bestMechanic")
+          }
+          value={
+            bestMechanic
+              ? formatCurrency(bestMechanic.total_revenue)
+              : formatCurrency(0)
+          }
+          icon={Trophy}
+          cls="text-amber-600 dark:text-amber-400"
+          subtitle={
+            bestMechanic
+              ? `${bestMechanic.work_orders_completed} ${t("reports.jobs")}`
+              : undefined
+          }
         />
       </div>
+
+      {/* Per-mechanic breakdown card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-sm font-semibold">
@@ -262,10 +289,17 @@ function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
                 data.mechanics.map((m, i) => (
                   <TableRow
                     key={m.mechanic_id}
-                    className={`border-b border-border hover:bg-muted/30 ${i === 0 ? "bg-muted/10" : ""}`}
+                    className={`border-b border-border hover:bg-muted/30 ${i === 0 ? "bg-muted/10" : ""} ${bestMechanic && m.mechanic_id === bestMechanic.mechanic_id ? "bg-amber-50/30 dark:bg-amber-950/10" : ""}`}
                   >
                     <TableCell className="px-4 py-3 font-medium">
-                      {m.mechanic_name}
+                      {i === 0 && bestMechanic ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          {m.mechanic_name}
+                          <Trophy className="size-3.5 text-amber-500" />
+                        </span>
+                      ) : (
+                        m.mechanic_name
+                      )}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-right tabular-nums">
                       {m.work_orders_completed}
@@ -479,9 +513,9 @@ export default function ReportsPage() {
     return (report.daily_breakdown as DailyReport[]).map((d) => ({
       date: d.date,
       revenue: Number(d.total_revenue ?? 0),
-      label: new Date(d.date).toLocaleDateString("en-US", { weekday: "short" }),
+      label: new Date(d.date).toLocaleDateString(locale, { weekday: "short" }),
     }));
-  }, [report, reportType]);
+  }, [report, reportType, locale]);
 
   const monthlyBreakdown = useMemo(() => {
     if (reportType !== "monthly") return [];
@@ -639,7 +673,7 @@ export default function ReportsPage() {
         <Card className="border-red-200 bg-red-50/30 dark:border-red-800/30 dark:bg-red-950/10">
           <CardContent className="py-4">
             <Typography.Text className="text-sm text-red-600 dark:text-red-400">
-              {reportQ.error.message}
+              "Couldn't load reports. Try again."
             </Typography.Text>
           </CardContent>
         </Card>
@@ -684,6 +718,7 @@ export default function ReportsPage() {
         <div className="flex flex-col gap-6">
           <InsightAlerts insights={insightsQ.data ?? []} loading={erpLoading} />
 
+          {/* ── #68: Comparison period column — computed deltas + prev period values ── */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <ReportKpiCard
               label={t("workOrders")}
@@ -705,12 +740,29 @@ export default function ReportsPage() {
                   ? `${Math.round((r.services_count / r.work_orders_completed) * 10) / 10}/WO`
                   : undefined
               }
+              delta={
+                r?.comparison?.services_count != null &&
+                (r?.services_count ?? 0) > 0 &&
+                r.comparison.services_count > 0
+                  ? Math.round(
+                      (((r?.services_count ?? 0) -
+                        r.comparison.services_count) /
+                        r.comparison.services_count) *
+                        1000,
+                    ) / 10
+                  : null
+              }
             />
             <ReportKpiCard
               label={t("revenue")}
               value={formatCurrency(r?.total_revenue ?? 0)}
               icon={Wallet}
               delta={r?.comparison?.revenue_change_pct}
+              subtitle={
+                r?.comparison?.total_revenue != null
+                  ? `prev: ${formatCurrency(r.comparison.total_revenue)}`
+                  : undefined
+              }
             />
             <ReportKpiCard
               label={t("expenses")}
@@ -824,8 +876,8 @@ export default function ReportsPage() {
                         },
                       ].map((item) => {
                         const total =
-                          r.profitability!.service_revenue +
-                          r.profitability!.parts_revenue;
+                          (r?.profitability?.service_revenue ?? 0) +
+                          (r?.profitability?.parts_revenue ?? 0);
                         return (
                           <div
                             key={item.name}
@@ -934,6 +986,7 @@ export default function ReportsPage() {
                 kpis={r.mechanic_kpis}
                 exportCols={mechExportCols}
                 exportFile={`mechanics-${reportType}-${dateParam}.xlsx`}
+                comparison={r?.comparison}
               />
             )}
         </div>

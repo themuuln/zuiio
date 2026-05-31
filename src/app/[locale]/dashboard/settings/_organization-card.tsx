@@ -3,8 +3,8 @@
 import { Building2 } from "lucide-react";
 import OrgLogoUpload from "@/components/org-logo-upload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Organization } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
+import type { Organization } from "@/lib/types";
 
 interface OrganizationCardProps {
   orgId: string;

@@ -18,13 +18,13 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { Typography } from "@/components/ui/typography";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import {
   useCreateExpense,
   useExpenseCategories,
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { Typography } from "@/components/ui/typography";
 
 interface ExpenseFormState {
   description: string;

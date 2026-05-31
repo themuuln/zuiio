@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { toastRetry } from "@/lib/toast-utils";
-import { createOrgQuery } from "./factory";
 import { diagnosisLabelKeys } from "@/lib/queries/keys";
+import { toastRetry } from "@/lib/toast-utils";
 import type { DiagnosisLabel } from "@/lib/types";
+import { createOrgQuery } from "./factory";
 
 const fetchDiagnosisLabels =
   createOrgQuery<DiagnosisLabel[]>("/diagnosis-labels");

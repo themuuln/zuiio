@@ -11,7 +11,6 @@ import {
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
-import type { ExportColumn } from "@/lib/export";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,10 +23,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { InvoiceItem, InvoicePayment } from "@/lib/types";
-import type { InvoiceWithItems } from "@/lib/types";
-import { cn, formatCurrency } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
+import type { ExportColumn } from "@/lib/export";
+import type {
+  InvoiceItem,
+  InvoicePayment,
+  InvoiceWithItems,
+} from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
 
 // ── Invoice status badge ─────────────────────────────────
 

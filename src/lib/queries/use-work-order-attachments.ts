@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { toastRetry } from "@/lib/toast-utils";
-import { createOrgQuery } from "./factory";
 import type { WorkOrderAttachment } from "@/lib/types";
+import { createOrgQuery } from "./factory";
 import { attachmentKeys } from "./keys";
 
 export function useAttachments(orgId: string | undefined, woId: string) {

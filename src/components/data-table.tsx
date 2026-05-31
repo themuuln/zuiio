@@ -5,10 +5,10 @@
 
 "use client";
 
+export type { DataTableProps } from "@/components/ui/data-table";
 export {
   DataTable,
   DataTableColumnHeader,
   DataTablePagination,
   DataTableViewOptions,
 } from "@/components/ui/data-table";
-export type { DataTableProps } from "@/components/ui/data-table";

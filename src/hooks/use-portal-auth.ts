@@ -27,7 +27,7 @@ export function usePortalAuth() {
     queryFn: async () => {
       const headers: Record<string, string> = {};
       if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+        headers.Authorization = `Bearer ${token}`;
       }
       const res = await fetch("/api/portal/customer", { headers });
       if (!res.ok) {

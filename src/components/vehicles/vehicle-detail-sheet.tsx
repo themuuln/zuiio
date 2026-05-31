@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
   ChevronRight,
@@ -10,8 +11,9 @@ import {
   Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { StatusBadge } from "@/components/status-badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,9 +26,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { formatPlateInput, inputProps } from "@/lib/form-ux";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/components/ui/item";
 import {
   Select,
   SelectContent,
@@ -34,34 +42,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Typography } from "@/components/ui/typography";
+import { ColorSelect } from "@/components/vehicles/color-select";
+import { usePageHeader } from "@/hooks/use-page-header";
+import { formatPlateInput, inputProps } from "@/lib/form-ux";
 import {
   isValidMongolianPlate,
   transliterateMongolianPlate,
 } from "@/lib/form-validation";
-import { ColorSelect } from "@/components/vehicles/color-select";
-import { StatusBadge } from "@/components/status-badge";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { usePageHeader } from "@/hooks/use-page-header";
-import type { WorkOrderStatus } from "@/lib/types";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { vehicleKeys } from "@/lib/queries/keys";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import type { WorkOrderStatus } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
-import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
-import {
-  Item,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
-} from "@/components/ui/item";
 
 interface VehicleOwnerSummary {
   customer_id: string;

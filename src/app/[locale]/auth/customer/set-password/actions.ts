@@ -1,10 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { ActionState } from "@/lib/form-validation";
 import { flattenFieldErrors } from "@/lib/form-validation";
+import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { customerSetPasswordSchema } from "@/lib/validation/auth-schemas";
 
 type SetPasswordState = ActionState<{ email: string }> & {

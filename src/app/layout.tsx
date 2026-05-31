@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
+import Script from "next/script";
 import type { ReactNode } from "react";
-import ThemeProvider from "@/components/theme-provider";
 import { SwCleanup } from "@/components/sw-cleanup";
+import ThemeProvider from "@/components/theme-provider";
 import "./globals.css";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";

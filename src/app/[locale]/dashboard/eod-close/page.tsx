@@ -1,32 +1,39 @@
 "use client";
 
 import {
+  AlertTriangle,
   Banknote,
-  Calendar,
   CheckCircle2,
+  ChevronDown,
   ClipboardList,
-  CreditCard,
+  Clock,
   Crown,
   DollarSign,
-  FileText,
   Printer,
   Receipt,
   Trophy,
-  AlertTriangle,
-  Clock,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { LowStockCard } from "@/app/[locale]/dashboard/_low-stock-card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useTranslations } from "next-intl";
+import {
+  useInventoryBalances,
+  useStockThresholds,
+} from "@/lib/queries/use-inventory";
 import { formatCurrency } from "@/lib/utils";
-import { LowStockCard } from "@/app/[locale]/dashboard/_low-stock-card";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -83,7 +90,7 @@ function todayStr(): string {
 }
 
 function formatDate(iso: string): string {
-  const d = new Date(iso + "T00:00:00");
+  const d = new Date(`${iso}T00:00:00`);
   return d.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -261,6 +268,26 @@ export default function EodClosePage() {
     window.print();
   };
 
+  // ── Low stock count for Pending Items ──────────────
+  const { data: balances = [] } = useInventoryBalances(orgId);
+  const { data: thresholds = [] } = useStockThresholds(orgId);
+
+  const lowStockCount = useMemo(() => {
+    if (!orgId) return 0;
+    const thresholdMap = new Map<string, number>();
+    for (const th of thresholds) {
+      thresholdMap.set(th.part_id, th.minimum_quantity);
+    }
+
+    let count = 0;
+    for (const b of balances) {
+      const min = thresholdMap.get(b.part_id ?? "") ?? 5;
+      const qty = b.quantity_on_hand ?? 0;
+      if (qty <= 0 || qty < min) count++;
+    }
+    return count;
+  }, [balances, thresholds, orgId]);
+
   // ── Loading state ──────────────────────────────────
   if (orgLoading || (loading && !eodData)) {
     return <PageSkeleton />;
@@ -283,7 +310,7 @@ export default function EodClosePage() {
   const streak = close?.streak ?? 0;
 
   return (
-    <div className="flex flex-col gap-6 pb-8 print:gap-4">
+    <div id="eod-report" className="flex flex-col gap-6 pb-8 print:gap-4">
       {/* ═══ Header ═══ */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -297,7 +324,7 @@ export default function EodClosePage() {
             {formatDate(today)}
           </Typography.Muted>
           {streak > 0 && (
-            <div className="mt-1 flex items-center gap-1.5">
+            <div className="mt-1 flex items-center gap-1.5 print:hidden">
               <Trophy className="size-4 text-amber-500" />
               <Badge
                 variant="secondary"
@@ -498,8 +525,28 @@ export default function EodClosePage() {
         </Card>
       </div>
 
-      {/* ═══ Low Stock Alert ═══ */}
-      {orgId && <LowStockCard orgId={orgId} />}
+      {/* ═══ Pending Items ═══ */}
+      {orgId && lowStockCount > 0 && (
+        <Collapsible defaultOpen className="print:hidden">
+          <Card className="border-amber-200/50 bg-amber-50/30 print:border-border print:shadow-none dark:border-amber-800/30 dark:bg-amber-950/10">
+            <CardContent className="p-4">
+              <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="size-4 text-amber-500" />
+                  <Typography.Text className="text-sm font-semibold">
+                    {t("eodClose.pendingItems") ?? "Pending Items"}
+                  </Typography.Text>
+                  <Badge variant="secondary">{lowStockCount}</Badge>
+                </div>
+                <ChevronDown className="size-4 transition-transform data-[panel-open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent keepMounted className="mt-3">
+                <LowStockCard orgId={orgId} />
+              </CollapsibleContent>
+            </CardContent>
+          </Card>
+        </Collapsible>
+      )}
 
       {/* ═══ Footer ═══ */}
       <div className="print:mt-4 print:border-t print:border-border print:pt-4 print:text-center print:text-xs print:text-muted-foreground">

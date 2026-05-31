@@ -7,9 +7,9 @@ import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
   clockIn,
   clockOut,
-  getActiveLog,
   getClockStatus,
   getTodayHours,
+  getTodayLog,
 } from "./time-tracking-service";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
@@ -133,7 +133,7 @@ describe("clockOut", () => {
   });
 });
 
-describe("getActiveLog", () => {
+describe("getTodayLog", () => {
   it("fetches the latest open log (null clock_out)", async () => {
     const mockOpenLog = {
       id: "log-active-2",
@@ -147,7 +147,7 @@ describe("getActiveLog", () => {
       .mockResolvedValue({ data: mockOpenLog, error: null });
     mockClient.from = vi.fn().mockReturnValue(builder);
 
-    const result = await getActiveLog("org-1", "mech-1");
+    const result = await getTodayLog("org-1", "mech-1");
     expect(result).toEqual(mockOpenLog);
     expect(builder.is).toHaveBeenCalledWith("clock_out", null);
   });

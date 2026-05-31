@@ -1,14 +1,14 @@
+import { revalidateTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
   createBranch,
+  deleteBranch,
   getBranches,
   updateBranch,
-  deleteBranch,
 } from "./branch-service";
-import { revalidateTag } from "next/cache";
-import { NotFoundError, ValidationError } from "@/lib/errors";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("@/lib/cache/with-cache", () => ({

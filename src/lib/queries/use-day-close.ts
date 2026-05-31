@@ -4,8 +4,7 @@
  * Replaces raw fetch() in the EOD close page with proper caching,
  * background refetching, and mutation support.
  */
-import { toast } from "sonner";
-import { toastRetry } from "@/lib/toast-utils";
+
 import {
   type UseMutationResult,
   type UseQueryResult,
@@ -13,9 +12,10 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { toastRetry } from "@/lib/toast-utils";
+import type { EndOfDaySummary } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import { dayCloseKeys, reportKeys } from "./keys";
-import type { EndOfDaySummary } from "@/lib/types";
 
 // ── Types ──────────────────────────────────────────────────
 

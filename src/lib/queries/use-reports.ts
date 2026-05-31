@@ -9,17 +9,16 @@
  * - Shared cache between tabs
  */
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
-import { createOrgQuery } from "./factory";
-import { reportKeys } from "./keys";
 import type {
   CustomerRetentionData,
   PnLSummary,
   ReportForecast,
   ReportInsight,
-  ReportMechanicKpi,
   ReportTarget,
   ServiceBreakdown,
 } from "@/lib/types";
+import { createOrgQuery } from "./factory";
+import { reportKeys } from "./keys";
 
 // ── Fetchers ────────────────────────────────────────────────
 

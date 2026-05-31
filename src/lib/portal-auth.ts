@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
-import { UnauthorizedError, toApiErrorResponse } from "@/lib/errors";
+import { toApiErrorResponse, UnauthorizedError } from "@/lib/errors";
 import { authRateLimiter } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 

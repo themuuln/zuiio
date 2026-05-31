@@ -94,6 +94,9 @@ export function WorkOrderDetailDrawer({
   } | null>(null);
   const [partsCatalog, setPartsCatalog] = useState<CatalogPartItem[]>([]);
   const [partSearch, setPartSearch] = useState("");
+  const [lowStockMap, setLowStockMap] = useState<
+    Record<string, { quantity: number; threshold: number }>
+  >({});
 
   // Inline price edit state
   const [editingServicePriceId, setEditingServicePriceId] = useState<
@@ -193,6 +196,12 @@ export function WorkOrderDetailDrawer({
             fetch("/api/global-catalog/parts", { signal }).then((r) =>
               r.json(),
             ),
+            fetch(`/api/organizations/${id}/inventory/balances`, {
+              signal,
+            }).then((r) => r.json()),
+            fetch(`/api/organizations/${id}/inventory/thresholds`, {
+              signal,
+            }).then((r) => r.json()),
           ])
             .then(
               ([
@@ -200,6 +209,8 @@ export function WorkOrderDetailDrawer({
                 orgPartsRes,
                 globalServicesRes,
                 globalPartsRes,
+                balancesRes,
+                thresholdsRes,
               ]) => {
                 if (signal.aborted) return;
 
@@ -257,6 +268,34 @@ export function WorkOrderDetailDrawer({
                     })),
                 ];
                 setPartsCatalog(mergedParts);
+
+                // Build low-stock map from balances and thresholds
+                const balancesList: Array<{
+                  part_id: string;
+                  quantity_on_hand: number;
+                }> = balancesRes.data?.data ?? balancesRes.data ?? [];
+                const thresholdsList: Array<{
+                  part_id: string;
+                  minimum_quantity: number;
+                }> = thresholdsRes.data?.data ?? thresholdsRes.data ?? [];
+                const thresholdMap: Record<string, number> = {};
+                for (const t of thresholdsList) {
+                  thresholdMap[t.part_id] = t.minimum_quantity;
+                }
+                const lowStock: Record<
+                  string,
+                  { quantity: number; threshold: number }
+                > = {};
+                for (const b of balancesList) {
+                  const min = thresholdMap[b.part_id] ?? 5;
+                  if (b.quantity_on_hand < min) {
+                    lowStock[b.part_id] = {
+                      quantity: b.quantity_on_hand,
+                      threshold: min,
+                    };
+                  }
+                }
+                setLowStockMap(lowStock);
               },
             )
             .catch((err) => {
@@ -429,7 +468,28 @@ export function WorkOrderDetailDrawer({
 
   async function removeService(serviceId: string) {
     const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const service = wo?.services?.find((s) => s.id === serviceId);
+    if (!orgId || !workOrderId || !service) return;
+
+    // Capture service data for potential undo
+    const serviceData = {
+      service_catalog_id: (service as any).service_catalog_id ?? null,
+      service_name: service.service_name,
+      quantity: (service as any).quantity ?? 1,
+      unit_price: Number(
+        (service as any).final_price ?? (service as any).unit_price ?? 0,
+      ),
+    };
+
+    // Optimistically remove from UI
+    setWo((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        services: (prev.services ?? []).filter((s) => s.id !== serviceId),
+      };
+    });
+
     try {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/services?serviceId=${serviceId}`,
@@ -438,19 +498,53 @@ export function WorkOrderDetailDrawer({
       const json = await res.json();
       if (json.error) {
         toast.error(json.error.message ?? "Failed to remove service");
+        // Rollback
+        setWo((prev) => {
+          if (!prev) return prev;
+          return { ...prev, services: [...(prev.services ?? []), service] };
+        });
         return;
       }
-      // Remove service directly from wo state — avoids stale cache from refetch
-      setWo((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          services: (prev.services ?? []).filter((s) => s.id !== serviceId),
-        };
+
+      toast("Service removed", {
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            try {
+              const addRes = await fetch(
+                `/api/organizations/${orgId}/work-orders/${workOrderId}/services`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(serviceData),
+                },
+              );
+              const addJson = await addRes.json();
+              if (addJson.data) {
+                setWo((prev) => {
+                  if (!prev) return prev;
+                  return {
+                    ...prev,
+                    services: [...(prev.services ?? []), addJson.data],
+                  };
+                });
+                onRefresh();
+              }
+            } catch {
+              toast.error("Failed to restore service");
+            }
+          },
+        },
+        duration: 5000,
       });
       onRefresh();
     } catch {
       toast.error("Failed to remove service");
+      // Rollback
+      setWo((prev) => {
+        if (!prev) return prev;
+        return { ...prev, services: [...(prev.services ?? []), service] };
+      });
     }
   }
 
@@ -511,7 +605,27 @@ export function WorkOrderDetailDrawer({
 
   async function removePart(partId: string) {
     const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const part = wo?.parts?.find((p) => p.id === partId);
+    if (!orgId || !workOrderId || !part) return;
+
+    // Capture part data for potential undo
+    const partData = {
+      part_name: part.part_name,
+      quantity: (part as any).quantity ?? 1,
+      unit_price: Number(
+        (part as any).final_price ?? (part as any).unit_price ?? 0,
+      ),
+    };
+
+    // Optimistically remove from UI
+    setWo((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        parts: (prev.parts ?? []).filter((p) => p.id !== partId),
+      };
+    });
+
     try {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/parts?partId=${partId}`,
@@ -520,19 +634,53 @@ export function WorkOrderDetailDrawer({
       const json = await res.json();
       if (json.error) {
         toast.error(json.error.message ?? "Failed to remove part");
+        // Rollback
+        setWo((prev) => {
+          if (!prev) return prev;
+          return { ...prev, parts: [...(prev.parts ?? []), part] };
+        });
         return;
       }
-      // Remove part directly from wo state — avoids stale cache from refetch
-      setWo((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          parts: (prev.parts ?? []).filter((p) => p.id !== partId),
-        };
+
+      toast("Part removed", {
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            try {
+              const addRes = await fetch(
+                `/api/organizations/${orgId}/work-orders/${workOrderId}/parts`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(partData),
+                },
+              );
+              const addJson = await addRes.json();
+              if (addJson.data) {
+                setWo((prev) => {
+                  if (!prev) return prev;
+                  return {
+                    ...prev,
+                    parts: [...(prev.parts ?? []), addJson.data],
+                  };
+                });
+                onRefresh();
+              }
+            } catch {
+              toast.error("Failed to restore part");
+            }
+          },
+        },
+        duration: 5000,
       });
       onRefresh();
     } catch {
       toast.error("Failed to remove part");
+      // Rollback
+      setWo((prev) => {
+        if (!prev) return prev;
+        return { ...prev, parts: [...(prev.parts ?? []), part] };
+      });
     }
   }
 
@@ -941,6 +1089,7 @@ export function WorkOrderDetailDrawer({
                             <PartsSection
                               parts={wo.parts ?? []}
                               partsCatalog={partsCatalog as any}
+                              lowStockMap={lowStockMap}
                               partSearch={partSearch}
                               newPartName={newPartName}
                               newPartQty={newPartQty}

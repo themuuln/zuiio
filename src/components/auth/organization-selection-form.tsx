@@ -1,12 +1,13 @@
 "use client";
 
-import { Building2, Info, KeyRound, Loader2 } from "lucide-react";
+import { Building2, Info, KeyRound, Loader2, Search } from "lucide-react";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
 import type { CompleteOrganizationLoginState } from "@/lib/actions/complete-organization-login";
 import type { UserOrganizationAccessOption } from "@/lib/services/organization-access-service";
-import { Typography } from "@/components/ui/typography";
 
 interface OrganizationSelectionFormProps {
   organizations: UserOrganizationAccessOption[];
@@ -44,6 +45,7 @@ export function OrganizationSelectionForm({
   const [state, formAction, isPending] = useActionState(action, {});
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fieldErrors = state?.fieldErrors ?? {};
   const hasFormError = !!state?.formError;
@@ -56,12 +58,36 @@ export function OrganizationSelectionForm({
     prevFormError.current = state?.formError;
   }, [state?.formError]);
 
+  const filteredOrganizations = useMemo(
+    () =>
+      searchQuery
+        ? organizations.filter((org) =>
+            org.name.toLowerCase().includes(searchQuery.toLowerCase()),
+          )
+        : organizations,
+    [organizations, searchQuery],
+  );
+
   const [organizationId, setOrganizationId] = useState(
-    organizations.find((organization) => organization.isPrimary)
-      ?.organizationId ??
+    () =>
+      organizations.find((organization) => organization.isPrimary)
+        ?.organizationId ??
       organizations[0]?.organizationId ??
       "",
   );
+
+  // Reset selection when filter hides the currently selected org
+  useEffect(() => {
+    if (
+      searchQuery &&
+      !filteredOrganizations.some(
+        (org) => org.organizationId === organizationId,
+      ) &&
+      filteredOrganizations.length > 0
+    ) {
+      setOrganizationId(filteredOrganizations[0].organizationId);
+    }
+  }, [searchQuery, filteredOrganizations, organizationId]);
 
   const selectedOrganization = useMemo(
     () =>
@@ -123,6 +149,17 @@ export function OrganizationSelectionForm({
         {/* Org selector — hidden in single-org mode */}
         {!singleOrgMode && (
           <div className="flex flex-col gap-1.5">
+            {/* Search input */}
+            <div className="relative">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={copy.organizationLabel}
+                className="h-9 pl-9 text-sm bg-muted/10"
+              />
+            </div>
             <label
               htmlFor="organizationId"
               className="text-sm font-medium text-foreground"
@@ -144,14 +181,20 @@ export function OrganizationSelectionForm({
                 }`}
                 aria-invalid={"organizationId" in fieldErrors || undefined}
               >
-                {organizations.map((organization) => (
-                  <option
-                    key={organization.organizationId}
-                    value={organization.organizationId}
-                  >
-                    {organization.name}
+                {filteredOrganizations.length > 0 ? (
+                  filteredOrganizations.map((organization) => (
+                    <option
+                      key={organization.organizationId}
+                      value={organization.organizationId}
+                    >
+                      {organization.name}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>
+                    {copy.noOrganizations}
                   </option>
-                ))}
+                )}
               </select>
             </div>
             {"organizationId" in fieldErrors && (

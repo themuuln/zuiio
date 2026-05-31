@@ -5,12 +5,12 @@ import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
 import {
   useInventoryBalances,
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
-import { Typography } from "@/components/ui/typography";
 
 interface LowStockCardProps {
   orgId: string;

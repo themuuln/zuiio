@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import { removePartsCarPart } from "@/lib/services/parts-cars-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const DELETE = createRouteHandler(async ({ request, orgId, params }) => {
   await requireActiveSubscription(orgId);

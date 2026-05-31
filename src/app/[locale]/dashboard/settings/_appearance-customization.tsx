@@ -3,8 +3,6 @@
 import { Monitor, Moon, Palette, Sun } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -12,7 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { SettingsForm } from "./_business-defaults-form";
 
 const THEME_OPTIONS = [
@@ -66,26 +67,31 @@ export function AppearanceCustomization({
       <CardContent className="flex flex-col gap-6 pt-5">
         <Field>
           <FieldLabel>Theme</FieldLabel>
-          <div className="flex gap-1 rounded-xl border border-border bg-card p-1 w-fit">
+          <ToggleGroup
+            value={theme ? [theme] : []}
+            onValueChange={(value) => {
+              const nextTheme = value[0];
+              if (nextTheme) {
+                setTheme(nextTheme);
+              }
+            }}
+            variant="outline"
+            className="flex w-fit flex-wrap gap-2 rounded-2xl border border-border bg-card p-1"
+          >
             {THEME_OPTIONS.map((option) => {
               const Icon = option.icon;
               return (
-                <button
+                <ToggleGroupItem
                   key={option.value}
-                  type="button"
-                  onClick={() => setTheme(option.value)}
-                  className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
-                    theme === option.value
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
+                  value={option.value}
+                  className="h-11 rounded-xl px-4 text-sm"
                 >
                   <Icon className="size-4" />
                   {option.label}
-                </button>
+                </ToggleGroupItem>
               );
             })}
-          </div>
+          </ToggleGroup>
         </Field>
 
         <Separator />

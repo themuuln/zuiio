@@ -11,11 +11,12 @@ import {
   Trash2,
   Wallet,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
-import { z } from "zod";
 import { toast } from "sonner";
+import { z } from "zod";
 import { ExportButton } from "@/components/export-button";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { ContactCard } from "@/components/sidebar-tabs/contact-card";
@@ -37,16 +38,19 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { Typography } from "@/components/ui/typography";
 import WorkOrderPhotoUpload from "@/components/work-order-photo-upload";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useRouter } from "@/lib/i18n/navigation";
 import { usePartsCatalog } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useLastVisitData } from "@/lib/queries/use-price-memory";
+import { workOrderKeys } from "@/lib/queries/keys";
 import {
   useAttachments,
   useDeleteAttachment,
@@ -70,12 +74,12 @@ import {
 import type {
   ServiceCatalog,
   WorkOrderAttachment,
+  WorkOrderDetail,
   WorkOrderPart,
   WorkOrderService,
   WorkOrderStatus,
 } from "@/lib/types";
 import { cn, formatMNT } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 
 const STATUSES = [
   "New",
@@ -116,6 +120,7 @@ export default function WorkOrderDetailPage() {
     null,
   );
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showRepeatDialog, setShowRepeatDialog] = useState(false);
 
   const paymentSchema = z.object({
     amount: z.number().positive("Amount must be greater than 0"),
@@ -174,6 +179,12 @@ export default function WorkOrderDetailPage() {
 
   const { data: attachments = [] } = useAttachments(orgId, woId);
   const deleteAttachment = useDeleteAttachment(orgId, woId);
+  const { data: lastVisit } = useLastVisitData(
+    orgId,
+    wo?.vehicle_id ?? undefined,
+  );
+  const queryClient = useQueryClient();
+  const detailKey = workOrderKeys.detail(orgId ?? "", woId);
 
   const sidebar = useRightSidebar();
 
@@ -190,7 +201,7 @@ export default function WorkOrderDetailPage() {
     if (!orgLoading && !orgId && !orgError) {
       push("/auth/select-organization?returnUrl=/dashboard/work-orders");
     }
-  }, [orgLoading, orgId, orgError, router]);
+  }, [orgLoading, orgId, orgError, push]);
 
   useEffect(() => {
     if (partPriceHistoryData?.[0] && newPart.unit_price === 0) {
@@ -275,7 +286,7 @@ export default function WorkOrderDetailPage() {
       sidebar.unregisterTab("customer");
       sidebar.unregisterTab("timeline");
     };
-  }, [wo]);
+  }, [wo, sidebar.registerTab, sidebar.setActiveTab, sidebar.unregisterTab]);
 
   const serviceExportColumns: ExportColumn<WorkOrderService>[] = useMemo(
     () => [
@@ -309,21 +320,17 @@ export default function WorkOrderDetailPage() {
       return;
     }
 
-    updateStatus.mutate(
-      {
-        woId,
-        status: newStatus,
-        notes: statusNotes || undefined,
-        loss_reason: lossReason || undefined,
-      },
-      {
-        onSuccess: () => {
-          setConfirmStatus(null);
-          setStatusNotes("");
-          setLossReasonText("");
-        },
-      },
-    );
+    // Optimistic: close confirmation immediately
+    setConfirmStatus(null);
+    setStatusNotes("");
+    setLossReasonText("");
+
+    updateStatus.mutate({
+      woId,
+      status: newStatus,
+      notes: statusNotes || undefined,
+      loss_reason: lossReason || undefined,
+    });
   };
 
   const assignMechanic = (mechanicId: string) => {
@@ -339,15 +346,56 @@ export default function WorkOrderDetailPage() {
         wo?.vehicle?.make,
         wo?.vehicle?.model,
       );
-      addService.mutate({
-        woId,
-        body: {
-          service_catalog_id: svc.id,
-          service_name: svc.name,
-          quantity: 1,
-          unit_price: prices[0] ?? svc.default_price ?? 0,
-        },
+      const unitPrice = prices[0] ?? svc.default_price ?? 0;
+
+      // Optimistic: inject service with temp ID
+      const prev = queryClient.getQueryData<WorkOrderDetail>(detailKey);
+      const tempId = `temp-${Date.now()}`;
+      queryClient.setQueryData<WorkOrderDetail>(detailKey, (prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          services: [
+            ...(prev.services ?? []),
+            {
+              id: tempId,
+              service_catalog_id: svc.id,
+              service_name: svc.name,
+              quantity: 1,
+              unit_price: unitPrice,
+              final_price: unitPrice,
+              discount_amount: 0,
+              discount_percentage: 0,
+              unit_cost: 0,
+              last_sold_price: null,
+              notes: null,
+              description: null,
+              mechanic_id: null,
+              work_order_id: woId,
+              organization_id: orgId,
+              created_by: null,
+              created_at: new Date().toISOString(),
+            } as WorkOrderService,
+          ],
+        };
       });
+
+      addService.mutate(
+        {
+          woId,
+          body: {
+            service_catalog_id: svc.id,
+            service_name: svc.name,
+            quantity: 1,
+            unit_price: unitPrice,
+          },
+        },
+        {
+          onError: () => {
+            queryClient.setQueryData<WorkOrderDetail>(detailKey, prev!);
+          },
+        },
+      );
     } catch {
       toast.error("Failed to add service");
     }
@@ -357,18 +405,103 @@ export default function WorkOrderDetailPage() {
     if (!orgId || !woId || !newPart.part_name.trim()) return;
     const unitPrice =
       newPart.unit_price || (partPriceHistoryData ?? [])[0] || 0;
+
+    // Optimistic: inject part with temp ID
+    const prev = queryClient.getQueryData<WorkOrderDetail>(detailKey);
+    const tempId = `temp-${Date.now()}`;
+    queryClient.setQueryData<WorkOrderDetail>(detailKey, (prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        parts: [
+          ...(prev.parts ?? []),
+          {
+            id: tempId,
+            part_name: newPart.part_name.trim(),
+            quantity: newPart.quantity,
+            unit_price: unitPrice,
+            final_price: unitPrice * newPart.quantity,
+            unit_cost: 0,
+            discount_amount: 0,
+            discount_percentage: 0,
+            last_sold_price: null,
+            notes: null,
+            part_number: null,
+            part_id: null,
+            work_order_id: woId,
+            organization_id: orgId,
+            created_by: null,
+            created_at: new Date().toISOString(),
+          } as WorkOrderPart,
+        ],
+      };
+    });
+
     addPart.mutate(
       {
         woId,
-        body: { ...newPart, unit_price: unitPrice },
+        body: {
+          part_name: newPart.part_name.trim(),
+          quantity: newPart.quantity,
+          unit_price: unitPrice,
+        },
       },
       {
         onSuccess: () => {
           setNewPart({ part_name: "", quantity: 1, unit_price: 0 });
           setShowAddPart(false);
         },
+        onError: () => {
+          queryClient.setQueryData<WorkOrderDetail>(detailKey, prev!);
+        },
       },
     );
+  };
+
+  const repeatFromLastVisit = async () => {
+    if (!orgId || !woId || !lastVisit) return;
+    setShowRepeatDialog(false);
+    const svcNames = lastVisit.services.map((s) => s.service_name);
+    const partNames = lastVisit.parts.map((p) => p.part_name);
+    let hasError = false;
+    for (const svc of lastVisit.services) {
+      try {
+        await addService.mutateAsync({
+          woId,
+          body: {
+            service_catalog_id: svc.service_catalog_id ?? "",
+            service_name: svc.service_name,
+            quantity: svc.quantity,
+            unit_price: svc.unit_price,
+          },
+        });
+      } catch {
+        hasError = true;
+      }
+    }
+    for (const part of lastVisit.parts) {
+      try {
+        await addPart.mutateAsync({
+          woId,
+          body: {
+            part_name: part.part_name,
+            quantity: part.quantity,
+            unit_price: part.unit_price,
+          },
+        });
+      } catch {
+        hasError = true;
+      }
+    }
+    if (hasError) {
+      toast.warning(
+        "Some items from the last visit could not be added. Check the work order.",
+      );
+    } else {
+      toast.success(
+        `Added ${svcNames.length} service(s) and ${partNames.length} part(s) from last visit`,
+      );
+    }
   };
 
   const generateInvoice = () => {
@@ -573,19 +706,21 @@ export default function WorkOrderDetailPage() {
                 onChange={(e) => setStatusNotes(e.target.value)}
                 className="h-11"
               />
-              {grossProfit < 0 && (confirmStatus === "Completed" || confirmStatus === "Cancelled") && (
-                <div className="flex flex-col gap-1.5">
-                  <Typography.Text className="text-sm font-medium text-destructive">
-                    Loss Reason (Required)
-                  </Typography.Text>
-                  <Textarea
-                    placeholder="Describe why this work order is closed at a loss (e.g. parts sold at cost, rework, discount)..."
-                    value={lossReasonText}
-                    onChange={(e) => setLossReasonText(e.target.value)}
-                    className="min-h-[80px]"
-                  />
-                </div>
-              )}
+              {grossProfit < 0 &&
+                (confirmStatus === "Completed" ||
+                  confirmStatus === "Cancelled") && (
+                  <div className="flex flex-col gap-1.5">
+                    <Typography.Text className="text-sm font-medium text-destructive">
+                      Loss Reason (Required)
+                    </Typography.Text>
+                    <Textarea
+                      placeholder="Describe why this work order is closed at a loss (e.g. parts sold at cost, rework, discount)..."
+                      value={lossReasonText}
+                      onChange={(e) => setLossReasonText(e.target.value)}
+                      className="min-h-[80px]"
+                    />
+                  </div>
+                )}
               <div className="flex gap-2 justify-end">
                 <Button
                   variant="outline"
@@ -601,7 +736,13 @@ export default function WorkOrderDetailPage() {
                   variant={
                     confirmStatus === "Cancelled" ? "destructive" : "default"
                   }
-                  disabled={saving || (grossProfit < 0 && !lossReasonText.trim() && (confirmStatus === "Completed" || confirmStatus === "Cancelled"))}
+                  disabled={
+                    saving ||
+                    (grossProfit < 0 &&
+                      !lossReasonText.trim() &&
+                      (confirmStatus === "Completed" ||
+                        confirmStatus === "Cancelled"))
+                  }
                   onClick={() => changeStatus(confirmStatus, lossReasonText)}
                 >
                   {saving
@@ -726,6 +867,18 @@ export default function WorkOrderDetailPage() {
               sheetName="Services"
               label="Export Services"
             />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowRepeatDialog(true)}
+              disabled={
+                !lastVisit ||
+                (lastVisit.services.length === 0 &&
+                  lastVisit.parts.length === 0)
+              }
+            >
+              Repeat from last visit
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -869,10 +1022,9 @@ export default function WorkOrderDetailPage() {
                             p.name
                               .toLowerCase()
                               .includes(newPart.part_name.toLowerCase()) ||
-                            (p.part_number &&
-                              p.part_number
-                                .toLowerCase()
-                                .includes(newPart.part_name.toLowerCase())),
+                            p.part_number
+                              ?.toLowerCase()
+                              .includes(newPart.part_name.toLowerCase()),
                         )
                         .slice(0, 10)
                         .map((part) => (
@@ -908,10 +1060,9 @@ export default function WorkOrderDetailPage() {
                           p.name
                             .toLowerCase()
                             .includes(newPart.part_name.toLowerCase()) ||
-                          (p.part_number &&
-                            p.part_number
-                              .toLowerCase()
-                              .includes(newPart.part_name.toLowerCase())),
+                          p.part_number
+                            ?.toLowerCase()
+                            .includes(newPart.part_name.toLowerCase()),
                       ).length === 0 && (
                         <div className="p-3 text-sm text-muted-foreground text-center">
                           No parts found
@@ -934,7 +1085,7 @@ export default function WorkOrderDetailPage() {
                     }}
                     onBlur={(e) => {
                       const n = Number(e.target.value);
-                      if (isNaN(n) || n < 1)
+                      if (Number.isNaN(n) || n < 1)
                         setNewPart((p) => ({ ...p, quantity: 1 }));
                     }}
                     className="h-11"
@@ -1053,21 +1204,58 @@ export default function WorkOrderDetailPage() {
                   variant="destructive"
                   size="sm"
                   onClick={() => {
+                    setDeleteConfirm(null);
                     if (deleteConfirm.type === "service") {
+                      // Optimistic: remove immediately
+                      const prev =
+                        queryClient.getQueryData<WorkOrderDetail>(detailKey);
+                      queryClient.setQueryData<WorkOrderDetail>(
+                        detailKey,
+                        (prev) => {
+                          if (!prev) return prev;
+                          return {
+                            ...prev,
+                            services: (prev.services ?? []).filter(
+                              (s) => s.id !== deleteConfirm.id,
+                            ),
+                          };
+                        },
+                      );
                       removeService.mutate(
                         { woId, serviceId: deleteConfirm.id },
                         {
-                          onSuccess: () => {
-                            setDeleteConfirm(null);
+                          onError: () => {
+                            queryClient.setQueryData<WorkOrderDetail>(
+                              detailKey,
+                              prev!,
+                            );
                           },
                         },
                       );
                     } else {
+                      // Optimistic: remove immediately
+                      const prev =
+                        queryClient.getQueryData<WorkOrderDetail>(detailKey);
+                      queryClient.setQueryData<WorkOrderDetail>(
+                        detailKey,
+                        (prev) => {
+                          if (!prev) return prev;
+                          return {
+                            ...prev,
+                            parts: (prev.parts ?? []).filter(
+                              (p) => p.id !== deleteConfirm.id,
+                            ),
+                          };
+                        },
+                      );
                       removePart.mutate(
                         { woId, partId: deleteConfirm.id },
                         {
-                          onSuccess: () => {
-                            setDeleteConfirm(null);
+                          onError: () => {
+                            queryClient.setQueryData<WorkOrderDetail>(
+                              detailKey,
+                              prev!,
+                            );
                           },
                         },
                       );
@@ -1405,14 +1593,44 @@ export default function WorkOrderDetailPage() {
               <>
                 <Separator />
                 <div className="flex flex-col gap-1 rounded bg-destructive/5 p-2 text-xs border border-destructive/20 mt-1">
-                  <span className="font-semibold text-destructive">Loss Reason:</span>
-                  <span className="text-muted-foreground">{wo.loss_reason}</span>
+                  <span className="font-semibold text-destructive">
+                    Loss Reason:
+                  </span>
+                  <span className="text-muted-foreground">
+                    {wo.loss_reason}
+                  </span>
                 </div>
               </>
             )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Repeat from Last Visit Dialog */}
+      <Dialog open={showRepeatDialog} onOpenChange={setShowRepeatDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Repeat from last visit</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              This will add{" "}
+              <strong>{lastVisit?.services.length ?? 0} service(s)</strong> and{" "}
+              <strong>{lastVisit?.parts.length ?? 0} part(s)</strong> from the{" "}
+              last visit for this vehicle. Continue?
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowRepeatDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={repeatFromLastVisit}>Continue</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Record Payment Dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>

@@ -1,8 +1,8 @@
 "use client";
 
 import { CheckCircle, Loader2, LogIn, Wrench, XCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,8 +14,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ApiResponse } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
+import type { ApiResponse } from "@/lib/types";
 
 interface InviteData {
   id: string;

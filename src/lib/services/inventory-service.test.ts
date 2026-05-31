@@ -1,20 +1,19 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createClient } from "@/lib/supabase/server";
-import { withCache } from "@/lib/cache/with-cache";
 import { revalidateTag } from "next/cache";
-import { createMockSupabaseClient } from "@/test/mocks/supabase";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
 import type { PartsCatalogItem } from "@/lib/types";
+import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
   createMovement,
+  createPart,
+  deletePart,
   getInventoryBalances,
+  getPartsCatalog,
   getStockThresholds,
   setStockThreshold,
-  getPartsCatalog,
-  createPart,
   updatePart,
-  deletePart,
 } from "./inventory-service";
 
 // ── Module-level mocks ──────────────────────────────────────────

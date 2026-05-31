@@ -1,28 +1,27 @@
 "use client";
 
-import { AlertTriangle, Package } from "lucide-react";
+import { AlertCircle, AlertTriangle, Package } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/lib/i18n/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { Link } from "@/lib/i18n/navigation";
 import {
   useInventoryBalances,
   usePartsCatalog,
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Tab } from "./_components/constants";
 import { getTabs } from "./_components/constants";
-import { TableSkeleton } from "./_components/table-skeleton";
-import { PartsTab } from "./_components/parts-tab";
 import { MovementsTab } from "./_components/movements-tab";
-import { SuppliersTab } from "./_components/suppliers-tab";
+import { PartsTab } from "./_components/parts-tab";
 import { PurchaseOrdersTab } from "./_components/purchase-orders-tab";
-import { Typography } from "@/components/ui/typography";
+import { SuppliersTab } from "./_components/suppliers-tab";
+import { TableSkeleton } from "./_components/table-skeleton";
 
 export default function InventoryPage() {
   const t = useTranslations("inventory");
@@ -34,9 +33,16 @@ export default function InventoryPage() {
   const [movementFilter, setMovementFilter] = useState("all");
 
   // Data for sidebar + cross-tab coordination
-  const { data: parts = [] } = usePartsCatalog(orgId ?? undefined);
-  const { data: balances = [] } = useInventoryBalances(orgId ?? undefined);
-  const { data: thresholds = [] } = useStockThresholds(orgId ?? undefined);
+  const { data: parts = [], error: partsError } = usePartsCatalog(
+    orgId ?? undefined,
+  );
+  const { data: balances = [], error: balancesError } = useInventoryBalances(
+    orgId ?? undefined,
+  );
+  const { data: thresholds = [], error: thresholdsError } = useStockThresholds(
+    orgId ?? undefined,
+  );
+  const inventoryError = partsError || balancesError || thresholdsError;
 
   const handleTabChange = useCallback((newTab: string) => {
     setTab(newTab as Tab);
@@ -97,6 +103,31 @@ export default function InventoryPage() {
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-10 w-full" />
         <TableSkeleton />
+      </div>
+    );
+  }
+
+  if (inventoryError && !parts.length && !balances.length) {
+    return (
+      <div className="tablet-touch flex flex-col gap-6">
+        <div>
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
+            {t("title")}
+          </Typography.H1>
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 gap-4">
+          <AlertCircle className="size-10 text-muted-foreground/40" />
+          <Typography.Muted className="text-muted-foreground text-center">
+            Couldn&apos;t load inventory data.
+          </Typography.Muted>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }

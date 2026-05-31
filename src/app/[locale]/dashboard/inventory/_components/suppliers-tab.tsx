@@ -3,7 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import {
@@ -22,7 +23,6 @@ import {
 import type { Supplier } from "@/lib/types";
 import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
-import { Typography } from "@/components/ui/typography";
 
 interface SuppliersTabProps {
   orgId: string;
@@ -64,6 +64,17 @@ export function SuppliersTab({
     { key: "phone", label: "Phone" },
     { key: "email", label: "Email" },
   ];
+
+  const handleDeleteSupplier = useCallback(
+    (id: string) => {
+      if (!confirm("Delete this supplier?")) return;
+      deleteSupplier.mutate(id, {
+        onSuccess: () => toast.success("Supplier deleted"),
+        onError: (err: Error) => toast.error(err.message),
+      });
+    },
+    [deleteSupplier],
+  );
 
   const columns: ColumnDef<Supplier>[] = useMemo(
     () => [
@@ -137,7 +148,7 @@ export function SuppliersTab({
         ),
       },
     ],
-    [],
+    [handleDeleteSupplier],
   );
 
   function handleSaveSupplier(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -174,14 +185,6 @@ export function SuppliersTab({
         onError: (err: Error) => toast.error(err.message),
       });
     }
-  }
-
-  function handleDeleteSupplier(id: string) {
-    if (!confirm("Delete this supplier?")) return;
-    deleteSupplier.mutate(id, {
-      onSuccess: () => toast.success("Supplier deleted"),
-      onError: (err: Error) => toast.error(err.message),
-    });
   }
 
   return (

@@ -6,8 +6,8 @@
 import { Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency } from "@/lib/utils";
 import type { CustomerRetentionData } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
 
 interface RetentionCardProps {
   data: CustomerRetentionData | null;

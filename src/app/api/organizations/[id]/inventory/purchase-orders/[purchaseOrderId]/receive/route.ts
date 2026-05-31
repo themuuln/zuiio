@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import { receivePurchaseOrder } from "@/lib/services/inventory-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const POST = createRouteHandler(async ({ request, params, orgId }) => {
   await requireActiveSubscription(orgId);

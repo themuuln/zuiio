@@ -5,10 +5,10 @@
 
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { InvoiceDocument } from "@/lib/pdf/invoice-document";
 import { getInvoice } from "@/lib/services/invoice-service";
 import { getOrganization } from "@/lib/services/organization-service";
-import { InvoiceDocument } from "@/lib/pdf/invoice-document";
-import { renderToPdfBuffer, pdfFilename } from "@/lib/utils/pdf";
+import { pdfFilename, renderToPdfBuffer } from "@/lib/utils/pdf";
 
 export const GET = createRouteHandler(async ({ params, supabase }) => {
   const invoiceId = params.invoiceId;

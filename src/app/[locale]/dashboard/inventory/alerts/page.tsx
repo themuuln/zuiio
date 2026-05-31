@@ -3,25 +3,25 @@
 import { AlertTriangle, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
+import { RecentList } from "@/components/sidebar-tabs/recent-list";
+import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Empty,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { Link } from "@/lib/i18n/navigation";
 import {
   useInventoryBalances,
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { Typography } from "@/components/ui/typography";
 
 export default function AlertsPage() {
   const t = useTranslations("inventory");
@@ -84,7 +84,12 @@ export default function AlertsPage() {
       sidebar.unregisterTab("summary");
       sidebar.unregisterTab("suppliers");
     };
-  }, [alerts]);
+  }, [
+    alerts,
+    sidebar.registerTab,
+    sidebar.setActiveTab,
+    sidebar.unregisterTab,
+  ]);
 
   return (
     <div className="flex flex-col gap-6">

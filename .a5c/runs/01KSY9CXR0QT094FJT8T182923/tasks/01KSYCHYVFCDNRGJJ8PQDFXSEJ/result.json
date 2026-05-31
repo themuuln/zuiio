@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSYCHYVFCDNRGJJ8PQDFXSEJ",
+  "taskId": "execute-phase",
+  "invocationKey": "tolom-ux-improvements:S000005:execute-phase",
+  "status": "ok",
+  "result": {
+    "buildError": null,
+    "buildPassing": true,
+    "changes": [
+      "src/app/[locale]/dashboard/inventory/_components/movements-tab.tsx"
+    ],
+    "status": "completed"
+  },
+  "startedAt": "2026-05-31T06:49:06.961Z",
+  "finishedAt": "2026-05-31T06:49:06.961Z",
+  "value": {
+    "buildError": null,
+    "buildPassing": true,
+    "changes": [
+      "src/app/[locale]/dashboard/inventory/_components/movements-tab.tsx"
+    ],
+    "status": "completed"
+  }
+}

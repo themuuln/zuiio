@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
-  updateExpenseCategory,
   deleteExpenseCategory,
+  updateExpenseCategory,
 } from "@/lib/services/expense-service";
 
 export const PATCH = createRouteHandler(

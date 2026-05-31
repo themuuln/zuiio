@@ -2,7 +2,6 @@ import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
-import { buildUpdates, type FieldMap } from "./build-updates";
 import { createClient } from "@/lib/supabase/server";
 import type {
   CreateExpenseCategoryParams,
@@ -14,6 +13,7 @@ import type {
   UpdateExpenseCategoryParams,
   UpdateExpenseParams,
 } from "@/lib/types";
+import { buildUpdates, type FieldMap } from "./build-updates";
 
 const trim = (v: unknown) => (v as string).trim() || null;
 

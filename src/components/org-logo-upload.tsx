@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
-import { createClient } from "@/lib/supabase/client";
 import { Camera, Loader2, Trash2 } from "lucide-react";
+import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 
 interface OrgLogoUploadProps {
   orgId: string;

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertCircle,
   ArrowRight,
   ArrowUpRight,
   BarChart3,
@@ -19,6 +20,7 @@ import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -59,13 +61,6 @@ type Tab = "overview" | "transactions" | "invoices" | "expenses";
 
 type PeriodOption = { key: Period; label: string };
 
-const PERIOD_OPTIONS: PeriodOption[] = [
-  { key: "today", label: "Today" },
-  { key: "week", label: "This Week" },
-  { key: "month", label: "This Month" },
-  { key: "all", label: "All Time" },
-];
-
 function PeriodBar({
   value,
   onChange,
@@ -73,16 +68,52 @@ function PeriodBar({
   value: Period;
   onChange: (p: Period) => void;
 }) {
+  const options: PeriodOption[] = [
+    { key: "today", label: "Today" },
+    { key: "week", label: "This Week" },
+    { key: "month", label: "This Month" },
+    { key: "all", label: "All Time" },
+  ];
+
+  const getDateRange = useCallback((period: Period): string => {
+    const now = new Date();
+    switch (period) {
+      case "today":
+        return now.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+      case "week": {
+        const curr = new Date(now);
+        const day = curr.getDay();
+        const diff = curr.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(curr.setDate(diff));
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        return `${monday.toLocaleDateString("en-US", { month: "short", day: "numeric" })} \u2013 ${sunday.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+      }
+      case "month": {
+        const first = new Date(now.getFullYear(), now.getMonth(), 1);
+        const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        return `${first.toLocaleDateString("en-US", { month: "short", day: "numeric" })} \u2013 ${last.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+      }
+      case "all":
+        return "";
+    }
+  }, []);
+
   return (
     <div className="flex gap-1.5">
-      {PERIOD_OPTIONS.map((opt) => (
+      {options.map((opt) => (
         <Button
           key={opt.key}
           variant={value === opt.key ? "default" : "ghost"}
           size="sm"
           onClick={() => onChange(opt.key)}
         >
-          {opt.label}
+          {value === opt.key && opt.key !== "all"
+            ? `${opt.label} (${getDateRange(opt.key)})`
+            : opt.label}
         </Button>
       ))}
     </div>
@@ -145,12 +176,17 @@ const invoiceStatusConfig: Record<
   partial: {
     label: "Partial",
     className:
-      "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-400",
+      "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400",
   },
   overdue: {
     label: "Overdue",
     className:
-      "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400",
+      "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 animate-pulse",
+  },
+  unpaid: {
+    label: "Unpaid",
+    className:
+      "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400",
   },
   cancelled: {
     label: "Cancelled",
@@ -161,7 +197,11 @@ const invoiceStatusConfig: Record<
 
 function InvoiceStatusBadge({ status }: { status: string }) {
   const cfg = invoiceStatusConfig[status] ?? invoiceStatusConfig.draft;
-  return <Badge variant="outline">{cfg.label}</Badge>;
+  return (
+    <Badge variant="outline" className={cfg.className}>
+      {cfg.label}
+    </Badge>
+  );
 }
 
 interface InvoiceListItem {
@@ -297,7 +337,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
         setSendingId(null);
       }
     },
-    [orgId, fetchInvoices, filter, setSendingId],
+    [orgId, fetchInvoices, filter],
   );
 
   const filtered = useFuzzySearch(invoices, search, {
@@ -753,13 +793,15 @@ export default function FinancePage() {
   } satisfies FinanceDataState);
   const { data } = financeData;
   const { registerTab } = useRightSidebar();
-  const [period, setPeriod] = useState<Period>("all");
+  const [period, setPeriod] = useState<Period>("month");
   const [tab, setTab] = useState<Tab>("overview");
   const [search, setSearch] = useState("");
 
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const { data: org, isPending: orgLoading, error: orgError } = useCurrentOrg();
   const orgId = org?.orgId ?? null;
-  const loading = orgLoading || (!!orgId && financeData.loading && !data);
+  const loading =
+    orgLoading || (!!orgId && financeData.loading && !hasLoadedOnce);
   const error = orgError
     ? "Failed to load organization"
     : !orgId && !orgLoading
@@ -783,6 +825,10 @@ export default function FinancePage() {
       dispatchFinance({ type: "LOAD_DONE" });
     }
   }, []);
+
+  useEffect(() => {
+    if (data) setHasLoadedOnce(true);
+  }, [data]);
 
   useEffect(() => {
     if (orgId) fetchData(orgId, period);
@@ -867,7 +913,7 @@ export default function FinancePage() {
     });
   }, [data?.recentWorkOrders, search]);
 
-  if (loading && !data) {
+  if (loading && !hasLoadedOnce) {
     return (
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -946,6 +992,16 @@ export default function FinancePage() {
           <TabBar value={tab} onChange={setTab} />
         </div>
       </div>
+
+      {period === "all" && (
+        <Alert>
+          <AlertCircle className="size-4" />
+          <AlertTitle>Large dataset</AlertTitle>
+          <AlertDescription>
+            Showing all data — may be slow for large datasets.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {tab === "overview" && (
         <OverviewTab

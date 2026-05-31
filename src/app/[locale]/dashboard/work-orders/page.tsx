@@ -1,15 +1,14 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Activity, BarChart3, ClipboardList, Plus } from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,7 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
+
 import type { ExportColumn } from "@/lib/export";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { useTableFilters } from "@/lib/hooks/use-url-filters";
@@ -142,19 +141,6 @@ const exportColumns: ExportColumn<WorkOrderListItem>[] = [
     label: "Gross Profit",
     format: "currency",
   },
-  {
-    key: "margin_percent",
-    label: "Margin %",
-    value: (wo) =>
-      wo.margin_percent !== undefined
-        ? `${wo.margin_percent.toFixed(1)}%`
-        : "—",
-  },
-  {
-    key: "loss_reason",
-    label: "Loss Reason",
-    value: (wo) => wo.loss_reason ?? "—",
-  },
 ];
 
 // ── Page ──────────────────────────────────────────────────────
@@ -222,8 +208,6 @@ export default function WorkOrdersPage() {
     }
   }, [orders]);
 
-  const { registerTab } = useRightSidebar();
-
   const updateStatus = useUpdateWorkOrderStatus(org?.orgId);
 
   const cancelWorkOrder = useMutation({
@@ -269,42 +253,6 @@ export default function WorkOrdersPage() {
       }))
       .filter((sc) => sc.count > 0);
   }, [orders]);
-
-  const todayWOs = useMemo(() => {
-    if (!orders) return [];
-    const todayStr = now.toISOString().split("T")[0];
-    return orders
-      .filter((wo) => wo.created_at.startsWith(todayStr))
-      .map((wo) => ({
-        id: wo.id,
-        primary: `#${wo.id.slice(0, 8)} - ${getCustomerName(wo)}`,
-        secondary: wo.mechanic?.full_name ?? null,
-        timestamp: new Date(wo.created_at).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        href: `/dashboard/work-orders/${wo.id}`,
-      }));
-  }, [orders, now]);
-
-  useEffect(() => {
-    registerTab(
-      "stats",
-      "Stats",
-      <StatusSummary items={statusCounts} title="Work Orders" />,
-      <BarChart3 className="size-4" />,
-    );
-    registerTab(
-      "activity",
-      "Activity",
-      <RecentList
-        items={todayWOs}
-        title="Today"
-        emptyMessage="No work orders today"
-      />,
-      <Activity className="size-4" />,
-    );
-  }, [registerTab, statusCounts, todayWOs]);
 
   const handleStatusChange = useCallback(
     (woId: string, newStatus: string) => {
@@ -464,6 +412,32 @@ export default function WorkOrdersPage() {
         }
       />
 
+      {/* ── Status Summary Bar ──────────────────────────────── */}
+      {statusCounts.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          {statusCounts.map((sc) => (
+            <Badge
+              key={sc.label}
+              variant={
+                sc.label === "Cancelled"
+                  ? "destructive"
+                  : sc.label === "Completed"
+                    ? "outline"
+                    : "default"
+              }
+              className="gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => setStatus(sc.label)}
+            >
+              <span
+                className={`size-2 rounded-full ${STATUS_COLORS[sc.label] ?? "bg-gray-500"}`}
+              />
+              {translateStatus(t, sc.label)}{" "}
+              <span className="font-mono text-xs">({sc.count})</span>
+            </Badge>
+          ))}
+        </div>
+      )}
+
       {/* ── Error ────────────────────────────────────────────── */}
       {error ? (
         <Card>
@@ -543,6 +517,46 @@ export default function WorkOrdersPage() {
                         {vehicleDisplay}
                       </span>
                     </div>
+                    {wo.status !== "Cancelled" &&
+                      (() => {
+                        const STEPS = [
+                          "New",
+                          "Diagnosing",
+                          "In Progress",
+                          "Ready for Pickup",
+                          "Completed",
+                        ];
+                        const COLORS = [
+                          "#3B82F6",
+                          "#EAB308",
+                          "#F97316",
+                          "#22C55E",
+                          "#6B7280",
+                        ];
+                        const cur = STEPS.indexOf(wo.status);
+                        if (cur < 0) return null;
+                        return (
+                          <div className="flex items-center gap-1 py-1">
+                            {STEPS.map((s, i) => (
+                              <div
+                                key={s}
+                                className="size-2 rounded-full transition-all"
+                                style={{
+                                  backgroundColor:
+                                    i < cur
+                                      ? COLORS[i]
+                                      : i === cur
+                                        ? COLORS[i]
+                                        : "hsl(var(--muted-foreground) / 0.2)",
+                                  ...(i === cur
+                                    ? { boxShadow: `0 0 0 2px ${COLORS[i]}40` }
+                                    : {}),
+                                }}
+                              />
+                            ))}
+                          </div>
+                        );
+                      })()}
                     <div className="flex items-center justify-between border-t border-border/50 pt-2 mt-1">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span>{wo.mechanic?.full_name ?? "—"}</span>

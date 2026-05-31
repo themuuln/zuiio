@@ -1,8 +1,9 @@
 /**
  * Service parameter types — Create/Update/Input interfaces for all domains.
  */
-import type { WorkOrderStatus } from "./core";
+
 import type { WorkOrderDetail } from "./composite";
+import type { WorkOrderStatus } from "./core";
 
 // ── Organization ───────────────────────────────────────────────
 

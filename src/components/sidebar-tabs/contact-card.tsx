@@ -1,9 +1,9 @@
 "use client";
 
-import { Phone, Mail, MapPin, Copy } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Copy, type Mail, type MapPin, type Phone } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 
 interface ContactInfo {

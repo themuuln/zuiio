@@ -21,11 +21,11 @@ import {
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Vehicle, WorkOrder } from "@/lib/types";
+import { Typography } from "@/components/ui/typography";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
-import { Typography } from "@/components/ui/typography";
 
 interface QueueItemProps {
   workOrder: WorkOrder & { vehicle: Vehicle | null };
@@ -34,6 +34,8 @@ interface QueueItemProps {
   mechanicName?: string | null;
   onItemClick?: (workOrder: WorkOrder & { vehicle: Vehicle | null }) => void;
   searchQuery?: string;
+  availableBays?: number[];
+  onAssignToBay?: (workOrderId: string, bayNumber: number) => void;
 }
 
 function getWaitTime(createdAt: string): { text: string; urgent: boolean } {
@@ -53,6 +55,8 @@ function QueueItem({
   mechanicName,
   onItemClick,
   searchQuery = "",
+  availableBays,
+  onAssignToBay,
 }: QueueItemProps) {
   const {
     attributes,
@@ -76,6 +80,8 @@ function QueueItem({
   const [waitInfo, setWaitInfo] = useState(() =>
     getWaitTime(workOrder.created_at),
   );
+
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const ref = new Date(workOrder.created_at).getTime();
@@ -103,8 +109,10 @@ function QueueItem({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onItemClick?.(workOrder);
       }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={cn(
-        "flex items-center gap-2 border border-border/60 bg-card px-3 py-2 cursor-pointer select-none transition-colors touch-manipulation",
+        "flex items-center gap-2 border border-border/60 bg-card px-3 py-2 cursor-pointer select-none transition-colors touch-manipulation relative",
         isDragging && "opacity-50 shadow-xl z-50",
         !isDragging && "hover:border-border hover:bg-muted/20",
         waitInfo.urgent &&
@@ -157,7 +165,7 @@ function QueueItem({
       </div>
 
       <div className="flex flex-col items-center gap-1 shrink-0">
-        {onQuickAssign && !isPending && (
+        {onQuickAssign && !isPending && !isHovered && (
           <Button
             type="button"
             size="icon-xs"
@@ -171,6 +179,35 @@ function QueueItem({
             <CornerDownRight className="size-2.5" />
           </Button>
         )}
+        {onAssignToBay &&
+          availableBays &&
+          availableBays.length > 0 &&
+          isHovered &&
+          !isPending && (
+            <div className="flex items-center gap-0.5">
+              {availableBays.slice(0, 4).map((bayNum) => (
+                <Button
+                  key={bayNum}
+                  type="button"
+                  size="icon-xs"
+                  variant="secondary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAssignToBay(workOrder.id, bayNum);
+                  }}
+                  title={`Assign to Bay ${String(bayNum).padStart(2, "0")}`}
+                  className="text-[9px] font-mono font-bold h-5 w-8 p-0"
+                >
+                  {String(bayNum).padStart(2, "0")}
+                </Button>
+              ))}
+              {availableBays.length > 4 && (
+                <span className="text-[8px] text-muted-foreground/50 font-medium ml-0.5">
+                  +{availableBays.length - 4}
+                </span>
+              )}
+            </div>
+          )}
         <span
           className={cn(
             "inline-flex items-center gap-0.5 text-[9px] font-medium whitespace-nowrap",
@@ -191,6 +228,8 @@ interface QueuePanelProps {
   onQuickAssign?: (workOrderId: string) => void;
   mechanics?: { id: string; full_name: string | null }[];
   onItemClick?: (workOrder: WorkOrder & { vehicle: Vehicle | null }) => void;
+  availableBays?: number[];
+  onAssignToBay?: (workOrderId: string, bayNumber: number) => void;
 }
 
 const EMPTY_RECORD: Record<string, boolean> = {};
@@ -201,6 +240,8 @@ export function QueuePanel({
   onQuickAssign,
   mechanics,
   onItemClick,
+  availableBays,
+  onAssignToBay,
 }: QueuePanelProps) {
   const { setNodeRef, isOver } = useDroppable({ id: "waiting-queue" });
   const [searchQuery, setSearchQuery] = useState("");
@@ -223,10 +264,15 @@ export function QueuePanel({
 
   const enrichedItems: EnrichedWO[] = useMemo(() => {
     const mm = new Map((mechanics ?? []).map((m) => [m.id, m.full_name]));
-    return items.map((wo) => ({
-      ...wo,
-      _mechanicName: wo.mechanic_id ? (mm.get(wo.mechanic_id) ?? null) : null,
-    }));
+    return items
+      .map((wo) => ({
+        ...wo,
+        _mechanicName: wo.mechanic_id ? (mm.get(wo.mechanic_id) ?? null) : null,
+      }))
+      .sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      );
   }, [items, mechanics]);
 
   const filtered = useFuzzySearch(enrichedItems, searchQuery, {
@@ -336,6 +382,8 @@ export function QueuePanel({
                       mechanicName={wo._mechanicName ?? null}
                       onItemClick={onItemClick}
                       searchQuery={searchQuery}
+                      availableBays={availableBays}
+                      onAssignToBay={onAssignToBay}
                     />
                   ))}
                 </div>

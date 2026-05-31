@@ -116,6 +116,7 @@
       "submit": "Sign in",
       "noAccount": "Don't have an account?",
       "forgotPassword": "Forgot password?",
+      "keepMeSignedIn": "Keep me signed in",
       "metaTitle": "Login | TOLOM",
       "metaDescription": "Sign in to your TOLOM account to manage your auto service business."
     },
@@ -155,6 +156,9 @@
       "backToLogin": "Back to sign in",
       "checkEmail": "Check your email",
       "checkEmailMessage": "If an account exists, we've sent a reset link.",
+      "resendLink": "Didn't receive it? Resend",
+      "cooldownMessage": "Resend available in {seconds}s",
+      "resentMessage": "Reset link resent. Check your inbox.",
       "metaTitle": "Forgot Password | TOLOM",
       "metaDescription": "Reset your TOLOM account password."
     },
@@ -214,6 +218,7 @@
     "overview": "Overview",
     "dashboard": "Dashboard",
     "mechanic": "My Shift",
+    "mechanicPerformance": "Mechanic Performance",
     "bayView": "Bay View",
     "workOrders": "Work Orders",
     "customers": "Customers",
@@ -247,8 +252,7 @@
     "inventoryPurchaseOrders": "Purchase Orders",
     "inventorySuppliers": "Suppliers",
     "inventoryAlerts": "Alerts",
-    "inventoryValuation": "Valuation",
-    "endOfDay": "End of Day"
+    "inventoryValuation": "Valuation"
   },
   "mechanic": {
     "title": "My Shift",
@@ -561,7 +565,8 @@
     "viewReports": "View Reports",
     "noWorkOrders": "No work orders yet",
     "noData": "No data available",
-    "weeklyTrend": "Weekly Trend"
+    "weeklyTrend": "Weekly Trend",
+    "completedOrders": "Completed Orders"
   },
   "workOrders": {
     "title": "Work Orders",
@@ -947,10 +952,6 @@
     "totalRevenue": "Total Revenue",
     "avgRevenuePerWo": "Avg Revenue / WO",
     "jobs": "Jobs",
-    "mechanic": "Mechanic",
-    "services": "Services",
-    "parts": "Parts",
-    "revenue": "Revenue",
     "commission": "Commission",
     "perMechanicBreakdown": "Per-Mechanic Breakdown",
     "noMechanicsCompletedWork": "No mechanics completed work today",
@@ -969,13 +970,8 @@
     "serviceCost": "Service Cost",
     "partsRevenue": "Parts Revenue",
     "partsCost": "Parts Cost",
-    "daily": "Daily",
-    "weekly": "Weekly",
-    "monthly": "Monthly",
     "customRange": "Custom Range",
-    "eodSummary": "EOD Summary",
-    "allMechanics": "All Mechanics",
-    "refresh": "Refresh"
+    "eodSummary": "EOD Summary"
   },
   "expenses": {
     "title": "Expenses",
@@ -1069,6 +1065,9 @@
     "heroSubtitle": "TOLOM powers every part of your workshop — work orders, inventory, customer relationships, mechanic tracking, and finances. All in one place, built for tablets.",
     "heroCtaPrimary": "Start Free Trial",
     "heroCtaSecondary": "See How It Works",
+    "heroSocialShops": "Auto shops across Mongolia",
+    "heroSocialVehicles": "Vehicles serviced",
+    "heroSocialSatisfaction": "Customer satisfaction",
     "heroStats1": "Work Orders Processed",
     "heroStats2": "Customers Served",
     "heroStats3": "Vehicles Registered",
@@ -1153,6 +1152,9 @@
     "pricingEnterprise": "Enterprise plans available for large operations with custom needs.",
     "pricingFullLink": "View full pricing & comparison",
     "pricingMostPopular": "Most Popular",
+    "pricingMonthly": "Monthly",
+    "pricingAnnual": "Annual",
+    "pricingSavePercent": "Save 20%",
     "pricingCta": "Start Free Trial",
     "ctaTitle": "Ready to Transform Your Shop?",
     "ctaSubtitle": "Join hundreds of auto service businesses already using TOLOM. Start your free trial today — no credit card required.",
@@ -1264,7 +1266,11 @@
     "totalCustomers": "Total Customers",
     "recentCustomers": "Recent Customers",
     "total": "Total",
-    "newCustomers": "New Customers"
+    "newCustomers": "New Customers",
+    "customerCount": "{count} customers",
+    "myCustomers": "My Customers",
+    "sharedCustomers": "Shared",
+    "searchSharedPlaceholder": "Search shared customers..."
   },
   "vehicles": {
     "title": "Vehicles",

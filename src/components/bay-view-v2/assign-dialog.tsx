@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Typography } from "@/components/ui/typography";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 
 interface VehicleSearchResult {
   id: string;

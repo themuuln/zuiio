@@ -1,3 +1,4 @@
+// biome-ignore lint/style/noRestrictedImports: factories require full Database typings
 import type { Database } from "@/lib/database.types";
 
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];

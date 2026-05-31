@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, FileText, Loader2 } from "lucide-react";
+import { Download, ExternalLink, FileText, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -15,9 +15,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Typography } from "@/components/ui/typography";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { formatMNT } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 
 const STATUS_VARIANTS: Record<
   string,
@@ -169,20 +169,36 @@ export default function PortalInvoicesPage() {
                     </Button>
                   )}
                   {(inv.public_token as string) && (
-                    <a
-                      href={`/invoice/${inv.public_token}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
+                    <>
+                      <a
+                        href={`/invoice/${inv.public_token}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs gap-1"
+                        >
+                          <ExternalLink className="size-3" />
+                          View
+                        </Button>
+                      </a>
                       <Button
                         variant="outline"
                         size="sm"
                         className="text-xs gap-1"
+                        onClick={() =>
+                          window.open(
+                            `/api/invoice/public/${inv.public_token}/pdf`,
+                            "_blank",
+                          )
+                        }
                       >
-                        <ExternalLink className="size-3" />
-                        View
+                        <Download className="size-3.5" />
+                        PDF
                       </Button>
-                    </a>
+                    </>
                   )}
                 </div>
               </CardContent>

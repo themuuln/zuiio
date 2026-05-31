@@ -1,9 +1,8 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { Dot } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Combobox,
   ComboboxContent,
@@ -12,8 +11,9 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { Textarea } from "@/components/ui/textarea";
 import { useDiagnosisLabels } from "@/lib/queries/use-diagnosis-labels";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useWizardContext } from "./wizard-context";
 
 export function ComplaintSection() {

@@ -6,6 +6,7 @@ import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import {
   Field,
   FieldContent,
@@ -23,7 +24,6 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import { inputProps } from "@/lib/form-ux";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useSuppliers, useUpdateSupplier } from "@/lib/queries/use-inventory";

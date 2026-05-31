@@ -1,9 +1,10 @@
 /**
  * MechanicBarChart — Horizontal bar chart of mechanic revenue performance.
  */
+
+import { BarChart } from "@/components/charts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ReportMechanicKpi } from "@/lib/types";
-import { BarChart } from "@/components/charts";
 
 interface MechanicBarChartProps {
   kpis: ReportMechanicKpi[];

@@ -2,24 +2,23 @@
 
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { transliterateMongolianPlate } from "@/lib/form-validation";
-import { usePageHeader } from "@/hooks/use-page-header";
-import { useRouter } from "@/lib/i18n/navigation";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useCreatePartsCar } from "@/lib/queries/use-inventory";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Link } from "@/lib/i18n/navigation";
-import { DatePicker } from "@/components/ui/date-picker";
-import { toast } from "sonner";
-import { useState } from "react";
 import { Typography } from "@/components/ui/typography";
+import { usePageHeader } from "@/hooks/use-page-header";
+import { transliterateMongolianPlate } from "@/lib/form-validation";
+import { Link, useRouter } from "@/lib/i18n/navigation";
+import { useCreatePartsCar } from "@/lib/queries/use-inventory";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 export default function NewPartsCarPage() {
-  const t = useTranslations("inventory");
+  const _t = useTranslations("inventory");
   const { push } = useRouter();
   const { setDetailPartsCarId } = usePageHeader();
   const { data: org } = useCurrentOrg();

@@ -1,23 +1,21 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";
-import type {
-  Customer,
-  MechanicAssignment,
-  Vehicle,
-  WorkOrder,
-  WorkOrderPart,
-  WorkOrderService,
-} from "@/lib/types";
-import type { WorkOrderDetail } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
 import { getWorkOrderDetail as _getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
+import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";
+import { createClient } from "@/lib/supabase/server";
 import type {
   AddPartParams,
   AddServiceParams,
   CreateWorkOrderParams,
+  Customer,
+  MechanicAssignment,
+  Vehicle,
+  WorkOrder,
+  WorkOrderDetail,
   WorkOrderFilters,
+  WorkOrderPart,
+  WorkOrderService,
 } from "@/lib/types";
 
 // ── Helper: get current user's org ────────────────────────────

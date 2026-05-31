@@ -1,7 +1,7 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { Customer } from "@/lib/types";
-import { customerKeys } from "./keys";
 import { createOrgQuery } from "./factory";
+import { customerKeys } from "./keys";
 
 interface CustomerWithVehicleCount extends Customer {
   vehicle_count?: number;

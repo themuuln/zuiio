@@ -9,6 +9,7 @@ import {
   PanelRightOpen,
   Plus,
   SearchIcon,
+  Settings2,
   UserPlus,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -24,12 +25,6 @@ import {
   CommandList,
   CommandShortcut,
 } from "@/components/ui/command";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-import { useNavigation } from "@/hooks/use-navigation";
-import { usePageHeader } from "@/hooks/use-page-header";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +34,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useRouter } from "@/lib/i18n/navigation";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigation } from "@/hooks/use-navigation";
+import { usePageHeader } from "@/hooks/use-page-header";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { Link, usePathname, useRouter } from "@/lib/i18n/navigation";
 
 export interface PageTab {
   value: string;
@@ -144,6 +144,7 @@ export function PageHeader({
               <div className="flex items-center gap-2">{actions}</div>
             )}
             <QuickCreateActions />
+            <SettingsShortcut />
             <NavUser />
             <RightSidebarToggle />
           </div>
@@ -234,6 +235,36 @@ export function PageHeader({
           </CommandGroup>
         </CommandList>
       </CommandDialog>
+    </>
+  );
+}
+
+function SettingsShortcut() {
+  const t = useTranslations();
+  const pathname = usePathname();
+  const isActive = pathname === "/dashboard/settings";
+
+  return (
+    <>
+      <Button
+        variant={isActive ? "secondary" : "ghost"}
+        size="sm"
+        className="hidden rounded-xl lg:inline-flex"
+        render={<Link href="/dashboard/settings" />}
+        aria-label={t("nav.settings")}
+      >
+        <Settings2 className="size-4" />
+        <span>{t("nav.settings")}</span>
+      </Button>
+      <Button
+        variant={isActive ? "secondary" : "ghost"}
+        size="icon-sm"
+        className="rounded-xl lg:hidden"
+        render={<Link href="/dashboard/settings" />}
+        aria-label={t("nav.settings")}
+      >
+        <Settings2 className="size-4" />
+      </Button>
     </>
   );
 }

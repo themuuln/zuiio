@@ -1,6 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 
 // Serves VitePress index.html from public/guide/
 export async function GET() {

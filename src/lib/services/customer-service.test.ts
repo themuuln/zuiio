@@ -1,17 +1,16 @@
+import { revalidateTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createClient } from "@/lib/supabase/server";
 import { createAuditLog } from "@/lib/audit";
-import { withCache } from "@/lib/cache/with-cache";
+import { createClient } from "@/lib/supabase/server";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
   createCustomer,
+  deleteCustomer,
   getCustomer,
   getCustomers,
-  updateCustomer,
-  deleteCustomer,
   searchCustomers,
+  updateCustomer,
 } from "./customer-service";
-import { revalidateTag } from "next/cache";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("@/lib/cache/with-cache", () => ({

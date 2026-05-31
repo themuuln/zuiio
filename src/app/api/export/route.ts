@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
+import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 
@@ -188,7 +188,7 @@ export const POST = createSimpleRouteHandler(async ({ request }) => {
         (value instanceof Date || typeof value === "string")
       ) {
         const d = value instanceof Date ? value : new Date(value);
-        cell.value = isNaN(d.getTime()) ? String(value) : d;
+        cell.value = Number.isNaN(d.getTime()) ? String(value) : d;
         cell.numFmt = "yyyy-mm-dd";
       } else if (col.format === "currency" && typeof value === "number") {
         cell.value = value;

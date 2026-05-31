@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { StatusBadge } from "./status-badge";
 
 describe("StatusBadge", () => {
@@ -7,7 +7,7 @@ describe("StatusBadge", () => {
     render(<StatusBadge status="New" />);
     const badge = screen.getByText("New");
     expect(badge).toBeDefined();
-    expect(badge.getAttribute("data-slot")).toBe("status-badge");
+    expect(badge.getAttribute("data-slot")).toBe("badge");
   });
 
   it('renders "Diagnosing" status', () => {
@@ -44,7 +44,7 @@ describe("StatusBadge", () => {
     const { container } = render(
       <StatusBadge status="New" className="custom-class" />,
     );
-    const badge = container.querySelector('[data-slot="status-badge"]');
+    const badge = container.querySelector('[data-slot="badge"]');
     expect(badge?.classList.contains("custom-class")).toBe(true);
   });
 });

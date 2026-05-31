@@ -2,8 +2,8 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import {
   ForbiddenError,
-  UnauthorizedError,
   toApiErrorResponse,
+  UnauthorizedError,
 } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 

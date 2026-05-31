@@ -1,6 +1,5 @@
 import { Resend } from "resend";
 import type { InvoiceWithItems } from "@/lib/types";
-import { Typography } from "@/components/ui/typography";
 
 // ── Resend client (lazy-init) ──────────────────────────────────
 

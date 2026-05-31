@@ -19,7 +19,7 @@ export const GET = createRouteHandler(async ({ orgId, supabase }) => {
     r.mechanic_id ? [r.mechanic_id] : [],
   ) as string[];
 
-  let profileMap = new Map<string, string>();
+  const profileMap = new Map<string, string>();
   if (mechanicIds.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")

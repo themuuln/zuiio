@@ -1,6 +1,8 @@
 "use client";
 
 import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useActionState, useEffect, useRef, useState } from "react";
@@ -13,10 +15,10 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
 import { setCookie } from "@/lib/utils";
 import { login } from "./actions";
-import { Typography } from "@/components/ui/typography";
 
 export default function LoginPage() {
   const t = useTranslations("auth.login");
@@ -26,6 +28,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const searchParams = useSearchParams();
   const redirectTo = searchParams?.get("redirectTo") ?? "";
 
@@ -163,6 +166,27 @@ export default function LoginPage() {
               <FieldError>{fieldErrors.password}</FieldError>
             )}
           </Field>
+
+          {/* Keep me signed in */}
+          <div className="flex items-center gap-2 -mt-2">
+            <Checkbox
+              id="rememberMe"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked === true)}
+            />
+            <Label
+              htmlFor="rememberMe"
+              className="text-[10px] font-mono text-muted-foreground cursor-pointer"
+            >
+              {t("keepMeSignedIn")}
+            </Label>
+          </div>
+          <input
+            type="hidden"
+            name="rememberMe"
+            value={rememberMe ? "true" : ""}
+          />
+
           <Field className="mt-1">
             <Button
               type="submit"

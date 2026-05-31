@@ -70,19 +70,16 @@ export default function VehiclesPage() {
     [setDetailVehicleId],
   );
 
-  const handleDelete = useCallback(
-    (vehicle: VehicleRow) => {
-      setVehicleToDelete(vehicle);
-    },
-    [setVehicleToDelete],
-  );
+  const handleDelete = useCallback((vehicle: VehicleRow) => {
+    setVehicleToDelete(vehicle);
+  }, []);
 
   const confirmDelete = useCallback(() => {
     if (!vehicleToDelete) return;
     deleteVehicle.mutate(vehicleToDelete.id, {
       onSettled: () => setVehicleToDelete(null),
     });
-  }, [vehicleToDelete, deleteVehicle, setVehicleToDelete]);
+  }, [vehicleToDelete, deleteVehicle]);
 
   const columns = useMemo(
     () => createColumns({ onEdit: handleEdit, onDelete: handleDelete }),

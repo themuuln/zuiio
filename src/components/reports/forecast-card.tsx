@@ -7,8 +7,8 @@ import { TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency } from "@/lib/utils";
 import type { ReportForecast } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
 import { DeltaIndicator } from "./delta-indicator";
 
 function formatCompact(n: number): string {

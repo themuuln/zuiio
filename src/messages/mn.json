@@ -116,6 +116,7 @@
       "submit": "Нэвтрэх",
       "noAccount": "Бүртгэлгүй юу?",
       "forgotPassword": "Нууц үгээ мартсан уу?",
+      "keepMeSignedIn": "Нэвтрэлтээ хадгалах",
       "metaTitle": "Нэвтрэх | TOLOM",
       "metaDescription": "TOLOM системд нэвтрэх. Авто засварын газраа нэг дороос удирдана уу."
     },
@@ -155,6 +156,9 @@
       "backToLogin": "Нэвтрэх хэсэг рүү буцах",
       "checkEmail": "Имэйлээ шалгана уу",
       "checkEmailMessage": "Тухайн имэйл хаягаар бүртгэл байвал нууц үг сэргээх холбоос илгээсэн.",
+      "resendLink": "Имэйл ирээгүй юу? Дахин илгээх",
+      "cooldownMessage": "Дахин илгээх боломжтой {seconds}с",
+      "resentMessage": "Сэргээх холбоосыг дахин илгээлээ. Имэйлээ шалгана уу.",
       "metaTitle": "Нууц үг мартсан | TOLOM",
       "metaDescription": "TOLOM нууц үгээ сэргээх."
     },
@@ -214,6 +218,7 @@
     "overview": "Ерөнхий",
     "dashboard": "Хяналтын самбар",
     "mechanic": "Миний ээлж",
+    "mechanicPerformance": "Механикчийн гүйцэтгэл",
     "bayView": "Засварын булан",
     "workOrders": "Ажлын захиалга",
     "customers": "Харилцагчид",
@@ -247,8 +252,7 @@
     "inventoryPurchaseOrders": "Худалдан авалт",
     "inventorySuppliers": "Нийлүүлэгчид",
     "inventoryAlerts": "Сануулга",
-    "inventoryValuation": "Үнэлгээ",
-    "endOfDay": "Өдрийн эцэс"
+    "inventoryValuation": "Үнэлгээ"
   },
   "mechanic": {
     "title": "Миний ээлж",
@@ -561,7 +565,9 @@
     "viewReports": "Тайлан харах",
     "noWorkOrders": "Ажлын захиалга байхгүй",
     "noData": "Мэдээлэл байхгүй",
-    "weeklyTrend": "Долоо хоногийн чиг хандлага"
+    "weeklyTrend": "Долоо хоногийн чиг хандлага",
+    "completedOrders": "Дууссан захиалга",
+    "newCustomers": "Шинэ харилцагч"
   },
   "workOrders": {
     "title": "Ажлын захиалга",
@@ -949,10 +955,6 @@
     "totalRevenue": "Нийт орлого",
     "avgRevenuePerWo": "Дундаж/Захиалга",
     "jobs": "Ажил",
-    "mechanic": "Механикч",
-    "services": "Үйлчилгээ",
-    "parts": "Сэлбэг",
-    "revenue": "Орлого",
     "commission": "Шимэлгээ",
     "perMechanicBreakdown": "Механикч бүрийн задаргаа",
     "noMechanicsCompletedWork": "Өнөөдөр механикч ажил гүйцэтгээгүй",
@@ -971,13 +973,8 @@
     "serviceCost": "Үйлчилгээний өртөг",
     "partsRevenue": "Сэлбэгийн орлого",
     "partsCost": "Сэлбэгийн өртөг",
-    "daily": "Өдрийн",
-    "weekly": "Долоо хоногийн",
-    "monthly": "Сарын",
     "customRange": "Өөрийн хугацаа",
-    "eodSummary": "Өдрийн эцэс",
-    "allMechanics": "Бүх механикч",
-    "refresh": "Шинэчлэх"
+    "eodSummary": "Өдрийн эцэс"
   },
   "expenses": {
     "title": "Зарлага",
@@ -1071,6 +1068,9 @@
     "heroSubtitle": "TOLOM нь таны цехийн ажлын захиалга, бараа материал, харилцагчийн харилцаа, механикийн явц, санхүүг нэг дороос удирдана. Бүгдийг таблет дээр ашиглахад тохируулсан.",
     "heroCtaPrimary": "Үнэгүй туршиж эхлэх",
     "heroCtaSecondary": "Хэрхэн ажилладагийг харах",
+    "heroSocialShops": "Авто цехүүд итгэл хүлээсэн",
+    "heroSocialVehicles": "Үйлчлүүлсэн тээврийн хэрэгсэл",
+    "heroSocialSatisfaction": "Харилцагчийн сэтгэл ханамж",
     "heroStats1": "Боловсруулсан захиалга",
     "heroStats2": "Үйлчлүүлсэн харилцагч",
     "heroStats3": "Бүртгэлтэй тээврийн хэрэгсэл",
@@ -1155,6 +1155,9 @@
     "pricingEnterprise": "Тусгай хэрэгцээтэй томоохон байгууллагад зориулсан Enterprise төлөвлөгөө бий.",
     "pricingFullLink": "Бүрэн үнийн санал харах",
     "pricingMostPopular": "Хамгийн их сонгодог",
+    "pricingMonthly": "Сараар",
+    "pricingAnnual": "Жилээр",
+    "pricingSavePercent": "20% хэмнэнэ",
     "pricingCta": "Үнэгүй туршиж эхлэх",
     "ctaTitle": "Цехийнхээ ажлыг илүү цэгцтэй болгоход бэлэн үү?",
     "ctaSubtitle": "TOLOM ашиглаж буй олон авто засварын бизнесийн нэг болоорой. Өнөөдөр үнэгүй туршиж эхлээд, кредит картгүйгээр боломжуудыг нь үзээрэй.",
@@ -1266,7 +1269,11 @@
     "totalCustomers": "Нийт харилцагч",
     "recentCustomers": "Сүүлийн харилцагч",
     "total": "Нийт",
-    "newCustomers": "Шинэ харилцагч"
+    "newCustomers": "Шинэ харилцагч",
+    "customerCount": "{count} харилцагч",
+    "myCustomers": "Манай харилцагчид",
+    "sharedCustomers": "Нийтлэг харилцагчид",
+    "searchSharedPlaceholder": "Нийтлэг харилцагчдаар хайх..."
   },
   "vehicles": {
     "title": "Тээврийн хэрэгсэл",

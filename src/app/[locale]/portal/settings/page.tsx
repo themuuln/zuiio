@@ -1,22 +1,21 @@
 "use client";
 
-import { Key, User, CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Key, Loader2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { Typography } from "@/components/ui/typography";
+import { usePortalAuth } from "@/hooks/use-portal-auth";
 
 export default function PortalSettingsPage() {
   const t = useTranslations();
   const { push } = useRouter();
   const { customer, loading, token } = usePortalAuth();
-  const [settingPwd, setSettingPwd] = useState(false);
-  const [pwdDone, setPwdDone] = useState(false);
+  const [settingPwd, _setSettingPwd] = useState(false);
+  const [pwdDone, _setPwdDone] = useState(false);
 
   const hasPassword = false; // Placeholder — in real flow, check if customer_user_id is set
 

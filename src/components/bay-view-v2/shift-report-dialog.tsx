@@ -3,7 +3,7 @@
 import { Car, Clock, DollarSign, Gauge, Loader2, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,11 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Typography } from "@/components/ui/typography";
 import type { ShiftReport } from "@/lib/services/bay-view-service";
 import { formatMNT } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 
 interface Props {
   open: boolean;

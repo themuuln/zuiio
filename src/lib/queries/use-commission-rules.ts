@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { toastRetry } from "@/lib/toast-utils";
-import { createOrgQuery } from "./factory";
 import { commissionKeys } from "@/lib/queries/keys";
+import { toastRetry } from "@/lib/toast-utils";
 import type { MechanicCommissionRule } from "@/lib/types";
+import { createOrgQuery } from "./factory";
 
 const fetchCommissionRules =
   createOrgQuery<MechanicCommissionRule[]>("/commission-rules");

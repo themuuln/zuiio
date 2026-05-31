@@ -71,6 +71,11 @@ const navGroups: NavGroup[] = [
         icon: Wrench,
       },
       {
+        labelKey: "nav.mechanicPerformance",
+        href: "/dashboard/mechanic-performance",
+        icon: TrendingUp,
+      },
+      {
         labelKey: "nav.workOrders",
         href: "/dashboard/work-orders",
         icon: ClipboardList,

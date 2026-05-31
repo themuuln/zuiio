@@ -1,16 +1,15 @@
 "use client";
 
-import { Loader2, Printer, Truck } from "lucide-react";
+import { Loader2, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -22,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Typography } from "@/components/ui/typography";
 import {
   usePurchaseOrderItems,
   usePurchaseOrders,
@@ -30,8 +30,6 @@ import {
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { PurchaseOrder } from "@/lib/types";
-import { Typography } from "@/components/ui/typography";
-import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 
 interface PurchaseOrderDetailSheetProps {
   open: boolean;

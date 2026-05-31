@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import {
@@ -24,7 +25,6 @@ import { formatMNT } from "@/lib/utils";
 import { formatDate, MOVEMENT_LABELS } from "./constants";
 import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
-import { Typography } from "@/components/ui/typography";
 
 // API returns part_name joined on movements
 type MovementRow = InventoryMovement & { part_name: string };
@@ -206,7 +206,7 @@ export function MovementsTab({
 
     const body = {
       part_id: movementForm.part_id,
-      quantity: parseInt(movementForm.quantity),
+      quantity: parseInt(movementForm.quantity, 10),
       movement_type: movementForm.movement_type,
       unit_cost: movementForm.unit_cost
         ? parseFloat(movementForm.unit_cost)

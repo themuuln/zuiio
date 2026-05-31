@@ -1,8 +1,8 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import type { VehicleServiceSchedule, ReminderLog } from "@/lib/types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import type { ReminderLog, VehicleServiceSchedule } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
 
 type ScheduleUpdateParams = {

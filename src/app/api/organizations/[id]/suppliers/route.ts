@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
+import { createSupplier, getSuppliers } from "@/lib/services/inventory-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
-import { getSuppliers, createSupplier } from "@/lib/services/inventory-service";
 
 export const GET = createRouteHandler(async ({ orgId }) => {
   const suppliers = await getSuppliers(orgId);

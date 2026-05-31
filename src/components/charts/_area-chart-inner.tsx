@@ -4,8 +4,8 @@ import { useId } from "react";
 // recharts - consider next/dynamic for code splitting
 import {
   Area,
-  AreaChart as RechartsAreaChart,
   CartesianGrid,
+  AreaChart as RechartsAreaChart,
   XAxis,
   YAxis,
 } from "recharts";

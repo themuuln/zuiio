@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { createOrgQuery } from "./factory";
 import type { VehicleModel } from "@/lib/types";
+import { createOrgQuery } from "./factory";
 import { vehicleModelKeys } from "./keys";
 
 /**

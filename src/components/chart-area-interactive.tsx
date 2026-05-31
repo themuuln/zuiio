@@ -1,9 +1,7 @@
 "use client";
 
-import * as React from "react";
 import dynamic from "next/dynamic";
-
-import { useIsMobile } from "@/hooks/use-mobile";
+import * as React from "react";
 import {
   Card,
   CardAction,
@@ -12,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
+import { type ChartConfig, ChartContainer } from "@/components/ui/chart";
 import {
   Select,
   SelectContent,
@@ -21,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const description = "An interactive area chart";
 

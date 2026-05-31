@@ -3,8 +3,8 @@
 // recharts - consider next/dynamic for code splitting
 import {
   Bar,
-  BarChart as RechartsBarChart,
   CartesianGrid,
+  BarChart as RechartsBarChart,
   XAxis,
   YAxis,
 } from "recharts";

@@ -2,12 +2,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  Car,
+  CarFront,
   ChevronDown,
   ChevronRight,
   Info,
   Loader2,
-  Car,
-  CarFront,
   Wrench,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -17,17 +17,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Typography } from "@/components/ui/typography";
-import type { Organization } from "@/lib/types";
 import {
-  carCatalogKeys,
   type CarBrand,
   type CarModel,
+  carCatalogKeys,
 } from "@/lib/queries/use-car-catalog";
+import type { Organization } from "@/lib/types";
 
 interface VehicleNicheFormProps {
   organization: Organization | undefined;

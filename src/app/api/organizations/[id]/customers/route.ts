@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   createCustomer,
   getCustomers,
   getSharedCustomers,
   searchCustomers,
 } from "@/lib/services/customer-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ request, orgId }) => {
   const searchQuery = request.nextUrl.searchParams.get("q") ?? undefined;

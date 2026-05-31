@@ -2,20 +2,20 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { toastRetry } from "@/lib/toast-utils";
 import type {
+  GlobalPartCatalog,
   InventoryBalanceWithAvgCost,
   InventoryMovement,
-  PartsCatalogItem,
-  PartsCars,
   PartsCarParts,
+  PartsCars,
+  PartsCatalogItem,
   PurchaseOrder,
   PurchaseOrderItem,
   StockThreshold,
   Supplier,
   UpdatePartParams,
-  GlobalPartCatalog,
 } from "@/lib/types";
 import { createOrgQuery } from "./factory";
-import { inventoryKeys, globalCatalogKeys } from "./keys";
+import { globalCatalogKeys, inventoryKeys } from "./keys";
 
 // ── Global Catalog Fetcher ───────────────────────────────────
 

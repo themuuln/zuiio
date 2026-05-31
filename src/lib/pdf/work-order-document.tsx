@@ -8,12 +8,12 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import type { WorkOrderDetail } from "@/lib/types";
 import {
-  type Locale,
-  t,
   colors,
   formatAmount,
   formatDate,
+  type Locale,
   sharedStyles,
+  t,
 } from "./pdf-styles";
 
 interface WorkOrderDocumentProps {

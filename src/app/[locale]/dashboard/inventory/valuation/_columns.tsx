@@ -2,8 +2,8 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
-import type { InventoryBalanceWithAvgCost } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
+import type { InventoryBalanceWithAvgCost } from "@/lib/types";
 
 export interface ValuationRow extends InventoryBalanceWithAvgCost {
   avgUnitCost: number;

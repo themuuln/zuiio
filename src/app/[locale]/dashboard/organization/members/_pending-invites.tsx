@@ -2,7 +2,6 @@
 
 import { Copy, Mail, RefreshCw, Trash2 } from "lucide-react";
 import type { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -16,8 +15,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { InviteWithEmail } from "./types";
 import { Typography } from "@/components/ui/typography";
+import type { InviteWithEmail } from "./types";
 
 interface PendingInvitesProps {
   loading: boolean;

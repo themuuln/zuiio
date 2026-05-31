@@ -3,10 +3,10 @@
 // recharts - consider next/dynamic for code splitting
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import {
+  type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from "@/components/ui/chart";
 
 const chartConfig = {

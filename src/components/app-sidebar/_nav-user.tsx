@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { SettingsIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,14 +13,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getInitials } from "@/lib/utils";
 import {
   Item,
-  ItemMedia,
   ItemContent,
-  ItemTitle,
   ItemDescription,
+  ItemMedia,
+  ItemTitle,
 } from "@/components/ui/item";
+import { getInitials } from "@/lib/utils";
 
 export function NavUser() {
   const [profile, setProfile] = useState<{

@@ -21,6 +21,13 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Typography } from "@/components/ui/typography";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { getNumberSetting, getStringSetting } from "./_settings-utils";
@@ -224,24 +231,27 @@ export function BusinessDefaultsForm({
                 Default currency
               </FieldLabel>
               <FieldContent>
-                <div className="relative">
-                  <CreditCard className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <select
+                <Select
+                  value={rhfForm.watch("defaultCurrency")}
+                  onValueChange={(value) =>
+                    value && rhfForm.setValue("defaultCurrency", value)
+                  }
+                >
+                  <SelectTrigger
                     id="defaultCurrency"
-                    value={rhfForm.watch("defaultCurrency")}
-                    onChange={(e) =>
-                      rhfForm.setValue("defaultCurrency", e.target.value)
-                    }
-                    className="flex h-11 w-full rounded-md border border-input bg-transparent pl-9 pr-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="Default currency"
+                    className="h-11 w-full"
                     aria-invalid={!!rhfForm.formState.errors.defaultCurrency}
                   >
-                    <option value="MNT">MNT (Mongolian Tugrik)</option>
-                    <option value="CNY">CNY (Chinese Yuan)</option>
-                    <option value="USD">USD (US Dollar)</option>
-                    <option value="EUR">EUR (Euro)</option>
-                  </select>
-                </div>
+                    <CreditCard className="size-4 text-muted-foreground" />
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MNT">MNT (Mongolian Tugrik)</SelectItem>
+                    <SelectItem value="CNY">CNY (Chinese Yuan)</SelectItem>
+                    <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                    <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                  </SelectContent>
+                </Select>
                 {rhfForm.formState.errors.defaultCurrency && (
                   <FieldError>
                     {rhfForm.formState.errors.defaultCurrency.message}
@@ -307,22 +317,25 @@ export function BusinessDefaultsForm({
             <Field data-invalid={!!rhfForm.formState.errors.language}>
               <FieldLabel htmlFor="language">Default language</FieldLabel>
               <FieldContent>
-                <div className="relative">
-                  <Globe className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <select
+                <Select
+                  value={rhfForm.watch("language")}
+                  onValueChange={(value) =>
+                    value && rhfForm.setValue("language", value)
+                  }
+                >
+                  <SelectTrigger
                     id="language"
-                    value={rhfForm.watch("language")}
-                    onChange={(e) =>
-                      rhfForm.setValue("language", e.target.value)
-                    }
-                    className="flex h-11 w-full rounded-md border border-input bg-transparent pl-9 pr-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="Default language"
+                    className="h-11 w-full"
                     aria-invalid={!!rhfForm.formState.errors.language}
                   >
-                    <option value="mn">Монгол (Mongolian)</option>
-                    <option value="en">English</option>
-                  </select>
-                </div>
+                    <Globe className="size-4 text-muted-foreground" />
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mn">Монгол (Mongolian)</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                  </SelectContent>
+                </Select>
                 {rhfForm.formState.errors.language && (
                   <FieldError>
                     {rhfForm.formState.errors.language.message}

@@ -6,14 +6,19 @@ import {
   Loader2,
   Mail,
   MapPin,
-  Phone,
   Pencil,
+  Phone,
   Save,
   Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  CustomerEditForm,
+  type CustomerFormState,
+} from "@/app/[locale]/dashboard/customers/[id]/_customer-edit-form";
+import { StatusBadge } from "@/components/status-badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,32 +31,25 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/status-badge";
+import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/components/ui/item";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Typography } from "@/components/ui/typography";
 import { usePageHeader } from "@/hooks/use-page-header";
 import { customerKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { WorkOrderStatus } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
-import {
-  CustomerEditForm,
-  type CustomerFormState,
-} from "@/app/[locale]/dashboard/customers/[id]/_customer-edit-form";
-import { Typography } from "@/components/ui/typography";
-import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
-import {
-  Item,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
-} from "@/components/ui/item";
 
 type CustomerType = "individual" | "company";
 

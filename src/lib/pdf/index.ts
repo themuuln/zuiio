@@ -8,7 +8,7 @@
  */
 
 export { InvoiceDocument } from "./invoice-document";
-export { WorkOrderDocument } from "./work-order-document";
+export type { Locale } from "./pdf-styles";
 export {
   colors,
   formatAmount,
@@ -16,4 +16,4 @@ export {
   sharedStyles,
   t,
 } from "./pdf-styles";
-export type { Locale } from "./pdf-styles";
+export { WorkOrderDocument } from "./work-order-document";

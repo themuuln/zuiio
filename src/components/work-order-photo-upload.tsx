@@ -1,11 +1,11 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
-import { Loader2, Paperclip, X } from "lucide-react";
+import { Loader2, Paperclip } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useCreateAttachment } from "@/lib/queries/use-work-order-attachments";
+import { createClient } from "@/lib/supabase/client";
 
 interface WorkOrderPhotoUploadProps {
   orgId: string;

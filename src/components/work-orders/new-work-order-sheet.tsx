@@ -1,16 +1,18 @@
 "use client";
 
+import { Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Wrench } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ComplaintSection,
   CustomerSection,
@@ -21,8 +23,6 @@ import {
   VehicleSection,
   WizardProvider,
 } from "@/components/work-orders/wizard";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/utils";
 
 function SheetSummarySection() {

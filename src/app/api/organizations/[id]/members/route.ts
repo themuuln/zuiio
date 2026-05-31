@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { ValidationError } from "@/lib/errors";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
-import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { createClient } from "@/lib/supabase/server";
-import { ValidationError } from "@/lib/errors";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 interface AddMemberParams {
   email: string;

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   AlertTriangle,
   Building2,
@@ -8,6 +7,7 @@ import {
   Landmark,
   Sparkles,
 } from "lucide-react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -24,8 +24,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import type { SubscriptionStatus } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
+import type { SubscriptionStatus } from "@/lib/types";
 
 interface BankOption {
   id: string;

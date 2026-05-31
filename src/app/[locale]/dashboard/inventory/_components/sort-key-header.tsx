@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ArrowUpDown, Star } from "lucide-react";
-import type { SortKey } from "./constants";
+import { ArrowDown, ArrowUp, ArrowUpDown, type Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { SortKey } from "./constants";
 
 export function SortKeyHeader({
   label,

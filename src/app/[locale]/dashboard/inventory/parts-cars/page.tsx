@@ -1,13 +1,12 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Plus, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { ListToolbar } from "@/components/list-toolbar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Empty,
   EmptyContent,
@@ -15,12 +14,13 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Link } from "@/lib/i18n/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
 import { usePageHeader } from "@/hooks/use-page-header";
+import { Link } from "@/lib/i18n/navigation";
 import { usePartsCars } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatMNT } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 
 export default function PartsCarsListPage() {
   const t = useTranslations("partsCars");
@@ -114,7 +114,7 @@ export default function PartsCarsListPage() {
                       )}
                     </div>
                     <Badge variant="outline" className="shrink-0">
-                      {t("status." + car.status)}
+                      {t(`status.${car.status}`)}
                     </Badge>
                   </div>
 

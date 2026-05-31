@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
 import { getEndOfDaySummary } from "@/lib/services/report-service";
+import { createClient } from "@/lib/supabase/server";
 
 function localDateStr(date?: Date): string {
   const d = date ?? new Date();
@@ -52,7 +52,7 @@ export async function getCloseStreak(orgId: string): Promise<number> {
   if (!logs || logs.length === 0) return 0;
 
   let streak = 0;
-  const todayLocal = localDateStr();
+  const _todayLocal = localDateStr();
 
   for (let i = 0; i < logs.length; i++) {
     const expectedDate = new Date();

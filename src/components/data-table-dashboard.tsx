@@ -1,16 +1,15 @@
 "use client";
 
-import * as React from "react";
 import {
   closestCenter,
   DndContext,
+  type DragEndEvent,
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
+  type UniqueIdentifier,
   useSensor,
   useSensors,
-  type DragEndEvent,
-  type UniqueIdentifier,
 } from "@dnd-kit/core";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
@@ -21,19 +20,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  CircleCheck,
-  EllipsisVertical,
-  GripVertical,
-  Columns3,
-  Loader,
-  Plus,
-} from "lucide-react";
-import {
+  type ColumnDef,
+  type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
@@ -41,18 +29,28 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
-  type ColumnFiltersState,
   type Row,
   type SortingState,
+  useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  CircleCheck,
+  Columns3,
+  EllipsisVertical,
+  GripVertical,
+  Loader,
+  Plus,
+} from "lucide-react";
 import dynamic from "next/dynamic";
+import * as React from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -84,10 +82,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
+
 const DataTableChart = dynamic(
   () => import("./_data-table-chart").then((m) => m.DataTableChart),
   { ssr: false },
 );
+
 import {
   Table,
   TableBody,

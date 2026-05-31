@@ -1,6 +1,6 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
-import { createOrgQuery } from "./factory";
 import type { DashboardData } from "@/lib/types";
+import { createOrgQuery } from "./factory";
 import { dashboardKeys } from "./keys";
 
 /**

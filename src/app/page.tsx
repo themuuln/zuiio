@@ -1,5 +1,5 @@
-import { redirect } from "@/lib/i18n/navigation";
 import type { Metadata } from "next";
+import { redirect } from "@/lib/i18n/navigation";
 
 export const metadata: Metadata = {
   title: "TOLOM - Auto Service Management",

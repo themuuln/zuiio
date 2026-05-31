@@ -26,9 +26,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { Typography } from "@/components/ui/typography";
 
 type PreviewRow = Record<string, string>;
 

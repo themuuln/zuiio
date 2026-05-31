@@ -12,9 +12,9 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
 import { signup } from "./actions";
-import { Typography } from "@/components/ui/typography";
 
 export default function SignupPage() {
   const t = useTranslations("auth.signup");

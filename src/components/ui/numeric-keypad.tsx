@@ -34,7 +34,7 @@ export function NumericKeypad({
         if (prev.includes(".")) return prev;
         // Don't start with a decimal
         if (prev === "") return "0.";
-        return prev + ".";
+        return `${prev}.`;
       }
       // Prevent leading zeros (allow "0" alone and "0.x")
       if (prev === "0" && key === "0") return prev;
@@ -49,7 +49,7 @@ export function NumericKeypad({
 
   const handleOK = React.useCallback(() => {
     const num = parseFloat(buffer);
-    onChange(isNaN(num) ? 0 : Math.round(num * 100) / 100);
+    onChange(Number.isNaN(num) ? 0 : Math.round(num * 100) / 100);
     setOpen(false);
   }, [buffer, onChange]);
 

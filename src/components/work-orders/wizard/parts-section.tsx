@@ -3,21 +3,21 @@
 import { Check, Clock, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { PartForm } from "@/components/inventory/part-form";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { NumericKeypad } from "@/components/ui/numeric-keypad";
-import { formatCurrency } from "@/lib/utils";
-import { useWizardContext } from "./wizard-context";
-import { Typography } from "@/components/ui/typography";
-import { PartForm } from "@/components/inventory/part-form";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { NumericKeypad } from "@/components/ui/numeric-keypad";
+import { Typography } from "@/components/ui/typography";
+import { formatCurrency } from "@/lib/utils";
+import { useWizardContext } from "./wizard-context";
 
 export function PartsSection() {
   const ctx = useWizardContext();
@@ -28,12 +28,8 @@ export function PartsSection() {
     ? ctx.partsCatalog.filter(
         (p) =>
           p.name.toLowerCase().includes(ctx.partSearch.toLowerCase()) ||
-          (p.part_number &&
-            p.part_number
-              .toLowerCase()
-              .includes(ctx.partSearch.toLowerCase())) ||
-          (p.category &&
-            p.category.toLowerCase().includes(ctx.partSearch.toLowerCase())),
+          p.part_number?.toLowerCase().includes(ctx.partSearch.toLowerCase()) ||
+          p.category?.toLowerCase().includes(ctx.partSearch.toLowerCase()),
       )
     : [];
 
@@ -162,14 +158,12 @@ export function PartsSection() {
                   (p.name
                     .toLowerCase()
                     .includes(ctx.partSearch.toLowerCase()) ||
-                    (p.part_number &&
-                      p.part_number
-                        .toLowerCase()
-                        .includes(ctx.partSearch.toLowerCase())) ||
-                    (p.category &&
-                      p.category
-                        .toLowerCase()
-                        .includes(ctx.partSearch.toLowerCase()))),
+                    p.part_number
+                      ?.toLowerCase()
+                      .includes(ctx.partSearch.toLowerCase()) ||
+                    p.category
+                      ?.toLowerCase()
+                      .includes(ctx.partSearch.toLowerCase())),
               )
               .slice(0, 6)
               .map((part) => (
@@ -214,14 +208,12 @@ export function PartsSection() {
               ctx.globalParts.filter(
                 (p) =>
                   p.name.toLowerCase().includes(ctx.partSearch.toLowerCase()) ||
-                  (p.part_number &&
-                    p.part_number
-                      .toLowerCase()
-                      .includes(ctx.partSearch.toLowerCase())) ||
-                  (p.category &&
-                    p.category
-                      .toLowerCase()
-                      .includes(ctx.partSearch.toLowerCase())),
+                  p.part_number
+                    ?.toLowerCase()
+                    .includes(ctx.partSearch.toLowerCase()) ||
+                  p.category
+                    ?.toLowerCase()
+                    .includes(ctx.partSearch.toLowerCase()),
               ).length === 0 && (
                 <div className="p-4 text-sm text-muted-foreground text-center">
                   {t("noPartsMatch")}

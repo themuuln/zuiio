@@ -2502,6 +2502,7 @@ export type Database = {
           deleted_at: string | null
           description: string | null
           estimated_duration_minutes: number | null
+          global_service_id: string | null
           id: string
           interval_km: number | null
           interval_months: number | null
@@ -2520,6 +2521,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           estimated_duration_minutes?: number | null
+          global_service_id?: string | null
           id?: string
           interval_km?: number | null
           interval_months?: number | null
@@ -2538,6 +2540,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           estimated_duration_minutes?: number | null
+          global_service_id?: string | null
           id?: string
           interval_km?: number | null
           interval_months?: number | null
@@ -2548,6 +2551,13 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "service_catalog_global_service_id_fkey"
+            columns: ["global_service_id"]
+            isOneToOne: false
+            referencedRelation: "global_services_catalog"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "service_catalog_organization_id_fkey"
             columns: ["organization_id"]

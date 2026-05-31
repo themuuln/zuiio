@@ -23,31 +23,31 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Empty,
   EmptyContent,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
-import {
-  useExpenseCategories,
-  useCreateExpenseCategory,
-  useUpdateExpenseCategory,
-  useDeleteExpenseCategory,
-} from "@/lib/queries/use-expenses";
-import type { ExpenseCategory } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
+import {
+  useCreateExpenseCategory,
+  useDeleteExpenseCategory,
+  useExpenseCategories,
+  useUpdateExpenseCategory,
+} from "@/lib/queries/use-expenses";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import type { ExpenseCategory } from "@/lib/types";
 
 const CATEGORY_COLORS = [
   { name: "Blue", value: "#3b82f6" },

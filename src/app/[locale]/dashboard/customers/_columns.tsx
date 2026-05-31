@@ -4,8 +4,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Building2, Car, ChevronRight, Clock, Globe, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
-import type { Customer } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
+import type { Customer } from "@/lib/types";
 
 export interface CustomerRow extends Customer {
   vehicle_count?: number;

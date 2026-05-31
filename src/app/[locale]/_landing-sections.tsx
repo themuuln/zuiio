@@ -15,8 +15,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -245,8 +247,11 @@ export function TestimonialsSection() {
   );
 }
 
+const MONTHLY_PRICES = [299000, 699000, 1590000];
+
 export function PricingSection() {
   const t = useTranslations("home");
+  const [annual, setAnnual] = useState(false);
 
   return (
     <section className="border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24">
@@ -259,11 +264,44 @@ export function PricingSection() {
             {t("pricingPreviewSubtitle")}
           </Typography.Muted>
         </div>
+        {/* Billing toggle */}
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <span
+            className={cn(
+              "text-sm transition-colors",
+              !annual && "font-medium text-foreground",
+              annual && "text-muted-foreground",
+            )}
+          >
+            {t("pricingMonthly")}
+          </span>
+          <Switch
+            checked={annual}
+            onCheckedChange={setAnnual}
+            aria-label="Toggle annual billing"
+          />
+          <span
+            className={cn(
+              "text-sm transition-colors",
+              annual && "font-medium text-foreground",
+              !annual && "text-muted-foreground",
+            )}
+          >
+            {t("pricingAnnual")}
+          </span>
+          {annual && (
+            <Badge variant="default" className="ml-1 whitespace-nowrap text-xs">
+              {t("pricingSavePercent")}
+            </Badge>
+          )}
+        </div>
         <div className="mt-12 grid gap-6 lg:grid-cols-3">
-          {PRICING_TIERS.map((tier) => {
+          {PRICING_TIERS.map((tier, index) => {
             const name = t(`${tier.key}Name`);
             const price = t(`${tier.key}Price`);
             const desc = t(`${tier.key}Desc`);
+            const monthlyPrice = MONTHLY_PRICES[index];
+            const annualPrice = Math.round(monthlyPrice * 12 * 0.8);
 
             return (
               <Card
@@ -286,7 +324,7 @@ export function PricingSection() {
                   <CardDescription>{desc}</CardDescription>
                   <div className="mt-4">
                     <span className="text-3xl font-bold tracking-tight">
-                      {price}
+                      {annual ? `₮${annualPrice.toLocaleString()}/yr` : price}
                     </span>
                   </div>
                 </CardHeader>

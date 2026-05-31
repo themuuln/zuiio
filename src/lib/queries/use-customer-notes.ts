@@ -1,13 +1,13 @@
 import {
   type UseQueryResult,
-  useQuery,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { toastRetry } from "@/lib/toast-utils";
-import { createOrgQuery } from "./factory";
 import type { CustomerNote, CustomerNoteType } from "@/lib/types";
+import { createOrgQuery } from "./factory";
 import { customerNoteKeys } from "./keys";
 
 /**

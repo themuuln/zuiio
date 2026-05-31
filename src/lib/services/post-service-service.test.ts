@@ -104,7 +104,7 @@ describe("getRecommendations", () => {
   }
 
   it("returns recommendations sorted by priority", async () => {
-    const builder = mockRecsResult([
+    const _builder = mockRecsResult([
       {
         id: "rec-1",
         organization_id: "org-1",

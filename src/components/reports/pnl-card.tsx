@@ -6,8 +6,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { formatCurrency } from "@/lib/utils";
 import type { PnLSummary } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
 
 interface PnLCardProps {
   data: PnLSummary | null;

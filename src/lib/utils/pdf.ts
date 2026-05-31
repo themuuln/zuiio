@@ -7,7 +7,7 @@
  *   // buffer is a NodeBuffer — send as attachment or save to storage
  */
 
-import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
+import { type DocumentProps, renderToBuffer } from "@react-pdf/renderer";
 import type { ReactElement } from "react";
 
 /**

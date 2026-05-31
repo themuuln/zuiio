@@ -3,6 +3,7 @@
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -161,6 +162,57 @@ export function CustomerForm({
     setError(null);
     setConflictInfo(null);
 
+    // ── Fuzzy-check duplicate phone/email (warn only, don't block) ──
+    const checkPhone = data.phone?.trim();
+    const checkEmail = data.email?.trim();
+
+    if (checkPhone || checkEmail) {
+      try {
+        const checkRes = await fetch(
+          `/api/organizations/${orgId}/customers?q=${encodeURIComponent(
+            checkPhone || checkEmail || "",
+          )}&pageSize=10`,
+        );
+        const checkJson = await checkRes.json();
+        const existingList = (checkJson?.data?.data ?? []) as Array<{
+          id: string;
+          first_name: string | null;
+          last_name: string | null;
+          company_name: string | null;
+          phone: string | null;
+          email: string | null;
+        }>;
+
+        if (checkPhone) {
+          const phoneMatch = existingList.find((c) => c.phone === checkPhone);
+          if (phoneMatch) {
+            const name =
+              [phoneMatch.first_name, phoneMatch.last_name]
+                .filter(Boolean)
+                .join(" ") ||
+              phoneMatch.company_name ||
+              phoneMatch.phone;
+            toast.warning(`This phone number already belongs to ${name}`);
+          }
+        }
+
+        if (checkEmail) {
+          const emailMatch = existingList.find((c) => c.email === checkEmail);
+          if (emailMatch) {
+            const name =
+              [emailMatch.first_name, emailMatch.last_name]
+                .filter(Boolean)
+                .join(" ") ||
+              emailMatch.company_name ||
+              emailMatch.email;
+            toast.warning(`This email already belongs to ${name}`);
+          }
+        }
+      } catch {
+        // Silently ignore duplication check failures — don't block creation
+      }
+    }
+
     try {
       const payload: CreateCustomerParams = {
         type: currentMode === "quick" ? "individual" : data.type,
@@ -190,15 +242,6 @@ export function CustomerForm({
       const customer = await createCustomerMutation.mutateAsync(payload);
       onSuccess?.(customer);
     } catch (err: any) {
-      if (err.code === "CONFLICT") {
-        const field = err.message.toLowerCase().includes("phone")
-          ? ("phone" as const)
-          : ("email" as const);
-        setConflictInfo({
-          field,
-          existingCustomerId: err.details?.existingCustomerId ?? null,
-        });
-      }
       setError(err.message || "Failed to save customer");
     }
   });

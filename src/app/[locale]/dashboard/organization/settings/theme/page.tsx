@@ -1,8 +1,8 @@
 "use client";
 
-import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { OrgThemeSettings } from "@/components/org-theme-settings";
 import { Typography } from "@/components/ui/typography";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 export default function ThemeSettingsPage() {
   const { data: orgInfo } = useCurrentOrg();

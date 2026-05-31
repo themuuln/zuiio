@@ -2,18 +2,17 @@
 
 import { useTranslations } from "next-intl";
 // recharts - consider next/dynamic for code splitting
-import { Cell } from "recharts";
 import {
   Area,
   AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Line,
   LineChart,
   Pie,
   PieChart,
-  Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
@@ -21,14 +20,13 @@ import { CHART_COLORS, STATUS_COLORS } from "@/components/charts/chart-colors";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
 } from "@/components/ui/chart";
-import type { DashboardData } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
+import type { DashboardData } from "@/lib/types";
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
@@ -45,17 +43,19 @@ export function MechanicTrendChart({
 }: {
   data: { week: string; orders: number; revenue: number }[];
 }) {
+  const t = useTranslations();
   if (data.length === 0) return null;
-
   const config = {
-    revenue: { label: "Revenue", color: CHART_COLORS[0] },
-    orders: { label: "Orders", color: CHART_COLORS[1] },
+    revenue: { label: t("reports.revenue"), color: CHART_COLORS[0] },
+    orders: { label: t("reports.completedWo"), color: CHART_COLORS[1] },
   };
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Weekly Trend</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          {t("dashboard.weeklyTrend")}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer
@@ -91,14 +91,14 @@ export function MechanicTrendChart({
             <ChartLegend content={<ChartLegendContent />} />
             <Bar
               dataKey="revenue"
-              name="Revenue"
+              name={t("reports.revenue")}
               fill={CHART_COLORS[0]}
               radius={[3, 3, 0, 0]}
               barSize={14}
             />
             <Bar
               dataKey="orders"
-              name="Orders"
+              name={t("reports.completedWo")}
               fill={CHART_COLORS[1]}
               radius={[3, 3, 0, 0]}
               barSize={14}
@@ -121,7 +121,7 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
     customerAcquisitionTrend,
   } = data;
 
-  const totalStatusCount = workOrderStatusDistribution.reduce(
+  const _totalStatusCount = workOrderStatusDistribution.reduce(
     (sum, s) => sum + s.count,
     0,
   );
@@ -150,11 +150,17 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
 
   const techConfig = {
     revenue: { label: t("reports.revenue"), color: CHART_COLORS[0] },
-    completedOrders: { label: "Completed Orders", color: CHART_COLORS[1] },
+    completedOrders: {
+      label: t("dashboard.completedOrders"),
+      color: CHART_COLORS[1],
+    },
   };
 
   const customerConfig = {
-    newCustomers: { label: "New Customers", color: CHART_COLORS[1] },
+    newCustomers: {
+      label: t("dashboard.newCustomers"),
+      color: CHART_COLORS[1],
+    },
   };
 
   return (
@@ -392,7 +398,7 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                   />
                   <Bar
                     dataKey="completedOrders"
-                    name="Completed Orders"
+                    name={t("dashboard.completedOrders")}
                     fill={CHART_COLORS[1]}
                     radius={[4, 4, 0, 0]}
                     barSize={24}
@@ -511,7 +517,7 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
                   <Line
                     type="monotone"
                     dataKey="newCustomers"
-                    name="New Customers"
+                    name={t("dashboard.newCustomers")}
                     stroke={CHART_COLORS[1]}
                     strokeWidth={2.5}
                     dot={{ fill: CHART_COLORS[1], r: 4, strokeWidth: 0 }}

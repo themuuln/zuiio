@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
-  getExpenseCategories as getCategories,
   createExpenseCategory,
+  getExpenseCategories as getCategories,
   seedDefaultExpenseCategories,
 } from "@/lib/services/expense-service";
 

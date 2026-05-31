@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { setCustomerPassword } from "./actions";
 import { Typography } from "@/components/ui/typography";
+import { setCustomerPassword } from "./actions";
 
 export default function CustomerSetPasswordPage() {
   const t = useTranslations();

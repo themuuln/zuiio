@@ -21,14 +21,14 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Typography } from "@/components/ui/typography";
 import {
   Item,
-  ItemMedia,
-  ItemContent,
-  ItemTitle,
   ItemActions,
+  ItemContent,
+  ItemMedia,
+  ItemTitle,
 } from "@/components/ui/item";
+import { Typography } from "@/components/ui/typography";
 import { formatPlateInput, inputProps } from "@/lib/form-ux";
 import {
   isValidMongolianPlate,

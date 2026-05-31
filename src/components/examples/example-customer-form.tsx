@@ -11,24 +11,24 @@
 
 "use client";
 
-import { z } from "zod";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Field,
-  FieldGroup,
-  FieldLabel,
   FieldContent,
   FieldDescription,
   FieldError,
+  FieldGroup,
+  FieldLabel,
 } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { inputProps } from "@/lib/form-ux";
 import {
   isValidMongolianPhone,
   normalizeMongolianPhone,
 } from "@/lib/form-validation";
-import { inputProps } from "@/lib/form-ux";
 
 // ── Schema ───────────────────────────────────────────────────
 

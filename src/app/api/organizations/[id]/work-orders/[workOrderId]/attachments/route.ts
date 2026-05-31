@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
-  getAttachments,
   createAttachment,
   deleteAttachment,
+  getAttachments,
 } from "@/lib/services/attachment-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 

@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { customerLogin } from "./actions";
 import { Typography } from "@/components/ui/typography";
+import { customerLogin } from "./actions";
 
 export default function CustomerLoginPage() {
   const t = useTranslations();

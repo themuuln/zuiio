@@ -43,7 +43,7 @@ export function NewUserSetup({ copy }: { copy: NewUserSetupCopy }) {
     setupStarted.current = true;
     runSetup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [runSetup]);
 
   if (state === "error") {
     return (

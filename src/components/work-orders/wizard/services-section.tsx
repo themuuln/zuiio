@@ -4,14 +4,14 @@ import { Check, Clock, Plus, Trash2, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { SearchInput } from "@/components/search-input";
+import { ServiceForm } from "@/components/services/service-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { NumericKeypad } from "@/components/ui/numeric-keypad";
+import { Typography } from "@/components/ui/typography";
 import { formatCurrency } from "@/lib/utils";
 import { useWizardContext } from "./wizard-context";
-import { Typography } from "@/components/ui/typography";
-import { ServiceForm } from "@/components/services/service-form";
 
 export function ServicesSection() {
   const ctx = useWizardContext();

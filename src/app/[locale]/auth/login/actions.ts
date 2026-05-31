@@ -1,10 +1,10 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { ActionState } from "@/lib/form-validation";
 import { flattenFieldErrors } from "@/lib/form-validation";
-import { loginSchema, isEmail, isPhone } from "@/lib/validation/auth-schemas";
+import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { isPhone, loginSchema } from "@/lib/validation/auth-schemas";
 
 type LoginState = ActionState<{ email: string }> & {
   redirectTo?: string;

@@ -1,0 +1,8 @@
+{
+  "phase": "Dashboard UX fixes",
+  "status": "partial",
+  "reason": "Agent timed out during research. Dashboard items 27-32 remain unstarted. Marking for retry.",
+  "buildPassing": true,
+  "changes": [],
+  "completedItems": []
+}

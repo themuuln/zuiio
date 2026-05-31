@@ -11,6 +11,8 @@ import {
 } from "@dnd-kit/core";
 import {
   Activity,
+  ArrowDown,
+  ArrowUp,
   Car,
   CheckCircle2,
   Columns3,
@@ -22,9 +24,11 @@ import {
   Minus,
   Plus,
   RefreshCw,
+  Search,
   Users,
   Wallet,
   Wrench,
+  X,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -33,6 +37,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -48,6 +53,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Typography } from "@/components/ui/typography";
+import { usePolling } from "@/hooks/use-polling";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type {
   BaySlotData,
@@ -60,16 +66,12 @@ import {
   getShiftReport,
 } from "@/lib/services/bay-view-service";
 import type { Vehicle, WorkOrder } from "@/lib/types";
+import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { cn, formatMNT, formatPlateNumber } from "@/lib/utils";
 import { useBayActionHandlers } from "./_bay-action-handlers";
 import { useBayDragHandlers } from "./_bay-drag-handlers";
 import { AssignDialog } from "./assign-dialog";
-import {
-  BayCard,
-  BayCardDragPreview,
-  MongolianLicensePlate,
-  STATUS_BADGE_CLASS,
-} from "./bay-card";
+import { BayCard, BayCardDragPreview, STATUS_BADGE_CLASS } from "./bay-card";
 import { MechanicPanel } from "./mechanic-panel";
 import { MechanicRegistrationDialog } from "./mechanic-registration-dialog";
 import type { PickupCompleteData } from "./pickup-complete-dialog";
@@ -194,6 +196,9 @@ export function BayViewV2Client() {
   const bayCountDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const [baySearchQuery, setBaySearchQuery] = useState("");
+  const prevShiftReportRef = useRef<ShiftReport | null>(null);
+  const polling = usePolling(() => fetchData(false), 30000);
 
   // Dialog open states
   const [showShiftReport, setShowShiftReport] = useState(false);
@@ -274,10 +279,8 @@ export function BayViewV2Client() {
       })
       .catch(() => {});
 
-    const interval = setInterval(() => fetchData(false), 30000);
     return () => {
       abort.abort();
-      clearInterval(interval);
     };
   }, [fetchData]);
 
@@ -385,8 +388,7 @@ export function BayViewV2Client() {
     [data?.bayCount, fetchData, handleBayCountChange],
   );
 
-  // Intercept status clicks — open PostServiceDialog for "Ready for Pickup"
-  // and PickupCompleteDialog for "Completed"
+  // Intercept status clicks — open PickupCompleteDialog for "Completed"
   function handleStatusClick(woId: string, status: string) {
     // Find the work order in current data
     const wo = data?.bays.find((b) => b.workOrder?.id === woId)?.workOrder;
@@ -395,18 +397,7 @@ export function BayViewV2Client() {
       return;
     }
 
-    if (status === "Ready for Pickup") {
-      setPendingPostService({
-        woId,
-        vehicleId: wo.vehicle?.id ?? "",
-        vehiclePlate: formatPlateNumber(wo.vehicle?.plate_number ?? ""),
-        currentOdometer: wo.vehicle?.odometer ?? null,
-        newStatus: status,
-        totalCost: Number(wo.total),
-      });
-      return;
-    }
-
+    // Completed — show pickup completion dialog for customer feedback
     if (status === "Completed") {
       setPendingPickupComplete({
         woId,
@@ -418,7 +409,8 @@ export function BayViewV2Client() {
       return;
     }
 
-    // Default: open status notes modal
+    // All other statuses (including "Ready for Pickup"): open status notes modal
+    // Post-service data can be filled later from the detail drawer
     rawHandleStatusClick(woId, status);
   }
 
@@ -479,6 +471,30 @@ export function BayViewV2Client() {
     params.set("woId", woId);
     router.replace(`?${params.toString()}`, { scroll: false });
   }
+
+  const availableBays = useMemo(
+    () => data?.bays.filter((b) => !b.workOrder).map((b) => b.bayNumber) ?? [],
+    [data],
+  );
+
+  const handleQuickAssignToBay = useCallback(
+    async (workOrderId: string, bayNumber: number) => {
+      markPending(workOrderId);
+      try {
+        await assignVehicleToBay(workOrderId, bayNumber);
+        setToast({
+          message: `${t("assignedToBay")} ${bayNumber}`,
+          variant: "info",
+        });
+        await fetchData(false);
+      } catch {
+        setToast({ message: t("failedToAssign"), variant: "error" });
+      } finally {
+        clearPending(workOrderId);
+      }
+    },
+    [t, markPending, clearPending, fetchData],
+  );
 
   const handleQueueItemClick = useCallback(
     (wo: WorkOrder & { vehicle: Vehicle | null }) => {
@@ -554,15 +570,55 @@ export function BayViewV2Client() {
     [data, myJobsOnly, currentProfile?.id],
   );
 
-  const filteredQueue = useMemo(
-    () =>
-      myJobsOnly
-        ? (data?.waitingQueue.filter(
-            (wo) => wo.mechanic_id === currentProfile?.id,
-          ) ?? [])
-        : (data?.waitingQueue ?? []),
-    [data, myJobsOnly, currentProfile?.id],
-  );
+  const filteredQueue = useMemo(() => data?.waitingQueue ?? [], [data]);
+
+  // Track previous shift report for trend comparison
+  useEffect(() => {
+    if (shiftReport) {
+      prevShiftReportRef.current = shiftReport;
+    }
+  }, [shiftReport]);
+
+  // Pause auto-refresh when any dialog/drawer is open
+  useEffect(() => {
+    const anyDialogOpen =
+      showShiftReport ||
+      showPinSettings ||
+      showVehicleReg ||
+      showMechanicReg ||
+      !!pendingPostService ||
+      !!pendingPickupComplete ||
+      !!pendingStatusChange ||
+      assignBay !== null ||
+      detailDrawerOpen;
+    if (anyDialogOpen) {
+      polling.pause();
+    } else {
+      polling.resume();
+    }
+  }, [
+    showShiftReport,
+    showPinSettings,
+    showVehicleReg,
+    showMechanicReg,
+    pendingPostService,
+    pendingPickupComplete,
+    pendingStatusChange,
+    assignBay,
+    detailDrawerOpen,
+  ]);
+
+  const searchedBays = useFuzzySearch(filteredBays, baySearchQuery, {
+    keys: [
+      "workOrder.vehicle.plate_number" as string,
+      "workOrder.vehicle.make" as string,
+      "workOrder.vehicle.model" as string,
+      "workOrder.customer_name" as string,
+      "workOrder.mechanic.full_name" as string,
+      "workOrder.status" as string,
+    ],
+    threshold: 0.4,
+  });
 
   useEffect(() => {
     if (!data) return;
@@ -575,6 +631,8 @@ export function BayViewV2Client() {
         onQuickAssign={handleQuickAssign}
         mechanics={data.mechanics}
         onItemClick={handleQueueItemClick}
+        availableBays={availableBays}
+        onAssignToBay={handleQuickAssignToBay}
       />,
       <List className="size-4" />,
     );
@@ -624,7 +682,9 @@ export function BayViewV2Client() {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-3 min-h-[400px]">
         <Typography.Muted className="text-base text-muted-foreground">
-          {error ?? t("noData")}
+          {error
+            ? "Couldn't load bay view. Check your internet connection."
+            : t("noData")}
         </Typography.Muted>
         <Button
           variant="outline"
@@ -643,6 +703,20 @@ export function BayViewV2Client() {
     ? (data.bays.find((b) => b.workOrder?.id === pendingPostService.woId) ??
       null)
     : null;
+
+  // Trend delta computation for KPI cards (compare current vs previous poll)
+  const prevShiftReport = prevShiftReportRef.current;
+  const trendDelta =
+    shiftReport && prevShiftReport
+      ? {
+          bayUtilization:
+            shiftReport.bayUtilization - prevShiftReport.bayUtilization,
+          activeJobs: shiftReport.activeJobs - prevShiftReport.activeJobs,
+          completedToday:
+            shiftReport.completedToday - prevShiftReport.completedToday,
+          revenueToday: shiftReport.revenueToday - prevShiftReport.revenueToday,
+        }
+      : null;
 
   return (
     <DndContext
@@ -713,6 +787,28 @@ export function BayViewV2Client() {
               >
                 <RefreshCw className="size-3.5" />
               </Button>
+
+              {/* Search Bar */}
+              <div className="relative min-w-[180px] max-w-[220px]">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/50" />
+                <Input
+                  type="text"
+                  value={baySearchQuery}
+                  onChange={(e) => setBaySearchQuery(e.target.value)}
+                  placeholder="Search plate, make, model..."
+                  className="h-8 pl-7 pr-7 text-xs"
+                />
+                {baySearchQuery && (
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    onClick={() => setBaySearchQuery("")}
+                    className="absolute right-0.5 top-1/2 size-6 -translate-y-1/2 p-0 text-muted-foreground/50"
+                  >
+                    <X className="size-3" />
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Right Controls (Action Buttons & Bay Count) */}
@@ -904,6 +1000,23 @@ export function BayViewV2Client() {
             <div className="flex flex-col gap-1">
               <span className="text-xl font-bold font-mono tracking-tight">
                 {shiftReport?.bayUtilization ?? 0}%
+                {trendDelta && trendDelta.bayUtilization !== 0 && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-0.5 text-xs font-semibold ml-1.5",
+                      trendDelta.bayUtilization > 0
+                        ? "text-emerald-500"
+                        : "text-red-500",
+                    )}
+                  >
+                    {trendDelta.bayUtilization > 0 ? (
+                      <ArrowUp className="size-2.5" />
+                    ) : (
+                      <ArrowDown className="size-2.5" />
+                    )}
+                    {Math.abs(trendDelta.bayUtilization)}%
+                  </span>
+                )}
               </span>
               <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                 <div
@@ -930,6 +1043,23 @@ export function BayViewV2Client() {
             <div className="flex items-baseline gap-1 mt-1">
               <span className="text-xl font-bold font-mono tracking-tight">
                 {shiftReport?.activeJobs ?? 0}
+                {trendDelta && trendDelta.activeJobs !== 0 && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-0.5 text-xs font-semibold ml-1.5",
+                      trendDelta.activeJobs > 0
+                        ? "text-emerald-500"
+                        : "text-red-500",
+                    )}
+                  >
+                    {trendDelta.activeJobs > 0 ? (
+                      <ArrowUp className="size-2.5" />
+                    ) : (
+                      <ArrowDown className="size-2.5" />
+                    )}
+                    {Math.abs(trendDelta.activeJobs)}
+                  </span>
+                )}
               </span>
               <span className="text-[10px] text-muted-foreground font-medium">
                 active
@@ -953,6 +1083,23 @@ export function BayViewV2Client() {
             <div className="flex items-baseline gap-1 mt-1">
               <span className="text-xl font-bold font-mono tracking-tight">
                 {shiftReport?.completedToday ?? 0}
+                {trendDelta && trendDelta.completedToday !== 0 && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-0.5 text-xs font-semibold ml-1.5",
+                      trendDelta.completedToday > 0
+                        ? "text-emerald-500"
+                        : "text-red-500",
+                    )}
+                  >
+                    {trendDelta.completedToday > 0 ? (
+                      <ArrowUp className="size-2.5" />
+                    ) : (
+                      <ArrowDown className="size-2.5" />
+                    )}
+                    {Math.abs(trendDelta.completedToday)}
+                  </span>
+                )}
               </span>
               <span className="text-[10px] text-muted-foreground font-medium">
                 completed
@@ -976,6 +1123,23 @@ export function BayViewV2Client() {
             <div className="flex items-baseline gap-1 mt-1">
               <span className="text-xl font-bold font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
                 {formatMNT(shiftReport?.revenueToday ?? 0)}
+                {trendDelta && trendDelta.revenueToday !== 0 && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-0.5 text-xs font-semibold ml-1.5",
+                      trendDelta.revenueToday > 0
+                        ? "text-emerald-500"
+                        : "text-red-500",
+                    )}
+                  >
+                    {trendDelta.revenueToday > 0 ? (
+                      <ArrowUp className="size-2.5" />
+                    ) : (
+                      <ArrowDown className="size-2.5" />
+                    )}
+                    {formatMNT(Math.abs(trendDelta.revenueToday))}
+                  </span>
+                )}
               </span>
             </div>
             <span className="text-[10px] text-muted-foreground font-medium mt-1">
@@ -988,7 +1152,7 @@ export function BayViewV2Client() {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-muted/5">
           {viewMode === "grid" && (
             <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 overflow-y-auto w-full h-full">
-              {filteredBays.map((bay) => (
+              {searchedBays.map((bay) => (
                 <BayCard
                   key={bay.bayNumber}
                   bay={bay}
@@ -1038,12 +1202,12 @@ export function BayViewV2Client() {
                       variant="outline"
                       className="font-mono font-bold text-[10px] rounded-full h-5"
                     >
-                      {filteredBays.filter((b) => !b.workOrder).length}
+                      {searchedBays.filter((b) => !b.workOrder).length}
                     </Badge>
                   </div>
                 </div>
                 <div className="flex flex-1 flex-col gap-3 px-3 overflow-y-auto no-scrollbar">
-                  {filteredBays
+                  {searchedBays
                     .filter((b) => !b.workOrder)
                     .map((bay) => (
                       <div
@@ -1061,7 +1225,7 @@ export function BayViewV2Client() {
                         />
                       </div>
                     ))}
-                  {filteredBays.filter((b) => !b.workOrder).length === 0 && (
+                  {searchedBays.filter((b) => !b.workOrder).length === 0 && (
                     <button
                       type="button"
                       onClick={() => {
@@ -1085,7 +1249,7 @@ export function BayViewV2Client() {
 
               {["New", "Diagnosing", "In Progress", "Ready for Pickup"].map(
                 (status) => {
-                  const baysWithStatus = filteredBays.filter(
+                  const baysWithStatus = searchedBays.filter(
                     (b) => b.workOrder?.status === status,
                   );
 
@@ -1223,7 +1387,7 @@ export function BayViewV2Client() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredBays.map((bay) => {
+                    {searchedBays.map((bay) => {
                       const wo = bay.workOrder;
                       const v = wo?.vehicle;
                       return (
@@ -1263,7 +1427,9 @@ export function BayViewV2Client() {
                           </TableCell>
                           <TableCell className="py-3">
                             {wo && v ? (
-                              <MongolianLicensePlate plate={v.plate_number} />
+                              <span className="font-mono text-xs font-bold">
+                                {formatPlateNumber(v.plate_number)}
+                              </span>
                             ) : wo ? (
                               "—"
                             ) : (
@@ -1444,18 +1610,6 @@ export function BayViewV2Client() {
     </DndContext>
   );
 }
-
-const _STATUS_VARIANT: Record<
-  string,
-  "default" | "secondary" | "outline" | "destructive"
-> = {
-  New: "secondary",
-  Diagnosing: "outline",
-  "In Progress": "default",
-  "Ready for Pickup": "secondary",
-  Completed: "outline",
-  Cancelled: "destructive",
-};
 
 function ElapsedText({ startedAt }: { startedAt: string | null | undefined }) {
   const [display, setDisplay] = useState("");

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   deleteVehicle,
   getVehicle,
   getVehicleServiceHistory,
   updateVehicle,
 } from "@/lib/services/vehicle-service";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ orgId, params }) => {
   const { vehicleId } = params;

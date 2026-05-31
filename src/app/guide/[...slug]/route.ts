@@ -1,6 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 
 // Catch-all route: serves VitePress static pages from public/guide/
 // This is needed because Next.js app router catches /guide before
@@ -23,7 +23,7 @@ export async function GET(
 
   const alternatePath =
     segments.length > 0
-      ? path.join(process.cwd(), "public", "guide", ...segments) + ".html"
+      ? `${path.join(process.cwd(), "public", "guide", ...segments)}.html`
       : path.join(process.cwd(), "public", "guide", "index.html");
 
   const targetPath = fs.existsSync(filePath)

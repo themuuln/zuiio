@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { createClient } from "@/lib/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 interface RealtimeTableConfig {
   /** Supabase table name. */
@@ -76,14 +76,5 @@ export function useRealtimeMulti({
         channelRef.current = null;
       }
     };
-  }, [
-    tables
-      .map(
-        (t) =>
-          `${t.table}:${JSON.stringify(t.queryKey)}:${t.filter}:${t.schema}`,
-      )
-      .join("|"),
-    enabled,
-    queryClient,
-  ]);
+  }, [enabled, queryClient, tables]);
 }

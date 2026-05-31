@@ -1,10 +1,10 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import type { Organization } from "@/lib/types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import type {
   CreateOrganizationParams,
+  Organization,
   UpdateOrganizationParams,
 } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";

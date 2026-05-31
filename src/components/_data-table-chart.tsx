@@ -1,5 +1,6 @@
 "use client";
 
+import { TrendingUp } from "lucide-react";
 // recharts - consider next/dynamic for code splitting
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import {
@@ -8,7 +9,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Separator } from "@/components/ui/separator";
-import { TrendingUp } from "lucide-react";
 
 const chartData = [
   { month: "January", desktop: 186, mobile: 80 },

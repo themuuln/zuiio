@@ -1,52 +1,42 @@
 "use client";
 
-import {
-  Car,
-  CheckCircle2,
-  Loader2,
-  Package,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Car, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
+import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import { Input } from "@/components/ui/input";
-import { Select, SelectItem } from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Typography } from "@/components/ui/typography";
 import {
   useAddPartsCarPart,
   useCompleteDisassembly,
   usePartsCar,
   usePartsCarParts,
+  usePartsCatalog,
+  usePublishPartsCarToCatalog,
   useRemovePartsCarPart,
   useStartDisassembly,
-  usePublishPartsCarToCatalog,
-  usePartsCatalog,
 } from "@/lib/queries/use-inventory";
-import {
-  Combobox,
-  ComboboxInput,
-  ComboboxContent,
-  ComboboxList,
-  ComboboxItem,
-  ComboboxEmpty,
-} from "@/components/ui/combobox";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { PartsCarLocationGroup } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
-import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 
 interface PartsCarDetailSheetProps {
   open: boolean;

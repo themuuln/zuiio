@@ -13,10 +13,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
 import { usePortalAuth } from "@/hooks/use-portal-auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 
 const NAV_ITEMS = [
   { href: "/portal", labelKey: "portal.dashboard", icon: Wrench },

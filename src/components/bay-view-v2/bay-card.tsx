@@ -5,6 +5,7 @@ import {
   Car,
   Check,
   CheckCircle,
+  ChevronDown,
   Clock,
   Loader2,
   Play,
@@ -15,6 +16,12 @@ import {
 import { useEffect, useId, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Card,
   CardContent,
@@ -57,6 +64,29 @@ export const STATUS_BADGE_CLASS: Record<string, string> = {
   Cancelled:
     "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25",
 };
+
+const ALL_STATUSES = [
+  "New",
+  "Diagnosing",
+  "In Progress",
+  "Ready for Pickup",
+  "Completed",
+  "Cancelled",
+] as const;
+
+/**
+ * Simple text-only plate display without the SVG Soyombo symbol.
+ * Used on BayCards for performance; full SVG is in the detail drawer.
+ */
+export function TextPlate({ plate }: { plate: string | null | undefined }) {
+  if (!plate) return null;
+  const formatted = formatPlateNumber(plate);
+  return (
+    <div className="inline-flex items-center select-none rounded border border-border bg-background px-2 py-0.5 font-mono text-xs font-bold h-6 justify-center shadow-sm">
+      {formatted}
+    </div>
+  );
+}
 
 export function MongolianLicensePlate({
   plate,
@@ -371,18 +401,46 @@ export function BayCard({
                   {isPending && (
                     <Loader2 className="size-3 animate-spin text-muted-foreground/60" />
                   )}
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "h-5 px-2 text-[9px] font-bold uppercase tracking-wider rounded-full border",
-                      STATUS_BADGE_CLASS[wo.status],
-                    )}
-                  >
-                    {wo.status === "In Progress" && (
-                      <span className="mr-1.5 size-1.5 rounded-full bg-current animate-pulse inline-block" />
-                    )}
-                    {wo.status}
-                  </Badge>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "h-5 px-2 text-[9px] font-bold uppercase tracking-wider rounded-full border cursor-pointer",
+                          STATUS_BADGE_CLASS[wo.status],
+                        )}
+                      >
+                        {wo.status === "In Progress" && (
+                          <span className="mr-1.5 size-1.5 rounded-full bg-current animate-pulse inline-block" />
+                        )}
+                        {wo.status}
+                        <ChevronDown className="ml-1 size-2.5 text-muted-foreground/60" />
+                      </Badge>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" sideOffset={4}>
+                      {ALL_STATUSES.map((status) => (
+                        <DropdownMenuItem
+                          key={status}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onStatusChange(wo.id, status);
+                          }}
+                          className="gap-2 text-xs"
+                        >
+                          <span
+                            className={cn(
+                              "size-2 shrink-0 rounded-full",
+                              STATUS_BADGE_CLASS[status]
+                                ?.match(/text-\w+-\d+/)?.[0]
+                                ?.replace("text", "bg") ??
+                                "bg-muted-foreground",
+                            )}
+                          />
+                          {status}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </CardHeader>
 
@@ -398,7 +456,7 @@ export function BayCard({
                     {v ? (
                       <>
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <MongolianLicensePlate plate={v.plate_number} />
+                          <TextPlate plate={v.plate_number} />
                           <ElapsedTimer
                             startedAt={wo.started_at ?? wo.created_at}
                           />

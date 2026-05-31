@@ -1,16 +1,16 @@
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
-import type { Customer } from "@/lib/types";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import { buildUpdates, type FieldMap } from "./build-updates";
 import type {
   CreateCustomerParams,
+  Customer,
   CustomerWithVehicleCount,
   PaginatedResponse,
   UpdateCustomerParams,
 } from "@/lib/types";
+import { buildUpdates, type FieldMap } from "./build-updates";
 
 /**
  * Lists all customers for an organization with optional search.
@@ -291,38 +291,45 @@ export async function createCustomer(
 
   const supabase = await createClient();
 
-  // Check for duplicate phone if provided
+  // Check for duplicate phone if provided (warn only — don't block)
   if (params.phone?.trim()) {
     const { data: existing } = await supabase
       .from("customers")
-      .select("id")
+      .select("id, first_name, last_name, company_name, phone")
       .eq("organization_id", orgId)
       .eq("phone", params.phone.trim())
       .is("deleted_at", null)
       .maybeSingle();
 
     if (existing) {
-      throw new ConflictError(
-        "A customer with this phone number already exists",
-        { existingCustomerId: existing.id },
+      const existingName =
+        [existing.first_name, existing.last_name].filter(Boolean).join(" ") ||
+        existing.company_name ||
+        existing.phone;
+      console.warn(
+        `[duplicate] Phone ${params.phone.trim()} already belongs to "${existingName}" (${existing.id})`,
       );
     }
   }
 
-  // Check for duplicate email if provided
+  // Check for duplicate email if provided (warn only — don't block)
   if (params.email?.trim()) {
     const { data: existing } = await supabase
       .from("customers")
-      .select("id")
+      .select("id, first_name, last_name, company_name, email")
       .eq("organization_id", orgId)
       .eq("email", params.email.trim())
       .is("deleted_at", null)
       .maybeSingle();
 
     if (existing) {
-      throw new ConflictError("A customer with this email already exists", {
-        existingCustomerId: existing.id,
-      });
+      const existingName =
+        [existing.first_name, existing.last_name].filter(Boolean).join(" ") ||
+        existing.company_name ||
+        existing.email;
+      console.warn(
+        `[duplicate] Email ${params.email.trim()} already belongs to "${existingName}" (${existing.id})`,
+      );
     }
   }
 

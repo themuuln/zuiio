@@ -1,11 +1,10 @@
 "use client";
 
-import { useLocale } from "next-intl";
 import { Loader2, Plus, Trash2, Wrench } from "lucide-react";
-
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useLocale } from "next-intl";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { ServiceCatalog } from "@/lib/types";
 
 // Extended type for catalog items that may come from global or org catalog
@@ -13,9 +12,10 @@ type CatalogServiceItem = ServiceCatalog & {
   _source?: "org" | "global";
   name_mn?: string | null;
 };
+
+import { Typography } from "@/components/ui/typography";
 import type { WorkOrderService } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
-import { Typography } from "@/components/ui/typography";
 
 interface ServicesSectionProps {
   services: WorkOrderService[];

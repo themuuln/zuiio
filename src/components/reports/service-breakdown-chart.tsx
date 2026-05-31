@@ -3,10 +3,11 @@
  *
  * Uses the shared BarChart wrapper from src/components/charts/.
  */
+
+import { BarChart } from "@/components/charts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ServiceBreakdown } from "@/lib/types";
-import { BarChart } from "@/components/charts";
 
 interface ServiceBreakdownChartProps {
   data: ServiceBreakdown[];
@@ -23,7 +24,7 @@ export function ServiceBreakdownChart({
   const chartData = data.slice(0, 6).map((s) => ({
     name:
       s.service_name.length > 20
-        ? s.service_name.slice(0, 18) + "…"
+        ? `${s.service_name.slice(0, 18)}…`
         : s.service_name,
     revenue: s.total_revenue,
   }));

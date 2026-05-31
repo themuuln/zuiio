@@ -5,8 +5,8 @@ import { OrganizationSelectionForm } from "@/components/auth/organization-select
 import { completeOrganizationLogin } from "@/lib/actions/complete-organization-login";
 import { UnauthorizedError } from "@/lib/errors";
 import { listUserOrganizations } from "@/lib/services/organization-access-service";
-import { createClient } from "@/lib/supabase/server";
 import { finalizeSignup } from "@/lib/services/signup-service";
+import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata({
   params,

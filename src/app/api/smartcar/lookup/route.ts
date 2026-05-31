@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { lookupPlate, type SmartCarVehicle } from "@/lib/smartcar/browser";
 
 // ---------------------------------------------------------------------------
@@ -36,7 +36,7 @@ function setCache(plate: string, data: SmartCarVehicle) {
 const PLATE_RE = /^\d{4}[А-ЯӨҮЁ]{3}$/i;
 
 function normalizePlate(raw: string): string | null {
-  const cleaned = raw.replace(/[\s\-]/g, "").toUpperCase();
+  const cleaned = raw.replace(/[\s-]/g, "").toUpperCase();
   if (!PLATE_RE.test(cleaned)) return null;
   return cleaned;
 }

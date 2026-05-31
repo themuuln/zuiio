@@ -4,8 +4,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Car, Hash, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
-import type { Vehicle } from "@/lib/types";
 import { Typography } from "@/components/ui/typography";
+import type { Vehicle } from "@/lib/types";
 
 export type VehicleRow = Vehicle & { owner_name?: string };
 

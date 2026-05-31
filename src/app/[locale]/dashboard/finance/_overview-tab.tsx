@@ -1,5 +1,6 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import {
   ClipboardList,
   Clock,
@@ -10,19 +11,18 @@ import {
   Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useMemo } from "react";
+import { AreaChart } from "@/components/charts/area-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ChartConfig } from "@/components/ui/chart";
-import { AreaChart } from "@/components/charts/area-chart";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
-import { useMemo } from "react";
-import type { ColumnDef } from "@tanstack/react-table";
-import { formatCurrency } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
 import type { RevenueTrendPoint } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
 import { EmptyFinanceState } from "./_empty-finance-state";
 import { KpiCard } from "./_kpi-card";
 import { NoRevenueBanner } from "./_no-revenue-banner";
 import { RevenueSplitBar } from "./_revenue-split-bar";
-import { Typography } from "@/components/ui/typography";
 
 interface TopService {
   name: string;

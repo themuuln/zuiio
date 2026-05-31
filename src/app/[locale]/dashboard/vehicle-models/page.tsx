@@ -225,10 +225,10 @@ export default function VehicleModelsPage() {
           context.previous,
         );
       }
-      toast.error("Failed to create vehicle model");
+      toast.error(t("common.somethingWentWrong"));
     },
     onSuccess: () => {
-      toast.success("Vehicle model created");
+      toast.success(t("vehicleModels.vehicleCreated"));
       setShowAdd(false);
       setEditingId(null);
       resetForm();
@@ -310,10 +310,10 @@ export default function VehicleModelsPage() {
           context.previous,
         );
       }
-      toast.error("Failed to update vehicle model");
+      toast.error(t("common.somethingWentWrong"));
     },
     onSuccess: () => {
-      toast.success("Vehicle model updated");
+      toast.success(t("vehicleModels.vehicleUpdated"));
       setEditingId(null);
       resetForm();
     },
@@ -353,9 +353,9 @@ export default function VehicleModelsPage() {
           context.previous,
         );
       }
-      toast.error("Failed to delete vehicle model");
+      toast.error(t("common.somethingWentWrong"));
     },
-    onSuccess: () => toast.success("Vehicle model deleted"),
+    onSuccess: () => toast.success(t("vehicleModels.vehicleDeleted")),
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: vehicleModelKeys.list(orgId ?? ""),

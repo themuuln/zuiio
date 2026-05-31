@@ -5,8 +5,8 @@ import { MechanicSelect } from "@/components/mechanic-select";
 import { Button } from "@/components/ui/button";
 import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import type { WorkOrderDetail } from "@/lib/types";
-import { StatusPill } from "./status-pill";
 import { MongolianLicensePlate } from "./bay-card";
+import { StatusPill } from "./status-pill";
 
 interface DrawerHeaderProps {
   wo: WorkOrderDetail | null;
@@ -58,7 +58,7 @@ export function DrawerHeaderSection({
           </div>
           <div className="min-w-0 flex flex-col gap-0.5">
             <div className="flex flex-wrap items-center gap-2">
-              {wo && wo.vehicle?.plate_number ? (
+              {wo?.vehicle?.plate_number ? (
                 <MongolianLicensePlate plate={wo.vehicle.plate_number} />
               ) : (
                 <span className="font-bold text-sm">{t("workOrder")}</span>
@@ -69,7 +69,7 @@ export function DrawerHeaderSection({
                 </span>
               )}
             </div>
-            {wo && wo.vehicle && (
+            {wo?.vehicle && (
               <div className="text-xs font-semibold text-foreground/90 flex items-center gap-1">
                 <span>
                   {wo.vehicle.make} {wo.vehicle.model}
@@ -81,7 +81,7 @@ export function DrawerHeaderSection({
                 )}
               </div>
             )}
-            {wo && wo.created_at && (
+            {wo?.created_at && (
               <span className="text-[10px] text-muted-foreground/60 mt-0.5">
                 Opened {new Date(wo.created_at).toLocaleDateString()}
               </span>
@@ -91,7 +91,7 @@ export function DrawerHeaderSection({
 
         {/* Column 2: Customer Info */}
         <div className="min-w-0 md:justify-self-center">
-          {wo && wo.customer ? (
+          {wo?.customer ? (
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-1.5 text-xs text-foreground/80 font-bold">
                 <User className="size-3.5 text-muted-foreground/75" />

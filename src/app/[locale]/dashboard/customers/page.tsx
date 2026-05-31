@@ -10,8 +10,9 @@ import {
   Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
+import { FilterChips, type FilterChip } from "@/components/filter-chips";
 import { ListToolbar } from "@/components/list-toolbar";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
@@ -45,6 +46,7 @@ export default function CustomersPage() {
     view: "my",
   });
   const { setNewCustomerDialogOpen, setDetailCustomerId } = usePageHeader();
+  const [inactiveFilter, setInactiveFilter] = useState(false);
   const activeView = view === "shared" ? "shared" : "my";
 
   const exportColumns: ExportColumn<CustomerRow>[] = useMemo(
@@ -86,7 +88,7 @@ export default function CustomersPage() {
   const { data: rawSharedCustomers, isFetching: sharedFetching } =
     useSharedCustomers(org?.orgId, activeView === "shared" ? search : "");
 
-  const customers =
+  const rawCustomersForView =
     activeView === "my"
       ? Array.isArray(rawCustomers)
         ? rawCustomers
@@ -97,13 +99,34 @@ export default function CustomersPage() {
   const activeFetching =
     activeView === "my" ? customersFetching : sharedFetching;
 
+  // Apply "Not visited in 3+ months" filter client-side
+  const threeMonthsAgo = useMemo(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 3);
+    return d;
+  }, []);
+
+  const inactiveCount = useMemo(
+    () =>
+      rawCustomersForView.filter(
+        (c) => !c.last_visit_at || new Date(c.last_visit_at) < threeMonthsAgo,
+      ).length,
+    [rawCustomersForView, threeMonthsAgo],
+  );
+
+  const customers = inactiveFilter
+    ? rawCustomersForView.filter(
+        (c) => !c.last_visit_at || new Date(c.last_visit_at) < threeMonthsAgo,
+      )
+    : rawCustomersForView;
+
   const { registerTab } = useRightSidebar();
 
   useEffect(() => {
-    if (!rawCustomers) return;
+    if (!rawCustomersForView) return;
 
     const now = new Date();
-    const newThisMonth = customers.filter(
+    const newThisMonth = rawCustomersForView.filter(
       (c) =>
         c.created_at &&
         new Date(c.created_at).getMonth() === now.getMonth() &&
@@ -116,14 +139,14 @@ export default function CustomersPage() {
       <StatusSummary
         title="Overview"
         items={[
-          { label: "Total Customers", count: customers.length },
+          { label: "Total Customers", count: rawCustomersForView.length },
           { label: "New This Month", count: newThisMonth },
         ]}
       />,
       <BarChart3 className="size-4" />,
     );
 
-    const recent = [...customers]
+    const recent = [...rawCustomersForView]
       .sort(
         (a, b) =>
           new Date(b.created_at ?? 0).getTime() -
@@ -145,7 +168,15 @@ export default function CustomersPage() {
       <RecentList items={recent} title="Recent Customers" />,
       <Clock className="size-4" />,
     );
-  }, [rawCustomers, customers, registerTab]);
+  }, [rawCustomersForView, registerTab]);
+
+  const inactiveChip: FilterChip = {
+    key: "inactive",
+    label: "Not visited in 3+ months",
+    active: inactiveFilter,
+    onClick: () => setInactiveFilter((v) => !v),
+    count: inactiveFilter ? undefined : inactiveCount,
+  };
 
   const isFirstLoad = rawCustomers === undefined && !search;
   const showLoadingScreen = orgLoading || (customersLoading && isFirstLoad);
@@ -239,6 +270,7 @@ export default function CustomersPage() {
             : undefined,
           emptyLabel: search ? `No matches for "${search}"` : undefined,
         }}
+        filters={<FilterChips items={[inactiveChip]} />}
         stats={
           <span>
             {customers.length} customer{customers.length !== 1 ? "s" : ""}

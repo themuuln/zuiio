@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   deleteServiceSchedule,
   getServiceSchedule,
   updateServiceSchedule,
 } from "@/lib/services/service-reminder-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ params }) => {
   const { reminderId } = params;

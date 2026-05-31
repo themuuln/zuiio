@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
-import { getOrganizationUsers } from "@/lib/services/user-service";
-import { removeUser } from "@/lib/services/user-service";
 import { createInvite } from "@/lib/services/invite-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
+import { getOrganizationUsers, removeUser } from "@/lib/services/user-service";
 
 export const GET = createRouteHandler(async ({ orgId }) => {
   const users = await getOrganizationUsers(orgId);
