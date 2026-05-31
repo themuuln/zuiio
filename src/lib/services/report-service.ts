@@ -30,11 +30,8 @@ import type {
 
 // ── Helpers ──────────────────────────────────────────────────
 
-function withBranchFilter<T extends { eq: (column: string, value: string) => T }>(
-  query: T,
-  branchId: string | null,
-): T {
-  return branchId ? query.eq("branch_id", branchId) : query;
+function withBranchFilter<T>(query: T, branchId: string | null): T {
+  return (branchId ? (query as any).eq("branch_id", branchId) : query) as T;
 }
 
 /**
@@ -754,8 +751,8 @@ export async function getMonthlyReport(
       "getMonthlyReport",
       orgId,
       mechanicId ?? "all",
-      year,
-      month,
+      String(year),
+      String(month),
       branchId ?? "all",
     ],
     async () => {

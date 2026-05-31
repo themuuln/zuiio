@@ -27,7 +27,7 @@ export function BranchSelect({
   className,
 }: BranchSelectProps) {
   return (
-    <Select value={value || "all"} onValueChange={onChange}>
+    <Select value={value || "all"} onValueChange={(v) => onChange(v ?? "all")}>
       <SelectTrigger className={className ?? "min-w-44"}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
