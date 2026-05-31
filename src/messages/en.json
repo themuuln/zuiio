@@ -468,6 +468,7 @@
     "statusTimeline": "Status Timeline",
     "noHistoryYet": "No status history yet",
     "noNotesRecorded": "No notes recorded",
+    "noComplaint": "No customer complaint recorded",
     "complaintAndNotes": "Complaint & Notes",
     "complaint": "Complaint",
     "diagnosis": "Diagnosis",
@@ -559,7 +560,8 @@
     "newVehicle": "New Vehicle",
     "viewReports": "View Reports",
     "noWorkOrders": "No work orders yet",
-    "noData": "No data available"
+    "noData": "No data available",
+    "weeklyTrend": "Weekly Trend"
   },
   "workOrders": {
     "title": "Work Orders",
@@ -609,7 +611,9 @@
     "searchByNameOrPhone": "Search by name, phone, or plate...",
     "searchByPlate": "Search by plate number...",
     "quickCreateCustomer": "Quick create customer",
+    "quickCreateCustomerDescription": "Add a new customer to the system",
     "quickCreateVehicle": "Quick create vehicle",
+    "quickCreateVehicleDescription": "Add a new vehicle to the system",
     "newCustomer": "New Customer",
     "newVehicle": "New Vehicle",
     "firstName": "First Name",
@@ -654,6 +658,7 @@
     "complaint": "Complaint / Diagnosis",
     "complaintPlaceholder": "Describe the issue reported by the customer...",
     "diagnosisLabelPlaceholder": "Select diagnosis label...",
+    "createVehicle": "Create vehicle",
     "cancel": "Cancel",
     "change": "Change"
   },
@@ -814,6 +819,10 @@
     "print": "Print"
   },
   "services": {
+    "tabMyServices": "My Services",
+    "tabGlobalCatalog": "Global Catalog",
+    "editLocalCopy": "Edit Local Copy",
+    "inCatalog": "In Catalog",
     "metaTitle": "Service Catalog — TOLOM",
     "metaDescription": "Auto service catalog with pricing memory. Manage oil changes, brakes, diagnostics, timing belts and more.",
     "pageTitle": "Service Catalog",
@@ -907,6 +916,16 @@
     "autoEnable": "Auto-Enable Reminders",
     "autoEnableDescription": "New schedules get reminders enabled automatically"
   },
+  "sidebar": {
+    "dueSoon": "Due Soon",
+    "reminderStatus": "Reminder Status",
+    "overdue": "Overdue",
+    "dueIn7Days": "Due in 7 Days",
+    "recentSends": "Recent Sends",
+    "noReminderHistory": "No reminder history yet",
+    "recentlyViewed": "Recently Viewed",
+    "reportsGenerated": "Reports generated on demand"
+  },
   "reports": {
     "title": "Reports",
     "subtitle": "Mechanic performance reports",
@@ -923,7 +942,40 @@
     "revenue": "Revenue",
     "discounts": "Discounts",
     "total": "Total",
-    "noData": "No data available"
+    "noData": "No data available",
+    "totalWorkOrders": "Total Work Orders",
+    "totalRevenue": "Total Revenue",
+    "avgRevenuePerWo": "Avg Revenue / WO",
+    "jobs": "Jobs",
+    "mechanic": "Mechanic",
+    "services": "Services",
+    "parts": "Parts",
+    "revenue": "Revenue",
+    "commission": "Commission",
+    "perMechanicBreakdown": "Per-Mechanic Breakdown",
+    "noMechanicsCompletedWork": "No mechanics completed work today",
+    "totalRevenueLabel": "Total Revenue",
+    "workOrders": "Work Orders",
+    "servicesSold": "Services Sold",
+    "expenses": "Expenses",
+    "grossProfit": "Gross Profit",
+    "margin": "Margin",
+    "effLaborRate": "Eff. Labor Rate",
+    "perWorkOrder": "per work order",
+    "partsToLabor": "Parts:Labor",
+    "revenueSplit": "Revenue Split",
+    "profitBreakdown": "Profit Breakdown",
+    "serviceRevenue": "Service Revenue",
+    "serviceCost": "Service Cost",
+    "partsRevenue": "Parts Revenue",
+    "partsCost": "Parts Cost",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "customRange": "Custom Range",
+    "eodSummary": "EOD Summary",
+    "allMechanics": "All Mechanics",
+    "refresh": "Refresh"
   },
   "expenses": {
     "title": "Expenses",
@@ -1208,7 +1260,11 @@
     "createSubtitle": "Create a customer record before check-in or invoicing.",
     "customerNotFound": "Customer not found.",
     "quickCreateCustomer": "Quick",
-    "createCustomer": "Create Customer"
+    "createCustomer": "Create Customer",
+    "totalCustomers": "Total Customers",
+    "recentCustomers": "Recent Customers",
+    "total": "Total",
+    "newCustomers": "New Customers"
   },
   "vehicles": {
     "title": "Vehicles",
@@ -1341,7 +1397,11 @@
     "modelCount": "{count} models",
     "variantCount": "{count} variants",
     "deleteVariant": "Delete variant",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "vehicleCreated": "Vehicle model created",
+    "vehicleUpdated": "Vehicle model updated",
+    "vehicleDeleted": "Vehicle model deleted",
+    "retry": "Retry"
   },
   "pricing": {
     "metaTitle": "Pricing — TOLOM",
@@ -2165,6 +2225,8 @@
     "noMechanicData": "No mechanic data today",
     "biggestIssue": "Biggest Issue",
     "noIssues": "No outstanding issues 🎉",
-    "viewJob": "View job →"
+    "viewJob": "View job →",
+    "toastCloseDaySuccess": "Day closed successfully",
+    "toastCloseDayError": "Failed to close day"
   }
 }

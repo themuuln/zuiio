@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { subDays } from "date-fns";
 
@@ -112,51 +113,33 @@ interface EodReport {
 
 // ── Helpers ────────────────────────────────────────────────
 
-function periodTitle(type: ReportType, date: string, dateTo?: string): string {
+function periodTitle(
+  type: ReportType,
+  date: string,
+  dateTo?: string,
+  loc: string = "mn",
+): string {
   if (type === "custom" && dateTo) {
     const fromDate = new Date(date);
     const toDate = new Date(dateTo);
     const formatD = (d: Date) =>
-      d.toLocaleDateString("en-US", {
+      d.toLocaleDateString(loc, {
         month: "short",
         day: "numeric",
         year: "numeric",
       });
-    if (fromDate.toDateString() === toDate.toDateString()) {
+    if (fromDate.toDateString() === toDate.toDateString())
       return formatD(fromDate);
-    }
-    return `${fromDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${formatD(toDate)}`;
+    return `${fromDate.toLocaleDateString(loc, { month: "short", day: "numeric" })} – ${formatD(toDate)}`;
   }
   const d = new Date(date);
-  switch (type) {
-    case "daily":
-      return d.toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
-    case "weekly": {
-      const end = new Date(date);
-      end.setDate(end.getDate() + 6);
-      return `${new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
-    }
-    case "monthly":
-      return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-    case "eod":
-      return d.toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
-    default:
-      return d.toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
-  }
+  const opts: Intl.DateTimeFormatOptions =
+    type === "monthly"
+      ? { month: "long", year: "numeric" }
+      : type === "weekly"
+        ? { month: "short", day: "numeric", year: "numeric" }
+        : { weekday: "long", month: "long", day: "numeric", year: "numeric" };
+  return d.toLocaleDateString(loc, opts);
 }
 
 function getDateRange(
@@ -181,23 +164,23 @@ function getDateRange(
 
 // ── EOD Report View ───────────────────────────────────────
 
-function EodView({ data }: { data: EodReport }) {
+function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <ReportKpiCard
-          label="Total Work Orders"
+          label={t("reports.totalWorkOrders")}
           value={String(data.total_work_orders)}
           icon={ClipboardList}
         />
         <ReportKpiCard
-          label="Total Revenue"
+          label={t("reports.totalRevenueLabel")}
           value={formatCurrency(data.total_revenue)}
           icon={Wallet}
-          subtitle={`${data.mechanics.length} mechanic${data.mechanics.length === 1 ? "" : "s"} active`}
+          subtitle={`${data.mechanics.length} ${t("reports.mechanic")}`}
         />
         <ReportKpiCard
-          label="Avg Revenue / WO"
+          label={t("reports.avgRevenuePerWo")}
           value={
             data.total_work_orders > 0
               ? formatCurrency(
@@ -208,7 +191,7 @@ function EodView({ data }: { data: EodReport }) {
           icon={TrendingUp}
         />
         <ReportKpiCard
-          label="Total Commission"
+          label={t("reports.commission")}
           value={formatCurrency(data.total_commission ?? 0)}
           icon={Wallet}
           cls="text-emerald-600 dark:text-emerald-400"
@@ -217,20 +200,24 @@ function EodView({ data }: { data: EodReport }) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-sm font-semibold">
-            Per-Mechanic Breakdown
+            {t("reports.perMechanicBreakdown")}
           </CardTitle>
           <ExportButton
             data={data.mechanics}
             columns={[
-              { key: "mechanic_name", label: "Mechanic" },
-              { key: "work_orders_completed", label: "Jobs" },
-              { key: "services_performed", label: "Services" },
-              { key: "parts_used", label: "Parts" },
-              { key: "total_revenue", label: "Revenue", format: "currency" },
+              { key: "mechanic_name", label: t("reports.mechanic") },
+              { key: "work_orders_completed", label: t("reports.jobs") },
+              { key: "services_performed", label: t("reports.services") },
+              { key: "parts_used", label: t("reports.parts") },
+              {
+                key: "total_revenue",
+                label: t("reports.revenue"),
+                format: "currency" as const,
+              },
               {
                 key: "total_commission",
-                label: "Commission",
-                format: "currency",
+                label: t("reports.commission"),
+                format: "currency" as const,
               },
             ]}
             filename={`eod-${data.date}.xlsx`}
@@ -242,22 +229,22 @@ function EodView({ data }: { data: EodReport }) {
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Mechanic
+                  {t("reports.mechanic")}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Jobs
+                  {t("reports.jobs")}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Services
+                  {t("reports.services")}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Parts
+                  {t("reports.parts")}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Revenue
+                  {t("reports.revenue")}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Commission
+                  {t("reports.commission")}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -268,7 +255,7 @@ function EodView({ data }: { data: EodReport }) {
                     colSpan={6}
                     className="px-4 py-8 text-center text-muted-foreground"
                   >
-                    No mechanics completed work today
+                    {t("reports.noMechanicsCompletedWork")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -308,7 +295,9 @@ function EodView({ data }: { data: EodReport }) {
             {data.mechanics.length > 0 && (
               <TableFooter>
                 <TableRow className="bg-muted/30 font-semibold">
-                  <TableCell className="px-4 py-3">Total</TableCell>
+                  <TableCell className="px-4 py-3">
+                    {t("reports.total")}
+                  </TableCell>
                   <TableCell className="px-4 py-3 text-right tabular-nums">
                     {data.mechanics.reduce(
                       (s, m) => s + m.work_orders_completed,
@@ -346,6 +335,8 @@ function EodView({ data }: { data: EodReport }) {
 // ── Main Reports Page ─────────────────────────────────────
 
 export default function ReportsPage() {
+  const t = useTranslations("reports");
+  const locale = useLocale();
   // ── State ────────────────────────────────────────────
   const [mechanicFilter, setMechanicFilter] = useState("");
   const [reportType, setReportType] = useState<ReportType>("daily");
@@ -523,11 +514,11 @@ export default function ReportsPage() {
   );
 
   const tabs: { label: string; value: ReportType; icon: LucideIcon }[] = [
-    { label: "Daily", value: "daily", icon: Calendar },
-    { label: "Weekly", value: "weekly", icon: BarChart3 },
-    { label: "Monthly", value: "monthly", icon: TrendingUp },
-    { label: "Custom Range", value: "custom", icon: Calendar },
-    { label: "EOD Summary", value: "eod", icon: ClipboardList },
+    { label: t("daily"), value: "daily", icon: Calendar },
+    { label: t("weekly"), value: "weekly", icon: BarChart3 },
+    { label: t("monthly"), value: "monthly", icon: TrendingUp },
+    { label: t("customRange"), value: "custom", icon: Calendar },
+    { label: t("eodSummary"), value: "eod", icon: ClipboardList },
   ];
 
   // ── Render ───────────────────────────────────────────
@@ -537,7 +528,7 @@ export default function ReportsPage() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            Reports
+            {t("title")}
           </Typography.H1>
           <Typography.Muted className="text-sm text-muted-foreground">
             {periodTitle(
@@ -550,6 +541,7 @@ export default function ReportsPage() {
                     ? customFromStr
                     : date,
               dateTo,
+              locale,
             )}
           </Typography.Muted>
         </div>
@@ -562,7 +554,7 @@ export default function ReportsPage() {
           <RefreshCw
             className={`mr-1.5 size-3.5 ${loading ? "animate-spin" : ""}`}
           />
-          Refresh
+          {t("refresh")}
         </Button>
       </div>
 
@@ -586,7 +578,7 @@ export default function ReportsPage() {
           value={mechanicFilter}
           onChange={setMechanicFilter}
           mechanics={mechanics}
-          placeholder="All Mechanics"
+          placeholder={t("allMechanics")}
           size="default"
         />
       </div>
@@ -685,7 +677,7 @@ export default function ReportsPage() {
       )}
 
       {/* ═══ EOD ═════════════════════════════════════════ */}
-      {!loading && isEod && eodReport && <EodView data={eodReport} />}
+      {!loading && isEod && eodReport && <EodView data={eodReport} t={t} />}
 
       {/* ═══ DAILY / WEEKLY / MONTHLY ════════════════════ */}
       {!loading && !isEod && report && (
@@ -694,7 +686,7 @@ export default function ReportsPage() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <ReportKpiCard
-              label="Work Orders"
+              label={t("workOrders")}
               value={String(r?.work_orders_completed ?? 0)}
               icon={ClipboardList}
               delta={r?.comparison?.work_orders_change_pct}
@@ -705,7 +697,7 @@ export default function ReportsPage() {
               }
             />
             <ReportKpiCard
-              label="Services Sold"
+              label={t("servicesSold")}
               value={String(r?.services_count ?? 0)}
               icon={Wallet}
               subtitle={
@@ -715,13 +707,13 @@ export default function ReportsPage() {
               }
             />
             <ReportKpiCard
-              label="Revenue"
+              label={t("revenue")}
               value={formatCurrency(r?.total_revenue ?? 0)}
               icon={Wallet}
               delta={r?.comparison?.revenue_change_pct}
             />
             <ReportKpiCard
-              label="Expenses"
+              label={t("expenses")}
               value={formatCurrency(0)}
               icon={Wallet}
               subtitle="connect expense data"
@@ -731,7 +723,7 @@ export default function ReportsPage() {
           {r?.profitability && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <ReportKpiCard
-                label="Gross Profit"
+                label={t("grossProfit")}
                 value={formatCurrency(r.profitability.gross_profit)}
                 icon={TrendingUp}
                 cls={
@@ -741,7 +733,7 @@ export default function ReportsPage() {
                 }
               />
               <ReportKpiCard
-                label="Margin"
+                label={t("margin")}
                 value={`${r.profitability.margin_percent}%`}
                 icon={BarChart3}
                 cls={
@@ -751,13 +743,13 @@ export default function ReportsPage() {
                 }
               />
               <ReportKpiCard
-                label="Eff. Labor Rate"
+                label={t("effLaborRate")}
                 value={formatCurrency(r.profitability.effective_labor_rate)}
                 icon={Wallet}
                 subtitle="per work order"
               />
               <ReportKpiCard
-                label="Parts:Labor"
+                label={t("partsToLabor")}
                 value={`${Math.round(r.profitability.parts_to_labor_ratio * 100)}%`}
                 icon={BarChart3}
                 subtitle="parts / labor"
@@ -778,7 +770,7 @@ export default function ReportsPage() {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-semibold">
-                    Revenue Split
+                    {t("revenueSplit")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -862,38 +854,44 @@ export default function ReportsPage() {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-semibold">
-                    Profit Breakdown
+                    {t("profitBreakdown")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">
-                      Service Revenue
+                      {t("serviceRevenue")}
                     </span>
                     <span className="font-medium tabular-nums">
                       {formatCurrency(r.profitability.service_revenue)}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Service Cost</span>
+                    <span className="text-muted-foreground">
+                      {t("serviceCost")}
+                    </span>
                     <span className="tabular-nums text-red-500/80">
                       -{formatCurrency(r.profitability.service_cost)}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs border-t border-border pt-1.5">
-                    <span className="text-muted-foreground">Parts Revenue</span>
+                    <span className="text-muted-foreground">
+                      {t("partsRevenue")}
+                    </span>
                     <span className="font-medium tabular-nums">
                       {formatCurrency(r.profitability.parts_revenue)}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Parts Cost</span>
+                    <span className="text-muted-foreground">
+                      {t("partsCost")}
+                    </span>
                     <span className="tabular-nums text-red-500/80">
                       -{formatCurrency(r.profitability.parts_cost)}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs font-semibold border-t border-border pt-1.5">
-                    <span>Gross Profit</span>
+                    <span>{t("grossProfit")}</span>
                     <span
                       className={`tabular-nums ${r.profitability.gross_profit >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500"}`}
                     >
@@ -950,11 +948,10 @@ export default function ReportsPage() {
             </div>
             <div className="text-center">
               <Typography.H3 className="text-sm font-semibold">
-                Select a report type
+                {t("title")}
               </Typography.H3>
               <Typography.Muted className="mt-1 text-xs text-muted-foreground">
-                Choose Daily, Weekly, Monthly, or End of Day to view your shop
-                data.
+                {t("subtitle")}
               </Typography.Muted>
             </div>
           </CardContent>

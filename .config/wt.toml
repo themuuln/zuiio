@@ -1,0 +1,6 @@
+[post-create]
+# Automatically install project dependencies in the new worktree path
+install = "pnpm install"  # or pnpm install, cargo build, etc.
+
+# Use worktrunk's step to copy over your gitignored .env files
+env = "wt step copy-ignored"

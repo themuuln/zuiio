@@ -136,10 +136,14 @@ export default function DashboardPage() {
 
   const dashboardExportColumns: ExportColumn<WorkOrderDetail>[] = useMemo(
     () => [
-      { key: "id", label: "WO #", value: (wo) => wo.id.slice(0, 8) },
+      {
+        key: "id",
+        label: t("workOrders.id"),
+        value: (wo) => wo.id.slice(0, 8),
+      },
       {
         key: "customer",
-        label: "Customer",
+        label: t("customers.name"),
         value: (wo) =>
           wo.customer
             ? `${wo.customer.first_name ?? ""} ${wo.customer.last_name ?? ""}`.trim()
@@ -147,13 +151,13 @@ export default function DashboardPage() {
       },
       {
         key: "vehicle",
-        label: "Vehicle",
+        label: t("workOrders.vehicle"),
         value: (wo) => wo.vehicle?.plate_number ?? "—",
       },
-      { key: "status", label: "Status" },
+      { key: "status", label: t("workOrders.status") },
       {
         key: "grand_total",
-        label: "Total",
+        label: t("common.total"),
         format: "currency" as const,
         value: (wo) =>
           (wo.services ?? []).reduce(
@@ -167,7 +171,11 @@ export default function DashboardPage() {
             0,
           ),
       },
-      { key: "created_at", label: "Date", format: "date" as const },
+      {
+        key: "created_at",
+        label: t("workOrders.date"),
+        format: "date" as const,
+      },
     ],
     [],
   );
@@ -341,11 +349,10 @@ export default function DashboardPage() {
             <TrendingUp className="mt-0.5 size-5 shrink-0 text-amber-500" />
             <Typography.Muted>
               <span className="font-semibold text-foreground">
-                {summary?.activeWorkOrders} work order
-                {summary?.activeWorkOrders === 1 ? "" : "s"} in progress.
-              </span>{" "}
-              Revenue and metrics appear here once work orders are marked{" "}
-              <strong>Completed</strong>.
+                {t("dashboard.activeWorkOrderCount", {
+                  count: summary?.activeWorkOrders ?? 0,
+                })}
+              </span>
             </Typography.Muted>
           </CardContent>
         </Card>
@@ -431,7 +438,7 @@ export default function DashboardPage() {
               accentKey="totalVehicles"
             />
             <KpiCard
-              label="Service Mix"
+              label={t("dashboard.serviceMix")}
               value={`${(summary?.totalRevenue ?? 0) > 0 ? Math.round(((summary?.serviceRevenue ?? 0) / (summary?.totalRevenue ?? 1)) * 100) : 0}%`}
               icon={Percent}
               loading={isDataLoading}
@@ -465,7 +472,7 @@ export default function DashboardPage() {
                     className="h-9 px-2 text-muted-foreground hover:text-foreground text-xs"
                     onClick={() => setSelectedRange(undefined)}
                   >
-                    Clear Filter
+                    {t("common.clearFilter")}
                   </Button>
                 )}
               </div>

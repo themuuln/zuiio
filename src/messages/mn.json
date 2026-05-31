@@ -468,6 +468,7 @@
     "statusTimeline": "Төлвийн түүх",
     "noHistoryYet": "Төлвийн түүх байхгүй",
     "noNotesRecorded": "Тэмдэглэл байхгүй",
+    "noComplaint": "Хэрэглэгчийн гомдол байхгүй",
     "complaintAndNotes": "Гомдол ба тэмдэглэл",
     "complaint": "Гомдол",
     "diagnosis": "Оношлогоо",
@@ -559,7 +560,8 @@
     "newVehicle": "Шинэ тээврийн хэрэгсэл",
     "viewReports": "Тайлан харах",
     "noWorkOrders": "Ажлын захиалга байхгүй",
-    "noData": "Мэдээлэл байхгүй"
+    "noData": "Мэдээлэл байхгүй",
+    "weeklyTrend": "Долоо хоногийн чиг хандлага"
   },
   "workOrders": {
     "title": "Ажлын захиалга",
@@ -817,6 +819,10 @@
     "print": "Хэвлэх"
   },
   "services": {
+    "tabMyServices": "Манай үйлчилгээ",
+    "tabGlobalCatalog": "Глобал каталог",
+    "editLocalCopy": "Үйлчилгээ засах",
+    "inCatalog": "Каталогт байгаа",
     "metaTitle": "Үйлчилгээний каталог — TOLOM",
     "metaDescription": "Авто засварын үйлчилгээний каталог, үнийн түүх. Тос солих, тормос, оношилгоо, цагийн бүс зэрэг бүх үйлчилгээг нэг дороос удирдах.",
     "pageTitle": "Үйлчилгээний каталог",
@@ -910,6 +916,16 @@
     "autoEnable": "Сануулгыг автоматаар идэвхжүүлэх",
     "autoEnableDescription": "Шинэ хуваарь үүсэхэд сануулга автоматаар идэвхтэй болох"
   },
+  "sidebar": {
+    "dueSoon": "Удахгүй дуусах",
+    "reminderStatus": "Сануулгын төлөв",
+    "overdue": "Хугацаа хэтэрсэн",
+    "dueIn7Days": "7 хоногийн дотор",
+    "recentSends": "Сүүлийн илгээлтүүд",
+    "noReminderHistory": "Сануулгын түүх алга",
+    "recentlyViewed": "Сүүлд үзсэн",
+    "reportsGenerated": "Тайлангууд шаардлагаар үүсгэгдсэн"
+  },
   "reports": {
     "title": "Тайлан",
     "subtitle": "Механикчдын гүйцэтгэлийн тайлан",
@@ -926,7 +942,42 @@
     "revenue": "Орлого",
     "discounts": "Хөнгөлөлт",
     "total": "Нийт",
-    "noData": "Мэдээлэл алга"
+    "noData": "Мэдээлэл алга",
+    "serviceMix": "Үйлчилгээний харьцаа",
+    "activeWorkOrderCount": "{count} захиалга хийгдэж байна. Захиалгыг 'Дууссан' болгосны дараа орлого ба үзүүлэлтүүд энд харагдана.",
+    "totalWorkOrders": "Нийт захиалга",
+    "totalRevenue": "Нийт орлого",
+    "avgRevenuePerWo": "Дундаж/Захиалга",
+    "jobs": "Ажил",
+    "mechanic": "Механикч",
+    "services": "Үйлчилгээ",
+    "parts": "Сэлбэг",
+    "revenue": "Орлого",
+    "commission": "Шимэлгээ",
+    "perMechanicBreakdown": "Механикч бүрийн задаргаа",
+    "noMechanicsCompletedWork": "Өнөөдөр механикч ажил гүйцэтгээгүй",
+    "totalRevenueLabel": "Нийт орлого",
+    "workOrders": "Захиалга",
+    "servicesSold": "Борлуулсан үйлчилгээ",
+    "expenses": "Зарлага",
+    "grossProfit": "Нийт ашиг",
+    "margin": "Ашиг хувь",
+    "effLaborRate": "Үр дүнтэй хөдөлмөрийн тариф",
+    "perWorkOrder": "захиалга бүрт",
+    "partsToLabor": "Сэлбэг/Хөдөлмөр",
+    "revenueSplit": "Орлогын задаргаа",
+    "profitBreakdown": "Ашгийн задаргаа",
+    "serviceRevenue": "Үйлчилгээний орлого",
+    "serviceCost": "Үйлчилгээний өртөг",
+    "partsRevenue": "Сэлбэгийн орлого",
+    "partsCost": "Сэлбэгийн өртөг",
+    "daily": "Өдрийн",
+    "weekly": "Долоо хоногийн",
+    "monthly": "Сарын",
+    "customRange": "Өөрийн хугацаа",
+    "eodSummary": "Өдрийн эцэс",
+    "allMechanics": "Бүх механикч",
+    "refresh": "Шинэчлэх"
   },
   "expenses": {
     "title": "Зарлага",
@@ -1211,7 +1262,11 @@
     "createSubtitle": "Харилцагчийн бүртгэлийг үйлчилгээний өмнө үүсгэнэ үү.",
     "customerNotFound": "Харилцагч олдсонгүй.",
     "quickCreateCustomer": "Хурдан",
-    "createCustomer": "Харилцагч үүсгэх"
+    "createCustomer": "Харилцагч үүсгэх",
+    "totalCustomers": "Нийт харилцагч",
+    "recentCustomers": "Сүүлийн харилцагч",
+    "total": "Нийт",
+    "newCustomers": "Шинэ харилцагч"
   },
   "vehicles": {
     "title": "Тээврийн хэрэгсэл",
@@ -1344,7 +1399,11 @@
     "modelCount": "{count} загвар",
     "variantCount": "{count} хувилбар",
     "deleteVariant": "Хувилбар устгах",
-    "cancel": "Цуцлах"
+    "cancel": "Цуцлах",
+    "vehicleCreated": "Машины загвар үүсгэгдлээ",
+    "vehicleUpdated": "Машины загвар шинэчлэгдлээ",
+    "vehicleDeleted": "Машины загвар устгагдлаа",
+    "retry": "Дахин оролдох"
   },
   "pricing": {
     "metaTitle": "Үнийн санал — TOLOM",
@@ -2146,5 +2205,30 @@
     "ctaTitle": "TOLOM-ийг өнөөдөр туршиж үзээрэй",
     "ctaSubtitle": "14 хоногийн үнэгүй туршилт. Кредит карт шаардлагагүй.",
     "ctaButton": "Үнэгүй эхлэх"
+  },
+  "eodClose": {
+    "title": "Өдрийн эцсийн хураангуй",
+    "print": "Тайлан хэвлэх",
+    "closeDay": "Өдөр хаах",
+    "dayClosed": "Өдөр хаагдсан ✓",
+    "dayClosedMessage": "Өдөр хаагдсан — тайлан хадгалагдлаа",
+    "streak": "{count}-хоног тасралтгүй",
+    "revenue": "Нийт орлого",
+    "paymentBreakdown": "Төлбөрийн задаргаа",
+    "cash": "Бэлэн мөнгө",
+    "card": "Карт",
+    "bankTransfer": "Банкны шилжүүлэг",
+    "other": "Бусад",
+    "completedJobs": "Өнөөдөр гүйцэтгэсэн",
+    "openJobs": "Нээлттэй захиалга",
+    "unpaidInvoices": "Төлөгдөөгүй нэхэмжлэх",
+    "lowStock": "Дутуу нөөц",
+    "bestMechanic": "Шилдэг механикч",
+    "noMechanicData": "Өнөөдөр механикчийн мэдээлэл байхгүй",
+    "biggestIssue": "Хамгийн том асуудал",
+    "noIssues": "Гараагүй асуудал байхгүй 🎉",
+    "viewJob": "Захиалга үзэх →",
+    "toastCloseDaySuccess": "Өдөр амжилттай хаагдлаа",
+    "toastCloseDayError": "Өдөр хаахад алдаа гарлаа"
   }
 }
