@@ -4,9 +4,9 @@ import type { ActionState } from "@/lib/form-validation";
 import { flattenFieldErrors } from "@/lib/form-validation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { isPhone, loginSchema } from "@/lib/validation/auth-schemas";
+import { loginSchema } from "@/lib/validation/auth-schemas";
 
-type LoginState = ActionState<{ email: string }> & {
+type LoginState = ActionState<{ username: string }> & {
   redirectTo?: string;
 };
 
@@ -15,58 +15,54 @@ export async function login(
   formData: FormData,
 ): Promise<LoginState> {
   const raw = {
-    email: (formData.get("email") as string) || "",
+    username: (formData.get("username") as string) || "",
     password: (formData.get("password") as string) || "",
   };
 
   const parsed = loginSchema.safeParse(raw);
   if (!parsed.success) {
     return {
-      values: { email: raw.email },
+      values: { username: raw.username },
       fieldErrors: flattenFieldErrors(parsed.error.issues),
     };
   }
 
   const supabase = await createClient();
-  let loginEmail = parsed.data.email;
+  const serviceRole = await createServiceRoleClient();
 
-  // If the identifier is a phone number, look up the user's email from profiles
-  if (isPhone(loginEmail)) {
-    const serviceRole = await createServiceRoleClient();
-    const { data: profile } = await serviceRole
-      .from("profiles")
-      .select("id")
-      .eq("phone", loginEmail)
-      .maybeSingle();
+  // Look up the user by username
+  const { data: profile } = await serviceRole
+    .from("profiles")
+    .select("id")
+    .eq("username", parsed.data.username)
+    .maybeSingle();
 
-    if (!profile) {
-      return {
-        values: { email: raw.email },
-        formError: "No account found with this phone number",
-      };
-    }
+  if (!profile) {
+    return {
+      values: { username: raw.username },
+      formError: "No account found with this username",
+    };
+  }
 
-    // Get the user's email from auth.users via service role
-    const { data: authUser } = await serviceRole.auth.admin.getUserById(
-      profile.id,
-    );
-    if (!authUser?.user?.email) {
-      return {
-        values: { email: raw.email },
-        formError: "No account found with this phone number",
-      };
-    }
-    loginEmail = authUser.user.email;
+  // Get the user's email from auth.users via service role
+  const { data: authUser } = await serviceRole.auth.admin.getUserById(
+    profile.id,
+  );
+  if (!authUser?.user?.email) {
+    return {
+      values: { username: raw.username },
+      formError: "No account found with this username",
+    };
   }
 
   const { error } = await supabase.auth.signInWithPassword({
-    email: loginEmail,
+    email: authUser.user.email,
     password: parsed.data.password,
   });
 
   if (error) {
     return {
-      values: { email: raw.email },
+      values: { username: raw.username },
       formError: error.message,
     };
   }

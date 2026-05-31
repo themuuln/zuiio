@@ -1,19 +1,77 @@
 import { Resend } from "resend";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { InvoiceWithItems } from "@/lib/types";
 
-// ── Resend client (lazy-init) ──────────────────────────────────
+// ── Global round-robin Resend clients ──────────────────────────
 
-let _resend: Resend | null = null;
+const API_KEYS_CACHE_TTL = 60_000; // 1 minute
+let _cachedKeys: string[] | null = null;
+let _cacheExpiresAt = 0;
+let _roundRobinIndex = 0;
 
-function getResend(): Resend {
-  if (!_resend) {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      throw new Error("RESEND_API_KEY is not configured");
-    }
-    _resend = new Resend(apiKey);
+/**
+ * Load Resend API keys from Supabase app_config table.
+ * Falls back to RESEND_API_KEY env var if no keys in DB.
+ * Results are cached in-memory for API_KEYS_CACHE_TTL.
+ */
+async function loadApiKeys(): Promise<string[]> {
+  const now = Date.now();
+  if (_cachedKeys && now < _cacheExpiresAt) {
+    return _cachedKeys;
   }
-  return _resend;
+
+  try {
+    const supabase = await createServiceRoleClient();
+    const { data } = await supabase
+      .from("app_config")
+      .select("value")
+      .eq("key", "resend_api_keys")
+      .single();
+
+    if (data?.value) {
+      const keys = data.value
+        .split(",")
+        .map((k: string) => k.trim())
+        .filter(Boolean);
+      if (keys.length > 0) {
+        _cachedKeys = keys;
+        _cacheExpiresAt = now + API_KEYS_CACHE_TTL;
+        return keys;
+      }
+    }
+  } catch {
+    // DB lookup failed — fall through to env var
+  }
+
+  // Fall back to env var
+  const single = process.env.RESEND_API_KEY;
+  if (single) {
+    const keys = [single];
+    _cachedKeys = keys;
+    _cacheExpiresAt = now + API_KEYS_CACHE_TTL;
+    return keys;
+  }
+
+  throw new Error(
+    "No Resend API keys configured. Add keys via app_config.resend_api_keys or set RESEND_API_KEY env var.",
+  );
+}
+
+const _clientCache = new Map<string, Resend>();
+
+async function getResendClient(): Promise<Resend> {
+  const keys = await loadApiKeys();
+  const idx = _roundRobinIndex % keys.length;
+  _roundRobinIndex = (idx + 1) % Number.MAX_SAFE_INTEGER;
+
+  const apiKey = keys[idx];
+
+  let client = _clientCache.get(apiKey);
+  if (!client) {
+    client = new Resend(apiKey);
+    _clientCache.set(apiKey, client);
+  }
+  return client;
 }
 
 function getFromEmail(): string {
@@ -128,8 +186,8 @@ function renderInvoiceEmailHtml(
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td>
-                    <Typography.H1 style="margin:0;font-size:22px;font-weight:700;color:#111827;">${orgName}</Typography.H1>
-                    <Typography.Text style="margin:4px 0 0;font-size:14px;color:#6b7280;">Нэхэмжлэх #${invoice.invoice_number}</Typography.Text>
+                    <h1 style="margin:0;font-size:22px;font-weight:700;color:#111827;">${orgName}</h1>
+                    <p style="margin:4px 0 0;font-size:14px;color:#6b7280;">Нэхэмжлэх #${invoice.invoice_number}</p>
                   </td>
                   <td align="right">
                     <span style="display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background-color:${statusBg[invoice.status] ?? statusBg.draft};color:${statusColor[invoice.status] ?? statusColor.draft};">
@@ -145,7 +203,7 @@ function renderInvoiceEmailHtml(
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td width="50%" valign="top">
-                    <Typography.H3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Төлбөр төлөгч</Typography.H3>
+                    <h3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Төлбөр төлөгч</h3>
                     <table cellpadding="0" cellspacing="0">
                       ${invoice.customer_name ? `<tr><td style="font-size:14px;font-weight:500;color:#111827;padding-bottom:2px;">${invoice.customer_name}</td></tr>` : ""}
                       ${invoice.customer_phone ? `<tr><td style="font-size:13px;color:#6b7280;">${invoice.customer_phone}</td></tr>` : ""}
@@ -154,7 +212,7 @@ function renderInvoiceEmailHtml(
                     </table>
                   </td>
                   <td width="50%" valign="top">
-                    <Typography.H3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Тээврийн хэрэгсэл</Typography.H3>
+                    <h3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Тээврийн хэрэгсэл</h3>
                     <table cellpadding="0" cellspacing="0">
                       ${invoice.vehicle_plate ? `<tr><td style="font-size:14px;font-family:monospace;font-weight:500;color:#111827;padding-bottom:2px;">${invoice.vehicle_plate}</td></tr>` : ""}
                       ${invoice.vehicle_details ? `<tr><td style="font-size:13px;color:#6b7280;">${invoice.vehicle_details}</td></tr>` : ""}
@@ -270,8 +328,8 @@ function renderInvoiceEmailHtml(
               ? `
           <tr>
             <td style="background-color:#ffffff;padding:0 32px 24px;">
-              <Typography.H3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Тэмдэглэл</Typography.H3>
-              <Typography.Text style="margin:0;font-size:13px;color:#6b7280;white-space:pre-wrap;">${invoice.notes}</Typography.Text>
+              <h3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Тэмдэглэл</h3>
+              <p style="margin:0;font-size:13px;color:#6b7280;white-space:pre-wrap;">${invoice.notes}</p>
             </td>
           </tr>`
               : ""
@@ -281,17 +339,17 @@ function renderInvoiceEmailHtml(
               ? `
           <tr>
             <td style="background-color:#ffffff;padding:0 32px 24px;">
-              <Typography.H3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Нөхцөл</Typography.H3>
-              <Typography.Text style="margin:0;font-size:13px;color:#6b7280;">${invoice.terms}</Typography.Text>
+              <h3 style="margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Нөхцөл</h3>
+              <p style="margin:0;font-size:13px;color:#6b7280;">${invoice.terms}</p>
             </td>
           </tr>`
               : ""
           }
           <tr>
             <td style="background-color:#ffffff;border-radius:0 0 12px 12px;padding:24px 32px 32px;text-align:center;">
-              <Typography.Text style="margin:0;font-size:12px;color:#9ca3af;">
+              <p style="margin:0;font-size:12px;color:#9ca3af;">
                 ${orgName} &middot; TOLOM систем
-              </Typography.Text>
+              </p>
             </td>
           </tr>
         </table>
@@ -307,6 +365,7 @@ function renderInvoiceEmailHtml(
 /**
  * Send an invoice email to a customer using Resend.
  * The email includes a link to the public invoice page and a summary.
+ * Keys are selected via global round-robin across RESEND_API_KEYS.
  */
 export async function sendInvoiceEmail(
   params: SendInvoiceEmailParams,
@@ -314,7 +373,7 @@ export async function sendInvoiceEmail(
   const { invoice, orgName, recipientEmail, bccEmail, publicInvoiceUrl } =
     params;
 
-  const resend = getResend();
+  const resend = await getResendClient();
   const fromEmail = getFromEmail();
 
   const html = renderInvoiceEmailHtml(invoice, orgName, publicInvoiceUrl);
@@ -362,13 +421,13 @@ function renderReminderEmailHtml(params: SendReminderEmailParams): string {
         <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
           <tr>
             <td style="background-color:#ffffff;border-radius:12px;padding:40px 32px;text-align:center;">
-              <Typography.H1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#111827;">Үйлчилгээний хугацаа ойртлоо</Typography.H1>
-              <Typography.Text style="margin:0 0 24px;font-size:15px;color:#6b7280;">${params.orgName}</Typography.Text>
+              <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#111827;">Үйлчилгээний хугацаа ойртлоо</h1>
+              <p style="margin:0 0 24px;font-size:15px;color:#6b7280;">${params.orgName}</p>
               <div style="background-color:#f3f4f6;border-radius:8px;padding:20px;margin-bottom:24px;text-align:left;">
-                <Typography.Text style="margin:0 0 12px;font-size:13px;color:#6b7280;">Эрхэм <strong style="color:#111827;">${params.customerName}</strong> танд,</Typography.Text>
-                <Typography.Text style="margin:0 0 12px;font-size:14px;color:#374151;line-height:1.5;">
+                <p style="margin:0 0 12px;font-size:13px;color:#6b7280;">Эрхэм <strong style="color:#111827;">${params.customerName}</strong> танд,</p>
+                <p style="margin:0 0 12px;font-size:14px;color:#374151;line-height:1.5;">
                   Таны тээврийн хэрэгслийн дараах үйлчилгээний хугацаа ойртож байгааг сануулж байна:
-                </Typography.Text>
+                </p>
                 <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
                   <tr>
                     <td style="padding:6px 0;color:#6b7280;">Машин</td>
@@ -384,14 +443,14 @@ function renderReminderEmailHtml(params: SendReminderEmailParams): string {
                   </tr>
                 </table>
               </div>
-              <Typography.Text style="margin:0 0 0;font-size:13px;color:#9ca3af;">
+              <p style="margin:0 0 0;font-size:13px;color:#9ca3af;">
                 Цаг товлохыг хүсвэл бидэнтэй холбогдоно уу.
-              </Typography.Text>
+              </p>
             </td>
           </tr>
           <tr>
             <td style="padding:24px 32px;text-align:center;">
-              <Typography.Text style="margin:0;font-size:12px;color:#9ca3af;">${params.orgName} &middot; TOLOM систем</Typography.Text>
+              <p style="margin:0;font-size:12px;color:#9ca3af;">${params.orgName} &middot; TOLOM систем</p>
             </td>
           </tr>
         </table>
@@ -405,7 +464,7 @@ function renderReminderEmailHtml(params: SendReminderEmailParams): string {
 export async function sendReminderEmail(
   params: SendReminderEmailParams,
 ): Promise<{ id: string }> {
-  const resend = getResend();
+  const resend = await getResendClient();
   const fromEmail = getFromEmail();
 
   const html = renderReminderEmailHtml(params);
@@ -424,9 +483,12 @@ export async function sendReminderEmail(
   return { id: data?.id ?? "" };
 }
 
+/**
+ * Test that at least one Resend API key is configured and usable.
+ */
 export async function testEmailConfig(): Promise<boolean> {
   try {
-    getResend();
+    await loadApiKeys();
     return true;
   } catch {
     return false;

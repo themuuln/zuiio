@@ -44,8 +44,13 @@ export function useEodReport(
   date: string,
 ): UseQueryResult<EndOfDaySummary, Error> {
   return useQuery({
-    queryKey: reportKeys.summary(orgId ?? "", "eod", date),
-    queryFn: () => fetchEodReport(orgId!, { params: { type: "eod", date } }),
+    queryKey: reportKeys.summary(orgId ?? "", "eod", date, null),
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error("Organization is required");
+      }
+      return fetchEodReport(orgId, { params: { type: "eod", date } });
+    },
     enabled: !!orgId,
     staleTime: 30_000,
     retry: 1,
@@ -61,7 +66,12 @@ export function useDayCloseStatus(
 ): UseQueryResult<DayCloseStatus, Error> {
   return useQuery({
     queryKey: dayCloseKeys.status(orgId ?? "", date),
-    queryFn: () => fetchDayCloseStatus(orgId!, { params: { date } }),
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error("Organization is required");
+      }
+      return fetchDayCloseStatus(orgId, { params: { date } });
+    },
     enabled: !!orgId,
     staleTime: 10_000,
     retry: 1,
@@ -100,7 +110,7 @@ export function useCloseDay(
           queryKey: dayCloseKeys.status(orgId, date),
         });
         queryClient.invalidateQueries({
-          queryKey: reportKeys.summary(orgId, "eod", date),
+          queryKey: reportKeys.summary(orgId, "eod", date, null),
         });
       }
     },

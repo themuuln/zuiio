@@ -3,9 +3,10 @@
 import type { ActionState } from "@/lib/form-validation";
 import { flattenFieldErrors } from "@/lib/form-validation";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { forgotPasswordSchema } from "@/lib/validation/auth-schemas";
 
-type ForgotPasswordState = ActionState<{ email: string }> & {
+type ForgotPasswordState = ActionState<{ username: string }> & {
   success?: boolean;
 };
 
@@ -14,13 +15,13 @@ export async function requestPasswordReset(
   formData: FormData,
 ): Promise<ForgotPasswordState> {
   const raw = {
-    email: (formData.get("email") as string) || "",
+    username: (formData.get("username") as string) || "",
   };
 
   const parsed = forgotPasswordSchema.safeParse(raw);
   if (!parsed.success) {
     return {
-      values: { email: raw.email },
+      values: { username: raw.username },
       fieldErrors: flattenFieldErrors(parsed.error.issues),
     };
   }
@@ -28,19 +29,26 @@ export async function requestPasswordReset(
   const supabase = await createClient();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-  const { error } = await supabase.auth.resetPasswordForEmail(
-    parsed.data.email,
-    {
-      redirectTo: `${siteUrl}/auth/reset-password`,
-    },
-  );
+  // Look up the user by username to get their auth email
+  const serviceRole = await createServiceRoleClient();
+  const { data: profile } = await serviceRole
+    .from("profiles")
+    .select("id")
+    .eq("username", parsed.data.username)
+    .maybeSingle();
 
-  if (error) {
-    return {
-      values: { email: parsed.data.email },
-      formError: error.message,
-    };
+  if (profile) {
+    const { data: authUser } = await serviceRole.auth.admin.getUserById(
+      profile.id,
+    );
+    if (authUser?.user?.email) {
+      // Don't await — fire and forget to avoid revealing user existence timing
+      supabase.auth.resetPasswordForEmail(authUser.user.email, {
+        redirectTo: `${siteUrl}/auth/reset-password`,
+      });
+    }
   }
 
+  // Always return success — don't reveal whether the username exists
   return { success: true };
 }

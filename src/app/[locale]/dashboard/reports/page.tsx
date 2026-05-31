@@ -23,6 +23,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { Cell, Pie, PieChart as RechartsPieChart } from "recharts";
 import { ExportButton } from "@/components/export-button";
+import { BranchSelect } from "@/components/branch-select";
 import { MechanicSelect } from "@/components/mechanic-select";
 import {
   DailyRevenueChart,
@@ -60,6 +61,7 @@ import {
 import { Typography } from "@/components/ui/typography";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
+import { useBranches } from "@/lib/queries/use-branches";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
   useMechanics,
@@ -390,10 +392,30 @@ export default function ReportsPage() {
     from: subDays(new Date(), 6),
     to: new Date(),
   }));
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("all");
 
   // ── Init: get org ID ─────────────────────────────────
   const { data: orgInfo } = useCurrentOrg();
   const orgId = orgInfo?.orgId ?? "";
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
+  const branchesQ = useBranches(orgId);
+
+  useEffect(() => {
+    const branches = branchesQ.data ?? [];
+    if (selectedBranchId === "all") {
+      if (branches.length === 1) {
+        setSelectedBranchId(branches[0].id);
+      }
+      return;
+    }
+
+    const branchStillExists = branches.some(
+      (branch) => branch.id === selectedBranchId,
+    );
+    if (!branchStillExists) {
+      setSelectedBranchId("all");
+    }
+  }, [branchesQ.data, selectedBranchId]);
 
   // ── Derived params ───────────────────────────────────
   const isEod = reportType === "eod";
@@ -440,20 +462,61 @@ export default function ReportsPage() {
           : "daily";
 
   // ── Data hooks ───────────────────────────────────────
-  const reportQ = useReport(orgId, reportType, {
-    date: dateParam,
-    ...(reportType === "custom"
-      ? { date_from: dateFrom, date_to: dateTo }
-      : {}),
-    ...(mechanicFilter ? { mechanic: mechanicFilter } : {}),
-  });
-  const mechanicsQ = useMechanics(orgId);
-  const insightsQ = useReportInsights(orgId, dateFrom, dateTo, !isEod);
-  const forecastQ = useReportForecast(orgId, periodType, dateParam, !isEod);
-  const targetsQ = useReportTargets(orgId, periodType, date, !isEod);
-  const retentionQ = useReportRetention(orgId, dateFrom, dateTo, !isEod);
-  const pnlQ = useReportPnl(orgId, dateFrom, dateTo, !isEod);
-  const serviceBdQ = useReportServiceBreakdown(orgId, dateFrom, dateTo, !isEod);
+  const reportQ = useReport(
+    orgId,
+    reportType,
+    {
+      date: dateParam,
+      ...(reportType === "custom"
+        ? { date_from: dateFrom, date_to: dateTo }
+        : {}),
+      ...(mechanicFilter ? { mechanic: mechanicFilter } : {}),
+    },
+    branchFilter,
+  );
+  const mechanicsQ = useMechanics(orgId, branchFilter);
+  const insightsQ = useReportInsights(
+    orgId,
+    dateFrom,
+    dateTo,
+    !isEod,
+    branchFilter,
+  );
+  const forecastQ = useReportForecast(
+    orgId,
+    periodType,
+    dateParam,
+    !isEod,
+    branchFilter,
+  );
+  const targetsQ = useReportTargets(
+    orgId,
+    periodType,
+    date,
+    !isEod,
+    branchFilter,
+  );
+  const retentionQ = useReportRetention(
+    orgId,
+    dateFrom,
+    dateTo,
+    !isEod,
+    branchFilter,
+  );
+  const pnlQ = useReportPnl(
+    orgId,
+    dateFrom,
+    dateTo,
+    !isEod,
+    branchFilter,
+  );
+  const serviceBdQ = useReportServiceBreakdown(
+    orgId,
+    dateFrom,
+    dateTo,
+    !isEod,
+    branchFilter,
+  );
 
   const loading = reportQ.isLoading;
   const erpLoading = insightsQ.isLoading;
@@ -547,6 +610,17 @@ export default function ReportsPage() {
     [mechanicsQ.data],
   );
 
+  useEffect(() => {
+    if (!mechanicFilter) return;
+
+    const mechanicStillAvailable = mechanics.some(
+      (mechanic) => mechanic.id === mechanicFilter,
+    );
+    if (!mechanicStillAvailable) {
+      setMechanicFilter("");
+    }
+  }, [mechanicFilter, mechanics]);
+
   const tabs: { label: string; value: ReportType; icon: LucideIcon }[] = [
     { label: t("daily"), value: "daily", icon: Calendar },
     { label: t("weekly"), value: "weekly", icon: BarChart3 },
@@ -582,7 +656,17 @@ export default function ReportsPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => reportQ.refetch()}
+          onClick={() => {
+            void Promise.all([
+              reportQ.refetch(),
+              insightsQ.refetch(),
+              forecastQ.refetch(),
+              targetsQ.refetch(),
+              retentionQ.refetch(),
+              pnlQ.refetch(),
+              serviceBdQ.refetch(),
+            ]);
+          }}
           disabled={loading}
         >
           <RefreshCw
@@ -608,13 +692,23 @@ export default function ReportsPage() {
             </Button>
           ))}
         </div>
-        <MechanicSelect
-          value={mechanicFilter}
-          onChange={setMechanicFilter}
-          mechanics={mechanics}
-          placeholder={t("allMechanics")}
-          size="default"
-        />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <BranchSelect
+            value={selectedBranchId}
+            onChange={setSelectedBranchId}
+            branches={branchesQ.data ?? []}
+            placeholder={t("branch")}
+            allLabel={t("allBranches")}
+            className="min-w-44"
+          />
+          <MechanicSelect
+            value={mechanicFilter}
+            onChange={setMechanicFilter}
+            mechanics={mechanics}
+            placeholder={t("allMechanics")}
+            size="default"
+          />
+        </div>
       </div>
 
       {/* Date pickers */}

@@ -1,0 +1,63 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "errors": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "typesAdded": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "success",
+        "typesAdded",
+        "errors"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "project": "TOLOM"
+      },
+      "instructions": [
+        "Run `supabase gen types typescript --linked > src/lib/database.types.ts` to regenerate types",
+        "Check if src/lib/types/index.ts or src/lib/types/core.ts need new type aliases for mechanic_devices and clock_in_tokens",
+        "Add type exports: MechanicDevice = Tables<'mechanic_devices'>, ClockInToken = Tables<'clock_in_tokens'> to src/lib/types/core.ts",
+        "Also add TablesInsert types: MechanicDeviceInsert, ClockInTokenInsert",
+        "Run `npm run build` afterward to verify no type errors from regeneration",
+        "If there are build errors, fix type references in the affected files"
+      ],
+      "outputFormat": "JSON with { success: boolean, typesAdded: string[], errors: string[] }",
+      "role": "TypeScript Developer",
+      "task": "Regenerate database types and ensure type imports are correct"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KSYX9CS3M56BAKF2JM6JYWRY/input.json",
+    "outputJsonPath": "tasks/01KSYX9CS3M56BAKF2JM6JYWRY/output.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "supabase",
+    "types",
+    "typescript"
+  ],
+  "title": "Regenerate TypeScript types after migration",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSYX9CS3M56BAKF2JM6JYWRY",
+  "taskId": "generate-types",
+  "invocationKey": "feature/qr-clock-in:S000003:generate-types",
+  "stepId": "S000003",
+  "inputs": {}
+}

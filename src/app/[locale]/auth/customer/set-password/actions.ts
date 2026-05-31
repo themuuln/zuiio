@@ -20,7 +20,7 @@ export async function setCustomerPassword(
   if (!token) {
     return {
       formError:
-        "No access token provided. Please use the link from your email or SMS.",
+        "No access token provided. Please use the link from your email or messaging app.",
     };
   }
 

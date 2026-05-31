@@ -1,0 +1,21 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T11:50:27.485Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYXY0C8WRNMC0PXPX1GJGA7",
+    "invocationKey": "feature/qr-clock-in:S000010:create-phone-scanner-page",
+    "invocationHash": "c91fe7d7031e50580a7d082527530096e00b51e3940adb091996c9c4c4d28e44",
+    "stepId": "S000010",
+    "taskId": "create-phone-scanner-page",
+    "kind": "agent",
+    "label": "ui",
+    "taskDefRef": "tasks/01KSYXY0C8WRNMC0PXPX1GJGA7/task.json",
+    "labels": [
+      "ui",
+      "mobile",
+      "camera"
+    ]
+  },
+  "checksum": "67719741696e46de83fe8279c28362d36641ac9a6974c0add1ee0e684137004e"
+}

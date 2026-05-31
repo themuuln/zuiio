@@ -1,0 +1,15 @@
+{
+  "runId": "01KSYX8PHZCF5WFPPG1AH2H313",
+  "request": "feature/qr-clock-in",
+  "processId": "feature/qr-clock-in",
+  "harness": "pi",
+  "entrypoint": {
+    "importPath": "../../processes/qr-clock-in.js",
+    "exportName": "process"
+  },
+  "processPath": "../../processes/qr-clock-in.js",
+  "layoutVersion": "2026.01-storage-preview",
+  "createdAt": "2026-05-31T11:38:49.292Z",
+  "prompt": "Implement QR scan + phone identity verification for mechanic clock-in/out.",
+  "completionProof": "61c8efcaa7720d535e1506965b5c0cc1"
+}

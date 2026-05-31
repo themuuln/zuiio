@@ -4,15 +4,18 @@ import { orgKeys } from "./keys";
 interface CurrentOrg {
   orgId: string;
   orgName: string | null;
+  branchId: string | null;
 }
 
 interface ProfileResponse {
   id: string;
   organizationId?: string;
   organizationName?: string | null;
+  branchId?: string | null;
   data?: {
     organizationId: string;
     organizationName?: string | null;
+    branchId?: string | null;
   };
 }
 
@@ -32,6 +35,7 @@ export function useCurrentOrg(): UseQueryResult<CurrentOrg | null, Error> {
       return {
         orgId: id,
         orgName: d?.organizationName ?? d?.data?.organizationName ?? null,
+        branchId: d?.branchId ?? d?.data?.branchId ?? null,
       };
     },
     staleTime: 5 * 60_000, // org doesn't change often

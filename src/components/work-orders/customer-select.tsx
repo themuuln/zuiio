@@ -66,7 +66,7 @@ export function CustomerSelect({
     setSearching(true);
     fetch(`/api/organizations/${orgId}/customers?q=${encodeURIComponent(q)}`)
       .then((r) => r.json())
-      .then((d) => setCustomers(d.data ?? []))
+      .then((d) => setCustomers(d.data?.data ?? []))
       .catch(() => setCustomers([]))
       .finally(() => setSearching(false));
   };

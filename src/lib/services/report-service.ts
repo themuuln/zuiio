@@ -30,6 +30,13 @@ import type {
 
 // ── Helpers ──────────────────────────────────────────────────
 
+function withBranchFilter<T extends { eq: (column: string, value: string) => T }>(
+  query: T,
+  branchId: string | null,
+): T {
+  return branchId ? query.eq("branch_id", branchId) : query;
+}
+
 /**
  * Calculate profitability metrics from work order service/part data.
  * Reuses the same logic as getWorkOrderProfit but batched for many WOs.
@@ -104,6 +111,7 @@ async function getComparisonData(
   currentStart: string,
   currentEnd: string,
   mechanicId: string | null,
+  branchId: string | null,
 ): Promise<ReportComparison | null> {
   const currentDuration =
     new Date(currentEnd).getTime() - new Date(currentStart).getTime();
@@ -124,6 +132,9 @@ async function getComparisonData(
 
   if (mechanicId) {
     query = query.eq("mechanic_id", mechanicId);
+  }
+  if (branchId) {
+    query = query.eq("branch_id", branchId);
   }
 
   const { data: prevWOs } = await query;
@@ -264,21 +275,26 @@ async function getMechanicKpis(
 
 export async function getMechanicsList(
   orgId: string,
+  branchId: string | null = null,
 ): Promise<{ id: string; full_name: string | null }[]> {
   const supabase = await createClient();
 
   return withCache(
-    ["getMechanicsList", orgId],
+    ["getMechanicsList", orgId, branchId ?? "all"],
     async () => {
       const { data: mechanics } = await supabase
         .from("organization_users")
-        .select("user_id, roles!inner(name)")
+        .select("user_id, roles!inner(name), branch_id")
         .eq("organization_id", orgId)
         .eq("roles.name", "mechanic");
 
-      if (!mechanics?.length) return [];
+      const filteredMechanics = branchId
+        ? (mechanics ?? []).filter((m) => m.branch_id === branchId)
+        : (mechanics ?? []);
 
-      const userIds = mechanics.map((m) => m.user_id);
+      if (!filteredMechanics.length) return [];
+
+      const userIds = filteredMechanics.map((m) => m.user_id);
 
       const { data: profiles } = await supabase
         .from("profiles")
@@ -301,11 +317,12 @@ export async function getDailyReport(
   orgId: string,
   mechanicId: string | null,
   date: string,
+  branchId: string | null = null,
 ): Promise<DailyReport> {
   const supabase = await createClient();
 
   return withCache(
-    ["getDailyReport", orgId, mechanicId ?? "all", date],
+    ["getDailyReport", orgId, mechanicId ?? "all", date, branchId ?? "all"],
     async () => {
       let mechanicName = "All Mechanics";
       if (mechanicId) {
@@ -328,6 +345,9 @@ export async function getDailyReport(
 
       if (mechanicId) {
         query = query.eq("mechanic_id", mechanicId);
+      }
+      if (branchId) {
+        query = query.eq("branch_id", branchId);
       }
 
       const { data: workOrders } = await query;
@@ -395,7 +415,7 @@ export async function getDailyReport(
       // ── ERP-grade enrichments ──────────────────────────────
       const [profitability, comparison, mechanicKpis] = await Promise.all([
         calculateProfitability(supabase, woIds),
-        getComparisonData(supabase, orgId, date, date, mechanicId),
+        getComparisonData(supabase, orgId, date, date, mechanicId, branchId),
         !mechanicId
           ? getMechanicKpis(supabase, orgId, woIds)
           : Promise.resolve([]),
@@ -448,11 +468,19 @@ export async function getCustomReport(
   mechanicId: string | null,
   dateFrom: string,
   dateTo: string,
+  branchId: string | null = null,
 ): Promise<DailyReport> {
   const supabase = await createClient();
 
   return withCache(
-    ["getCustomReport", orgId, mechanicId ?? "all", dateFrom, dateTo],
+    [
+      "getCustomReport",
+      orgId,
+      mechanicId ?? "all",
+      dateFrom,
+      dateTo,
+      branchId ?? "all",
+    ],
     async () => {
       let mechanicName = "All Mechanics";
       if (mechanicId) {
@@ -475,6 +503,9 @@ export async function getCustomReport(
 
       if (mechanicId) {
         query = query.eq("mechanic_id", mechanicId);
+      }
+      if (branchId) {
+        query = query.eq("branch_id", branchId);
       }
 
       const { data: workOrders } = await query;
@@ -541,7 +572,14 @@ export async function getCustomReport(
 
       const [profitability, comparison, mechanicKpis] = await Promise.all([
         calculateProfitability(supabase, woIds),
-        getComparisonData(supabase, orgId, dateFrom, dateTo, mechanicId),
+        getComparisonData(
+          supabase,
+          orgId,
+          dateFrom,
+          dateTo,
+          mechanicId,
+          branchId,
+        ),
         !mechanicId
           ? getMechanicKpis(supabase, orgId, woIds)
           : Promise.resolve([]),
@@ -592,94 +630,116 @@ export async function getWeeklyReport(
   orgId: string,
   mechanicId: string | null,
   weekStart: string,
+  branchId: string | null = null,
 ): Promise<WeeklyReport> {
-  const weekStartDate = new Date(weekStart);
-  const weekEndDate = new Date(weekStartDate);
-  weekEndDate.setDate(weekEndDate.getDate() + 6);
+  return withCache(
+    [
+      "getWeeklyReport",
+      orgId,
+      mechanicId ?? "all",
+      weekStart,
+      branchId ?? "all",
+    ],
+    async () => {
+      const weekStartDate = new Date(weekStart);
+      const weekEndDate = new Date(weekStartDate);
+      weekEndDate.setDate(weekEndDate.getDate() + 6);
 
-  const weekEnd = weekEndDate.toISOString().split("T")[0];
+      const weekEnd = weekEndDate.toISOString().split("T")[0];
 
-  const supabase = await createClient();
-  let mechanicName = "All Mechanics";
-  if (mechanicId) {
-    const { data: mechanic } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", mechanicId)
-      .single();
-    mechanicName = mechanic?.full_name ?? "Unknown";
-  }
+      const supabase = await createClient();
+      let mechanicName = "All Mechanics";
+      if (mechanicId) {
+        const { data: mechanic } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", mechanicId)
+          .single();
+        mechanicName = mechanic?.full_name ?? "Unknown";
+      }
 
-  const dailyBreakdown: DailyReport[] = [];
-  let totalWos = 0;
-  let totalServices = 0;
-  let totalParts = 0;
-  let totalRevenue = 0;
-  let totalDiscounts = 0;
+      const dailyBreakdown: DailyReport[] = [];
+      let totalWos = 0;
+      let totalServices = 0;
+      let totalParts = 0;
+      let totalRevenue = 0;
+      let totalDiscounts = 0;
 
-  const dailyResults = await Promise.all(
-    Array.from({ length: 7 }, async (_, i) => {
-      const d = new Date(weekStartDate);
-      d.setDate(d.getDate() + i);
-      const dateStr = d.toISOString().split("T")[0];
-      return getDailyReport(orgId, mechanicId, dateStr);
-    }),
+      const dailyResults = await Promise.all(
+        Array.from({ length: 7 }, async (_, i) => {
+          const d = new Date(weekStartDate);
+          d.setDate(d.getDate() + i);
+          const dateStr = d.toISOString().split("T")[0];
+          return getDailyReport(orgId, mechanicId, dateStr, branchId);
+        }),
+      );
+      for (const daily of dailyResults) {
+        dailyBreakdown.push(daily);
+        totalWos += daily.work_orders_completed;
+        totalServices += daily.services_count;
+        totalParts += daily.parts_count;
+        totalRevenue += daily.total_revenue;
+        totalDiscounts += daily.total_discounts;
+      }
+
+      const allWoIds = dailyBreakdown.flatMap((d) =>
+        d.work_orders.map((w) => w.id),
+      );
+      const [profitability, comparison, mechanicKpis] = await Promise.all([
+        calculateProfitability(supabase, allWoIds),
+        getComparisonData(
+          supabase,
+          orgId,
+          weekStart,
+          weekEnd,
+          mechanicId,
+          branchId,
+        ),
+        !mechanicId
+          ? getMechanicKpis(supabase, orgId, allWoIds)
+          : Promise.resolve([]),
+      ]);
+
+      if (comparison) {
+        comparison.revenue_change_pct =
+          comparison.total_revenue > 0
+            ? Math.round(
+                ((totalRevenue - comparison.total_revenue) /
+                  comparison.total_revenue) *
+                  1000,
+              ) / 10
+            : null;
+        comparison.work_orders_change_pct =
+          comparison.work_orders_completed > 0
+            ? Math.round(
+                ((totalWos - comparison.work_orders_completed) /
+                  comparison.work_orders_completed) *
+                  1000,
+              ) / 10
+            : null;
+      }
+
+      return {
+        week_start: weekStart,
+        week_end: weekEnd,
+        mechanic_id: mechanicId ?? "",
+        mechanic_name: mechanicName,
+        work_orders_completed: totalWos,
+        services_count: totalServices,
+        parts_count: totalParts,
+        total_revenue: totalRevenue,
+        total_discounts: totalDiscounts,
+        daily_breakdown: dailyBreakdown,
+        comparison,
+        profitability,
+        mechanic_kpis: mechanicKpis,
+      };
+    },
+    {
+      tags: [cacheTags.reports(orgId)],
+      revalidate: cacheDurations.reports,
+    },
   );
-  for (const daily of dailyResults) {
-    dailyBreakdown.push(daily);
-    totalWos += daily.work_orders_completed;
-    totalServices += daily.services_count;
-    totalParts += daily.parts_count;
-    totalRevenue += daily.total_revenue;
-    totalDiscounts += daily.total_discounts;
-  }
-
-  // ── ERP-grade enrichments ──────────────────────────────
-  const allWoIds = dailyBreakdown.flatMap((d) =>
-    d.work_orders.map((w) => w.id),
-  );
-  const [profitability, comparison, mechanicKpis] = await Promise.all([
-    calculateProfitability(supabase, allWoIds),
-    getComparisonData(supabase, orgId, weekStart, weekEnd, mechanicId),
-    !mechanicId
-      ? getMechanicKpis(supabase, orgId, allWoIds)
-      : Promise.resolve([]),
-  ]);
-
-  if (comparison) {
-    comparison.revenue_change_pct =
-      comparison.total_revenue > 0
-        ? Math.round(
-            ((totalRevenue - comparison.total_revenue) /
-              comparison.total_revenue) *
-              1000,
-          ) / 10
-        : null;
-    comparison.work_orders_change_pct =
-      comparison.work_orders_completed > 0
-        ? Math.round(
-            ((totalWos - comparison.work_orders_completed) /
-              comparison.work_orders_completed) *
-              1000,
-          ) / 10
-        : null;
-  }
-
-  return {
-    week_start: weekStart,
-    week_end: weekEnd,
-    mechanic_id: mechanicId ?? "",
-    mechanic_name: mechanicName,
-    work_orders_completed: totalWos,
-    services_count: totalServices,
-    parts_count: totalParts,
-    total_revenue: totalRevenue,
-    total_discounts: totalDiscounts,
-    daily_breakdown: dailyBreakdown,
-    comparison,
-    profitability,
-    mechanic_kpis: mechanicKpis,
-  };
 }
 
 export async function getMonthlyReport(
@@ -687,196 +747,281 @@ export async function getMonthlyReport(
   mechanicId: string | null,
   year: number,
   month: number,
+  branchId: string | null = null,
 ): Promise<MonthlyReport> {
-  const supabase = await createClient();
-  let mechanicName = "All Mechanics";
-  if (mechanicId) {
-    const { data: mechanic } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", mechanicId)
-      .single();
-    mechanicName = mechanic?.full_name ?? "Unknown";
-  }
+  return withCache(
+    [
+      "getMonthlyReport",
+      orgId,
+      mechanicId ?? "all",
+      year,
+      month,
+      branchId ?? "all",
+    ],
+    async () => {
+      const supabase = await createClient();
+      let mechanicName = "All Mechanics";
+      if (mechanicId) {
+        const { data: mechanic } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", mechanicId)
+          .single();
+        mechanicName = mechanic?.full_name ?? "Unknown";
+      }
 
-  const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
-  const lastDay = new Date(year, month, 0).getDate();
-  const endDate = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+      const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+      const lastDay = new Date(year, month, 0).getDate();
+      const endDate = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
 
-  let query = supabase
-    .from("work_orders")
-    .select("id")
-    .eq("organization_id", orgId)
-    .gte("created_at", `${startDate}T00:00:00`)
-    .lte("created_at", `${endDate}T23:59:59`)
-    .eq("status", "Completed")
-    .is("deleted_at", null);
+      let query = supabase
+        .from("work_orders")
+        .select("id")
+        .eq("organization_id", orgId)
+        .gte("created_at", `${startDate}T00:00:00`)
+        .lte("created_at", `${endDate}T23:59:59`)
+        .eq("status", "Completed")
+        .is("deleted_at", null);
 
-  if (mechanicId) {
-    query = query.eq("mechanic_id", mechanicId);
-  }
+      if (mechanicId) {
+        query = query.eq("mechanic_id", mechanicId);
+      }
+      if (branchId) {
+        query = query.eq("branch_id", branchId);
+      }
 
-  const { data: workOrders } = await query;
+      const { data: workOrders } = await query;
+      const woIds = (workOrders ?? []).map((w) => w.id);
 
-  const woIds = (workOrders ?? []).map((w) => w.id);
+      const [servicesData, partsData] = await Promise.all([
+        woIds.length > 0
+          ? supabase
+              .from("work_order_services")
+              .select("final_price, discount_amount, work_order_id")
+              .in("work_order_id", woIds)
+          : { data: [] as any[] },
+        woIds.length > 0
+          ? supabase
+              .from("work_order_parts")
+              .select("final_price, discount_amount, work_order_id")
+              .in("work_order_id", woIds)
+          : { data: [] as any[] },
+      ]);
 
-  const [servicesData, partsData] = await Promise.all([
-    woIds.length > 0
-      ? supabase
-          .from("work_order_services")
-          .select("final_price, discount_amount, work_order_id")
-          .in("work_order_id", woIds)
-      : { data: [] as any[] },
-    woIds.length > 0
-      ? supabase
-          .from("work_order_parts")
-          .select("final_price, discount_amount, work_order_id")
-          .in("work_order_id", woIds)
-      : { data: [] as any[] },
-  ]);
+      const woDataMap = new Map<string, { services: any[]; parts: any[] }>();
+      for (const s of servicesData.data ?? []) {
+        const entry = woDataMap.get(s.work_order_id) ?? {
+          services: [],
+          parts: [],
+        };
+        entry.services.push(s);
+        woDataMap.set(s.work_order_id, entry);
+      }
+      for (const p of partsData.data ?? []) {
+        const entry = woDataMap.get(p.work_order_id) ?? {
+          services: [],
+          parts: [],
+        };
+        entry.parts.push(p);
+        woDataMap.set(p.work_order_id, entry);
+      }
 
-  const woDataMap = new Map<string, { services: any[]; parts: any[] }>();
-  for (const s of servicesData.data ?? []) {
-    const entry = woDataMap.get(s.work_order_id) ?? { services: [], parts: [] };
-    entry.services.push(s);
-    woDataMap.set(s.work_order_id, entry);
-  }
-  for (const p of partsData.data ?? []) {
-    const entry = woDataMap.get(p.work_order_id) ?? { services: [], parts: [] };
-    entry.parts.push(p);
-    woDataMap.set(p.work_order_id, entry);
-  }
+      let servicesCount = 0;
+      let partsCount = 0;
+      let totalRevenue = 0;
+      let totalDiscounts = 0;
 
-  let servicesCount = 0;
-  let partsCount = 0;
-  let totalRevenue = 0;
-  let totalDiscounts = 0;
+      for (const [_woId, data] of woDataMap) {
+        servicesCount += data.services.length;
+        partsCount += data.parts.length;
+        for (const s of data.services) {
+          totalRevenue += Number(s.final_price);
+          totalDiscounts += Number(s.discount_amount ?? 0);
+        }
+        for (const p of data.parts) {
+          totalRevenue += Number(p.final_price);
+          totalDiscounts += Number(p.discount_amount ?? 0);
+        }
+      }
 
-  for (const [_woId, data] of woDataMap) {
-    servicesCount += data.services.length;
-    partsCount += data.parts.length;
-    for (const s of data.services) {
-      totalRevenue += Number(s.final_price);
-      totalDiscounts += Number(s.discount_amount ?? 0);
-    }
-    for (const p of data.parts) {
-      totalRevenue += Number(p.final_price);
-      totalDiscounts += Number(p.discount_amount ?? 0);
-    }
-  }
+      const weeklyBreakdown: WeeklyReport[] = [];
+      const firstDay = new Date(year, month - 1, 1);
+      const lastDayDate = new Date(year, month, 0);
+      const weekStart = new Date(firstDay);
+      const dayOfWeek = weekStart.getDay();
+      const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      weekStart.setDate(weekStart.getDate() + daysToMonday);
 
-  // ── Weekly breakdown ─────────────────────────────────────
-  const weeklyBreakdown: WeeklyReport[] = [];
-  const firstDay = new Date(year, month - 1, 1);
-  const lastDayDate = new Date(year, month, 0);
-  const weekStart = new Date(firstDay);
-  // Align to Monday
-  const dayOfWeek = weekStart.getDay();
-  const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  weekStart.setDate(weekStart.getDate() + daysToMonday);
+      while (weekStart <= lastDayDate) {
+        const ws = weekStart.toISOString().split("T")[0];
+        const weeklyReport = await getWeeklyReport(
+          orgId,
+          mechanicId,
+          ws,
+          branchId,
+        );
+        const weekEndDate = new Date(weekStart);
+        weekEndDate.setDate(weekEndDate.getDate() + 6);
+        if (
+          weekEndDate.getMonth() === month - 1 ||
+          weekStart.getMonth() === month - 1
+        ) {
+          weeklyBreakdown.push(weeklyReport);
+        }
+        weekStart.setDate(weekStart.getDate() + 7);
+      }
 
-  while (weekStart <= lastDayDate) {
-    const ws = weekStart.toISOString().split("T")[0];
-    const weeklyReport = await getWeeklyReport(orgId, mechanicId, ws);
-    // Only include weeks that overlap with the target month
-    const weekEndDate = new Date(weekStart);
-    weekEndDate.setDate(weekEndDate.getDate() + 6);
-    if (
-      weekEndDate.getMonth() === month - 1 ||
-      weekStart.getMonth() === month - 1
-    ) {
-      weeklyBreakdown.push(weeklyReport);
-    }
-    weekStart.setDate(weekStart.getDate() + 7);
-  }
+      const [profitability, comparison, mechanicKpis] = await Promise.all([
+        calculateProfitability(supabase, woIds),
+        getComparisonData(
+          supabase,
+          orgId,
+          startDate,
+          endDate,
+          mechanicId,
+          branchId,
+        ),
+        !mechanicId
+          ? getMechanicKpis(supabase, orgId, woIds)
+          : Promise.resolve([]),
+      ]);
 
-  // ── ERP-grade enrichments ──────────────────────────────
-  const [profitability, comparison, mechanicKpis] = await Promise.all([
-    calculateProfitability(supabase, woIds),
-    getComparisonData(supabase, orgId, startDate, endDate, mechanicId),
-    !mechanicId ? getMechanicKpis(supabase, orgId, woIds) : Promise.resolve([]),
-  ]);
+      if (comparison) {
+        comparison.revenue_change_pct =
+          comparison.total_revenue > 0
+            ? Math.round(
+                ((totalRevenue - comparison.total_revenue) /
+                  comparison.total_revenue) *
+                  1000,
+              ) / 10
+            : null;
+        comparison.work_orders_change_pct =
+          comparison.work_orders_completed > 0
+            ? Math.round(
+                ((woIds.length - comparison.work_orders_completed) /
+                  comparison.work_orders_completed) *
+                  1000,
+              ) / 10
+            : null;
+      }
 
-  if (comparison) {
-    comparison.revenue_change_pct =
-      comparison.total_revenue > 0
-        ? Math.round(
-            ((totalRevenue - comparison.total_revenue) /
-              comparison.total_revenue) *
-              1000,
-          ) / 10
-        : null;
-    comparison.work_orders_change_pct =
-      comparison.work_orders_completed > 0
-        ? Math.round(
-            ((woIds.length - comparison.work_orders_completed) /
-              comparison.work_orders_completed) *
-              1000,
-          ) / 10
-        : null;
-  }
-
-  return {
-    year,
-    month,
-    mechanic_id: mechanicId ?? "",
-    mechanic_name: mechanicName,
-    work_orders_completed: woIds.length,
-    services_count: servicesCount,
-    parts_count: partsCount,
-    total_revenue: totalRevenue,
-    total_discounts: totalDiscounts,
-    weekly_breakdown: weeklyBreakdown,
-    comparison,
-    profitability,
-    mechanic_kpis: mechanicKpis,
-  };
+      return {
+        year,
+        month,
+        mechanic_id: mechanicId ?? "",
+        mechanic_name: mechanicName,
+        work_orders_completed: woIds.length,
+        services_count: servicesCount,
+        parts_count: partsCount,
+        total_revenue: totalRevenue,
+        total_discounts: totalDiscounts,
+        weekly_breakdown: weeklyBreakdown,
+        comparison,
+        profitability,
+        mechanic_kpis: mechanicKpis,
+      };
+    },
+    {
+      tags: [cacheTags.reports(orgId)],
+      revalidate: cacheDurations.reports,
+    },
+  );
 }
 
 export async function getEndOfDaySummary(
   orgId: string,
   date: string,
+  branchId: string | null = null,
 ): Promise<EndOfDaySummary> {
   const supabase = await createClient();
 
-  const { data: workOrders } = await supabase
-    .from("work_orders")
-    .select("id, mechanic_id")
-    .eq("organization_id", orgId)
-    .gte("completed_at", `${date}T00:00:00`)
-    .lte("completed_at", `${date}T23:59:59`)
-    .eq("status", "Completed")
-    .is("deleted_at", null);
+  const { data: workOrders } = await withBranchFilter(
+    supabase
+      .from("work_orders")
+      .select("id, mechanic_id")
+      .eq("organization_id", orgId)
+      .gte("completed_at", `${date}T00:00:00`)
+      .lte("completed_at", `${date}T23:59:59`)
+      .eq("status", "Completed")
+      .is("deleted_at", null),
+    branchId,
+  );
 
-  if (!workOrders?.length) {
+  return getEndOfDaySummaryFromScopedWorkOrders(
+    supabase,
+    orgId,
+    date,
+    branchId,
+    (workOrders ?? []) as Array<{ id: string; mechanic_id: string | null }>,
+  );
+}
+
+async function getEndOfDaySummaryFromScopedWorkOrders(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  orgId: string,
+  date: string,
+  branchId: string | null,
+  workOrders: Array<{ id: string; mechanic_id: string | null }>,
+): Promise<EndOfDaySummary> {
+  if (!workOrders.length) {
     // Still fetch open_work_orders, unpaid_invoices, issues for empty-day case
     const [openWoEmpty, unpaidInvEmpty, biggestIssueEmpty] = await Promise.all([
-      supabase
-        .from("work_orders")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", orgId)
-        .neq("status", "Completed")
-        .neq("status", "Cancelled")
-        .is("deleted_at", null),
-      supabase
-        .from("invoices")
-        .select("balance_due")
-        .eq("organization_id", orgId)
-        .in("status", ["sent", "overdue", "partial"])
-        .is("deleted_at", null),
-      // Biggest issue: oldest open work order with customer name
-      supabase
-        .from("work_orders")
-        .select(
-          "id, description, created_at, customer_id, customers!inner(full_name)",
-        )
-        .eq("organization_id", orgId)
-        .neq("status", "Completed")
-        .neq("status", "Cancelled")
-        .is("deleted_at", null)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle(),
+      branchId
+        ? supabase
+            .from("work_orders")
+            .select("id")
+            .eq("organization_id", orgId)
+            .eq("branch_id", branchId)
+            .neq("status", "Completed")
+            .neq("status", "Cancelled")
+            .is("deleted_at", null)
+        : supabase
+            .from("work_orders")
+            .select("id", { count: "exact", head: true })
+            .eq("organization_id", orgId)
+            .neq("status", "Completed")
+            .neq("status", "Cancelled")
+            .is("deleted_at", null),
+      branchId
+        ? supabase
+            .from("invoices")
+            .select("balance_due")
+            .eq("organization_id", orgId)
+            .eq("branch_id", branchId)
+            .in("status", ["sent", "overdue", "partial"])
+            .is("deleted_at", null)
+        : supabase
+            .from("invoices")
+            .select("balance_due")
+            .eq("organization_id", orgId)
+            .in("status", ["sent", "overdue", "partial"])
+            .is("deleted_at", null),
+      branchId
+        ? supabase
+            .from("work_orders")
+            .select(
+              "id, description, created_at, customer_id, customers!inner(full_name)",
+            )
+            .eq("organization_id", orgId)
+            .eq("branch_id", branchId)
+            .neq("status", "Completed")
+            .neq("status", "Cancelled")
+            .is("deleted_at", null)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .maybeSingle()
+        : supabase
+            .from("work_orders")
+            .select(
+              "id, description, created_at, customer_id, customers!inner(full_name)",
+            )
+            .eq("organization_id", orgId)
+            .neq("status", "Completed")
+            .neq("status", "Cancelled")
+            .is("deleted_at", null)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .maybeSingle(),
     ]);
     const biEmptyData = biggestIssueEmpty.data;
     const daysOpen = biEmptyData?.created_at
@@ -892,7 +1037,9 @@ export async function getEndOfDaySummary(
       total_work_orders: 0,
       total_revenue: 0,
       total_commission: 0,
-      open_work_orders: openWoEmpty.count ?? 0,
+      open_work_orders: branchId
+        ? ((openWoEmpty as { data?: unknown[] }).data?.length ?? 0)
+        : ((openWoEmpty as { count?: number }).count ?? 0),
       payment_breakdown: { cash: 0, card: 0, bank_transfer: 0, other: 0 },
       unpaid_invoices: {
         count: unpaidInvEmptyData.length,
@@ -979,13 +1126,22 @@ export async function getEndOfDaySummary(
           .in("work_order_id", woIds)
       : { data: [] as any[] },
     // Open work orders count
-    supabase
-      .from("work_orders")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId)
-      .neq("status", "Completed")
-      .neq("status", "Cancelled")
-      .is("deleted_at", null),
+    branchId
+      ? supabase
+          .from("work_orders")
+          .select("id")
+          .eq("organization_id", orgId)
+          .eq("branch_id", branchId)
+          .neq("status", "Completed")
+          .neq("status", "Cancelled")
+          .is("deleted_at", null)
+      : supabase
+          .from("work_orders")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", orgId)
+          .neq("status", "Completed")
+          .neq("status", "Cancelled")
+          .is("deleted_at", null),
     // Payment method breakdown (payments on today's work orders)
     woIds.length > 0
       ? supabase
@@ -994,25 +1150,47 @@ export async function getEndOfDaySummary(
           .in("work_order_id", woIds)
       : { data: [] as any[] },
     // Unpaid invoices (balance_due)
-    supabase
-      .from("invoices")
-      .select("balance_due")
-      .eq("organization_id", orgId)
-      .in("status", ["sent", "overdue", "partial"])
-      .is("deleted_at", null),
+    branchId
+      ? supabase
+          .from("invoices")
+          .select("balance_due")
+          .eq("organization_id", orgId)
+          .eq("branch_id", branchId)
+          .in("status", ["sent", "overdue", "partial"])
+          .is("deleted_at", null)
+      : supabase
+          .from("invoices")
+          .select("balance_due")
+          .eq("organization_id", orgId)
+          .in("status", ["sent", "overdue", "partial"])
+          .is("deleted_at", null),
     // Biggest issue: oldest open work order with customer name
-    supabase
-      .from("work_orders")
-      .select(
-        "id, description, created_at, customer_id, customers!inner(full_name)",
-      )
-      .eq("organization_id", orgId)
-      .neq("status", "Completed")
-      .neq("status", "Cancelled")
-      .is("deleted_at", null)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
+    branchId
+      ? supabase
+          .from("work_orders")
+          .select(
+            "id, description, created_at, customer_id, customers!inner(full_name)",
+          )
+          .eq("organization_id", orgId)
+          .eq("branch_id", branchId)
+          .neq("status", "Completed")
+          .neq("status", "Cancelled")
+          .is("deleted_at", null)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle()
+      : supabase
+          .from("work_orders")
+          .select(
+            "id, description, created_at, customer_id, customers!inner(full_name)",
+          )
+          .eq("organization_id", orgId)
+          .neq("status", "Completed")
+          .neq("status", "Cancelled")
+          .is("deleted_at", null)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle(),
   ]);
 
   const woDataMap = new Map<string, { services: any[]; parts: any[] }>();
@@ -1143,7 +1321,9 @@ export async function getEndOfDaySummary(
     total_work_orders: totalWorkOrders,
     total_revenue: totalRevenue,
     total_commission: totalCommission,
-    open_work_orders: (openWoResult as any)?.count ?? 0,
+    open_work_orders: branchId
+      ? ((openWoResult as { data?: unknown[] }).data?.length ?? 0)
+      : ((openWoResult as { count?: number }).count ?? 0),
     payment_breakdown: paymentBreakdown,
     unpaid_invoices: {
       count: unpaidInvCount,
@@ -1173,6 +1353,7 @@ export async function getMechanicPerformanceTrend(
   period: "weekly" | "monthly" = "weekly",
   startDate: string,
   endDate: string,
+  branchId: string | null = null,
 ): Promise<TechnicianPerformance> {
   const supabase = await createClient();
 
@@ -1184,6 +1365,7 @@ export async function getMechanicPerformanceTrend(
       period,
       startDate,
       endDate,
+      branchId ?? "all",
     ],
     async () => {
       const { data: profile } = await supabase
@@ -1193,15 +1375,18 @@ export async function getMechanicPerformanceTrend(
         .single();
       const mechanicName = profile?.full_name ?? "Unknown";
 
-      const { data: workOrders } = await supabase
-        .from("work_orders")
-        .select("id, created_at")
-        .eq("organization_id", orgId)
-        .eq("mechanic_id", mechanicId)
-        .eq("status", "Completed")
-        .gte("created_at", `${startDate}T00:00:00`)
-        .lte("created_at", `${endDate}T23:59:59`)
-        .is("deleted_at", null);
+      const { data: workOrders } = await withBranchFilter(
+        supabase
+          .from("work_orders")
+          .select("id, created_at")
+          .eq("organization_id", orgId)
+          .eq("mechanic_id", mechanicId)
+          .eq("status", "Completed")
+          .gte("created_at", `${startDate}T00:00:00`)
+          .lte("created_at", `${endDate}T23:59:59`)
+          .is("deleted_at", null),
+        branchId,
+      );
 
       const woIds = (workOrders ?? []).map((w) => w.id);
 
@@ -1293,11 +1478,12 @@ export async function getMechanicPerformanceTrend(
 export async function getDashboardData(
   orgId: string,
   period: "today" | "week" | "month" | "all" = "all",
+  branchId: string | null = null,
 ): Promise<DashboardData> {
   const supabase = await createClient();
 
   return withCache(
-    ["getDashboardData", orgId, period],
+    ["getDashboardData", orgId, period, branchId ?? "all"],
     async () => {
       const today = new Date().toISOString().split("T")[0];
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
@@ -1328,59 +1514,80 @@ export async function getDashboardData(
         allCompletedWos,
       ] = await Promise.all([
         // Completed WOs in period (for revenue)
-        supabase
-          .from("work_orders")
-          .select("id")
-          .eq("organization_id", orgId)
-          .eq("status", "Completed")
-          .gte("updated_at", `${dateFrom}T00:00:00`)
-          .is("deleted_at", null),
+        withBranchFilter(
+          supabase
+            .from("work_orders")
+            .select("id")
+            .eq("organization_id", orgId)
+            .eq("status", "Completed")
+            .gte("updated_at", `${dateFrom}T00:00:00`)
+            .is("deleted_at", null),
+          branchId,
+        ),
 
         // Active WOs
-        supabase
-          .from("work_orders")
-          .select("id")
-          .eq("organization_id", orgId)
-          .not("status", "in", '("Completed","Cancelled")')
-          .is("deleted_at", null),
+        withBranchFilter(
+          supabase
+            .from("work_orders")
+            .select("id")
+            .eq("organization_id", orgId)
+            .not("status", "in", '("Completed","Cancelled")')
+            .is("deleted_at", null),
+          branchId,
+        ),
 
         // All WO statuses for distribution
-        supabase
-          .from("work_orders")
-          .select("status")
-          .eq("organization_id", orgId)
-          .is("deleted_at", null),
+        withBranchFilter(
+          supabase
+            .from("work_orders")
+            .select("status")
+            .eq("organization_id", orgId)
+            .is("deleted_at", null),
+          branchId,
+        ),
 
         // Recent 10 WO ids (we'll batch-fetch details)
-        supabase
-          .from("work_orders")
-          .select("id")
-          .eq("organization_id", orgId)
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false })
-          .limit(10),
+        withBranchFilter(
+          supabase
+            .from("work_orders")
+            .select("id")
+            .eq("organization_id", orgId)
+            .is("deleted_at", null)
+            .order("created_at", { ascending: false })
+            .limit(10),
+          branchId,
+        ),
 
         // Total customers
-        supabase
-          .from("customers")
-          .select("id", { count: "exact", head: true })
-          .eq("organization_id", orgId)
-          .is("deleted_at", null),
+        withBranchFilter(
+          supabase
+            .from("customers")
+            .select("id", { count: "exact", head: true })
+            .eq("organization_id", orgId)
+            .is("deleted_at", null),
+          branchId,
+        ),
 
         // Total vehicles
-        supabase
-          .from("vehicles")
-          .select("id", { count: "exact", head: true })
-          .eq("organization_id", orgId)
-          .is("deleted_at", null),
+        withBranchFilter(
+          supabase
+            .from("vehicles")
+            .select("id", { count: "exact", head: true })
+            .eq("organization_id", orgId)
+            .is("deleted_at", null),
+          branchId,
+        ),
 
         // All completed WOs ever (for tech perf and categories)
-        supabase
-          .from("work_orders")
-          .select("id")
-          .eq("organization_id", orgId)
-          .eq("status", "Completed")
-          .is("deleted_at", null),
+        withBranchFilter(
+          supabase
+            .from("work_orders")
+            .select("id")
+            .eq("organization_id", orgId)
+            .eq("status", "Completed")
+            .is("deleted_at", null),
+          branchId,
+        ),
       ]);
 
       // ── Batch 2: Services + Parts for revenue ──────────────
@@ -1484,13 +1691,18 @@ export async function getDashboardData(
         customerAcquisitionTrend,
         prevSummary,
       ] = await Promise.all([
-        getRevenueTrendBatched(supabase, orgId, dayCount),
+        getRevenueTrendBatched(supabase, orgId, dayCount, branchId),
         getTopServicesBatched(supabase, completedWoIds),
-        getTechnicianPerformanceBatched(supabase, orgId, allCompletedIds),
+        getTechnicianPerformanceBatched(
+          supabase,
+          orgId,
+          allCompletedIds,
+          branchId,
+        ),
         getRecentWorkOrdersBatched(supabase, recentWoIds),
         getServiceCategoryBreakdownBatched(supabase, orgId, allCompletedIds),
-        getCustomerAcquisitionTrendBatched(supabase, orgId),
-        getPreviousPeriodSummary(supabase, orgId, period),
+        getCustomerAcquisitionTrendBatched(supabase, orgId, branchId),
+        getPreviousPeriodSummary(supabase, orgId, period, branchId),
       ]);
 
       // Combine into a DashboardSummary shape for comparison
@@ -1528,7 +1740,7 @@ export async function getDashboardData(
       return dashboardData;
     },
     {
-      tags: [cacheTags.dashboardMetrics(orgId)],
+      tags: [cacheTags.dashboardMetrics(orgId, branchId ?? undefined)],
       revalidate: cacheDurations.dashboardMetrics,
     },
   );
@@ -1694,6 +1906,7 @@ async function getPreviousPeriodSummary(
   supabase: Awaited<ReturnType<typeof createClient>>,
   orgId: string,
   period: "today" | "week" | "month" | "all",
+  branchId: string | null = null,
 ): Promise<Omit<
   DashboardSummary,
   | "activeWorkOrders"
@@ -1721,14 +1934,17 @@ async function getPreviousPeriodSummary(
   const prevTo = prevEnd.toISOString().split("T")[0];
 
   // Get completed WOs in previous period
-  const { data: prevWos } = await supabase
-    .from("work_orders")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("status", "Completed")
-    .gte("updated_at", `${prevFrom}T00:00:00`)
-    .lte("updated_at", `${prevTo}T23:59:59`)
-    .is("deleted_at", null);
+  const { data: prevWos } = await withBranchFilter(
+    supabase
+      .from("work_orders")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("status", "Completed")
+      .gte("updated_at", `${prevFrom}T00:00:00`)
+      .lte("updated_at", `${prevTo}T23:59:59`)
+      .is("deleted_at", null),
+    branchId,
+  );
 
   const prevIds = (prevWos ?? []).map((w: { id: string }) => w.id);
   if (prevIds.length === 0) {
@@ -1896,6 +2112,7 @@ async function getRevenueTrendBatched(
   supabase: Awaited<ReturnType<typeof createClient>>,
   orgId: string,
   dayCount: number,
+  branchId: string | null = null,
 ): Promise<RevenueTrendPoint[]> {
   const dateStrings: string[] = [];
   for (let i = dayCount - 1; i >= 0; i--) {
@@ -1907,14 +2124,17 @@ async function getRevenueTrendBatched(
   const endDate = dateStrings[dateStrings.length - 1];
 
   // 1 query: get all completed WO ids in date range
-  const { data: dayWos } = await supabase
-    .from("work_orders")
-    .select("id, updated_at")
-    .eq("organization_id", orgId)
-    .eq("status", "Completed")
-    .gte("updated_at", `${startDate}T00:00:00`)
-    .lte("updated_at", `${endDate}T23:59:59`)
-    .is("deleted_at", null);
+  const { data: dayWos } = await withBranchFilter(
+    supabase
+      .from("work_orders")
+      .select("id, updated_at")
+      .eq("organization_id", orgId)
+      .eq("status", "Completed")
+      .gte("updated_at", `${startDate}T00:00:00`)
+      .lte("updated_at", `${endDate}T23:59:59`)
+      .is("deleted_at", null),
+    branchId,
+  );
 
   const woMap = new Map<string, string>(); // id → date
   for (const wo of dayWos ?? []) {
@@ -2000,16 +2220,21 @@ async function getTechnicianPerformanceBatched(
   supabase: Awaited<ReturnType<typeof createClient>>,
   orgId: string,
   allCompletedIds: string[],
+  branchId: string | null = null,
 ): Promise<TechnicianPerformance[]> {
   // 1 query: get mechanics
   const { data: mechanics } = await supabase
     .from("organization_users")
-    .select("user_id, roles!inner(name)")
+    .select("user_id, roles!inner(name), branch_id")
     .eq("organization_id", orgId)
     .eq("roles.name", "mechanic");
 
-  if (!mechanics?.length) return [];
-  const mechanicIds = mechanics.map((m: { user_id: string }) => m.user_id);
+  const scopedMechanics = branchId
+    ? (mechanics ?? []).filter((m) => m.branch_id === branchId)
+    : (mechanics ?? []);
+
+  if (!scopedMechanics.length) return [];
+  const mechanicIds = scopedMechanics.map((m: { user_id: string }) => m.user_id);
 
   // 1 query: get profiles for all mechanics
   const { data: profiles } = await supabase
@@ -2023,13 +2248,16 @@ async function getTechnicianPerformanceBatched(
   }
 
   // 1 query: get all completed WOs grouped by mechanic
-  const { data: woByMechanic } = await supabase
-    .from("work_orders")
-    .select("id, mechanic_id")
-    .eq("organization_id", orgId)
-    .eq("status", "Completed")
-    .in("mechanic_id", mechanicIds)
-    .is("deleted_at", null);
+  const { data: woByMechanic } = await withBranchFilter(
+    supabase
+      .from("work_orders")
+      .select("id, mechanic_id")
+      .eq("organization_id", orgId)
+      .eq("status", "Completed")
+      .in("mechanic_id", mechanicIds)
+      .is("deleted_at", null),
+    branchId,
+  );
 
   // Group WO ids by mechanic
   const woPerMechanic = new Map<string, string[]>();
@@ -2278,13 +2506,17 @@ async function getServiceCategoryBreakdownBatched(
 async function getCustomerAcquisitionTrendBatched(
   supabase: Awaited<ReturnType<typeof createClient>>,
   orgId: string,
+  branchId: string | null = null,
 ): Promise<CustomerAcquisitionPoint[]> {
   // 1 query: get all customers with created_at
-  const { data: customers } = await supabase
-    .from("customers")
-    .select("created_at")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null);
+  const { data: customers } = await withBranchFilter(
+    supabase
+      .from("customers")
+      .select("created_at")
+      .eq("organization_id", orgId)
+      .is("deleted_at", null),
+    branchId,
+  );
 
   // Group by month in-memory
   const monthCount = new Map<string, number>();
@@ -2319,19 +2551,23 @@ export interface TimelineEvent {
 
 export async function getDailyTimeline(
   orgId: string,
+  branchId: string | null = null,
 ): Promise<TimelineEvent[]> {
   const supabase = await createClient();
   const today = new Date().toISOString().split("T")[0];
 
-  const { data: wos, error: woError } = await supabase
-    .from("work_orders")
-    .select(
-      "id, customer:customers(first_name, last_name), vehicle:vehicles(plate_number), bay_number",
-    )
-    .eq("organization_id", orgId)
-    .gte("updated_at", `${today}T00:00:00`)
-    .order("updated_at", { ascending: false })
-    .limit(40);
+  const { data: wos, error: woError } = await withBranchFilter(
+    supabase
+      .from("work_orders")
+      .select(
+        "id, customer:customers(first_name, last_name), vehicle:vehicles(plate_number), bay_number",
+      )
+      .eq("organization_id", orgId)
+      .gte("updated_at", `${today}T00:00:00`)
+      .order("updated_at", { ascending: false })
+      .limit(40),
+    branchId,
+  );
 
   if (woError || !wos?.length) return [];
 
@@ -2418,20 +2654,24 @@ export async function generateReportInsights(
   orgId: string,
   dateFrom: string,
   dateTo: string,
+  branchId: string | null = null,
 ): Promise<ReportInsight[]> {
   const supabase = await createClient();
   const insights: ReportInsight[] = [];
   let insightId = 0;
 
   // Fetch current period data
-  const { data: currentWOs } = await supabase
-    .from("work_orders")
-    .select("id, mechanic_id, created_at")
-    .eq("organization_id", orgId)
-    .eq("status", "Completed")
-    .gte("created_at", `${dateFrom}T00:00:00`)
-    .lte("created_at", `${dateTo}T23:59:59`)
-    .is("deleted_at", null);
+  const { data: currentWOs } = await withBranchFilter(
+    supabase
+      .from("work_orders")
+      .select("id, mechanic_id, created_at")
+      .eq("organization_id", orgId)
+      .eq("status", "Completed")
+      .gte("created_at", `${dateFrom}T00:00:00`)
+      .lte("created_at", `${dateTo}T23:59:59`)
+      .is("deleted_at", null),
+    branchId,
+  );
 
   const currentWoIds = (currentWOs ?? []).map((w) => w.id);
   if (currentWoIds.length === 0) {
@@ -2456,14 +2696,17 @@ export async function generateReportInsights(
     .toISOString()
     .split("T")[0];
 
-  const { data: prevWOs } = await supabase
-    .from("work_orders")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("status", "Completed")
-    .gte("created_at", `${prevFrom}T00:00:00`)
-    .lte("created_at", `${prevTo}T23:59:59`)
-    .is("deleted_at", null);
+  const { data: prevWOs } = await withBranchFilter(
+    supabase
+      .from("work_orders")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("status", "Completed")
+      .gte("created_at", `${prevFrom}T00:00:00`)
+      .lte("created_at", `${prevTo}T23:59:59`)
+      .is("deleted_at", null),
+    branchId,
+  );
 
   const prevWoIds = (prevWOs ?? []).map((w) => w.id);
 
@@ -2666,6 +2909,7 @@ export async function getRevenueForecast(
   orgId: string,
   periodType: "daily" | "weekly" | "monthly",
   date: string,
+  branchId: string | null = null,
 ): Promise<ReportForecast> {
   const supabase = await createClient();
 
@@ -2706,14 +2950,17 @@ export async function getRevenueForecast(
   }
 
   // Fetch revenue to date
-  const { data: wos } = await supabase
-    .from("work_orders")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("status", "Completed")
-    .gte("created_at", `${periodStart}T00:00:00`)
-    .lte("created_at", `${periodEnd}T23:59:59`)
-    .is("deleted_at", null);
+  const { data: wos } = await withBranchFilter(
+    supabase
+      .from("work_orders")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("status", "Completed")
+      .gte("created_at", `${periodStart}T00:00:00`)
+      .lte("created_at", `${periodEnd}T23:59:59`)
+      .is("deleted_at", null),
+    branchId,
+  );
 
   const woIds = (wos ?? []).map((w) => w.id);
   let currentRevenue = 0;
@@ -2746,14 +2993,17 @@ export async function getRevenueForecast(
   const prevStart = new Date(prevStartMs).toISOString().split("T")[0];
   const prevEnd = new Date(prevEndMs).toISOString().split("T")[0];
 
-  const { data: prevWOs } = await supabase
-    .from("work_orders")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("status", "Completed")
-    .gte("created_at", `${prevStart}T00:00:00`)
-    .lte("created_at", `${prevEnd}T23:59:59`)
-    .is("deleted_at", null);
+  const { data: prevWOs } = await withBranchFilter(
+    supabase
+      .from("work_orders")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("status", "Completed")
+      .gte("created_at", `${prevStart}T00:00:00`)
+      .lte("created_at", `${prevEnd}T23:59:59`)
+      .is("deleted_at", null),
+    branchId,
+  );
 
   const prevWoIds = (prevWOs ?? []).map((w) => w.id);
   let prevRevenue = 0;
@@ -2802,6 +3052,7 @@ export async function getRevenueTargets(
   orgId: string,
   periodType: "daily" | "weekly" | "monthly",
   _date: string,
+  branchId: string | null = null,
 ): Promise<ReportTarget[]> {
   const supabase = await createClient();
 
@@ -2828,14 +3079,17 @@ export async function getRevenueTargets(
     if (!periodStart || !periodEnd) continue;
 
     // Fetch actual revenue for this period
-    const { data: wos } = await supabase
-      .from("work_orders")
-      .select("id")
-      .eq("organization_id", orgId)
-      .eq("status", "Completed")
-      .gte("created_at", `${periodStart}T00:00:00`)
-      .lte("created_at", `${periodEnd}T23:59:59`)
-      .is("deleted_at", null);
+    const { data: wos } = await withBranchFilter(
+      supabase
+        .from("work_orders")
+        .select("id")
+        .eq("organization_id", orgId)
+        .eq("status", "Completed")
+        .gte("created_at", `${periodStart}T00:00:00`)
+        .lte("created_at", `${periodEnd}T23:59:59`)
+        .is("deleted_at", null),
+      branchId,
+    );
 
     const woIds = (wos ?? []).map((w) => w.id);
     let actualRevenue = 0;
@@ -2933,18 +3187,22 @@ export async function getCustomerRetention(
   orgId: string,
   dateFrom: string,
   dateTo: string,
+  branchId: string | null = null,
 ): Promise<CustomerRetentionData> {
   const supabase = await createClient();
 
   // Get all WOs in period with customer info
-  const { data: wos } = await supabase
-    .from("work_orders")
-    .select("id, customer_id, created_at")
-    .eq("organization_id", orgId)
-    .eq("status", "Completed")
-    .gte("created_at", `${dateFrom}T00:00:00`)
-    .lte("created_at", `${dateTo}T23:59:59`)
-    .is("deleted_at", null);
+  const { data: wos } = await withBranchFilter(
+    supabase
+      .from("work_orders")
+      .select("id, customer_id, created_at")
+      .eq("organization_id", orgId)
+      .eq("status", "Completed")
+      .gte("created_at", `${dateFrom}T00:00:00`)
+      .lte("created_at", `${dateTo}T23:59:59`)
+      .is("deleted_at", null),
+    branchId,
+  );
 
   if (!wos?.length) {
     return {
@@ -2965,23 +3223,29 @@ export async function getCustomerRetention(
   // For each customer, count total visits (all time) and visits in period
   const [allTimeWOs, prevWOs] = await Promise.all([
     customerIds.length > 0
-      ? supabase
-          .from("work_orders")
-          .select("customer_id, total_amount")
-          .eq("organization_id", orgId)
-          .eq("status", "Completed")
-          .in("customer_id", customerIds)
-          .is("deleted_at", null)
+      ? withBranchFilter(
+          supabase
+            .from("work_orders")
+            .select("customer_id, total_amount")
+            .eq("organization_id", orgId)
+            .eq("status", "Completed")
+            .in("customer_id", customerIds)
+            .is("deleted_at", null),
+          branchId,
+        )
       : { data: [] as any[] },
     customerIds.length > 0
-      ? supabase
-          .from("work_orders")
-          .select("customer_id")
-          .eq("organization_id", orgId)
-          .eq("status", "Completed")
-          .lt("created_at", `${dateFrom}T00:00:00`)
-          .in("customer_id", customerIds)
-          .is("deleted_at", null)
+      ? withBranchFilter(
+          supabase
+            .from("work_orders")
+            .select("customer_id")
+            .eq("organization_id", orgId)
+            .eq("status", "Completed")
+            .lt("created_at", `${dateFrom}T00:00:00`)
+            .in("customer_id", customerIds)
+            .is("deleted_at", null),
+          branchId,
+        )
       : { data: [] as any[] },
   ]);
 
@@ -3123,18 +3387,22 @@ export async function getPnLSummary(
   orgId: string,
   dateFrom: string,
   dateTo: string,
+  branchId: string | null = null,
 ): Promise<PnLSummary> {
   const supabase = await createClient();
 
   // Fetch completed WOs in period
-  const { data: wos } = await supabase
-    .from("work_orders")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("status", "Completed")
-    .gte("created_at", `${dateFrom}T00:00:00`)
-    .lte("created_at", `${dateTo}T23:59:59`)
-    .is("deleted_at", null);
+  const { data: wos } = await withBranchFilter(
+    supabase
+      .from("work_orders")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("status", "Completed")
+      .gte("created_at", `${dateFrom}T00:00:00`)
+      .lte("created_at", `${dateTo}T23:59:59`)
+      .is("deleted_at", null),
+    branchId,
+  );
 
   const woIds = (wos ?? []).map((w) => w.id);
 
@@ -3152,13 +3420,16 @@ export async function getPnLSummary(
           .select("final_price, unit_cost, quantity")
           .in("work_order_id", woIds)
       : { data: [] as any[] },
-    supabase
-      .from("expenses")
-      .select("amount, category")
-      .eq("organization_id", orgId)
-      .gte("expense_date", dateFrom)
-      .lte("expense_date", dateTo)
-      .is("deleted_at", null),
+    withBranchFilter(
+      supabase
+        .from("expenses")
+        .select("amount, category")
+        .eq("organization_id", orgId)
+        .gte("expense_date", dateFrom)
+        .lte("expense_date", dateTo)
+        .is("deleted_at", null),
+      branchId,
+    ),
   ]);
 
   const serviceRevenue = (svcs.data ?? []).reduce(
@@ -3230,17 +3501,21 @@ export async function getServiceBreakdown(
   orgId: string,
   dateFrom: string,
   dateTo: string,
+  branchId: string | null = null,
 ): Promise<ServiceBreakdown[]> {
   const supabase = await createClient();
 
-  const { data: wos } = await supabase
-    .from("work_orders")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("status", "Completed")
-    .gte("created_at", `${dateFrom}T00:00:00`)
-    .lte("created_at", `${dateTo}T23:59:59`)
-    .is("deleted_at", null);
+  const { data: wos } = await withBranchFilter(
+    supabase
+      .from("work_orders")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("status", "Completed")
+      .gte("created_at", `${dateFrom}T00:00:00`)
+      .lte("created_at", `${dateTo}T23:59:59`)
+      .is("deleted_at", null),
+    branchId,
+  );
 
   const woIds = (wos ?? []).map((w) => w.id);
   if (woIds.length === 0) return [];

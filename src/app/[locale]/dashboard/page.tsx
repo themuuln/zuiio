@@ -23,9 +23,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
+import { BranchSelect } from "@/components/branch-select";
 import type { ExportColumn } from "@/lib/export";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { dashboardKeys } from "@/lib/queries/keys";
+import { useBranches } from "@/lib/queries/use-branches";
 import { useDashboard } from "@/lib/queries/use-dashboard";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { WorkOrderDetail } from "@/lib/types";
@@ -69,9 +71,28 @@ export default function DashboardPage() {
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(
     undefined,
   );
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("all");
   // ── React Query hooks ───────────────────────────────
   const { data: org, isPending: orgLoading, error: orgError } = useCurrentOrg();
   const orgId = org?.orgId;
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
+  const { data: branches = [] } = useBranches(orgId);
+
+  useEffect(() => {
+    if (selectedBranchId === "all") {
+      if (branches.length === 1) {
+        setSelectedBranchId(branches[0].id);
+      }
+      return;
+    }
+
+    const branchStillExists = branches.some(
+      (branch) => branch.id === selectedBranchId,
+    );
+    if (!branchStillExists) {
+      setSelectedBranchId("all");
+    }
+  }, [branches, selectedBranchId]);
 
   // ── Realtime: refresh dashboard when core tables change ────
   useRealtimeMulti({
@@ -79,28 +100,34 @@ export default function DashboardPage() {
     tables: [
       {
         table: "work_orders",
-        queryKey: dashboardKeys.all(orgId ?? ""),
-        filter: `organization_id=eq.${orgId}`,
+        queryKey: dashboardKeys.all(orgId ?? "", branchFilter),
+        filter: branchFilter
+          ? `organization_id=eq.${orgId},branch_id=eq.${branchFilter}`
+          : `organization_id=eq.${orgId}`,
       },
       {
         table: "invoices",
-        queryKey: dashboardKeys.all(orgId ?? ""),
-        filter: `organization_id=eq.${orgId}`,
+        queryKey: dashboardKeys.all(orgId ?? "", branchFilter),
+        filter: branchFilter
+          ? `organization_id=eq.${orgId},branch_id=eq.${branchFilter}`
+          : `organization_id=eq.${orgId}`,
       },
       {
         table: "work_order_services",
-        queryKey: dashboardKeys.all(orgId ?? ""),
+        queryKey: dashboardKeys.all(orgId ?? "", branchFilter),
         filter: `organization_id=eq.${orgId}`,
       },
       {
         table: "work_order_parts",
-        queryKey: dashboardKeys.all(orgId ?? ""),
+        queryKey: dashboardKeys.all(orgId ?? "", branchFilter),
         filter: `organization_id=eq.${orgId}`,
       },
       {
         table: "customers",
-        queryKey: dashboardKeys.all(orgId ?? ""),
-        filter: `organization_id=eq.${orgId}`,
+        queryKey: dashboardKeys.all(orgId ?? "", branchFilter),
+        filter: branchFilter
+          ? `organization_id=eq.${orgId},branch_id=eq.${branchFilter}`
+          : `organization_id=eq.${orgId}`,
       },
     ],
   });
@@ -111,7 +138,7 @@ export default function DashboardPage() {
     isFetching: dashboardFetching,
     error: dashboardError,
     refetch: refetchDashboard,
-  } = useDashboard(orgId, period);
+  } = useDashboard(orgId, period, branchFilter);
 
   // ── Track first successful load (to distinguish initial vs period-change) ──
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -128,6 +155,24 @@ export default function DashboardPage() {
     : dashboardError
       ? dashboardError.message
       : null;
+
+  const filteredWorkOrders = useMemo(() => {
+    const recentWorkOrders = data?.recentWorkOrders;
+    if (!recentWorkOrders) return [];
+    if (!selectedRange || !selectedRange.from) return recentWorkOrders;
+
+    const fromStart = new Date(selectedRange.from);
+    fromStart.setHours(0, 0, 0, 0);
+
+    const toEnd = new Date(selectedRange.to || selectedRange.from);
+    toEnd.setHours(23, 59, 59, 999);
+
+    return recentWorkOrders.filter((wo) => {
+      if (!wo.created_at) return false;
+      const woDate = new Date(wo.created_at);
+      return woDate >= fromStart && woDate <= toEnd;
+    });
+  }, [data?.recentWorkOrders, selectedRange]);
 
   // ── Redirect when org not selected ─────────────────
   useEffect(() => {
@@ -288,24 +333,7 @@ export default function DashboardPage() {
     );
   }
 
-  const { summary, summaryComparison, insights, recentWorkOrders } = data ?? {};
-
-  const filteredWorkOrders = useMemo(() => {
-    if (!recentWorkOrders) return [];
-    if (!selectedRange || !selectedRange.from) return recentWorkOrders;
-
-    const fromStart = new Date(selectedRange.from);
-    fromStart.setHours(0, 0, 0, 0);
-
-    const toEnd = new Date(selectedRange.to || selectedRange.from);
-    toEnd.setHours(23, 59, 59, 999);
-
-    return recentWorkOrders.filter((wo) => {
-      if (!wo.created_at) return false;
-      const woDate = new Date(wo.created_at);
-      return woDate >= fromStart && woDate <= toEnd;
-    });
-  }, [recentWorkOrders, selectedRange]);
+  const { summary, summaryComparison, insights } = data ?? {};
 
   function getTrend(
     current: number,
@@ -335,8 +363,18 @@ export default function DashboardPage() {
           {t("dashboard.subtitle")}
         </Typography.Muted>
       </div>
-      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-        <PeriodBar value={period} onChange={handlePeriodChange} />
+      <div className="flex flex-col gap-3 sm:items-end">
+        <BranchSelect
+          value={selectedBranchId}
+          onChange={setSelectedBranchId}
+          branches={branches}
+          placeholder={t("dashboard.branch")}
+          allLabel={t("dashboard.allBranches")}
+          className="min-w-44"
+        />
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <PeriodBar value={period} onChange={handlePeriodChange} />
+        </div>
       </div>
     </div>
   );

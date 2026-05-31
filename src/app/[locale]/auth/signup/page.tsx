@@ -33,8 +33,7 @@ export default function SignupPage() {
 
   const [organizationName, setOrganizationName] = useState("");
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -98,37 +97,23 @@ export default function SignupPage() {
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="email">
-              {t("emailOrPhoneLabel")}{" "}
-              <span className="text-destructive">*</span>
+            <FieldLabel htmlFor="username">
+              {t("usernameLabel")} <span className="text-destructive">*</span>
             </FieldLabel>
             <Input
-              id="email"
-              name="email"
+              id="username"
+              name="username"
               type="text"
-              autoComplete="email"
+              autoComplete="username"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("emailOrPhonePlaceholder")}
-              aria-invalid={"email" in fieldErrors || undefined}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder={t("usernamePlaceholder")}
+              aria-invalid={"username" in fieldErrors || undefined}
             />
-            {"email" in fieldErrors && (
-              <FieldError>{fieldErrors.email}</FieldError>
+            {"username" in fieldErrors && (
+              <FieldError>{fieldErrors.username}</FieldError>
             )}
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="phone">{t("phoneLabel")}</FieldLabel>
-            <Input
-              id="phone"
-              name="phone"
-              type="tel"
-              autoComplete="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder={t("phonePlaceholder")}
-            />
           </Field>
 
           <Field>

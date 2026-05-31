@@ -42,12 +42,23 @@ export function useReport(
   orgId: string | undefined,
   reportType: string,
   params: Record<string, string>,
+  branchId?: string | null,
 ): UseQueryResult<unknown, Error> {
-  const paramKey = JSON.stringify({ type: reportType, ...params });
+  const paramKey = JSON.stringify({
+    type: reportType,
+    branch: branchId ?? "all",
+    ...params,
+  });
   return useQuery({
-    queryKey: reportKeys.summary(orgId ?? "", reportType, paramKey),
-    queryFn: () =>
-      fetchReport(orgId!, { params: { type: reportType, ...params } }),
+    queryKey: reportKeys.summary(orgId ?? "", reportType, paramKey, branchId),
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error("Organization is required");
+      }
+      return fetchReport(orgId, {
+        params: { type: reportType, branch: branchId ?? "all", ...params },
+      });
+    },
     enabled: !!orgId,
     staleTime: 60_000,
     retry: 1,
@@ -57,10 +68,18 @@ export function useReport(
 /** Mechanic list for the filter dropdown. */
 export function useMechanics(
   orgId: string | undefined,
+  branchId?: string | null,
 ): UseQueryResult<Array<{ id: string; full_name: string | null }>, Error> {
   return useQuery({
-    queryKey: reportKeys.mechanics(orgId ?? ""),
-    queryFn: () => fetchMechanics(orgId!, { params: { type: "mechanics" } }),
+    queryKey: reportKeys.mechanics(orgId ?? "", branchId),
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error("Organization is required");
+      }
+      return fetchMechanics(orgId, {
+        params: { type: "mechanics", branch: branchId ?? "all" },
+      });
+    },
     enabled: !!orgId,
     staleTime: 300_000,
     retry: 1,
@@ -73,13 +92,23 @@ export function useReportInsights(
   dateFrom: string,
   dateTo: string,
   enabled = true,
+  branchId?: string | null,
 ): UseQueryResult<ReportInsight[], Error> {
   return useQuery({
-    queryKey: reportKeys.insights(orgId ?? "", dateFrom, dateTo),
-    queryFn: () =>
-      fetchInsights(orgId!, {
-        params: { type: "insights", date_from: dateFrom, date_to: dateTo },
-      }),
+    queryKey: reportKeys.insights(orgId ?? "", dateFrom, dateTo, branchId),
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error("Organization is required");
+      }
+      return fetchInsights(orgId, {
+        params: {
+          type: "insights",
+          date_from: dateFrom,
+          date_to: dateTo,
+          branch: branchId ?? "all",
+        },
+      });
+    },
     enabled: !!orgId && enabled,
     staleTime: 120_000,
     retry: 1,
@@ -92,13 +121,23 @@ export function useReportForecast(
   periodType: string,
   date: string,
   enabled = true,
+  branchId?: string | null,
 ): UseQueryResult<ReportForecast, Error> {
   return useQuery({
-    queryKey: reportKeys.forecast(orgId ?? "", periodType, date),
-    queryFn: () =>
-      fetchForecast(orgId!, {
-        params: { type: "forecast", period_type: periodType, date },
-      }),
+    queryKey: reportKeys.forecast(orgId ?? "", periodType, date, branchId),
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error("Organization is required");
+      }
+      return fetchForecast(orgId, {
+        params: {
+          type: "forecast",
+          period_type: periodType,
+          date,
+          branch: branchId ?? "all",
+        },
+      });
+    },
     enabled: !!orgId && enabled,
     staleTime: 120_000,
     retry: 1,
@@ -111,13 +150,23 @@ export function useReportTargets(
   periodType: string,
   date: string,
   enabled = true,
+  branchId?: string | null,
 ): UseQueryResult<ReportTarget[], Error> {
   return useQuery({
-    queryKey: reportKeys.targets(orgId ?? "", periodType, date),
-    queryFn: () =>
-      fetchTargets(orgId!, {
-        params: { type: "targets", period_type: periodType, date },
-      }),
+    queryKey: reportKeys.targets(orgId ?? "", periodType, date, branchId),
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error("Organization is required");
+      }
+      return fetchTargets(orgId, {
+        params: {
+          type: "targets",
+          period_type: periodType,
+          date,
+          branch: branchId ?? "all",
+        },
+      });
+    },
     enabled: !!orgId && enabled,
     staleTime: 60_000,
     retry: 1,
@@ -130,13 +179,23 @@ export function useReportRetention(
   dateFrom: string,
   dateTo: string,
   enabled = true,
+  branchId?: string | null,
 ): UseQueryResult<CustomerRetentionData, Error> {
   return useQuery({
-    queryKey: reportKeys.retention(orgId ?? "", dateFrom, dateTo),
-    queryFn: () =>
-      fetchRetention(orgId!, {
-        params: { type: "retention", date_from: dateFrom, date_to: dateTo },
-      }),
+    queryKey: reportKeys.retention(orgId ?? "", dateFrom, dateTo, branchId),
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error("Organization is required");
+      }
+      return fetchRetention(orgId, {
+        params: {
+          type: "retention",
+          date_from: dateFrom,
+          date_to: dateTo,
+          branch: branchId ?? "all",
+        },
+      });
+    },
     enabled: !!orgId && enabled,
     staleTime: 120_000,
     retry: 1,
@@ -149,13 +208,23 @@ export function useReportPnl(
   dateFrom: string,
   dateTo: string,
   enabled = true,
+  branchId?: string | null,
 ): UseQueryResult<PnLSummary, Error> {
   return useQuery({
-    queryKey: reportKeys.pnl(orgId ?? "", dateFrom, dateTo),
-    queryFn: () =>
-      fetchPnl(orgId!, {
-        params: { type: "pnl", date_from: dateFrom, date_to: dateTo },
-      }),
+    queryKey: reportKeys.pnl(orgId ?? "", dateFrom, dateTo, branchId),
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error("Organization is required");
+      }
+      return fetchPnl(orgId, {
+        params: {
+          type: "pnl",
+          date_from: dateFrom,
+          date_to: dateTo,
+          branch: branchId ?? "all",
+        },
+      });
+    },
     enabled: !!orgId && enabled,
     staleTime: 120_000,
     retry: 1,
@@ -168,17 +237,28 @@ export function useReportServiceBreakdown(
   dateFrom: string,
   dateTo: string,
   enabled = true,
+  branchId?: string | null,
 ): UseQueryResult<ServiceBreakdown[], Error> {
   return useQuery({
-    queryKey: reportKeys.serviceBreakdown(orgId ?? "", dateFrom, dateTo),
-    queryFn: () =>
-      fetchServiceBreakdown(orgId!, {
+    queryKey: reportKeys.serviceBreakdown(
+      orgId ?? "",
+      dateFrom,
+      dateTo,
+      branchId,
+    ),
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error("Organization is required");
+      }
+      return fetchServiceBreakdown(orgId, {
         params: {
           type: "service-breakdown",
           date_from: dateFrom,
           date_to: dateTo,
+          branch: branchId ?? "all",
         },
-      }),
+      });
+    },
     enabled: !!orgId && enabled,
     staleTime: 120_000,
     retry: 1,

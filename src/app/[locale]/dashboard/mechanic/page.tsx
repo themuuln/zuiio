@@ -17,7 +17,7 @@ import {
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
@@ -161,6 +161,24 @@ function timeAgo(dateStr: string): string {
 
 // ── KPI Card ───────────────────────────────────────
 
+const ACCENT_MAP = {
+  blue: {
+    dot: "bg-blue-500",
+    icon: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-50/60 dark:bg-blue-950/20 ring-blue-500/15",
+  },
+  green: {
+    dot: "bg-emerald-500",
+    icon: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-emerald-50/60 dark:bg-emerald-950/20 ring-emerald-500/15",
+  },
+  amber: {
+    dot: "bg-amber-500",
+    icon: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-50/60 dark:bg-amber-950/20 ring-amber-500/15",
+  },
+} as const;
+
 function KpiCard({
   icon: Icon,
   label,
@@ -176,24 +194,7 @@ function KpiCard({
   accent: "blue" | "green" | "amber";
   loading?: boolean;
 }) {
-  const accentMap = {
-    blue: {
-      dot: "bg-blue-500",
-      icon: "text-blue-600 dark:text-blue-400",
-      bg: "bg-blue-50/60 dark:bg-blue-950/20 ring-blue-500/15",
-    },
-    green: {
-      dot: "bg-emerald-500",
-      icon: "text-emerald-600 dark:text-emerald-400",
-      bg: "bg-emerald-50/60 dark:bg-emerald-950/20 ring-emerald-500/15",
-    },
-    amber: {
-      dot: "bg-amber-500",
-      icon: "text-amber-600 dark:text-amber-400",
-      bg: "bg-amber-50/60 dark:bg-amber-950/20 ring-amber-500/15",
-    },
-  };
-  const a = accentMap[accent];
+  const a = ACCENT_MAP[accent];
 
   return (
     <div
@@ -253,30 +254,23 @@ function WorkOrderRow({
   onStatusChange: (newStatus: string) => void;
 }) {
   const cfg = getStatusCfg(wo.status);
-  const elapsed = useMemo(() => timeAgo(wo.created_at), [wo.created_at]);
+  const elapsed = timeAgo(wo.created_at);
 
-  const nextStatuses = useMemo(() => {
+  const nextStatuses = (() => {
     const transitions = NEXT_STATUSES[wo.status] ?? [];
     if (wo.status !== "Cancelled" && wo.status !== "Completed") {
       return [...transitions, "Cancelled"];
     }
     return transitions;
-  }, [wo.status]);
+  })();
 
   const canChange = nextStatuses.length > 0;
 
   return (
-    <div
+    <button
+      type="button"
       aria-label={`Open work order for ${wo.customer_name ?? "customer"}`}
       onClick={onClick}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onClick();
-        }
-      }}
-      role="button"
-      tabIndex={0}
       className={cn(
         "group relative flex w-full items-center gap-3 border-b border-border/40 px-4 py-3 text-left transition-all duration-150 last:border-b-0 h-auto rounded-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
         cfg.bg,
@@ -376,7 +370,7 @@ function WorkOrderRow({
           </Badge>
         )}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -475,74 +469,69 @@ function MechanicDashboard({
     totalCost: number;
   } | null>(null);
 
-  const fetchData = useCallback(
-    async (showLoader = false) => {
-      if (showLoader) setDataLoading(true);
-      setIsRefreshing(!showLoader);
-      const today = new Date().toISOString().split("T")[0];
-      const eodUrl = `/api/organizations/${orgId}/reports?type=eod&date=${today}&mechanic=${userId}`;
-      const woUrl = `/api/organizations/${orgId}/work-orders?mechanic=${userId}&status=In Progress&status=Diagnosing&status=New&status=Ready for Pickup`;
-      const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0];
-      const trendUrl = `/api/organizations/${orgId}/reports?type=mechanic-trend&mechanic=${userId}&period=weekly&startDate=${eightWeeksAgo}&endDate=${today}`;
-      const clockUrl = `/api/organizations/${orgId}/me/time/status`;
+  const fetchData = async () => {
+    setIsRefreshing(true);
+    const today = new Date().toISOString().split("T")[0];
+    const eodUrl = `/api/organizations/${orgId}/reports?type=eod&date=${today}&mechanic=${userId}`;
+    const woUrl = `/api/organizations/${orgId}/work-orders?mechanic=${userId}&status=In Progress&status=Diagnosing&status=New&status=Ready for Pickup`;
+    const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
+    const trendUrl = `/api/organizations/${orgId}/reports?type=mechanic-trend&mechanic=${userId}&period=weekly&startDate=${eightWeeksAgo}&endDate=${today}`;
+    const clockUrl = `/api/organizations/${orgId}/me/time/status`;
 
-      try {
-        const [eodJson, woJson, trendJson, clockJson] = await Promise.all([
-          fetch(eodUrl)
-            .then((r) => r.json())
-            .catch(() => ({ data: null })),
-          fetch(woUrl)
-            .then((r) => r.json())
-            .catch(() => ({ data: [] })),
-          fetch(trendUrl)
-            .then((r) => r.json())
-            .catch(() => ({ data: null })),
-          fetch(clockUrl)
-            .then((r) => r.json())
-            .catch(() => ({ data: null })),
-        ]);
-        if (eodJson.data?.mechanics?.length > 0) {
-          setEod(eodJson.data.mechanics[0]);
-        }
-        if (Array.isArray(woJson.data)) {
-          setAssignedWos(woJson.data);
-        }
-        if (trendJson.data) {
-          setTrend(trendJson.data);
-        }
-        if (clockJson.data) {
-          setClockStatus(clockJson.data);
-        }
-      } catch {
-        // silent
-      } finally {
-        setDataLoading(false);
-        setIsRefreshing(false);
+    try {
+      const [eodJson, woJson, trendJson, clockJson] = await Promise.all([
+        fetch(eodUrl)
+          .then((r) => r.json())
+          .catch(() => ({ data: null })),
+        fetch(woUrl)
+          .then((r) => r.json())
+          .catch(() => ({ data: [] })),
+        fetch(trendUrl)
+          .then((r) => r.json())
+          .catch(() => ({ data: null })),
+        fetch(clockUrl)
+          .then((r) => r.json())
+          .catch(() => ({ data: null })),
+      ]);
+      if (eodJson.data?.mechanics?.length > 0) {
+        setEod(eodJson.data.mechanics[0]);
       }
-    },
-    [userId, orgId],
-  );
+      if (Array.isArray(woJson.data)) {
+        setAssignedWos(woJson.data);
+      }
+      if (trendJson.data) {
+        setTrend(trendJson.data);
+      }
+      if (clockJson.data) {
+        setClockStatus(clockJson.data);
+      }
+    } catch {
+      // silent
+    }
+    setDataLoading(false);
+    setIsRefreshing(false);
+  };
 
   useEffect(() => {
-    fetchData(true);
-  }, [fetchData]);
+    setDataLoading(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchData();
+  }, [userId, orgId]);
 
-  usePolling(() => fetchData(false), 30000);
+  usePolling(fetchData, 30000);
 
   // Sort: active/pickup first, then new, then rest
-  const sortedWos = useMemo(() => {
-    const priority: Record<string, number> = {
-      "In Progress": 0,
-      "Ready for Pickup": 1,
-      New: 2,
-      Diagnosing: 3,
-    };
-    return assignedWos.toSorted(
-      (a, b) => (priority[a.status] ?? 99) - (priority[b.status] ?? 99),
-    );
-  }, [assignedWos]);
+  const priority: Record<string, number> = {
+    "In Progress": 0,
+    "Ready for Pickup": 1,
+    New: 2,
+    Diagnosing: 3,
+  };
+  const sortedWos = assignedWos.toSorted(
+    (a, b) => (priority[a.status] ?? 99) - (priority[b.status] ?? 99),
+  );
 
   // ── Mount: register tabs + open sidebar (once) ────────
   useEffect(() => {
@@ -880,20 +869,25 @@ export default function MechanicPage() {
       return;
     }
 
-    const orgId = profile.organizationId;
-    fetch(`/api/organizations/${orgId}/reports?type=mechanics`, {
-      signal: abort.signal,
-    })
-      .then((r) => r.json())
-      .then((json) => {
+    (async () => {
+      const orgId = profile.organizationId;
+      try {
+        const res = await fetch(
+          `/api/organizations/${orgId}/reports?type=mechanics`,
+          { signal: abort.signal },
+        );
+        const json = await res.json();
+        if (abort.signal.aborted) return;
         const list: MechanicItem[] = json.data ?? [];
         setMechanics(list);
         if (list.length > 0) {
           setSelectedMechanicId(list[0].id);
         }
-      })
-      .catch(() => {})
-      .finally(() => setMechanicsLoading(false));
+      } catch {
+        // silent
+      }
+      if (!abort.signal.aborted) setMechanicsLoading(false);
+    })();
 
     return () => abort.abort();
   }, [profile?.organizationId, isAdmin]);

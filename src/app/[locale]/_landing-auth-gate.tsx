@@ -4,14 +4,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+interface PublicStats {
+  shops: number;
+  vehiclesServiced: number;
+  satisfaction: number;
+}
+
 interface AuthGateProps {
-  children: (
-    stats: {
-      totalWorkOrders: number;
-      totalCustomers: number;
-      totalVehicles: number;
-    } | null,
-  ) => React.ReactNode;
+  children: (stats: PublicStats | null) => React.ReactNode;
 }
 
 /**
@@ -21,11 +21,7 @@ interface AuthGateProps {
  */
 export function AuthGate({ children }: AuthGateProps) {
   const router = useRouter();
-  const [stats, setStats] = useState<{
-    totalWorkOrders: number;
-    totalCustomers: number;
-    totalVehicles: number;
-  } | null>(null);
+  const [stats, setStats] = useState<PublicStats | null>(null);
 
   // Redirect logged-in users to dashboard (non-blocking, delayed for router init)
   useEffect(() => {

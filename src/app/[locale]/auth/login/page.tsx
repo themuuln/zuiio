@@ -25,7 +25,7 @@ export default function LoginPage() {
   const authT = useTranslations("auth");
   const locale = useLocale();
   const [state, formAction, isPending] = useActionState(login, {});
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -98,26 +98,25 @@ export default function LoginPage() {
           )}
           <Field className="gap-1">
             <FieldLabel
-              htmlFor="email"
+              htmlFor="username"
               className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono font-bold"
             >
-              {t("emailOrPhoneLabel")}{" "}
-              <span className="text-destructive">*</span>
+              {t("usernameLabel")} <span className="text-destructive">*</span>
             </FieldLabel>
             <Input
-              id="email"
-              name="email"
+              id="username"
+              name="username"
               type="text"
-              autoComplete="email"
+              autoComplete="username"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("emailOrPhonePlaceholder")}
-              aria-invalid={"email" in fieldErrors ? true : undefined}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder={t("usernamePlaceholder")}
+              aria-invalid={"username" in fieldErrors ? true : undefined}
               className="font-mono text-xs bg-muted/10 focus-visible:bg-transparent h-8 min-h-0"
             />
-            {"email" in fieldErrors && (
-              <FieldError>{fieldErrors.email}</FieldError>
+            {"username" in fieldErrors && (
+              <FieldError>{fieldErrors.username}</FieldError>
             )}
           </Field>
           <Field className="gap-1">

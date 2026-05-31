@@ -1,0 +1,1 @@
+{"migrationFile": "supabase/migrations/20260601000000_mechanic_devices.sql", "sqlContent": "Created mechanic_devices, clock_in_tokens tables with RLS, RPCs: generate_clock_token, verify_clock_token, register_mechanic_device, generate_registration_token, revoke_mechanic_device, list_mechanic_devices", "tablesCreated": ["mechanic_devices", "clock_in_tokens"]}

@@ -88,7 +88,7 @@ const PLAN_DATA: PlanData[] = [
         text: "Mechanic accountability & performance tracking",
         included: true,
       },
-      { text: "SMS reminders & customer retention", included: true },
+      { text: "Telegram messaging & customer retention", included: true },
       { text: "Dashboard analytics & priority support", included: true },
     ],
     ctaVariant: "default",
@@ -136,7 +136,7 @@ const COMPARISON_ROWS: ComparisonRow[] = [
   },
   { key: "featureStorage", core: "1 GB", pro: "10 GB", business: "50 GB" },
   { key: "featureInventory", core: "—", pro: "✓", business: "✓" },
-  { key: "featureSms", core: "—", pro: "✓", business: "✓" },
+  { key: "featureMessaging", core: "—", pro: "✓", business: "✓" },
   { key: "featureApi", core: "—", pro: "—", business: "✓" },
   { key: "featureMultiBranch", core: "—", pro: "—", business: "✓" },
   {

@@ -66,7 +66,7 @@ All dashboard pages return **200** and render with:
 
 | Page | Status | Notes |
 |------|--------|-------|
-| `/dashboard` | ✅ 200 | KPI cards, period tabs, charts, recent work orders table |
+| `/dashboard` | ✅ 200 | KPI cards, branch selector, period tabs, charts, recent work orders table |
 | `/dashboard/bay-view` | ✅ 200 | Bay view with live bay cards, waiting queue, mechanics tabs |
 | `/dashboard/bay-view-v2` | ✅ 200 | Updated bay view |
 | `/dashboard/mechanic` | ✅ 200 | Mechanic shift view |
@@ -89,7 +89,7 @@ All dashboard pages return **200** and render with:
 | `/dashboard/inventory/purchase-orders` | ✅ 200 | Purchase orders |
 | `/dashboard/expenses` | ✅ 200 | Expense list with category filter, search, export, Summary/Categories tabs |
 | `/dashboard/finance` | ✅ 200 | Period filters, Overview/Transactions/Invoices tabs |
-| `/dashboard/reports` | ✅ 200 | Period filters, mechanic filter, date picker, Refresh, Help/Recent tabs |
+| `/dashboard/reports` | ✅ 200 | Branch filter, period filters, mechanic filter, date picker, Refresh, Help/Recent tabs |
 | `/dashboard/organization` | ✅ 200 | Subscription/Team tabs, Manage Members |
 | `/dashboard/organization/members` | ✅ 200 | Member management |
 | `/dashboard/settings` | ✅ 200 | Settings with command search |

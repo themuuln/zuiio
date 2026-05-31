@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSYX9CS3M56BAKF2JM6JYWRY",
+  "taskId": "generate-types",
+  "invocationKey": "feature/qr-clock-in:S000003:generate-types",
+  "status": "ok",
+  "result": {
+    "errors": [],
+    "success": true,
+    "typesAdded": [
+      "MechanicDevice",
+      "MechanicDeviceInsert",
+      "ClockInToken",
+      "ClockInTokenInsert"
+    ]
+  },
+  "startedAt": "2026-05-31T11:39:16.886Z",
+  "finishedAt": "2026-05-31T11:39:16.886Z",
+  "value": {
+    "errors": [],
+    "success": true,
+    "typesAdded": [
+      "MechanicDevice",
+      "MechanicDeviceInsert",
+      "ClockInToken",
+      "ClockInTokenInsert"
+    ]
+  }
+}

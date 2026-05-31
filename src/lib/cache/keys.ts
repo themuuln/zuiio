@@ -52,6 +52,9 @@ export const cacheTags = {
   // Work Order Attachments
   workOrderAttachments: (woId: string) => `wo-attachments:${woId}`,
 
+  // Appointments
+  appointments: (orgId: string) => `appointments:${orgId}`,
+
   // Service Reminders
   serviceSchedules: (orgId: string) => `service-schedules:${orgId}`,
   serviceSchedule: (id: string) => `service-schedule:${id}`,

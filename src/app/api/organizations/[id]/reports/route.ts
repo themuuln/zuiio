@@ -25,13 +25,16 @@ export const GET = createRouteHandler(
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") ?? "daily";
     const mechanicId = searchParams.get("mechanic");
+    const branchParam = searchParams.get("branch");
+    const branchId =
+      branchParam && branchParam !== "all" ? branchParam : null;
     const date =
       searchParams.get("date") ?? new Date().toISOString().split("T")[0];
     const dateFrom = searchParams.get("date_from") ?? date;
     const dateTo = searchParams.get("date_to") ?? date;
 
     if (type === "mechanics") {
-      const mechanics = await getMechanicsList(orgId);
+      const mechanics = await getMechanicsList(orgId, branchId);
       return NextResponse.json({ data: mechanics });
     }
 
@@ -39,7 +42,7 @@ export const GET = createRouteHandler(
       const period =
         (searchParams.get("period") as "today" | "week" | "month" | "all") ??
         "all";
-      const dashboard = await getDashboardData(orgId, period);
+      const dashboard = await getDashboardData(orgId, period, branchId);
       return NextResponse.json({ data: dashboard });
     }
 
@@ -47,7 +50,7 @@ export const GET = createRouteHandler(
 
     switch (type) {
       case "daily": {
-        const report = await getDailyReport(orgId, mid || null, date);
+        const report = await getDailyReport(orgId, mid || null, date, branchId);
         return NextResponse.json({ data: report });
       }
       case "custom": {
@@ -56,24 +59,31 @@ export const GET = createRouteHandler(
           mid || null,
           dateFrom,
           dateTo,
+          branchId,
         );
         return NextResponse.json({ data: report });
       }
       case "weekly": {
-        const report = await getWeeklyReport(orgId, mid || null, date);
+        const report = await getWeeklyReport(orgId, mid || null, date, branchId);
         return NextResponse.json({ data: report });
       }
       case "monthly": {
         const [year, month] = date.split("-").map(Number);
-        const report = await getMonthlyReport(orgId, mid || null, year, month);
+        const report = await getMonthlyReport(
+          orgId,
+          mid || null,
+          year,
+          month,
+          branchId,
+        );
         return NextResponse.json({ data: report });
       }
       case "eod": {
-        const summary = await getEndOfDaySummary(orgId, date);
+        const summary = await getEndOfDaySummary(orgId, date, branchId);
         return NextResponse.json({ data: summary });
       }
       case "timeline": {
-        const timeline = await getDailyTimeline(orgId);
+        const timeline = await getDailyTimeline(orgId, branchId);
         return NextResponse.json({ data: timeline });
       }
       case "mechanic-trend": {
@@ -92,38 +102,64 @@ export const GET = createRouteHandler(
           period,
           startDate,
           endDate,
+          branchId,
         );
         return NextResponse.json({ data: trend });
       }
       // ── ERP-Grade endpoints ────────────────────────────────
       case "insights": {
-        const insights = await generateReportInsights(orgId, dateFrom, dateTo);
+        const insights = await generateReportInsights(
+          orgId,
+          dateFrom,
+          dateTo,
+          branchId,
+        );
         return NextResponse.json({ data: insights });
       }
       case "forecast": {
         const periodType =
           (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ??
           "monthly";
-        const forecast = await getRevenueForecast(orgId, periodType, date);
+        const forecast = await getRevenueForecast(
+          orgId,
+          periodType,
+          date,
+          branchId,
+        );
         return NextResponse.json({ data: forecast });
       }
       case "targets": {
         const periodType =
           (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ??
           "monthly";
-        const targets = await getRevenueTargets(orgId, periodType, date);
+        const targets = await getRevenueTargets(
+          orgId,
+          periodType,
+          date,
+          branchId,
+        );
         return NextResponse.json({ data: targets });
       }
       case "retention": {
-        const retention = await getCustomerRetention(orgId, dateFrom, dateTo);
+        const retention = await getCustomerRetention(
+          orgId,
+          dateFrom,
+          dateTo,
+          branchId,
+        );
         return NextResponse.json({ data: retention });
       }
       case "pnl": {
-        const pnl = await getPnLSummary(orgId, dateFrom, dateTo);
+        const pnl = await getPnLSummary(orgId, dateFrom, dateTo, branchId);
         return NextResponse.json({ data: pnl });
       }
       case "service-breakdown": {
-        const breakdown = await getServiceBreakdown(orgId, dateFrom, dateTo);
+        const breakdown = await getServiceBreakdown(
+          orgId,
+          dateFrom,
+          dateTo,
+          branchId,
+        );
         return NextResponse.json({ data: breakdown });
       }
       default:

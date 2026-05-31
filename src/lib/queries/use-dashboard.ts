@@ -15,13 +15,18 @@ const fetchDashboard = createOrgQuery<DashboardData>("/reports");
 export function useDashboard(
   orgId: string | undefined,
   period: string = "month",
+  branchId?: string | null,
 ): UseQueryResult<DashboardData, Error> {
   return useQuery({
-    queryKey: dashboardKeys.summary(orgId ?? "", period),
-    queryFn: () =>
-      fetchDashboard(orgId!, {
-        params: { type: "dashboard", period },
-      }),
+    queryKey: dashboardKeys.summary(orgId ?? "", period, branchId),
+    queryFn: async () => {
+      if (!orgId) {
+        throw new Error("Organization is required");
+      }
+      return fetchDashboard(orgId, {
+        params: { type: "dashboard", period, branch: branchId ?? "all" },
+      });
+    },
     enabled: !!orgId,
     staleTime: 60_000,
     retry: 1,

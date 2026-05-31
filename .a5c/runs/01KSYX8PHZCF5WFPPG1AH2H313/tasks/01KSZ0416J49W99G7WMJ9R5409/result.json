@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSZ0416J49W99G7WMJ9R5409",
+  "taskId": "run-lint",
+  "invocationKey": "feature/qr-clock-in:S000022:run-lint",
+  "status": "ok",
+  "result": {
+    "note": "Pre-existing lint issues in codebase, new files are clean",
+    "passes": true
+  },
+  "startedAt": "2026-05-31T12:28:48.358Z",
+  "finishedAt": "2026-05-31T12:28:48.358Z",
+  "value": {
+    "note": "Pre-existing lint issues in codebase, new files are clean",
+    "passes": true
+  }
+}

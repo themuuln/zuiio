@@ -41,7 +41,7 @@ export default function CustomerSetPasswordPage() {
         <Card className="w-full max-w-sm">
           <CardContent className="py-8 text-center text-sm text-muted-foreground">
             No access token provided. Please use the link from your email or
-            SMS.
+            messaging app.
           </CardContent>
         </Card>
       </div>

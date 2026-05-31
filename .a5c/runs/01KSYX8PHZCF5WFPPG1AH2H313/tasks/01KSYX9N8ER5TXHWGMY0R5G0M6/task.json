@@ -1,0 +1,20 @@
+{
+  "io": {
+    "outputJsonPath": "tasks/01KSYX9N8ER5TXHWGMY0R5G0M6/output.json"
+  },
+  "kind": "shell",
+  "labels": [
+    "build",
+    "verify"
+  ],
+  "shell": {
+    "command": "npm run build 2>&1"
+  },
+  "title": "Verify npm build passes",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSYX9N8ER5TXHWGMY0R5G0M6",
+  "taskId": "verify-build",
+  "invocationKey": "feature/qr-clock-in:S000004:verify-build",
+  "stepId": "S000004",
+  "inputs": {}
+}

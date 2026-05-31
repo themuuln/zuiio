@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSYYZD22AEJ2TB5MNSBNMKPH",
+  "taskId": "__sdk.breakpoint",
+  "invocationKey": "feature/qr-clock-in:S000015:__sdk.breakpoint",
+  "status": "ok",
+  "result": {
+    "approved": true,
+    "response": "Proceed with Phase 5"
+  },
+  "startedAt": "2026-05-31T12:08:46.998Z",
+  "finishedAt": "2026-05-31T12:08:46.998Z",
+  "value": {
+    "approved": true,
+    "response": "Proceed with Phase 5"
+  }
+}

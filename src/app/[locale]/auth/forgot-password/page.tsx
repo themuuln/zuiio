@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     requestPasswordReset,
     {},
   );
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
   const fieldErrors = state?.fieldErrors ?? {};
@@ -50,10 +50,10 @@ export default function ForgotPasswordPage() {
   }, [cooldown]);
 
   const handleResend = () => {
-    if (cooldown > 0 || !email) return;
+    if (cooldown > 0 || !username) return;
     setCooldown(30);
     const form = new FormData();
-    form.append("email", email);
+    form.append("username", username);
     formAction(form);
     toast.success(t("resentMessage"));
   };
@@ -115,21 +115,21 @@ export default function ForgotPasswordPage() {
         {state?.formError && <FieldError>{state.formError}</FieldError>}
         <Field>
           <FieldLabel htmlFor="email">
-            {t("emailLabel")} <span className="text-destructive">*</span>
+            {t("usernameLabel")} <span className="text-destructive">*</span>
           </FieldLabel>
           <Input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
+            id="username"
+            name="username"
+            type="text"
+            autoComplete="username"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={t("emailPlaceholder")}
-            aria-invalid={"email" in fieldErrors || undefined}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder={t("usernamePlaceholder")}
+            aria-invalid={"username" in fieldErrors || undefined}
           />
-          {"email" in fieldErrors && (
-            <FieldError>{fieldErrors.email}</FieldError>
+          {"username" in fieldErrors && (
+            <FieldError>{fieldErrors.username}</FieldError>
           )}
         </Field>
         <Button type="submit" className="w-full" disabled={isPending}>

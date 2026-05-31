@@ -27,6 +27,7 @@ import {
 import { Typography } from "@/components/ui/typography";
 import { prefetchCriticalRoutes } from "@/lib/prefetch";
 import { cn } from "@/lib/utils";
+import { AnimatedCounter } from "@/components/animated-counter";
 import { AuthGate } from "./_landing-auth-gate";
 
 // Lazy-load below-the-fold sections — they only load when scrolled into view
@@ -96,10 +97,10 @@ const FEATURES = [
     previewLabel: "Multi-Branch",
   },
   {
-    key: "featureSms",
+    key: "featureChatbot",
     icon: MessageSquareText,
     gradient: "from-orange-500/20 to-orange-600/10",
-    previewLabel: "SMS",
+    previewLabel: "Chat",
   },
   {
     key: "featureApi",
@@ -120,7 +121,7 @@ export default function HomePage() {
 
   return (
     <AuthGate>
-      {(_stats) => (
+      {(stats) => (
         <div className="flex min-h-dvh flex-col">
           <LandingNav />
 
@@ -167,7 +168,7 @@ export default function HomePage() {
                 <div className="mt-12 grid grid-cols-3 gap-6 border-t pt-8 sm:mt-16 sm:pt-10">
                   <div className="text-center">
                     <div className="text-2xl font-bold tracking-tight sm:text-3xl">
-                      500+
+                      <AnimatedCounter end={stats?.shops ?? 12} suffix="+" />
                     </div>
                     <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
                       {t("heroSocialShops")}
@@ -175,7 +176,10 @@ export default function HomePage() {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold tracking-tight sm:text-3xl">
-                      50,000+
+                      <AnimatedCounter
+                        end={stats?.vehiclesServiced ?? 130}
+                        suffix="+"
+                      />
                     </div>
                     <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
                       {t("heroSocialVehicles")}
@@ -183,7 +187,10 @@ export default function HomePage() {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold tracking-tight sm:text-3xl">
-                      98%
+                      <AnimatedCounter
+                        end={stats?.satisfaction ?? 98}
+                        suffix="%"
+                      />
                     </div>
                     <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
                       {t("heroSocialSatisfaction")}
@@ -283,7 +290,7 @@ export default function HomePage() {
                     variant="outline"
                     className="gap-1.5 px-3.5 py-1.5 text-sm font-normal"
                   >
-                    💬 SMS мэдэгдэл
+                    💬 Telegram мэдэгдэл
                   </Badge>
                   <Badge
                     variant="outline"

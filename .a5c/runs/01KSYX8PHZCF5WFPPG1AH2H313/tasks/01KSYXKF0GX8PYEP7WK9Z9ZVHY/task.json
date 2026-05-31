@@ -1,0 +1,91 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "routes": {
+          "type": "array"
+        },
+        "routesCreated": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "routesCreated",
+        "routes"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "existingRoutes": [
+          "src/app/api/organizations/[id]/me/time/clock-in/route.ts",
+          "src/app/api/organizations/[id]/me/time/clock-out/route.ts",
+          "src/app/api/organizations/[id]/me/time/status/route.ts"
+        ],
+        "project": "TOLOM"
+      },
+      "instructions": [
+        "Read the existing clock-in and clock-out API routes",
+        "Read src/lib/services/time-tracking-service.ts",
+        "Read src/lib/api-handler.ts for the route handler pattern",
+        "",
+        "Create a new API route: src/app/api/organizations/[id]/clock/qr/route.ts",
+        "POST /api/organizations/[id]/clock/qr — Generate a QR token for clock-in/out",
+        "  - Requires auth (mechanic session)",
+        "  - Body: { actionType: 'clock_in' | 'clock_out' }",
+        "  - Returns: { data: { rawToken, sessionId, expiresAt } }",
+        "",
+        "Create: src/app/api/organizations/[id]/clock/verify/route.ts",
+        "POST /api/organizations/[id]/clock/verify — Verify QR scan from phone",
+        "  - Requires auth (phone session)",
+        "  - Body: { rawToken }",
+        "  - Calls verifyAndClaimClockToken, then clockIn/clockOut",
+        "  - Returns: { data: { success, actionType, timestamp } }",
+        "",
+        "Create: src/app/api/organizations/[id]/clock/register-device/route.ts",
+        "POST — Register device from phone after scanning registration QR",
+        "  - Requires auth (phone session)",
+        "  - Body: { registrationToken, deviceName }",
+        "  - Returns: { data: { deviceId } }",
+        "",
+        "Create: src/app/api/organizations/[id]/clock/devices/route.ts",
+        "GET — List registered devices (admin view)",
+        "DELETE — Revoke a device (admin: body: { deviceId })",
+        "",
+        "Create: src/app/api/organizations/[id]/clock/generate-registration/route.ts",
+        "POST — Admin generates a device registration QR for a mechanic",
+        "  - Body: { mechanicId }",
+        "  - Returns: { data: { rawToken, sessionId, expiresAt } }",
+        "",
+        "Follow the existing api-handler.ts pattern for all routes:",
+        "- Use createRouteHandler() wrapper",
+        "- Return ApiResponse<T> format",
+        "- Add rate limiting for clock-in/out mutations"
+      ],
+      "outputFormat": "JSON with { routesCreated: string[], routes: object[] }",
+      "role": "Backend Developer",
+      "task": "Extend existing clock-in/out flow to support QR-based identity verification"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KSYXKF0GX8PYEP7WK9Z9ZVHY/input.json",
+    "outputJsonPath": "tasks/01KSYXKF0GX8PYEP7WK9Z9ZVHY/output.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "api",
+    "clock-in",
+    "routes"
+  ],
+  "title": "Extend clock-in service for QR verification",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSYXKF0GX8PYEP7WK9Z9ZVHY",
+  "taskId": "extend-clock-in-service",
+  "invocationKey": "feature/qr-clock-in:S000007:extend-clock-in-service",
+  "stepId": "S000007",
+  "inputs": {}
+}

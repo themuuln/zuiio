@@ -6,12 +6,12 @@ import { flattenFieldErrors } from "@/lib/form-validation";
 import { finalizeSignup } from "@/lib/services/signup-service";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { isPhone, signupSchema } from "@/lib/validation/auth-schemas";
+import { signupSchema } from "@/lib/validation/auth-schemas";
 
 type SignupState = ActionState<{
   organizationName: string;
   fullName: string;
-  email: string;
+  username: string;
 }> & {
   redirectTo?: string;
 };
@@ -23,8 +23,7 @@ export async function signup(
   const raw = {
     organizationName: (formData.get("organizationName") as string) || "",
     fullName: (formData.get("fullName") as string) || "",
-    email: (formData.get("email") as string) || "",
-    phone: (formData.get("phone") as string) || "",
+    username: (formData.get("username") as string) || "",
     password: (formData.get("password") as string) || "",
     confirmPassword: (formData.get("confirmPassword") as string) || "",
   };
@@ -35,7 +34,7 @@ export async function signup(
       values: {
         organizationName: raw.organizationName,
         fullName: raw.fullName,
-        email: raw.email,
+        username: raw.username,
       },
       fieldErrors: flattenFieldErrors(parsed.error.issues),
     };
@@ -43,15 +42,8 @@ export async function signup(
 
   const serviceRole = await createServiceRoleClient();
 
-  // Determine the auth email: use provided email, or generate one from phone
-  let authEmail = parsed.data.email;
-  let phoneNumber = parsed.data.phone || null;
-
-  if (isPhone(authEmail)) {
-    // User entered a phone number as the identifier — generate a placeholder email
-    phoneNumber = authEmail;
-    authEmail = `phone_${authEmail.replace(/[^a-zA-Z0-9]/g, "")}@tolom.auth`;
-  }
+  // Generate a placeholder email for Supabase Auth (username-based accounts)
+  const authEmail = `username_${parsed.data.username.toLowerCase()}@tolom.auth`;
 
   try {
     // Use service-role to create user with email_confirm: true (no confirmation email)
@@ -62,30 +54,29 @@ export async function signup(
       user_metadata: {
         full_name: parsed.data.fullName,
         org_name: parsed.data.organizationName,
-        phone: phoneNumber,
       },
     });
 
     if (error) {
       const formError = error.message.includes("already registered")
-        ? "An account with this email already exists"
+        ? "This username is already taken"
         : error.message;
       return {
         values: {
           organizationName: raw.organizationName,
           fullName: raw.fullName,
-          email: raw.email,
+          username: raw.username,
         },
         formError,
       };
     }
 
-    // Save phone number to profiles table
-    if (phoneNumber && data.user) {
+    // Save username to profiles table
+    if (data.user) {
       await serviceRole.from("profiles").upsert(
         {
           id: data.user.id,
-          phone: phoneNumber,
+          username: parsed.data.username,
           full_name: parsed.data.fullName,
         },
         { onConflict: "id" },
@@ -121,7 +112,7 @@ export async function signup(
         values: {
           organizationName: raw.organizationName,
           fullName: raw.fullName,
-          email: raw.email,
+          username: raw.username,
         },
         formError: "Network error. Please check your connection and try again.",
       };

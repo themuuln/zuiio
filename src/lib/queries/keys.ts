@@ -9,6 +9,11 @@ export const orgKeys = {
     [...orgKeys.detail(id), "subscription"] as const,
 };
 
+export const branchKeys = {
+  all: (orgId: string) => ["organizations", orgId, "branches"] as const,
+  list: (orgId: string) => [...branchKeys.all(orgId), "list"] as const,
+};
+
 export const customerKeys = {
   all: (orgId: string) => ["organizations", orgId, "customers"] as const,
   list: (orgId: string, query?: string) =>
@@ -118,29 +123,74 @@ export const customerNoteKeys = {
 };
 
 export const reportKeys = {
-  all: (orgId: string) => ["organizations", orgId, "reports"] as const,
-  summary: (orgId: string, type: string, params: string) =>
-    [...reportKeys.all(orgId), type, params] as const,
-  mechanics: (orgId: string) =>
-    [...reportKeys.all(orgId), "mechanics"] as const,
-  insights: (orgId: string, dateFrom: string, dateTo: string) =>
-    [...reportKeys.all(orgId), "insights", dateFrom, dateTo] as const,
-  forecast: (orgId: string, periodType: string, date: string) =>
-    [...reportKeys.all(orgId), "forecast", periodType, date] as const,
-  targets: (orgId: string, periodType: string, date: string) =>
-    [...reportKeys.all(orgId), "targets", periodType, date] as const,
-  retention: (orgId: string, dateFrom: string, dateTo: string) =>
-    [...reportKeys.all(orgId), "retention", dateFrom, dateTo] as const,
-  pnl: (orgId: string, dateFrom: string, dateTo: string) =>
-    [...reportKeys.all(orgId), "pnl", dateFrom, dateTo] as const,
-  serviceBreakdown: (orgId: string, dateFrom: string, dateTo: string) =>
-    [...reportKeys.all(orgId), "service-breakdown", dateFrom, dateTo] as const,
+  all: (orgId: string, branchId?: string | null) =>
+    ["organizations", orgId, "reports", branchId ?? "all"] as const,
+  summary: (
+    orgId: string,
+    type: string,
+    params: string,
+    branchId?: string | null,
+  ) => [...reportKeys.all(orgId, branchId), type, params] as const,
+  mechanics: (orgId: string, branchId?: string | null) =>
+    [...reportKeys.all(orgId, branchId), "mechanics"] as const,
+  insights: (
+    orgId: string,
+    dateFrom: string,
+    dateTo: string,
+    branchId?: string | null,
+  ) =>
+    [...reportKeys.all(orgId, branchId), "insights", dateFrom, dateTo] as const,
+  forecast: (
+    orgId: string,
+    periodType: string,
+    date: string,
+    branchId?: string | null,
+  ) =>
+    [...reportKeys.all(orgId, branchId), "forecast", periodType, date] as const,
+  targets: (
+    orgId: string,
+    periodType: string,
+    date: string,
+    branchId?: string | null,
+  ) =>
+    [...reportKeys.all(orgId, branchId), "targets", periodType, date] as const,
+  retention: (
+    orgId: string,
+    dateFrom: string,
+    dateTo: string,
+    branchId?: string | null,
+  ) =>
+    [
+      ...reportKeys.all(orgId, branchId),
+      "retention",
+      dateFrom,
+      dateTo,
+    ] as const,
+  pnl: (
+    orgId: string,
+    dateFrom: string,
+    dateTo: string,
+    branchId?: string | null,
+  ) => [...reportKeys.all(orgId, branchId), "pnl", dateFrom, dateTo] as const,
+  serviceBreakdown: (
+    orgId: string,
+    dateFrom: string,
+    dateTo: string,
+    branchId?: string | null,
+  ) =>
+    [
+      ...reportKeys.all(orgId, branchId),
+      "service-breakdown",
+      dateFrom,
+      dateTo,
+    ] as const,
 };
 
 export const dashboardKeys = {
-  all: (orgId: string) => ["organizations", orgId, "dashboard"] as const,
-  summary: (orgId: string, period: string) =>
-    [...dashboardKeys.all(orgId), "summary", period] as const,
+  all: (orgId: string, branchId?: string | null) =>
+    ["organizations", orgId, "dashboard", branchId ?? "all"] as const,
+  summary: (orgId: string, period: string, branchId?: string | null) =>
+    [...dashboardKeys.all(orgId, branchId), "summary", period] as const,
 };
 
 export const inventoryKeys = {
@@ -212,6 +262,10 @@ export const dayCloseKeys = {
   all: (orgId: string) => ["organizations", orgId, "day-close"] as const,
   status: (orgId: string, date: string) =>
     [...dayCloseKeys.all(orgId), "status", date] as const,
+};
+
+export const publicStatsKeys = {
+  all: ["public-stats"] as const,
 };
 
 export const expenseKeys = {

@@ -17,7 +17,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { startTransition, useRef, useState } from "react";
 import { toast } from "sonner";
 import { applyBrandThemePreview } from "@/components/brand-theme-provider";
 import { Badge } from "@/components/ui/badge";
@@ -227,6 +227,7 @@ export default function SettingsPage() {
   const currentLocale = useLocale();
   const { theme, setTheme } = useTheme();
   const [form, setForm] = useState<SettingsForm>(DEFAULT_FORM);
+  const orgSyncedRef = useRef(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -252,17 +253,19 @@ export default function SettingsPage() {
     retry: 1,
   });
 
-  useEffect(() => {
-    if (organization) {
+  // Sync form from organization data on first load (handles cached and async-loaded cases)
+  if (organization && !orgSyncedRef.current) {
+    orgSyncedRef.current = true;
+    startTransition(() => {
       setForm(buildFormFromOrganization(organization));
-    }
-  }, [organization]);
+    });
+  }
 
-  const preview = useCallback((color: string) => {
+  const preview = (color: string) => {
     applyBrandThemePreview({
       brand_color: color || undefined,
     });
-  }, []);
+  };
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -303,7 +306,10 @@ export default function SettingsPage() {
       const json = await response.json();
 
       if (!response.ok || json.error || !json.data) {
-        throw new Error(json.error?.message ?? "Failed to save settings");
+        const errMsg = json.error?.message ?? "Failed to save settings";
+        toast.error(errMsg);
+        setError(errMsg);
+        return;
       }
 
       const updated = buildFormFromOrganization(json.data);
@@ -325,36 +331,31 @@ export default function SettingsPage() {
         err instanceof Error ? err.message : "Failed to save settings";
       toast.error(message);
       setError(message);
-    } finally {
-      setSaving(false);
     }
+    setSaving(false);
   }
 
   const { state: pageHeader, setActiveTab } = usePageHeader();
-  const activeTab = pageHeader.activeTab;
+  const headerTab = pageHeader.activeTab;
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredSections = useMemo(() => {
-    if (!searchQuery.trim()) return SETTINGS_SECTIONS;
-    const q = searchQuery.toLowerCase();
-    return SETTINGS_SECTIONS.filter(
-      (s) =>
-        s.title.toLowerCase().includes(q) ||
-        s.description.toLowerCase().includes(q),
-    );
-  }, [searchQuery]);
+  const q = searchQuery.trim().toLowerCase();
+  const filteredSections = q
+    ? SETTINGS_SECTIONS.filter(
+        (s) =>
+          s.title.toLowerCase().includes(q) ||
+          s.description.toLowerCase().includes(q),
+      )
+    : SETTINGS_SECTIONS;
 
-  // Auto-select first matching section when current is hidden by search
-  useEffect(() => {
-    if (
-      searchQuery.trim() &&
-      !filteredSections.find((s) => s.value === activeTab)
-    ) {
-      const firstMatch = filteredSections[0]?.value;
-      if (firstMatch) setActiveTab(firstMatch);
-    }
-  }, [filteredSections, activeTab, setActiveTab, searchQuery]);
+  // Derive effective tab: auto-select first matching section when search hides current
+  const activeTab =
+    q &&
+    filteredSections.length > 0 &&
+    !filteredSections.find((s) => s.value === headerTab)
+      ? filteredSections[0].value
+      : headerTab;
 
   const activeSection =
     SETTINGS_SECTIONS.find((section) => section.value === activeTab) ??

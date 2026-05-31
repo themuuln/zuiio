@@ -81,7 +81,7 @@ Development Plan + Pricing Plan Only
 | Үйлчилгээний сануулга (vehicle_service_schedules + cron) | ✅ Ажиллаж байна |
 | Авто-синк: захиалга дууссан → сануулга шинэчлэгдэх | ✅ Ажиллаж байна |
 | Түүхээс сануулга үүсгэх (Sync from History) | ✅ Ажиллаж байна |
-| SMS/Email илгээх | 🟡 Engine бэлэн, Send интеграци хийгдээгүй |
+| Харилцагчийн мэдэгдэл (Telegram/бот) | 🟡 Telegram бэлэн, WhatsApp/Facebook бот хийгдээгүй |
 | Орлогын тайлан (revenue dashboard) | ✅ Ажиллаж байна |
 | Ашгийн тайлан (P&L) | ✅ Ажиллаж байна |
 | Өдөр хаах тайлан (EOD close) | ✅ Ажиллаж байна |
@@ -165,7 +165,7 @@ Development Plan + Pricing Plan Only
 
 | Эрэмбэ | Юу хийх | Яагаад |
 |--------|---------|--------|
-| 1 | SMS/Email илгээх интеграци хийх | Сануулгын модуль бэлэн, гэхдээ илгээх холбоос байхгүй. Энэгүйгээр SMS add-on зарж болохгүй |
+| 1 | Telegram/WhatsApp chatbot мэдэгдлийн интеграци хийх | Сануулгын модуль бэлэн, гэхдээ Telegram бот зөвхөн эзэмшигчид мэдэгдэл явуулдаг. Харилцагчийн chatbot (WhatsApp/Facebook) хэрэгтэй |
 | 2 | Тооцоо/Quote workflow нэмэх | Авто засварын бизнесийн гол процесс — захиалгын өмнөх үнийн санал |
 | 3 | Олон салбарын dashboard + тайлан | Том засварын төвүүдэд шаардлагатай |
 | 4 | API key, webhook infrastructure | Гуравдагч этгээдийн интеграци хийх боломжгүй |
@@ -366,7 +366,7 @@ Garage OS
 ├── Customer Retention  🟡 PARTIAL
 │   ├── Service interval reminders ✅ (vehicle_service_schedules + cron + logs)
 │   ├── Service due dates ✅
-│   ├── SMS/Email *sending* 🟡 (engine ready, send integration unwired)
+│   ├── Customer messaging (Telegram/chatbot) 🟡 (Telegram owner notifications done; customer chatbot unwired)
 │   ├── Customer portal ✅ 🆕
 │   ├── Telegram notifications ✅ 🆕
 │   ├── Follow-ups 🔴
@@ -376,7 +376,7 @@ Garage OS
 │   ├── Telegram bot ✅ 🆕 (webhook + scheduled notifications)
 │   ├── Resend (email) ✅ (invoices, communications)
 │   ├── Smartcar (VIN lookup) ✅
-│   ├── SMS provider 🔴 (no integration_accounts table)
+│   ├── Messenger chatbot (WhatsApp/Facebook) 🔴
 │   ├── Accounting export 🔴
 │   ├── API keys / webhooks 🔴
 │   └── Messenger (WhatsApp etc.) 🔴
@@ -514,7 +514,7 @@ customer_followups     🔴
 Integration Tables  🔴 Not started (plus extras)
 
 integration_accounts  🔴
-sms_messages  🔴
+
 webhook_events  🔴
 api_keys  🔴
 external_sync_logs  🔴
@@ -608,7 +608,7 @@ Next.js server:
 - report aggregation
 - permission checks beyond RLS
 Supabase Edge Functions:
-- SMS webhooks
+- webhooks
 - [LIVE] check-service-reminders — daily cron that scans upcoming vehicle_service_schedules and creates reminder_logs
 - lightweight external API callbacks
 Frontend:
@@ -737,7 +737,7 @@ Do Not Build In Phase 1 (built anyway — ahead of schedule)
 
 - ✅ invoice workflow (built — invoices, payments, PDF, public view)
 - ✅ payment flow (built — payments, split payments)
-- ✅ SMS reminders (built — vehicle_service_schedules + cron + logs)
+- ✅ Service reminders (built — vehicle_service_schedules + cron + logs)
 - ✅ advanced inventory control (built — movement ledger, thresholds, alerts)
 - ✅ supplier management (built)
 - ✅ purchase orders (built)
@@ -854,7 +854,7 @@ Turn the system into a revenue engine.
 Features
 
 - ✅ Payment confirmation (with payment methods: cash/card/transfer, split payments)
-- 🟡 SMS reminder module (engine built: vehicle_service_schedules + cron + reminder_logs; SMS/Email *send* integration unwired)
+- 🟡 Service reminder delivery (Telegram owner notifications done; customer-facing chatbot pending)
 - ✅ Service interval reminders — vehicle_service_schedules table with per-vehicle config, reminder_logs audit trail, cron-driven check-service-reminders edge function
 - ✅ Oil change reminder — generic interval system supports all service types (oil, tires, brakes, etc.)
 - ✅ Auto-sync from work order completion — when a work order status changes to "Completed", services are auto-created/updated in vehicle_service_schedules
@@ -891,7 +891,7 @@ Owner can see:
 - ✅ Repeat customer activity (retention card in reports)
 
 ⚠️ Remaining gaps before full Phase 3 delivery:
-- SMS/Email sending from reminder_logs needs integration
+- Customer-facing messaging (WhatsApp/Facebook chatbot) unwired
 - No customer follow-up scheduling
 - No cash register session tracking
 
@@ -1022,7 +1022,7 @@ Modules
 - 🔴 Estimate / quote approval
 - ✅ Invoicing + payment capture (built ahead of schedule)
 - 🔴 Appointment booking
-- 🟡 SMS / email notifications (engine built, send integration unwired)
+- 🟡 Customer notifications (Telegram owner done; customer chatbot pending)
 - 🔴 Photo / video inspection
 - 🔴 Warranty / repeat repair tracking
 - ✅ Role-based permissions (seeded RBAC: owner, admin, manager, mechanic, guest)
@@ -1032,7 +1032,7 @@ Modules
 - 🔴 Insurance repair workflow
 - 🔴 API access (no api_keys or integration_accounts)
 - 🔴 Webhooks
-- 🔴 Third-party integrations (accounting, WhatsApp, SMS, payment gateways)
+- 🔴 Third-party integrations (accounting, WhatsApp, payment gateways)
 - 🔴 Offline mode + sync queue
 - 🟡 Advanced BI (reports page has 10+ chart types, forecasts, targets — good but not full BI)
 - 🔴 AI estimate assistant
@@ -1046,7 +1046,7 @@ Phase 3 candidates
 
 - 🔴 Estimate / quote approval (still missing)
 - ✅ Invoicing and payment recording (LIVE)
-- 🟡 SMS / email notifications (engine ready, send integration unwired)
+- 🟡 Customer messaging (Telegram done; WhatsApp/Facebook chatbot pending)
 - 🔴 Appointment booking (still missing)
 - ✅ Customer self-service portal (LIVE — added beyond plan)
 - 🔴 Photo / video inspection (still missing)
@@ -1097,7 +1097,7 @@ No repair history	Hard to upsell or diagnose	Service history per vehicle	Phase 1
 No work order discipline	Jobs get forgotten	Work order workflow	Phase 1	✅ LIVE
 Inventory leakage	Parts disappear or get misused	Inventory movement ledger	Phase 2	✅ LIVE
 Mechanic accountability	Owner cannot measure staff	Mechanic assignment + performance	Phase 2	✅ LIVE
-No repeat reminders	Customers do not return	SMS/service interval reminders	Phase 3	🟠 WIP (engine ready, SMS send unwired)
+No repeat reminders	Customers do not return	Service interval reminders	Phase 3	🟠 WIP (engine ready, customer-facing chatbot unwired)
 Payment confusion	Unpaid invoices get lost	Payment status	Phase 3	✅ LIVE
 Multi-branch chaos	Larger shops need control	Branch system + transfer	Phase 4	🟠 PARTIAL (schema + stock transfer built, dashboard thin)
 Poor mechanic adoption	Mechanics hate admin dashboards	Flutter mechanic app	Phase 5	🔴 TODO
@@ -1225,7 +1225,7 @@ Approximate monthly infrastructure early:
 Supabase: low-cost paid tier
 Vercel: low-cost paid tier
 Domain/email/tools
-SMS costs only when used
+No external messaging costs until chatbot integration
 
 Real cost is your time.
 
@@ -1310,7 +1310,7 @@ Up to 300 work orders/month
 Up to 1,000 customers
 Up to 1GB storage
 No inventory
-No SMS automation
+No chatbot/customer messaging
 No advanced reports
 
 Purpose
@@ -1345,7 +1345,7 @@ Low-stock alerts
 Mechanic assignment
 Mechanic performance
 Advanced reports
-SMS reminders
+Customer messaging (Telegram)
 Payment history
 Dashboard analytics
 Priority support
@@ -1465,7 +1465,7 @@ Everything in Core
 Inventory setup
 Service category setup
 Mechanic workflow setup
-SMS setup
+Messaging (Telegram) setup
 Report configuration
 Initial data migration
 
@@ -1544,7 +1544,7 @@ Everything in Basic
 Inventory
 Mechanic tracking
 Advanced reports
-SMS reminders
+Customer messaging (Telegram)
 Payment history
 Up to 3 branches
 
@@ -1587,14 +1587,14 @@ Otherwise you destroy your own product business.
 
 Add-ons are where profit grows.
 
-SMS Reminder Module  🟠 ENGINE READY — SMS/Email *sending* integration pending
+Customer Messaging (Telegram/WhatsApp/Facebook)  🔴 NOT STARTED — chatbot integration pending
 
 ₮80k–₮200k/month
-+ actual SMS cost
++ platform messaging costs
 
 Includes:
 
-Oil change reminders (generic interval system supports all service types)
+Service reminder delivery via chat
 Appointment reminders
 Pickup reminders
 Follow-up messages
@@ -1782,7 +1782,7 @@ Branches
 Users
 Work orders/month
 Storage
-SMS volume
+Messaging volume
 API calls
 Advanced reports
 Inventory locations
@@ -1799,7 +1799,7 @@ Work orders/month	300	1,500	5,000
 Customers	1,000	10,000	50,000
 Storage	1GB	10GB	50GB
 Inventory	No	Yes	Yes
-SMS reminders	No	Yes	Yes
+Messaging (Telegram/chatbot)	No	Yes	Yes
 API	No	No	Yes
 Multi-branch	No	No	Yes
 BI	No	Basic	Advanced

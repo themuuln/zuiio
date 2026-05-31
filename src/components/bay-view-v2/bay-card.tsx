@@ -13,7 +13,7 @@ import {
   Trash2,
   Wrench,
 } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -163,27 +163,21 @@ export function MongolianLicensePlate({
 }
 
 function ElapsedTimer({ startedAt }: { startedAt: string | null | undefined }) {
-  const [display, setDisplay] = useState("");
-  const startedRef = useRef<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    if (!startedAt) {
-      setDisplay("");
-      startedRef.current = null;
-      return;
-    }
-    const ms = new Date(startedAt).getTime();
-    startedRef.current = ms;
-    const tick = () => {
-      if (startedRef.current === null) return;
-      setDisplay(formatDuration(Date.now() - startedRef.current));
-    };
+    if (!startedAt) return;
+    const tick = () => setNow(Date.now());
     tick();
     const interval = setInterval(tick, 30000);
     return () => clearInterval(interval);
   }, [startedAt]);
 
-  if (!display) return null;
+  if (!startedAt) return null;
+
+  const ms = new Date(startedAt).getTime();
+  const elapsed = Math.max(0, now - ms);
+  const display = formatDuration(elapsed);
 
   return (
     <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/60 px-2 py-0.5 rounded font-mono tabular-nums select-none border border-border/30">

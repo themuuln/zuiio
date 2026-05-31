@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSYX92P68SMN3SXMA4NDKS5B",
+  "taskId": "create-db-migration",
+  "invocationKey": "feature/qr-clock-in:S000002:create-db-migration",
+  "status": "ok",
+  "result": {
+    "migrationFile": "supabase/migrations/20260601000000_mechanic_devices.sql",
+    "sqlContent": "Tables: mechanic_devices, clock_in_tokens. RPCs: generate_clock_token, verify_clock_token, register_mechanic_device, generate_registration_token, revoke_mechanic_device, list_mechanic_devices. RLS enabled on both tables.",
+    "tablesCreated": [
+      "mechanic_devices",
+      "clock_in_tokens"
+    ]
+  },
+  "startedAt": "2026-05-31T11:39:07.388Z",
+  "finishedAt": "2026-05-31T11:39:07.388Z",
+  "value": {
+    "migrationFile": "supabase/migrations/20260601000000_mechanic_devices.sql",
+    "sqlContent": "Tables: mechanic_devices, clock_in_tokens. RPCs: generate_clock_token, verify_clock_token, register_mechanic_device, generate_registration_token, revoke_mechanic_device, list_mechanic_devices. RLS enabled on both tables.",
+    "tablesCreated": [
+      "mechanic_devices",
+      "clock_in_tokens"
+    ]
+  }
+}

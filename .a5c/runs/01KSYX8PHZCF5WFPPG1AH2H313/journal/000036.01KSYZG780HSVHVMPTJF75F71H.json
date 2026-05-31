@@ -1,0 +1,19 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T12:17:52.896Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYZG762MB4CQEESTZR6PYNF",
+    "invocationKey": "feature/qr-clock-in:S000018:__sdk.breakpoint",
+    "invocationHash": "35c1aa9ebdd12e200a20fe250c85fac15948136aff2d1dce1f0e54533369b70a",
+    "stepId": "S000018",
+    "taskId": "__sdk.breakpoint",
+    "kind": "breakpoint",
+    "label": "breakpoint",
+    "taskDefRef": "tasks/01KSYZG762MB4CQEESTZR6PYNF/task.json",
+    "labels": [
+      "breakpoint"
+    ]
+  },
+  "checksum": "c944561e5d65bbaec59efd31dad3cbe46e8b3fca7964b8b4ab59e2d852858bc5"
+}
