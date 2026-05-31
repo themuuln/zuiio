@@ -1,9 +1,11 @@
 "use client";
 
+import { ExternalLink } from "lucide-react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
-
-const PARTNERS = Array.from({ length: 12 }, (_, i) => `partner_${i + 1}`);
 
 export function PartnersSlider() {
   const t = useTranslations("home");
@@ -15,23 +17,57 @@ export function PartnersSlider() {
           {t("partnersTitle")}
         </Typography.Muted>
 
-        {/* Sliding track — two copies for seamless infinite loop */}
-        <div className="relative mx-auto max-w-5xl overflow-hidden">
-          <div className="flex animate-marquee gap-6">
-            {[...PARTNERS, ...PARTNERS].map((name, i) => (
-              <div
-                key={`${name}_${i}`}
-                className="flex h-16 w-44 shrink-0 items-center justify-center rounded-xl border bg-background shadow-xs"
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <div className="size-6 rounded-md bg-muted-foreground/10" />
-                  <span className="text-xs font-medium text-muted-foreground/60">
-                    {name}
-                  </span>
-                </div>
-              </div>
-            ))}
+        {/* Founding org feature */}
+        <div className="mx-auto max-w-md">
+          <div className="flex flex-col items-center gap-4 rounded-xl border bg-background p-6 shadow-xs">
+            {/* Logo */}
+            <div className="relative size-20 overflow-hidden rounded-full border">
+              <Image
+                src="/khantaishir-motors-logo.jpg"
+                alt="Хантайшир Моторс ХХК"
+                fill
+                className="object-cover"
+              />
+            </div>
+
+            {/* Org info */}
+            <div className="text-center">
+              <Typography.H3 className="text-lg font-semibold">
+                Хантайшир Моторс ХХК
+              </Typography.H3>
+              <Typography.Muted className="mt-1 text-xs text-muted-foreground">
+                {t("partnersOrgDesc")}
+              </Typography.Muted>
+            </div>
+
+            {/* Facebook link */}
+            <Button
+              variant="outline"
+              size="sm"
+              render={
+                <a
+                  href="https://www.facebook.com/khantaishiravtoservice"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              }
+              nativeButton={false}
+              className="gap-2"
+            >
+              <ExternalLink className="size-4" />
+              Facebook
+            </Button>
           </div>
+        </div>
+
+        {/* Coming soon badge */}
+        <div className="mt-8 text-center">
+          <Badge
+            variant="secondary"
+            className="px-4 py-1.5 text-xs font-medium"
+          >
+            {t("partnersComingSoon")}
+          </Badge>
         </div>
       </div>
     </section>

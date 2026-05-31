@@ -1,81 +1,60 @@
-import { Resend } from "resend";
-import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 import type { InvoiceWithItems } from "@/lib/types";
 
-// ── Global round-robin Resend clients ──────────────────────────
+// ── SMTP Transport ─────────────────────────────────────────────
 
-const API_KEYS_CACHE_TTL = 60_000; // 1 minute
-let _cachedKeys: string[] | null = null;
-let _cacheExpiresAt = 0;
-let _roundRobinIndex = 0;
+let _transporter: Transporter | null = null;
 
-/**
- * Load Resend API keys from Supabase app_config table.
- * Falls back to RESEND_API_KEY env var if no keys in DB.
- * Results are cached in-memory for API_KEYS_CACHE_TTL.
- */
-async function loadApiKeys(): Promise<string[]> {
-  const now = Date.now();
-  if (_cachedKeys && now < _cacheExpiresAt) {
-    return _cachedKeys;
-  }
+function getTransporter(): Transporter {
+  if (_transporter) return _transporter;
 
-  try {
-    const supabase = await createServiceRoleClient();
-    const { data } = await supabase
-      .from("app_config")
-      .select("value")
-      .eq("key", "resend_api_keys")
-      .single();
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = parseInt(process.env.SMTP_PORT || "587", 10);
+  const secure = process.env.SMTP_SECURE === "true";
+  const user = process.env.SMTP_USER || "";
+  const pass = process.env.SMTP_PASS || "";
 
-    if (data?.value) {
-      const keys = data.value
-        .split(",")
-        .map((k: string) => k.trim())
-        .filter(Boolean);
-      if (keys.length > 0) {
-        _cachedKeys = keys;
-        _cacheExpiresAt = now + API_KEYS_CACHE_TTL;
-        return keys;
-      }
-    }
-  } catch {
-    // DB lookup failed — fall through to env var
-  }
+  _transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: { user, pass },
+  });
 
-  // Fall back to env var
-  const single = process.env.RESEND_API_KEY;
-  if (single) {
-    const keys = [single];
-    _cachedKeys = keys;
-    _cacheExpiresAt = now + API_KEYS_CACHE_TTL;
-    return keys;
-  }
-
-  throw new Error(
-    "No Resend API keys configured. Add keys via app_config.resend_api_keys or set RESEND_API_KEY env var.",
-  );
-}
-
-const _clientCache = new Map<string, Resend>();
-
-async function getResendClient(): Promise<Resend> {
-  const keys = await loadApiKeys();
-  const idx = _roundRobinIndex % keys.length;
-  _roundRobinIndex = (idx + 1) % Number.MAX_SAFE_INTEGER;
-
-  const apiKey = keys[idx];
-
-  let client = _clientCache.get(apiKey);
-  if (!client) {
-    client = new Resend(apiKey);
-    _clientCache.set(apiKey, client);
-  }
-  return client;
+  return _transporter;
 }
 
 function getFromEmail(): string {
-  return process.env.EMAIL_FROM ?? "noreply@tolom.app";
+  return process.env.EMAIL_FROM || "TOLOM <noreply@tolom.app>";
+}
+
+// ── Public API ─────────────────────────────────────────────────
+
+/**
+ * Send an email via the configured SMTP transport.
+ * Supports any SMTP provider — Gmail, SendGrid, Brevo, etc.
+ * Change env vars to swap providers without code changes.
+ */
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  from,
+}: {
+  to: string | string[];
+  subject: string;
+  html: string;
+  from?: string;
+}): Promise<{ id: string }> {
+  const transporter = getTransporter();
+  const info = await transporter.sendMail({
+    from: from || getFromEmail(),
+    to: Array.isArray(to) ? to.join(", ") : to,
+    subject,
+    html,
+  });
+  return { id: info.messageId };
 }
 
 // ── Types ──────────────────────────────────────────────────────
@@ -363,9 +342,8 @@ function renderInvoiceEmailHtml(
 // ── Public API ─────────────────────────────────────────────────
 
 /**
- * Send an invoice email to a customer using Resend.
+ * Send an invoice email to a customer via the configured SMTP.
  * The email includes a link to the public invoice page and a summary.
- * Keys are selected via global round-robin across RESEND_API_KEYS.
  */
 export async function sendInvoiceEmail(
   params: SendInvoiceEmailParams,
@@ -373,25 +351,16 @@ export async function sendInvoiceEmail(
   const { invoice, orgName, recipientEmail, bccEmail, publicInvoiceUrl } =
     params;
 
-  const resend = await getResendClient();
-  const fromEmail = getFromEmail();
-
   const html = renderInvoiceEmailHtml(invoice, orgName, publicInvoiceUrl);
 
-  const { data, error } = await resend.emails.send({
-    from: `${orgName} <${fromEmail}>`,
+  const { id } = await sendEmail({
+    from: `${orgName} <${getFromEmail()}>`,
     to: [recipientEmail],
-    bcc: bccEmail ? [bccEmail] : undefined,
-    replyTo: bccEmail ? bccEmail : undefined,
     subject: `${orgName} — Нэхэмжлэх #${invoice.invoice_number}`,
     html,
   });
 
-  if (error) {
-    throw new Error(`Failed to send email: ${error.message}`);
-  }
-
-  return { id: data?.id ?? "" };
+  return { id };
 }
 
 // ── Reminder Email ─────────────────────────────────────────────
@@ -464,31 +433,25 @@ function renderReminderEmailHtml(params: SendReminderEmailParams): string {
 export async function sendReminderEmail(
   params: SendReminderEmailParams,
 ): Promise<{ id: string }> {
-  const resend = await getResendClient();
-  const fromEmail = getFromEmail();
-
   const html = renderReminderEmailHtml(params);
 
-  const { data, error } = await resend.emails.send({
-    from: `${params.orgName} <${fromEmail}>`,
+  const { id } = await sendEmail({
+    from: `${params.orgName} <${getFromEmail()}>`,
     to: [params.recipientEmail],
     subject: `Сануулга: ${params.serviceName} — ${params.vehicleLabel}`,
     html,
   });
 
-  if (error) {
-    throw new Error(`Failed to send reminder email: ${error.message}`);
-  }
-
-  return { id: data?.id ?? "" };
+  return { id };
 }
 
 /**
- * Test that at least one Resend API key is configured and usable.
+ * Test that SMTP is configured and the transporter can verify.
  */
 export async function testEmailConfig(): Promise<boolean> {
   try {
-    await loadApiKeys();
+    const transporter = getTransporter();
+    await transporter.verify();
     return true;
   } catch {
     return false;
