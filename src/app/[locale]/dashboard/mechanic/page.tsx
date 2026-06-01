@@ -53,6 +53,7 @@ import {
   useMechanicTrend,
   useClockStatus,
   useClockToggle,
+  useMechanicsList,
 } from "@/lib/queries/use-mechanic-dashboard";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
 import { cn, formatMNT } from "@/lib/utils";
@@ -73,11 +74,6 @@ interface WorkOrderRow {
   vehicle_plate: string | null;
   vehicle_id: string | null;
   created_at: string;
-}
-
-interface MechanicItem {
-  id: string;
-  full_name: string | null;
 }
 
 // ── Status config ──────────────────────────────────
@@ -795,44 +791,21 @@ export default function MechanicPage() {
     isMechanic,
     isAdmin,
   } = useCurrentUserRole();
-  const [mechanics, setMechanics] = useState<MechanicItem[]>([]);
+  const pageQueryClient = useQueryClient();
+  const mechanicsQuery = useMechanicsList(profile?.organizationId ?? undefined);
+  const mechanics = mechanicsQuery.data ?? [];
+  const mechanicsLoading = mechanicsQuery.isPending;
   const [selectedMechanicId, setSelectedMechanicId] = useState<string | null>(
     null,
   );
-  const [mechanicsLoading, setMechanicsLoading] = useState(true);
   const [showAddMechanic, setShowAddMechanic] = useState(false);
 
+  // Auto-select the first mechanic once loaded
   useEffect(() => {
-    if (!profile?.organizationId) return;
-    const abort = new AbortController();
-
-    if (!isAdmin) {
-      setMechanicsLoading(false);
-      return;
+    if (mechanics.length > 0 && !selectedMechanicId) {
+      setSelectedMechanicId(mechanics[0].id);
     }
-
-    (async () => {
-      const orgId = profile.organizationId;
-      try {
-        const res = await fetch(
-          `/api/organizations/${orgId}/reports?type=mechanics`,
-          { signal: abort.signal },
-        );
-        const json = await res.json();
-        if (abort.signal.aborted) return;
-        const list: MechanicItem[] = json.data ?? [];
-        setMechanics(list);
-        if (list.length > 0) {
-          setSelectedMechanicId(list[0].id);
-        }
-      } catch {
-        // silent
-      }
-      if (!abort.signal.aborted) setMechanicsLoading(false);
-    })();
-
-    return () => abort.abort();
-  }, [profile?.organizationId, isAdmin]);
+  }, [mechanics, selectedMechanicId]);
 
   if (roleLoading) {
     return (
@@ -965,19 +938,9 @@ export default function MechanicPage() {
           onOpenChange={(open) => {
             setShowAddMechanic(open);
             if (!open) {
-              const orgId = profile?.organizationId;
-              if (orgId) {
-                fetch(`/api/organizations/${orgId}/reports?type=mechanics`)
-                  .then((r) => r.json())
-                  .then((json) => {
-                    const list: MechanicItem[] = json.data ?? [];
-                    setMechanics(list);
-                    if (list.length > 0 && !selectedMechanicId) {
-                      setSelectedMechanicId(list[0].id);
-                    }
-                  })
-                  .catch(() => {});
-              }
+              pageQueryClient.invalidateQueries({
+                queryKey: ["organizations", profile?.organizationId!, "mechanics", "list"],
+              });
             }
           }}
         />
@@ -998,20 +961,9 @@ export default function MechanicPage() {
         onOpenChange={(open) => {
           setShowAddMechanic(open);
           if (!open) {
-            // Refresh mechanics list
-            const orgId = profile?.organizationId;
-            if (orgId) {
-              fetch(`/api/organizations/${orgId}/reports?type=mechanics`)
-                .then((r) => r.json())
-                .then((json) => {
-                  const list: MechanicItem[] = json.data ?? [];
-                  setMechanics(list);
-                  if (list.length > 0 && !selectedMechanicId) {
-                    setSelectedMechanicId(list[0].id);
-                  }
-                })
-                .catch(() => {});
-            }
+            pageQueryClient.invalidateQueries({
+              queryKey: ["organizations", profile?.organizationId!, "mechanics", "list"],
+            });
           }
         }}
       />
