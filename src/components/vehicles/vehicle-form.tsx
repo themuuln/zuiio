@@ -25,7 +25,11 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Kbd } from "@/components/ui/kbd";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Item,
   ItemActions,
@@ -842,45 +846,34 @@ export function VehicleForm({
                   aria-invalid={!!form.formState.errors.plateNumber}
                   {...inputProps("plate")}
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-11 shrink-0 w-11"
-                  onClick={handlePlateLookup}
-                  disabled={looking || !form.watch("plateNumber")?.trim()}
-                  title="Lookup plate on SmartCar.mn"
-                >
-                  {looking ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Search className="size-4" />
-                  )}
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-11 shrink-0 w-11"
+                      onClick={handlePlateLookup}
+                      disabled={looking || !form.watch("plateNumber")?.trim()}
+                    >
+                      {looking ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Search className="size-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="font-mono text-[11px] leading-relaxed whitespace-nowrap">
+                    A→А B→В C→С E→Е H→Н K→К M→М N→Н<br />
+                    O→О P→Р T→Т U→У V→В X→Х Y→Ү
+                  </TooltipContent>
+                </Tooltip>
               </div>
               {form.formState.errors.plateNumber && (
                 <FieldError>
                   {form.formState.errors.plateNumber.message}
                 </FieldError>
               )}
-              <p className="mt-1 text-[11px] text-muted-foreground/50 font-mono tracking-wider leading-relaxed">
-                Latin → Cyrillic:{" "}
-                <Kbd className="text-[10px] px-1">A</Kbd>→<Kbd className="text-[10px] px-1">А</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">B</Kbd>→<Kbd className="text-[10px] px-1">В</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">C</Kbd>→<Kbd className="text-[10px] px-1">С</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">E</Kbd>→<Kbd className="text-[10px] px-1">Е</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">H</Kbd>→<Kbd className="text-[10px] px-1">Н</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">K</Kbd>→<Kbd className="text-[10px] px-1">К</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">M</Kbd>→<Kbd className="text-[10px] px-1">М</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">N</Kbd>→<Kbd className="text-[10px] px-1">Н</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">O</Kbd>→<Kbd className="text-[10px] px-1">О</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">P</Kbd>→<Kbd className="text-[10px] px-1">Р</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">T</Kbd>→<Kbd className="text-[10px] px-1">Т</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">U</Kbd>→<Kbd className="text-[10px] px-1">У</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">V</Kbd>→<Kbd className="text-[10px] px-1">В</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">X</Kbd>→<Kbd className="text-[10px] px-1">Х</Kbd>{" "}
-                <Kbd className="text-[10px] px-1">Y</Kbd>→<Kbd className="text-[10px] px-1">Ү</Kbd>
-              </p>
             </FieldContent>
           </Field>
 
