@@ -23,6 +23,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
+import { useCurrentUserRole } from "@/hooks/use-current-user-role";
 import { usePageHeader } from "@/hooks/use-page-header";
 import type { ExportColumn } from "@/lib/export";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
@@ -64,6 +65,14 @@ export default function DashboardPage() {
   const t = useTranslations();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { isMechanic, loading: roleLoading } = useCurrentUserRole();
+
+  // ── Redirect mechanics to bay view ─────────────────────
+  useEffect(() => {
+    if (!roleLoading && isMechanic) {
+      router.replace("/dashboard/bay-view");
+    }
+  }, [roleLoading, isMechanic, router]);
   const { setNewWorkOrderSheetOpen } = usePageHeader();
   const [period, setPeriod] = useState<Period>(
     () => (searchParams.get("period") as Period) ?? "all",

@@ -234,7 +234,13 @@ export function useNavigation() {
     ? navGroups.filter((g) => g.labelKey !== FINANCIALS_GROUP_KEY)
     : navGroups;
 
-  const filteredPrimaryItems = primaryItems;
+  const filteredPrimaryItems = isMechanic
+    ? [{
+        labelKey: "nav.bayView",
+        href: "/dashboard/bay-view",
+        icon: LayoutGrid,
+      }]
+    : primaryItems;
   const filteredSettingsItems = isMechanic ? [] : settingsItems;
   const filteredUtilityItems = utilityItems;
 
@@ -252,7 +258,7 @@ export function useNavigation() {
   const resolvedCurrentItem =
     [...filteredAllItems]
       .sort((a, b) => b.href.length - a.href.length)
-      .find((item) => isActive(item.href)) ?? filteredPrimaryItems[0];
+      .find((item) => isActive(item.href)) ?? filteredPrimaryItems[0] ?? null;
 
   const resolvedCurrentGroup =
     filteredNavGroups.find((group) =>
