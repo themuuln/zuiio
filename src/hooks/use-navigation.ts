@@ -21,6 +21,7 @@ import {
   Warehouse,
   Wrench,
 } from "lucide-react";
+import { useCurrentUserRole } from "@/hooks/use-current-user-role";
 import { usePathname } from "@/lib/i18n/navigation";
 
 export interface NavItem {
@@ -196,13 +197,6 @@ const settingsItems: NavItem[] = [
   { labelKey: "nav.admin", href: "/dashboard/admin", icon: Shield },
 ];
 
-const allItems = [
-  ...primaryItems,
-  ...navGroups.flatMap((group) => group.children),
-  ...utilityItems,
-  ...settingsItems,
-];
-
 const sections: NavSection[] = [
   {
     labelKey: "nav.dashboard",
@@ -221,8 +215,12 @@ const sections: NavSection[] = [
   },
 ];
 
+/** The Financials group label — hidden from mechanics who lack reports.read */
+const FINANCIALS_GROUP_KEY = "nav.group.financials";
+
 export function useNavigation() {
   const pathname = usePathname();
+  const { isMechanic } = useCurrentUserRole();
 
   function isActive(href: string) {
     if (href === "/dashboard") {
@@ -231,43 +229,63 @@ export function useNavigation() {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  const currentItem =
-    [...allItems]
+  // ── Filter nav items based on role ──────────────────────
+  const filteredNavGroups = isMechanic
+    ? navGroups.filter((g) => g.labelKey !== FINANCIALS_GROUP_KEY)
+    : navGroups;
+
+  const filteredPrimaryItems = primaryItems;
+  const filteredSettingsItems = isMechanic ? [] : settingsItems;
+  const filteredUtilityItems = utilityItems;
+
+  const filteredAllItems = [
+    ...filteredPrimaryItems,
+    ...filteredNavGroups.flatMap((group) => group.children),
+    ...filteredUtilityItems,
+    ...filteredSettingsItems,
+  ];
+
+  const filteredSections = isMechanic
+    ? sections.filter((s) => s.labelKey !== FINANCIALS_GROUP_KEY)
+    : sections;
+
+  const resolvedCurrentItem =
+    [...filteredAllItems]
       .sort((a, b) => b.href.length - a.href.length)
-      .find((item) => isActive(item.href)) ?? primaryItems[0];
+      .find((item) => isActive(item.href)) ?? filteredPrimaryItems[0];
 
-  const currentGroup =
-    navGroups.find((group) =>
-      group.children.some((item) => item.href === currentItem.href),
+  const resolvedCurrentGroup =
+    filteredNavGroups.find((group) =>
+      group.children.some((item) => item.href === resolvedCurrentItem.href),
     ) ?? null;
-  const currentSection =
-    sections.find((section) =>
-      section.items.some((item) => item.href === currentItem.href),
-    ) ?? sections[0];
+  const resolvedCurrentSection =
+    filteredSections.find((section) =>
+      section.items.some((item) => item.href === resolvedCurrentItem.href),
+    ) ?? filteredSections[0];
 
-  const breadcrumbs: NavBreadcrumb[] = currentGroup
+  const resolvedBreadcrumbs: NavBreadcrumb[] = resolvedCurrentGroup
     ? [
         { labelKey: "nav.dashboard", href: "/dashboard" },
-        { labelKey: currentGroup.labelKey },
-        { labelKey: currentItem.labelKey },
+        { labelKey: resolvedCurrentGroup.labelKey },
+        { labelKey: resolvedCurrentItem.labelKey },
       ]
-    : currentItem.href === "/dashboard"
+    : resolvedCurrentItem.href === "/dashboard"
       ? [{ labelKey: "nav.dashboard" }]
       : [
           { labelKey: "nav.dashboard", href: "/dashboard" },
-          { labelKey: currentItem.labelKey },
+          { labelKey: resolvedCurrentItem.labelKey },
         ];
 
   return {
-    primaryItems,
-    groups: navGroups,
-    utilityItems,
-    settingsItems,
-    sections,
-    currentSection,
-    searchItems: allItems,
-    currentItem,
-    breadcrumbs,
+    primaryItems: filteredPrimaryItems,
+    groups: filteredNavGroups,
+    utilityItems: filteredUtilityItems,
+    settingsItems: filteredSettingsItems,
+    sections: filteredSections,
+    currentSection: resolvedCurrentSection,
+    searchItems: filteredAllItems,
+    currentItem: resolvedCurrentItem,
+    breadcrumbs: resolvedBreadcrumbs,
     isActive,
     pathname,
   };
