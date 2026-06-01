@@ -543,7 +543,18 @@ function MechanicDashboard({
 
   const handleClockToggle = () => {
     const action = clockStatus.clockedIn ? "clock-out" : "clock-in";
-    clockMutation.mutate(action);
+    clockMutation.mutate(action, {
+      onSuccess: () => {
+        toast.success(
+          clockStatus.clockedIn
+            ? t("mechanic.clockedOut")
+            : t("mechanic.clockedIn"),
+        );
+      },
+      onError: (err) => {
+        toast.error(err instanceof Error ? err.message : "Network error");
+      },
+    });
   };
 
   const handlePickupCompleteConfirm = async (data: PickupCompleteData) => {
@@ -939,7 +950,12 @@ export default function MechanicPage() {
             setShowAddMechanic(open);
             if (!open) {
               pageQueryClient.invalidateQueries({
-                queryKey: ["organizations", profile?.organizationId!, "mechanics", "list"],
+                queryKey: [
+                  "organizations",
+                  profile?.organizationId!,
+                  "mechanics",
+                  "list",
+                ],
               });
             }
           }}
@@ -962,7 +978,12 @@ export default function MechanicPage() {
           setShowAddMechanic(open);
           if (!open) {
             pageQueryClient.invalidateQueries({
-              queryKey: ["organizations", profile?.organizationId!, "mechanics", "list"],
+              queryKey: [
+                "organizations",
+                profile?.organizationId!,
+                "mechanics",
+                "list",
+              ],
             });
           }
         }}

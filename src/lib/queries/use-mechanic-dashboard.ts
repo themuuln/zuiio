@@ -14,7 +14,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { toast } from "sonner";
+
 import { clockKeys, mechanicKeys } from "./keys";
 
 // ── Types ──────────────────────────────────────────
@@ -136,9 +136,7 @@ export function useMechanicTrend(
     queryKey: mechanicKeys.trend(orgId ?? "", userId ?? "", "", ""),
     queryFn: async () => {
       const today = new Date().toISOString().split("T")[0];
-      const eightWeeksAgo = new Date(
-        Date.now() - 56 * 24 * 60 * 60 * 1000,
-      )
+      const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0];
       const url = `${apiUrl(orgId!, "/reports")}?type=mechanic-trend&mechanic=${userId!}&period=weekly&startDate=${eightWeeksAgo}&endDate=${today}`;
@@ -192,17 +190,10 @@ export function useClockToggle(orgId: string | undefined) {
       }
       return res.json();
     },
-    onSuccess: (_data, action) => {
-      // Invalidate so the next poll or stale fetch gets fresh status
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: clockKeys.status(orgId ?? ""),
       });
-      toast.success(
-        action === "clock-in" ? "Clocked in" : "Clocked out",
-      );
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
     },
   });
 }
