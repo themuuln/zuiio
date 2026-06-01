@@ -220,7 +220,7 @@ const FINANCIALS_GROUP_KEY = "nav.group.financials";
 
 export function useNavigation() {
   const pathname = usePathname();
-  const { isMechanic } = useCurrentUserRole();
+  const { isMechanic, loading: roleLoading } = useCurrentUserRole();
 
   function isActive(href: string) {
     if (href === "/dashboard") {
@@ -229,30 +229,38 @@ export function useNavigation() {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  // ── Filter nav items based on role ──────────────────────
-  const filteredNavGroups = isMechanic
-    ? navGroups
-        .filter((g) => g.labelKey !== FINANCIALS_GROUP_KEY)
-        .map((g) => ({
-          ...g,
-          // Bay View is already the primary home item — remove from Operations group
-          children: g.labelKey === "nav.group.operations"
-            ? g.children.filter((c) => c.href !== "/dashboard/bay-view")
-            : g.children,
-        }))
-    : navGroups;
+  // ── While role is loading, show nothing to avoid flash of unfiltered items ──
+  const navReady = !roleLoading;
 
-  const filteredPrimaryItems = isMechanic
-    ? [
-        {
-          labelKey: "nav.bayView",
-          href: "/dashboard/bay-view",
-          icon: LayoutGrid,
-        },
-      ]
-    : primaryItems;
-  const filteredSettingsItems = isMechanic ? [] : settingsItems;
-  const filteredUtilityItems = utilityItems;
+  // ── Filter nav items based on role ──────────────────────
+  const filteredNavGroups = !navReady
+    ? []
+    : isMechanic
+      ? navGroups
+          .filter((g) => g.labelKey !== FINANCIALS_GROUP_KEY)
+          .map((g) => ({
+            ...g,
+            // Bay View is already the primary home item — remove from Operations group
+            children:
+              g.labelKey === "nav.group.operations"
+                ? g.children.filter((c) => c.href !== "/dashboard/bay-view")
+                : g.children,
+          }))
+      : navGroups;
+
+  const filteredPrimaryItems = !navReady
+    ? []
+    : isMechanic
+      ? [
+          {
+            labelKey: "nav.bayView",
+            href: "/dashboard/bay-view",
+            icon: LayoutGrid,
+          },
+        ]
+      : primaryItems;
+  const filteredSettingsItems = !navReady ? [] : isMechanic ? [] : settingsItems;
+  const filteredUtilityItems = navReady ? utilityItems : [];
 
   const filteredAllItems = [
     ...filteredPrimaryItems,
@@ -261,8 +269,10 @@ export function useNavigation() {
     ...filteredSettingsItems,
   ];
 
-  const filteredSections = isMechanic
-    ? sections.filter((s) => s.labelKey !== FINANCIALS_GROUP_KEY)
+  const filteredSections = !navReady
+    ? []
+    : isMechanic
+      ? sections.filter((s) => s.labelKey !== FINANCIALS_GROUP_KEY)
     : sections;
 
   const resolvedCurrentItem =
