@@ -56,6 +56,11 @@ export default function VehiclesPage() {
   } = useVehicles(org?.orgId, search);
   const deleteVehicle = useDeleteVehicle(org?.orgId);
 
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  useEffect(() => {
+    if (vehicles) setHasLoadedOnce(true);
+  }, [vehicles]);
+
   const list: VehicleRow[] = vehicles ?? [];
 
   const [vehicleToDelete, setVehicleToDelete] = useState<VehicleRow | null>(
@@ -127,7 +132,9 @@ export default function VehiclesPage() {
     );
   }, [list, registerTab]);
 
-  if (isLoading && !vehicles) {
+  // Full-page skeleton only on the absolute first load (never seen data)
+  // After that, preserve layout and only skeleton the data table
+  if (isLoading && !hasLoadedOnce) {
     return (
       <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
         <div className="flex items-center justify-between">
@@ -228,7 +235,9 @@ export default function VehiclesPage() {
 
       <Card className="py-0">
         <CardContent className="p-0">
-          {list.length === 0 ? (
+          {!vehicles && hasLoadedOnce ? (
+            <DataTable columns={columns} data={[]} loading />
+          ) : list.length === 0 ? (
             <Empty>
               <EmptyHeader>
                 <EmptyMedia variant="icon">
