@@ -2,7 +2,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ForbiddenError, ValidationError } from "@/lib/errors";
-import { hasPermission } from "@/lib/supabase/role-guard";
 import {
   generateReportInsights,
   getCustomerRetention,
@@ -21,6 +20,7 @@ import {
   getWeeklyReport,
   setRevenueTarget,
 } from "@/lib/services/report-service";
+import { hasPermission } from "@/lib/supabase/role-guard";
 
 // ── Role hierarchy (mirrors role-guard.ts) ──
 const ROLE_HIERARCHY: Record<string, number> = {
@@ -36,6 +36,7 @@ const ROLE_HIERARCHY: Record<string, number> = {
 // "mechanic-trend": own performance trend (filtered to self when no reports.read)
 // "mechanics": list of mechanics (names only, non-financial)
 const MECHANIC_SAFE_TYPES = new Set([
+  "custom",
   "timeline",
   "eod",
   "mechanic-trend",
@@ -128,10 +129,7 @@ export const GET = createRouteHandler(
     // ── Enforce self-access for mechanic-specific types ──
     // Without reports.read, a mechanic can only access their own data
     const hasReportsRead = await hasPermission("reports", "read", orgId);
-    const effectiveMid =
-      hasReportsRead
-        ? (requestedMechanicId ?? "")
-        : user.id; // force self-access when no reports.read
+    const effectiveMid = hasReportsRead ? (requestedMechanicId ?? "") : user.id; // force self-access when no reports.read
 
     if (type === "mechanics") {
       const mechanics = await getMechanicsList(orgId, branchId);

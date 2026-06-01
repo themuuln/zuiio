@@ -23,6 +23,7 @@ export function NewCustomerSheet({
       onOpenChange={onOpenChange}
       title={t("addCustomer")}
       description={t("createSubtitle")}
+      sheetSize="2xl"
     >
       <CustomerForm
         mode="full"

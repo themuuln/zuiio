@@ -143,7 +143,7 @@ export function NewExpenseSheet({ open, onOpenChange }: NewExpenseSheetProps) {
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
-        className="flex w-full flex-col gap-0 p-0 sm:max-w-lg"
+        className="flex w-full flex-col gap-0 p-0 sm:max-w-2xl"
         showCloseButton
       >
         <SheetHeader className="px-4 pt-4">

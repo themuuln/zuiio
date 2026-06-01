@@ -22,6 +22,7 @@ export function QuickCreateCustomerSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="New customer"
+      sheetSize="2xl"
     >
       <CustomerForm
         mode="quick"

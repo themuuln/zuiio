@@ -23,6 +23,7 @@ export function NewVehicleSheet({
       onOpenChange={onOpenChange}
       title={t("addVehicle")}
       description={t("createSubtitle")}
+      sheetSize="2xl"
     >
       <VehicleForm
         mode="full"

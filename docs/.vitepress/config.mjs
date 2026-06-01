@@ -46,9 +46,11 @@ export default defineConfig({
           { text: "Хяналтын самбар", link: "/dashboard" },
           { text: "Засварын булан", link: "/bay-view" },
           { text: "Механикийн самбар", link: "/mechanic" },
+          { text: "Механикийн гүйцэтгэл", link: "/mechanic-performance" },
           { text: "Ажлын захиалга", link: "/work-orders" },
           { text: "Харилцагчид", link: "/customers" },
           { text: "Тээврийн хэрэгсэл", link: "/vehicles" },
+          { text: "Өдрийн хаалт", link: "/eod-close" },
         ],
       },
       {
@@ -85,8 +87,15 @@ export default defineConfig({
         ],
       },
       {
+        text: "Харилцагчийн портал",
+        items: [{ text: "Портал", link: "/portal" }],
+      },
+      {
         text: "Бусад",
-        items: [{ text: "Зөвлөмжүүд", link: "/tips" }],
+        items: [
+          { text: "Интеграцууд", link: "/integrations" },
+          { text: "Зөвлөмжүүд", link: "/tips" },
+        ],
       },
     ],
 

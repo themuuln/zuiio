@@ -171,7 +171,8 @@ export default function MechanicPerformancePage() {
       }
 
       setMechanics(perf);
-    } catch {
+    } catch (err) {
+      console.error("Failed to load mechanic performance data:", err);
       setMechanics([]);
     } finally {
       setLoading(false);

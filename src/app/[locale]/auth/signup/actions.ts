@@ -33,9 +33,9 @@ export async function signup(
   formData: FormData,
 ): Promise<SignupState> {
   const raw = {
-    organizationName: (formData.get("organizationName") as string) || "",
-    fullName: (formData.get("fullName") as string) || "",
-    identifier: (formData.get("identifier") as string) || "",
+    organizationName: (formData.get("organizationName") as string)?.trim() || "",
+    fullName: (formData.get("fullName") as string)?.trim() || "",
+    identifier: (formData.get("identifier") as string)?.trim() || "",
     password: (formData.get("password") as string) || "",
     confirmPassword: (formData.get("confirmPassword") as string) || "",
   };
@@ -74,13 +74,13 @@ export async function signup(
   let phoneValue: string | undefined;
 
   if (type === "email") {
-    authEmail = identifier;
+    authEmail = identifier.trim();
   } else if (type === "phone") {
-    phoneValue = normalizeMongolianPhone(identifier);
+    phoneValue = normalizeMongolianPhone(identifier.trim());
     authEmail = `phone_${phoneValue.replace(/[^0-9]/g, "")}@tolom.auth`;
   } else {
     // type === "username"
-    usernameValue = identifier;
+    usernameValue = identifier.trim().toLowerCase();
     // Validate username format
     if (!/^[a-zA-Z0-9_]+$/.test(usernameValue)) {
       return {

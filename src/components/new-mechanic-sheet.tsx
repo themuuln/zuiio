@@ -1,11 +1,16 @@
 "use client";
 
 import { CheckCircle, Copy, Loader2, UserPlus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -30,6 +35,7 @@ interface Role {
 
 interface CreatedMechanic {
   email: string;
+  identifier?: string;
   password: string;
   fullName: string;
 }
@@ -39,6 +45,141 @@ type NewMechanicSheetProps = {
   onOpenChange: (open: boolean) => void;
 };
 
+// ── Reducer for form state ────────────────────────────────
+interface FormState {
+  identifier: string;
+  password: string;
+  fullName: string;
+  selectedRoleId: string;
+  sending: boolean;
+  errors: Record<string, string>;
+  createdMechanic: CreatedMechanic | null;
+}
+
+type FormAction =
+  | { type: "SET_FIELD"; field: "identifier" | "password" | "fullName"; value: string }
+  | { type: "SET_SELECTED_ROLE"; roleId: string }
+  | { type: "SET_SENDING"; sending: boolean }
+  | { type: "SET_ERRORS"; errors: Record<string, string> }
+  | { type: "CLEAR_ERROR"; field: string }
+  | { type: "SET_CREATED"; mechanic: CreatedMechanic | null }
+  | { type: "RESET" };
+
+const INITIAL_FORM_STATE: FormState = {
+  identifier: "",
+  password: "",
+  fullName: "",
+  selectedRoleId: "",
+  sending: false,
+  errors: {},
+  createdMechanic: null,
+};
+
+function formReducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case "SET_FIELD":
+      return { ...state, [action.field]: action.value };
+    case "SET_SELECTED_ROLE":
+      return { ...state, selectedRoleId: action.roleId };
+    case "SET_SENDING":
+      return { ...state, sending: action.sending };
+    case "SET_ERRORS":
+      return { ...state, errors: action.errors };
+    case "CLEAR_ERROR":
+      return { ...state, errors: { ...state.errors, [action.field]: "" } };
+    case "SET_CREATED":
+      return { ...state, createdMechanic: action.mechanic };
+    case "RESET":
+      return { ...INITIAL_FORM_STATE };
+    default:
+      return state;
+  }
+}
+
+// ── Success view (sub-component) ──────────────────────────
+function MechanicCredentialsView({
+  createdMechanic,
+  open,
+  onOpenChange,
+}: {
+  createdMechanic: CreatedMechanic;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const copyCredentials = () => {
+    const loginUser = createdMechanic.identifier || createdMechanic.email;
+    const text = `Username/Phone/Email: ${loginUser}\nPassword: ${createdMechanic.password}`;
+    navigator.clipboard.writeText(text);
+    toast.success("Credentials copied to clipboard");
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-2xl">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2 text-base">
+            <CheckCircle className="size-4 text-emerald-500" />
+            Mechanic Added
+          </SheetTitle>
+          <SheetDescription>
+            Share these credentials with the mechanic. They can log in
+            immediately.
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="flex flex-1 flex-col gap-6 px-4">
+          <div className="rounded-lg border bg-muted/30 p-4">
+            <div className="flex flex-col gap-3">
+              <div>
+                <Typography.Muted className="text-xs">
+                  Username / Phone / Email
+                </Typography.Muted>
+                <Typography.Text className="font-medium">
+                  {createdMechanic.identifier || createdMechanic.email}
+                </Typography.Text>
+              </div>
+              <div>
+                <Typography.Muted className="text-xs">
+                  Password
+                </Typography.Muted>
+                <Typography.Text className="font-mono font-medium">
+                  {createdMechanic.password}
+                </Typography.Text>
+              </div>
+              {createdMechanic.fullName && (
+                <div>
+                  <Typography.Muted className="text-xs">
+                    Name
+                  </Typography.Muted>
+                  <Typography.Text className="font-medium">
+                    {createdMechanic.fullName}
+                  </Typography.Text>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-auto flex flex-col gap-2 pt-4">
+            <Button type="button" onClick={copyCredentials} className="gap-2">
+              <Copy className="size-4" />
+              Copy Credentials
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                onOpenChange(false)
+              }
+            >
+              Done
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 export function NewMechanicSheet({
   open,
   onOpenChange,
@@ -46,15 +187,10 @@ export function NewMechanicSheet({
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [form, dispatch] = useReducer(formReducer, INITIAL_FORM_STATE);
+  // Roles are API data, kept separate from form state
   const [roles, setRoles] = useState<Role[]>([]);
-  const [selectedRoleId, setSelectedRoleId] = useState("");
   const [rolesLoading, setRolesLoading] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [createdMechanic, setCreatedMechanic] =
-    useState<CreatedMechanic | null>(null);
 
   // Fetch roles when sheet opens
   useEffect(() => {
@@ -71,12 +207,14 @@ export function NewMechanicSheet({
         const mechanic = list.find(
           (r: Role) => r.name.toLowerCase() === "mechanic",
         );
-        setSelectedRoleId(mechanic?.id ?? list[0]?.id ?? "");
+        dispatch({
+          type: "SET_SELECTED_ROLE",
+          roleId: mechanic?.id ?? list[0]?.id ?? "",
+        });
       } catch {
         toast.error("Failed to load roles");
-      } finally {
-        setRolesLoading(false);
       }
+      setRolesLoading(false);
     };
 
     loadRoles();
@@ -85,28 +223,48 @@ export function NewMechanicSheet({
   // Reset form on close
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      setEmail("");
-      setPassword("");
-      setFullName("");
-      setCreatedMechanic(null);
+      dispatch({ type: "RESET" });
     }
     onOpenChange(open);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password || !orgId || !selectedRoleId) return;
 
-    setSending(true);
+    const newErrors: Record<string, string> = {};
+    if (!form.fullName.trim()) {
+      newErrors.fullName = "Full name is required";
+    }
+    if (!form.identifier.trim()) {
+      newErrors.identifier = "Username, phone, or email is required";
+    }
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    } else if (form.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    }
+    if (!form.selectedRoleId) {
+      newErrors.roleId = "Role is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      dispatch({ type: "SET_ERRORS", errors: newErrors });
+      return;
+    }
+    dispatch({ type: "SET_ERRORS", errors: {} });
+
+    if (!orgId) return;
+
+    dispatch({ type: "SET_SENDING", sending: true });
     try {
       const res = await fetch(`/api/organizations/${orgId}/members`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: email.trim(),
-          password,
-          fullName: fullName.trim(),
-          roleId: selectedRoleId,
+          identifier: form.identifier.trim(),
+          password: form.password,
+          fullName: form.fullName.trim(),
+          roleId: form.selectedRoleId,
         }),
       });
       const body = await res.json();
@@ -115,93 +273,31 @@ export function NewMechanicSheet({
         throw new Error(body.error?.message ?? "Failed to add mechanic");
       }
 
-      setCreatedMechanic(body.data);
+      dispatch({ type: "SET_CREATED", mechanic: body.data });
       toast.success("Mechanic added successfully");
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to add mechanic",
       );
-    } finally {
-      setSending(false);
     }
-  };
-
-  const copyCredentials = () => {
-    if (!createdMechanic) return;
-    const text = `Email: ${createdMechanic.email}\nPassword: ${createdMechanic.password}`;
-    navigator.clipboard.writeText(text);
-    toast.success("Credentials copied to clipboard");
+    dispatch({ type: "SET_SENDING", sending: false });
   };
 
   // Show success state with credentials
-  if (createdMechanic) {
+  if (form.createdMechanic) {
     return (
-      <Sheet open={open} onOpenChange={handleOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2 text-base">
-              <CheckCircle className="size-4 text-emerald-500" />
-              Mechanic Added
-            </SheetTitle>
-            <SheetDescription>
-              Share these credentials with the mechanic. They can log in
-              immediately.
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="flex flex-1 flex-col gap-6 px-4">
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <div className="flex flex-col gap-3">
-                <div>
-                  <Typography.Muted className="text-xs">Email</Typography.Muted>
-                  <Typography.Text className="font-medium">
-                    {createdMechanic.email}
-                  </Typography.Text>
-                </div>
-                <div>
-                  <Typography.Muted className="text-xs">
-                    Password
-                  </Typography.Muted>
-                  <Typography.Text className="font-mono font-medium">
-                    {createdMechanic.password}
-                  </Typography.Text>
-                </div>
-                {createdMechanic.fullName && (
-                  <div>
-                    <Typography.Muted className="text-xs">
-                      Name
-                    </Typography.Muted>
-                    <Typography.Text className="font-medium">
-                      {createdMechanic.fullName}
-                    </Typography.Text>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-auto flex flex-col gap-2 pt-4">
-              <Button type="button" onClick={copyCredentials} className="gap-2">
-                <Copy className="size-4" />
-                Copy Credentials
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-              >
-                Done
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <MechanicCredentialsView
+        createdMechanic={form.createdMechanic}
+        open={open}
+        onOpenChange={handleOpenChange}
+      />
     );
   }
 
   // Show form
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
+      <SheetContent side="right" className="w-full sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 text-base">
             <UserPlus className="size-4" />
@@ -218,79 +314,139 @@ export function NewMechanicSheet({
           className="flex flex-1 flex-col gap-6 px-4"
         >
           <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="mechanic-fullname">Full Name</Label>
-              <Input
-                id="mechanic-fullname"
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Smith"
-              />
-            </div>
+            <Field data-invalid={!!form.errors.fullName}>
+              <FieldLabel htmlFor="mechanic-fullname">
+                Full Name <span className="text-destructive">*</span>
+              </FieldLabel>
+              <FieldContent>
+                <Input
+                  id="mechanic-fullname"
+                  type="text"
+                  value={form.fullName}
+                  onChange={(e) => {
+                    dispatch({
+                      type: "SET_FIELD",
+                      field: "fullName",
+                      value: e.target.value,
+                    });
+                    if (form.errors.fullName)
+                      dispatch({ type: "CLEAR_ERROR", field: "fullName" });
+                  }}
+                  placeholder="John Smith"
+                />
+                {form.errors.fullName && (
+                  <FieldError>{form.errors.fullName}</FieldError>
+                )}
+              </FieldContent>
+            </Field>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="mechanic-email">Email address</Label>
-              <Input
-                id="mechanic-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="mechanic@example.com"
-                required
-              />
-            </div>
+            <Field data-invalid={!!form.errors.identifier}>
+              <FieldLabel htmlFor="mechanic-identifier">
+                Username, Phone, or Email{" "}
+                <span className="text-destructive">*</span>
+              </FieldLabel>
+              <FieldContent>
+                <Input
+                  id="mechanic-identifier"
+                  type="text"
+                  value={form.identifier}
+                  onChange={(e) => {
+                    dispatch({
+                      type: "SET_FIELD",
+                      field: "identifier",
+                      value: e.target.value,
+                    });
+                    if (form.errors.identifier)
+                      dispatch({ type: "CLEAR_ERROR", field: "identifier" });
+                  }}
+                  placeholder="mechanic@example.com, 9911..., or username"
+                />
+                {form.errors.identifier && (
+                  <FieldError>{form.errors.identifier}</FieldError>
+                )}
+              </FieldContent>
+            </Field>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="mechanic-password">Password</Label>
-              <Input
-                id="mechanic-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min. 8 characters"
-                minLength={8}
-                required
-              />
-            </div>
+            <Field data-invalid={!!form.errors.password}>
+              <FieldLabel htmlFor="mechanic-password">
+                Password <span className="text-destructive">*</span>
+              </FieldLabel>
+              <FieldContent>
+                <Input
+                  id="mechanic-password"
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => {
+                    dispatch({
+                      type: "SET_FIELD",
+                      field: "password",
+                      value: e.target.value,
+                    });
+                    if (form.errors.password)
+                      dispatch({ type: "CLEAR_ERROR", field: "password" });
+                  }}
+                  placeholder="Min. 8 characters"
+                />
+                {form.errors.password && (
+                  <FieldError>{form.errors.password}</FieldError>
+                )}
+              </FieldContent>
+            </Field>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="mechanic-role">Role</Label>
-              <Select
-                value={selectedRoleId}
-                onValueChange={(value) => value && setSelectedRoleId(value)}
-                disabled={rolesLoading || roles.length === 0}
-              >
-                <SelectTrigger id="mechanic-role" className="w-full">
-                  <SelectValue
-                    placeholder={
-                      rolesLoading
-                        ? "Loading..."
-                        : roles.length === 0
-                          ? "No roles available"
-                          : undefined
+            <Field data-invalid={!!form.errors.roleId}>
+              <FieldLabel htmlFor="mechanic-role">
+                Role <span className="text-destructive">*</span>
+              </FieldLabel>
+              <FieldContent>
+                <Select
+                  value={form.selectedRoleId}
+                  onValueChange={(value) => {
+                    if (value) {
+                      dispatch({
+                        type: "SET_SELECTED_ROLE",
+                        roleId: value,
+                      });
+                      if (form.errors.roleId)
+                        dispatch({ type: "CLEAR_ERROR", field: "roleId" });
                     }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.id}>
-                      {role.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                  }}
+                  disabled={rolesLoading || roles.length === 0}
+                >
+                  <SelectTrigger id="mechanic-role" className="w-full">
+                    <SelectValue
+                      placeholder={
+                        rolesLoading
+                          ? "Loading..."
+                          : roles.length === 0
+                            ? "No roles available"
+                            : undefined
+                      }
+                    >
+                      {form.selectedRoleId
+                        ? roles.find(
+                            (r) => r.id === form.selectedRoleId,
+                          )?.name
+                        : undefined}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.errors.roleId && (
+                  <FieldError>{form.errors.roleId}</FieldError>
+                )}
+              </FieldContent>
+            </Field>
           </div>
 
           <div className="mt-auto flex flex-col gap-2 pt-4">
-            <Button
-              type="submit"
-              disabled={
-                sending || !email.trim() || !password || !selectedRoleId
-              }
-            >
-              {sending ? (
+            <Button type="submit" disabled={form.sending}>
+              {form.sending ? (
                 <Loader2 className="mr-2 size-4 animate-spin" />
               ) : (
                 <UserPlus className="mr-2 size-4" />

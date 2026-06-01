@@ -185,6 +185,7 @@ export interface PaginatedResponse<T> {
 export interface UserProfile {
   id: string;
   email: string;
+  username: string | null;
   phone: string | null;
   fullName: string | null;
   avatarUrl: string | null;

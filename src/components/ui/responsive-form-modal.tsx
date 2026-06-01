@@ -35,6 +35,8 @@ export type ResponsiveFormModalProps = {
   className?: string;
   /** Whether to use a centered Dialog on desktop instead of a side Sheet */
   useDialogOnDesktop?: boolean;
+  /** Width size for the side Sheet on desktop (default: "sm") */
+  sheetSize?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
 };
 
 export function ResponsiveFormModal({
@@ -45,6 +47,7 @@ export function ResponsiveFormModal({
   children,
   className,
   useDialogOnDesktop = false,
+  sheetSize = "xl",
 }: ResponsiveFormModalProps) {
   const isMobile = useIsMobile();
 
@@ -100,7 +103,8 @@ export function ResponsiveFormModal({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="sm:max-w-xl flex flex-col p-0 overflow-hidden"
+        size={sheetSize}
+        className="flex flex-col p-0 overflow-hidden"
       >
         <SheetHeader className="p-6 pb-2 shrink-0 text-left">
           <SheetTitle className="text-xl font-bold">{title}</SheetTitle>

@@ -100,8 +100,7 @@ function mapApiToVehicle(api: SmartCarApiResponse): SmartCarVehicle {
 // Public API
 // ---------------------------------------------------------------------------
 
-const API_URL =
-  "https://xyp-api.smartcar.mn/xyp-api/v1/xyp/get-data-public";
+const API_URL = "https://xyp-api.smartcar.mn/xyp-api/v1/xyp/get-data-public";
 const REQUEST_TIMEOUT_MS = 15_000;
 
 export async function lookupPlate(
@@ -156,7 +155,10 @@ export async function lookupPlate(
     const msg = err instanceof Error ? err.message : String(err);
     // AbortError is the timeout case
     if (err instanceof DOMException && err.name === "AbortError") {
-      return { ok: false, error: `SmartCar API timed out after ${REQUEST_TIMEOUT_MS}ms` };
+      return {
+        ok: false,
+        error: `SmartCar API timed out after ${REQUEST_TIMEOUT_MS}ms`,
+      };
     }
     return { ok: false, error: msg };
   }

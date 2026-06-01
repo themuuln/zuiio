@@ -25,7 +25,7 @@ importers:
         version: 3.2.2(react@19.2.4)
       '@hookform/resolvers':
         specifier: ^5.4.0
-        version: 5.4.0(react-hook-form@7.76.1(react@19.2.4))
+        version: 5.4.0(react-hook-form@7.77.0(react@19.2.4))
       '@react-email/render':
         specifier: ^2.0.8
         version: 2.0.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -69,8 +69,8 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0
       fuse.js:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.4.0
+        version: 7.4.0
       html5-qrcode:
         specifier: ^2.3.8
         version: 2.3.8
@@ -98,9 +98,6 @@ importers:
       nuqs:
         specifier: ^2.8.9
         version: 2.8.9(next@16.2.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
-      playwright-core:
-        specifier: ^1.60.0
-        version: 1.60.0
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
@@ -114,8 +111,8 @@ importers:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
       react-hook-form:
-        specifier: ^7.76.1
-        version: 7.76.1(react@19.2.4)
+        specifier: ^7.77.0
+        version: 7.77.0(react@19.2.4)
       react-resizable-panels:
         specifier: ^4.11.2
         version: 4.11.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -202,11 +199,11 @@ importers:
         specifier: ^0.2.14
         version: 0.2.14(eslint@10.4.0(jiti@2.7.0))
       react-grab:
-        specifier: ^0.1.39
-        version: 0.1.39(react@19.2.4)
+        specifier: ^0.1.43
+        version: 0.1.43(react@19.2.4)
       shadcn:
-        specifier: ^4.8.3
-        version: 4.8.3(@types/node@20.19.41)(typescript@5.9.3)
+        specifier: ^4.9.0
+        version: 4.9.0(@types/node@20.19.41)(typescript@5.9.3)
       tailwindcss:
         specifier: ^4.3.0
         version: 4.3.0
@@ -215,7 +212,7 @@ importers:
         version: 5.9.3
       vitepress:
         specifier: ^1.6.4
-        version: 1.6.4(@algolia/client-search@5.53.0)(@types/node@20.19.41)(@types/react@19.2.15)(fuse.js@7.3.0)(lightningcss@1.32.0)(postcss@8.5.15)(qrcode@1.5.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(search-insights@2.17.3)(terser@5.48.0)(typescript@5.9.3)
+        version: 1.6.4(@algolia/client-search@5.53.0)(@types/node@20.19.41)(@types/react@19.2.15)(fuse.js@7.4.0)(lightningcss@1.32.0)(postcss@8.5.15)(qrcode@1.5.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(search-insights@2.17.3)(terser@5.48.0)(typescript@5.9.3)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.7.0)(jsdom@26.1.0)(lightningcss@1.32.0)(msw@2.14.6(@types/node@20.19.41)(typescript@5.9.3))(terser@5.48.0)(yaml@2.9.0)
@@ -2096,8 +2093,8 @@ packages:
       react: ^18.0 || ^19.0 || ^19.0.0-rc
       react-dom: ^18.0 || ^19.0 || ^19.0.0-rc
 
-  '@react-grab/cli@0.1.39':
-    resolution: {integrity: sha512-+2Q9W0OE0MwPb4mBmwZPSs9QgHN0fhf2SVqNuib7tr5JmzEtDo1SWSsFjQ50QiwRTJzIY8I5IZTg6vVb1jOFLw==}
+  '@react-grab/cli@0.1.43':
+    resolution: {integrity: sha512-S+UBB0Mwu1g0Cjhff5YzsA33YFYu91DmazPL9uVvF1wDjsO2Lu9hKN/OzBCHYjWlxdBT7TLy2A6pNTS3Sx8o9w==}
     hasBin: true
 
   '@react-pdf/fns@3.1.3':
@@ -4123,8 +4120,8 @@ packages:
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
 
-  fuse.js@7.3.0:
-    resolution: {integrity: sha512-plz8RVjfcDedTGfVngWH1jmJvBvAwi1v2jecfDerbEnMcmOYUEEwKFTHbNoCiYyzaK2Ws8lABkTCcRSqCY1q4w==}
+  fuse.js@7.4.0:
+    resolution: {integrity: sha512-3UqmoSFwzX1sNB1YSk+Co0EdH29XCW2p9g48OAiy93cjKqzuABsqw2VIgSN3CmsT/wo6pIJ3F0Jxeiiby8rhIQ==}
     engines: {node: '>=10'}
 
   fuzzysort@3.1.0:
@@ -5358,8 +5355,8 @@ packages:
     peerDependencies:
       react: ^19.2.4
 
-  react-grab@0.1.39:
-    resolution: {integrity: sha512-5ZzlW7YDLVeR/244ZHB7eukEjE3X0g4wT1uVYHq39HwoNcWeQWKpwYfptIBeydDhcgPBggMaXxQaqZJkyqM4xA==}
+  react-grab@0.1.43:
+    resolution: {integrity: sha512-3wplt0CobZE5k1Vf3PBqBm3vlNQnVWEpSGBMHRnnFcj/khYYwGXSMSTedW1s8MI5FqkdhU/CFoJ7hQqGwzqFIA==}
     hasBin: true
     peerDependencies:
       react: '>=17.0.0'
@@ -5367,8 +5364,8 @@ packages:
       react:
         optional: true
 
-  react-hook-form@7.76.1:
-    resolution: {integrity: sha512-rYM7tPiWlu3nZchkR/ex7piyzui2vFPyaLnXnI/RnblB/L4qfMmyses8llJVtF1NpE9WBBsJlGtcSZzPCXW1qQ==}
+  react-hook-form@7.77.0:
+    resolution: {integrity: sha512-Sslh9YDYc0GDlWT/lxasnIduNo4v3yyvqRGvmGKUre5AFjDs/HV9/OafHGD8d+sB2yoL4UIL9L8X9i0WlZZebg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
@@ -5618,8 +5615,8 @@ packages:
   setprototypeof@1.2.0:
     resolution: {integrity: sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==}
 
-  shadcn@4.8.3:
-    resolution: {integrity: sha512-cnP485rIqtDb8waOp+IKUIfifVf64/PCd5VX/nnLeIP+qZ3yS4r6FOQtOdQkoQEvomQUsJS2OHr5CTzKWw0wKQ==}
+  shadcn@4.9.0:
+    resolution: {integrity: sha512-GPrj/bFcxxykkDzHRDNzoJMAS1a6M4IcfSWpxKU7FXx7DzBU7QumZM9roovo0Blw/z6wRRl7moDB6jnreOFFGA==}
     hasBin: true
 
   sharp@0.34.5:
@@ -5904,12 +5901,12 @@ packages:
   tinyexec@0.3.2:
     resolution: {integrity: sha512-KQQR9yN7R5+OSwaK0XQoj22pwHoTlgYqmUscPYoknOoWCWfj/5/ABTMRi69FrKU5ffPVh5QcFikpWJI/P1ocHA==}
 
-  tinyexec@1.2.3:
-    resolution: {integrity: sha512-g62dB+w1/OEFnPvmX0yd/HnetYITOL+1nJW7kitOycOeAvmbWC/nu0fwmmQ/kupNojqExzyC/T++pST/jRJ2mQ==}
+  tinyexec@1.2.4:
+    resolution: {integrity: sha512-SHf/r48b7vOrjve9PxJo3MN5v5yuyjHvdUcrQffT3WXMUfnGmHDVbC4k3sHJaJTgZCwpUplIaAo5ANtMyp3YHg==}
     engines: {node: '>=18'}
 
-  tinyglobby@0.2.16:
-    resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
+  tinyglobby@0.2.17:
+    resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
     engines: {node: '>=12.0.0'}
 
   tinypool@1.1.1:
@@ -7210,10 +7207,10 @@ snapshots:
     dependencies:
       hono: 4.12.23
 
-  '@hookform/resolvers@5.4.0(react-hook-form@7.76.1(react@19.2.4))':
+  '@hookform/resolvers@5.4.0(react-hook-form@7.77.0(react@19.2.4))':
     dependencies:
       '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.76.1(react@19.2.4)
+      react-hook-form: 7.77.0(react@19.2.4)
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -7965,7 +7962,7 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
 
-  '@react-grab/cli@0.1.39':
+  '@react-grab/cli@0.1.43':
     dependencies:
       agent-install: 0.0.5
       commander: 14.0.3
@@ -7976,7 +7973,7 @@ snapshots:
       picocolors: 1.1.1
       prompts: 2.4.2
       smol-toml: 1.6.1
-      tinyexec: 1.2.3
+      tinyexec: 1.2.4
 
   '@react-pdf/fns@3.1.3': {}
 
@@ -8863,7 +8860,7 @@ snapshots:
       flatted: 3.4.2
       pathe: 2.0.3
       sirv: 3.0.2
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
       tinyrainbow: 2.0.0
       vitest: 3.2.4(@types/node@20.19.41)(@vitest/ui@3.2.4)(jiti@2.7.0)(jsdom@26.1.0)(lightningcss@1.32.0)(msw@2.14.6(@types/node@20.19.41)(typescript@5.9.3))(terser@5.48.0)(yaml@2.9.0)
 
@@ -8954,14 +8951,14 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@vueuse/integrations@12.8.2(focus-trap@7.8.0)(fuse.js@7.3.0)(qrcode@1.5.4)(typescript@5.9.3)':
+  '@vueuse/integrations@12.8.2(focus-trap@7.8.0)(fuse.js@7.4.0)(qrcode@1.5.4)(typescript@5.9.3)':
     dependencies:
       '@vueuse/core': 12.8.2(typescript@5.9.3)
       '@vueuse/shared': 12.8.2(typescript@5.9.3)
       vue: 3.5.35(typescript@5.9.3)
     optionalDependencies:
       focus-trap: 7.8.0
-      fuse.js: 7.3.0
+      fuse.js: 7.4.0
       qrcode: 1.5.4
     transitivePeerDependencies:
       - typescript
@@ -10146,7 +10143,7 @@ snapshots:
 
   function-bind@1.1.2: {}
 
-  fuse.js@7.3.0: {}
+  fuse.js@7.4.0: {}
 
   fuzzysort@3.1.0: {}
 
@@ -11357,14 +11354,14 @@ snapshots:
       react: 19.2.4
       scheduler: 0.27.0
 
-  react-grab@0.1.39(react@19.2.4):
+  react-grab@0.1.43(react@19.2.4):
     dependencies:
-      '@react-grab/cli': 0.1.39
+      '@react-grab/cli': 0.1.43
       bippy: 0.5.41(react@19.2.4)
     optionalDependencies:
       react: 19.2.4
 
-  react-hook-form@7.76.1(react@19.2.4):
+  react-hook-form@7.77.0(react@19.2.4):
     dependencies:
       react: 19.2.4
 
@@ -11648,7 +11645,7 @@ snapshots:
 
   setprototypeof@1.2.0: {}
 
-  shadcn@4.8.3(@types/node@20.19.41)(typescript@5.9.3):
+  shadcn@4.9.0(@types/node@20.19.41)(typescript@5.9.3):
     dependencies:
       '@babel/core': 7.29.7
       '@babel/parser': 7.29.7
@@ -11966,9 +11963,9 @@ snapshots:
 
   tinyexec@0.3.2: {}
 
-  tinyexec@1.2.3: {}
+  tinyexec@1.2.4: {}
 
-  tinyglobby@0.2.16:
+  tinyglobby@0.2.17:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
@@ -12242,7 +12239,7 @@ snapshots:
       picomatch: 4.0.4
       postcss: 8.5.15
       rollup: 4.60.4
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
     optionalDependencies:
       '@types/node': 20.19.41
       fsevents: 2.3.3
@@ -12251,7 +12248,7 @@ snapshots:
       terser: 5.48.0
       yaml: 2.9.0
 
-  vitepress@1.6.4(@algolia/client-search@5.53.0)(@types/node@20.19.41)(@types/react@19.2.15)(fuse.js@7.3.0)(lightningcss@1.32.0)(postcss@8.5.15)(qrcode@1.5.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(search-insights@2.17.3)(terser@5.48.0)(typescript@5.9.3):
+  vitepress@1.6.4(@algolia/client-search@5.53.0)(@types/node@20.19.41)(@types/react@19.2.15)(fuse.js@7.4.0)(lightningcss@1.32.0)(postcss@8.5.15)(qrcode@1.5.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(search-insights@2.17.3)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@docsearch/css': 3.8.2
       '@docsearch/js': 3.8.2(@algolia/client-search@5.53.0)(@types/react@19.2.15)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(search-insights@2.17.3)
@@ -12264,7 +12261,7 @@ snapshots:
       '@vue/devtools-api': 7.7.9
       '@vue/shared': 3.5.35
       '@vueuse/core': 12.8.2(typescript@5.9.3)
-      '@vueuse/integrations': 12.8.2(focus-trap@7.8.0)(fuse.js@7.3.0)(qrcode@1.5.4)(typescript@5.9.3)
+      '@vueuse/integrations': 12.8.2(focus-trap@7.8.0)(fuse.js@7.4.0)(qrcode@1.5.4)(typescript@5.9.3)
       focus-trap: 7.8.0
       mark.js: 8.11.1
       minisearch: 7.2.0
@@ -12319,7 +12316,7 @@ snapshots:
       std-env: 3.10.0
       tinybench: 2.9.0
       tinyexec: 0.3.2
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
       vite: 7.3.3(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0)

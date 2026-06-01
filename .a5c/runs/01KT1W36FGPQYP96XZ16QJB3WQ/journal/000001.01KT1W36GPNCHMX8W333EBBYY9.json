@@ -1,0 +1,15 @@
+{
+  "type": "RUN_CREATED",
+  "recordedAt": "2026-06-01T15:16:03.734Z",
+  "data": {
+    "runId": "01KT1W36FGPQYP96XZ16QJB3WQ",
+    "processId": "payroll-feature",
+    "entrypoint": {
+      "importPath": "../../processes/payroll-feature.js",
+      "exportName": "process"
+    },
+    "harness": "pi",
+    "prompt": "Build complete payroll system: pay rates per mechanic, monthly payroll calculation, payroll history table, payroll management page"
+  },
+  "checksum": "af8be8a7cb37f716ded75b4b775a6ef89c94cdd4770648c8ca2af694b0970c12"
+}

@@ -28,7 +28,7 @@ export async function login(
   formData: FormData,
 ): Promise<LoginState> {
   const raw = {
-    identifier: (formData.get("identifier") as string) || "",
+    identifier: (formData.get("identifier") as string)?.trim() || "",
     password: (formData.get("password") as string) || "",
   };
 
@@ -49,7 +49,7 @@ export async function login(
   if (type === "email") {
     // Sign in directly with email — Supabase Auth handles it natively
     const { error } = await supabase.auth.signInWithPassword({
-      email: identifier,
+      email: identifier.trim(),
       password,
     });
 
@@ -73,17 +73,25 @@ export async function login(
 
   if (type === "phone") {
     lookupColumn = "phone";
-    lookupValue = normalizeMongolianPhone(identifier);
+    lookupValue = normalizeMongolianPhone(identifier.trim());
   } else {
     lookupColumn = "username";
-    lookupValue = identifier;
+    lookupValue = identifier.trim().toLowerCase();
   }
 
-  const { data: profile } = await serviceRole
+  const { data: profile, error: profileError } = await serviceRole
     .from("profiles")
     .select("id")
     .eq(lookupColumn, lookupValue)
     .maybeSingle();
+
+  if (profileError) {
+    console.error("Login lookup database error:", profileError);
+    return {
+      values: { identifier: raw.identifier },
+      formError: `Database lookup error: ${profileError.message}`,
+    };
+  }
 
   if (!profile) {
     return {
@@ -96,9 +104,17 @@ export async function login(
   }
 
   // Get the user's email from auth.users via service role
-  const { data: authUser } = await serviceRole.auth.admin.getUserById(
+  const { data: authUser, error: authUserError } = await serviceRole.auth.admin.getUserById(
     profile.id,
   );
+  if (authUserError) {
+    console.error("Login auth user fetch error:", authUserError);
+    return {
+      values: { identifier: raw.identifier },
+      formError: `Auth lookup error: ${authUserError.message}`,
+    };
+  }
+
   if (!authUser?.user?.email) {
     return {
       values: { identifier: raw.identifier },

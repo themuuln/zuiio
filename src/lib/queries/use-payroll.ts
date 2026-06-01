@@ -62,14 +62,11 @@ export function usePayRateUpsert(orgId: string | undefined) {
       hourlyRate: number;
       effectiveFrom: string;
     }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/payroll/pay-rates`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mechanicId, hourlyRate, effectiveFrom }),
-        },
-      );
+      const res = await fetch(`/api/organizations/${orgId}/payroll/pay-rates`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mechanicId, hourlyRate, effectiveFrom }),
+      });
       const json = await res.json();
       if (!res.ok)
         throw new Error(json.error?.message ?? "Failed to save pay rate");
@@ -90,21 +87,12 @@ export function useCalculatePayroll(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      year,
-      month,
-    }: {
-      year: number;
-      month: number;
-    }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/payroll/calculate`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ year, month }),
-        },
-      );
+    mutationFn: async ({ year, month }: { year: number; month: number }) => {
+      const res = await fetch(`/api/organizations/${orgId}/payroll/calculate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ year, month }),
+      });
       const json = await res.json();
       if (!res.ok)
         throw new Error(json.error?.message ?? "Payroll calculation failed");
@@ -112,7 +100,11 @@ export function useCalculatePayroll(orgId: string | undefined) {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: payrollKeys.records(orgId ?? "", variables.year, variables.month),
+        queryKey: payrollKeys.records(
+          orgId ?? "",
+          variables.year,
+          variables.month,
+        ),
       });
     },
   });
@@ -151,7 +143,11 @@ export function useUpdatePayrollRecord(orgId: string | undefined) {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: payrollKeys.records(orgId ?? "", variables.year, variables.month),
+        queryKey: payrollKeys.records(
+          orgId ?? "",
+          variables.year,
+          variables.month,
+        ),
       });
     },
   });

@@ -25,6 +25,7 @@ import { getInitials } from "@/lib/utils";
 export function NavUser() {
   const [profile, setProfile] = useState<{
     fullName?: string | null;
+    username?: string | null;
     email?: string | null;
   } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,7 +39,12 @@ export function NavUser() {
   }, []);
 
   const displayName = profile?.fullName ?? "User";
-  const email = profile?.email ?? "";
+  const rawEmail = profile?.email ?? "";
+  const displayIdentifier =
+    profile?.username ??
+    (rawEmail.endsWith("@tolom.auth")
+      ? rawEmail.replace(/^username_|@tolom\.auth$/g, "")
+      : rawEmail);
   const initials = getInitials(profile?.fullName);
 
   const router = useRouter();
@@ -81,7 +87,9 @@ export function NavUser() {
             </ItemMedia>
             <ItemContent>
               <ItemTitle className="text-sm">{displayName}</ItemTitle>
-              <ItemDescription className="text-[11px]">{email}</ItemDescription>
+              <ItemDescription className="text-[11px]">
+                {displayIdentifier}
+              </ItemDescription>
             </ItemContent>
           </Item>
         </DropdownMenuGroup>

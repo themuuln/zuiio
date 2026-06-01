@@ -577,9 +577,7 @@ export async function getCustomReport(
           mechanicId,
           branchId,
         ),
-        !mechanicId
-          ? getMechanicKpis(supabase, orgId, woIds)
-          : Promise.resolve([]),
+        getMechanicKpis(supabase, orgId, woIds),
       ]);
 
       if (comparison) {

@@ -200,12 +200,9 @@ export function BayViewV2Client() {
   const [myJobsOnly, setMyJobsOnly] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [assignBay, setAssignBay] = useState<number | null>(null);
-  const handleAssignOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) setAssignBay(null);
-    },
-    [],
-  );
+  const handleAssignOpenChange = useCallback((open: boolean) => {
+    if (!open) setAssignBay(null);
+  }, []);
   const bayCountMutationInFlightRef = useRef(false);
   const [bayCountPending, setBayCountPending] = useState(false);
   const [bayCountInputValue, setBayCountInputValue] = useState<number | string>(
@@ -329,9 +326,8 @@ export function BayViewV2Client() {
       if (report) setShiftReport(report);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   }, []);
 
   const pollingCb = useCallback(() => fetchData(false), [fetchData]);
@@ -453,13 +449,16 @@ export function BayViewV2Client() {
       bayCountMutationInFlightRef.current = true;
       bayCountValueRef.current = next;
       setBayCountPending(true);
+      let caught: unknown = null;
       try {
         await handleBayCountChange(next);
         await fetchData(false);
-      } finally {
-        bayCountMutationInFlightRef.current = false;
-        setBayCountPending(false);
+      } catch (err) {
+        caught = err;
       }
+      bayCountMutationInFlightRef.current = false;
+      setBayCountPending(false);
+      if (caught) throw caught;
     },
     [data?.bayCount, fetchData, handleBayCountChange],
   );
@@ -565,9 +564,8 @@ export function BayViewV2Client() {
         await fetchData(false);
       } catch {
         setToast({ message: t("failedToAssign"), variant: "error" });
-      } finally {
-        clearPending(workOrderId);
       }
+      clearPending(workOrderId);
     },
     [t, markPending, clearPending, fetchData],
   );
@@ -599,9 +597,8 @@ export function BayViewV2Client() {
         }
       } catch {
         setToast({ message: t("failedToAssign"), variant: "error" });
-      } finally {
-        clearPending(workOrderId);
       }
+      clearPending(workOrderId);
     },
     [data, t, markPending, clearPending, fetchData],
   );
@@ -625,9 +622,8 @@ export function BayViewV2Client() {
         await fetchData(false);
       } catch {
         setToast({ message: t("failedToAssign"), variant: "error" });
-      } finally {
-        clearPending(workOrderId);
       }
+      clearPending(workOrderId);
     },
     [assignBay, t, markPending, clearPending, fetchData],
   );

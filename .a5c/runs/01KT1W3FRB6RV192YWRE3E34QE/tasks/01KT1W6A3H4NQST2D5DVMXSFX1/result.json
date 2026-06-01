@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT1W6A3H4NQST2D5DVMXSFX1",
+  "taskId": "payroll-api",
+  "invocationKey": "payroll-feature:S000003:payroll-api",
+  "status": "ok",
+  "result": {
+    "files": [
+      "src/app/api/organizations/[id]/payroll/pay-rates/route.ts",
+      "src/app/api/organizations/[id]/payroll/records/route.ts",
+      "src/app/api/organizations/[id]/payroll/calculate/route.ts",
+      "src/app/api/organizations/[id]/payroll/records/[id]/route.ts"
+    ]
+  },
+  "startedAt": "2026-06-01T15:18:28.678Z",
+  "finishedAt": "2026-06-01T15:18:28.678Z",
+  "value": {
+    "files": [
+      "src/app/api/organizations/[id]/payroll/pay-rates/route.ts",
+      "src/app/api/organizations/[id]/payroll/records/route.ts",
+      "src/app/api/organizations/[id]/payroll/calculate/route.ts",
+      "src/app/api/organizations/[id]/payroll/records/[id]/route.ts"
+    ]
+  }
+}

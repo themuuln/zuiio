@@ -87,16 +87,19 @@ function InputGroupButton({
   type = "button",
   variant = "ghost",
   size = "xs",
+  nativeButton,
   ...props
-}: Omit<React.ComponentProps<typeof Button>, "size" | "type"> &
+}: Omit<React.ComponentProps<typeof Button>, "size" | "type" | "nativeButton"> &
   VariantProps<typeof inputGroupButtonVariants> & {
     type?: "button" | "submit" | "reset";
+    nativeButton?: boolean;
   }) {
   return (
     <Button
       type={type}
       data-size={size}
       variant={variant}
+      nativeButton={nativeButton}
       className={cn(inputGroupButtonVariants({ size }), className)}
       {...props}
     />

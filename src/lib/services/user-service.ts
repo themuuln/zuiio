@@ -36,7 +36,7 @@ export async function getOrganizationUsers(
   const userIds = members.map((m) => m.user_id);
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, full_name, phone, avatar_url")
+    .select("id, full_name, username, phone, avatar_url")
     .in("id", userIds);
 
   const profileMap = new Map(
@@ -44,6 +44,7 @@ export async function getOrganizationUsers(
       p.id,
       {
         full_name: p.full_name,
+        username: p.username,
         phone: p.phone,
         avatar_url: p.avatar_url,
       },
@@ -59,6 +60,7 @@ export async function getOrganizationUsers(
     return {
       id: m.user_id,
       email: "",
+      username: profile?.username ?? null,
       phone: profile?.phone ?? null,
       fullName: profile?.full_name ?? null,
       avatarUrl: profile?.avatar_url ?? null,
@@ -273,7 +275,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
     supabase
       .from("profiles")
       .select(
-        "id, organization_id, branch_id, full_name, phone, avatar_url, is_active, created_at, updated_at",
+        "id, organization_id, branch_id, full_name, username, phone, avatar_url, is_active, created_at, updated_at",
       )
       .eq("id", user.id)
       .maybeSingle(),
@@ -311,6 +313,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   return {
     id: user.id,
     email: user.email ?? "",
+    username: profile?.username ?? null,
     phone: profile?.phone ?? (user.phone as string) ?? null,
     fullName:
       profile?.full_name ??

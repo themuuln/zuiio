@@ -42,7 +42,8 @@ import {
 import { formatMNT } from "@/lib/utils";
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+  draft:
+    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
   approved: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   paid: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
 };
@@ -58,7 +59,11 @@ export default function PayrollPage() {
 
   // ── Queries ──
   const { data: payRates = [], isPending: ratesLoading } = usePayRates(orgId);
-  const { data: records = [], isPending: recordsLoading } = usePayrollRecords(orgId, year, month);
+  const { data: records = [], isPending: recordsLoading } = usePayrollRecords(
+    orgId,
+    year,
+    month,
+  );
 
   // ── Mutations ──
   const upsertRate = usePayRateUpsert(orgId);
@@ -107,7 +112,12 @@ export default function PayrollPage() {
 
   const handleApprove = async (recordId: string) => {
     try {
-      await updateRecord.mutateAsync({ recordId, action: "approve", year, month });
+      await updateRecord.mutateAsync({
+        recordId,
+        action: "approve",
+        year,
+        month,
+      });
       toast.success(t("payroll.approvedMsg"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to approve");
@@ -119,7 +129,9 @@ export default function PayrollPage() {
       await updateRecord.mutateAsync({ recordId, action: "pay", year, month });
       toast.success(t("payroll.paidMsg"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to mark as paid");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to mark as paid",
+      );
     }
   };
 
@@ -174,9 +186,7 @@ export default function PayrollPage() {
             onClick={handleCalculate}
             disabled={calculatePayroll.isPending}
           >
-            {calculatePayroll.isPending
-              ? "..."
-              : t("payroll.calculate")}
+            {calculatePayroll.isPending ? "..." : t("payroll.calculate")}
           </Button>
         </div>
       </div>
@@ -197,9 +207,7 @@ export default function PayrollPage() {
                 <Users />
               </EmptyMedia>
               <EmptyTitle>{t("payroll.noPayRates")}</EmptyTitle>
-              <EmptyDescription>
-                {t("payroll.noPayRatesDesc")}
-              </EmptyDescription>
+              <EmptyDescription>{t("payroll.noPayRatesDesc")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (
@@ -242,8 +250,7 @@ export default function PayrollPage() {
                       size="sm"
                       onClick={() => handleSaveRate(rate.mechanic_id)}
                       disabled={
-                        !editingRates[rate.mechanic_id] ||
-                        upsertRate.isPending
+                        !editingRates[rate.mechanic_id] || upsertRate.isPending
                       }
                     >
                       {t("payroll.save")}
@@ -273,12 +280,8 @@ export default function PayrollPage() {
               <EmptyMedia variant="icon">
                 <ClipboardList />
               </EmptyMedia>
-              <EmptyTitle>
-                {t("payroll.noPayRates")}
-              </EmptyTitle>
-              <EmptyDescription>
-                {t("payroll.noPayRatesDesc")}
-              </EmptyDescription>
+              <EmptyTitle>{t("payroll.noPayRates")}</EmptyTitle>
+              <EmptyDescription>{t("payroll.noPayRatesDesc")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (

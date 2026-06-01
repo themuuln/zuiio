@@ -26,6 +26,7 @@ export function PartnersSlider() {
                 src="/khantaishir-motors-logo.jpg"
                 alt="Хантайшир Моторс ХХК"
                 fill
+                sizes="80px"
                 className="object-cover"
               />
             </div>

@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-06-01T15:16:18.610Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KT1W3N0VFC19QQ04BZZKQMXT",
+    "invocationKey": "payroll-feature:S000001:db-migration",
+    "invocationHash": "f5562d7236ea045f9089cc9538bb3bec4342c6a40e9d3a84e5aa2611ab6d6131",
+    "stepId": "S000001",
+    "taskId": "db-migration",
+    "kind": "skill",
+    "label": "Create payroll tables migration",
+    "taskDefRef": "tasks/01KT1W3N0VFC19QQ04BZZKQMXT/task.json"
+  },
+  "checksum": "d08cd1f448394a6c5a356d78fbe684e810358414e93ad3ed931f84d38521f6ce"
+}

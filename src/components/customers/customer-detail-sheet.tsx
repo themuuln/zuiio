@@ -273,7 +273,7 @@ export function CustomerDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg p-0 gap-0">
+      <SheetContent side="right" className="w-full sm:max-w-2xl p-0 gap-0">
         <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
           <DetailSheetHeader
             icon={customer?.type === "company" ? Building2 : Pencil}

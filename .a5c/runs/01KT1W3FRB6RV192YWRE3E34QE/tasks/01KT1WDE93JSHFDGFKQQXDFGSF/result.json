@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT1WDE93JSHFDGFKQQXDFGSF",
+  "taskId": "payroll-page",
+  "invocationKey": "payroll-feature:S000006:payroll-page",
+  "status": "ok",
+  "result": {
+    "files": [
+      "src/app/[locale]/dashboard/payroll/page.tsx",
+      "src/messages/en.json",
+      "src/messages/mn.json",
+      "src/hooks/use-navigation.ts"
+    ]
+  },
+  "startedAt": "2026-06-01T15:25:30.023Z",
+  "finishedAt": "2026-06-01T15:25:30.023Z",
+  "value": {
+    "files": [
+      "src/app/[locale]/dashboard/payroll/page.tsx",
+      "src/messages/en.json",
+      "src/messages/mn.json",
+      "src/hooks/use-navigation.ts"
+    ]
+  }
+}

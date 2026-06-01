@@ -111,7 +111,7 @@ export async function requestPasswordReset(
       lookupValue = normalizeMongolianPhone(identifier);
     } else {
       lookupColumn = "username";
-      lookupValue = identifier;
+      lookupValue = identifier.trim().toLowerCase();
     }
 
     const { data: profile } = await serviceRole

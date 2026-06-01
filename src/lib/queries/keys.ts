@@ -201,8 +201,7 @@ export const reportKeys = {
 };
 
 export const payrollKeys = {
-  all: (orgId: string) =>
-    [...orgKeys.detail(orgId), "payroll"] as const,
+  all: (orgId: string) => [...orgKeys.detail(orgId), "payroll"] as const,
   payRates: (orgId: string) =>
     [...payrollKeys.all(orgId), "pay-rates"] as const,
   records: (orgId: string, year: number, month: number) =>

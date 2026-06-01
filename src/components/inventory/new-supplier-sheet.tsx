@@ -103,7 +103,7 @@ export function NewSupplierSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg p-0 gap-0">
+      <SheetContent side="right" className="w-full sm:max-w-2xl p-0 gap-0">
         <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">

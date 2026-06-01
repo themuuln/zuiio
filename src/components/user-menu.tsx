@@ -66,7 +66,12 @@ export default function UserMenu({ collapsed }: UserMenuProps) {
   };
 
   const displayName = profile?.fullName ?? "User";
-  const email = profile?.email ?? "";
+  const rawEmail = profile?.email ?? "";
+  const displayIdentifier =
+    profile?.username ??
+    (rawEmail.endsWith("@tolom.auth")
+      ? rawEmail.replace(/^username_|@tolom\.auth$/g, "")
+      : rawEmail);
   const initials = getInitials(profile?.fullName);
 
   if (loading) {
@@ -113,7 +118,7 @@ export default function UserMenu({ collapsed }: UserMenuProps) {
             <ItemContent>
               <ItemTitle className="text-sm">{displayName}</ItemTitle>
               <ItemDescription className="text-xs text-sidebar-foreground/60">
-                {email}
+                {displayIdentifier}
               </ItemDescription>
             </ItemContent>
           )}

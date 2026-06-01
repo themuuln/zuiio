@@ -195,53 +195,21 @@ async function bootstrapOrganization(
     throw new Error(orgError?.message ?? "Failed to create organization");
   }
 
+  // The database trigger automatically seeds standard roles and permissions.
+  // Fetch the created "Org Owner" role.
   const { data: adminRole, error: adminRoleError } = await adminClient
     .from("roles")
-    .insert({
-      organization_id: org.id,
-      name: "Org Owner",
-      is_system: true,
-      created_by: userId,
-      updated_by: userId,
-    })
     .select("id")
+    .eq("organization_id", org.id)
+    .eq("name", "Org Owner")
+    .is("deleted_at", null)
     .single();
 
   if (adminRoleError || !adminRole) {
     throw new Error(
-      adminRoleError?.message ?? "Failed to create Org Owner role",
+      adminRoleError?.message ?? "Failed to resolve Org Owner role",
     );
   }
-
-  const { error: mechanicRoleError } = await adminClient.from("roles").insert({
-    organization_id: org.id,
-    name: "Mechanic",
-    is_system: true,
-    created_by: userId,
-    updated_by: userId,
-  });
-
-  if (mechanicRoleError) {
-    throw new Error(
-      mechanicRoleError?.message ?? "Failed to create Mechanic role",
-    );
-  }
-
-  await adminClient.from("roles").insert({
-    organization_id: org.id,
-    name: "Manager",
-    is_system: true,
-    created_by: userId,
-    updated_by: userId,
-  });
-
-  await adminClient.from("roles").insert({
-    organization_id: org.id,
-    name: "Guest",
-    is_system: true,
-    created_by: userId,
-    updated_by: userId,
-  });
 
   const { data: branch, error: branchError } = await adminClient
     .from("branches")

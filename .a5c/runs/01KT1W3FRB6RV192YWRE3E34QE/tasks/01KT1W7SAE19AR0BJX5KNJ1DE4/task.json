@@ -1,0 +1,28 @@
+{
+  "io": {
+    "inputJsonPath": "tasks/01KT1W7SAE19AR0BJX5KNJ1DE4/input.json",
+    "outputJsonPath": "tasks/01KT1W7SAE19AR0BJX5KNJ1DE4/output.json"
+  },
+  "kind": "skill",
+  "skill": {
+    "context": {
+      "instructions": [
+        "Create migration 20260601150001_add_payroll_permissions.sql:",
+        "  - INSERT INTO permissions (resource, action) VALUES ('payroll', 'read'), ('payroll', 'write') ON CONFLICT DO NOTHING",
+        "  - Get permission IDs, then INSERT INTO role_permissions for Org Owner and Manager roles",
+        "  - Study existing permission migrations for exact column names and patterns (check migrations that insert into permissions and role_permissions)",
+        "Apply migration via MCP, regenerate types via MCP"
+      ]
+    },
+    "name": "supabase"
+  },
+  "title": "Add payroll permissions",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KT1W7SAE19AR0BJX5KNJ1DE4",
+  "taskId": "permissions-seed",
+  "invocationKey": "payroll-feature:S000004:permissions-seed",
+  "stepId": "S000004",
+  "inputs": {
+    "input": {}
+  }
+}
