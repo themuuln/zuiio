@@ -102,21 +102,34 @@ export async function upsertPayRate(
  * List all mechanics with their current pay rate.
  * Joins with profiles for mechanic names.
  */
-export async function listPayRates(
-  orgId: string,
-): Promise<PayRate[]> {
+export async function listPayRates(orgId: string): Promise<PayRate[]> {
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("mechanic_pay_rates")
-    .select("*, profiles!inner(full_name)")
+    .select("*")
     .eq("organization_id", orgId)
     .is("effective_to", null);
 
-  return ((data ?? []) as any[]).map((r) => ({
-    ...r,
-    mechanic_name: (r as any).profiles?.full_name ?? null,
-  })) as PayRate[];
+  if (error) throw error;
+
+  const rates = (data ?? []) as PayRate[];
+
+  // Enrich with mechanic names
+  const mechanicIds = rates.map((r) => r.mechanic_id);
+  if (mechanicIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", mechanicIds);
+    const nameMap = new Map(profiles?.map((p) => [p.id, p.full_name]) ?? []);
+    return rates.map((r) => ({
+      ...r,
+      mechanic_name: nameMap.get(r.mechanic_id) ?? null,
+    })) as PayRate[];
+  }
+
+  return rates;
 }
 
 // ── Payroll Calculation ────────────────────────────
@@ -188,11 +201,35 @@ export async function calculateMonthlyPayroll(
     const hourlyRate = Number(rateData?.hourly_rate ?? 0);
     const grossPay = Math.round(totalHours * hourlyRate * 100) / 100;
 
-    // UPSERT — idempotent
-    const { data: record } = await supabase
+    // Check if a record already exists (to preserve status/paid_at)
+    const { data: existing } = await supabase
       .from("payroll_records")
-      .upsert(
-        {
+      .select("id, status, paid_at")
+      .eq("organization_id", orgId)
+      .eq("mechanic_id", mechanicId)
+      .eq("period_start", periodStart)
+      .maybeSingle();
+
+    let record;
+    if (existing) {
+      // Update computed fields only — preserve status and paid_at
+      const { data: updated } = await supabase
+        .from("payroll_records")
+        .update({
+          period_end: periodEnd,
+          total_hours: totalHours,
+          hourly_rate: hourlyRate,
+          gross_pay: grossPay,
+        })
+        .eq("id", existing.id)
+        .select()
+        .single();
+      record = updated;
+    } else {
+      // Insert new record with draft status
+      const { data: inserted } = await supabase
+        .from("payroll_records")
+        .insert({
           organization_id: orgId,
           mechanic_id: mechanicId,
           period_start: periodStart,
@@ -201,14 +238,11 @@ export async function calculateMonthlyPayroll(
           hourly_rate: hourlyRate,
           gross_pay: grossPay,
           status: "draft",
-        },
-        {
-          onConflict: "mechanic_id, period_start",
-          ignoreDuplicates: false,
-        },
-      )
-      .select()
-      .single();
+        })
+        .select()
+        .single();
+      record = inserted;
+    }
 
     if (record) {
       records.push({
@@ -240,15 +274,28 @@ export async function getPayrollRecords(
 
   const { data } = await supabase
     .from("payroll_records")
-    .select("*, profiles!inner(full_name)")
+    .select("*")
     .eq("organization_id", orgId)
     .eq("period_start", periodStart)
     .eq("period_end", periodEnd);
 
-  return ((data ?? []) as any[]).map((r) => ({
-    ...r,
-    mechanic_name: (r as any).profiles?.full_name ?? null,
-  })) as PayrollRecord[];
+  const records = (data ?? []) as PayrollRecord[];
+
+  // Enrich with mechanic names
+  const mechanicIds = records.map((r) => r.mechanic_id);
+  if (mechanicIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", mechanicIds);
+    const nameMap = new Map(profiles?.map((p) => [p.id, p.full_name]) ?? []);
+    return records.map((r) => ({
+      ...r,
+      mechanic_name: nameMap.get(r.mechanic_id) ?? null,
+    })) as PayrollRecord[];
+  }
+
+  return records;
 }
 
 /**
