@@ -159,6 +159,11 @@ const navGroups: NavGroup[] = [
         icon: TrendingUp,
       },
       {
+        labelKey: "nav.payroll",
+        href: "/dashboard/payroll",
+        icon: DollarSign,
+      },
+      {
         labelKey: "nav.reports",
         href: "/dashboard/reports",
         icon: BarChart3,
@@ -222,13 +227,6 @@ export function useNavigation() {
   const pathname = usePathname();
   const { isMechanic, loading: roleLoading } = useCurrentUserRole();
 
-  function isActive(href: string) {
-    if (href === "/dashboard") {
-      return pathname === "/dashboard";
-    }
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
-
   const mechanicHomeItem: NavItem = {
     labelKey: "nav.bayView",
     href: "/dashboard/bay-view",
@@ -264,12 +262,33 @@ export function useNavigation() {
     ...filteredSettingsItems,
   ];
 
+  const isActive = (href: string) => {
+    if (href === "/dashboard") {
+      return pathname === "/dashboard";
+    }
+    // Exact match — unambiguous
+    if (pathname === href) return true;
+    // Prefix match — only if no other nav item is a better (longer) match.
+    // This prevents parent items like /dashboard/inventory from highlighting
+    // when on a child page like /dashboard/inventory/valuation.
+    if (pathname.startsWith(`${href}/`)) {
+      return !filteredAllItems.some(
+        (item) =>
+          item.href !== href &&
+          (pathname === item.href || pathname.startsWith(`${item.href}/`)),
+      );
+    }
+    return false;
+  };
+
   const filteredSections = isDefinitelyMechanic
     ? sections.filter((s) => s.labelKey !== FINANCIALS_GROUP_KEY)
     : sections;
 
   // Stable fallback — never null
-  const fallbackItem = isDefinitelyMechanic ? mechanicHomeItem : primaryItems[0];
+  const fallbackItem = isDefinitelyMechanic
+    ? mechanicHomeItem
+    : primaryItems[0];
 
   const resolvedCurrentItem =
     [...filteredAllItems]

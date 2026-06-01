@@ -83,6 +83,20 @@ export const serviceKeys = {
 export const mechanicKeys = {
   all: (orgId: string) => ["organizations", orgId, "mechanics"] as const,
   list: (orgId: string) => [...mechanicKeys.all(orgId), "list"] as const,
+  /** EOD summary for a specific mechanic */
+  eod: (orgId: string, userId: string) =>
+    [...mechanicKeys.all(orgId), userId, "eod"] as const,
+  /** Mechanic trend data (avg job value, jobs per day, weekly trend) */
+  trend: (orgId: string, userId: string, startDate: string, endDate: string) =>
+    [...mechanicKeys.all(orgId), userId, "trend", startDate, endDate] as const,
+  /** Active work orders for a mechanic (multiple statuses) */
+  workOrders: (orgId: string, userId: string) =>
+    [...mechanicKeys.all(orgId), userId, "work-orders"] as const,
+};
+
+export const clockKeys = {
+  status: (orgId: string) =>
+    ["organizations", orgId, "me", "time", "status"] as const,
 };
 
 export const wizardKeys = {
@@ -183,6 +197,20 @@ export const reportKeys = {
       "service-breakdown",
       dateFrom,
       dateTo,
+    ] as const,
+};
+
+export const payrollKeys = {
+  all: (orgId: string) =>
+    [...orgKeys.detail(orgId), "payroll"] as const,
+  payRates: (orgId: string) =>
+    [...payrollKeys.all(orgId), "pay-rates"] as const,
+  records: (orgId: string, year: number, month: number) =>
+    [
+      ...payrollKeys.all(orgId),
+      "records",
+      String(year),
+      String(month),
     ] as const,
 };
 
