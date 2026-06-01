@@ -108,6 +108,15 @@ interface VehicleDetailResponse {
   notes: string | null;
   tags: string[] | null;
   created_at: string;
+  steering: string | null;
+  seats: number | null;
+  height: number | null;
+  width: number | null;
+  length: number | null;
+  weight: number | null;
+  import_date: string | null;
+  country_of_origin: string | null;
+  category: string | null;
   owners: VehicleOwnerSummary[];
   service_history: VehicleServiceHistoryItem[];
 }
@@ -130,6 +139,15 @@ interface VehicleFormState {
   licenseExpiryAt: string;
   nextServiceAt: string;
   notes: string;
+  steering: string;
+  seats: string;
+  height: string;
+  width: string;
+  length: string;
+  weight: string;
+  importDate: string;
+  countryOfOrigin: string;
+  category: string;
 }
 
 const emptyForm: VehicleFormState = {
@@ -150,6 +168,15 @@ const emptyForm: VehicleFormState = {
   licenseExpiryAt: "",
   nextServiceAt: "",
   notes: "",
+  steering: "",
+  seats: "",
+  height: "",
+  width: "",
+  length: "",
+  weight: "",
+  importDate: "",
+  countryOfOrigin: "",
+  category: "",
 };
 
 function syncForm(v: VehicleDetailResponse): VehicleFormState {
@@ -171,6 +198,15 @@ function syncForm(v: VehicleDetailResponse): VehicleFormState {
     licenseExpiryAt: v.license_expiry_at?.slice(0, 10) ?? "",
     nextServiceAt: v.next_service_at?.slice(0, 10) ?? "",
     notes: v.notes ?? "",
+    steering: v.steering ?? "",
+    seats: v.seats ? String(v.seats) : "",
+    height: v.height ? String(v.height) : "",
+    width: v.width ? String(v.width) : "",
+    length: v.length ? String(v.length) : "",
+    weight: v.weight ? String(v.weight) : "",
+    importDate: v.import_date?.slice(0, 10) ?? "",
+    countryOfOrigin: v.country_of_origin ?? "",
+    category: v.category ?? "",
   };
 }
 
@@ -264,6 +300,15 @@ export function VehicleDetailSheet({
             licenseExpiryAt: formData.licenseExpiryAt || null,
             nextServiceAt: formData.nextServiceAt || null,
             notes: formData.notes.trim() || null,
+            steering: formData.steering.trim() || null,
+            seats: formData.seats ? Number(formData.seats) : null,
+            height: formData.height ? Number(formData.height) : null,
+            width: formData.width ? Number(formData.width) : null,
+            length: formData.length ? Number(formData.length) : null,
+            weight: formData.weight ? Number(formData.weight) : null,
+            importDate: formData.importDate || null,
+            countryOfOrigin: formData.countryOfOrigin.trim() || null,
+            category: formData.category.trim() || null,
           }),
         },
       );
@@ -293,6 +338,15 @@ export function VehicleDetailSheet({
             odometer: formData.odometer
               ? Number(formData.odometer)
               : old.odometer,
+            steering: formData.steering || old.steering,
+            seats: formData.seats ? Number(formData.seats) : old.seats,
+            height: formData.height ? Number(formData.height) : old.height,
+            width: formData.width ? Number(formData.width) : old.width,
+            length: formData.length ? Number(formData.length) : old.length,
+            weight: formData.weight ? Number(formData.weight) : old.weight,
+            import_date: formData.importDate || old.import_date,
+            country_of_origin: formData.countryOfOrigin || old.country_of_origin,
+            category: formData.category || old.category,
           };
         },
       );
@@ -536,6 +590,15 @@ export function VehicleDetailSheet({
                         [t("transmission"), vehicle.transmission],
                         [t("drivetrain"), vehicle.drivetrain],
                         [t("bodyType"), vehicle.body_type],
+                        [t("steering"), vehicle.steering],
+                        [t("seats"), vehicle.seats ? String(vehicle.seats) : null],
+                        [t("height"), vehicle.height ? `${vehicle.height} mm` : null],
+                        [t("width"), vehicle.width ? `${vehicle.width} mm` : null],
+                        [t("length"), vehicle.length ? `${vehicle.length} mm` : null],
+                        [t("weight"), vehicle.weight ? `${vehicle.weight} kg` : null],
+                        [t("importDate"), vehicle.import_date ? new Date(vehicle.import_date).toLocaleDateString() : null],
+                        [t("countryOfOrigin"), vehicle.country_of_origin],
+                        [t("category"), vehicle.category],
                       ] as [string, string | null][]
                     ).map(([label, value]) => (
                       <div
@@ -889,6 +952,74 @@ function VehicleEditForm({
             form={form}
             onFieldChange={setField}
             type="date"
+          />
+          <FormField
+            label={t("steering")}
+            field="steering"
+            form={form}
+            onFieldChange={setField}
+            placeholder="e.g. Right, Left"
+          />
+          <FormField
+            label={t("seats")}
+            field="seats"
+            form={form}
+            onFieldChange={setField}
+            type="number"
+            placeholder="e.g. 5"
+          />
+          <FormField
+            label={t("height")}
+            field="height"
+            form={form}
+            onFieldChange={setField}
+            type="number"
+            placeholder="e.g. 1420"
+          />
+          <FormField
+            label={t("width")}
+            field="width"
+            form={form}
+            onFieldChange={setField}
+            type="number"
+            placeholder="e.g. 1690"
+          />
+          <FormField
+            label={t("length")}
+            field="length"
+            form={form}
+            onFieldChange={setField}
+            type="number"
+            placeholder="e.g. 4390"
+          />
+          <FormField
+            label={t("weight")}
+            field="weight"
+            form={form}
+            onFieldChange={setField}
+            type="number"
+            placeholder="e.g. 1190"
+          />
+          <FormField
+            label={t("importDate")}
+            field="importDate"
+            form={form}
+            onFieldChange={setField}
+            type="date"
+          />
+          <FormField
+            label={t("countryOfOrigin")}
+            field="countryOfOrigin"
+            form={form}
+            onFieldChange={setField}
+            placeholder="e.g. Japan, Germany"
+          />
+          <FormField
+            label={t("category")}
+            field="category"
+            form={form}
+            onFieldChange={setField}
+            placeholder="e.g. M1, N1"
           />
           <Field className="col-span-2">
             <FieldLabel htmlFor="vds-notes">{t("notes")}</FieldLabel>
