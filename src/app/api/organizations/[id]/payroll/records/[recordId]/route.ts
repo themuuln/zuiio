@@ -6,7 +6,7 @@ export const PATCH = createRouteHandler(
   async ({ request, orgId, params }) => {
     const body = await request.json();
     const { action } = body;
-    const recordId = params.id;
+    const recordId = params.recordId;
 
     if (!action || !["approve", "pay"].includes(action)) {
       return NextResponse.json(
