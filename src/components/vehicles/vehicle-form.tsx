@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Loader2, Plus, Search, User } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CustomerForm } from "@/components/customers/customer-form";
@@ -56,6 +56,7 @@ import {
 } from "@/lib/queries/use-car-catalog";
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useCarBrands, type CarBrand } from "@/lib/queries/use-car-catalog";
 import {
   useCreateVehicle,
   useCustomerSearch,
@@ -263,11 +264,26 @@ export function VehicleForm({
   const { data: brands = [] } = useFilteredCarBrands(
     orgSettingsRes.settings as Record<string, unknown> | undefined,
   );
+  const { data: allBrands = [] } = useCarBrands();
+
+  // Track brands pinned by SmartCar lookup so they appear even if outside niche
+  const [pinnedBrands, setPinnedBrands] = useState<CarBrand[]>([]);
+
+  // Merge pinned brands into the display list (deduped)
+  const displayBrands = useMemo(() => {
+    const merged = [...brands];
+    for (const pb of pinnedBrands) {
+      if (!merged.some((b) => b.id === pb.id)) {
+        merged.push(pb);
+      }
+    }
+    return merged;
+  }, [brands, pinnedBrands]);
 
   const watchedMake = form.watch("make");
-  const selectedBrand = brands.find(
+  const selectedBrand = displayBrands.find(
     (b) => b.name.toLowerCase() === (watchedMake || "").toLowerCase(),
-  );
+  ) ?? null;
   const { data: models = [] } = useFilteredCarModels(
     selectedBrand?.id ?? null,
     orgSettingsRes.settings as Record<string, unknown> | undefined,
@@ -294,16 +310,21 @@ export function VehicleForm({
       const d = json.data;
 
       // Core fields
-      if (d.make) form.setValue("make", d.make);
+      if (d.make) {
+        form.setValue("make", d.make);
+        // Pin the brand so it appears in the combobox even if outside niche
+        const matched = allBrands.find(
+          (b) => b.name.toLowerCase() === d.make.toLowerCase(),
+        );
+        if (matched) setPinnedBrands([matched]);
+      }
       if (d.model) form.setValue("model", d.model);
       if (d.year) form.setValue("year", String(d.year));
       if (d.vin) form.setValue("vin", d.vin);
       if (d.engineCc) form.setValue("engine", String(d.engineCc));
 
       // Fuel type (map Mongolian → English)
-      const fuelEn = d.fuelType
-        ? mapMongolianValue(d.fuelType, MN_FUEL)
-        : null;
+      const fuelEn = d.fuelType ? mapMongolianValue(d.fuelType, MN_FUEL) : null;
       if (fuelEn) form.setValue("fuelType", fuelEn);
 
       // Transmission (map Mongolian → English)
@@ -331,7 +352,10 @@ export function VehicleForm({
           form.setValue("bodyType", "Wagon");
         } else if (btLower.includes("кабриолет")) {
           form.setValue("bodyType", "Convertible");
-        } else if (btLower.includes("кроссовер") || btLower.includes("crossover")) {
+        } else if (
+          btLower.includes("кроссовер") ||
+          btLower.includes("crossover")
+        ) {
           form.setValue("bodyType", "Crossover");
         } else {
           form.setValue("bodyType", d.bodyType);
