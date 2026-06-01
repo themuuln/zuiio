@@ -110,6 +110,10 @@ export function WorkOrderDetailDrawer({
 
   // Post-service form state
   const [showPostServiceForm, setShowPostServiceForm] = useState(false);
+  const handleCancelPostService = useCallback(() => {
+    setShowPostServiceForm(false);
+    setPostFormServices([]);
+  }, []);
   const [postFormServices, setPostFormServices] = useState<
     Array<{
       id: string;
@@ -122,6 +126,7 @@ export function WorkOrderDetailDrawer({
 
   // Pickup complete form state
   const [showPickupForm, setShowPickupForm] = useState(false);
+  const handleCancelPickup = useCallback(() => setShowPickupForm(false), []);
 
   // Status change confirmation
   const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
@@ -1198,10 +1203,7 @@ export function WorkOrderDetailDrawer({
             services={postFormServices}
             newStatus="Ready for Pickup"
             onConfirm={handlePostServiceFormSubmit}
-            onCancel={() => {
-              setShowPostServiceForm(false);
-              setPostFormServices([]);
-            }}
+            onCancel={handleCancelPostService}
           />
         )}
 
@@ -1214,7 +1216,7 @@ export function WorkOrderDetailDrawer({
             }
             totalCost={Number(wo.total ?? 0)}
             onConfirm={handlePickupSubmit}
-            onCancel={() => setShowPickupForm(false)}
+            onCancel={handleCancelPickup}
           />
         )}
 

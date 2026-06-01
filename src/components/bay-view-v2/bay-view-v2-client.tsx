@@ -200,6 +200,12 @@ export function BayViewV2Client() {
   const [myJobsOnly, setMyJobsOnly] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [assignBay, setAssignBay] = useState<number | null>(null);
+  const handleAssignOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) setAssignBay(null);
+    },
+    [],
+  );
   const bayCountMutationInFlightRef = useRef(false);
   const [bayCountPending, setBayCountPending] = useState(false);
   const [bayCountInputValue, setBayCountInputValue] = useState<number | string>(
@@ -210,7 +216,8 @@ export function BayViewV2Client() {
   );
   const [baySearchQuery, setBaySearchQuery] = useState("");
   const prevShiftReportRef = useRef<ShiftReport | null>(null);
-  const polling = usePolling(() => fetchData(false), 30000);
+
+  // Polling is set up after fetchData is declared below
 
   // Dialog open states
   const [showShiftReport, setShowShiftReport] = useState(false);
@@ -291,6 +298,7 @@ export function BayViewV2Client() {
 
   const { registerTab, unregisterTab } = useRightSidebar();
   const [toast, setToast] = useState<ToastState | null>(null);
+  const handleDismissToast = useCallback(() => setToast(null), []);
   const bayCountValueRef = useRef(data?.bayCount ?? 0);
 
   const markPending = useCallback((...ids: string[]) => {
@@ -325,6 +333,9 @@ export function BayViewV2Client() {
       setLoading(false);
     }
   }, []);
+
+  const pollingCb = useCallback(() => fetchData(false), [fetchData]);
+  const polling = usePolling(pollingCb, 30000);
 
   useEffect(() => {
     const abort = new AbortController();
@@ -595,28 +606,31 @@ export function BayViewV2Client() {
     [data, t, markPending, clearPending, fetchData],
   );
 
-  async function handleAssignToBay(workOrderId: string, mechanicId?: string) {
-    if (assignBay === null) return;
-    markPending(workOrderId);
-    try {
-      await assignVehicleToBay(workOrderId, assignBay);
-      if (mechanicId) {
-        const { assignMechanicToWorkOrder } = await import(
-          "@/lib/services/bay-view-service"
-        );
-        await assignMechanicToWorkOrder(workOrderId, mechanicId);
+  const handleAssignToBay = useCallback(
+    async (workOrderId: string, mechanicId?: string) => {
+      if (assignBay === null) return;
+      markPending(workOrderId);
+      try {
+        await assignVehicleToBay(workOrderId, assignBay);
+        if (mechanicId) {
+          const { assignMechanicToWorkOrder } = await import(
+            "@/lib/services/bay-view-service"
+          );
+          await assignMechanicToWorkOrder(workOrderId, mechanicId);
+        }
+        setToast({
+          message: `${t("assignedToBay")} ${assignBay}`,
+          variant: "info",
+        });
+        await fetchData(false);
+      } catch {
+        setToast({ message: t("failedToAssign"), variant: "error" });
+      } finally {
+        clearPending(workOrderId);
       }
-      setToast({
-        message: `${t("assignedToBay")} ${assignBay}`,
-        variant: "info",
-      });
-      await fetchData(false);
-    } catch {
-      setToast({ message: t("failedToAssign"), variant: "error" });
-    } finally {
-      clearPending(workOrderId);
-    }
-  }
+    },
+    [assignBay, t, markPending, clearPending, fetchData],
+  );
 
   const userIsMechanic =
     currentProfile && data?.mechanics.some((m) => m.id === currentProfile.id);
@@ -1614,9 +1628,7 @@ export function BayViewV2Client() {
       <AssignDialog
         key={assignBay ?? "closed"}
         open={assignBay !== null}
-        onOpenChange={(open) => {
-          if (!open) setAssignBay(null);
-        }}
+        onOpenChange={handleAssignOpenChange}
         bayNumber={assignBay ?? 0}
         queue={data.waitingQueue}
         mechanics={data.mechanics}
@@ -1704,7 +1716,7 @@ export function BayViewV2Client() {
         <ToastMessage
           message={toast.message}
           variant={toast.variant}
-          onDismiss={() => setToast(null)}
+          onDismiss={handleDismissToast}
         />
       )}
     </DndContext>

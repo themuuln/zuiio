@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 
@@ -19,7 +19,7 @@ export function NewUserSetup({ copy }: { copy: NewUserSetupCopy }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const setupStarted = useRef(false);
 
-  const runSetup = async () => {
+  const runSetup = useCallback(async () => {
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/auth/finalize-signup", {
@@ -36,13 +36,12 @@ export function NewUserSetup({ copy }: { copy: NewUserSetupCopy }) {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (setupStarted.current) return;
     setupStarted.current = true;
     runSetup();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runSetup]);
 
   if (state === "error") {
