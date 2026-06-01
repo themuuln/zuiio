@@ -11,6 +11,10 @@ export function useClientNow(): Date {
 
   useEffect(() => {
     setNow(new Date());
+
+    // Tick every second so elapsed-time displays don't freeze
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
   }, []);
 
   return now;
