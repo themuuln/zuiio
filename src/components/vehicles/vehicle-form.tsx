@@ -98,6 +98,50 @@ const vehicleSchema = z.object({
 
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
 
+// ── Mongolian → English mappings for SmartCar API ────────────
+
+const MN_COLORS: Record<string, string> = {
+  хар: "Black",
+  цагаан: "White",
+  улаан: "Red",
+  цэнхэр: "Blue",
+  шар: "Yellow",
+  ногоон: "Green",
+  саарал: "Gray",
+  мөнгөн: "Silver",
+  бор: "Brown",
+  улбар: "Orange",
+  ягаан: "Purple",
+  алтан: "Gold",
+  хүрэн: "Brown",
+};
+
+const MN_FUEL: Record<string, string> = {
+  бензин: "Gasoline",
+  дизель: "Diesel",
+  цахилгаан: "Electric",
+  эрлийз: "Hybrid",
+  хийн: "LPG",
+  автомахин: "Gasoline",
+};
+
+const MN_TRANSMISSION: Record<string, string> = {
+  автомат: "Automatic",
+  механик: "Manual",
+  вариатор: "CVT",
+};
+
+function mapMongolianValue(
+  val: string,
+  mapping: Record<string, string>,
+): string | null {
+  const lower = val.toLowerCase().trim();
+  for (const [mn, en] of Object.entries(mapping)) {
+    if (lower.includes(mn)) return en;
+  }
+  return null;
+}
+
 // ── Helpers ──────────────────────────────────────────────────
 
 function getCustomerLabel(customer: Customer) {
@@ -248,14 +292,70 @@ export function VehicleForm({
         return;
       }
       const d = json.data;
+
+      // Core fields
       if (d.make) form.setValue("make", d.make);
       if (d.model) form.setValue("model", d.model);
       if (d.year) form.setValue("year", String(d.year));
       if (d.vin) form.setValue("vin", d.vin);
       if (d.engineCc) form.setValue("engine", String(d.engineCc));
-      if (d.fuelType) form.setValue("fuelType", d.fuelType);
-      if (d.transmission) form.setValue("transmission", d.transmission);
-      if (d.bodyType) form.setValue("bodyType", d.bodyType);
+
+      // Fuel type (map Mongolian → English)
+      const fuelEn = d.fuelType
+        ? mapMongolianValue(d.fuelType, MN_FUEL)
+        : null;
+      if (fuelEn) form.setValue("fuelType", fuelEn);
+
+      // Transmission (map Mongolian → English)
+      const transEn = d.transmission
+        ? mapMongolianValue(d.transmission, MN_TRANSMISSION)
+        : null;
+      if (transEn) form.setValue("transmission", transEn);
+
+      // Body type (map Mongolian → English category)
+      if (d.bodyType) {
+        const btLower = d.bodyType.toLowerCase();
+        if (btLower.includes("туулах чадвар") || btLower.includes("suv")) {
+          form.setValue("bodyType", "SUV");
+        } else if (btLower.includes("седан")) {
+          form.setValue("bodyType", "Sedan");
+        } else if (btLower.includes("хетчбек")) {
+          form.setValue("bodyType", "Hatchback");
+        } else if (btLower.includes("пикап") || btLower.includes("ачилт")) {
+          form.setValue("bodyType", "Pickup");
+        } else if (btLower.includes("ван")) {
+          form.setValue("bodyType", "Van");
+        } else if (btLower.includes("купе")) {
+          form.setValue("bodyType", "Coupe");
+        } else if (btLower.includes("универсал") || btLower.includes("wagon")) {
+          form.setValue("bodyType", "Wagon");
+        } else if (btLower.includes("кабриолет")) {
+          form.setValue("bodyType", "Convertible");
+        } else if (btLower.includes("кроссовер") || btLower.includes("crossover")) {
+          form.setValue("bodyType", "Crossover");
+        } else {
+          form.setValue("bodyType", d.bodyType);
+        }
+      }
+
+      // Additional rich fields from the API
+      if (d.color) {
+        const colorEn = mapMongolianValue(d.color, MN_COLORS);
+        if (colorEn) form.setValue("color", colorEn);
+      }
+
+      if (d.country) form.setValue("countryOfOrigin", d.country);
+
+      if (d.seats) form.setValue("seats", String(d.seats));
+
+      if (d.category) form.setValue("category", d.category);
+
+      if (d.importDate) {
+        // API returns ISO date "2019-07-08T00:00:00" — use the date part only
+        const datePart = d.importDate.split("T")[0] ?? d.importDate;
+        form.setValue("importDate", datePart);
+      }
+
       toast.success("Plate lookup complete");
     } catch {
       toast.error("Lookup failed — try again");
