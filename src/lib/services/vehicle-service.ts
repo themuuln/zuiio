@@ -38,7 +38,7 @@ export async function getVehicles(
   let query = supabase
     .from("vehicles")
     .select(
-      "*, vehicle_owners!inner(customer_id, customers!inner(first_name, last_name, phone))",
+      "*, vehicle_owners(customer_id, customers(first_name, last_name, phone))",
     )
     .eq("organization_id", orgId)
     .is("deleted_at", null)
