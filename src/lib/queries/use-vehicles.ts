@@ -24,6 +24,8 @@ export function useVehicles(
       }),
     enabled: !!orgId,
     staleTime: 30_000,
+    // Keep previous data visible while fetching new search results
+    placeholderData: (prev) => prev,
   });
 }
 
