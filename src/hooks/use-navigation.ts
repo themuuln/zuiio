@@ -229,38 +229,33 @@ export function useNavigation() {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  // ── While role is loading, show nothing to avoid flash of unfiltered items ──
-  const navReady = !roleLoading;
+  const mechanicHomeItem: NavItem = {
+    labelKey: "nav.bayView",
+    href: "/dashboard/bay-view",
+    icon: LayoutGrid,
+  };
 
-  // ── Filter nav items based on role ──────────────────────
-  const filteredNavGroups = !navReady
-    ? []
-    : isMechanic
-      ? navGroups
-          .filter((g) => g.labelKey !== FINANCIALS_GROUP_KEY)
-          .map((g) => ({
-            ...g,
-            // Bay View is already the primary home item — remove from Operations group
-            children:
-              g.labelKey === "nav.group.operations"
-                ? g.children.filter((c) => c.href !== "/dashboard/bay-view")
-                : g.children,
-          }))
-      : navGroups;
+  // ── Filter nav items based on role (only once role is known) ──
+  const isDefinitelyMechanic = !roleLoading && isMechanic;
 
-  const filteredPrimaryItems = !navReady
-    ? []
-    : isMechanic
-      ? [
-          {
-            labelKey: "nav.bayView",
-            href: "/dashboard/bay-view",
-            icon: LayoutGrid,
-          },
-        ]
-      : primaryItems;
-  const filteredSettingsItems = !navReady ? [] : isMechanic ? [] : settingsItems;
-  const filteredUtilityItems = navReady ? utilityItems : [];
+  const filteredNavGroups = isDefinitelyMechanic
+    ? navGroups
+        .filter((g) => g.labelKey !== FINANCIALS_GROUP_KEY)
+        .map((g) => ({
+          ...g,
+          // Bay View is already the primary home item — remove from Operations group
+          children:
+            g.labelKey === "nav.group.operations"
+              ? g.children.filter((c) => c.href !== "/dashboard/bay-view")
+              : g.children,
+        }))
+    : navGroups;
+
+  const filteredPrimaryItems = isDefinitelyMechanic
+    ? [mechanicHomeItem]
+    : primaryItems;
+  const filteredSettingsItems = isDefinitelyMechanic ? [] : settingsItems;
+  const filteredUtilityItems = utilityItems;
 
   const filteredAllItems = [
     ...filteredPrimaryItems,
@@ -269,18 +264,17 @@ export function useNavigation() {
     ...filteredSettingsItems,
   ];
 
-  const filteredSections = !navReady
-    ? []
-    : isMechanic
-      ? sections.filter((s) => s.labelKey !== FINANCIALS_GROUP_KEY)
+  const filteredSections = isDefinitelyMechanic
+    ? sections.filter((s) => s.labelKey !== FINANCIALS_GROUP_KEY)
     : sections;
+
+  // Stable fallback — never null
+  const fallbackItem = isDefinitelyMechanic ? mechanicHomeItem : primaryItems[0];
 
   const resolvedCurrentItem =
     [...filteredAllItems]
       .sort((a, b) => b.href.length - a.href.length)
-      .find((item) => isActive(item.href)) ??
-    filteredPrimaryItems[0] ??
-    null;
+      .find((item) => isActive(item.href)) ?? fallbackItem;
 
   const resolvedCurrentGroup =
     filteredNavGroups.find((group) =>
@@ -316,5 +310,6 @@ export function useNavigation() {
     breadcrumbs: resolvedBreadcrumbs,
     isActive,
     pathname,
+    roleLoading,
   };
 }

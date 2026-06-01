@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Fragment } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sidebar,
   SidebarContent,
@@ -21,10 +22,56 @@ import { onLinkHover } from "@/lib/prefetch";
 import { MechanicSwitcher } from "./_mechanic-switcher";
 import { OrgBranding } from "./_org-branding";
 
+function SidebarSkeleton() {
+  return (
+    <>
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <div className="flex h-8 items-center gap-3 px-2">
+                <Skeleton className="size-4 shrink-0 rounded" />
+                <Skeleton className="h-3.5 w-24" />
+              </div>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+      <SidebarSeparator />
+      {[1, 2, 3, 4].map((i) => (
+        <Fragment key={i}>
+          {i > 1 && <SidebarSeparator />}
+          <SidebarGroup className="py-1">
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-0.5">
+                {[1, 2].map((j) => (
+                  <SidebarMenuItem key={j}>
+                    <div className="flex h-8 items-center gap-3 px-2">
+                      <Skeleton className="size-4 shrink-0 rounded" />
+                      <Skeleton className="h-3.5 w-20" />
+                    </div>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </Fragment>
+      ))}
+      <SidebarSeparator />
+    </>
+  );
+}
+
 export function AppSidebar() {
   const t = useTranslations();
-  const { isActive, groups, utilityItems, primaryItems, settingsItems } =
-    useNavigation();
+  const {
+    isActive,
+    groups,
+    utilityItems,
+    primaryItems,
+    settingsItems,
+    roleLoading,
+  } = useNavigation();
   const settingsShortcut = settingsItems.find(
     (item) => item.href === "/dashboard/settings",
   );
@@ -35,41 +82,15 @@ export function AppSidebar() {
         <OrgBranding />
       </SidebarHeader>
       <SidebarContent>
-        {/* Dashboard */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {primaryItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    render={
-                      <Link
-                        href={item.href}
-                        onMouseEnter={onLinkHover(item.href)}
-                      />
-                    }
-                    isActive={isActive(item.href)}
-                    tooltip={t(item.labelKey)}
-                  >
-                    <item.icon className="size-4" />
-                    <span>{t(item.labelKey)}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator />
-
-        {/* All nav groups */}
-        {groups.map((group, i) => (
-          <Fragment key={group.labelKey}>
-            {i > 0 && <SidebarSeparator />}
-            <SidebarGroup className="py-1">
+        {roleLoading ? (
+          <SidebarSkeleton />
+        ) : (
+          <>
+            {/* Dashboard / Bay View */}
+            <SidebarGroup>
               <SidebarGroupContent>
-                <SidebarMenu className="gap-0.5">
-                  {group.children.map((item) => (
+                <SidebarMenu>
+                  {primaryItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
                         render={
@@ -81,7 +102,7 @@ export function AppSidebar() {
                         isActive={isActive(item.href)}
                         tooltip={t(item.labelKey)}
                       >
-                        <item.icon className="size-4 shrink-0" />
+                        <item.icon className="size-4" />
                         <span>{t(item.labelKey)}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -89,36 +110,68 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-          </Fragment>
-        ))}
 
-        <SidebarSeparator />
+            <SidebarSeparator />
 
-        {/* Utility items (Guide) */}
-        {utilityItems.length > 0 && (
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {utilityItems.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      render={
-                        <Link
-                          href={item.href}
-                          onMouseEnter={onLinkHover(item.href)}
-                        />
-                      }
-                      isActive={isActive(item.href)}
-                      tooltip={t(item.labelKey)}
-                    >
-                      <item.icon className="size-4" />
-                      <span>{t(item.labelKey)}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+            {/* All nav groups */}
+            {groups.map((group, i) => (
+              <Fragment key={group.labelKey}>
+                {i > 0 && <SidebarSeparator />}
+                <SidebarGroup className="py-1">
+                  <SidebarGroupContent>
+                    <SidebarMenu className="gap-0.5">
+                      {group.children.map((item) => (
+                        <SidebarMenuItem key={item.href}>
+                          <SidebarMenuButton
+                            render={
+                              <Link
+                                href={item.href}
+                                onMouseEnter={onLinkHover(item.href)}
+                              />
+                            }
+                            isActive={isActive(item.href)}
+                            tooltip={t(item.labelKey)}
+                          >
+                            <item.icon className="size-4 shrink-0" />
+                            <span>{t(item.labelKey)}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              </Fragment>
+            ))}
+
+            <SidebarSeparator />
+
+            {/* Utility items (Guide) */}
+            {utilityItems.length > 0 && (
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {utilityItems.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          render={
+                            <Link
+                              href={item.href}
+                              onMouseEnter={onLinkHover(item.href)}
+                            />
+                          }
+                          isActive={isActive(item.href)}
+                          tooltip={t(item.labelKey)}
+                        >
+                          <item.icon className="size-4" />
+                          <span>{t(item.labelKey)}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
+          </>
         )}
       </SidebarContent>
       <SidebarFooter>
