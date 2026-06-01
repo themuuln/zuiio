@@ -17,7 +17,7 @@ import {
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { PickupCompleteData } from "@/components/bay-view-v2/pickup-complete-dialog";
 import { PickupCompleteDialog } from "@/components/bay-view-v2/pickup-complete-dialog";
@@ -44,9 +44,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
-import { useCurrentUserRole } from "@/hooks/use-current-user-role";
-import { usePolling } from "@/hooks/use-polling";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { useCurrentUserRole } from "@/hooks/use-current-user-role";
+import {
+  useMechanicEod,
+  useMechanicWorkOrders,
+  useMechanicTrend,
+  useClockStatus,
+  useClockToggle,
+} from "@/lib/queries/use-mechanic-dashboard";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
 import { cn, formatMNT } from "@/lib/utils";
 
@@ -56,15 +63,6 @@ const MechanicTrendChart = dynamic(
 );
 
 // ── Types ──────────────────────────────────────────
-
-interface MechanicEodSummary {
-  mechanic_id: string;
-  mechanic_name: string;
-  work_orders_completed: number;
-  services_count: number;
-  parts_count: number;
-  total_revenue: number;
-}
 
 interface WorkOrderRow {
   id: string;
@@ -444,24 +442,16 @@ function MechanicDashboard({
   isAdminView: boolean;
 }) {
   const t = useTranslations();
+  const queryClient = useQueryClient();
   const now = useClientNow();
   const { push } = useRouter();
   const { registerTab, unregisterTab } = useRightSidebar();
-  const [eod, setEod] = useState<MechanicEodSummary | null>(null);
-  const [assignedWos, setAssignedWos] = useState<WorkOrderRow[]>([]);
-  const [trend, setTrend] = useState<{
-    avgJobValue: number;
-    jobsPerDay: number;
-    weeklyTrend: { week: string; orders: number; revenue: number }[];
-  } | null>(null);
-  const [dataLoading, setDataLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [clockStatus, setClockStatus] = useState<{
-    clockedIn: boolean;
-    since: string | null;
-    todayHours: number;
-  }>({ clockedIn: false, since: null, todayHours: 0 });
-  const [clockLoading, setClockLoading] = useState(false);
+
+  // ── Queries ──
+  const eodQuery = useMechanicEod(orgId, userId);
+  const woQuery = useMechanicWorkOrders(orgId, userId);
+  const trendQuery = useMechanicTrend(orgId, userId);
+  const clockQuery = useClockStatus(orgId);
   const [pendingPickupComplete, setPendingPickupComplete] = useState<{
     woId: string;
     vehicleId: string;
@@ -469,67 +459,39 @@ function MechanicDashboard({
     totalCost: number;
   } | null>(null);
 
-  const fetchData = useCallback(async () => {
-    setIsRefreshing(true);
-    const today = new Date().toISOString().split("T")[0];
-    const eodUrl = `/api/organizations/${orgId}/reports?type=eod&date=${today}&mechanic=${userId}`;
-    const woUrl = `/api/organizations/${orgId}/work-orders?mechanic=${userId}&status=In Progress&status=Diagnosing&status=New&status=Ready for Pickup`;
-    const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0];
-    const trendUrl = `/api/organizations/${orgId}/reports?type=mechanic-trend&mechanic=${userId}&period=weekly&startDate=${eightWeeksAgo}&endDate=${today}`;
-    const clockUrl = `/api/organizations/${orgId}/me/time/status`;
+  const eod = eodQuery.data ?? null;
+  const assignedWos = woQuery.data ?? [];
+  const trend = trendQuery.data ?? null;
+  const clockStatus = clockQuery.data ?? {
+    clockedIn: false,
+    since: null,
+    todayHours: 0,
+  };
 
-    try {
-      const [eodJson, woJson, trendJson, clockJson] = await Promise.all([
-        fetch(eodUrl)
-          .then((r) => r.json())
-          .catch(() => ({ data: null })),
-        fetch(woUrl)
-          .then((r) => r.json())
-          .catch(() => ({ data: [] })),
-        fetch(trendUrl)
-          .then((r) => r.json())
-          .catch(() => ({ data: null })),
-        fetch(clockUrl)
-          .then((r) => r.json())
-          .catch(() => ({ data: null })),
-      ]);
-      if (eodJson.data?.mechanics?.length > 0) {
-        setEod(eodJson.data.mechanics[0]);
-      }
-      if (Array.isArray(woJson.data)) {
-        setAssignedWos(woJson.data);
-      }
-      if (trendJson.data) {
-        setTrend(trendJson.data);
-      }
-      if (clockJson.data) {
-        setClockStatus(clockJson.data);
-      }
-    } catch {
-      // silent
-    }
-    setDataLoading(false);
-    setIsRefreshing(false);
-  }, [orgId, userId]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  usePolling(fetchData, 30000);
+  // Combined loading: show skeleton until main data loads
+  const mainDataPending =
+    eodQuery.isPending || woQuery.isPending || trendQuery.isPending;
+  const dataLoading = mainDataPending;
+  const isRefreshing =
+    (eodQuery.isFetching ||
+      woQuery.isFetching ||
+      trendQuery.isFetching ||
+      clockQuery.isFetching) &&
+    !mainDataPending;
+  const clockLoading = clockQuery.isFetching;
 
   // Sort: active/pickup first, then new, then rest
-  const priority: Record<string, number> = {
-    "In Progress": 0,
-    "Ready for Pickup": 1,
-    New: 2,
-    Diagnosing: 3,
-  };
-  const sortedWos = assignedWos.toSorted(
-    (a, b) => (priority[a.status] ?? 99) - (priority[b.status] ?? 99),
-  );
+  const sortedWos = useMemo(() => {
+    const priority: Record<string, number> = {
+      "In Progress": 0,
+      "Ready for Pickup": 1,
+      New: 2,
+      Diagnosing: 3,
+    };
+    return (assignedWos ?? []).toSorted(
+      (a, b) => (priority[a.status] ?? 99) - (priority[b.status] ?? 99),
+    );
+  }, [assignedWos]);
 
   // ── Mount: register tabs + open sidebar (once) ────────
   useEffect(() => {
@@ -581,37 +543,11 @@ function MechanicDashboard({
   }, [eod, assignedWos, sortedWos, dataLoading, registerTab]);
 
   const updateStatus = useUpdateWorkOrderStatus(orgId);
+  const clockMutation = useClockToggle(orgId);
 
-  const handleClockToggle = async () => {
-    setClockLoading(true);
-    const endpoint = clockStatus.clockedIn ? "clock-out" : "clock-in";
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/me/time/${endpoint}`,
-        { method: "POST" },
-      );
-      const json = await res.json();
-      if (!res.ok) {
-        toast.error(json.error?.message ?? "Failed to toggle clock");
-        return;
-      }
-      const statusRes = await fetch(
-        `/api/organizations/${orgId}/me/time/status`,
-      );
-      const statusJson = await statusRes.json();
-      if (statusJson.data) {
-        setClockStatus(statusJson.data);
-      }
-      toast.success(
-        clockStatus.clockedIn
-          ? t("mechanic.clockedOut")
-          : t("mechanic.clockedIn"),
-      );
-    } catch {
-      toast.error("Network error");
-    } finally {
-      setClockLoading(false);
-    }
+  const handleClockToggle = () => {
+    const action = clockStatus.clockedIn ? "clock-out" : "clock-in";
+    clockMutation.mutate(action);
   };
 
   const handlePickupCompleteConfirm = async (data: PickupCompleteData) => {
@@ -654,14 +590,22 @@ function MechanicDashboard({
       }
     }
 
-    setAssignedWos((prev) =>
-      prev.map((wo) => (wo.id === woId ? { ...wo, status: newStatus } : wo)),
+    // Optimistic update on work orders list
+    queryClient.setQueryData(
+      ["organizations", orgId, "mechanics", userId, "work-orders"],
+      (prev: WorkOrderRow[] | undefined) =>
+        (prev ?? []).map((w) =>
+          w.id === woId ? { ...w, status: newStatus } : w,
+        ),
     );
     try {
       await updateStatus.mutateAsync({ woId, status: newStatus });
       toast.success(`Status updated to ${newStatus}`);
     } catch {
-      // Error toast handled by mutation's onError — optimistic update corrected on next poll
+      // Refetch will correct optimistic update on error
+      queryClient.invalidateQueries({
+        queryKey: ["organizations", orgId, "mechanics", userId, "work-orders"],
+      });
     }
   };
 
