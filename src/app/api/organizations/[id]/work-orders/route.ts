@@ -11,9 +11,12 @@ import type { WorkOrderStatus } from "@/lib/types";
 export const GET = createRouteHandler(
   async ({ request, orgId }) => {
     const { searchParams } = new URL(request.url);
+    const statuses = searchParams.getAll("status");
     const filters = {
       status:
-        (searchParams.get("status") as unknown as WorkOrderStatus) ?? undefined,
+        statuses.length > 0
+          ? (statuses as unknown as WorkOrderStatus[])
+          : undefined,
       mechanic_id: searchParams.get("mechanic") ?? undefined,
       date: searchParams.get("date") ?? undefined,
       search: searchParams.get("q") ?? undefined,

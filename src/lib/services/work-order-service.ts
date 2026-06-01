@@ -81,7 +81,13 @@ export async function getWorkOrders(
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
-  if (filters?.status) query = query.eq("status", filters.status);
+  if (filters?.status) {
+    if (Array.isArray(filters.status)) {
+      query = query.in("status", filters.status);
+    } else {
+      query = query.eq("status", filters.status);
+    }
+  }
   if (filters?.mechanic_id)
     query = query.eq("mechanic_id", filters.mechanic_id);
   if (filters?.date) {

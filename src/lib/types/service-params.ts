@@ -189,7 +189,7 @@ export interface AddPartParams {
 }
 
 export interface WorkOrderFilters {
-  status?: WorkOrderStatus;
+  status?: WorkOrderStatus | WorkOrderStatus[];
   mechanic_id?: string;
   date?: string;
   vehicle_plate?: string;

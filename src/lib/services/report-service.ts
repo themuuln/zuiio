@@ -283,7 +283,7 @@ export async function getMechanicsList(
         .from("organization_users")
         .select("user_id, roles!inner(name), branch_id")
         .eq("organization_id", orgId)
-        .eq("roles.name", "mechanic");
+        .eq("roles.name", "Mechanic");
 
       const filteredMechanics = branchId
         ? (mechanics ?? []).filter((m) => m.branch_id === branchId)
@@ -930,26 +930,38 @@ export async function getEndOfDaySummary(
   date: string,
   branchId: string | null = null,
 ): Promise<EndOfDaySummary> {
-  const supabase = await createClient();
+  return withCache(
+    ["getEndOfDaySummary", orgId, date, branchId ?? "all"],
+    async () => {
+      const supabase = await createClient();
 
-  const { data: workOrders } = await withBranchFilter(
-    supabase
-      .from("work_orders")
-      .select("id, mechanic_id")
-      .eq("organization_id", orgId)
-      .gte("completed_at", `${date}T00:00:00`)
-      .lte("completed_at", `${date}T23:59:59`)
-      .eq("status", "Completed")
-      .is("deleted_at", null),
-    branchId,
-  );
+      const { data: workOrders } = await withBranchFilter(
+        supabase
+          .from("work_orders")
+          .select("id, mechanic_id")
+          .eq("organization_id", orgId)
+          .gte("completed_at", `${date}T00:00:00`)
+          .lte("completed_at", `${date}T23:59:59`)
+          .eq("status", "Completed")
+          .is("deleted_at", null),
+        branchId,
+      );
 
-  return getEndOfDaySummaryFromScopedWorkOrders(
-    supabase,
-    orgId,
-    date,
-    branchId,
-    (workOrders ?? []) as Array<{ id: string; mechanic_id: string | null }>,
+      return getEndOfDaySummaryFromScopedWorkOrders(
+        supabase,
+        orgId,
+        date,
+        branchId,
+        (workOrders ?? []) as Array<{
+          id: string;
+          mechanic_id: string | null;
+        }>,
+      );
+    },
+    {
+      tags: [cacheTags.reports(orgId)],
+      revalidate: cacheDurations.reports,
+    },
   );
 }
 
@@ -2224,7 +2236,7 @@ async function getTechnicianPerformanceBatched(
     .from("organization_users")
     .select("user_id, roles!inner(name), branch_id")
     .eq("organization_id", orgId)
-    .eq("roles.name", "mechanic");
+    .eq("roles.name", "Mechanic");
 
   const scopedMechanics = branchId
     ? (mechanics ?? []).filter((m) => m.branch_id === branchId)

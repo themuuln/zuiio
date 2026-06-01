@@ -139,8 +139,10 @@ export async function getClockStatus(
   orgId: string,
   mechanicId: string,
 ): Promise<ClockStatus> {
-  const openLog = await getTodayLog(orgId, mechanicId);
-  const todayHours = await getTodayHours(orgId, mechanicId);
+  const [openLog, todayHours] = await Promise.all([
+    getTodayLog(orgId, mechanicId),
+    getTodayHours(orgId, mechanicId),
+  ]);
 
   return {
     clockedIn: openLog !== null,
