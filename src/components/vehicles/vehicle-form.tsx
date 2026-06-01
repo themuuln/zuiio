@@ -95,6 +95,11 @@ const vehicleSchema = z.object({
   countryOfOrigin: z.string().optional(),
   category: z.string().optional(),
   seats: z.string().optional(),
+  steering: z.string().optional(),
+  height: z.string().optional(),
+  width: z.string().optional(),
+  length: z.string().optional(),
+  weight: z.string().optional(),
 });
 
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
@@ -281,9 +286,10 @@ export function VehicleForm({
   }, [brands, pinnedBrands]);
 
   const watchedMake = form.watch("make");
-  const selectedBrand = displayBrands.find(
-    (b) => b.name.toLowerCase() === (watchedMake || "").toLowerCase(),
-  ) ?? null;
+  const selectedBrand =
+    displayBrands.find(
+      (b) => b.name.toLowerCase() === (watchedMake || "").toLowerCase(),
+    ) ?? null;
   const { data: models = [] } = useFilteredCarModels(
     selectedBrand?.id ?? null,
     orgSettingsRes.settings as Record<string, unknown> | undefined,
@@ -379,6 +385,24 @@ export function VehicleForm({
         const datePart = d.importDate.split("T")[0] ?? d.importDate;
         form.setValue("importDate", datePart);
       }
+
+      // Steering (wheel position)
+      if (d.steering) {
+        const steeringEn = mapMongolianValue(d.steering, {
+          Баруун: "Right",
+          Зүүн: "Left",
+          Төв: "Center",
+        });
+        if (steeringEn) form.setValue("steering", steeringEn);
+      }
+
+      // Dimensions (mm) — stored as strings, parsed to int in submit
+      if (d.height) form.setValue("height", String(d.height));
+      if (d.width) form.setValue("width", String(d.width));
+      if (d.length) form.setValue("length", String(d.length));
+
+      // Weight (kg)
+      if (d.weight) form.setValue("weight", String(d.weight));
 
       toast.success("Plate lookup complete");
     } catch {
@@ -499,10 +523,6 @@ export function VehicleForm({
         return;
       }
     }
-    if (data.vin && data.vin.length !== 17) {
-      form.setError("vin", { message: "VIN must be 17 characters" });
-      return;
-    }
     if (data.seats?.trim()) {
       const n = Number(data.seats);
       if (Number.isNaN(n) || n < 1 || n > 50) {
@@ -564,6 +584,24 @@ export function VehicleForm({
         seats:
           currentMode === "full" && data.seats?.trim()
             ? Number(data.seats)
+            : undefined,
+        steering:
+          currentMode === "full" ? data.steering || undefined : undefined,
+        height:
+          currentMode === "full" && data.height?.trim()
+            ? Number(data.height)
+            : undefined,
+        width:
+          currentMode === "full" && data.width?.trim()
+            ? Number(data.width)
+            : undefined,
+        length:
+          currentMode === "full" && data.length?.trim()
+            ? Number(data.length)
+            : undefined,
+        weight:
+          currentMode === "full" && data.weight?.trim()
+            ? Number(data.weight)
             : undefined,
       };
 
@@ -1162,6 +1200,65 @@ export function VehicleForm({
                     value={form.watch("category") || ""}
                     onChange={(e) => form.setValue("category", e.target.value)}
                     placeholder="e.g. M1, N1"
+                  />
+                </FieldContent>
+              </Field>
+
+              <Field>
+                <FieldLabel>Steering</FieldLabel>
+                <FieldContent>
+                  <Input
+                    value={form.watch("steering") || ""}
+                    onChange={(e) => form.setValue("steering", e.target.value)}
+                    placeholder="e.g. Right, Left"
+                  />
+                </FieldContent>
+              </Field>
+
+              <Field>
+                <FieldLabel>Height (mm)</FieldLabel>
+                <FieldContent>
+                  <Input
+                    type="number"
+                    value={form.watch("height") || ""}
+                    onChange={(e) => form.setValue("height", e.target.value)}
+                    placeholder="e.g. 1420"
+                  />
+                </FieldContent>
+              </Field>
+
+              <Field>
+                <FieldLabel>Width (mm)</FieldLabel>
+                <FieldContent>
+                  <Input
+                    type="number"
+                    value={form.watch("width") || ""}
+                    onChange={(e) => form.setValue("width", e.target.value)}
+                    placeholder="e.g. 1690"
+                  />
+                </FieldContent>
+              </Field>
+
+              <Field>
+                <FieldLabel>Length (mm)</FieldLabel>
+                <FieldContent>
+                  <Input
+                    type="number"
+                    value={form.watch("length") || ""}
+                    onChange={(e) => form.setValue("length", e.target.value)}
+                    placeholder="e.g. 4390"
+                  />
+                </FieldContent>
+              </Field>
+
+              <Field>
+                <FieldLabel>Weight (kg)</FieldLabel>
+                <FieldContent>
+                  <Input
+                    type="number"
+                    value={form.watch("weight") || ""}
+                    onChange={(e) => form.setValue("weight", e.target.value)}
+                    placeholder="e.g. 1190"
                   />
                 </FieldContent>
               </Field>

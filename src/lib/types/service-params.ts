@@ -616,6 +616,11 @@ export interface CreateVehicleParams {
   countryOfOrigin?: string;
   category?: string;
   seats?: number;
+  steering?: string;
+  height?: number;
+  width?: number;
+  length?: number;
+  weight?: number;
 }
 
 export interface UpdateVehicleParams {
@@ -637,6 +642,15 @@ export interface UpdateVehicleParams {
   notes?: string | null;
   licenseExpiryAt?: string | null;
   nextServiceAt?: string | null;
+  importDate?: string | null;
+  countryOfOrigin?: string | null;
+  category?: string | null;
+  seats?: number | null;
+  steering?: string | null;
+  height?: number | null;
+  width?: number | null;
+  length?: number | null;
+  weight?: number | null;
 }
 
 export interface CreateServiceCatalogParams {

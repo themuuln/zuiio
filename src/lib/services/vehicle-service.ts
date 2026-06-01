@@ -205,6 +205,11 @@ export async function createVehicle(
       country_of_origin: params.countryOfOrigin?.trim() || null,
       category: params.category?.trim() || null,
       seats: params.seats ?? null,
+      steering: params.steering || null,
+      height: params.height ?? null,
+      width: params.width ?? null,
+      length: params.length ?? null,
+      weight: params.weight ?? null,
       created_by: userId,
       updated_by: userId,
     })
@@ -309,6 +314,15 @@ export async function updateVehicle(
       notes: "notes",
       licenseExpiryAt: "license_expiry_at",
       nextServiceAt: "next_service_at",
+      importDate: "import_date",
+      countryOfOrigin: "country_of_origin",
+      category: "category",
+      seats: "seats",
+      steering: "steering",
+      height: "height",
+      width: "width",
+      length: "length",
+      weight: "weight",
     },
     transforms: {
       vin: trim,
@@ -319,6 +333,7 @@ export async function updateVehicle(
       color: trim,
       engine: trim,
       notes: trim,
+      steering: trim,
     },
   };
   const updates = {

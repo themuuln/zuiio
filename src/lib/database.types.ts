@@ -1903,6 +1903,47 @@ export type Database = {
           },
         ]
       }
+      mechanic_pay_rates: {
+        Row: {
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          hourly_rate: number
+          id: string
+          mechanic_id: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          effective_from: string
+          effective_to?: string | null
+          hourly_rate: number
+          id?: string
+          mechanic_id: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          hourly_rate?: number
+          id?: string
+          mechanic_id?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mechanic_pay_rates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mechanic_time_logs: {
         Row: {
           clock_in: string
@@ -2532,6 +2573,62 @@ export type Database = {
             columns: ["work_order_id"]
             isOneToOne: false
             referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_records: {
+        Row: {
+          created_at: string
+          gross_pay: number
+          hourly_rate: number
+          id: string
+          mechanic_id: string
+          notes: string | null
+          organization_id: string
+          paid_at: string | null
+          period_end: string
+          period_start: string
+          status: string
+          total_hours: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gross_pay?: number
+          hourly_rate?: number
+          id?: string
+          mechanic_id: string
+          notes?: string | null
+          organization_id: string
+          paid_at?: string | null
+          period_end: string
+          period_start: string
+          status?: string
+          total_hours?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gross_pay?: number
+          hourly_rate?: number
+          id?: string
+          mechanic_id?: string
+          notes?: string | null
+          organization_id?: string
+          paid_at?: string | null
+          period_end?: string
+          period_start?: string
+          status?: string
+          total_hours?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_records_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -4084,12 +4181,14 @@ export type Database = {
           drivetrain: string | null
           engine: string | null
           fuel_type: string | null
+          height: number | null
           id: string
           import_date: string | null
           inspection_notes: string | null
           last_service_branch_id: string | null
           last_visit_at: string | null
           last_visit_date: string | null
+          length: number | null
           license_expiry: string | null
           license_expiry_at: string | null
           make: string
@@ -4110,6 +4209,8 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           vin: string | null
+          weight: number | null
+          width: number | null
           year: number | null
         }
         Insert: {
@@ -4126,12 +4227,14 @@ export type Database = {
           drivetrain?: string | null
           engine?: string | null
           fuel_type?: string | null
+          height?: number | null
           id?: string
           import_date?: string | null
           inspection_notes?: string | null
           last_service_branch_id?: string | null
           last_visit_at?: string | null
           last_visit_date?: string | null
+          length?: number | null
           license_expiry?: string | null
           license_expiry_at?: string | null
           make: string
@@ -4152,6 +4255,8 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           vin?: string | null
+          weight?: number | null
+          width?: number | null
           year?: number | null
         }
         Update: {
@@ -4168,12 +4273,14 @@ export type Database = {
           drivetrain?: string | null
           engine?: string | null
           fuel_type?: string | null
+          height?: number | null
           id?: string
           import_date?: string | null
           inspection_notes?: string | null
           last_service_branch_id?: string | null
           last_visit_at?: string | null
           last_visit_date?: string | null
+          length?: number | null
           license_expiry?: string | null
           license_expiry_at?: string | null
           make?: string
@@ -4194,6 +4301,8 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           vin?: string | null
+          weight?: number | null
+          width?: number | null
           year?: number | null
         }
         Relationships: [
@@ -4913,7 +5022,14 @@ export type Database = {
         | "steering"
         | "ac"
         | "other"
-      permission_action: "create" | "read" | "update" | "delete" | "manage"
+      permission_action:
+        | "create"
+        | "read"
+        | "update"
+        | "delete"
+        | "manage"
+        | "write"
+        | "invite"
       plan_type: "starter" | "pro" | "business" | "enterprise"
     }
     CompositeTypes: {
@@ -5078,7 +5194,15 @@ export const Constants = {
         "ac",
         "other",
       ],
-      permission_action: ["create", "read", "update", "delete", "manage"],
+      permission_action: [
+        "create",
+        "read",
+        "update",
+        "delete",
+        "manage",
+        "write",
+        "invite",
+      ],
       plan_type: ["starter", "pro", "business", "enterprise"],
     },
   },
