@@ -17,7 +17,7 @@ import {
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { PickupCompleteData } from "@/components/bay-view-v2/pickup-complete-dialog";
 import { PickupCompleteDialog } from "@/components/bay-view-v2/pickup-complete-dialog";
@@ -469,7 +469,7 @@ function MechanicDashboard({
     totalCost: number;
   } | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsRefreshing(true);
     const today = new Date().toISOString().split("T")[0];
     const eodUrl = `/api/organizations/${orgId}/reports?type=eod&date=${today}&mechanic=${userId}`;
@@ -512,16 +512,11 @@ function MechanicDashboard({
     }
     setDataLoading(false);
     setIsRefreshing(false);
-  };
+  }, [orgId, userId]);
 
   useEffect(() => {
-    setDataLoading(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchData();
-  }, [
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    fetchData,
-  ]);
+  }, [fetchData]);
 
   usePolling(fetchData, 30000);
 
