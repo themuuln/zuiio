@@ -231,15 +231,25 @@ export function useNavigation() {
 
   // ── Filter nav items based on role ──────────────────────
   const filteredNavGroups = isMechanic
-    ? navGroups.filter((g) => g.labelKey !== FINANCIALS_GROUP_KEY)
+    ? navGroups
+        .filter((g) => g.labelKey !== FINANCIALS_GROUP_KEY)
+        .map((g) => ({
+          ...g,
+          // Bay View is already the primary home item — remove from Operations group
+          children: g.labelKey === "nav.group.operations"
+            ? g.children.filter((c) => c.href !== "/dashboard/bay-view")
+            : g.children,
+        }))
     : navGroups;
 
   const filteredPrimaryItems = isMechanic
-    ? [{
-        labelKey: "nav.bayView",
-        href: "/dashboard/bay-view",
-        icon: LayoutGrid,
-      }]
+    ? [
+        {
+          labelKey: "nav.bayView",
+          href: "/dashboard/bay-view",
+          icon: LayoutGrid,
+        },
+      ]
     : primaryItems;
   const filteredSettingsItems = isMechanic ? [] : settingsItems;
   const filteredUtilityItems = utilityItems;
@@ -258,7 +268,9 @@ export function useNavigation() {
   const resolvedCurrentItem =
     [...filteredAllItems]
       .sort((a, b) => b.href.length - a.href.length)
-      .find((item) => isActive(item.href)) ?? filteredPrimaryItems[0] ?? null;
+      .find((item) => isActive(item.href)) ??
+    filteredPrimaryItems[0] ??
+    null;
 
   const resolvedCurrentGroup =
     filteredNavGroups.find((group) =>
