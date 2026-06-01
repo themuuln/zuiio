@@ -197,7 +197,9 @@ export default function VehiclesPage() {
             {t("title")}
           </Typography.H1>
           <Typography.Muted className="text-muted-foreground">
-            {isFetching ? "Searching…" : t("searchResults", { count: list.length })}
+            {isFetching
+              ? "Searching…"
+              : t("searchResults", { count: list.length })}
           </Typography.Muted>
         </div>
       </div>
@@ -208,16 +210,7 @@ export default function VehiclesPage() {
           value: search,
           onChange: setSearch,
           loading: isFetching,
-          resultLabel: isFetching
-            ? "Searching…"
-            : list.length
-              ? `${list.length} result${list.length === 1 ? "" : "s"}`
-              : undefined,
-          emptyLabel: search ? `No matches for "${search}"` : undefined,
         }}
-        stats={
-          <span>{isFetching ? "Searching…" : t("searchResults", { count: list.length })}</span>
-        }
         actions={
           <div className="flex items-center gap-2">
             <ExportButton
