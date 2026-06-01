@@ -2231,7 +2231,9 @@ async function getTechnicianPerformanceBatched(
     : (mechanics ?? []);
 
   if (!scopedMechanics.length) return [];
-  const mechanicIds = scopedMechanics.map((m: { user_id: string }) => m.user_id);
+  const mechanicIds = scopedMechanics.map(
+    (m: { user_id: string }) => m.user_id,
+  );
 
   // 1 query: get profiles for all mechanics
   const { data: profiles } = await supabase

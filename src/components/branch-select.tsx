@@ -1,6 +1,5 @@
 "use client";
 
-import type { Branch } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -8,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { Branch } from "@/lib/types";
 
 interface BranchSelectProps {
   value: string;

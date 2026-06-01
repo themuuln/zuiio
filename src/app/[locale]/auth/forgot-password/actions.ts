@@ -1,21 +1,33 @@
 "use server";
 
 import type { ActionState } from "@/lib/form-validation";
-import { flattenFieldErrors } from "@/lib/form-validation";
+import {
+  flattenFieldErrors,
+  normalizeMongolianPhone,
+} from "@/lib/form-validation";
 import { sendEmail } from "@/lib/services/email-service";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { forgotPasswordSchema } from "@/lib/validation/auth-schemas";
 
-type ForgotPasswordState = ActionState<{ username: string }> & {
+type ForgotPasswordState = ActionState<{ identifier: string }> & {
   success?: boolean;
 };
+
+type IdentifierType = "email" | "phone" | "username";
+
+function detectIdentifierType(value: string): IdentifierType {
+  if (value.includes("@")) return "email";
+  const digits = value.replace(/[\s\-()]/g, "");
+  if (/^\+?\d{7,15}$/.test(digits)) return "phone";
+  return "username";
+}
 
 /**
  * Render a minimal HTML email for password reset.
  * Uses inline styles for email client compatibility.
  */
 function renderResetPasswordEmailHtml(
-  username: string,
+  displayName: string,
   actionLink: string,
 ): string {
   return `<!DOCTYPE html>
@@ -35,7 +47,7 @@ function renderResetPasswordEmailHtml(
               <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">Нууц үг сэргээх</h1>
               <p style="margin:0 0 24px;font-size:15px;color:#6b7280;">TOLOM</p>
               <p style="margin:0 0 24px;font-size:14px;color:#374151;line-height:1.6;">
-                Сайн байна уу, <strong>${username}</strong>.<br />
+                Сайн байна уу, <strong>${displayName}</strong>.<br />
                 Таны нууц үг сэргээх хүсэлтийг хүлээн авлаа. Доорх товч дээр дарж шинэ нууц үгээ үүсгэнэ үү.
               </p>
               <a href="${actionLink}" style="display:inline-block;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600;color:#ffffff;background-color:#111827;text-decoration:none;">
@@ -65,59 +77,97 @@ export async function requestPasswordReset(
   formData: FormData,
 ): Promise<ForgotPasswordState> {
   const raw = {
-    username: (formData.get("username") as string) || "",
+    identifier: (formData.get("identifier") as string) || "",
   };
 
   const parsed = forgotPasswordSchema.safeParse(raw);
   if (!parsed.success) {
     return {
-      values: { username: raw.username },
+      values: { identifier: raw.identifier },
       fieldErrors: flattenFieldErrors(parsed.error.issues),
     };
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-
-  // Look up the user by username to get their auth email
   const serviceRole = await createServiceRoleClient();
-  const { data: profile } = await serviceRole
-    .from("profiles")
-    .select("id")
-    .eq("username", parsed.data.username)
-    .maybeSingle();
 
-  if (profile) {
-    const { data: authUser } = await serviceRole.auth.admin.getUserById(
-      profile.id,
-    );
-    if (authUser?.user?.email) {
-      try {
-        // Generate the recovery link via Supabase Admin API
-        const { data: linkData } = await serviceRole.auth.admin.generateLink({
-          type: "recovery",
-          email: authUser.user.email,
-          options: {
-            redirectTo: `${siteUrl}/auth/reset-password`,
-          },
-        });
+  const { identifier } = parsed.data;
+  const type = detectIdentifierType(identifier);
 
-        if (linkData?.properties?.action_link) {
-          // Send via the configured SMTP (Gmail, SendGrid, etc.)
-          await sendEmail({
-            to: authUser.user.email,
-            subject: "Нууц үг сэргээх хүсэлт",
-            html: renderResetPasswordEmailHtml(
-              parsed.data.username,
-              linkData.properties.action_link,
-            ),
-          });
-        }
-      } catch {
-        // Silent catch — never reveal whether the username exists
+  // Try to find the auth email associated with this identifier
+  let authEmail: string | null = null;
+  let displayName = identifier;
+
+  if (type === "email") {
+    // The identifier itself is the email — use it directly
+    authEmail = identifier;
+  } else {
+    // Look up the profile by phone or username
+    let lookupColumn: "username" | "phone";
+    let lookupValue: string;
+
+    if (type === "phone") {
+      lookupColumn = "phone";
+      lookupValue = normalizeMongolianPhone(identifier);
+    } else {
+      lookupColumn = "username";
+      lookupValue = identifier;
+    }
+
+    const { data: profile } = await serviceRole
+      .from("profiles")
+      .select("id")
+      .eq(lookupColumn, lookupValue)
+      .maybeSingle();
+
+    if (profile) {
+      // Use the profile's full_name as display name if available
+      const { data: fullProfile } = await serviceRole
+        .from("profiles")
+        .select("full_name")
+        .eq("id", profile.id)
+        .maybeSingle();
+
+      if (fullProfile?.full_name) {
+        displayName = fullProfile.full_name;
+      }
+
+      const { data: authUser } = await serviceRole.auth.admin.getUserById(
+        profile.id,
+      );
+      if (authUser?.user?.email) {
+        authEmail = authUser.user.email;
       }
     }
   }
 
-  // Always return success — don't reveal whether the username exists
+  if (authEmail) {
+    try {
+      // Generate the recovery link via Supabase Admin API
+      const { data: linkData } = await serviceRole.auth.admin.generateLink({
+        type: "recovery",
+        email: authEmail,
+        options: {
+          redirectTo: `${siteUrl}/auth/reset-password`,
+        },
+      });
+
+      if (linkData?.properties?.action_link) {
+        // Send via the configured SMTP (Gmail, SendGrid, etc.)
+        await sendEmail({
+          to: authEmail,
+          subject: "Нууц үг сэргээх хүсэлт",
+          html: renderResetPasswordEmailHtml(
+            displayName,
+            linkData.properties.action_link,
+          ),
+        });
+      }
+    } catch {
+      // Silent catch — never reveal whether the identifier exists
+    }
+  }
+
+  // Always return success — don't reveal whether the identifier exists
   return { success: true };
 }

@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
-  getPriceRules,
-  getPriceRule,
   createPriceRule,
-  updatePriceRule,
   deletePriceRule,
+  getPriceRule,
+  getPriceRules,
   resolvePrice,
+  updatePriceRule,
 } from "@/lib/services/price-rules-service";
 
 // ── GET /api/organizations/[id]/price-rules ──────────────────

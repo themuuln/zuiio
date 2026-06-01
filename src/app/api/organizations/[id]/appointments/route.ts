@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   createAppointment,
   getAppointments,
 } from "@/lib/services/appointment-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import type { AppointmentStatus } from "@/lib/types";
 
 export const GET = createRouteHandler(

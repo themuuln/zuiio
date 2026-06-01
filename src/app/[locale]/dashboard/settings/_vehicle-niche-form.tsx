@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import {
   Car,
   CarFront,
@@ -91,9 +91,8 @@ export function VehicleNicheForm({
     [expandedBrands, niche.brand_ids],
   );
 
-  const brandModelsQueries = expandedBrandIds.map((brandId) => ({
-    brandId,
-    query: useQuery({
+  const brandModelsQueries = useQueries({
+    queries: expandedBrandIds.map((brandId) => ({
       queryKey: carCatalogKeys.models(brandId),
       queryFn: async (): Promise<CarModel[]> => {
         const res = await fetch(`/api/car-brands/${brandId}/models`);
@@ -103,16 +102,17 @@ export function VehicleNicheForm({
         return json.data;
       },
       staleTime: 1000 * 60 * 60 * 24,
-    }),
-  }));
+    })),
+  });
 
   const modelsByBrand = useMemo(() => {
     const map: Record<string, CarModel[]> = {};
-    for (const { brandId, query } of brandModelsQueries) {
-      if (query.data) map[brandId] = query.data;
+    for (const [index, query] of brandModelsQueries.entries()) {
+      const brandId = expandedBrandIds[index];
+      if (brandId && query.data) map[brandId] = query.data;
     }
     return map;
-  }, [brandModelsQueries]);
+  }, [brandModelsQueries, expandedBrandIds]);
 
   const toggleBrand = useCallback((brandId: string) => {
     setNiche((prev) => {
@@ -123,6 +123,28 @@ export function VehicleNicheForm({
       return { ...prev, brand_ids: nextBrandIds };
     });
   }, []);
+
+  const selectAllBrands = useCallback(() => {
+    setNiche((prev) => ({
+      ...prev,
+      brand_ids: allBrands.map((brand) => brand.id),
+    }));
+  }, [allBrands]);
+
+  const invertBrands = useCallback(() => {
+    setNiche((prev) => {
+      const selected = new Set(prev.brand_ids);
+      const nextBrandIds = allBrands
+        .filter((brand) => !selected.has(brand.id))
+        .map((brand) => brand.id);
+
+      return {
+        ...prev,
+        brand_ids: nextBrandIds,
+        model_ids: [],
+      };
+    });
+  }, [allBrands]);
 
   const toggleModel = useCallback((modelId: string) => {
     setNiche((prev) => {
@@ -224,12 +246,12 @@ export function VehicleNicheForm({
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
               <Typography.Text className="font-medium">
-                Restrict to specific vehicle brands
+                Show only specific vehicle brands
               </Typography.Text>
               <Typography.Muted className="text-sm text-muted-foreground">
-                Limit your workshop to servicing only selected vehicle brands
-                and models. Only your chosen brands will appear in vehicle
-                creation, work orders, and parts catalog.
+                Choose the vehicle brands and models your workshop works on.
+                Only selected brands will appear in vehicle creation, work
+                orders, and the parts catalog.
               </Typography.Muted>
             </div>
             <Switch
@@ -272,8 +294,8 @@ export function VehicleNicheForm({
                   Vehicle Brands
                 </Typography.Text>
                 <Typography.Muted className="text-xs text-muted-foreground">
-                  Check the brands your workshop services. Click the arrow to
-                  select specific models.
+                  Select the brands your workshop services. Expand a brand to
+                  narrow it down to specific models.
                 </Typography.Muted>
 
                 {brandsLoading ? (
@@ -314,20 +336,24 @@ export function VehicleNicheForm({
 
               {/* Quick actions */}
               {allBrands.length > 0 && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      setNiche((prev) => ({
-                        ...prev,
-                        brand_ids: allBrands.map((b) => b.id),
-                      }))
-                    }
+                    onClick={selectAllBrands}
                     disabled={saving}
                   >
-                    Select all brands
+                    Select all
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={invertBrands}
+                    disabled={saving}
+                  >
+                    Invert
                   </Button>
                   <Button
                     type="button"
@@ -370,8 +396,8 @@ export function VehicleNicheForm({
         <AlertDescription>
           When enabled, only the brands and models you select will appear in
           vehicle creation forms, work order vehicle selection, and the parts
-          catalog. This helps keep your workspace focused on the vehicles your
-          workshop actually services. You can change this at any time — the
+          catalog. This keeps your workspace focused on the vehicles your
+          workshop actually services. You can change this at any time and the
           update takes effect immediately. Existing vehicles are not affected.
         </AlertDescription>
       </Alert>

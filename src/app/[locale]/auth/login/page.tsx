@@ -1,13 +1,12 @@
 "use client";
 
 import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
   FieldError,
@@ -15,6 +14,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
 import { setCookie } from "@/lib/utils";
@@ -25,7 +25,7 @@ export default function LoginPage() {
   const authT = useTranslations("auth");
   const locale = useLocale();
   const [state, formAction, isPending] = useActionState(login, {});
-  const [username, setUsername] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -98,25 +98,25 @@ export default function LoginPage() {
           )}
           <Field className="gap-1">
             <FieldLabel
-              htmlFor="username"
+              htmlFor="identifier"
               className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono font-bold"
             >
-              {t("usernameLabel")} <span className="text-destructive">*</span>
+              {t("identifierLabel")} <span className="text-destructive">*</span>
             </FieldLabel>
             <Input
-              id="username"
-              name="username"
+              id="identifier"
+              name="identifier"
               type="text"
-              autoComplete="username"
+              autoComplete="email"
               required
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder={t("usernamePlaceholder")}
-              aria-invalid={"username" in fieldErrors ? true : undefined}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder={t("identifierPlaceholder")}
+              aria-invalid={"identifier" in fieldErrors ? true : undefined}
               className="font-mono text-xs bg-muted/10 focus-visible:bg-transparent h-8 min-h-0"
             />
-            {"username" in fieldErrors && (
-              <FieldError>{fieldErrors.username}</FieldError>
+            {"identifier" in fieldErrors && (
+              <FieldError>{fieldErrors.identifier}</FieldError>
             )}
           </Field>
           <Field className="gap-1">

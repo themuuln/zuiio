@@ -1,5 +1,5 @@
-import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
+import nodemailer from "nodemailer";
 import type { InvoiceWithItems } from "@/lib/types";
 
 // ── SMTP Transport ─────────────────────────────────────────────

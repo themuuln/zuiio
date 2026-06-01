@@ -14,6 +14,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
+import { AnimatedCounter } from "@/components/animated-counter";
 import { LandingNav } from "@/components/landing-nav";
 import { PartnersSlider } from "@/components/partners-slider";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +28,6 @@ import {
 import { Typography } from "@/components/ui/typography";
 import { prefetchCriticalRoutes } from "@/lib/prefetch";
 import { cn } from "@/lib/utils";
-import { AnimatedCounter } from "@/components/animated-counter";
 import { AuthGate } from "./_landing-auth-gate";
 
 // Lazy-load below-the-fold sections — they only load when scrolled into view

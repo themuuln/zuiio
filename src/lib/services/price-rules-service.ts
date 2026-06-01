@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
-import { NotFoundError, ValidationError } from "@/lib/errors";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import type { Tables } from "@/lib/database.types";
+import { NotFoundError, ValidationError } from "@/lib/errors";
+import { createClient } from "@/lib/supabase/server";
 
 export type PriceRule = Tables<"price_rules">;
 
@@ -301,7 +301,7 @@ function nameMatchesPattern(name: string, pattern: string): boolean {
   const patLower = pattern.toLowerCase();
   // Support simple * wildcards
   const regex = new RegExp(
-    "^" + patLower.replace(/%/g, ".*").replace(/\*/g, ".*") + "$",
+    `^${patLower.replace(/%/g, ".*").replace(/\*/g, ".*")}$`,
   );
   return regex.test(nameLower);
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import { createClient } from "@/lib/supabase/server";
 import { verifyAndClaimClockToken } from "@/lib/services/qr-token-service";
+import { createClient } from "@/lib/supabase/server";
 
 export const POST = createRouteHandler(async ({ request, orgId, user }) => {
   const body = (await request.json()) as { rawToken: string };

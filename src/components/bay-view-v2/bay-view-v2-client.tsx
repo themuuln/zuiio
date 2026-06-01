@@ -67,6 +67,7 @@ import {
 import { Typography } from "@/components/ui/typography";
 import { usePolling } from "@/hooks/use-polling";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import type {
   BaySlotData,
   BayViewData,
@@ -78,7 +79,6 @@ import {
   getShiftReport,
 } from "@/lib/services/bay-view-service";
 import type { Vehicle, WorkOrder } from "@/lib/types";
-import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { cn, formatMNT, formatPlateNumber } from "@/lib/utils";
 import { useBayActionHandlers } from "./_bay-action-handlers";
 import { useBayDragHandlers } from "./_bay-drag-handlers";
@@ -671,6 +671,8 @@ export function BayViewV2Client() {
     pendingStatusChange,
     assignBay,
     detailDrawerOpen,
+    polling.pause,
+    polling.resume,
   ]);
 
   const searchedBays = useFuzzySearch(filteredBays, baySearchQuery, {
@@ -720,6 +722,8 @@ export function BayViewV2Client() {
     registerTab,
     t,
     unregisterTab,
+    availableBays,
+    handleQuickAssignToBay,
   ]);
 
   if (loading && !data) {

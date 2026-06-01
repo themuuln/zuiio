@@ -33,7 +33,7 @@ export default function SignupPage() {
 
   const [organizationName, setOrganizationName] = useState("");
   const [fullName, setFullName] = useState("");
-  const [username, setUsername] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -97,22 +97,22 @@ export default function SignupPage() {
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="username">
-              {t("usernameLabel")} <span className="text-destructive">*</span>
+            <FieldLabel htmlFor="identifier">
+              {t("identifierLabel")} <span className="text-destructive">*</span>
             </FieldLabel>
             <Input
-              id="username"
-              name="username"
+              id="identifier"
+              name="identifier"
               type="text"
-              autoComplete="username"
+              autoComplete="email"
               required
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder={t("usernamePlaceholder")}
-              aria-invalid={"username" in fieldErrors || undefined}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder={t("identifierPlaceholder")}
+              aria-invalid={"identifier" in fieldErrors || undefined}
             />
-            {"username" in fieldErrors && (
-              <FieldError>{fieldErrors.username}</FieldError>
+            {"identifier" in fieldErrors && (
+              <FieldError>{fieldErrors.identifier}</FieldError>
             )}
           </Field>
 

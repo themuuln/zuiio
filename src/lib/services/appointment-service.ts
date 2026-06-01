@@ -10,8 +10,6 @@ import type {
   Appointment,
   AppointmentDetail,
   AppointmentStatus,
-} from "@/lib/types";
-import type {
   CreateAppointmentParams,
   UpdateAppointmentParams,
 } from "@/lib/types";

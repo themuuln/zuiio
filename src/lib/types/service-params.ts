@@ -3,7 +3,11 @@
  */
 
 import type { WorkOrderDetail } from "./composite";
-import type { AppointmentStatus, EstimateStatus, WorkOrderStatus } from "./core";
+import type {
+  AppointmentStatus,
+  EstimateStatus,
+  WorkOrderStatus,
+} from "./core";
 
 // ── Organization ───────────────────────────────────────────────
 

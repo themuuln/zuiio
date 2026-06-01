@@ -3,13 +3,13 @@
 import { Camera, CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
-import { redirectToLogin } from "@/lib/auth-redirect";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
+import { redirectToLogin } from "@/lib/auth-redirect";
 import { useQrScanner } from "@/lib/hooks/use-qr-scanner";
 
 type ScanState =
@@ -103,7 +103,13 @@ export default function ClockPage() {
     };
     // Only when orgId becomes available
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.organizationId]);
+  }, [
+    profile?.organizationId,
+    handleScanResult,
+    scannerInitAttempted,
+    startScanning,
+    stopScanning,
+  ]);
 
   // Derive "scanning" state from hook
   useEffect(() => {

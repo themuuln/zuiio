@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, ShieldCheck, ShieldHalf, Wrench, Eye } from "lucide-react";
+import { Eye, Shield, ShieldCheck, ShieldHalf, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useReducer } from "react";
 import { toast } from "sonner";
@@ -55,7 +55,7 @@ const roleColors: Record<string, string> = {
 };
 
 export default function RolesPage() {
-  const t = useTranslations();
+  const _t = useTranslations();
   const [state, dispatch] = useReducer(rolesReducer, {
     loading: true,
     roles: [],

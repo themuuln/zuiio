@@ -19,11 +19,11 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
+import { CustomerSelect } from "@/components/work-orders/customer-select";
+import { VehicleSelect } from "@/components/work-orders/vehicle-select";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { CustomerSelect } from "@/components/work-orders/customer-select";
-import { VehicleSelect } from "@/components/work-orders/vehicle-select";
 import type { Customer, Vehicle } from "@/lib/types";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -453,7 +453,10 @@ export default function NewEstimatePage() {
                       value={line.quantity}
                       onChange={(e) =>
                         updateLine(line.id, {
-                          quantity: Math.max(1, parseInt(e.target.value) || 1),
+                          quantity: Math.max(
+                            1,
+                            parseInt(e.target.value, 10) || 1,
+                          ),
                         })
                       }
                       className="h-8 text-sm text-right"
@@ -469,7 +472,7 @@ export default function NewEstimatePage() {
                         updateLine(line.id, {
                           unit_price: Math.max(
                             0,
-                            parseInt(e.target.value) || 0,
+                            parseInt(e.target.value, 10) || 0,
                           ),
                         })
                       }
@@ -486,7 +489,7 @@ export default function NewEstimatePage() {
                         updateLine(line.id, {
                           discount_percentage: Math.max(
                             0,
-                            Math.min(100, parseInt(e.target.value) || 0),
+                            Math.min(100, parseInt(e.target.value, 10) || 0),
                           ),
                         })
                       }
@@ -503,7 +506,7 @@ export default function NewEstimatePage() {
                         updateLine(line.id, {
                           discount_amount: Math.max(
                             0,
-                            parseInt(e.target.value) || 0,
+                            parseInt(e.target.value, 10) || 0,
                           ),
                         })
                       }

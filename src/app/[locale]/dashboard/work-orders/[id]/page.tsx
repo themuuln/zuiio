@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -11,7 +12,6 @@ import {
   Trash2,
   Wallet,
 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
@@ -47,10 +47,10 @@ import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useRouter } from "@/lib/i18n/navigation";
+import { workOrderKeys } from "@/lib/queries/keys";
 import { usePartsCatalog } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useLastVisitData } from "@/lib/queries/use-price-memory";
-import { workOrderKeys } from "@/lib/queries/keys";
 import {
   useAttachments,
   useDeleteAttachment,

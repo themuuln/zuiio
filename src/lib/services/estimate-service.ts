@@ -5,6 +5,11 @@ import {
   UnauthorizedError,
   ValidationError,
 } from "@/lib/errors";
+import {
+  addPartToWorkOrder,
+  addServiceToWorkOrder,
+  recalculateWorkOrderTotals,
+} from "@/lib/services/work-order-service";
 import { createClient } from "@/lib/supabase/server";
 import type {
   CreateEstimateParams,
@@ -12,11 +17,6 @@ import type {
   EstimateStatus,
   UpdateEstimateParams,
 } from "@/lib/types";
-import {
-  addPartToWorkOrder,
-  addServiceToWorkOrder,
-  recalculateWorkOrderTotals,
-} from "@/lib/services/work-order-service";
 
 // ── Helpers ────────────────────────────────────────────────────
 

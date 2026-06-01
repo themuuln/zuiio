@@ -1,17 +1,17 @@
 "use client";
 
 import { AlertCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
   useInventoryBalances,
   useInventoryMovements,
   usePartsCatalog,
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { DetailsForm } from "./_details-form";
 import { PartHeader } from "./_header";
 import { StockHistory } from "./_stock-history";

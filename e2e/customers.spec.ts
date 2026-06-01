@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { loginViaUI } from "./helpers";
 
 // All customer tests use /en/ locale for stable English text selectors

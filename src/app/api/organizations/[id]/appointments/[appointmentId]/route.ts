@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
+  deleteAppointment,
   getAppointment,
   updateAppointment,
-  deleteAppointment,
 } from "@/lib/services/appointment-service";
 
 export const GET = createRouteHandler(

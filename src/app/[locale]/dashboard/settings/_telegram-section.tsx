@@ -7,6 +7,7 @@ import {
   MessageCircle,
   RefreshCw,
 } from "lucide-react";
+import QRCode from "qrcode";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ function SectionHeading() {
 
 export function TelegramSection() {
   const [deepLink, setDeepLink] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -56,7 +58,14 @@ export function TelegramSection() {
         return;
       }
 
-      setDeepLink(json.data.bot_deep_link);
+      const link = json.data.bot_deep_link;
+      setDeepLink(link);
+      setQrDataUrl(null);
+      const dataUrl = await QRCode.toDataURL(link, {
+        width: 220,
+        margin: 2,
+      });
+      setQrDataUrl(dataUrl);
       toast.success("Link token generated");
     } catch (err) {
       toast.error(
@@ -189,14 +198,26 @@ export function TelegramSection() {
               )}
             </div>
 
-            {deepLink && (
-              <div className="mt-2 rounded-lg border bg-muted/30 p-3">
-                <Typography.Muted className="text-xs text-muted-foreground">
-                  Your deep link
-                </Typography.Muted>
-                <code className="mt-1 block break-all rounded bg-muted px-2 py-1 text-xs font-mono">
-                  {deepLink}
-                </code>
+            {deepLink && qrDataUrl && (
+              <div className="mt-2 flex flex-col gap-4 rounded-lg border bg-muted/30 p-4 sm:flex-row sm:items-start">
+                {/* QR Code */}
+                <div className="flex shrink-0 items-center justify-center rounded-lg bg-white p-1.5">
+                  {/* biome-ignore lint/performance/noImgElement: QR codes use inline data URIs, next/Image is not suitable */}
+                  <img
+                    src={qrDataUrl}
+                    alt="Telegram bot deep link QR code"
+                    className="size-32"
+                  />
+                </div>
+                {/* Deep link text */}
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <Typography.Muted className="text-xs text-muted-foreground">
+                    Scan with your phone or copy the link to connect
+                  </Typography.Muted>
+                  <code className="block break-all rounded-md bg-muted px-3 py-2 text-xs font-mono">
+                    {deepLink}
+                  </code>
+                </div>
               </div>
             )}
           </CardContent>

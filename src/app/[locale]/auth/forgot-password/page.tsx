@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     requestPasswordReset,
     {},
   );
-  const [username, setUsername] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
   const fieldErrors = state?.fieldErrors ?? {};
@@ -50,10 +50,10 @@ export default function ForgotPasswordPage() {
   }, [cooldown]);
 
   const handleResend = () => {
-    if (cooldown > 0 || !username) return;
+    if (cooldown > 0 || !identifier) return;
     setCooldown(30);
     const form = new FormData();
-    form.append("username", username);
+    form.append("identifier", identifier);
     formAction(form);
     toast.success(t("resentMessage"));
   };
@@ -114,22 +114,22 @@ export default function ForgotPasswordPage() {
       <form action={formAction} className="flex flex-col gap-4">
         {state?.formError && <FieldError>{state.formError}</FieldError>}
         <Field>
-          <FieldLabel htmlFor="email">
-            {t("usernameLabel")} <span className="text-destructive">*</span>
+          <FieldLabel htmlFor="identifier">
+            {t("identifierLabel")} <span className="text-destructive">*</span>
           </FieldLabel>
           <Input
-            id="username"
-            name="username"
+            id="identifier"
+            name="identifier"
             type="text"
-            autoComplete="username"
+            autoComplete="email"
             required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder={t("usernamePlaceholder")}
-            aria-invalid={"username" in fieldErrors || undefined}
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder={t("identifierPlaceholder")}
+            aria-invalid={"identifier" in fieldErrors || undefined}
           />
-          {"username" in fieldErrors && (
-            <FieldError>{fieldErrors.username}</FieldError>
+          {"identifier" in fieldErrors && (
+            <FieldError>{fieldErrors.identifier}</FieldError>
           )}
         </Field>
         <Button type="submit" className="w-full" disabled={isPending}>

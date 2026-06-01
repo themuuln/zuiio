@@ -4,8 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { CustomerSelect } from "@/components/work-orders/customer-select";
-import { VehicleSelect } from "@/components/work-orders/vehicle-select";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -22,8 +20,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Typography } from "@/components/ui/typography";
 import { Textarea } from "@/components/ui/textarea";
+import { Typography } from "@/components/ui/typography";
+import { CustomerSelect } from "@/components/work-orders/customer-select";
+import { VehicleSelect } from "@/components/work-orders/vehicle-select";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import type { Customer, Vehicle } from "@/lib/types";
 

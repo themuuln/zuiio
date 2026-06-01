@@ -4,20 +4,19 @@ import { ClipboardList } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Empty,
-  EmptyContent,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { InventoryMovement } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 import {
   formatDate,
-  MOVEMENT_LABELS,
   MOVEMENT_COLORS,
+  MOVEMENT_LABELS,
 } from "../../_components/constants";
 
 interface StockHistoryProps {

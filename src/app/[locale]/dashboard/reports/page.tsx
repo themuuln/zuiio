@@ -22,8 +22,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { Cell, Pie, PieChart as RechartsPieChart } from "recharts";
-import { ExportButton } from "@/components/export-button";
 import { BranchSelect } from "@/components/branch-select";
+import { ExportButton } from "@/components/export-button";
 import { MechanicSelect } from "@/components/mechanic-select";
 import {
   DailyRevenueChart,
@@ -503,13 +503,7 @@ export default function ReportsPage() {
     !isEod,
     branchFilter,
   );
-  const pnlQ = useReportPnl(
-    orgId,
-    dateFrom,
-    dateTo,
-    !isEod,
-    branchFilter,
-  );
+  const pnlQ = useReportPnl(orgId, dateFrom, dateTo, !isEod, branchFilter);
   const serviceBdQ = useReportServiceBreakdown(
     orgId,
     dateFrom,

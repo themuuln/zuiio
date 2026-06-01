@@ -24,18 +24,49 @@ tolom/
 
 ```bash
 npm run dev          # Start Next.js dev server
-npm run build        # Production build
-npm run lint         # ESLint check
-npm run test         # Run all tests (vitest / jest)
+npm run build        # Production build (skips redundant TS check)
+npm run start        # Start production server
+npm run lint         # Biome check (linter + formatter + import sort)
+npm run format       # Biome format --write
+npm run test         # Run all tests (vitest)
 npm run docs:build   # Rebuild VitePress Гарын авлага into public/guide/
 supabase start       # Start local Supabase stack (CLI only — no MCP equivalent)
 supabase migration new <name>  # Create a new migration file (CLI only — creates local file)
+
+# Fast validation (replaces `npm run build` for quick feedback)
+npm run validate:types   # tsc --noEmit --incremental (fast type-check only)
+npm run validate:lint    # biome check src/ (fast lint on source code)
+npm run validate         # validate:types && validate:lint
 ```
 
-Verify before committing:
+### Validation Strategy
+
+**Old heavy approach:** `npm run build` — compiles, minifies, code-splits, and optimizes the entire app (~90% CPU/RAM).
+
+**New lightweight approach:** `npm run validate` — runs `tsc --noEmit --incremental` + `biome check src/` in memory, bypassing Turbopack/Webpack entirely. ~90% less resources.
+
+The production build (`npm run build`) has `typescript: { ignoreBuildErrors: true }` in `next.config.ts` since type-checking is already handled by `pnpm validate:types`.
+
+**Pre-commit verification:**
 ```bash
-npm run lint && npm run test && npm run build
+npm run validate && npm run test
 ```
+
+**Before merging/CI (stricter):**
+```bash
+npm run validate && npm run test && npm run build
+```
+
+### MCP Servers Available
+
+This project has the following MCP servers connected. Use them instead of raw CLI when possible:
+- **supabase** (23 tools) — migrations, SQL, types, edge functions, docs search
+- **next-devtools** (24 tools) — component insights, server actions, routes
+- **shadcn** (7 tools) — component search, add, docs
+- **context7** (2 tools) — live documentation queries for any library (Next.js, Biome, Supabase, React, etc.)
+- **playwright** (23 tools) — browser testing
+
+Use `context7_query-docs` via MCP to look up live docs without leaving the terminal (e.g., "how does Biome 2.x `includes` work").
 
 ## UI Components & shadcn
 
@@ -177,7 +208,8 @@ After adding, verify against the rules above. Third-party registries (e.g., `@ma
 ## Coding Style & Naming Conventions
 
 - **TypeScript** throughout — no `any` without a comment explaining why.
-- **2-space indentation**, single quotes, trailing semicolons (Prettier defaults).
+- **2-space indentation**, single quotes, trailing semicolons (Biome defaults).
+- **Linting/formatting via Biome** (v2.2.0) — not ESLint. The `lint` script runs `biome check`, which covers linting, formatting, and import sorting in one pass. Use `pnpm validate:lint` for fast Biome checks on `src/` only.
 - **Files/directories**: kebab-case (`work-order-form.tsx`, `use-customer-data.ts`).
 - **Components**: PascalCase (`WorkOrderForm`), **hooks**: `use` prefix (`useCustomerData`).
 - **Database tables/columns**: snake_case (`work_orders`, `organization_id`).

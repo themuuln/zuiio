@@ -26,8 +26,7 @@ export const GET = createRouteHandler(
     const type = searchParams.get("type") ?? "daily";
     const mechanicId = searchParams.get("mechanic");
     const branchParam = searchParams.get("branch");
-    const branchId =
-      branchParam && branchParam !== "all" ? branchParam : null;
+    const branchId = branchParam && branchParam !== "all" ? branchParam : null;
     const date =
       searchParams.get("date") ?? new Date().toISOString().split("T")[0];
     const dateFrom = searchParams.get("date_from") ?? date;
@@ -64,7 +63,12 @@ export const GET = createRouteHandler(
         return NextResponse.json({ data: report });
       }
       case "weekly": {
-        const report = await getWeeklyReport(orgId, mid || null, date, branchId);
+        const report = await getWeeklyReport(
+          orgId,
+          mid || null,
+          date,
+          branchId,
+        );
         return NextResponse.json({ data: report });
       }
       case "monthly": {

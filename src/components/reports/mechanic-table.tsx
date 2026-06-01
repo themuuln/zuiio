@@ -3,6 +3,7 @@
  */
 
 import { ExportButton } from "@/components/export-button";
+import { DeltaIndicator } from "@/components/reports/delta-indicator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -13,8 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TrendingDown, TrendingUp } from "lucide-react";
-import { DeltaIndicator } from "@/components/reports/delta-indicator";
 import type { ExportColumn } from "@/lib/export";
 import type { ReportComparison, ReportMechanicKpi } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";

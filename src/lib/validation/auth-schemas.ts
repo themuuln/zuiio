@@ -2,12 +2,10 @@ import { z } from "zod";
 
 // ── Helpers ──
 
-const usernameRegex = /^[a-zA-Z0-9_]+$/;
-
 // ── Login ──
 
 export const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  identifier: z.string().min(1, "Email, phone, or username is required"),
   password: z.string().min(1, "Password is required"),
 });
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -20,14 +18,7 @@ export const signupSchema = z
       .string()
       .min(2, "Organization name must be at least 2 characters"),
     fullName: z.string().min(1, "Full name is required"),
-    username: z
-      .string()
-      .min(3, "Username must be at least 3 characters")
-      .max(30, "Username must be at most 30 characters")
-      .regex(
-        usernameRegex,
-        "Username can only contain letters, numbers, and underscores",
-      ),
+    identifier: z.string().min(1, "Email, phone, or username is required"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })
@@ -40,7 +31,7 @@ export type SignupInput = z.infer<typeof signupSchema>;
 // ── Forgot Password ──
 
 export const forgotPasswordSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  identifier: z.string().min(1, "Email, phone, or username is required"),
 });
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 

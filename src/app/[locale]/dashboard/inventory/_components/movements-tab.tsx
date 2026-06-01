@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
@@ -21,7 +22,6 @@ import {
   useInventoryMovements,
 } from "@/lib/queries/use-inventory";
 import type { InventoryMovement, PartsCatalogItem } from "@/lib/types";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatMNT } from "@/lib/utils";
 import { formatDate, MOVEMENT_FILTERS, MOVEMENT_LABELS } from "./constants";
 import { Modal } from "./modal";

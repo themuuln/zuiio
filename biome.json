@@ -7,7 +7,21 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!node_modules", "!.next", "!dist", "!build"]
+    "includes": [
+      "**",
+      "!node_modules",
+      "!.next",
+      "!dist",
+      "!build",
+      "!.a5c",
+      "!.antigravitycli",
+      "!.claude",
+      "!.commandcode",
+      "!.factory",
+      "!opencode",
+      "!_scripts",
+      "!scratch"
+    ]
   },
   "formatter": {
     "enabled": true,

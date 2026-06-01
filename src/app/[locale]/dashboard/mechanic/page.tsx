@@ -19,6 +19,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import type { PickupCompleteData } from "@/components/bay-view-v2/pickup-complete-dialog";
+import { PickupCompleteDialog } from "@/components/bay-view-v2/pickup-complete-dialog";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
@@ -46,8 +48,6 @@ import { useCurrentUserRole } from "@/hooks/use-current-user-role";
 import { usePolling } from "@/hooks/use-polling";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
-import type { PickupCompleteData } from "@/components/bay-view-v2/pickup-complete-dialog";
-import { PickupCompleteDialog } from "@/components/bay-view-v2/pickup-complete-dialog";
 import { cn, formatMNT } from "@/lib/utils";
 
 const MechanicTrendChart = dynamic(
@@ -518,7 +518,10 @@ function MechanicDashboard({
     setDataLoading(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchData();
-  }, [userId, orgId]);
+  }, [
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchData,
+  ]);
 
   usePolling(fetchData, 30000);
 

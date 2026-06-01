@@ -157,7 +157,7 @@ export default function EstimatesPage() {
                 <Typography.Text className="text-sm text-muted-foreground block truncate mt-0.5">
                   Created {new Date(estimate.created_at).toLocaleDateString()}
                   {estimate.customer_id &&
-                    " · Customer ID: " + estimate.customer_id.slice(0, 8)}
+                    ` · Customer ID: ${estimate.customer_id.slice(0, 8)}`}
                 </Typography.Text>
               </div>
               <div className="text-right">

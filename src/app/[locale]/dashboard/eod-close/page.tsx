@@ -28,11 +28,11 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
   useInventoryBalances,
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatCurrency } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────

@@ -41,6 +41,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
+import { Link } from "@/lib/i18n/navigation";
 import { inventoryKeys } from "@/lib/queries/keys";
 import {
   useGlobalPartsCatalog,
@@ -49,7 +50,6 @@ import {
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
 import type { CreatePartParams, PartsCatalogItem } from "@/lib/types";
-import { Link } from "@/lib/i18n/navigation";
 import { formatMNT } from "@/lib/utils";
 import type { SortKey } from "./constants";
 import { Modal } from "./modal";
