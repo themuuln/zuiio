@@ -312,7 +312,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
 
   return {
     id: user.id,
-    email: user.email ?? "",
+    email: "",
     username: profile?.username ?? null,
     phone: profile?.phone ?? (user.phone as string) ?? null,
     fullName:

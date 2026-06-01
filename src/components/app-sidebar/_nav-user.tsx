@@ -39,12 +39,7 @@ export function NavUser() {
   }, []);
 
   const displayName = profile?.fullName ?? "User";
-  const rawEmail = profile?.email ?? "";
-  const displayIdentifier =
-    profile?.username ??
-    (rawEmail.endsWith("@tolom.auth")
-      ? rawEmail.replace(/^username_|@tolom\.auth$/g, "")
-      : rawEmail);
+  const displayIdentifier = profile?.username ?? "";
   const initials = getInitials(profile?.fullName);
 
   const router = useRouter();
@@ -87,9 +82,11 @@ export function NavUser() {
             </ItemMedia>
             <ItemContent>
               <ItemTitle className="text-sm">{displayName}</ItemTitle>
-              <ItemDescription className="text-[11px]">
-                {displayIdentifier}
-              </ItemDescription>
+              {displayIdentifier && (
+                <ItemDescription className="text-[11px]">
+                  @{displayIdentifier}
+                </ItemDescription>
+              )}
             </ItemContent>
           </Item>
         </DropdownMenuGroup>

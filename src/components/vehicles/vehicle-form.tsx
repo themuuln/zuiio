@@ -57,6 +57,7 @@ import {
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCarBrands, type CarBrand } from "@/lib/queries/use-car-catalog";
+import { vehicleKeys } from "@/lib/queries/keys";
 import {
   useCreateVehicle,
   useCustomerSearch,
@@ -606,6 +607,12 @@ export function VehicleForm({
       };
 
       const vehicle = await createVehicleMutation.mutateAsync(payload);
+      // Force cache invalidation so the vehicle list refetches
+      if (orgId) {
+        queryClient.invalidateQueries({
+          queryKey: vehicleKeys.all(orgId),
+        });
+      }
       onSuccess?.(vehicle);
     } catch (err: any) {
       setError(err.message || "Failed to create vehicle");
