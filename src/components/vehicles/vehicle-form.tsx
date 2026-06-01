@@ -56,7 +56,7 @@ import {
 } from "@/lib/queries/use-car-catalog";
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useCarBrands, type CarBrand } from "@/lib/queries/use-car-catalog";
+import { useCarBrands, type CarBrand, type CarModel } from "@/lib/queries/use-car-catalog";
 import { vehicleKeys } from "@/lib/queries/keys";
 import {
   useCreateVehicle,
@@ -272,8 +272,9 @@ export function VehicleForm({
   );
   const { data: allBrands = [] } = useCarBrands();
 
-  // Track brands pinned by SmartCar lookup so they appear even if outside niche
+  // Track brands/models pinned by SmartCar lookup so they appear even if outside niche
   const [pinnedBrands, setPinnedBrands] = useState<CarBrand[]>([]);
+  const [pinnedModels, setPinnedModels] = useState<string[]>([]);
 
   // Merge pinned brands into the display list (deduped)
   const displayBrands = useMemo(() => {
@@ -295,6 +296,27 @@ export function VehicleForm({
     selectedBrand?.id ?? null,
     orgSettingsRes.settings as Record<string, unknown> | undefined,
   );
+
+  // Merge pinned models into the display list (deduped by name)
+  const displayModels = useMemo(() => {
+    if (!pinnedModels.length) return models;
+    const existing = new Set(models.map((m) => m.name.toLowerCase()));
+    const pinned = pinnedModels
+      .filter((name) => !existing.has(name.toLowerCase()))
+      .map((name) => ({
+        id: `pinned-${name}`,
+        name,
+        body_type: null,
+        fuel_type: null,
+        transmission: null,
+        drivetrain: null,
+        year_start: null,
+        year_end: null,
+        engine_options: null,
+        is_active: true,
+      } as CarModel));
+    return [...pinned, ...models];
+  }, [models, pinnedModels]);
 
   // ── Handlers ─────────────────────────────────────────────
 
@@ -325,7 +347,13 @@ export function VehicleForm({
         );
         if (matched) setPinnedBrands([matched]);
       }
-      if (d.model) form.setValue("model", d.model);
+      if (d.model) {
+        form.setValue("model", d.model);
+        // Pin the model so it appears in the combobox even if not in catalog
+        setPinnedModels((prev) =>
+          prev.includes(d.model) ? prev : [...prev, d.model],
+        );
+      }
       if (d.year) form.setValue("year", String(d.year));
       if (d.vin) form.setValue("vin", d.vin);
       if (d.engineCc) form.setValue("engine", String(d.engineCc));
@@ -870,9 +898,9 @@ export function VehicleForm({
             </FieldLabel>
             <FieldContent>
               <Combobox
-                items={models}
+                items={displayModels}
                 value={
-                  models.find((m) => m.name === form.watch("model")) ?? null
+                  displayModels.find((m) => m.name === form.watch("model")) ?? null
                 }
                 onValueChange={(model) => {
                   if (model) handleModelSelect(model.name);
