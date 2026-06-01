@@ -1,5 +1,14 @@
 # Repository Guidelines
 
+**Generated:** 2026-06-01 · **Commit:** `69144ed` · **Branch:** `main`
+
+Sub-AGENTS.md exist for high-complexity directories. Read this first, then drill into specific layers.
+
+| Layer | File |
+|-------|------|
+| Business logic | `src/lib/services/AGENTS.md` |
+| Shared components | `src/components/AGENTS.md` |
+
 ## Project Overview
 
 TOLOM is a vertical operating system for auto service businesses — a multi-tenant SaaS platform built with Next.js, Supabase, PostgreSQL, and later Flutter for the mechanic mobile app. See `MASTER_PLAN.md` for the full product vision, roadmap, and pricing strategy.
@@ -10,13 +19,20 @@ TOLOM is a vertical operating system for auto service businesses — a multi-ten
 tolom/
 ├── src/                # Next.js application (frontend + API routes)
 │   ├── app/            # App router pages and layouts
-│   ├── components/     # Shared React components
+│   │   ├── [locale]/dashboard/   # 20 feature modules
+│   │   └── api/                  # RESTful API routes
+│   ├── components/     # Shared React components → src/components/AGENTS.md
+│   │   └── ui/         # shadcn primitives (62 installed)
 │   ├── lib/            # Utilities, clients, helpers
+│   │   ├── services/   # Business logic layer → src/lib/services/AGENTS.md
+│   │   ├── queries/    # React Query hooks
+│   │   └── stores/     # Zustand client state
 │   └── middleware.ts   # Auth and tenant middleware
 ├── supabase/           # Supabase migrations, seeds, edge functions
-│   ├── migrations/     # SQL migrations (ordered, idempotent)
+│   ├── migrations/     # SQL migrations (100 files, ordered, idempotent)
 │   └── functions/      # Edge functions (webhooks, scheduled jobs)
-├── docs/               # Product and technical documentation
+├── docs/               # VitePress Гарын авлага documentation
+├── e2e/                # Playwright end-to-end tests
 └── public/             # Static assets
 ```
 
@@ -228,16 +244,17 @@ After adding, verify against the rules above. Third-party registries (e.g., `@ma
 
 - **Keep page components under ~400 lines.** Beyond that, extract sections into sub-components or separate files (e.g., `_charts.tsx`, `_kpi-card.tsx`, `_work-orders-table.tsx`).
 - Files exceeding 500 lines are a signal to split. Place extracted sub-components in a `_`-prefixed file in the same directory (e.g., `dashboard/_charts.tsx`).
+- See `src/components/AGENTS.md` for the component directory structure and shared component catalog.
 
 ## Data Fetching Pattern
 
 | Layer | Location | When to Use |
 |-------|----------|-------------|
-| **React Query hooks** | `src/lib/queries/` | Client-side pages that need caching, refetching, loading/error states |
-| **Server services** | `src/lib/services/` | API route handlers and server components |
+| **React Query hooks** | `src/lib/queries/` (28 hooks) | Client-side pages that need caching, refetching, loading/error states |
+| **Server services** | `src/lib/services/AGENTS.md` (47 services) | API route handlers and server components |
 | **Direct fetch** | Inside API routes only | To call Supabase or external services from an API handler |
 
-The rule: pages use hooks, hooks call API routes, API routes call services, services query Supabase. Never skip a layer.
+The rule: pages use hooks, hooks call API routes, API routes call services, services query Supabase. Never skip a layer. See `src/lib/services/AGENTS.md` for service-layer conventions.
 
 ## Client State (Zustand)
 
@@ -502,9 +519,70 @@ This repo follows the global guidelines in `~/.factory/AGENTS.md`:
 
 ## Test Credentials
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | Mtuya1355@gmail.com | TolomAdmin2025! |
+**All passwords:** `Tolom!11` · **PIN:** `1234`
+
+| Role | Email | Org |
+|------|-------|-----|
+| Org Owner | `themuuln{num}@gmail.com` | `tolom{num}` |
+| Mechanic | `mechanic{num}` | `tolom{num}` |
+
+Examples: `themuuln4@gmail.com` owns `tolom4`, `mechanic4` works at `tolom4`.
+
+## Testing Workflow
+
+### Problem
+Dev mode (`npm run dev`) compiles modules lazily via Turbopack — first requests take **8-9s**, making rapid testing painful.
+
+### Solution
+Always use a **production build on a separate port** for testing:
+
+```bash
+# Build (takes ~30s)
+npm run build
+
+# Start production server on a free port
+PORT=$(nextport) npm run start
+```
+
+This eliminates all compilation overhead. First request is **~100ms** instead of 8s.
+
+### Authenticated API Testing (curl)
+
+For mutations, use curl with a session cookie. Extract the cookie from a logged-in browser session:
+
+```bash
+# 1. Get a session cookie from an active browser login
+# Open http://localhost:{PORT}/dashboard/payroll, log in,
+# then copy the sb-*-auth-token cookie from DevTools > Application > Cookies
+
+COOKIE="sb-xxxxxxxxx-auth-token=<full-cookie-value>"
+ORG_ID="00000000-0000-0000-0000-000000000001"
+
+# 2. Test API endpoints
+curl -s -b "$COOKIE" http://localhost:{PORT}/api/organizations/$ORG_ID/payroll/pay-rates
+curl -s -X POST -b "$COOKIE" -H "Content-Type: application/json" \
+  -d '{"year":2026,"month":6}' \
+  http://localhost:{PORT}/api/organizations/$ORG_ID/payroll/calculate
+```
+
+### Common Pitfalls Found in QA
+
+| Issue | Symptom | Fix |
+|-------|---------|-----|
+| **Nested `[id]` route params** | Build error: "same slug name 'id' repeat" | Rename nested param to `[recordId]` or `[orgId]` — Next.js disallows duplicate `[id]` in path |
+| **`profiles!inner` join** | API returns empty `data:[]` silently | Add FK between tables, or query profiles in a separate call. Without a foreign key, Supabase can't resolve the join |
+| **Missing UNIQUE constraint** | Upsert silently fails (no error, no insert) | Every `onConflict` must have a matching `UNIQUE` constraint on the table |
+| **Upsert resets immutable fields** | Recalculate wipes `status` and `paid_at` | Use check-then-update instead of upsert when some fields must be preserved |
+| **`revalidateTag` signature** | TypeScript error: "Expected 2 arguments" | Next.js 16 requires `revalidateTag(tag, "default")` — the second arg is mandatory |
+| **RLS blocking service functions** | Quietly empty results | Service functions using `createClient()` inherit the request user's RLS. If the user lacks SELECT on a table, the query returns `[]` without error |
+| **Missing test seed data** | Can't verify calculation logic | Add seed `mechanic_daily_reports` rows in the migration or via MCP before testing calculate endpoints |
+
+### Testing Hygiene
+
+1. **Test each phase before starting the next.** Don't write 7 phases then QA at the end — by phase 3 (API routes), hit the endpoints with curl. A profiles join bug found at phase 3 costs 2 minutes to fix. Found at phase 7 costs 30 minutes of backtracking.
+2. **Build + production server before any API test.** Run `npm run build && PORT=$(nextport) npm run start` at the start of any session involving backend work. Never test against dev mode — the 8s compilation tax kills iteration speed.
+3. **Always check the response shape.** An empty `data:[]` could mean "no records" or "silent SQL failure". When in doubt, run the query via MCP `supabase_execute_sql`.
+4. **Test the full lifecycle before moving on.** For payroll: create rate → calculate → approve → pay → recalculate (verify status preserved). Each step validates the previous one.
 
 ## Architecture Notes
 
