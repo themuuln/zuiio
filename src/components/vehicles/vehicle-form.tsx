@@ -25,6 +25,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Kbd } from "@/components/ui/kbd";
 import {
   Item,
   ItemActions,
@@ -56,7 +57,11 @@ import {
 } from "@/lib/queries/use-car-catalog";
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useCarBrands, type CarBrand, type CarModel } from "@/lib/queries/use-car-catalog";
+import {
+  useCarBrands,
+  type CarBrand,
+  type CarModel,
+} from "@/lib/queries/use-car-catalog";
 import { vehicleKeys } from "@/lib/queries/keys";
 import {
   useCreateVehicle,
@@ -303,18 +308,21 @@ export function VehicleForm({
     const existing = new Set(models.map((m) => m.name.toLowerCase()));
     const pinned = pinnedModels
       .filter((name) => !existing.has(name.toLowerCase()))
-      .map((name) => ({
-        id: `pinned-${name}`,
-        name,
-        body_type: null,
-        fuel_type: null,
-        transmission: null,
-        drivetrain: null,
-        year_start: null,
-        year_end: null,
-        engine_options: null,
-        is_active: true,
-      } as CarModel));
+      .map(
+        (name) =>
+          ({
+            id: `pinned-${name}`,
+            name,
+            body_type: null,
+            fuel_type: null,
+            transmission: null,
+            drivetrain: null,
+            year_start: null,
+            year_end: null,
+            engine_options: null,
+            is_active: true,
+          }) as CarModel,
+      );
     return [...pinned, ...models];
   }, [models, pinnedModels]);
 
@@ -542,6 +550,7 @@ export function VehicleForm({
       const n = Number(data.year);
       if (Number.isNaN(n) || n < 1900 || n > new Date().getFullYear() + 2) {
         form.setError("year", { message: "Enter a valid year" });
+        toast.error("Enter a valid year");
         return;
       }
     }
@@ -549,6 +558,7 @@ export function VehicleForm({
       const n = Number(data.odometer);
       if (Number.isNaN(n) || n < 0) {
         form.setError("odometer", { message: "Must be a positive number" });
+        toast.error("Odometer must be a positive number");
         return;
       }
     }
@@ -556,15 +566,16 @@ export function VehicleForm({
       const n = Number(data.seats);
       if (Number.isNaN(n) || n < 1 || n > 50) {
         form.setError("seats", { message: "Must be 1–50" });
+        toast.error("Seats must be between 1 and 50");
         return;
       }
     }
 
     // Full-mode owner validation
     if (currentMode === "full" && showOwnerSelect && !selectedCustomer) {
-      form.setError("root", {
-        message: "Customer owner is required",
-      });
+      const msg = "Customer owner is required";
+      form.setError("root", { message: msg });
+      toast.error(msg);
       return;
     }
 
@@ -643,7 +654,9 @@ export function VehicleForm({
       }
       onSuccess?.(vehicle);
     } catch (err: any) {
-      setError(err.message || "Failed to create vehicle");
+      const msg = err.message || "Failed to create vehicle";
+      setError(msg);
+      toast.error(msg);
     }
   });
 
@@ -680,7 +693,15 @@ export function VehicleForm({
 
       {/* ── Customer Owner Section (Inline Customer Form) ── */}
       {currentMode === "full" && showOwnerSelect && (
-        <Card className="border-border animate-fade-in">
+        <Card
+          className={
+            "animate-fade-in" +
+            " " +
+            (form.formState.errors.root
+              ? "border-destructive/50 bg-destructive/5"
+              : "border-border")
+          }
+        >
           <CardHeader className="py-4">
             <CardTitle className="text-base flex items-center justify-between">
               Owner Customer <span className="text-destructive">*</span>
@@ -817,6 +838,7 @@ export function VehicleForm({
                   }}
                   className="h-11 flex-1 font-mono uppercase"
                   placeholder="4444УНА"
+                  lang="mn"
                   aria-invalid={!!form.formState.errors.plateNumber}
                   {...inputProps("plate")}
                 />
@@ -841,6 +863,21 @@ export function VehicleForm({
                   {form.formState.errors.plateNumber.message}
                 </FieldError>
               )}
+              <p className="mt-1 text-[11px] text-muted-foreground/50 font-mono tracking-wider">
+                Type <Kbd className="text-[10px] px-1">A</Kbd>→<Kbd className="text-[10px] px-1">А</Kbd>{" "}
+                <Kbd className="text-[10px] px-1">O</Kbd>→<Kbd className="text-[10px] px-1">О</Kbd>{" "}
+                <Kbd className="text-[10px] px-1">Y</Kbd>→<Kbd className="text-[10px] px-1">Ү</Kbd>{" "}
+                <Kbd className="text-[10px] px-1">H</Kbd>→<Kbd className="text-[10px] px-1">Н</Kbd>{" "}
+                <Kbd className="text-[10px] px-1">B</Kbd>→<Kbd className="text-[10px] px-1">В</Kbd>{" "}
+                <Kbd className="text-[10px] px-1">C</Kbd>→<Kbd className="text-[10px] px-1">С</Kbd>{" "}
+                <Kbd className="text-[10px] px-1">E</Kbd>→<Kbd className="text-[10px] px-1">Е</Kbd>{" "}
+                <Kbd className="text-[10px] px-1">K</Kbd>→<Kbd className="text-[10px] px-1">К</Kbd>{" "}
+                <Kbd className="text-[10px] px-1">M</Kbd>→<Kbd className="text-[10px] px-1">М</Kbd>{" "}
+                <Kbd className="text-[10px] px-1">P</Kbd>→<Kbd className="text-[10px] px-1">Р</Kbd>{" "}
+                <Kbd className="text-[10px] px-1">T</Kbd>→<Kbd className="text-[10px] px-1">Т</Kbd>{" "}
+                <Kbd className="text-[10px] px-1">U</Kbd>→<Kbd className="text-[10px] px-1">У</Kbd>{" "}
+                <Kbd className="text-[10px] px-1">X</Kbd>→<Kbd className="text-[10px] px-1">Х</Kbd>
+              </p>
             </FieldContent>
           </Field>
 
@@ -900,7 +937,8 @@ export function VehicleForm({
               <Combobox
                 items={displayModels}
                 value={
-                  displayModels.find((m) => m.name === form.watch("model")) ?? null
+                  displayModels.find((m) => m.name === form.watch("model")) ??
+                  null
                 }
                 onValueChange={(model) => {
                   if (model) handleModelSelect(model.name);
