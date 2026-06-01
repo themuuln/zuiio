@@ -629,6 +629,8 @@ export async function getWeeklyReport(
   weekStart: string,
   branchId: string | null = null,
 ): Promise<WeeklyReport> {
+  const supabase = await createClient();
+
   return withCache(
     [
       "getWeeklyReport",
@@ -644,7 +646,6 @@ export async function getWeeklyReport(
 
       const weekEnd = weekEndDate.toISOString().split("T")[0];
 
-      const supabase = await createClient();
       let mechanicName = "All Mechanics";
       if (mechanicId) {
         const { data: mechanic } = await supabase
@@ -746,6 +747,8 @@ export async function getMonthlyReport(
   month: number,
   branchId: string | null = null,
 ): Promise<MonthlyReport> {
+  const supabase = await createClient();
+
   return withCache(
     [
       "getMonthlyReport",
@@ -756,7 +759,6 @@ export async function getMonthlyReport(
       branchId ?? "all",
     ],
     async () => {
-      const supabase = await createClient();
       let mechanicName = "All Mechanics";
       if (mechanicId) {
         const { data: mechanic } = await supabase
@@ -930,11 +932,11 @@ export async function getEndOfDaySummary(
   date: string,
   branchId: string | null = null,
 ): Promise<EndOfDaySummary> {
+  const supabase = await createClient();
+
   return withCache(
     ["getEndOfDaySummary", orgId, date, branchId ?? "all"],
     async () => {
-      const supabase = await createClient();
-
       const { data: workOrders } = await withBranchFilter(
         supabase
           .from("work_orders")
