@@ -125,6 +125,10 @@ export function PartForm({
   };
 
   const onSubmit = form.handleSubmit(async (data) => {
+    if (!orgId) {
+      setError("No organization selected. Please refresh the page.");
+      return;
+    }
     setError(null);
 
     try {

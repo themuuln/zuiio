@@ -413,14 +413,13 @@ export async function searchVehiclesWithCustomers(search?: string) {
     .from("vehicles")
     .select(`
       id, plate_number, make, model, year, color,
-      vehicle_owners!inner(
-        customer_id,
-        customers!inner(id, first_name, last_name, phone)
+      vehicle_owners(
+        owned_until,
+        customers(id, first_name, last_name, phone)
       )
     `)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .is("vehicle_owners.owned_until", null)
     .order("plate_number")
     .limit(20);
 

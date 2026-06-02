@@ -71,6 +71,7 @@ type ServicePriceHistory = Tables<"service_price_history">;
 type SubscriptionPlan = Tables<"subscription_plans">;
 type VehicleModel = Tables<"vehicle_models">;
 type VehicleModelPart = Tables<"vehicle_model_parts">;
+type VehicleModelService = Tables<"vehicle_model_services">;
 type VehicleOwner = Tables<"vehicle_owners">;
 type InventoryMovement = Tables<"inventory_movements">;
 type Supplier = Tables<"suppliers">;
@@ -123,6 +124,7 @@ export type {
   TransmissionType,
   VehicleModel,
   VehicleModelPart,
+  VehicleModelService,
   VehicleOwner,
   InventoryMovement,
   Supplier,

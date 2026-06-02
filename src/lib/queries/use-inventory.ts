@@ -489,6 +489,7 @@ export function useUpdatePart(orgId: string | undefined) {
       id: string;
       body: UpdatePartParams;
     }) => {
+      if (!orgId) throw new Error("No organization ID");
       const res = await fetch(
         `/api/organizations/${orgId}/inventory/parts/${id}`,
         {
@@ -497,8 +498,16 @@ export function useUpdatePart(orgId: string | undefined) {
           body: JSON.stringify(body),
         },
       );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
+      let json: Record<string, unknown>;
+      try {
+        json = await res.json();
+      } catch {
+        throw new Error(
+          `Server returned ${res.status} ${res.statusText}. Please try again.`,
+        );
+      }
+      const apiError2 = json.error as { message?: string } | undefined;
+      if (apiError2) throw new Error(apiError2.message ?? "Request failed");
       return json.data as PartsCatalogItem;
     },
     onMutate: async ({ id, body }) => {

@@ -118,12 +118,17 @@ export function MemberList({
               >
                 <div className="flex items-center gap-3">
                   <div className="flex size-9 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase text-muted-foreground">
-                    {(member.fullName ?? member.email ?? "?").slice(0, 2)}
+                    {(
+                      member.fullName ??
+                      member.username ??
+                      member.email ??
+                      "?"
+                    ).slice(0, 2)}
                   </div>
                   <div>
                     <div className="flex flex-col gap-1">
                       <Typography.Text className="text-sm font-medium">
-                        {member.fullName ?? t("unnamed")}
+                        {member.fullName ?? member.username ?? t("unnamed")}
                       </Typography.Text>
                       <Select
                         value={member.roleId ?? ""}

@@ -67,9 +67,17 @@ export const POST = createRouteHandler(
 
     if (type === "email") {
       authEmail = inputIdentifier;
+      // Derive username from the email (strip @domain, lowercase, keep alphanumeric/underscore)
+      const emailPrefix = inputIdentifier
+        .split("@")[0]!
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, "_");
+      usernameValue = emailPrefix.slice(0, 30);
     } else if (type === "phone") {
       phoneValue = normalizeMongolianPhone(inputIdentifier);
       authEmail = `phone_${phoneValue.replace(/[^0-9]/g, "")}@tolom.auth`;
+      // Derive username from the normalized phone number
+      usernameValue = `p${phoneValue.replace(/[^0-9]/g, "").slice(0, 20)}`;
 
       // Check if phone already in use in profiles
       const { data: existingPhone } = await serviceRole

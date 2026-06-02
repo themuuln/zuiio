@@ -501,14 +501,26 @@ export function useCreateCustomer(orgId: string | undefined) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const json = await res.json();
+      let json: Record<string, unknown>;
+      try {
+        json = await res.json();
+      } catch {
+        throw new Error(
+          `Server returned ${res.status} ${res.statusText}. Please try again.`,
+        );
+      }
       if (!res.ok || json.error) {
         const err = new Error(
-          json.error?.message ?? "Failed to create customer",
+          ((json.error as Record<string, unknown>)?.message as string) ??
+            "Failed to create customer",
         );
-        if (json.error?.code) {
-          (err as { code?: string }).code = json.error.code;
-          (err as { details?: unknown }).details = json.error.details;
+        if ((json.error as Record<string, unknown>)?.code) {
+          (err as { code?: string }).code = (
+            json.error as Record<string, unknown>
+          ).code as string;
+          (err as { details?: unknown }).details = (
+            json.error as Record<string, unknown>
+          ).details;
         }
         throw err;
       }
@@ -645,9 +657,19 @@ export function useCreatePart(orgId: string | undefined) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const json = await res.json();
+      let json: Record<string, unknown>;
+      try {
+        json = await res.json();
+      } catch {
+        throw new Error(
+          `Server returned ${res.status} ${res.statusText}. Please try again.`,
+        );
+      }
       if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? "Failed to create part");
+        throw new Error(
+          ((json.error as Record<string, unknown>)?.message as string) ??
+            "Failed to create part",
+        );
       }
       return json.data as PartsCatalogItem;
     },
