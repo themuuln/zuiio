@@ -23,6 +23,7 @@ async function insertStatusHistory(
   supabase: Awaited<ReturnType<typeof createClient>>,
   workOrderId: string,
   orgId: string,
+  previousStatus: string | null,
   status: string,
   notes?: string,
 ) {
@@ -30,6 +31,7 @@ async function insertStatusHistory(
   await supabase.from("work_order_status_history").insert({
     work_order_id: workOrderId,
     organization_id: orgId,
+    previous_status: previousStatus,
     status,
     notes: notes ?? null,
     created_by: userId,
@@ -253,7 +255,7 @@ export async function createWorkOrder(
     throw new Error(woError?.message ?? "Failed to create work order");
 
   // Insert status history
-  await insertStatusHistory(supabase, wo.id, orgId, "New");
+  await insertStatusHistory(supabase, wo.id, orgId, null, "New");
 
   // Assign mechanic if provided
   if (params.mechanic_id) {
@@ -300,6 +302,21 @@ export async function updateWorkOrderStatus(
 ): Promise<WorkOrder> {
   const supabase = await createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
+  const { data: currentWorkOrder, error: currentWorkOrderError } =
+    await supabase
+      .from("work_orders")
+      .select("id, organization_id, status")
+      .eq("id", id)
+      .eq("organization_id", orgId)
+      .is("deleted_at", null)
+      .single();
+
+  if (currentWorkOrderError || !currentWorkOrder) {
+    throw new NotFoundError("Work order not found");
+  }
+
+  const previousStatus = currentWorkOrder.status;
+  const statusChanged = previousStatus !== newStatus;
 
   const { data, error } = await supabase
     .from("work_orders")
@@ -318,7 +335,16 @@ export async function updateWorkOrderStatus(
 
   if (error || !data) throw new NotFoundError("Work order not found");
 
-  await insertStatusHistory(supabase, id, orgId, newStatus, notes);
+  if (statusChanged) {
+    await insertStatusHistory(
+      supabase,
+      id,
+      orgId,
+      previousStatus,
+      newStatus,
+      notes,
+    );
+  }
 
   // Auto-create/update service schedules when work order completes
   if (newStatus === "Completed") {

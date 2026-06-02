@@ -9,11 +9,9 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +22,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
@@ -57,6 +57,7 @@ export function ServiceModelPricesSheet({
   open,
   onOpenChange,
 }: ServiceModelPricesSheetProps) {
+  const t = useTranslations("services");
   const locale = useLocale();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
@@ -241,7 +242,7 @@ export function ServiceModelPricesSheet({
         <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col">
           <SheetHeader>
             <div className="flex items-center justify-between">
-              <SheetTitle>Model-Specific Prices</SheetTitle>
+              <SheetTitle>{t("modelSpecificPrices")}</SheetTitle>
               <Badge variant="secondary" className="shrink-0">
                 {customCount} / {totalModels} custom
               </Badge>
@@ -428,8 +429,8 @@ export function ServiceModelPricesSheet({
                                     new Set(prev).add(vm.id),
                                   );
                                 }}
-                                aria-label="Reset to default"
-                                title="Reset to default price"
+                                aria-label={t("resetToDefault")}
+                                title={t("resetToDefaultTitle")}
                               >
                                 <Trash2 className="size-3.5 text-destructive" />
                               </Button>

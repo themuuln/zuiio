@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Building2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import type { Supplier } from "@/lib/types";
@@ -15,9 +16,10 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
   return [
     {
       accessorKey: "name",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Name" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("inventory");
+        return <DataTableColumnHeader column={column} title={t("name")} />;
+      },
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Building2 className="size-4 text-muted-foreground/60" />
@@ -35,9 +37,12 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
     },
     {
       accessorKey: "contact_person",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Contact Person" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("inventory");
+        return (
+          <DataTableColumnHeader column={column} title={t("contactPerson")} />
+        );
+      },
       cell: ({ row }) => (
         <span className="text-muted-foreground">
           {row.original.contact_person ?? "—"}
@@ -46,16 +51,18 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
     },
     {
       accessorKey: "phone",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Phone" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("inventory");
+        return <DataTableColumnHeader column={column} title={t("phone")} />;
+      },
       cell: ({ row }) => row.original.phone ?? "—",
     },
     {
       accessorKey: "email",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Email" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("inventory");
+        return <DataTableColumnHeader column={column} title={t("email")} />;
+      },
       cell: ({ row }) => (
         <span className="text-muted-foreground">
           {row.original.email ?? "—"}
@@ -76,7 +83,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
             size="sm"
             onClick={() => cb.onEdit(row.original.id)}
           >
-            Edit
+            {useTranslations("common")("edit")}
           </Button>
           <Button
             variant="ghost"
@@ -84,7 +91,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<Supplier>[] {
             className="text-destructive"
             onClick={() => cb.onDelete(row.original.id)}
           >
-            Delete
+            {useTranslations("common")("delete")}
           </Button>
         </div>
       ),

@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Car, Hash, Pencil, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import { Typography } from "@/components/ui/typography";
@@ -19,9 +20,10 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
     {
       id: "plate_number",
       accessorKey: "plate_number",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Plate" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("vehicles");
+        return <DataTableColumnHeader column={column} title={t("plate")} />;
+      },
       cell: ({ row }) => (
         <div className="flex items-center gap-2.5">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 ring-1 ring-border">
@@ -43,9 +45,10 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
     {
       id: "vin",
       accessorKey: "vin",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="VIN" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("vehicles");
+        return <DataTableColumnHeader column={column} title={t("vin")} />;
+      },
       cell: ({ row }) =>
         row.original.vin ? (
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -61,9 +64,10 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
     {
       id: "owner_name",
       accessorKey: "owner_name",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Owner" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("vehicles");
+        return <DataTableColumnHeader column={column} title={t("owner")} />;
+      },
       cell: ({ row }) =>
         row.original.owner_name ? (
           <Typography.Text className="truncate text-sm">
@@ -85,7 +89,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
               render={
                 <button
                   type="button"
-                  aria-label="Edit"
+                  aria-label={useTranslations("common")("edit")}
                   onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     cb.onEdit(vehicle);
@@ -102,7 +106,7 @@ export function createColumns(cb: ColumnCallbacks): ColumnDef<VehicleRow>[] {
               render={
                 <button
                   type="button"
-                  aria-label="Delete"
+                  aria-label={useTranslations("common")("delete")}
                   onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     cb.onDelete(vehicle);

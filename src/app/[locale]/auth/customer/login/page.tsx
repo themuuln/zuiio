@@ -58,7 +58,7 @@ export default function CustomerLoginPage() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="email@example.com"
+                placeholder={t("portal.emailPlaceholder")}
                 required
                 autoComplete="email"
                 value={email}
@@ -79,7 +79,7 @@ export default function CustomerLoginPage() {
                 id="password"
                 name="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder={t("portal.passwordPlaceholder")}
                 required
                 autoComplete="current-password"
                 value={password}

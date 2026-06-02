@@ -185,30 +185,30 @@ function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
       {/* Dashboard-style KPI cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <ReportKpiCard
-          label={t("reports.totalRevenueLabel")}
+          label={t("totalRevenueLabel")}
           value={formatCurrency(data.total_revenue)}
           icon={Wallet}
-          subtitle={`${data.mechanics.length} ${t("reports.mechanic")}`}
+          subtitle={`${data.mechanics.length} ${t("mechanic")}`}
           cls="text-emerald-600 dark:text-emerald-400"
         />
         <ReportKpiCard
-          label={t("reports.totalWorkOrders")}
+          label={t("totalWorkOrders")}
           value={String(data.total_work_orders)}
           icon={CheckCircle2}
           cls="text-blue-600 dark:text-blue-400"
-          subtitle={`${t("reports.avgRevenuePerWo")}: ${formatCurrency(avgRevenuePerWo)}`}
+          subtitle={`${t("avgRevenuePerWo")}: ${formatCurrency(avgRevenuePerWo)}`}
         />
         <ReportKpiCard
-          label={t("reports.commission")}
+          label={t("commission")}
           value={formatCurrency(data.total_commission ?? 0)}
           icon={BarChart3}
-          subtitle={`${t("reports.avgRevenuePerWo")}: ${formatCurrency(Math.round((data.total_commission ?? 0) / Math.max(data.total_work_orders, 1)))}`}
+          subtitle={`${t("avgRevenuePerWo")}: ${formatCurrency(Math.round((data.total_commission ?? 0) / Math.max(data.total_work_orders, 1)))}`}
         />
         <ReportKpiCard
           label={
             bestMechanic
               ? bestMechanic.mechanic_name
-              : t("reports.bestMechanic")
+              : t("bestMechanic")
           }
           value={
             bestMechanic
@@ -219,7 +219,7 @@ function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
           cls="text-amber-600 dark:text-amber-400"
           subtitle={
             bestMechanic
-              ? `${bestMechanic.work_orders_completed} ${t("reports.jobs")}`
+              ? `${bestMechanic.work_orders_completed} ${t("jobs")}`
               : undefined
           }
         />
@@ -229,23 +229,23 @@ function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-sm font-semibold">
-            {t("reports.perMechanicBreakdown")}
+            {t("perMechanicBreakdown")}
           </CardTitle>
           <ExportButton
             data={data.mechanics}
             columns={[
-              { key: "mechanic_name", label: t("reports.mechanic") },
-              { key: "work_orders_completed", label: t("reports.jobs") },
-              { key: "services_performed", label: t("reports.services") },
-              { key: "parts_used", label: t("reports.parts") },
+              { key: "mechanic_name", label: t("mechanic") },
+              { key: "work_orders_completed", label: t("jobs") },
+            { key: "services_performed", label: t("services") },
+              { key: "parts_used", label: t("parts") },
               {
                 key: "total_revenue",
-                label: t("reports.revenue"),
+                label: t("revenue"),
                 format: "currency" as const,
               },
               {
                 key: "total_commission",
-                label: t("reports.commission"),
+                label: t("commission"),
                 format: "currency" as const,
               },
             ]}
@@ -258,22 +258,22 @@ function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {t("reports.mechanic")}
+                  {t("mechanic")}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  {t("reports.jobs")}
+                  {t("jobs")}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  {t("reports.services")}
+                  {t("services")}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  {t("reports.parts")}
+                  {t("parts")}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  {t("reports.revenue")}
+                  {t("revenue")}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  {t("reports.commission")}
+                  {t("commission")}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -284,7 +284,7 @@ function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
                     colSpan={6}
                     className="px-4 py-8 text-center text-muted-foreground"
                   >
-                    {t("reports.noMechanicsCompletedWork")}
+                    {t("noMechanicsCompletedWork")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -332,7 +332,7 @@ function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
               <TableFooter>
                 <TableRow className="bg-muted/30 font-semibold">
                   <TableCell className="px-4 py-3">
-                    {t("reports.total")}
+                    {t("total")}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-right tabular-nums">
                     {data.mechanics.reduce(
@@ -402,13 +402,6 @@ export default function ReportsPage() {
 
   useEffect(() => {
     const branches = branchesQ.data ?? [];
-    if (selectedBranchId === "all") {
-      if (branches.length === 1) {
-        setSelectedBranchId(branches[0].id);
-      }
-      return;
-    }
-
     const branchStillExists = branches.some(
       (branch) => branch.id === selectedBranchId,
     );
@@ -524,45 +517,43 @@ export default function ReportsPage() {
   useEffect(() => {
     registerTab(
       "help",
-      "Help",
+      t("help"),
       <div className="flex flex-col gap-1.5">
         <Typography.Muted className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
-          Reports
+          {t("title")}
         </Typography.Muted>
-        {(["Daily", "Weekly", "Monthly", "EOD Summary"] as const).map(
-          (label) => (
-            <div
-              key={label}
-              className="rounded-md border border-border/50 bg-card px-2.5 py-2"
-            >
-              <Typography.Text className="text-xs font-medium">
-                {label}
-              </Typography.Text>
-            </div>
-          ),
-        )}
+        {(["daily", "weekly", "monthly", "eodSummary"] as const).map((key) => (
+          <div
+            key={key}
+            className="rounded-md border border-border/50 bg-card px-2.5 py-2"
+          >
+            <Typography.Text className="text-xs font-medium">
+              {t(key)}
+            </Typography.Text>
+          </div>
+        ))}
       </div>,
     );
     registerTab(
       "recent",
-      "Recent",
+      t("recent"),
       <RecentList
         items={[]}
-        title="Recently Viewed"
-        emptyMessage="Reports generated on demand"
+        title={t("recentlyViewed")}
+        emptyMessage={t("generatedOnDemand")}
       />,
     );
-  }, [registerTab]);
+  }, [t, registerTab]);
 
   // ── Derived data ─────────────────────────────────────
   const r = report;
   const mechExportCols: ExportColumn<ReportMechanicKpi>[] = [
-    { key: "mechanic_name", label: "Mechanic" },
-    { key: "work_orders_completed", label: "Jobs" },
-    { key: "services_count", label: "Services" },
-    { key: "parts_count", label: "Parts" },
-    { key: "total_revenue", label: "Revenue", format: "currency" },
-    { key: "avg_revenue_per_wo", label: "Avg/WO", format: "currency" },
+    { key: "mechanic_name", label: t("mechanic") },
+    { key: "work_orders_completed", label: t("jobs") },
+    { key: "services_count", label: t("services") },
+    { key: "parts_count", label: t("parts") },
+    { key: "total_revenue", label: t("revenue"), format: "currency" },
+    { key: "avg_revenue_per_wo", label: t("avgPerWo"), format: "currency" },
   ];
 
   const dailyBreakdown = useMemo(() => {
@@ -761,7 +752,7 @@ export default function ReportsPage() {
         <Card className="border-red-200 bg-red-50/30 dark:border-red-800/30 dark:bg-red-950/10">
           <CardContent className="py-4">
             <Typography.Text className="text-sm text-red-600 dark:text-red-400">
-              "Couldn't load reports. Try again."
+              {t("errorLoading")}
             </Typography.Text>
           </CardContent>
         </Card>
@@ -856,7 +847,7 @@ export default function ReportsPage() {
               label={t("expenses")}
               value={formatCurrency(0)}
               icon={Wallet}
-              subtitle="connect expense data"
+              subtitle={t("connectExpenseData")}
             />
           </div>
 
@@ -918,10 +909,10 @@ export default function ReportsPage() {
                     <ChartContainer
                       config={{
                         services: {
-                          label: "Services",
+                          label: t("services"),
                           color: "var(--chart-1)",
                         },
-                        parts: { label: "Parts", color: "var(--chart-2)" },
+                        parts: { label: t("parts"), color: "var(--chart-2)" },
                       }}
                       className="h-[140px] w-[140px]"
                     >
@@ -929,11 +920,11 @@ export default function ReportsPage() {
                         <Pie
                           data={[
                             {
-                              name: "Services",
+                              name: t("services"),
                               value: r.profitability.service_revenue,
                             },
                             {
-                              name: "Parts",
+                              name: t("parts"),
                               value: r.profitability.parts_revenue,
                             },
                           ]}
@@ -953,12 +944,12 @@ export default function ReportsPage() {
                     <div className="flex flex-col gap-2">
                       {[
                         {
-                          name: "Services",
+                          name: t("services"),
                           value: r.profitability.service_revenue,
                           color: "var(--chart-1)",
                         },
                         {
-                          name: "Parts",
+                          name: t("parts"),
                           value: r.profitability.parts_revenue,
                           color: "var(--chart-2)",
                         },

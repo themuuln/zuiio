@@ -1,6 +1,7 @@
 "use client";
 
 import { Monitor, Moon, Palette, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +52,7 @@ export function AppearanceCustomization({
   preview,
   savedBrandColor,
 }: AppearanceCustomizationProps) {
+  const t = useTranslations("settings");
   return (
     <Card>
       <CardHeader className="pb-0">
@@ -59,16 +61,18 @@ export function AppearanceCustomization({
             <Palette className="size-3.5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-sm font-semibold">Appearance</CardTitle>
+            <CardTitle className="text-sm font-semibold">
+              {t("appearanceSection")}
+            </CardTitle>
             <CardDescription className="text-xs">
-              Choose your preferred color theme.
+              {t("appearanceDesc")}
             </CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-6 pt-5">
         <Field>
-          <FieldLabel>Theme</FieldLabel>
+          <FieldLabel>{t("theme")}</FieldLabel>
           <ToggleGroup
             value={theme ? [theme] : []}
             onValueChange={(value) => {
@@ -99,7 +103,7 @@ export function AppearanceCustomization({
         <Separator />
 
         <Field>
-          <FieldLabel>Brand color</FieldLabel>
+          <FieldLabel>{t("brandColor")}</FieldLabel>
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
@@ -116,7 +120,7 @@ export function AppearanceCustomization({
                     : "") ||
                   "#000000",
               }}
-              aria-label="Brand color picker"
+              aria-label={t("brandColorPicker")}
             >
               <input
                 type="color"
@@ -146,7 +150,7 @@ export function AppearanceCustomization({
                   preview(color);
                 }
               }}
-              placeholder="#334155"
+              placeholder={t("brandColorPlaceholder")}
               className="w-32 font-mono text-sm"
               maxLength={7}
             />

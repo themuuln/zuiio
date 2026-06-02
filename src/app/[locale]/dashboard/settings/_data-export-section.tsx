@@ -1,6 +1,7 @@
 "use client";
 
 import { Database, Download, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -81,6 +82,7 @@ export function DataExportSection({ orgId }: DataExportSectionProps) {
 }
 
 function ExportDataButton({ orgId }: { orgId: string }) {
+  const t = useTranslations("settings");
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -105,7 +107,7 @@ function ExportDataButton({ orgId }: { orgId: string }) {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      toast.success("Data exported successfully");
+      toast.success(t("exportSuccess"));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Export failed";
       setExportError(message);

@@ -138,6 +138,20 @@ export const GET = createRouteHandler(
     }
 
     if (type === "dashboard") {
+      const dateFromParam = searchParams.get("date_from");
+      const dateToParam = searchParams.get("date_to");
+
+      if (dateFromParam && dateToParam) {
+        // Custom date range — pass as object
+        const dashboard = await getDashboardData(orgId, {
+          dateFrom: dateFromParam,
+          dateTo: dateToParam,
+          branchId,
+        });
+        return NextResponse.json({ data: dashboard });
+      }
+
+      // Backward compat with period string
       const period =
         (searchParams.get("period") as "today" | "week" | "month" | "all") ??
         "all";

@@ -2,6 +2,7 @@
 
 import { SettingsIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import {
 import { getInitials } from "@/lib/utils";
 
 export function NavUser() {
+  const t = useTranslations("userMenu");
   const [profile, setProfile] = useState<{
     fullName?: string | null;
     username?: string | null;
@@ -38,7 +40,7 @@ export function NavUser() {
       .finally(() => setLoading(false));
   }, []);
 
-  const displayName = profile?.fullName ?? "User";
+  const displayName = profile?.fullName ?? t("user");
   const displayIdentifier = profile?.username ?? "";
   const initials = getInitials(profile?.fullName);
 
@@ -56,7 +58,7 @@ export function NavUser() {
           <Button
             variant="ghost"
             className="relative size-9 rounded-full flex items-center justify-center p-0 hover:bg-accent/50 focus-visible:ring-2"
-            aria-label="User menu"
+            aria-label={t("menu")}
           >
             <Avatar className="size-7">
               <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
@@ -97,13 +99,13 @@ export function NavUser() {
             className="gap-2 text-xs"
           >
             <SettingsIcon />
-            <span>Settings</span>
+            <span>{t("settings")}</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={handleSignOut}
             className="text-destructive focus:text-destructive gap-2 text-xs"
           >
-            <span>Sign out</span>
+            <span>{t("signOut")}</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

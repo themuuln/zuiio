@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   FEATURE_KEYS,
+  type FeatureKey,
   getNextPlanWithFeature,
   getPlanFeatures,
   isPlanFeatureEnabled,
   PLAN_FEATURES,
-  type FeatureKey,
   type PlanType,
 } from "./plan-features";
 

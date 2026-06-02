@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Loader2, RefreshCw, Shield, ShieldAlert } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,7 @@ export default function AdminPage() {
   const [orgs, setOrgs] = useState<AdminOrg[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingOrgId, setSavingOrgId] = useState<string | null>(null);
+  const t = useTranslations();
 
   useEffect(() => {
     const abort = new AbortController();
@@ -71,9 +73,11 @@ export default function AdminPage() {
             : o,
         ),
       );
-      toast.success(`Updated to ${planType}`);
+      toast.success(t("admin.updatedTo", { plan: planType }));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update");
+      toast.error(
+        err instanceof Error ? err.message : t("admin.failedToUpdate"),
+      );
     } finally {
       setSavingOrgId(null);
     }
@@ -99,9 +103,11 @@ export default function AdminPage() {
             : o,
         ),
       );
-      toast.success("Trial reset — 14 days starting now");
+      toast.success(t("admin.trialReset"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to reset trial");
+      toast.error(
+        err instanceof Error ? err.message : t("admin.failedToResetTrial"),
+      );
     } finally {
       setSavingOrgId(null);
     }
@@ -128,10 +134,10 @@ export default function AdminPage() {
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <ShieldAlert className="size-10 text-destructive" />
         <Typography.H2 className="text-xl font-semibold">
-          Access Denied
+          {t("admin.accessDenied")}
         </Typography.H2>
         <Typography.Muted className="text-muted-foreground text-center max-w-md">
-          You need super admin privileges to access this dashboard.
+          {t("admin.accessDeniedDesc")}
         </Typography.Muted>
       </div>
     );
@@ -143,10 +149,10 @@ export default function AdminPage() {
         <div>
           <Typography.H1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
             <Shield className="size-6" />
-            Admin Dashboard
+            {t("admin.dashboardTitle")}
           </Typography.H1>
           <Typography.Muted className="text-muted-foreground">
-            Manage organizations and their subscriptions
+            {t("admin.dashboardDesc")}
           </Typography.Muted>
         </div>
         <Badge variant="outline" className="text-xs">
@@ -156,19 +162,21 @@ export default function AdminPage() {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Organizations</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            {t("admin.organizations")}
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y">
             <div className="hidden md:grid md:grid-cols-[1fr_120px_100px_230px] gap-4 px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              <span>Organization</span>
-              <span>Plan</span>
-              <span>Status</span>
-              <span className="text-right">Actions</span>
+              <span>{t("admin.organization")}</span>
+              <span>{t("admin.plan")}</span>
+              <span>{t("admin.status")}</span>
+              <span className="text-right">{t("admin.actions")}</span>
             </div>
             {orgs.length === 0 ? (
               <div className="px-6 py-12 text-center text-sm text-muted-foreground">
-                No organizations found.
+                {t("admin.noOrgs")}
               </div>
             ) : (
               orgs.map((org) => (
@@ -195,12 +203,14 @@ export default function AdminPage() {
                       >
                         {org.subscription.plan_type}
                         {org.subscription.trial && (
-                          <span className="ml-1 text-[10px]">(trial)</span>
+                          <span className="ml-1 text-[10px]">
+                            ({t("admin.trial")})
+                          </span>
                         )}
                       </Badge>
                     ) : (
                       <span className="text-xs text-muted-foreground">
-                        No plan
+                        {t("admin.noPlan")}
                       </span>
                     )}
                   </div>
@@ -252,7 +262,7 @@ export default function AdminPage() {
                       disabled={savingOrgId === org.id}
                       onClick={() => handleExtendTrial(org.id)}
                       className="h-7 text-[11px] px-2"
-                      title="Reset to 14-day trial starting now"
+                      title={t("admin.resetTrial")}
                     >
                       {savingOrgId === org.id ? (
                         <Loader2 className="size-3 animate-spin" />

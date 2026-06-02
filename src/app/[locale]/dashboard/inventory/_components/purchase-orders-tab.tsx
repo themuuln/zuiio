@@ -32,7 +32,7 @@ import {
   useSuppliers,
 } from "@/lib/queries/use-inventory";
 import { formatMNT } from "@/lib/utils";
-import { formatDate, PO_STATUS_LABELS } from "./constants";
+import { formatDate, getPoStatusLabels } from "./constants";
 import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
 
@@ -50,6 +50,7 @@ export function PurchaseOrdersTab({
   const locale = useLocale();
   const t = useTranslations("inventory");
   const now = useClientNow();
+  const poStatusLabels = useMemo(() => getPoStatusLabels(t), [t]);
   const { data: purchaseOrders = [], isLoading } = usePurchaseOrders(orgId);
   const createPO = useCreatePurchaseOrder(orgId);
   const receivePO = useReceivePurchaseOrder(orgId);
@@ -66,7 +67,7 @@ export function PurchaseOrdersTab({
       (po) =>
         po.order_number.toLowerCase().includes(q) ||
         (po.supplier?.name ?? "").toLowerCase().includes(q) ||
-        (PO_STATUS_LABELS[po.status] ?? po.status).toLowerCase().includes(q),
+        (poStatusLabels[po.status] ?? po.status).toLowerCase().includes(q),
     );
   }, [purchaseOrders, search]);
 
@@ -102,7 +103,7 @@ export function PurchaseOrdersTab({
     }
 
     if (!items.length) {
-      toast.error("Add at least one item");
+      toast.error(t("addAtLeastOneItem"));
       return;
     }
 
@@ -115,7 +116,7 @@ export function PurchaseOrdersTab({
       },
       {
         onSuccess: () => {
-          toast.success("Purchase order created");
+          toast.success(t("poCreated"));
           setShowAddPO(false);
         },
         onError: (err: Error) => toast.error(err.message),
@@ -125,7 +126,7 @@ export function PurchaseOrdersTab({
 
   function handleReceivePO(poId: string) {
     receivePO.mutate(poId, {
-      onSuccess: () => toast.success("PO received"),
+      onSuccess: () => toast.success(t("poReceived")),
       onError: (err: Error) => toast.error(err.message),
     });
   }
@@ -144,7 +145,11 @@ export function PurchaseOrdersTab({
           value: search,
           onChange: onSearchChange,
         }}
-        stats={<span>{filteredPOs.length} orders</span>}
+        stats={
+          <span>
+            {filteredPOs.length} {t("purchaseOrders")}
+          </span>
+        }
         actions={
           <div className="flex items-center gap-2">
             <ExportButton
@@ -155,7 +160,7 @@ export function PurchaseOrdersTab({
             />
             <Button size="default" onClick={() => setShowAddPO(true)}>
               <Plus className="size-4" />
-              Create PO
+              {t("createPO")}
             </Button>
           </div>
         }
@@ -171,7 +176,7 @@ export function PurchaseOrdersTab({
               {t("noPurchaseOrders")}
             </Typography.Muted>
             <Button variant="outline" onClick={() => setShowAddPO(true)}>
-              Create your first PO
+              {t("createFirstPO")}
             </Button>
           </CardContent>
         </Card>
@@ -184,6 +189,8 @@ export function PurchaseOrdersTab({
               orgId={orgId}
               onReceive={handleReceivePO}
               onToggle={handleTogglePO}
+              t={t}
+              poStatusLabels={poStatusLabels}
             />
           ))}
         </div>
@@ -191,10 +198,7 @@ export function PurchaseOrdersTab({
 
       {/* Create PO Modal */}
       {showAddPO && (
-        <Modal
-          title="Create Purchase Order"
-          onClose={() => setShowAddPO(false)}
-        >
+        <Modal title={t("createPO")} onClose={() => setShowAddPO(false)}>
           <form onSubmit={handleCreatePO} className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-2">
@@ -252,7 +256,7 @@ export function PurchaseOrdersTab({
                   Items
                 </Typography.Text>
               </div>
-              <POItemEditor parts={activeParts} locale={locale} />
+              <POItemEditor parts={activeParts} locale={locale} t={t} />
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <Button
@@ -260,10 +264,10 @@ export function PurchaseOrdersTab({
                 variant="outline"
                 onClick={() => setShowAddPO(false)}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={createPO.isPending}>
-                Create PO
+                {t("createPO")}
               </Button>
             </div>
           </form>
@@ -278,11 +282,15 @@ function POListItem({
   orgId,
   onReceive,
   onToggle,
+  t,
+  poStatusLabels,
 }: {
   po: PurchaseOrderWithSupplier;
   orgId: string;
   onReceive: (id: string) => void;
   onToggle: (id: string) => void;
+  t: (key: string) => string;
+  poStatusLabels: Record<string, string>;
 }) {
   const { data: items = [], isLoading: itemsLoading } = usePurchaseOrderItems(
     orgId,
@@ -300,11 +308,11 @@ function POListItem({
         <span className="flex min-w-0 flex-1 flex-col items-start">
           <span className="font-medium">{po.order_number}</span>
           <span className="text-sm text-muted-foreground">
-            {po.supplier?.name ?? "No supplier"}
+            {po.supplier?.name ?? t("noSupplier")}
           </span>
         </span>
         <Badge variant="outline">
-          {PO_STATUS_LABELS[po.status] ?? po.status}
+          {poStatusLabels[po.status] ?? po.status}
         </Badge>
         <span className="text-sm font-semibold tabular-nums">
           {formatMNT(po.total_amount)}
@@ -325,16 +333,16 @@ function POListItem({
               <TableHeader>
                 <TableRow className="border-b border-border">
                   <TableHead className="py-2 pr-4 text-left font-medium text-muted-foreground">
-                    Part
+                    {t("part")}
                   </TableHead>
                   <TableHead className="py-2 pr-4 text-right font-medium text-muted-foreground">
-                    Ordered
+                    {t("quantityOrdered")}
                   </TableHead>
                   <TableHead className="py-2 pr-4 text-right font-medium text-muted-foreground">
-                    Received
+                    {t("quantityReceived")}
                   </TableHead>
                   <TableHead className="py-2 text-right font-medium text-muted-foreground">
-                    Unit Cost
+                    {t("unitCost")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -361,7 +369,7 @@ function POListItem({
               <div className="mt-3 flex justify-end">
                 <Button size="sm" onClick={() => onReceive(po.id)}>
                   <Truck className="size-3" />
-                  Receive Stock
+                  {t("receiveStock")}
                 </Button>
               </div>
             )}
@@ -375,6 +383,7 @@ function POListItem({
 function POItemEditor({
   parts,
   locale,
+  t,
 }: {
   parts: {
     id: string;
@@ -383,6 +392,7 @@ function POItemEditor({
     is_active: boolean;
   }[];
   locale: string;
+  t: (key: string) => string;
 }) {
   const [count, setCount] = useState(0);
 
@@ -395,13 +405,13 @@ function POItemEditor({
           className="flex items-end gap-2 border-b border-border pb-2"
         >
           <div className="flex-1 flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Part</span>
+            <span className="text-xs text-muted-foreground">{t("part")}</span>
             <select
               name={`item_${i}_part_id`}
               required
               className="h-9 w-full rounded border border-input bg-background px-2 text-sm"
             >
-              <option value="">Select</option>
+              <option value="">{t("select")}</option>
               {parts.map((p) => (
                 <option key={p.id} value={p.id}>
                   {locale === "mn" && p.name_mn ? p.name_mn : p.name}
@@ -410,7 +420,7 @@ function POItemEditor({
             </select>
           </div>
           <div className="w-20 flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Qty</span>
+            <span className="text-xs text-muted-foreground">{t("qty")}</span>
             <input
               type="number"
               name={`item_${i}_qty`}
@@ -420,7 +430,9 @@ function POItemEditor({
             />
           </div>
           <div className="w-24 flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Cost</span>
+            <span className="text-xs text-muted-foreground">
+              {t("unitCost")}
+            </span>
             <input
               type="number"
               name={`item_${i}_cost`}
@@ -446,7 +458,7 @@ function POItemEditor({
         className="gap-1 text-primary"
       >
         <Plus className="size-3" />
-        Add item
+        {t("addItem")}
       </Button>
     </div>
   );

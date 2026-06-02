@@ -26,11 +26,6 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   Item,
   ItemActions,
   ItemContent,
@@ -46,6 +41,11 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { formatPlateInput, inputProps } from "@/lib/form-ux";
@@ -54,19 +54,17 @@ import {
   transliterateMongolianPlate,
 } from "@/lib/form-validation";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
+import { vehicleKeys } from "@/lib/queries/keys";
 import {
+  type CarBrand,
+  type CarModel,
   carCatalogKeys,
+  useCarBrands,
   useFilteredCarBrands,
   useFilteredCarModels,
 } from "@/lib/queries/use-car-catalog";
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import {
-  useCarBrands,
-  type CarBrand,
-  type CarModel,
-} from "@/lib/queries/use-car-catalog";
-import { vehicleKeys } from "@/lib/queries/keys";
 import {
   useCreateVehicle,
   useCustomerSearch,

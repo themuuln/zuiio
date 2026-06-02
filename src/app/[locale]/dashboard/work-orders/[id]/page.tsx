@@ -216,22 +216,22 @@ export default function WorkOrderDetailPage() {
 
     sidebar.registerTab(
       "vehicle",
-      "Vehicle",
+      t("vehicle"),
       <ContactCard
-        title="Vehicle"
+        title={t("vehicle")}
         items={[
           {
-            label: "Plate Number",
+            label: t("plateNumber"),
             value: wo.vehicle?.plate_number,
             copyable: true,
           },
           {
-            label: "Make / Model",
+            label: t("makeModel"),
             value: [wo.vehicle?.make, wo.vehicle?.model]
               .filter(Boolean)
               .join(" "),
           },
-          { label: "Year", value: wo.vehicle?.year?.toString() },
+          { label: t("year"), value: wo.vehicle?.year?.toString() },
           { label: "VIN", value: wo.vehicle?.vin, copyable: true },
         ]}
       />,
@@ -239,25 +239,25 @@ export default function WorkOrderDetailPage() {
 
     sidebar.registerTab(
       "customer",
-      "Customer",
+      t("customer"),
       <ContactCard
-        title="Customer"
+        title={t("customer")}
         items={[
           {
-            label: "Name",
+            label: t("name"),
             value: [wo.customer?.first_name, wo.customer?.last_name]
               .filter(Boolean)
               .join(" "),
             copyable: true,
           },
           {
-            label: "Phone",
+            label: t("phoneLabel"),
             value: wo.customer?.phone,
             icon: Phone,
             copyable: true,
           },
           {
-            label: "Email",
+            label: t("emailLabel"),
             value: wo.customer?.email,
             icon: Mail,
             copyable: true,
@@ -268,16 +268,16 @@ export default function WorkOrderDetailPage() {
 
     sidebar.registerTab(
       "timeline",
-      "Timeline",
+      t("timeline"),
       <RecentList
-        title="Status History"
+        title={t("statusHistory")}
         items={(wo.status_history ?? []).map((h) => ({
           id: h.id,
           primary: h.status,
           secondary: h.notes ?? undefined,
           timestamp: new Date(h.created_at).toLocaleString(),
         }))}
-        emptyMessage="No status changes"
+        emptyMessage={t("noStatusChanges")}
       />,
     );
 
@@ -290,21 +290,21 @@ export default function WorkOrderDetailPage() {
 
   const serviceExportColumns: ExportColumn<WorkOrderService>[] = useMemo(
     () => [
-      { key: "service_name", label: "Service" },
-      { key: "quantity", label: "Qty" },
-      { key: "unit_price", label: "Unit Price", format: "currency" },
-      { key: "discount_amount", label: "Discount", format: "currency" },
-      { key: "final_price", label: "Final Price", format: "currency" },
+      { key: "service_name", label: t("service") },
+      { key: "quantity", label: t("qty") },
+      { key: "unit_price", label: t("unitPrice"), format: "currency" },
+      { key: "discount_amount", label: t("discount"), format: "currency" },
+      { key: "final_price", label: t("finalPrice"), format: "currency" },
     ],
     [],
   );
 
   const partExportColumns: ExportColumn<WorkOrderPart>[] = useMemo(
     () => [
-      { key: "part_name", label: "Part" },
-      { key: "quantity", label: "Qty" },
-      { key: "unit_price", label: "Unit Price", format: "currency" },
-      { key: "final_price", label: "Final Price", format: "currency" },
+      { key: "part_name", label: t("part") },
+      { key: "quantity", label: t("qty") },
+      { key: "unit_price", label: t("unitPrice"), format: "currency" },
+      { key: "final_price", label: t("finalPrice"), format: "currency" },
     ],
     [],
   );
@@ -397,7 +397,7 @@ export default function WorkOrderDetailPage() {
         },
       );
     } catch {
-      toast.error("Failed to add service");
+      toast.error(t("failedToAddService"));
     }
   };
 
@@ -494,12 +494,13 @@ export default function WorkOrderDetailPage() {
       }
     }
     if (hasError) {
-      toast.warning(
-        "Some items from the last visit could not be added. Check the work order.",
-      );
+      toast.warning(t("repeatPartialWarning"));
     } else {
       toast.success(
-        `Added ${svcNames.length} service(s) and ${partNames.length} part(s) from last visit`,
+        t("repeatSuccess", {
+          services: svcNames.length,
+          parts: partNames.length,
+        }),
       );
     }
   };
@@ -534,7 +535,7 @@ export default function WorkOrderDetailPage() {
         onSuccess: () => {
           setShowPaymentDialog(false);
           paymentForm.reset();
-          toast.success("Payment recorded");
+          toast.success(t("paymentRecorded"));
         },
         onError: (err: Error) => {
           toast.error(err.message || "Failed to record payment");
@@ -573,7 +574,7 @@ export default function WorkOrderDetailPage() {
     return (
       <div className="tablet-touch flex flex-col gap-6">
         <Button variant="ghost" onClick={() => back()} className="w-fit">
-          <ArrowLeft className="size-4" /> Back
+          <ArrowLeft className="size-4" /> {t("back")}
         </Button>
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
@@ -581,7 +582,7 @@ export default function WorkOrderDetailPage() {
               {error ?? t("workOrderNotFound")}
             </Typography.Muted>
             <Button onClick={() => refetchWo()} variant="outline">
-              Retry
+              {t("retry")}
             </Button>
           </CardContent>
         </Card>
@@ -711,10 +712,10 @@ export default function WorkOrderDetailPage() {
                   confirmStatus === "Cancelled") && (
                   <div className="flex flex-col gap-1.5">
                     <Typography.Text className="text-sm font-medium text-destructive">
-                      Loss Reason (Required)
+                      {t("lossReasonRequired")}
                     </Typography.Text>
                     <Textarea
-                      placeholder="Describe why this work order is closed at a loss (e.g. parts sold at cost, rework, discount)..."
+                      placeholder={t("lossReasonPlaceholder")}
                       value={lossReasonText}
                       onChange={(e) => setLossReasonText(e.target.value)}
                       className="min-h-[80px]"
@@ -865,7 +866,7 @@ export default function WorkOrderDetailPage() {
               columns={serviceExportColumns}
               filename={`wo-${woId.slice(0, 8)}-services.xlsx`}
               sheetName="Services"
-              label="Export Services"
+              label={t("exportServices")}
             />
             <Button
               variant="ghost"
@@ -877,7 +878,7 @@ export default function WorkOrderDetailPage() {
                   lastVisit.parts.length === 0)
               }
             >
-              Repeat from last visit
+              {t("repeatFromLastVisit")}
             </Button>
             <Button
               variant="outline"
@@ -990,7 +991,7 @@ export default function WorkOrderDetailPage() {
               columns={partExportColumns}
               filename={`wo-${woId.slice(0, 8)}-parts.xlsx`}
               sheetName="Parts"
-              label="Export Parts"
+              label={t("exportParts")}
             />
             <Button
               variant="outline"
@@ -1362,12 +1363,12 @@ export default function WorkOrderDetailPage() {
                     variant="ghost"
                     size="icon-xs"
                     onClick={() => {
-                      if (confirm("Remove this photo?")) {
+                      if (confirm(t("removePhotoConfirm"))) {
                         deleteAttachment.mutate(att.id);
                       }
                     }}
                     className="absolute top-1 right-1 rounded-full bg-background/80 text-muted-foreground opacity-0 hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
-                    aria-label="Remove photo"
+                    aria-label={t("removePhoto")}
                   >
                     <Trash2 className="size-3" />
                   </Button>
@@ -1462,12 +1463,12 @@ export default function WorkOrderDetailPage() {
             )}
 
             <div className="flex justify-between text-sm border-t pt-2">
-              <span>Total Paid</span>
+              <span>{t("totalPaid")}</span>
               <span className="font-medium">{formatMNT(totalPaid)}</span>
             </div>
             {balanceDue > 0 && (
               <div className="flex justify-between text-sm">
-                <span>Balance Due</span>
+                <span>{t("balanceDue")}</span>
                 <span className="font-medium text-destructive">
                   {formatMNT(balanceDue)}
                 </span>
@@ -1483,7 +1484,7 @@ export default function WorkOrderDetailPage() {
                 size="sm"
                 className="w-full"
               >
-                <Wallet className="size-4" /> Record Payment
+                <Wallet className="size-4" /> {t("recordPayment")}
               </Button>
             )}
           </CardContent>
@@ -1511,7 +1512,7 @@ export default function WorkOrderDetailPage() {
             </div>
             {Number(wo.discount_total) > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Discounts</span>
+                <span className="text-muted-foreground">{t("discounts")}</span>
                 <span className="font-medium tabular-nums text-destructive">
                   -{formatMNT(Number(wo.discount_total))}
                 </span>
@@ -1531,31 +1532,31 @@ export default function WorkOrderDetailPage() {
       {/* Profit / Cost Summary */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Profit &amp; Cost</CardTitle>
+          <CardTitle className="text-base">{t("profitAndCost")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Services Cost</span>
+              <span className="text-muted-foreground">{t("servicesCost")}</span>
               <span className="font-medium tabular-nums">
                 {formatMNT(servicesCost)}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Parts Cost</span>
+              <span className="text-muted-foreground">{t("partsCost")}</span>
               <span className="font-medium tabular-nums">
                 {formatMNT(partsCost)}
               </span>
             </div>
             <Separator />
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Revenue</span>
+              <span className="text-muted-foreground">{t("revenueLabel")}</span>
               <span className="font-medium tabular-nums">
                 {formatMNT(servicesTotal + partsTotal)}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Total Cost</span>
+              <span className="text-muted-foreground">{t("totalCost")}</span>
               <span className="font-medium tabular-nums">
                 {formatMNT(totalCost)}
               </span>
@@ -1567,7 +1568,7 @@ export default function WorkOrderDetailPage() {
                   grossProfit >= 0 ? "text-emerald-600" : "text-destructive"
                 }
               >
-                {grossProfit >= 0 ? "Gross Profit" : "Loss"}
+                {grossProfit >= 0 ? t("grossProfit") : t("loss")}
               </span>
               <span
                 className={cn(
@@ -1579,7 +1580,7 @@ export default function WorkOrderDetailPage() {
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Margin</span>
+              <span className="text-muted-foreground">{t("margin")}</span>
               <span
                 className={cn(
                   "font-medium tabular-nums",
@@ -1594,7 +1595,7 @@ export default function WorkOrderDetailPage() {
                 <Separator />
                 <div className="flex flex-col gap-1 rounded bg-destructive/5 p-2 text-xs border border-destructive/20 mt-1">
                   <span className="font-semibold text-destructive">
-                    Loss Reason:
+                    {t("lossReason")}:
                   </span>
                   <span className="text-muted-foreground">
                     {wo.loss_reason}
@@ -1610,23 +1611,23 @@ export default function WorkOrderDetailPage() {
       <Dialog open={showRepeatDialog} onOpenChange={setShowRepeatDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Repeat from last visit</DialogTitle>
+            <DialogTitle>{t("repeatFromLastVisit")}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">
-              This will add{" "}
-              <strong>{lastVisit?.services.length ?? 0} service(s)</strong> and{" "}
-              <strong>{lastVisit?.parts.length ?? 0} part(s)</strong> from the{" "}
-              last visit for this vehicle. Continue?
+              {t("repeatDialogDesc", {
+                services: lastVisit?.services.length ?? 0,
+                parts: lastVisit?.parts.length ?? 0,
+              })}
             </p>
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
                 onClick={() => setShowRepeatDialog(false)}
               >
-                Cancel
+                {t("cancel")}
               </Button>
-              <Button onClick={repeatFromLastVisit}>Continue</Button>
+              <Button onClick={repeatFromLastVisit}>{t("continue")}</Button>
             </div>
           </div>
         </DialogContent>
@@ -1636,11 +1637,11 @@ export default function WorkOrderDetailPage() {
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
+            <DialogTitle>{t("recordPayment")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handlePaymentSubmit} className="flex flex-col gap-4">
             <Field data-invalid={!!paymentForm.formState.errors.amount}>
-              <FieldLabel>Amount</FieldLabel>
+              <FieldLabel>{t("amount")}</FieldLabel>
               <FieldContent>
                 <Input
                   type="number"
@@ -1659,17 +1660,17 @@ export default function WorkOrderDetailPage() {
               </FieldContent>
             </Field>
             <Field data-invalid={!!paymentForm.formState.errors.method}>
-              <FieldLabel>Payment Method</FieldLabel>
+              <FieldLabel>{t("paymentMethod")}</FieldLabel>
               <FieldContent>
                 <select
                   aria-invalid={!!paymentForm.formState.errors.method}
                   className="flex h-11 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
                   {...paymentForm.register("method")}
                 >
-                  <option value="cash">Cash</option>
-                  <option value="card">Card</option>
-                  <option value="bank_transfer">Bank Transfer</option>
-                  <option value="manual">Manual</option>
+                  <option value="cash">{t("cash")}</option>
+                  <option value="card">{t("card")}</option>
+                  <option value="bank_transfer">{t("bankTransfer")}</option>
+                  <option value="manual">{t("manual")}</option>
                 </select>
                 {paymentForm.formState.errors.method && (
                   <FieldError>
@@ -1679,19 +1680,19 @@ export default function WorkOrderDetailPage() {
               </FieldContent>
             </Field>
             <Field>
-              <FieldLabel>Reference (optional)</FieldLabel>
+              <FieldLabel>{t("referenceOptional")}</FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder="Transaction ID / card last 4"
+                  placeholder={t("referencePlaceholder")}
                   {...paymentForm.register("reference")}
                 />
               </FieldContent>
             </Field>
             <Field>
-              <FieldLabel>Notes (optional)</FieldLabel>
+              <FieldLabel>{t("notesOptional")}</FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder="Any notes"
+                  placeholder={t("notesPlaceholder")}
                   {...paymentForm.register("notes")}
                 />
               </FieldContent>
@@ -1702,7 +1703,7 @@ export default function WorkOrderDetailPage() {
                 variant="outline"
                 onClick={() => setShowPaymentDialog(false)}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button
                 type="submit"
@@ -1710,7 +1711,7 @@ export default function WorkOrderDetailPage() {
                   recordPayment.isPending || paymentForm.formState.isSubmitting
                 }
               >
-                {recordPayment.isPending ? "Recording..." : "Record Payment"}
+                {recordPayment.isPending ? t("recording") : t("recordPayment")}
               </Button>
             </div>
           </form>

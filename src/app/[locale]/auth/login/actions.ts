@@ -104,9 +104,8 @@ export async function login(
   }
 
   // Get the user's email from auth.users via service role
-  const { data: authUser, error: authUserError } = await serviceRole.auth.admin.getUserById(
-    profile.id,
-  );
+  const { data: authUser, error: authUserError } =
+    await serviceRole.auth.admin.getUserById(profile.id);
   if (authUserError) {
     console.error("Login auth user fetch error:", authUserError);
     return {

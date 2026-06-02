@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Tags, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -204,6 +205,7 @@ function operatorDescription(op: string, value: number): string {
 }
 
 export function PricingRulesSection({ orgId }: { orgId: string }) {
+  const t = useTranslations("settings");
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<PriceRule | null>(null);
@@ -270,7 +272,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
       setDialogOpen(false);
       setEditingRule(null);
       setForm(DEFAULT_FORM);
-      toast.success("Price rule saved");
+      toast.success(t("savePriceRule"));
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -291,7 +293,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["price-rules", orgId] });
       setDeleteConfirm(null);
-      toast.success("Price rule deleted");
+      toast.success(t("deletePriceRule"));
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -383,13 +385,12 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
       <div className="flex items-center justify-between">
         <div>
           <Typography.Text className="text-sm text-muted-foreground">
-            {rules?.length ?? 0} rule{(rules?.length ?? 0) !== 1 ? "s" : ""}{" "}
-            configured
+            {t("rulesConfigured", { count: rules?.length ?? 0 })}
           </Typography.Text>
         </div>
         <Button onClick={openNew} size="sm">
           <Plus className="mr-1 size-4" />
-          Add Rule
+          {t("addRule")}
         </Button>
       </div>
 
@@ -399,16 +400,15 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
             <Tags className="size-10 text-muted-foreground/40" />
             <div className="text-center">
               <Typography.Text className="text-sm font-medium">
-                No pricing rules yet
+                {t("noPricingRulesYet")}
               </Typography.Text>
               <Typography.Muted className="text-xs text-muted-foreground">
-                Add rules to automatically adjust prices based on vehicle type,
-                class, or fuel type.
+                {t("noPricingRulesDesc")}
               </Typography.Muted>
             </div>
             <Button onClick={openNew} variant="outline" size="sm">
               <Plus className="mr-1 size-4" />
-              Create first rule
+              {t("createFirstRule")}
             </Button>
           </CardContent>
         </Card>
@@ -431,17 +431,17 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                       variant={rule.is_active ? "default" : "secondary"}
                       className="text-[10px] px-1.5 py-0"
                     >
-                      {rule.is_active ? "Active" : "Inactive"}
+                      {rule.is_active ? t("active") : t("inactive")}
                     </Badge>
                     <Badge
                       variant="outline"
                       className="text-[10px] px-1.5 py-0"
                     >
                       {rule.apply_to === "both"
-                        ? "Parts & Services"
+                        ? t("appliesBoth")
                         : rule.apply_to === "part"
-                          ? "Parts"
-                          : "Services"}
+                          ? t("appliesParts")
+                          : t("appliesServices")}
                     </Badge>
                   </div>
                   {rule.description && (
@@ -451,7 +451,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                   )}
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px]">
-                      Priority {rule.priority}
+                      {t("priority")} {rule.priority}
                     </span>
                     <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px]">
                       {operatorDescription(rule.operator, rule.value)}

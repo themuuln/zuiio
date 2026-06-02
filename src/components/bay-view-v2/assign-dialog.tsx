@@ -2,6 +2,7 @@
 
 import { Car, CornerDownRight, Loader2, Plus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { NewCustomerSheet } from "@/components/customers/new-customer-sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Typography } from "@/components/ui/typography";
-import { NewCustomerSheet } from "@/components/customers/new-customer-sheet";
 import { NewVehicleSheet } from "@/components/vehicles/new-vehicle-sheet";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";

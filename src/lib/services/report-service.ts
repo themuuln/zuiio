@@ -1487,13 +1487,26 @@ export async function getMechanicPerformanceTrend(
 
 export async function getDashboardData(
   orgId: string,
-  period: "today" | "week" | "month" | "all" = "all",
+  periodOrOpts:
+    | "today"
+    | "week"
+    | "month"
+    | "all"
+    | { dateFrom: string; dateTo: string; branchId?: string | null } = "all",
   branchId: string | null = null,
 ): Promise<DashboardData> {
   const supabase = await createClient();
 
+  // Normalize params: support both string period and object with dateFrom/dateTo
+  const resolvedPeriod =
+    typeof periodOrOpts === "string" ? periodOrOpts : "all";
+  const resolvedBranchId =
+    typeof periodOrOpts === "object" && periodOrOpts.branchId !== undefined
+      ? periodOrOpts.branchId
+      : branchId;
+
   return withCache(
-    ["getDashboardData", orgId, period, branchId ?? "all"],
+    ["getDashboardData", orgId, resolvedPeriod, resolvedBranchId ?? "all"],
     async () => {
       const today = new Date().toISOString().split("T")[0];
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
@@ -1502,16 +1515,36 @@ export async function getDashboardData(
       const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0];
-      const dayCount = period === "today" ? 1 : period === "week" ? 7 : 30;
 
-      const dateFrom =
-        period === "today"
-          ? today
-          : period === "week"
-            ? weekAgo
-            : period === "month"
-              ? monthAgo
-              : "2000-01-01";
+      // When dateFrom/dateTo provided as object, use those directly
+      let dateFrom: string;
+      let dateTo: string | null;
+      if (typeof periodOrOpts === "object") {
+        dateFrom = periodOrOpts.dateFrom;
+        dateTo = periodOrOpts.dateTo;
+      } else {
+        dateFrom =
+          periodOrOpts === "today"
+            ? today
+            : periodOrOpts === "week"
+              ? weekAgo
+              : periodOrOpts === "month"
+                ? monthAgo
+                : "2000-01-01";
+        dateTo = null; // no upper bound for period-based filters
+      }
+      const dayCount = dateTo
+        ? Math.ceil(
+            (new Date(dateTo).getTime() - new Date(dateFrom).getTime()) /
+              (24 * 60 * 60 * 1000),
+          ) + 1
+        : typeof periodOrOpts === "string"
+          ? periodOrOpts === "today"
+            ? 1
+            : periodOrOpts === "week"
+              ? 7
+              : 30
+          : 30;
 
       // ── Batch 1: All work-orders data in parallel ──────────
       const [
@@ -1524,16 +1557,22 @@ export async function getDashboardData(
         allCompletedWos,
       ] = await Promise.all([
         // Completed WOs in period (for revenue)
-        withBranchFilter(
-          supabase
-            .from("work_orders")
-            .select("id")
-            .eq("organization_id", orgId)
-            .eq("status", "Completed")
-            .gte("updated_at", `${dateFrom}T00:00:00`)
-            .is("deleted_at", null),
-          branchId,
-        ),
+        (() => {
+          let q = withBranchFilter(
+            supabase
+              .from("work_orders")
+              .select("id")
+              .eq("organization_id", orgId)
+              .eq("status", "Completed")
+              .gte("updated_at", `${dateFrom}T00:00:00`)
+              .is("deleted_at", null),
+            resolvedBranchId,
+          );
+          if (dateTo) {
+            q = q.lte("updated_at", `${dateTo}T23:59:59`);
+          }
+          return q;
+        })(),
 
         // Active WOs
         withBranchFilter(
@@ -1543,7 +1582,7 @@ export async function getDashboardData(
             .eq("organization_id", orgId)
             .not("status", "in", '("Completed","Cancelled")')
             .is("deleted_at", null),
-          branchId,
+          resolvedBranchId,
         ),
 
         // All WO statuses for distribution
@@ -1553,7 +1592,7 @@ export async function getDashboardData(
             .select("status")
             .eq("organization_id", orgId)
             .is("deleted_at", null),
-          branchId,
+          resolvedBranchId,
         ),
 
         // Recent 10 WO ids (we'll batch-fetch details)
@@ -1565,7 +1604,7 @@ export async function getDashboardData(
             .is("deleted_at", null)
             .order("created_at", { ascending: false })
             .limit(10),
-          branchId,
+          resolvedBranchId,
         ),
 
         // Total customers
@@ -1575,7 +1614,7 @@ export async function getDashboardData(
             .select("id", { count: "exact", head: true })
             .eq("organization_id", orgId)
             .is("deleted_at", null),
-          branchId,
+          resolvedBranchId,
         ),
 
         // Total vehicles
@@ -1585,7 +1624,7 @@ export async function getDashboardData(
             .select("id", { count: "exact", head: true })
             .eq("organization_id", orgId)
             .is("deleted_at", null),
-          branchId,
+          resolvedBranchId,
         ),
 
         // All completed WOs ever (for tech perf and categories)
@@ -1596,7 +1635,7 @@ export async function getDashboardData(
             .eq("organization_id", orgId)
             .eq("status", "Completed")
             .is("deleted_at", null),
-          branchId,
+          resolvedBranchId,
         ),
       ]);
 
@@ -1701,18 +1740,23 @@ export async function getDashboardData(
         customerAcquisitionTrend,
         prevSummary,
       ] = await Promise.all([
-        getRevenueTrendBatched(supabase, orgId, dayCount, branchId),
+        getRevenueTrendBatched(supabase, orgId, dayCount, resolvedBranchId),
         getTopServicesBatched(supabase, completedWoIds),
         getTechnicianPerformanceBatched(
           supabase,
           orgId,
           allCompletedIds,
-          branchId,
+          resolvedBranchId,
         ),
         getRecentWorkOrdersBatched(supabase, recentWoIds),
         getServiceCategoryBreakdownBatched(supabase, orgId, allCompletedIds),
-        getCustomerAcquisitionTrendBatched(supabase, orgId, branchId),
-        getPreviousPeriodSummary(supabase, orgId, period, branchId),
+        getCustomerAcquisitionTrendBatched(supabase, orgId, resolvedBranchId),
+        getPreviousPeriodSummary(
+          supabase,
+          orgId,
+          resolvedPeriod,
+          resolvedBranchId,
+        ),
       ]);
 
       // Combine into a DashboardSummary shape for comparison
@@ -1750,7 +1794,7 @@ export async function getDashboardData(
       return dashboardData;
     },
     {
-      tags: [cacheTags.dashboardMetrics(orgId, branchId ?? undefined)],
+      tags: [cacheTags.dashboardMetrics(orgId, resolvedBranchId ?? undefined)],
       revalidate: cacheDurations.dashboardMetrics,
     },
   );
@@ -1929,7 +1973,6 @@ async function getPreviousPeriodSummary(
 
   const now = new Date();
   const currentStart = new Date(now);
-  const _currentEnd = new Date(now);
   const durationMs =
     period === "today"
       ? 24 * 60 * 60 * 1000

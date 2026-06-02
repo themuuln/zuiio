@@ -1,4 +1,7 @@
+"use client";
+
 import { Check, Pencil, Target, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +31,7 @@ export function GoalCard({
   onCancel: () => void;
   onEdit: () => void;
 }) {
+  const t = useTranslations("common");
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
@@ -44,7 +48,7 @@ export function GoalCard({
                 onChange={(e) => onGoalInputChange(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && onSave()}
                 className="flex h-10 w-full rounded-md border border-input bg-background pl-7 pr-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                placeholder="Enter daily revenue goal"
+                placeholder={t("enterGoal")}
                 min={0}
               />
             </div>
@@ -52,7 +56,7 @@ export function GoalCard({
               size="sm"
               onClick={onSave}
               disabled={isPending}
-              aria-label="Save goal"
+              aria-label={t("saveGoal")}
             >
               <Check className="size-4" />
             </Button>
@@ -60,7 +64,7 @@ export function GoalCard({
               variant="ghost"
               size="sm"
               onClick={onCancel}
-              aria-label="Cancel"
+              aria-label={t("cancel")}
             >
               <X className="size-4" />
             </Button>
@@ -73,13 +77,13 @@ export function GoalCard({
               </div>
               <div>
                 <Typography.Muted className="text-xs text-muted-foreground">
-                  Daily Goal
+                  {t("dailyGoal")}
                 </Typography.Muted>
                 {settingsLoading ? (
                   <Skeleton className="mt-1 h-6 w-24" />
                 ) : (
                   <Typography.Text className="text-lg font-semibold tabular-nums">
-                    {dailyGoal > 0 ? formatCurrency(dailyGoal) : "Not set"}
+                    {dailyGoal > 0 ? formatCurrency(dailyGoal) : t("notSet")}
                   </Typography.Text>
                 )}
               </div>
@@ -107,7 +111,7 @@ export function GoalCard({
               variant="ghost"
               size="icon-xs"
               onClick={onEdit}
-              aria-label="Set daily goal"
+              aria-label={t("setDailyGoal")}
             >
               <Pencil className="size-3.5" />
             </Button>

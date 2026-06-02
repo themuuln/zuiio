@@ -9,6 +9,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
 import { Badge } from "@/components/ui/badge";
@@ -39,38 +40,44 @@ const invoiceStatusConfig: Record<
   { label: string; className: string; icon: typeof Clock }
 > = {
   draft: {
-    label: "Draft",
+    label: "statusDraft",
     className: "bg-gray-100 text-gray-700 border-gray-300",
     icon: Clock,
   },
   sent: {
-    label: "Sent",
+    label: "statusSent",
     className: "bg-blue-100 text-blue-700 border-blue-300",
     icon: FileText,
   },
   paid: {
-    label: "Paid",
+    label: "statusPaid",
     className: "bg-green-100 text-green-700 border-green-300",
     icon: CheckCircle2,
   },
   partial: {
-    label: "Partial Payment",
+    label: "statusPartial",
     className: "bg-amber-100 text-amber-700 border-amber-300",
     icon: Clock,
   },
   overdue: {
-    label: "Overdue",
+    label: "statusOverdue",
     className: "bg-red-100 text-red-700 border-red-300",
     icon: XCircle,
   },
   cancelled: {
-    label: "Cancelled",
+    label: "statusCancelled",
     className: "bg-gray-100 text-gray-500 border-gray-300",
     icon: XCircle,
   },
 };
 
-function InvoiceStatusBadge({ status }: { status: string }) {
+function InvoiceStatusBadge({
+  status,
+  t,
+}: {
+  status: string;
+  t: (key: string) => string;
+}) {
   const config = invoiceStatusConfig[status] ?? invoiceStatusConfig.draft;
   const Icon = config.icon;
 
@@ -80,7 +87,7 @@ function InvoiceStatusBadge({ status }: { status: string }) {
       className="gap-1.5 text-sm font-semibold min-h-[32px]"
     >
       <Icon className="size-3.5" />
-      {config.label}
+      {t(config.label)}
     </Badge>
   );
 }
@@ -148,7 +155,13 @@ function InvoiceSkeleton() {
 
 // ── Error state ──────────────────────────────────────────
 
-function InvoiceError({ message }: { message: string }) {
+function InvoiceError({
+  message,
+  t,
+}: {
+  message: string;
+  t: (key: string) => string;
+}) {
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-lg items-center justify-center p-8">
       <Card className="w-full">
@@ -158,11 +171,10 @@ function InvoiceError({ message }: { message: string }) {
           </div>
           <div className="text-center">
             <Typography.H2 className="text-lg font-semibold">
-              Invoice Not Found
+              {t("notFound")}
             </Typography.H2>
             <Typography.Muted className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-              {message ||
-                "This invoice could not be found. The link may be invalid or the invoice has been removed."}
+              {message || t("notFoundDescription")}
             </Typography.Muted>
           </div>
         </CardContent>
@@ -174,6 +186,7 @@ function InvoiceError({ message }: { message: string }) {
 // ── Main page ────────────────────────────────────────────
 
 export default function PublicInvoicePage() {
+  const t = useTranslations("invoice");
   const params = useParams();
   const token = params.token as string;
 
@@ -190,7 +203,7 @@ export default function PublicInvoicePage() {
       const res = await fetch(`/api/invoice/public/${token}`);
       const json = await res.json();
       if (json.error) {
-        setError(json.error.message ?? "Invoice not found");
+        setError(json.error.message ?? t("notFound"));
       } else {
         setInvoice(json.data);
         // Try to fetch org name from the invoice's org
@@ -199,7 +212,7 @@ export default function PublicInvoicePage() {
         }
       }
     } catch {
-      setError("Failed to load invoice. Please try again.");
+      setError(t("loadError"));
     } finally {
       setLoading(false);
     }
@@ -219,22 +232,22 @@ export default function PublicInvoicePage() {
 
   const invoiceItemColumns: ExportColumn<InvoiceItem>[] = useMemo(
     () => [
-      { key: "item_type", label: "Type" },
-      { key: "description", label: "Description" },
-      { key: "quantity", label: "Qty" },
-      { key: "unit_price", label: "Unit Price", format: "currency" },
-      { key: "discount_amount", label: "Discount", format: "currency" },
-      { key: "total_price", label: "Total", format: "currency" },
+      { key: "item_type", label: t("type") },
+      { key: "description", label: t("description") },
+      { key: "quantity", label: t("qty") },
+      { key: "unit_price", label: t("unitPrice"), format: "currency" },
+      { key: "discount_amount", label: t("discount"), format: "currency" },
+      { key: "total_price", label: t("total"), format: "currency" },
     ],
     [],
   );
 
   const paymentColumns: ExportColumn<InvoicePayment>[] = useMemo(
     () => [
-      { key: "paid_at", label: "Date", format: "date" },
-      { key: "method", label: "Method" },
-      { key: "reference", label: "Reference" },
-      { key: "amount", label: "Amount", format: "currency" },
+      { key: "paid_at", label: t("date"), format: "date" },
+      { key: "method", label: t("method") },
+      { key: "reference", label: t("reference") },
+      { key: "amount", label: t("amount"), format: "currency" },
     ],
     [],
   );
@@ -253,7 +266,7 @@ export default function PublicInvoicePage() {
 
   // ── Error ──────────────────────────────────────────────
   if (error || !invoice) {
-    return <InvoiceError message={error ?? "Invoice not found"} />;
+    return <InvoiceError message={error ?? t("notFound")} t={t} />;
   }
 
   return (
@@ -273,7 +286,7 @@ export default function PublicInvoicePage() {
               columns={invoiceItemColumns}
               filename={`invoice-${invoice.invoice_number}-items.xlsx`}
               sheetName="Line Items"
-              label="Items"
+              label={t("items")}
             />
             {payments.length > 0 && (
               <ExportButton
@@ -281,12 +294,12 @@ export default function PublicInvoicePage() {
                 columns={paymentColumns}
                 filename={`invoice-${invoice.invoice_number}-payments.xlsx`}
                 sheetName="Payments"
-                label="Payments"
+                label={t("payments")}
               />
             )}
             <Button variant="outline" size="sm" onClick={handlePrint}>
               <Printer className="size-4" />
-              <span className="hidden sm:inline ml-1">Print</span>
+              <span className="hidden sm:inline ml-1">{t("print")}</span>
             </Button>
             <Button
               variant="outline"
@@ -296,7 +309,7 @@ export default function PublicInvoicePage() {
               }}
             >
               <Download className="size-4" />
-              <span className="hidden sm:inline ml-1">PDF</span>
+              <span className="hidden sm:inline ml-1">{t("pdf")}</span>
             </Button>
           </div>
         </div>
@@ -310,20 +323,24 @@ export default function PublicInvoicePage() {
             <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <Typography.H1 className="text-2xl font-semibold tracking-tight text-foreground">
-                  {orgName || "INVOICE"}
+                  {orgName || t("invoice")}
                 </Typography.H1>
                 <Typography.Muted className="mt-1.5 text-sm text-muted-foreground">
-                  Invoice #{invoice.invoice_number}
+                  {t("invoiceNumber", { number: invoice.invoice_number })}
                 </Typography.Muted>
                 <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                  <span>Issued: {formatDate(invoice.issued_at)}</span>
+                  <span>
+                    {t("issued")}: {formatDate(invoice.issued_at)}
+                  </span>
                   {invoice.due_at && (
-                    <span>Due: {formatDate(invoice.due_at)}</span>
+                    <span>
+                      {t("due")}: {formatDate(invoice.due_at)}
+                    </span>
                   )}
                 </div>
               </div>
               <div className="flex items-start gap-2">
-                <InvoiceStatusBadge status={invoice.status} />
+                <InvoiceStatusBadge status={invoice.status} t={t} />
               </div>
             </div>
 
@@ -331,7 +348,7 @@ export default function PublicInvoicePage() {
             <div className="mb-10 grid gap-6 sm:grid-cols-2">
               <div>
                 <Typography.H3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Bill To
+                  {t("billTo")}
                 </Typography.H3>
                 <div className="flex flex-col gap-0.5 text-sm">
                   {invoice.customer_name && (
@@ -358,14 +375,14 @@ export default function PublicInvoicePage() {
                     !invoice.customer_phone &&
                     !invoice.customer_email && (
                       <Typography.Muted className="text-muted-foreground italic">
-                        No customer info
+                        {t("noCustomerInfo")}
                       </Typography.Muted>
                     )}
                 </div>
               </div>
               <div>
                 <Typography.H3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Vehicle
+                  {t("vehicle")}
                 </Typography.H3>
                 <div className="flex flex-col gap-0.5 text-sm">
                   {invoice.vehicle_plate && (
@@ -380,7 +397,7 @@ export default function PublicInvoicePage() {
                   )}
                   {!invoice.vehicle_plate && !invoice.vehicle_details && (
                     <Typography.Muted className="text-muted-foreground italic">
-                      No vehicle info
+                      {t("noVehicleInfo")}
                     </Typography.Muted>
                   )}
                 </div>
@@ -393,16 +410,16 @@ export default function PublicInvoicePage() {
                 <TableHeader>
                   <TableRow className="border-b border-border">
                     <TableHead className="pb-3 text-left font-semibold text-muted-foreground">
-                      Item
+                      {t("item")}
                     </TableHead>
                     <TableHead className="pb-3 text-right font-semibold text-muted-foreground">
                       Qty
                     </TableHead>
                     <TableHead className="pb-3 text-right font-semibold text-muted-foreground">
-                      Unit Price
+                      {t("unitPrice")}
                     </TableHead>
                     <TableHead className="pb-3 text-right font-semibold text-muted-foreground">
-                      Discount
+                      {t("discount")}
                     </TableHead>
                     <TableHead className="pb-3 text-right font-semibold text-muted-foreground">
                       Total
@@ -416,7 +433,7 @@ export default function PublicInvoicePage() {
                         colSpan={5}
                         className="py-12 text-center text-muted-foreground"
                       >
-                        No line items on this invoice
+                        {t("noLineItems")}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -464,7 +481,7 @@ export default function PublicInvoicePage() {
               <div className="mb-6 flex flex-col gap-2 text-sm">
                 {servicesTotal > 0 && (
                   <div className="flex items-center justify-between text-muted-foreground">
-                    <span>Services Total</span>
+                    <span>{t("servicesTotal")}</span>
                     <span className="tabular-nums font-medium">
                       {formatCurrency(servicesTotal)}
                     </span>
@@ -472,7 +489,7 @@ export default function PublicInvoicePage() {
                 )}
                 {partsTotal > 0 && (
                   <div className="flex items-center justify-between text-muted-foreground">
-                    <span>Parts Total</span>
+                    <span>{t("partsTotal")}</span>
                     <span className="tabular-nums font-medium">
                       {formatCurrency(partsTotal)}
                     </span>
@@ -484,21 +501,21 @@ export default function PublicInvoicePage() {
             {/* Totals */}
             <div className="flex flex-col items-end gap-1.5 border-t border-border pt-4">
               <div className="flex w-full max-w-xs items-center justify-between text-sm">
-                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-muted-foreground">{t("subtotal")}</span>
                 <span className="tabular-nums font-medium">
                   {formatCurrency(Number(invoice.subtotal))}
                 </span>
               </div>
               {Number(invoice.discount_total) > 0 && (
                 <div className="flex w-full max-w-xs items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Discount</span>
+                  <span className="text-muted-foreground">{t("discount")}</span>
                   <span className="tabular-nums font-medium text-destructive">
                     -{formatCurrency(Number(invoice.discount_total))}
                   </span>
                 </div>
               )}
               <div className="flex w-full max-w-xs items-center justify-between border-t border-border pt-2 text-lg font-semibold">
-                <span>Grand Total</span>
+                <span>{t("grandTotal")}</span>
                 <span className="tabular-nums">
                   {formatCurrency(Number(invoice.total))}
                 </span>
@@ -506,13 +523,13 @@ export default function PublicInvoicePage() {
               {Number(invoice.amount_paid) > 0 && (
                 <>
                   <div className="flex w-full max-w-xs items-center justify-between text-sm text-green-600">
-                    <span>Amount Paid</span>
+                    <span>{t("amountPaid")}</span>
                     <span className="tabular-nums font-medium">
                       -{formatCurrency(Number(invoice.amount_paid))}
                     </span>
                   </div>
                   <div className="flex w-full max-w-xs items-center justify-between border-t border-border pt-1 text-base font-semibold">
-                    <span>Balance Due</span>
+                    <span>{t("balanceDue")}</span>
                     <span className="tabular-nums">
                       {formatCurrency(Number(invoice.balance_due))}
                     </span>
@@ -525,23 +542,23 @@ export default function PublicInvoicePage() {
             {payments.length > 0 && (
               <div className="mt-10">
                 <Typography.H3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Payment History
+                  {t("paymentHistory")}
                 </Typography.H3>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow className="border-b border-border">
                         <TableHead className="pb-2 pr-4 text-left font-medium text-muted-foreground">
-                          Date
+                          {t("date")}
                         </TableHead>
                         <TableHead className="pb-2 pr-4 text-left font-medium text-muted-foreground">
-                          Method
+                          {t("method")}
                         </TableHead>
                         <TableHead className="pb-2 pr-4 text-left font-medium text-muted-foreground">
-                          Reference
+                          {t("reference")}
                         </TableHead>
                         <TableHead className="pb-2 text-right font-medium text-muted-foreground">
-                          Amount
+                          {t("amount")}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -576,7 +593,7 @@ export default function PublicInvoicePage() {
               {invoice.notes && (
                 <div>
                   <Typography.H3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Notes
+                    {t("notes")}
                   </Typography.H3>
                   <Typography.Muted className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
                     {invoice.notes}
@@ -586,7 +603,7 @@ export default function PublicInvoicePage() {
               {invoice.terms && (
                 <div>
                   <Typography.H3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Terms
+                    {t("terms")}
                   </Typography.H3>
                   <Typography.Muted className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
                     {invoice.terms}

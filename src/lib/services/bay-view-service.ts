@@ -536,6 +536,21 @@ export async function updateWorkOrderStatus(
   } = await (await createClient()).auth.getUser();
   if (!user) throw new UnauthorizedError();
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const { data: currentWorkOrder, error: currentWorkOrderError } =
+    await supabase
+      .from("work_orders")
+      .select("id, organization_id, status")
+      .eq("id", workOrderId)
+      .eq("organization_id", orgId)
+      .is("deleted_at", null)
+      .single();
+
+  if (currentWorkOrderError || !currentWorkOrder) {
+    throw new NotFoundError("Work order not found");
+  }
+
+  const previousStatus = currentWorkOrder.status;
+  const statusChanged = previousStatus !== status;
 
   const updates: Record<string, unknown> = {
     status,
@@ -555,14 +570,14 @@ export async function updateWorkOrderStatus(
 
   if (error) throw new Error(error.message ?? "Failed to update status");
 
-  // Insert status history entry with optional notes
-  if (notes) {
+  if (statusChanged) {
     const userId = (await supabase.auth.getUser()).data.user?.id;
     await supabase.from("work_order_status_history").insert({
       work_order_id: workOrderId,
       organization_id: orgId,
+      previous_status: previousStatus,
       status,
-      notes,
+      notes: notes ?? null,
       created_by: userId,
     });
   }

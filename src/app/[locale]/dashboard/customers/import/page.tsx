@@ -210,13 +210,13 @@ export default function ImportCustomersPage() {
     if (!file) return;
 
     if (!file.name.endsWith(".csv")) {
-      toast.error("Only .csv files are accepted");
+      toast.error(t("import.onlyCsv"));
       return;
     }
 
     const content = await file.text();
     if (!content.trim()) {
-      toast.error("CSV file is empty");
+      toast.error(t("import.csvEmpty"));
       return;
     }
 
@@ -224,7 +224,7 @@ export default function ImportCustomersPage() {
     const { headers, rows, totalLines } = parsePreview(content);
 
     if (headers.length === 0) {
-      toast.error("CSV file has no valid headers");
+      toast.error(t("import.noValidHeaders"));
       return;
     }
 
@@ -306,11 +306,11 @@ export default function ImportCustomersPage() {
       });
 
       if (result.imported > 0) {
-        toast.success(`Successfully imported ${result.imported} customers`);
+        toast.success(t("import.success", { count: result.imported }));
       }
     } catch {
-      setState({ status: "error", message: "Failed to import customers" });
-      toast.error("Failed to import customers");
+      setState({ status: "error", message: t("import.failed") });
+      toast.error(t("import.failed"));
     }
   }, [orgId]);
 
@@ -411,10 +411,10 @@ export default function ImportCustomersPage() {
                 <Upload className="size-10 text-muted-foreground/50" />
                 <div className="text-center">
                   <Typography.Text className="font-medium">
-                    Drag and drop a CSV file here, or click to browse
+                    {t("import.dragDrop")}
                   </Typography.Text>
                   <Typography.Muted className="mt-1 text-sm text-muted-foreground">
-                    Only .csv files with customer data are accepted
+                    {t("import.onlyCsvDesc")}
                   </Typography.Muted>
                 </div>
               </label>
@@ -432,7 +432,7 @@ export default function ImportCustomersPage() {
           <div className="flex justify-center">
             <Button variant="outline" onClick={handleDownloadTemplate}>
               <Download className="size-4" />
-              Download Sample CSV Template
+              {t("import.downloadTemplate")}
             </Button>
           </div>
         </>
@@ -453,7 +453,7 @@ export default function ImportCustomersPage() {
           <CardContent className="flex items-center gap-3 p-6">
             <Loader2 className="size-5 animate-spin text-primary" />
             <Typography.Muted className="text-sm text-muted-foreground">
-              Processing {state.total} customer{state.total !== 1 ? "s" : ""}...
+              {t("import.processing", { count: state.total })}
             </Typography.Muted>
           </CardContent>
         </Card>
@@ -465,7 +465,7 @@ export default function ImportCustomersPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <CheckCircle2 className="size-5 text-primary" />
-                Import Complete
+                {t("import.complete")}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
@@ -486,7 +486,7 @@ export default function ImportCustomersPage() {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-16">Row</TableHead>
-                          <TableHead>Error</TableHead>
+                          <TableHead>{t("import.error")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -513,9 +513,9 @@ export default function ImportCustomersPage() {
               render={<Link href="/dashboard/customers" />}
               variant="outline"
             >
-              Back to Customers
+              {t("import.backToCustomers")}
             </Button>
-            <Button onClick={resetImport}>Import Another File</Button>
+            <Button onClick={resetImport}>{t("import.importAnother")}</Button>
           </div>
         </>
       )}
@@ -525,7 +525,7 @@ export default function ImportCustomersPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base text-destructive">
               <XCircle className="size-5" />
-              Import Failed
+              {t("import.failedTitle")}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -534,13 +534,13 @@ export default function ImportCustomersPage() {
             </Typography.Text>
             <div className="flex gap-3">
               <Button variant="outline" onClick={resetImport}>
-                Try Again
+                {t("import.tryAgain")}
               </Button>
               <Button
                 render={<Link href="/dashboard/customers" />}
                 variant="ghost"
               >
-                Back to Customers
+                {t("import.backToCustomers")}
               </Button>
             </div>
           </CardContent>

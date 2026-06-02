@@ -22,6 +22,18 @@ import type {
 
 // ── Work Order Composites ──────────────────────────────────────
 
+export interface WorkOrderServiceHistoryEntry {
+  work_order_id: string;
+  status: string;
+  created_at: string;
+  complaint: string | null;
+  diagnosis: string | null;
+  notes: string | null;
+  total: number;
+  mechanic_name: string | null;
+  services: { name: string; price: number }[];
+}
+
 export interface WorkOrderDetail extends Record<string, unknown> {
   id: string;
   organization_id: string;
@@ -59,6 +71,7 @@ export interface WorkOrderDetail extends Record<string, unknown> {
   services: WorkOrderService[];
   parts: WorkOrderPart[];
   status_history: WorkOrderStatusHistory[];
+  service_history: WorkOrderServiceHistoryEntry[];
   diagnosis_label?: DiagnosisLabel | null;
   attachments?: WorkOrderAttachment[];
 }

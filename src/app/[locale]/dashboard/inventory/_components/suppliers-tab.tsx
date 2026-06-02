@@ -59,10 +59,10 @@ export function SuppliersTab({
   }, [suppliers, search]);
 
   const supplierExportColumns: ExportColumn<Supplier>[] = [
-    { key: "name", label: "Name" },
-    { key: "contact_person", label: "Contact" },
-    { key: "phone", label: "Phone" },
-    { key: "email", label: "Email" },
+    { key: "name", label: t("name") },
+    { key: "contact_person", label: t("contact") },
+    { key: "phone", label: t("phone") },
+    { key: "email", label: t("email") },
   ];
 
   const handleDeleteSupplier = useCallback(
@@ -81,7 +81,7 @@ export function SuppliersTab({
       {
         accessorKey: "name",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Name" />
+          <DataTableColumnHeader column={column} title={t("name")} />
         ),
         cell: ({ row }) => (
           <span className="font-medium">{row.original.name}</span>
@@ -90,7 +90,7 @@ export function SuppliersTab({
       {
         accessorKey: "contact_person",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Contact" />
+          <DataTableColumnHeader column={column} title={t("contact")} />
         ),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
@@ -101,13 +101,13 @@ export function SuppliersTab({
       {
         accessorKey: "phone",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Phone" />
+          <DataTableColumnHeader column={column} title={t("phone")} />
         ),
       },
       {
         accessorKey: "email",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Email" />
+          <DataTableColumnHeader column={column} title={t("email")} />
         ),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
@@ -131,7 +131,7 @@ export function SuppliersTab({
                 setEditingSupplier(row.original);
                 setShowAddSupplier(true);
               }}
-              title="Edit"
+              title={t("edit")}
             >
               <Pencil className="size-4" />
             </Button>
@@ -140,7 +140,7 @@ export function SuppliersTab({
               size="icon-xs"
               onClick={() => handleDeleteSupplier(row.original.id)}
               className="text-destructive/70 hover:text-destructive"
-              title="Delete"
+              title={t("delete")}
             >
               <Trash2 className="size-4" />
             </Button>

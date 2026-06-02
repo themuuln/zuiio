@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,15 +33,17 @@ export function SettingsNavigation({
   sections,
   timezone,
 }: SettingsNavigationProps) {
+  const t = useTranslations("settings");
+
   return (
     <aside className="flex flex-col gap-4 xl:sticky xl:top-20 xl:self-start">
       <Card className="border-border/70 bg-card/95 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold">
-            Settings navigator
+            {t("navTitle")}
           </CardTitle>
           <CardDescription className="text-xs">
-            Every section stays on one page. Use this rail to jump and scan.
+            {t("navDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
@@ -83,18 +86,18 @@ export function SettingsNavigation({
       <Card className="border-border/70 bg-card/95 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold">
-            Workspace defaults
+            {t("workspaceDefaults")}
           </CardTitle>
           <CardDescription className="text-xs">
-            Quick summary of the values shaping new invoices and reports.
+            {t("workspaceDefaultsDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {[
-            { label: "Organization", value: organizationName },
-            { label: "Language", value: language },
-            { label: "Timezone", value: timezone },
-            { label: "Currency", value: currency },
+            { label: t("orgLabel"), value: organizationName },
+            { label: t("langLabel"), value: language },
+            { label: t("timezoneLabel"), value: timezone },
+            { label: t("currencyLabel"), value: currency },
           ].map((item) => (
             <div
               key={item.label}
@@ -107,8 +110,10 @@ export function SettingsNavigation({
                 <Typography.Text className="text-sm font-medium">
                   {item.value}
                 </Typography.Text>
-                {item.label === "Organization" ? (
-                  <Badge variant="outline">{sections.length} sections</Badge>
+                {item.label === t("orgLabel") ? (
+                  <Badge variant="outline">
+                    {t("sectionCount", { count: sections.length })}
+                  </Badge>
                 ) : null}
               </div>
             </div>

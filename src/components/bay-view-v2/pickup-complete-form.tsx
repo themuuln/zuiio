@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -146,6 +147,9 @@ export function PickupCompleteForm({
           <DialogTitle className="flex items-center gap-2">
             {t("pickupCompleteTitle")}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {t("pickupCompleteTitle")} — {vehiclePlate}
+          </DialogDescription>
           <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-1">
             {vehiclePlate}
           </span>

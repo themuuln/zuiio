@@ -169,7 +169,7 @@ export function PartsTab({
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: inventoryKeys.thresholds(orgId) });
-      toast.success("Threshold saved");
+      toast.success(t("inventory.thresholdSaved"));
       setEditingThreshold(null);
     },
     onError: (err: Error) => toast.error(err.message),
@@ -401,7 +401,7 @@ export function PartsTab({
         ) : isPartsError ? (
           <Alert variant="destructive">
             <AlertTriangle className="size-4" />
-            <AlertTitle>Error loading inventory parts</AlertTitle>
+            <AlertTitle>{t("inventory.errorLoadingParts")}</AlertTitle>
             <AlertDescription>
               {partsError instanceof Error
                 ? partsError.message
@@ -636,7 +636,7 @@ export function PartsTab({
         ) : isGlobalPartsError ? (
           <Alert variant="destructive">
             <AlertTriangle className="size-4" />
-            <AlertTitle>Error loading global catalog</AlertTitle>
+            <AlertTitle>{t("inventory.errorLoadingGlobal")}</AlertTitle>
             <AlertDescription>
               {globalPartsError instanceof Error
                 ? globalPartsError.message
@@ -803,7 +803,7 @@ export function PartsTab({
               if (forkingData) {
                 toast.success(t("forkSuccess"));
               } else {
-                toast.success("Part created");
+                toast.success(t("inventory.partCreated"));
               }
               setShowAddPart(false);
               setForkingData(null);
@@ -880,7 +880,7 @@ export function PartsTab({
                     (p) => !thresholdMap[p.id],
                   );
                   if (partsNoThreshold.length === 0) {
-                    toast.success("All parts already have thresholds");
+                    toast.success(t("inventory.allPartsHaveThreshold"));
                     setShowDefaultThreshold(false);
                     return;
                   }

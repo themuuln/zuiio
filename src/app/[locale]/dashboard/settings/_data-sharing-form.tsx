@@ -1,6 +1,7 @@
 "use client";
 
 import { Info, Shield } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -20,6 +21,7 @@ export function DataSharingForm({
   organization,
   onRefetch,
 }: DataSharingFormProps) {
+  const t = useTranslations("settings");
   const [sharingEnabled, setSharingEnabled] = useState(
     organization?.sharing_enabled ?? false,
   );
@@ -48,11 +50,12 @@ export function DataSharingForm({
         onRefetch();
         toast.success(
           checked
-            ? "Data sharing enabled — other organizations can now view your customer data"
-            : "Data sharing disabled — your data is now private",
+            ? t("dataSharingEnabledToast")
+            : t("dataSharingDisabledToast"),
         );
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to update";
+        const message =
+          err instanceof Error ? err.message : t("dataSharingFailedToast");
         toast.error(message);
         setSharingEnabled(!checked); // revert
       } finally {
@@ -81,11 +84,10 @@ export function DataSharingForm({
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
               <Typography.Text className="font-medium">
-                Share customer & vehicle data
+                {t("dataSharingTitle")}
               </Typography.Text>
               <Typography.Muted className="text-sm text-muted-foreground">
-                When enabled, other organizations on the network can view your
-                customers, vehicles, and service history.
+                {t("dataSharingDesc")}
               </Typography.Muted>
             </div>
             <Switch
@@ -99,7 +101,7 @@ export function DataSharingForm({
 
           <div className="flex flex-col gap-3">
             <Typography.Text className="text-sm font-medium">
-              What gets shared
+              {t("whatGetsShared")}
             </Typography.Text>
             <div className="grid gap-2 sm:grid-cols-2">
               <SharedItem
@@ -125,7 +127,7 @@ export function DataSharingForm({
 
           <div className="flex flex-col gap-2">
             <Typography.Text className="text-sm font-medium">
-              Access rules
+              {t("accessRules")}
             </Typography.Text>
             <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
               <li>
@@ -144,7 +146,7 @@ export function DataSharingForm({
 
       <Alert variant="default">
         <Info className="size-4" />
-        <AlertTitle>About data sharing</AlertTitle>
+        <AlertTitle>{t("aboutDataSharing")}</AlertTitle>
         <AlertDescription>
           Data sharing is an opt-in feature. Your customer and vehicle data is
           private by default. When you enable sharing, other auto service

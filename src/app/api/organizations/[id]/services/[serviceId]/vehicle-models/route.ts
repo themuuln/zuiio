@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
+  deleteServiceVehicleModelPrice,
   getServiceVehicleModels,
   upsertServiceVehicleModelPrice,
-  deleteServiceVehicleModelPrice,
 } from "@/lib/services/service-catalog-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 

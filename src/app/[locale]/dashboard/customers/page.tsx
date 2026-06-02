@@ -135,12 +135,15 @@ export default function CustomersPage() {
 
     registerTab(
       "stats",
-      "Stats",
+      t("common.stats"),
       <StatusSummary
-        title="Overview"
+        title={t("customers.overview")}
         items={[
-          { label: "Total Customers", count: rawCustomersForView.length },
-          { label: "New This Month", count: newThisMonth },
+          {
+            label: t("customers.totalCustomers"),
+            count: rawCustomersForView.length,
+          },
+          { label: t("customers.newThisMonth"), count: newThisMonth },
         ]}
       />,
       <BarChart3 className="size-4" />,
@@ -158,14 +161,14 @@ export default function CustomersPage() {
         primary:
           [c.first_name, c.last_name].filter(Boolean).join(" ") ||
           c.phone ||
-          "Unknown",
+          t("common.unknown"),
         secondary: c.phone,
       }));
 
     registerTab(
       "recent",
-      "Recent",
-      <RecentList items={recent} title="Recent Customers" />,
+      t("common.recent"),
+      <RecentList items={recent} title={t("customers.recentCustomers")} />,
       <Clock className="size-4" />,
     );
   }, [rawCustomersForView, registerTab]);

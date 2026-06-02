@@ -127,7 +127,7 @@ export function BusinessDefaultsForm({
   currentLocale,
   onSubmit,
 }: BusinessDefaultsFormProps) {
-  const t = useTranslations();
+  const t = useTranslations("settings");
 
   const rhfForm = useForm<BusinessDefaultsValues>({
     resolver: zodResolver(businessDefaultsSchema),
@@ -184,10 +184,10 @@ export function BusinessDefaultsForm({
     <Card className="lg:col-span-2">
       <CardHeader className="pb-4">
         <CardTitle className="text-sm font-semibold">
-          Business defaults
+          {t("businessDefaultsTitle")}
         </CardTitle>
         <CardDescription className="text-xs">
-          These settings are used for new invoices, reports, and payment flows.
+          {t("businessDefaultsDesc")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -200,7 +200,9 @@ export function BusinessDefaultsForm({
         >
           <FieldGroup className="grid gap-4 sm:grid-cols-2">
             <Field data-invalid={!!rhfForm.formState.errors.invoicePrefix}>
-              <FieldLabel htmlFor="invoicePrefix">Invoice prefix</FieldLabel>
+              <FieldLabel htmlFor="invoicePrefix">
+                {t("invoicePrefix")}
+              </FieldLabel>
               <FieldContent>
                 <div className="relative">
                   <FileText className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -228,7 +230,7 @@ export function BusinessDefaultsForm({
 
             <Field data-invalid={!!rhfForm.formState.errors.defaultCurrency}>
               <FieldLabel htmlFor="defaultCurrency">
-                Default currency
+                {t("defaultCurrency")}
               </FieldLabel>
               <FieldContent>
                 <Select
@@ -243,13 +245,13 @@ export function BusinessDefaultsForm({
                     aria-invalid={!!rhfForm.formState.errors.defaultCurrency}
                   >
                     <CreditCard className="size-4 text-muted-foreground" />
-                    <SelectValue placeholder="Select currency" />
+                    <SelectValue placeholder={t("selectCurrency")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MNT">MNT (Mongolian Tugrik)</SelectItem>
-                    <SelectItem value="CNY">CNY (Chinese Yuan)</SelectItem>
-                    <SelectItem value="USD">USD (US Dollar)</SelectItem>
-                    <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                    <SelectItem value="MNT">{t("currencyMnt")}</SelectItem>
+                    <SelectItem value="CNY">{t("currencyCny")}</SelectItem>
+                    <SelectItem value="USD">{t("currencyUsd")}</SelectItem>
+                    <SelectItem value="EUR">{t("currencyEur")}</SelectItem>
                   </SelectContent>
                 </Select>
                 {rhfForm.formState.errors.defaultCurrency && (
@@ -262,7 +264,7 @@ export function BusinessDefaultsForm({
 
             <Field data-invalid={!!rhfForm.formState.errors.defaultTaxRate}>
               <FieldLabel htmlFor="defaultTaxRate">
-                Default tax rate (%)
+                {t("defaultTaxRate")}
               </FieldLabel>
               <FieldContent>
                 <Input
@@ -283,7 +285,7 @@ export function BusinessDefaultsForm({
             </Field>
 
             <Field data-invalid={!!rhfForm.formState.errors.timezone}>
-              <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
+              <FieldLabel htmlFor="timezone">{t("timezone")}</FieldLabel>
               <FieldContent>
                 <Input
                   id="timezone"
@@ -299,7 +301,7 @@ export function BusinessDefaultsForm({
             </Field>
 
             <Field data-invalid={!!rhfForm.formState.errors.dateFormat}>
-              <FieldLabel htmlFor="dateFormat">Date format</FieldLabel>
+              <FieldLabel htmlFor="dateFormat">{t("dateFormat")}</FieldLabel>
               <FieldContent>
                 <Input
                   id="dateFormat"
@@ -315,7 +317,7 @@ export function BusinessDefaultsForm({
             </Field>
 
             <Field data-invalid={!!rhfForm.formState.errors.language}>
-              <FieldLabel htmlFor="language">Default language</FieldLabel>
+              <FieldLabel htmlFor="language">{t("defaultLanguage")}</FieldLabel>
               <FieldContent>
                 <Select
                   value={rhfForm.watch("language")}
@@ -329,11 +331,11 @@ export function BusinessDefaultsForm({
                     aria-invalid={!!rhfForm.formState.errors.language}
                   >
                     <Globe className="size-4 text-muted-foreground" />
-                    <SelectValue placeholder="Select language" />
+                    <SelectValue placeholder={t("selectLanguage")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="mn">Монгол (Mongolian)</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="mn">{t("languageMn")}</SelectItem>
+                    <SelectItem value="en">{t("languageEn")}</SelectItem>
                   </SelectContent>
                 </Select>
                 {rhfForm.formState.errors.language && (
@@ -343,7 +345,7 @@ export function BusinessDefaultsForm({
                 )}
                 {currentLocale !== watchedLanguage && (
                   <Typography.Muted className="text-xs text-muted-foreground">
-                    Language will change after save
+                    {t("languageChangeAfterSave")}
                   </Typography.Muted>
                 )}
               </FieldContent>
@@ -365,11 +367,11 @@ export function BusinessDefaultsForm({
           <div className="flex items-center justify-between gap-4 border-t border-border pt-4">
             <Typography.Muted className="text-xs text-muted-foreground">
               {watchedLanguage !== currentLocale
-                ? "Saving will switch the interface language immediately."
-                : "All changes are saved to your organization."}
+                ? t("langWillReload")
+                : t("allChangesSaved")}
             </Typography.Muted>
             <Button type="submit" disabled={saving} className="min-w-24">
-              {saving ? t("common.saving") : t("common.save")}
+              {saving ? t("saving") : t("save")}
             </Button>
           </div>
         </form>

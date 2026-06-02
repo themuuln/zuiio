@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Building2, Car, ChevronRight, Clock, Globe, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import { Typography } from "@/components/ui/typography";
@@ -12,30 +13,38 @@ export interface CustomerRow extends Customer {
   organization_name?: string;
 }
 
-function getCustomerDisplayName(customer: CustomerRow): string {
+function getCustomerDisplayName(
+  customer: CustomerRow,
+  t?: (key: string) => string,
+): string {
   return (
     [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
     customer.company_name ||
     customer.contact_person ||
     customer.full_name ||
     customer.phone ||
-    "No name"
+    (t ? t("noName") : "No name")
   );
 }
 
-function formatDate(dateString: string | null): string | null {
+function formatDate(
+  dateString: string | null,
+  t?: (key: string, values?: Record<string, number>) => string,
+): string | null {
   if (!dateString) return null;
   const date = new Date(dateString);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
+  if (days === 0) return t ? t("today") : "Today";
+  if (days === 1) return t ? t("yesterday") : "Yesterday";
+  if (days < 7) return t ? t("daysAgo", { days }) : `${days} days ago`;
   if (days < 30) {
     const weeks = Math.floor(days / 7);
-    return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
+    return t
+      ? t("weeksAgo", { weeks })
+      : `${weeks} week${weeks > 1 ? "s" : ""} ago`;
   }
   return date.toLocaleDateString();
 }
@@ -44,10 +53,12 @@ export const columns: ColumnDef<CustomerRow>[] = [
   {
     id: "name",
     accessorFn: (row) => getCustomerDisplayName(row),
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("customers");
+      return <DataTableColumnHeader column={column} title={t("name")} />;
+    },
     cell: ({ row }) => {
+      const t = useTranslations("customers");
       const customer = row.original;
       return (
         <div className="flex items-center gap-2.5">
@@ -60,7 +71,7 @@ export const columns: ColumnDef<CustomerRow>[] = [
           </div>
           <div className="min-w-0">
             <Typography.Text className="truncate text-sm font-medium">
-              {getCustomerDisplayName(customer)}
+              {getCustomerDisplayName(customer, t)}
             </Typography.Text>
             <Typography.Muted className="text-xs text-muted-foreground capitalize">
               {customer.type}
@@ -72,9 +83,10 @@ export const columns: ColumnDef<CustomerRow>[] = [
   },
   {
     id: "contact",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Contact" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("customers");
+      return <DataTableColumnHeader column={column} title={t("contact")} />;
+    },
     cell: ({ row }) => {
       const customer = row.original;
       return (
@@ -97,9 +109,10 @@ export const columns: ColumnDef<CustomerRow>[] = [
   {
     id: "vehicles",
     accessorKey: "vehicle_count",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Vehicles" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("customers");
+      return <DataTableColumnHeader column={column} title={t("vehicles")} />;
+    },
     cell: ({ row }) => (
       <Badge variant="secondary" className="gap-1 tabular-nums">
         <Car className="size-3 text-muted-foreground/60" />
@@ -110,9 +123,10 @@ export const columns: ColumnDef<CustomerRow>[] = [
   {
     id: "total_visits",
     accessorKey: "total_visits",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Visits" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("customers");
+      return <DataTableColumnHeader column={column} title={t("visits")} />;
+    },
     cell: ({ row }) => (
       <span className="text-sm tabular-nums">{row.original.total_visits}</span>
     ),
@@ -120,18 +134,20 @@ export const columns: ColumnDef<CustomerRow>[] = [
   {
     id: "last_visit",
     accessorKey: "last_visit_at",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Last Visit" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("customers");
+      return <DataTableColumnHeader column={column} title={t("lastVisit")} />;
+    },
     cell: ({ row }) => {
-      const lastVisit = formatDate(row.original.last_visit_at);
+      const t = useTranslations("customers");
+      const lastVisit = formatDate(row.original.last_visit_at, t);
       return lastVisit ? (
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Clock className="size-3.5 shrink-0 text-muted-foreground/50" />
           <span>{lastVisit}</span>
         </div>
       ) : (
-        <span className="text-sm text-muted-foreground/50">Never</span>
+        <span className="text-sm text-muted-foreground/50">{t("never")}</span>
       );
     },
   },
@@ -148,10 +164,12 @@ export const sharedColumns: ColumnDef<CustomerRow>[] = [
   {
     id: "name",
     accessorFn: (row) => getCustomerDisplayName(row),
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("customers");
+      return <DataTableColumnHeader column={column} title={t("name")} />;
+    },
     cell: ({ row }) => {
+      const t = useTranslations("customers");
       const customer = row.original;
       return (
         <div className="flex items-center gap-2.5">
@@ -164,7 +182,7 @@ export const sharedColumns: ColumnDef<CustomerRow>[] = [
           </div>
           <div className="min-w-0">
             <Typography.Text className="truncate text-sm font-medium">
-              {getCustomerDisplayName(customer)}
+              {getCustomerDisplayName(customer, t)}
             </Typography.Text>
             <div className="flex items-center gap-1">
               <Typography.Muted className="text-xs text-muted-foreground capitalize">
@@ -187,9 +205,10 @@ export const sharedColumns: ColumnDef<CustomerRow>[] = [
   },
   {
     id: "contact",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Contact" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("customers");
+      return <DataTableColumnHeader column={column} title={t("contact")} />;
+    },
     cell: ({ row }) => {
       const customer = row.original;
       return (
@@ -212,9 +231,10 @@ export const sharedColumns: ColumnDef<CustomerRow>[] = [
   {
     id: "vehicles",
     accessorKey: "vehicle_count",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Vehicles" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("customers");
+      return <DataTableColumnHeader column={column} title={t("vehicles")} />;
+    },
     cell: ({ row }) => (
       <Badge variant="secondary" className="gap-1 tabular-nums">
         <Car className="size-3 text-muted-foreground/60" />
@@ -225,18 +245,20 @@ export const sharedColumns: ColumnDef<CustomerRow>[] = [
   {
     id: "last_visit",
     accessorKey: "last_visit_at",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Last Visit" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("customers");
+      return <DataTableColumnHeader column={column} title={t("lastVisit")} />;
+    },
     cell: ({ row }) => {
-      const lastVisit = formatDate(row.original.last_visit_at);
+      const t = useTranslations("customers");
+      const lastVisit = formatDate(row.original.last_visit_at, t);
       return lastVisit ? (
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Clock className="size-3.5 shrink-0 text-muted-foreground/50" />
           <span>{lastVisit}</span>
         </div>
       ) : (
-        <span className="text-sm text-muted-foreground/50">Never</span>
+        <span className="text-sm text-muted-foreground/50">{t("never")}</span>
       );
     },
   },

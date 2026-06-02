@@ -290,9 +290,11 @@ export default function EodClosePage() {
     return (
       <div className="flex flex-col items-center gap-4 py-16">
         <AlertTriangle className="size-10 text-destructive" />
-        <Typography.H3 className="m-0">Failed to load data</Typography.H3>
+        <Typography.H3 className="m-0">
+          {t("eodClose.failedToLoad")}
+        </Typography.H3>
         <Typography.Muted>{error}</Typography.Muted>
-        <Button onClick={fetchData}>Retry</Button>
+        <Button onClick={fetchData}>{t("common.retry")}</Button>
       </div>
     );
   }
@@ -312,7 +314,7 @@ export default function EodClosePage() {
           <div className="flex items-center gap-2">
             <ClipboardList className="size-5 text-primary" />
             <Typography.H2 className="m-0 text-xl font-semibold">
-              {t("eodClose.title") ?? "End of Day Summary"}
+              {t("eodClose.title")}
             </Typography.H2>
           </div>
           <Typography.Muted className="mt-1">
@@ -325,7 +327,7 @@ export default function EodClosePage() {
                 variant="secondary"
                 className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
               >
-                🔥 {streak}-day streak
+                {t("eodClose.streak", { count: streak })}
               </Badge>
               <Typography.Muted className="text-[11px] text-muted-foreground/60 ml-1">
                 {streak >= 5
@@ -340,7 +342,7 @@ export default function EodClosePage() {
         <div className="flex flex-wrap gap-2 print:hidden">
           <Button variant="outline" size="sm" onClick={handlePrint}>
             <Printer className="mr-1.5 size-3.5" />
-            {t("eodClose.print") ?? "Print Report"}
+            {t("eodClose.print")}
           </Button>
           {!isClosed ? (
             <Button
@@ -352,14 +354,12 @@ export default function EodClosePage() {
               <CheckCircle2
                 className={`mr-1.5 size-3.5 ${closing ? "animate-spin" : ""}`}
               />
-              {closing
-                ? "Closing..."
-                : (t("eodClose.closeDay") ?? "Close Day ✓")}
+              {closing ? t("common.saving") : t("eodClose.closeDay")}
             </Button>
           ) : (
             <Button size="sm" variant="outline" disabled>
               <CheckCircle2 className="mr-1.5 size-3.5 text-emerald-500" />
-              {t("eodClose.dayClosed") ?? "Day Closed ✓"}
+              {t("eodClose.dayClosed")}
             </Button>
           )}
         </div>
@@ -371,19 +371,19 @@ export default function EodClosePage() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <StatCard
           icon={DollarSign}
-          label={t("eodClose.revenue") ?? "Total Revenue"}
+          label={t("eodClose.revenue")}
           value={formatCurrency(eod?.total_revenue ?? 0)}
           accent="text-emerald-500"
         />
         <StatCard
           icon={CheckCircle2}
-          label={t("eodClose.completedJobs") ?? "Completed Today"}
+          label={t("eodClose.completedJobs")}
           value={String(eod?.total_work_orders ?? 0)}
           accent="text-blue-500"
         />
         <StatCard
           icon={Clock}
-          label={t("eodClose.openJobs") ?? "Open Jobs"}
+          label={t("eodClose.openJobs")}
           value={String(eod?.open_work_orders ?? 0)}
           href="/dashboard/work-orders"
           accent={
@@ -394,7 +394,7 @@ export default function EodClosePage() {
         />
         <StatCard
           icon={Receipt}
-          label={t("eodClose.unpaidInvoices") ?? "Unpaid Invoices"}
+          label={t("eodClose.unpaidInvoices")}
           value={`${eod?.unpaid_invoices?.count ?? 0} · ${formatCurrency(eod?.unpaid_invoices?.total ?? 0)}`}
           href="/dashboard/finance"
           accent={
@@ -412,27 +412,27 @@ export default function EodClosePage() {
             <div className="mb-3 flex items-center gap-2">
               <Banknote className="size-4 text-muted-foreground" />
               <Typography.Text className="text-sm font-semibold">
-                {t("eodClose.paymentBreakdown") ?? "Payment Breakdown"}
+                {t("eodClose.paymentBreakdown")}
               </Typography.Text>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <PaymentMiniCard
-                label={t("eodClose.cash") ?? "Cash"}
+                label={t("eodClose.cash")}
                 amount={eod.payment_breakdown?.cash ?? 0}
                 color="bg-emerald-500"
               />
               <PaymentMiniCard
-                label={t("eodClose.card") ?? "Card"}
+                label={t("eodClose.card")}
                 amount={eod.payment_breakdown?.card ?? 0}
                 color="bg-blue-500"
               />
               <PaymentMiniCard
-                label={t("eodClose.bankTransfer") ?? "Bank Transfer"}
+                label={t("eodClose.bankTransfer")}
                 amount={eod.payment_breakdown?.bank_transfer ?? 0}
                 color="bg-purple-500"
               />
               <PaymentMiniCard
-                label={t("eodClose.other") ?? "Other"}
+                label={t("eodClose.other")}
                 amount={eod.payment_breakdown?.other ?? 0}
                 color="bg-gray-400"
               />
@@ -449,7 +449,7 @@ export default function EodClosePage() {
             <div className="mb-3 flex items-center gap-2">
               <Crown className="size-4 text-amber-500" />
               <Typography.Text className="text-sm font-semibold">
-                {t("eodClose.bestMechanic") ?? "Best Mechanic"}
+                {t("eodClose.bestMechanic")}
               </Typography.Text>
             </div>
             {eod?.best_mechanic ? (
@@ -472,7 +472,7 @@ export default function EodClosePage() {
               </div>
             ) : (
               <Typography.Muted className="text-sm">
-                {t("eodClose.noMechanicData") ?? "No mechanic data today"}
+                {t("eodClose.noMechanicData")}
               </Typography.Muted>
             )}
           </CardContent>
@@ -484,7 +484,7 @@ export default function EodClosePage() {
             <div className="mb-3 flex items-center gap-2">
               <AlertTriangle className="size-4 text-amber-500" />
               <Typography.Text className="text-sm font-semibold">
-                {t("eodClose.biggestIssue") ?? "Biggest Issue"}
+                {t("eodClose.biggestIssue")}
               </Typography.Text>
             </div>
             {openCount > 0 ? (
@@ -497,8 +497,10 @@ export default function EodClosePage() {
                     <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                       <span>
                         {biggestIssue.days_open > 0
-                          ? `${biggestIssue.days_open} day${biggestIssue.days_open === 1 ? "" : "s"} open`
-                          : "Opened today"}
+                          ? t("eodClose.daysOpen", {
+                              count: biggestIssue.days_open,
+                            })
+                          : t("eodClose.openedToday")}
                       </span>
                       {biggestIssue.customer && (
                         <>
@@ -546,7 +548,7 @@ export default function EodClosePage() {
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="size-4 text-amber-500" />
                   <Typography.Text className="text-sm font-semibold">
-                    {t("eodClose.pendingItems") ?? "Pending Items"}
+                    {t("eodClose.pendingItems")}
                   </Typography.Text>
                   <Badge variant="secondary">{lowStockCount}</Badge>
                 </div>

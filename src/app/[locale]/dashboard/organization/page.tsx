@@ -47,6 +47,7 @@ import type { Organization, SubscriptionPlanInfo } from "@/lib/types";
 
 export default function OrganizationPage() {
   const t = useTranslations();
+  const orgT = useTranslations("organization.page");
   const orgInfoQuery = useCurrentOrg();
   const orgId = orgInfoQuery.data?.orgId;
 
@@ -125,12 +126,12 @@ export default function OrganizationPage() {
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
-      toast.success("Organization updated");
+      toast.success(orgT("orgUpdated"));
       await refetchOrg();
       setEditing(false);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to update organization",
+        err instanceof Error ? err.message : orgT("failedToUpdateOrg"),
       );
     } finally {
       setIsSaving(false);
@@ -327,7 +328,7 @@ export default function OrganizationPage() {
                 </Button>
               )}
             </CardTitle>
-            <CardDescription>Workspace details</CardDescription>
+            <CardDescription>{orgT("workspaceDetails")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {editing ? (
@@ -339,10 +340,10 @@ export default function OrganizationPage() {
                 className="flex flex-col gap-3"
               >
                 <Field data-invalid={!!form.formState.errors.name}>
-                  <FieldLabel>Name</FieldLabel>
+                  <FieldLabel>{orgT("nameLabel")}</FieldLabel>
                   <FieldContent>
                     <Input
-                      placeholder="Organization name"
+                      placeholder={orgT("orgNamePlaceholder")}
                       aria-invalid={!!form.formState.errors.name}
                       {...form.register("name")}
                     />
@@ -356,7 +357,7 @@ export default function OrganizationPage() {
 
                 <div>
                   <Typography.Muted className="text-sm text-muted-foreground">
-                    Slug
+                    {orgT("slugLabel")}
                   </Typography.Muted>
                   <Typography.Text className="font-medium">
                     {organization?.slug ?? "\u2014"}
@@ -364,10 +365,10 @@ export default function OrganizationPage() {
                 </div>
 
                 <Field data-invalid={!!form.formState.errors.logoUrl}>
-                  <FieldLabel>Logo URL</FieldLabel>
+                  <FieldLabel>{orgT("logoUrlLabel")}</FieldLabel>
                   <FieldContent>
                     <Input
-                      placeholder="https://example.com/logo.png"
+                      placeholder={orgT("logoUrlPlaceholder")}
                       aria-invalid={!!form.formState.errors.logoUrl}
                       {...form.register("logoUrl")}
                     />
@@ -417,7 +418,7 @@ export default function OrganizationPage() {
               <>
                 <div>
                   <Typography.Muted className="text-sm text-muted-foreground">
-                    Name
+                    {orgT("nameLabel")}
                   </Typography.Muted>
                   <Typography.Text className="font-medium">
                     {organization?.name ?? "\u2014"}
@@ -425,7 +426,7 @@ export default function OrganizationPage() {
                 </div>
                 <div>
                   <Typography.Muted className="text-sm text-muted-foreground">
-                    Slug
+                    {orgT("slugLabel")}
                   </Typography.Muted>
                   <Typography.Text className="font-medium">
                     {organization?.slug ?? "\u2014"}
@@ -442,7 +443,7 @@ export default function OrganizationPage() {
               <CreditCard className="size-4" />
               Subscription
             </CardTitle>
-            <CardDescription>Current plan and billing</CardDescription>
+            <CardDescription>{orgT("currentPlanAndBilling")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {subscription ? (
@@ -519,7 +520,7 @@ export default function OrganizationPage() {
               <Users className="size-4" />
               Members
             </CardTitle>
-            <CardDescription>Team management</CardDescription>
+            <CardDescription>{orgT("teamManagement")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Typography.Muted className="text-sm text-muted-foreground">
@@ -550,7 +551,7 @@ export default function OrganizationPage() {
               <Palette className="size-4" />
               Theme
             </CardTitle>
-            <CardDescription>Customize appearance</CardDescription>
+            <CardDescription>{orgT("customizeAppearance")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Typography.Muted className="text-sm text-muted-foreground">
@@ -573,7 +574,7 @@ export default function OrganizationPage() {
               <DollarSign className="size-4" />
               Payroll
             </CardTitle>
-            <CardDescription>Mechanic pay rates</CardDescription>
+            <CardDescription>{orgT("mechanicPayRates")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Typography.Muted className="text-sm text-muted-foreground">
@@ -596,7 +597,9 @@ export default function OrganizationPage() {
               <Smartphone className="size-4" />
               Devices
             </CardTitle>
-            <CardDescription>Mechanic tablet management</CardDescription>
+            <CardDescription>
+              {orgT("mechanicTabletManagement")}
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Typography.Muted className="text-sm text-muted-foreground">
@@ -619,7 +622,9 @@ export default function OrganizationPage() {
               <Settings className="size-4" />
               Settings
             </CardTitle>
-            <CardDescription>Business defaults & rules</CardDescription>
+            <CardDescription>
+              {orgT("businessDefaultsAndRules")}
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Typography.Muted className="text-sm text-muted-foreground">

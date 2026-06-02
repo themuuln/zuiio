@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { AlertCircle, ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import { Typography } from "@/components/ui/typography";
@@ -49,9 +50,10 @@ function isOverdue(expense: ExpenseWithCategory): boolean {
 export const columns: ColumnDef<ExpenseWithCategory>[] = [
   {
     accessorKey: "expense_date",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Date" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("expenses");
+      return <DataTableColumnHeader column={column} title={t("date")} />;
+    },
     cell: ({ row }) => (
       <span className="text-sm tabular-nums">
         {formatDate(row.original.expense_date)}
@@ -61,9 +63,10 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
   {
     id: "description",
     accessorKey: "description",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Description" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("expenses");
+      return <DataTableColumnHeader column={column} title={t("description")} />;
+    },
     cell: ({ row }) => {
       const expense = row.original;
       return (
@@ -82,9 +85,10 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
   },
   {
     id: "category",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Category" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("expenses");
+      return <DataTableColumnHeader column={column} title={t("category")} />;
+    },
     cell: ({ row }) => {
       const cat = row.original.category;
       return cat ? (
@@ -96,9 +100,10 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
   },
   {
     accessorKey: "vendor_name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Vendor" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("expenses");
+      return <DataTableColumnHeader column={column} title={t("vendor")} />;
+    },
     cell: ({ row }) => {
       const vendor = row.original.vendor_name;
       return vendor ? (
@@ -110,9 +115,10 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
   },
   {
     accessorKey: "due_date",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Due" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("expenses");
+      return <DataTableColumnHeader column={column} title={t("due")} />;
+    },
     cell: ({ row }) => {
       const expense = row.original;
       if (!expense.due_date) {
@@ -137,9 +143,10 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
   },
   {
     accessorKey: "amount",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Amount" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("expenses");
+      return <DataTableColumnHeader column={column} title={t("amount")} />;
+    },
     cell: ({ row }) => (
       <span className="text-sm font-medium tabular-nums">
         {formatMNT(row.original.amount)}
@@ -148,13 +155,15 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
   },
   {
     accessorKey: "paid_at",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("expenses");
+      return <DataTableColumnHeader column={column} title={t("status")} />;
+    },
     cell: ({ row }) => {
+      const t = useTranslations("expenses");
       const expense = row.original;
       if (expense.paid_at) {
-        return <Badge variant="outline">Paid</Badge>;
+        return <Badge variant="outline">{t("paid")}</Badge>;
       }
       const overdue = isOverdue(expense);
       if (overdue) {
@@ -164,11 +173,11 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
             className="border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400 gap-1"
           >
             <AlertCircle className="size-3" />
-            Overdue
+            {t("overdue")}
           </Badge>
         );
       }
-      return <Badge variant="outline">Unpaid</Badge>;
+      return <Badge variant="outline">{t("unpaid")}</Badge>;
     },
   },
   {

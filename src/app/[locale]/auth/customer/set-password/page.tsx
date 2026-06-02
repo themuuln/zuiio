@@ -40,8 +40,7 @@ export default function CustomerSetPasswordPage() {
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-sm">
           <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            No access token provided. Please use the link from your email or
-            messaging app.
+            {t("portal.noAccessToken")}
           </CardContent>
         </Card>
       </div>
@@ -87,7 +86,7 @@ export default function CustomerSetPasswordPage() {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="email@example.com"
+                  placeholder={t("portal.emailPlaceholder")}
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -107,7 +106,7 @@ export default function CustomerSetPasswordPage() {
                   id="password"
                   name="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t("portal.passwordPlaceholder")}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -127,7 +126,7 @@ export default function CustomerSetPasswordPage() {
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t("portal.confirmPasswordPlaceholder")}
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

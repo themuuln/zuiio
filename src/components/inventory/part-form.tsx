@@ -67,6 +67,7 @@ export function PartForm({
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? "";
   const commonT = useTranslations("common");
+  const t = useTranslations("inventory");
 
   const [currentMode, setCurrentMode] = useState<"quick" | "full">(mode);
   const [error, setError] = useState<string | null>(null);
@@ -126,7 +127,7 @@ export function PartForm({
 
   const onSubmit = form.handleSubmit(async (data) => {
     if (!orgId) {
-      setError("No organization selected. Please refresh the page.");
+      setError(commonT("noOrganization"));
       return;
     }
     setError(null);
@@ -169,7 +170,7 @@ export function PartForm({
       }
       onSuccess?.(part);
     } catch (err: unknown) {
-      setError((err as Error).message || "Failed to save part");
+      setError((err as Error).message || commonT("unexpectedError"));
     }
   });
 
@@ -290,7 +291,11 @@ export function PartForm({
                         className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer border-t border-border"
                       >
                         <Plus className="size-4 shrink-0 text-muted-foreground" />
-                        <span>Create "{categoryInput.trim()}" category</span>
+                        <span>
+                          {t("inventory.createCategory", {
+                            name: categoryInput.trim(),
+                          })}
+                        </span>
                         {createCategory.isPending && (
                           <Loader2 className="size-3 animate-spin ml-auto" />
                         )}

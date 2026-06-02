@@ -4,8 +4,8 @@ import { Car, Loader2, User, Wrench, X } from "lucide-react";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { Button } from "@/components/ui/button";
 import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { MongolianLicensePlate } from "@/components/vehicles/license-plate";
 import type { WorkOrderDetail } from "@/lib/types";
-import { MongolianLicensePlate } from "./bay-card";
 import { StatusPill } from "./status-pill";
 
 interface DrawerHeaderProps {

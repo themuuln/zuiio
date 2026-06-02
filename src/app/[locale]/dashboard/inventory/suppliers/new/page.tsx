@@ -137,7 +137,7 @@ export default function NewSupplierPage() {
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field>
-                <FieldLabel htmlFor="tax_id">Tax ID</FieldLabel>
+                <FieldLabel htmlFor="tax_id">{t("taxId")}</FieldLabel>
                 <Input
                   id="tax_id"
                   value={taxId}
@@ -147,7 +147,9 @@ export default function NewSupplierPage() {
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="payment_terms">Payment Terms</FieldLabel>
+                <FieldLabel htmlFor="payment_terms">
+                  {t("paymentTerms")}
+                </FieldLabel>
                 <Input
                   id="payment_terms"
                   value={paymentTerms}

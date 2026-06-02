@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -70,6 +71,7 @@ type QuoteValues = z.infer<typeof quoteSchema>;
 // ── Main Component ─────────────────────────────────────────────
 
 export default function NewEstimatePage() {
+  const t = useTranslations("estimates");
   const router = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId ?? "";
@@ -190,15 +192,15 @@ export default function NewEstimatePage() {
 
   const handleSave = async (status: string = "draft") => {
     if (!customer) {
-      toast.error("Please select a customer");
+      toast.error(t("pleaseSelectCustomer"));
       return;
     }
     if (!vehicle) {
-      toast.error("Please select a vehicle");
+      toast.error(t("pleaseSelectVehicle"));
       return;
     }
     if (lines.length === 0) {
-      toast.error("Add at least one item");
+      toast.error(t("addAtLeastOneItem"));
       return;
     }
 
@@ -226,12 +228,10 @@ export default function NewEstimatePage() {
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
-      toast.success("Quote created!");
+      toast.success(t("quoteCreated"));
       router.push(`/dashboard/estimates/${json.data.id}`);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to create quote",
-      );
+      toast.error(err instanceof Error ? err.message : t("failedToCreate"));
     } finally {
       setSaving(false);
     }
@@ -262,7 +262,7 @@ export default function NewEstimatePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       <div>
-        <Typography.H2>Create Quote</Typography.H2>
+        <Typography.H2>{t("newQuoteTitle")}</Typography.H2>
         <Typography.Text className="text-muted-foreground">
           Build a quote with services and parts. When approved, convert it to a
           work order.
@@ -290,25 +290,25 @@ export default function NewEstimatePage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center justify-between">
-            <span>Line Items</span>
+            <span>{t("lineItems")}</span>
             <div className="flex gap-2">
               <Sheet>
                 <SheetTrigger>
                   <Button variant="outline" size="sm">
                     <Plus className="size-4" />
-                    Add Service
+                    {t("addService")}
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-full sm:max-w-md">
                   <SheetHeader>
-                    <SheetTitle>Add Service</SheetTitle>
+                    <SheetTitle>{t("addServiceTitle")}</SheetTitle>
                     <SheetDescription>
                       Search the service catalog
                     </SheetDescription>
                   </SheetHeader>
                   <div className="mt-4 space-y-3">
                     <SearchInput
-                      placeholder="Search services..."
+                      placeholder={t("searchServicesPlaceholder")}
                       onSearch={searchServices}
                       loading={searchingServices}
                       debounceMs={400}
@@ -347,19 +347,19 @@ export default function NewEstimatePage() {
                 <SheetTrigger>
                   <Button variant="outline" size="sm">
                     <Plus className="size-4" />
-                    Add Part
+                    {t("addPart")}
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-full sm:max-w-md">
                   <SheetHeader>
-                    <SheetTitle>Add Part</SheetTitle>
+                    <SheetTitle>{t("addPartTitle")}</SheetTitle>
                     <SheetDescription>
                       Search the parts catalog
                     </SheetDescription>
                   </SheetHeader>
                   <div className="mt-4 space-y-3">
                     <SearchInput
-                      placeholder="Search parts..."
+                      placeholder={t("searchPartsPlaceholder")}
                       onSearch={searchParts}
                       loading={searchingParts}
                       debounceMs={400}
@@ -414,7 +414,7 @@ export default function NewEstimatePage() {
                 <div className="col-span-2 text-right">Unit Price</div>
                 <div className="col-span-1 text-right">Disc %</div>
                 <div className="col-span-1 text-right">Disc ₮</div>
-                <div className="col-span-2 text-right">Total</div>
+                <div className="col-span-2 text-right">{t("total")}</div>
                 <div className="col-span-1" />
               </div>
               {lines.map((line, idx) => (
@@ -428,7 +428,7 @@ export default function NewEstimatePage() {
                   <div className="col-span-3">
                     {line.item_type === "custom" ? (
                       <Input
-                        placeholder="Description"
+                        placeholder={t("descriptionPlaceholder")}
                         value={line.description}
                         onChange={(e) =>
                           updateLine(line.id, { description: e.target.value })
@@ -542,7 +542,7 @@ export default function NewEstimatePage() {
               <span className="font-mono">₮{subtotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-lg font-semibold border-t pt-2">
-              <span>Total</span>
+              <span>{t("grandTotal")}</span>
               <span className="font-mono">₮{grandTotal.toLocaleString()}</span>
             </div>
           </div>
@@ -552,20 +552,20 @@ export default function NewEstimatePage() {
       {/* Notes & Terms */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Field>
-          <FieldLabel>Notes</FieldLabel>
+          <FieldLabel>{t("notes")}</FieldLabel>
           <FieldContent>
             <Textarea
-              placeholder="Customer-facing notes..."
+              placeholder={t("notesPlaceholder")}
               rows={3}
               {...form.register("notes")}
             />
           </FieldContent>
         </Field>
         <Field>
-          <FieldLabel>Terms & Conditions</FieldLabel>
+          <FieldLabel>{t("termsAndConditions")}</FieldLabel>
           <FieldContent>
             <Textarea
-              placeholder="Payment terms, warranty info..."
+              placeholder={t("termsPlaceholder")}
               rows={3}
               {...form.register("terms")}
             />
@@ -589,7 +589,7 @@ export default function NewEstimatePage() {
           onClick={() => handleSave("draft")}
           disabled={saving || lines.length === 0}
         >
-          {saving ? "Saving..." : "Create Quote"}
+          {saving ? t("saving") : t("createQuote")}
         </Button>
       </div>
     </div>

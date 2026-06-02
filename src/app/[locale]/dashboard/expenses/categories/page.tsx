@@ -211,7 +211,7 @@ export default function CategoriesPage() {
             <EmptyMedia variant="icon">
               <Circle />
             </EmptyMedia>
-            <EmptyTitle>No categories yet</EmptyTitle>
+            <EmptyTitle>{t("expenses.noCategories")}</EmptyTitle>
           </EmptyHeader>
           <EmptyContent>
             <Button onClick={openAddDialog} variant="outline">
@@ -242,7 +242,9 @@ export default function CategoriesPage() {
                       size="icon-sm"
                       variant="ghost"
                       onClick={() => openEditDialog(cat)}
-                      aria-label={`Edit ${cat.name}`}
+                      aria-label={t("expenses.editCategory", {
+                        name: cat.name,
+                      })}
                     >
                       <Pencil className="size-3.5" />
                     </Button>
@@ -253,7 +255,9 @@ export default function CategoriesPage() {
                         setSelectedCategory(cat);
                         setDeleteDialogOpen(true);
                       }}
-                      aria-label={`Delete ${cat.name}`}
+                      aria-label={t("expenses.deleteCategory", {
+                        name: cat.name,
+                      })}
                     >
                       <Trash2 className="size-3.5" />
                     </Button>
@@ -270,35 +274,38 @@ export default function CategoriesPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {isEditing ? "Edit Category" : "Add Category"}
+              {isEditing
+                ? t("expenses.editCategoryTitle")
+                : t("expenses.addCategoryTitle")}
             </DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="name">
-                Name <span className="text-destructive">*</span>
+                {t("expenses.categoryName")}{" "}
+                <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="name"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                placeholder="e.g. Utilities"
+                placeholder={t("expenses.categoryNamePlaceholder")}
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t("expenses.description")}</Label>
               <Input
                 id="description"
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
-                placeholder="Optional description"
+                placeholder={t("expenses.descriptionPlaceholder")}
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>Color</Label>
+              <Label>{t("expenses.color")}</Label>
               <div className="flex flex-wrap gap-2.5">
                 {CATEGORY_COLORS.map((color) => (
                   <Button
@@ -349,11 +356,13 @@ export default function CategoriesPage() {
       >
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Category</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("expenses.deleteCategoryTitle")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <strong>{selectedCategory?.name}</strong>? Expenses assigned to
-              this category will not be deleted.
+              {t("expenses.deleteCategoryDesc", {
+                name: selectedCategory?.name ?? "",
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

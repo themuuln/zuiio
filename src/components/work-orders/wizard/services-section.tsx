@@ -294,7 +294,7 @@ export function ServicesSection() {
                       value={svc.quantity}
                       className="w-16 h-11 text-center cursor-pointer"
                       min={1}
-                      aria-label="Quantity"
+                      aria-label={t("quantity")}
                     />
                   </NumericKeypad>
                   <NumericKeypad
@@ -306,7 +306,7 @@ export function ServicesSection() {
                     <Input
                       value={svc.base_price}
                       className="w-28 h-11 cursor-pointer"
-                      aria-label="Price"
+                      aria-label={t("price")}
                     />
                   </NumericKeypad>
                   <div className="flex items-center gap-1">
@@ -320,7 +320,7 @@ export function ServicesSection() {
                         value={svc.discount_amount_mnt || ""}
                         className="w-24 h-11 cursor-pointer"
                         placeholder={t("discount")}
-                        aria-label="Discount amount"
+                        aria-label={t("discount")}
                       />
                     </NumericKeypad>
                   </div>
@@ -333,7 +333,7 @@ export function ServicesSection() {
                     onClick={() => ctx.removeService(idx)}
                     data-slot="touch-target"
                     className="min-w-[44px]"
-                    aria-label="Remove service"
+                    aria-label={t("remove")}
                   >
                     <Trash2 className="size-5 text-destructive" />
                   </Button>

@@ -71,6 +71,7 @@ function mockWorkOrderDetail(overrides: Record<string, unknown> = {}) {
     services: [] as WorkOrderService[],
     parts: [] as WorkOrderPart[],
     status_history: [],
+    service_history: [],
     ...overrides,
   };
 }
@@ -311,6 +312,10 @@ describe("updateWorkOrderStatus", () => {
 
   it("updates status and creates status history entry", async () => {
     mockClient.from("work_orders").single.mockResolvedValueOnce({
+      data: { id: "wo-1", organization_id: "org-1", status: "New" },
+      error: null,
+    });
+    mockClient.from("work_orders").single.mockResolvedValueOnce({
       data: {
         id: "wo-1",
         organization_id: "org-1",
@@ -333,6 +338,7 @@ describe("updateWorkOrderStatus", () => {
       mockClient.from("work_order_status_history").insert,
     ).toHaveBeenCalledWith(
       expect.objectContaining({
+        previous_status: "New",
         status: "In Progress",
         work_order_id: "wo-1",
       }),
@@ -340,7 +346,63 @@ describe("updateWorkOrderStatus", () => {
     expect(result.status).toBe("In Progress");
   });
 
+  it("records the previous status when moving backward", async () => {
+    mockClient.from("work_orders").single.mockResolvedValueOnce({
+      data: { id: "wo-1", organization_id: "org-1", status: "In Progress" },
+      error: null,
+    });
+    mockClient.from("work_orders").single.mockResolvedValueOnce({
+      data: {
+        id: "wo-1",
+        organization_id: "org-1",
+        status: "Diagnosing",
+      },
+      error: null,
+    });
+
+    await updateWorkOrderStatus("wo-1", "org-1", "Diagnosing");
+
+    expect(
+      mockClient.from("work_order_status_history").insert,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        previous_status: "In Progress",
+        status: "Diagnosing",
+        work_order_id: "wo-1",
+      }),
+    );
+  });
+
+  it("does not create a duplicate history row when the status is unchanged", async () => {
+    mockClient.from("work_orders").single.mockResolvedValueOnce({
+      data: { id: "wo-1", organization_id: "org-1", status: "Diagnosing" },
+      error: null,
+    });
+    mockClient.from("work_orders").single.mockResolvedValueOnce({
+      data: {
+        id: "wo-1",
+        organization_id: "org-1",
+        status: "Diagnosing",
+      },
+      error: null,
+    });
+
+    await updateWorkOrderStatus("wo-1", "org-1", "Diagnosing");
+
+    expect(
+      mockClient.from("work_order_status_history").insert,
+    ).not.toHaveBeenCalled();
+  });
+
   it('when status is "Completed" — updates completed_at, calls syncWorkOrderToSchedules, creates inventory movements', async () => {
+    mockClient.from("work_orders").single.mockResolvedValueOnce({
+      data: {
+        id: "wo-1",
+        organization_id: "org-1",
+        status: "Ready for Pickup",
+      },
+      error: null,
+    });
     // Mock completed_at update
     mockClient
       .from("work_orders")

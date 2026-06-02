@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -127,6 +128,9 @@ export function PickupCompleteDialog({
               {vehiclePlate}
             </span>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {t("pickupCompleteTitle")} — {vehiclePlate}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-5">

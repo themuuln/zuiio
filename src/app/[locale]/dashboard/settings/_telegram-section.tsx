@@ -7,6 +7,7 @@ import {
   MessageCircle,
   RefreshCw,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -47,6 +48,8 @@ export function TelegramSection() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const t = useTranslations("settings");
+
   async function generateLink() {
     setLoading(true);
     try {
@@ -66,11 +69,9 @@ export function TelegramSection() {
         margin: 2,
       });
       setQrDataUrl(dataUrl);
-      toast.success("Link token generated");
+      toast.success(t("linkTokenGenerated"));
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to generate link",
-      );
+      toast.error(err instanceof Error ? err.message : t("failedToGenerate"));
     } finally {
       setLoading(false);
     }
@@ -81,10 +82,10 @@ export function TelegramSection() {
     try {
       await navigator.clipboard.writeText(deepLink);
       setCopied(true);
-      toast.success("Copied to clipboard");
+      toast.success(t("copiedToClipboard"));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Failed to copy");
+      toast.error(t("failedToCopy"));
     }
   }
 

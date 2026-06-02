@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import {
   Card,
@@ -141,6 +142,7 @@ const AreaInteractiveChart = dynamic(
 
 export function ChartAreaInteractive() {
   const isMobile = useIsMobile();
+  const t = useTranslations("dateRangePicker");
   const [timeRange, setTimeRange] = React.useState("90d");
 
   React.useEffect(() => {
@@ -196,16 +198,16 @@ export function ChartAreaInteractive() {
             <SelectTrigger
               className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
               size="sm"
-              aria-label="Select a value"
+              aria-label={t("placeholder")}
             >
-              <SelectValue placeholder="Last 3 months" />
+              <SelectValue placeholder={t("last90Days")} />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
               <SelectItem value="90d" className="rounded-lg">
-                Last 3 months
+                {t("last90Days")}
               </SelectItem>
               <SelectItem value="30d" className="rounded-lg">
-                Last 30 days
+                {t("last30Days")}
               </SelectItem>
               <SelectItem value="7d" className="rounded-lg">
                 Last 7 days

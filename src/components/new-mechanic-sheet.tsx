@@ -57,7 +57,11 @@ interface FormState {
 }
 
 type FormAction =
-  | { type: "SET_FIELD"; field: "identifier" | "password" | "fullName"; value: string }
+  | {
+      type: "SET_FIELD";
+      field: "identifier" | "password" | "fullName";
+      value: string;
+    }
   | { type: "SET_SELECTED_ROLE"; roleId: string }
   | { type: "SET_SENDING"; sending: boolean }
   | { type: "SET_ERRORS"; errors: Record<string, string> }
@@ -148,9 +152,7 @@ function MechanicCredentialsView({
               </div>
               {createdMechanic.fullName && (
                 <div>
-                  <Typography.Muted className="text-xs">
-                    Name
-                  </Typography.Muted>
+                  <Typography.Muted className="text-xs">Name</Typography.Muted>
                   <Typography.Text className="font-medium">
                     {createdMechanic.fullName}
                   </Typography.Text>
@@ -167,9 +169,7 @@ function MechanicCredentialsView({
             <Button
               type="button"
               variant="outline"
-              onClick={() =>
-                onOpenChange(false)
-              }
+              onClick={() => onOpenChange(false)}
             >
               Done
             </Button>
@@ -423,9 +423,7 @@ export function NewMechanicSheet({
                       }
                     >
                       {form.selectedRoleId
-                        ? roles.find(
-                            (r) => r.id === form.selectedRoleId,
-                          )?.name
+                        ? roles.find((r) => r.id === form.selectedRoleId)?.name
                         : undefined}
                     </SelectValue>
                   </SelectTrigger>

@@ -149,9 +149,9 @@ function getStatusCfg(status: string) {
 
 // ── Helpers ────────────────────────────────────────
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, t: (key: string) => string): string {
   const mins = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
-  if (mins < 1) return "just now";
+  if (mins < 1) return t("common.justNow");
   if (mins < 60) return `${mins}m`;
   const h = Math.floor(mins / 60);
   return `${h}h ${mins % 60}m`;
@@ -251,8 +251,9 @@ function WorkOrderRow({
   onClick: () => void;
   onStatusChange: (newStatus: string) => void;
 }) {
+  const t = useTranslations();
   const cfg = getStatusCfg(wo.status);
-  const elapsed = timeAgo(wo.created_at);
+  const elapsed = timeAgo(wo.created_at, t);
 
   const nextStatuses = (() => {
     const transitions = NEXT_STATUSES[wo.status] ?? [];
@@ -299,7 +300,7 @@ function WorkOrderRow({
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
           <span className="truncate max-w-[200px]">
-            {wo.description ?? "No description"}
+            {wo.description ?? t("common.noDescription")}
           </span>
           <span className="text-[10px] text-muted-foreground/40 shrink-0">
             · {elapsed}
@@ -495,8 +496,18 @@ function MechanicDashboard({
 
   // ── Mount: register tabs + open sidebar (once) ────────
   useEffect(() => {
-    registerTab("stats", "Stats", null, <BarChart3 className="size-4" />);
-    registerTab("jobs", "Jobs", null, <Wrench className="size-4" />);
+    registerTab(
+      "stats",
+      t("mechanic.stats"),
+      null,
+      <BarChart3 className="size-4" />,
+    );
+    registerTab(
+      "jobs",
+      t("mechanic.jobs"),
+      null,
+      <Wrench className="size-4" />,
+    );
     return () => {
       unregisterTab("stats");
       unregisterTab("jobs");
@@ -508,14 +519,17 @@ function MechanicDashboard({
   useEffect(() => {
     registerTab(
       "stats",
-      "Stats",
+      t("mechanic.stats"),
       <StatusSummary
-        title="Today"
+        title={t("mechanic.today")}
         items={[
-          { label: "Completed Today", count: eod?.work_orders_completed ?? 0 },
-          { label: "Revenue Today", count: eod?.total_revenue ?? 0 },
           {
-            label: "Active Jobs",
+            label: t("mechanic.completedToday"),
+            count: eod?.work_orders_completed ?? 0,
+          },
+          { label: t("mechanic.revenueToday"), count: eod?.total_revenue ?? 0 },
+          {
+            label: t("mechanic.activeJobs"),
             count: assignedWos.length,
             color: "secondary",
           },
@@ -526,18 +540,18 @@ function MechanicDashboard({
 
     registerTab(
       "jobs",
-      "Jobs",
+      t("mechanic.jobs"),
       <RecentList
-        title="Assigned"
+        title={t("mechanic.assigned")}
         items={sortedWos.map((wo) => ({
           id: wo.id,
           primary: wo.vehicle_plate ?? "—",
           secondary: wo.status,
-          timestamp: timeAgo(wo.created_at),
+          timestamp: timeAgo(wo.created_at, t),
           href: `/dashboard/work-orders/${wo.id}`,
         }))}
         loading={dataLoading}
-        emptyMessage="No active work orders"
+        emptyMessage={t("mechanic.noActiveWorkOrders")}
       />,
     );
   }, [eod, assignedWos, sortedWos, dataLoading, registerTab]);
@@ -556,7 +570,9 @@ function MechanicDashboard({
         );
       },
       onError: (err) => {
-        toast.error(err instanceof Error ? err.message : "Network error");
+        toast.error(
+          err instanceof Error ? err.message : t("common.networkError"),
+        );
       },
     });
   };
@@ -578,9 +594,9 @@ function MechanicDashboard({
       });
 
       await updateStatus.mutateAsync({ woId, status: "Completed" });
-      toast.success("Completed");
+      toast.success(t("mechanic.completed"));
     } catch {
-      toast.error("Failed to complete work order");
+      toast.error(t("mechanic.failedToComplete"));
     } finally {
       setPendingPickupComplete(null);
     }
@@ -611,7 +627,7 @@ function MechanicDashboard({
     );
     try {
       await updateStatus.mutateAsync({ woId, status: newStatus });
-      toast.success(`Status updated to ${newStatus}`);
+      toast.success(t("mechanic.statusUpdatedTo", { status: newStatus }));
     } catch {
       // Refetch will correct optimistic update on error
       queryClient.invalidateQueries({
@@ -632,7 +648,7 @@ function MechanicDashboard({
               </Typography.H1>
               <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-50/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
                 <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px] shadow-emerald-500/60" />
-                Live
+                {t("common.live")}
               </span>
             </div>
             <Typography.Muted className="mt-0.5 text-xs text-muted-foreground/60">
@@ -656,7 +672,7 @@ function MechanicDashboard({
       {isRefreshing && (
         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/50 -mt-3">
           <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          Updating...
+          {t("common.updating")}
         </div>
       )}
 
@@ -710,17 +726,17 @@ function MechanicDashboard({
       <div className="grid gap-3 sm:grid-cols-2">
         <KpiCard
           icon={Coins}
-          label="Avg Job Value"
+          label={t("mechanic.avgJobValue")}
           value={trend ? formatMNT(trend.avgJobValue) : "—"}
-          subtext="Revenue per completed order"
+          subtext={t("mechanic.revenuePerOrder")}
           accent="blue"
           loading={dataLoading}
         />
         <KpiCard
           icon={CheckCircle2}
-          label="Jobs Per Day"
+          label={t("mechanic.jobsPerDay")}
           value={trend ? String(trend.jobsPerDay) : "—"}
-          subtext="Average over selected period"
+          subtext={t("mechanic.avgOverPeriod")}
           accent="green"
           loading={dataLoading}
         />
@@ -741,7 +757,7 @@ function MechanicDashboard({
               : t("mechanic.myWorkOrders")}
           </span>
           <span className="ml-auto text-[10px] text-muted-foreground/50">
-            {sortedWos.length} job{sortedWos.length !== 1 ? "s" : ""}
+            {t("mechanic.jobCount", { count: sortedWos.length })}
           </span>
         </div>
 
@@ -852,12 +868,12 @@ export default function MechanicPage() {
           <Wrench className="size-7 text-muted-foreground" />
         </div>
         <Typography.H2 className="text-lg font-semibold">
-          Mechanic Dashboard
+          {t("mechanic.dashboardTitle")}
         </Typography.H2>
         <Typography.Muted className="text-sm text-muted-foreground text-center max-w-md">
-          This view is for mechanics. Your current role is{" "}
-          <strong>{profile?.roleName ?? "unknown"}</strong>.{"\n"}
-          Ask your admin to assign you the Mechanic role to access this page.
+          {t("mechanic.restrictedAccess")}{" "}
+          <strong>{profile?.roleName ?? t("common.unknown")}</strong>.{"\n"}
+          {t("mechanic.askAdmin")}
         </Typography.Muted>
       </div>
     );
@@ -898,7 +914,7 @@ export default function MechanicPage() {
             </EmptyHeader>
             <Button onClick={() => setShowAddMechanic(true)} className="mt-4">
               <UserPlus className="mr-2 size-4" />
-              Invite mechanic
+              {t("mechanic.inviteMechanic")}
             </Button>
           </Empty>
         ) : selectedMechanicId ? (
@@ -913,7 +929,7 @@ export default function MechanicPage() {
                   </Typography.H1>
                   <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-50/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
                     <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px] shadow-emerald-500/60" />
-                    Live
+                    {t("common.live")}
                   </span>
                 </div>
                 <Typography.Muted className="mt-0.5 text-xs text-muted-foreground/60">
@@ -941,7 +957,7 @@ export default function MechanicPage() {
             {/* Quick-action bar */}
             <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-card p-3 shadow-sm shadow-black/5">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mr-2 shrink-0">
-                Management
+                {t("mechanic.management")}
               </span>
               <Button
                 variant="outline"
@@ -950,7 +966,7 @@ export default function MechanicPage() {
                 className="h-8 text-xs gap-1.5"
               >
                 <UserPlus className="size-3.5" />
-                Invite Mechanic
+                {t("mechanic.inviteMechanic")}
               </Button>
               <Button
                 variant="outline"
@@ -959,7 +975,7 @@ export default function MechanicPage() {
                 render={<Link href="/dashboard/organization/members" />}
               >
                 <Users className="size-3.5" />
-                Members
+                {t("mechanic.members")}
               </Button>
               <Button
                 variant="outline"
@@ -968,7 +984,7 @@ export default function MechanicPage() {
                 render={<Link href="/dashboard/payroll" />}
               >
                 <DollarSign className="size-3.5" />
-                Payroll
+                {t("mechanic.payroll")}
               </Button>
               <Button
                 variant="outline"
@@ -977,7 +993,7 @@ export default function MechanicPage() {
                 render={<Link href="/dashboard/organization/roles" />}
               >
                 <Shield className="size-3.5" />
-                Roles
+                {t("mechanic.roles")}
               </Button>
               <Button
                 variant="outline"
@@ -986,7 +1002,7 @@ export default function MechanicPage() {
                 render={<Link href="/dashboard/organization" />}
               >
                 <Building2 className="size-3.5" />
-                Organization
+                {t("mechanic.organization")}
               </Button>
             </div>
 

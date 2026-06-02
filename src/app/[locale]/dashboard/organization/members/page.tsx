@@ -123,7 +123,7 @@ export default function MembersPage() {
       if (body.data)
         dispatchPageData({ type: "SET_MEMBERS", members: body.data });
     } catch {
-      toast.error("Failed to load members");
+      toast.error(t("memberLoadError"));
     } finally {
       dispatchPageData({ type: "SET_LOADING_MEMBERS", value: false });
     }
@@ -150,7 +150,7 @@ export default function MembersPage() {
           invites: body.data.filter((i) => i.status === "pending"),
         });
     } catch {
-      toast.error("Failed to load invites");
+      toast.error(t("inviteLoadError"));
     } finally {
       dispatchPageData({ type: "SET_LOADING_INVITES", value: false });
     }
@@ -179,7 +179,7 @@ export default function MembersPage() {
         }
       }
     } catch {
-      toast.error("Failed to load roles");
+      toast.error(t("roleLoadError"));
     } finally {
       dispatchPageData({ type: "SET_LOADING_ROLES", value: false });
     }
@@ -201,7 +201,7 @@ export default function MembersPage() {
       if (body.data)
         dispatchPageData({ type: "SET_BRANCHES", branches: body.data });
     } catch {
-      toast.error("Failed to load branches");
+      toast.error(t("branchLoadError"));
     } finally {
       dispatchPageData({ type: "SET_LOADING_BRANCHES", value: false });
     }

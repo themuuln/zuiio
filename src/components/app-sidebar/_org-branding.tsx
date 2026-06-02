@@ -2,9 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
+import { useCurrentUserRole } from "@/hooks/use-current-user-role";
 import { Link } from "@/lib/i18n/navigation";
 import { orgKeys } from "@/lib/queries/keys";
-import { useCurrentUserRole } from "@/hooks/use-current-user-role";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization } from "@/lib/types";
 

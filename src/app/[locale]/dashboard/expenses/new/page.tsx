@@ -71,17 +71,16 @@ export default function NewExpensePage() {
     event.preventDefault();
 
     if (!orgId) {
-      toast.error("Organization not loaded. Please try again.");
+      toast.error(t("common.somethingWentWrong"));
       return;
     }
 
     const errors: Record<string, string> = {};
-    if (!form.description.trim())
-      errors.description = "Description is required";
+    if (!form.description.trim()) errors.description = t("common.required");
     const amount = parseFloat(form.amount);
-    if (!form.amount.trim()) errors.amount = "Amount is required";
+    if (!form.amount.trim()) errors.amount = t("common.required");
     else if (Number.isNaN(amount) || amount <= 0)
-      errors.amount = "Enter a valid amount";
+      errors.amount = t("expenses.invalidAmount");
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
@@ -260,7 +259,7 @@ export default function NewExpensePage() {
                   htmlFor="dueDate"
                   className="mb-1 block text-sm font-medium"
                 >
-                  Due Date
+                  {t("expenses.due")}
                 </Label>
                 <Input
                   id="dueDate"

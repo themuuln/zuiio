@@ -23,7 +23,7 @@ import {
 } from "@/lib/queries/use-inventory";
 import type { InventoryMovement, PartsCatalogItem } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
-import { formatDate, MOVEMENT_FILTERS, MOVEMENT_LABELS } from "./constants";
+import { formatDate, getMovementFilters, getMovementLabels } from "./constants";
 import { Modal } from "./modal";
 import { TableSkeleton } from "./table-skeleton";
 
@@ -48,6 +48,8 @@ export function MovementsTab({
   // const locale = useLocale();
   const t = useTranslations("inventory");
   const now = useClientNow();
+  const movementLabels = useMemo(() => getMovementLabels(t), [t]);
+  const movementFilters = useMemo(() => getMovementFilters(t), [t]);
 
   const { data: movements = [], isLoading } = useInventoryMovements(orgId);
   const createMovement = useCreateMovement(orgId);
@@ -92,17 +94,17 @@ export function MovementsTab({
   }, [movements, movementFilter, search]);
 
   const movementExportColumns: ExportColumn<MovementRow>[] = [
-    { key: "created_at", label: "Date", format: "date" },
+    { key: "created_at", label: t("date"), format: "date" },
     {
       key: "movement_type",
-      label: "Type",
-      value: (m) => MOVEMENT_LABELS[m.movement_type] ?? m.movement_type,
+      label: t("movementType"),
+      value: (m) => movementLabels[m.movement_type] ?? m.movement_type,
     },
-    { key: "part_name", label: "Part" },
-    { key: "quantity", label: "Qty", format: "number" },
-    { key: "unit_cost", label: "Unit Cost", format: "number" },
-    { key: "reference_type", label: "Reference" },
-    { key: "notes", label: "Notes" },
+    { key: "part_name", label: t("part") },
+    { key: "quantity", label: t("qty"), format: "number" },
+    { key: "unit_cost", label: t("unitCost"), format: "number" },
+    { key: "reference_type", label: t("reference") },
+    { key: "notes", label: t("notes") },
   ];
 
   const columns: ColumnDef<MovementRow>[] = useMemo(
@@ -111,7 +113,7 @@ export function MovementsTab({
         id: "date",
         accessorKey: "created_at",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Date" />
+          <DataTableColumnHeader column={column} title={t("date")} />
         ),
         cell: ({ row }) => (
           <span className="text-xs text-muted-foreground">
@@ -122,11 +124,11 @@ export function MovementsTab({
       {
         accessorKey: "movement_type",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Type" />
+          <DataTableColumnHeader column={column} title={t("movementType")} />
         ),
         cell: ({ row }) => (
           <Badge variant="outline">
-            {MOVEMENT_LABELS[row.original.movement_type] ??
+            {movementLabels[row.original.movement_type] ??
               row.original.movement_type}
           </Badge>
         ),
@@ -135,7 +137,7 @@ export function MovementsTab({
         id: "part_name",
         accessorKey: "part_name",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Part" />
+          <DataTableColumnHeader column={column} title={t("part")} />
         ),
         cell: ({ row }) => (
           <span className="text-sm font-medium">{row.original.part_name}</span>
@@ -144,7 +146,7 @@ export function MovementsTab({
       {
         accessorKey: "quantity",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Qty" />
+          <DataTableColumnHeader column={column} title={t("qty")} />
         ),
         cell: ({ row }) => (
           <span className="font-semibold tabular-nums">
@@ -155,7 +157,7 @@ export function MovementsTab({
       {
         accessorKey: "unit_cost",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Unit Cost" />
+          <DataTableColumnHeader column={column} title={t("unitCost")} />
         ),
         cell: ({ row }) => (
           <span className="tabular-nums">
@@ -167,7 +169,7 @@ export function MovementsTab({
         id: "reference",
         accessorKey: "reference_type",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Ref" />
+          <DataTableColumnHeader column={column} title={t("reference")} />
         ),
         cell: ({ row }) => (
           <span className="text-xs text-muted-foreground">
@@ -179,7 +181,7 @@ export function MovementsTab({
         id: "notes",
         accessorKey: "notes",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Notes" />
+          <DataTableColumnHeader column={column} title={t("notes")} />
         ),
         cell: ({ row }) => (
           <span className="max-w-[200px] truncate text-xs text-muted-foreground">
@@ -188,13 +190,13 @@ export function MovementsTab({
         ),
       },
     ],
-    [],
+    [t, movementLabels],
   );
 
   async function handleRecordMovement(e: React.FormEvent) {
     e.preventDefault();
     if (!movementForm.part_id || !movementForm.quantity) {
-      toast.error("Please select a part and enter a quantity");
+      toast.error(t("selectPartAndQty"));
       return;
     }
 
@@ -210,7 +212,7 @@ export function MovementsTab({
 
     createMovement.mutate(body, {
       onSuccess: () => {
-        toast.success("Movement recorded");
+        toast.success(t("movementRecorded"));
         setShowAddMovement(false);
         setMovementForm({
           part_id: "",
@@ -261,7 +263,7 @@ export function MovementsTab({
             }}
             className="flex-wrap gap-1.5"
           >
-            {MOVEMENT_FILTERS.map((filter) => (
+            {movementFilters.map((filter) => (
               <ToggleGroupItem key={filter.key} value={filter.key}>
                 {filter.label}
               </ToggleGroupItem>
@@ -282,7 +284,7 @@ export function MovementsTab({
               sheetName="Movements"
             />
             <Button size="default" onClick={() => setShowAddMovement(true)}>
-              Record Movement
+              {t("recordMovement")}
             </Button>
           </div>
         }
@@ -317,7 +319,7 @@ export function MovementsTab({
                       variant="outline"
                       className="text-[10px] px-1.5 py-0"
                     >
-                      {MOVEMENT_LABELS[m.movement_type] ?? m.movement_type}
+                      {movementLabels[m.movement_type] ?? m.movement_type}
                     </Badge>
                   </div>
                   <span className="font-medium">{m.part_name}</span>
@@ -343,7 +345,7 @@ export function MovementsTab({
       {/* Record Movement Modal */}
       {showAddMovement && (
         <Modal
-          title="Record Stock Movement"
+          title={t("recordStockMovement")}
           onClose={() => {
             setShowAddMovement(false);
             setMovementForm({
@@ -360,9 +362,9 @@ export function MovementsTab({
         >
           <form onSubmit={handleRecordMovement} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">Part *</label>
+              <label className="text-sm font-medium">{t("part")} *</label>
               <Input
-                placeholder="Search parts..."
+                placeholder={t("searchParts")}
                 value={partsSearch}
                 onChange={(e) => searchParts(e.target.value)}
               />
@@ -392,7 +394,7 @@ export function MovementsTab({
               {movementForm.part_id && !partsSearch && (
                 <div className="flex items-center justify-between">
                   <Typography.Muted className="text-sm text-muted-foreground">
-                    Selected: {movementForm.part_name}
+                    {t("selectedPart")}: {movementForm.part_name}
                   </Typography.Muted>
                   <Badge variant="outline" className="gap-1.5">
                     {t("currentBalance")}:{" "}
@@ -405,7 +407,7 @@ export function MovementsTab({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium">Quantity *</label>
+                <label className="text-sm font-medium">{t("quantity")} *</label>
                 <Input
                   type="number"
                   min="1"
@@ -420,7 +422,7 @@ export function MovementsTab({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium">Unit Cost</label>
+                <label className="text-sm font-medium">{t("unitCost")}</label>
                 <Input
                   type="number"
                   min="0"
@@ -437,7 +439,7 @@ export function MovementsTab({
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">Movement Type</label>
+              <label className="text-sm font-medium">{t("movementType")}</label>
               <select
                 value={movementForm.movement_type}
                 onChange={(e) =>
@@ -448,7 +450,7 @@ export function MovementsTab({
                 }
                 className="h-11 rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                {Object.entries(MOVEMENT_LABELS).map(([key, label]) => (
+                {Object.entries(movementLabels).map(([key, label]) => (
                   <option key={key} value={key}>
                     {label}
                   </option>
@@ -456,7 +458,7 @@ export function MovementsTab({
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">Notes</label>
+              <label className="text-sm font-medium">{t("notes")}</label>
               <Input
                 value={movementForm.notes}
                 onChange={(e) =>
@@ -473,10 +475,10 @@ export function MovementsTab({
                 variant="outline"
                 onClick={() => setShowAddMovement(false)}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={createMovement.isPending}>
-                Record
+                {t("record")}
               </Button>
             </div>
           </form>

@@ -13,14 +13,12 @@ import {
   Wrench,
 } from "lucide-react";
 import dynamicImport from "next/dynamic";
-import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { BranchSelect } from "@/components/branch-select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
@@ -37,7 +35,7 @@ import { formatCurrency } from "@/lib/utils";
 import { DailyTimeline } from "./_daily-timeline";
 import { KpiCard } from "./_kpi-cards";
 import { LowStockCard } from "./_low-stock-card";
-import { type Period, PeriodBar } from "./_period-bar";
+import { DateFilterBar } from "./_period-bar";
 import { RecentWorkOrdersTable } from "./_recent-work-orders";
 import { SectionHeader } from "./_section-header";
 
@@ -63,7 +61,6 @@ const ChartsSection = dynamicImport(() => import("./_charts"), {
 
 export default function DashboardPage() {
   const t = useTranslations();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { isMechanic, loading: roleLoading } = useCurrentUserRole();
 
@@ -74,12 +71,7 @@ export default function DashboardPage() {
     }
   }, [roleLoading, isMechanic, router]);
   const { setNewWorkOrderSheetOpen } = usePageHeader();
-  const [period, setPeriod] = useState<Period>(
-    () => (searchParams.get("period") as Period) ?? "all",
-  );
-  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(
-    undefined,
-  );
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedBranchId, setSelectedBranchId] = useState<string>("all");
   // ── React Query hooks ───────────────────────────────
   const { data: org, isPending: orgLoading, error: orgError } = useCurrentOrg();
@@ -88,13 +80,6 @@ export default function DashboardPage() {
   const { data: branches = [] } = useBranches(orgId);
 
   useEffect(() => {
-    if (selectedBranchId === "all") {
-      if (branches.length === 1) {
-        setSelectedBranchId(branches[0].id);
-      }
-      return;
-    }
-
     const branchStillExists = branches.some(
       (branch) => branch.id === selectedBranchId,
     );
@@ -141,13 +126,20 @@ export default function DashboardPage() {
     ],
   });
 
+  const dateFrom = dateRange?.from?.toISOString().split("T")[0];
+  const dateTo = dateRange?.to?.toISOString().split("T")[0];
+
   const {
     data,
     isPending: dashboardLoading,
     isFetching: dashboardFetching,
     error: dashboardError,
     refetch: refetchDashboard,
-  } = useDashboard(orgId, period, branchFilter);
+  } = useDashboard(orgId, {
+    dateFrom,
+    dateTo,
+    branchId: branchFilter,
+  });
 
   // ── Track first successful load (to distinguish initial vs period-change) ──
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -168,12 +160,12 @@ export default function DashboardPage() {
   const filteredWorkOrders = useMemo(() => {
     const recentWorkOrders = data?.recentWorkOrders;
     if (!recentWorkOrders) return [];
-    if (!selectedRange || !selectedRange.from) return recentWorkOrders;
+    if (!dateRange?.from) return recentWorkOrders;
 
-    const fromStart = new Date(selectedRange.from);
+    const fromStart = new Date(dateRange.from);
     fromStart.setHours(0, 0, 0, 0);
 
-    const toEnd = new Date(selectedRange.to || selectedRange.from);
+    const toEnd = new Date(dateRange.to || dateRange.from);
     toEnd.setHours(23, 59, 59, 999);
 
     return recentWorkOrders.filter((wo) => {
@@ -181,7 +173,7 @@ export default function DashboardPage() {
       const woDate = new Date(wo.created_at);
       return woDate >= fromStart && woDate <= toEnd;
     });
-  }, [data?.recentWorkOrders, selectedRange]);
+  }, [data?.recentWorkOrders, dateRange]);
 
   // ── Redirect when org not selected ─────────────────
   useEffect(() => {
@@ -189,23 +181,6 @@ export default function DashboardPage() {
       router.replace("/auth/select-organization?returnUrl=/dashboard");
     }
   }, [orgId, orgLoading, dashboardLoading, dashboardError, router]);
-
-  const handlePeriodChange = useCallback(
-    (p: Period) => {
-      setPeriod(p);
-      const params = new URLSearchParams(searchParams.toString());
-      if (p === "all") {
-        params.delete("period");
-      } else {
-        params.set("period", p);
-      }
-      const qs = params.toString();
-      router.replace(qs ? `?${qs}` : window.location.pathname, {
-        scroll: false,
-      });
-    },
-    [searchParams, router],
-  );
 
   const dashboardExportColumns: ExportColumn<WorkOrderDetail>[] = useMemo(
     () => [
@@ -381,9 +356,7 @@ export default function DashboardPage() {
           allLabel={t("dashboard.allBranches")}
           className="min-w-44"
         />
-        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-          <PeriodBar value={period} onChange={handlePeriodChange} />
-        </div>
+        <DateFilterBar value={dateRange} onChange={setDateRange} />
       </div>
     </div>
   );
@@ -552,30 +525,10 @@ export default function DashboardPage() {
       {insightElements}
       {/* ── Recent Work Orders ── */}
       <div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <SectionHeader
-            title={t("dashboard.recentWorkOrders")}
-            description={t("dashboard.recentWorkOrdersDesc")}
-          />
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <DateRangePicker
-              value={selectedRange}
-              onChange={setSelectedRange}
-              className="w-full sm:w-[260px]"
-              align="end"
-            />
-            {selectedRange?.from && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 px-2 text-muted-foreground hover:text-foreground text-xs"
-                onClick={() => setSelectedRange(undefined)}
-              >
-                {t("common.clearFilter")}
-              </Button>
-            )}
-          </div>
-        </div>
+        <SectionHeader
+          title={t("dashboard.recentWorkOrders")}
+          description={t("dashboard.recentWorkOrdersDesc")}
+        />
         <RecentWorkOrdersTable
           workOrders={filteredWorkOrders}
           router={router}

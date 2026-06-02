@@ -10,16 +10,20 @@ export type SortKey = "name" | "category" | "price" | "stock" | "popularity";
 
 // ── Movement labels ──────────────────────────────────────────
 
-export const MOVEMENT_LABELS: Record<string, string> = {
-  purchase: "Purchase",
-  sale: "Sale",
-  adjustment: "Adjustment",
-  transfer_in: "Transfer In",
-  transfer_out: "Transfer Out",
-  return: "Return",
-  waste: "Damage",
-  disassembly: "Disassembly",
-};
+export function getMovementLabels(
+  t: (key: string) => string,
+): Record<string, string> {
+  return {
+    purchase: t("movementPurchase"),
+    sale: t("movementSale"),
+    adjustment: t("movementAdjustment"),
+    transfer_in: t("movementTransferIn"),
+    transfer_out: t("movementTransferOut"),
+    return: t("movementReturn"),
+    waste: t("movementWaste"),
+    disassembly: t("movementDisassembly"),
+  };
+}
 
 export const MOVEMENT_COLORS: Record<string, string> = {
   purchase:
@@ -46,27 +50,33 @@ export const PO_STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-destructive/10 text-destructive",
 };
 
-export const PO_STATUS_LABELS: Record<string, string> = {
-  draft: "Draft",
-  ordered: "Ordered",
-  partial: "Partially Received",
-  received: "Received",
-  cancelled: "Cancelled",
-};
+export function getPoStatusLabels(
+  t: (key: string) => string,
+): Record<string, string> {
+  return {
+    draft: t("poStatusDraft"),
+    ordered: t("poStatusOrdered"),
+    partial: t("poStatusPartiallyReceived"),
+    received: t("poStatusReceived"),
+    cancelled: t("poStatusCancelled"),
+  };
+}
 
 // ── Movement type filter chips ───────────────────────────────
 
-export const MOVEMENT_FILTERS = [
-  { key: "all", label: "All" },
-  { key: "purchase", label: "Purchase" },
-  { key: "sale", label: "Sale" },
-  { key: "adjustment", label: "Adjustment" },
-  { key: "transfer_in", label: "Transfer In" },
-  { key: "transfer_out", label: "Transfer Out" },
-  { key: "return", label: "Return" },
-  { key: "waste", label: "Damage" },
-  { key: "disassembly", label: "Disassembly" },
-] as const;
+export function getMovementFilters(t: (key: string) => string) {
+  return [
+    { key: "all", label: t("all") },
+    { key: "purchase", label: t("movementPurchase") },
+    { key: "sale", label: t("movementSale") },
+    { key: "adjustment", label: t("movementAdjustment") },
+    { key: "transfer_in", label: t("movementTransferIn") },
+    { key: "transfer_out", label: t("movementTransferOut") },
+    { key: "return", label: t("movementReturn") },
+    { key: "waste", label: t("movementWaste") },
+    { key: "disassembly", label: t("movementDisassembly") },
+  ] as const;
+}
 
 // ── Tab config ───────────────────────────────────────────────
 

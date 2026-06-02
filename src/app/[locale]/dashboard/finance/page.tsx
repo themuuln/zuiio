@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import type { DateRange } from "react-day-picker";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -24,6 +25,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import {
   Empty,
   EmptyContent,
@@ -56,69 +58,7 @@ import { KpiCard } from "./_kpi-card";
 import { OverviewTab } from "./_overview-tab";
 import { TransactionsTab } from "./_transactions-tab";
 
-type Period = "today" | "week" | "month" | "all";
 type Tab = "overview" | "transactions" | "invoices" | "expenses";
-
-type PeriodOption = { key: Period; label: string };
-
-function PeriodBar({
-  value,
-  onChange,
-}: {
-  value: Period;
-  onChange: (p: Period) => void;
-}) {
-  const options: PeriodOption[] = [
-    { key: "today", label: "Today" },
-    { key: "week", label: "This Week" },
-    { key: "month", label: "This Month" },
-    { key: "all", label: "All Time" },
-  ];
-
-  const getDateRange = useCallback((period: Period): string => {
-    const now = new Date();
-    switch (period) {
-      case "today":
-        return now.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        });
-      case "week": {
-        const curr = new Date(now);
-        const day = curr.getDay();
-        const diff = curr.getDate() - day + (day === 0 ? -6 : 1);
-        const monday = new Date(curr.setDate(diff));
-        const sunday = new Date(monday);
-        sunday.setDate(monday.getDate() + 6);
-        return `${monday.toLocaleDateString("en-US", { month: "short", day: "numeric" })} \u2013 ${sunday.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
-      }
-      case "month": {
-        const first = new Date(now.getFullYear(), now.getMonth(), 1);
-        const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        return `${first.toLocaleDateString("en-US", { month: "short", day: "numeric" })} \u2013 ${last.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
-      }
-      case "all":
-        return "";
-    }
-  }, []);
-
-  return (
-    <div className="flex gap-1.5">
-      {options.map((opt) => (
-        <Button
-          key={opt.key}
-          variant={value === opt.key ? "default" : "ghost"}
-          size="sm"
-          onClick={() => onChange(opt.key)}
-        >
-          {value === opt.key && opt.key !== "all"
-            ? `${opt.label} (${getDateRange(opt.key)})`
-            : opt.label}
-        </Button>
-      ))}
-    </div>
-  );
-}
 
 function TabBar({
   value,
@@ -595,6 +535,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
 
 // ── Expenses Tab ──────────────────────────────────
 function ExpensesTab({ orgId }: { orgId: string | null }) {
+  const t = useTranslations();
   const { data: expenses, isLoading: expLoading } = useExpenses(
     orgId ?? undefined,
   );
@@ -610,25 +551,25 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          label="Total Expenses"
+          label={t("expenses.totalExpenses")}
           value={loading ? "\u2014" : String(stats?.totalExpenses ?? 0)}
           icon={Wallet}
           loading={loading}
         />
         <KpiCard
-          label="Total Amount"
+          label={t("expenses.totalAmount")}
           value={loading ? "\u2014" : formatMNT(stats?.totalAmount ?? 0)}
           icon={DollarSign}
           loading={loading}
         />
         <KpiCard
-          label="This Month"
+          label={t("expenses.thisMonth")}
           value={loading ? "\u2014" : formatMNT(stats?.thisMonth ?? 0)}
           icon={TrendingUp}
           loading={loading}
         />
         <KpiCard
-          label="Unpaid"
+          label={t("expenses.unpaid")}
           value={loading ? "\u2014" : formatMNT(stats?.unpaidAmount ?? 0)}
           icon={Clock}
           subtitle={
@@ -642,7 +583,7 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
 
       <div className="flex items-center justify-between">
         <Typography.Muted className="text-sm font-medium text-muted-foreground">
-          Recent Expenses
+          {t("expenses.title")}
         </Typography.Muted>
         <Button
           render={<Link href="/dashboard/expenses" />}
@@ -650,7 +591,7 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
           size="sm"
         >
           <ArrowRight className="size-4" />
-          View All
+          {t("common.viewAll")}
         </Button>
       </div>
 
@@ -666,7 +607,7 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
                 <EmptyMedia variant="icon">
                   <Wallet />
                 </EmptyMedia>
-                <EmptyTitle>No expenses recorded yet</EmptyTitle>
+                <EmptyTitle>{t("expenses.noExpenses")}</EmptyTitle>
               </EmptyHeader>
               <EmptyContent>
                 <Button
@@ -674,7 +615,7 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
                   variant="outline"
                   size="sm"
                 >
-                  Add Expense
+                  {t("expenses.addExpense")}
                 </Button>
               </EmptyContent>
             </Empty>
@@ -684,19 +625,19 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                      Date
+                      {t("common.date")}
                     </TableHead>
                     <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                      Description
+                      {t("common.description")}
                     </TableHead>
                     <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                      Category
+                      {t("expenses.category")}
                     </TableHead>
                     <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                      Amount
+                      {t("common.amount")}
                     </TableHead>
                     <TableHead className="px-5 py-3.5 text-center font-medium text-muted-foreground">
-                      Status
+                      {t("common.status")}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -739,9 +680,11 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
                       </TableCell>
                       <TableCell className="px-5 py-3.5 text-center">
                         {exp.paid_at ? (
-                          <Badge variant="outline">Paid</Badge>
+                          <Badge variant="outline">{t("expenses.paid")}</Badge>
                         ) : (
-                          <Badge variant="outline">Unpaid</Badge>
+                          <Badge variant="outline">
+                            {t("expenses.unpaid")}
+                          </Badge>
                         )}
                       </TableCell>
                     </TableRow>
@@ -793,7 +736,7 @@ export default function FinancePage() {
   } satisfies FinanceDataState);
   const { data } = financeData;
   const { registerTab } = useRightSidebar();
-  const [period, setPeriod] = useState<Period>("month");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("overview");
   const [search, setSearch] = useState("");
 
@@ -808,31 +751,42 @@ export default function FinancePage() {
       ? "No organization found"
       : financeData.error;
 
-  const fetchData = useCallback(async (oid: string, p: Period) => {
-    dispatchFinance({ type: "LOAD_START" });
-    try {
-      const res = await fetch(
-        `/api/organizations/${oid}/reports?type=dashboard&period=${p}`,
-      );
-      const json = await res.json();
-      if (json.error) {
-        dispatchFinance({ type: "LOAD_ERROR", error: json.error.message });
-      } else {
-        dispatchFinance({ type: "LOAD_SUCCESS", data: json.data });
+  const dateFrom = dateRange?.from?.toISOString().split("T")[0];
+  const dateTo = dateRange?.to?.toISOString().split("T")[0];
+
+  const fetchData = useCallback(
+    async (oid: string, df?: string, dt?: string) => {
+      dispatchFinance({ type: "LOAD_START" });
+      try {
+        const params = new URLSearchParams({ type: "dashboard" });
+        if (df && dt) {
+          params.set("date_from", df);
+          params.set("date_to", dt);
+        }
+        const res = await fetch(
+          `/api/organizations/${oid}/reports?${params.toString()}`,
+        );
+        const json = await res.json();
+        if (json.error) {
+          dispatchFinance({ type: "LOAD_ERROR", error: json.error.message });
+        } else {
+          dispatchFinance({ type: "LOAD_SUCCESS", data: json.data });
+        }
+      } catch {
+        toast.error("Failed to load finance data");
+        dispatchFinance({ type: "LOAD_DONE" });
       }
-    } catch {
-      toast.error("Failed to load finance data");
-      dispatchFinance({ type: "LOAD_DONE" });
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (data) setHasLoadedOnce(true);
   }, [data]);
 
   useEffect(() => {
-    if (orgId) fetchData(orgId, period);
-  }, [orgId, period, fetchData]);
+    if (orgId) fetchData(orgId, dateFrom, dateTo);
+  }, [orgId, dateFrom, dateTo, fetchData]);
 
   useEffect(() => {
     if (!data) return;
@@ -862,7 +816,7 @@ export default function FinancePage() {
           primary:
             (wo.customer?.full_name ??
               `${wo.customer?.first_name ?? ""} ${wo.customer?.last_name ?? ""}`.trim()) ||
-            "Unknown",
+            t("common.unknown"),
           secondary: `${wo.vehicle?.plate_number ?? "—"} · ${formatCurrency(wo.total)}`,
           timestamp: new Date(wo.created_at).toLocaleDateString("en-US", {
             month: "short",
@@ -988,15 +942,20 @@ export default function FinancePage() {
           </Typography.Muted>
         </div>
         <div className="flex flex-col items-end gap-3">
-          <PeriodBar value={period} onChange={setPeriod} />
+          <DateRangePicker
+            value={dateRange}
+            onChange={setDateRange}
+            className="w-full sm:w-[260px]"
+            align="end"
+          />
           <TabBar value={tab} onChange={setTab} />
         </div>
       </div>
 
-      {period === "all" && (
+      {!dateRange?.from && !dateRange?.to && (
         <Alert>
           <AlertCircle className="size-4" />
-          <AlertTitle>Large dataset</AlertTitle>
+          <AlertTitle>{t("finance.largeDataset")}</AlertTitle>
           <AlertDescription>
             Showing all data — may be slow for large datasets.
           </AlertDescription>

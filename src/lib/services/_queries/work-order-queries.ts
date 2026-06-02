@@ -8,6 +8,7 @@ import type {
   WorkOrderHelper,
   WorkOrderPart,
   WorkOrderService,
+  WorkOrderServiceHistoryEntry,
   WorkOrderStatusHistory,
 } from "@/lib/types";
 
@@ -45,6 +46,7 @@ export async function getWorkOrderDetail(
     { data: mechanicData },
     { data: labelData },
     { data: helpersData },
+    { data: priorServiceVisits },
   ] = await Promise.all([
     supabase
       .from("work_order_services")
@@ -106,7 +108,62 @@ export async function getWorkOrderDetail(
         mechanic:mechanic_id (full_name)
       `)
       .eq("work_order_id", id),
+    wo.vehicle_id
+      ? supabase
+          .from("work_orders")
+          .select(
+            "id, status, complaint, diagnosis, notes, total, created_at, mechanic_id",
+          )
+          .eq("organization_id", wo.organization_id)
+          .eq("vehicle_id", wo.vehicle_id)
+          .neq("id", id)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+          .limit(10)
+      : { data: [] },
   ]);
+
+  const priorVisitIds = (priorServiceVisits ?? []).map((visit) => visit.id);
+  const priorVisitMechanicIds = [
+    ...new Set(
+      (priorServiceVisits ?? []).flatMap((visit) =>
+        visit.mechanic_id ? [visit.mechanic_id] : [],
+      ),
+    ),
+  ] as string[];
+
+  const [{ data: priorVisitProfiles }, { data: priorVisitServices }] =
+    priorVisitIds.length === 0
+      ? [{ data: [] }, { data: [] }]
+      : await Promise.all([
+          supabase
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", priorVisitMechanicIds),
+          supabase
+            .from("work_order_services")
+            .select("work_order_id, service_name, final_price")
+            .in("work_order_id", priorVisitIds),
+        ]);
+
+  const priorVisitMechanicMap = new Map(
+    (priorVisitProfiles ?? []).map((profile) => [
+      profile.id,
+      profile.full_name,
+    ]),
+  );
+  const priorVisitServicesMap = new Map<
+    string,
+    WorkOrderServiceHistoryEntry["services"]
+  >();
+  for (const service of priorVisitServices ?? []) {
+    const existing = priorVisitServicesMap.get(service.work_order_id) ?? [];
+    existing.push({
+      name: service.service_name,
+      price: Number(service.final_price ?? 0),
+    });
+    priorVisitServicesMap.set(service.work_order_id, existing);
+  }
 
   return {
     ...wo,
@@ -134,6 +191,19 @@ export async function getWorkOrderDetail(
     services: (services ?? []) as WorkOrderService[],
     parts: (parts ?? []) as WorkOrderPart[],
     status_history: (statusHistory ?? []) as WorkOrderStatusHistory[],
+    service_history: (priorServiceVisits ?? []).map((visit) => ({
+      work_order_id: visit.id,
+      status: visit.status,
+      created_at: visit.created_at,
+      complaint: visit.complaint,
+      diagnosis: visit.diagnosis,
+      notes: visit.notes,
+      total: Number(visit.total ?? 0),
+      mechanic_name: visit.mechanic_id
+        ? (priorVisitMechanicMap.get(visit.mechanic_id) ?? null)
+        : null,
+      services: priorVisitServicesMap.get(visit.id) ?? [],
+    })),
     diagnosis_label: labelData as DiagnosisLabel | null,
   };
 }

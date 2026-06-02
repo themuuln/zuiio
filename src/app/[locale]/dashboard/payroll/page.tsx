@@ -34,8 +34,8 @@ import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
   useCalculatePayroll,
-  usePayRateUpsert,
   usePayRates,
+  usePayRateUpsert,
   usePayrollRecords,
   useUpdatePayrollRecord,
 } from "@/lib/queries/use-payroll";

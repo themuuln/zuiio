@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -29,23 +30,17 @@ import { AppointmentCreateSheet } from "./_create-sheet";
 
 // ── Status helpers ────────────────────────────────────────────
 
-const STATUS_LABELS: Record<string, string> = {
-  scheduled: "Scheduled",
-  checked_in: "Checked In",
-  in_progress: "In Progress",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  no_show: "No Show",
-};
+const STATUS_LABELS: Record<string, string> = {};
 
 function formatTime(iso: string) {
   const d = new Date(iso);
-  return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 // ── Main Page ──────────────────────────────────────────────────
 
 export default function AppointmentsPage() {
+  const t = useTranslations("appointments");
   const queryClient = useQueryClient();
   const { data: org } = useCurrentOrg();
   const [statusFilter, setStatusFilter] = useState("all");
@@ -89,9 +84,9 @@ export default function AppointmentsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      toast.success("Appointment updated");
+      toast.success(t("updated"));
     },
-    onError: () => toast.error("Failed to update appointment"),
+    onError: () => toast.error(t("failedToUpdate")),
   });
 
   // Delete appointment
@@ -107,9 +102,9 @@ export default function AppointmentsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      toast.success("Appointment cancelled");
+      toast.success(t("cancelled"));
     },
-    onError: () => toast.error("Failed to cancel appointment"),
+    onError: () => toast.error(t("failedToCancel")),
   });
 
   // Filter
@@ -125,20 +120,28 @@ export default function AppointmentsPage() {
           onValueChange={(v) => setStatusFilter(v ?? "all")}
         >
           <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="All statuses" />
+            <SelectValue placeholder={t("allStatuses")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {Object.entries(STATUS_LABELS).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
+            <SelectItem value="all">{t("allStatuses")}</SelectItem>
+            {Object.keys(STATUS_LABELS).length === 0 &&
+              Object.keys({
+                scheduled: "",
+                checked_in: "",
+                in_progress: "",
+                completed: "",
+                cancelled: "",
+                no_show: "",
+              }).map((value) => (
+                <SelectItem key={value} value={value}>
+                  {t("status_" + value)}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
         <Button onClick={() => setCreateOpen(true)}>
           <Plus className="size-4" />
-          New Appointment
+          {t("newAppointment")}
         </Button>
       </div>
 
@@ -154,11 +157,13 @@ export default function AppointmentsPage() {
             <EmptyMedia variant="icon">
               <Calendar className="size-10 text-muted-foreground" />
             </EmptyMedia>
-            <EmptyTitle>No appointments</EmptyTitle>
+            <EmptyTitle>{t("noAppointments")}</EmptyTitle>
             <EmptyDescription>
               {statusFilter !== "all"
-                ? `No appointments with status "${STATUS_LABELS[statusFilter] ?? statusFilter}"`
-                : "Schedule your first appointment to get started"}
+                ? t("noAppointmentsWithStatus", {
+                    status: t("status_" + statusFilter),
+                  })
+                : t("scheduleFirst")}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
@@ -186,7 +191,7 @@ export default function AppointmentsPage() {
                     {appointment.title}
                   </Typography.Text>
                   <Typography.Text className="text-sm text-muted-foreground block truncate">
-                    {appointment.customer_id ?? "No customer"}
+                    {appointment.customer_id ?? t("noCustomer")}
                   </Typography.Text>
                 </div>
                 <Select
@@ -202,11 +207,19 @@ export default function AppointmentsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
+                    {Object.keys(STATUS_LABELS).length === 0 &&
+                      Object.keys({
+                        scheduled: "",
+                        checked_in: "",
+                        in_progress: "",
+                        completed: "",
+                        cancelled: "",
+                        no_show: "",
+                      }).map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {t("status_" + value)}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <Button
@@ -215,7 +228,7 @@ export default function AppointmentsPage() {
                   className="text-destructive"
                   onClick={() => deleteMutation.mutate(appointment.id)}
                 >
-                  Cancel
+                  {t("commonCancel")}
                 </Button>
               </CardContent>
             </Card>

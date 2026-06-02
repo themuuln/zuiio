@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,7 @@ export function NumericKeypad({
   onChange,
   children,
 }: NumericKeypadProps) {
+  const t = useTranslations("common");
   const [open, setOpen] = React.useState(false);
   const [buffer, setBuffer] = React.useState("");
   const previousRef = React.useRef(value);
@@ -90,7 +92,7 @@ export function NumericKeypad({
         {/* Keypad grid */}
         <fieldset
           className="grid grid-cols-4 gap-2 border-0 p-0 m-0"
-          aria-label="Numeric keypad"
+          aria-label={t("numericKeypad")}
         >
           {/* Row 1: 7 8 9 ⌫ */}
           <KeyButton onClick={() => handleKey("7")}>7</KeyButton>
@@ -99,7 +101,7 @@ export function NumericKeypad({
           <KeyButton
             onClick={() => handleKey("backspace")}
             variant="muted"
-            aria-label="Backspace"
+            aria-label={t("backspace")}
           >
             <svg
               width="20"
@@ -125,7 +127,7 @@ export function NumericKeypad({
           <KeyButton
             onClick={() => handleKey("clear")}
             variant="muted"
-            aria-label="Clear"
+            aria-label={t("clear")}
           >
             C
           </KeyButton>
@@ -142,7 +144,10 @@ export function NumericKeypad({
           <KeyButton onClick={() => handleKey("0")} className="col-span-2">
             0
           </KeyButton>
-          <KeyButton onClick={() => handleKey(".")} aria-label="Decimal point">
+          <KeyButton
+            onClick={() => handleKey(".")}
+            aria-label={t("decimalPoint")}
+          >
             .
           </KeyButton>
           <div aria-hidden="true" />

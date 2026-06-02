@@ -374,7 +374,7 @@ export function WorkOrderDetailDrawer({
       if (json.error) {
         toast.error(json.error.message ?? "Failed to update status");
       } else {
-        setWo(json.data);
+        await fetchWo(true);
         toast.success(`Status changed to ${newStatus}`);
         onRefresh();
       }
@@ -409,7 +409,7 @@ export function WorkOrderDetailDrawer({
       const json = await res.json();
       if (json.error) toast.error(json.error.message);
       else {
-        setWo(json.data);
+        await fetchWo(true);
         onRefresh();
       }
     } catch {
@@ -921,7 +921,7 @@ export function WorkOrderDetailDrawer({
       if (json.error) {
         toast.error(json.error.message ?? "Failed to update status");
       } else {
-        setWo(json.data);
+        await fetchWo(true);
         toast.success("Ready for Pickup — recommendations saved");
         onRefresh();
       }
@@ -963,7 +963,7 @@ export function WorkOrderDetailDrawer({
       if (json.error) {
         toast.error(json.error.message ?? "Failed to complete");
       } else {
-        setWo(json.data);
+        await fetchWo(true);
         toast.success("Work order completed");
         setShowPickupForm(false);
         setShowCelebration(true);
@@ -1149,6 +1149,7 @@ export function WorkOrderDetailDrawer({
                         <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start">
                           <StatusTimeline
                             statusHistory={wo.status_history ?? []}
+                            serviceHistory={wo.service_history ?? []}
                             t={t}
                           />
                         </div>
@@ -1207,19 +1208,6 @@ export function WorkOrderDetailDrawer({
           />
         )}
 
-        {/* Pickup complete form overlay inside drawer */}
-        {showPickupForm && wo && (
-          <PickupCompleteForm
-            woId={workOrderId ?? ""}
-            vehiclePlate={
-              (wo.vehicle as { plate_number?: string })?.plate_number ?? ""
-            }
-            totalCost={Number(wo.total ?? 0)}
-            onConfirm={handlePickupSubmit}
-            onCancel={handleCancelPickup}
-          />
-        )}
-
         <UnsavedWarning
           show={showUnsavedWarning}
           onDiscard={handleDiscard}
@@ -1229,6 +1217,19 @@ export function WorkOrderDetailDrawer({
 
         <DrawerCelebration show={showCelebration} message="Completed!" />
       </DrawerContent>
+
+      {/* Pickup complete form overlay — outside DrawerContent to avoid Vaul + Base UI portal nesting */}
+      {showPickupForm && wo && (
+        <PickupCompleteForm
+          woId={workOrderId ?? ""}
+          vehiclePlate={
+            (wo.vehicle as { plate_number?: string })?.plate_number ?? ""
+          }
+          totalCost={Number(wo.total ?? 0)}
+          onConfirm={handlePickupSubmit}
+          onCancel={handleCancelPickup}
+        />
+      )}
     </Drawer>
   );
 }

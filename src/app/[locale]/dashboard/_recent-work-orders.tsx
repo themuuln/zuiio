@@ -155,8 +155,8 @@ export function RecentWorkOrdersTable({
           data={workOrders}
           columns={workOrdersForExport}
           filename={`dashboard-recent-${now.toISOString().split("T")[0]}.xlsx`}
-          sheetName="Recent Work Orders"
-          title="Recent Work Orders"
+          sheetName={t("dashboard.recentWorkOrders")}
+          title={t("dashboard.recentWorkOrders")}
           label={t("common.export")}
           buttonSize="xs"
           className="min-w-0 px-2"

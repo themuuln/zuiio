@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { FileText, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,14 +30,7 @@ import type { Estimate } from "@/lib/types";
 
 // ── Status helpers ────────────────────────────────────────────
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Draft",
-  sent: "Sent",
-  approved: "Approved",
-  declined: "Declined",
-  expired: "Expired",
-  converted: "Converted",
-};
+const STATUS_LABELS: Record<string, string> = {};
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-gray-500",
@@ -50,6 +44,7 @@ const STATUS_COLORS: Record<string, string> = {
 // ── Main Page ──────────────────────────────────────────────────
 
 export default function EstimatesPage() {
+  const t = useTranslations("estimates");
   const router = useRouter();
   const { data: org } = useCurrentOrg();
   const [statusFilter, setStatusFilter] = useState("all");
@@ -75,7 +70,7 @@ export default function EstimatesPage() {
   });
 
   const formatCurrency = (val: number | string) =>
-    new Intl.NumberFormat("mn-MN").format(Number(val));
+    new Intl.NumberFormat().format(Number(val));
 
   return (
     <div className="space-y-6">
@@ -85,21 +80,28 @@ export default function EstimatesPage() {
           onValueChange={(v) => setStatusFilter(v ?? "all")}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="All statuses" />
+            <SelectValue placeholder={t("allStatuses")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="active">Active (Draft/Sent/Approved)</SelectItem>
-            {Object.entries(STATUS_LABELS).map(([value, label]) => (
+            <SelectItem value="all">{t("all")}</SelectItem>
+            <SelectItem value="active">{t("active")}</SelectItem>
+            {[
+              "draft",
+              "sent",
+              "approved",
+              "declined",
+              "expired",
+              "converted",
+            ].map((value) => (
               <SelectItem key={value} value={value}>
-                {label}
+                {t("status_" + value)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Button onClick={() => router.push("/dashboard/estimates/new")}>
           <Plus className="size-4" />
-          New Quote
+          {t("newQuote")}
         </Button>
       </div>
 
@@ -115,16 +117,13 @@ export default function EstimatesPage() {
             <EmptyMedia variant="icon">
               <FileText className="size-10 text-muted-foreground" />
             </EmptyMedia>
-            <EmptyTitle>No quotes</EmptyTitle>
-            <EmptyDescription>
-              Create a quote to send to a customer. When approved, it converts
-              to a work order.
-            </EmptyDescription>
+            <EmptyTitle>{t("noQuotes")}</EmptyTitle>
+            <EmptyDescription>{t("noQuotesDesc")}</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
             <Button onClick={() => router.push("/dashboard/estimates/new")}>
               <Plus className="size-4" />
-              Create Quote
+              {t("createQuote")}
             </Button>
           </EmptyContent>
         </Empty>
@@ -151,13 +150,14 @@ export default function EstimatesPage() {
                     variant="outline"
                     className={`${STATUS_COLORS[estimate.status] ?? "bg-gray-500"} text-white border-0`}
                   >
-                    {STATUS_LABELS[estimate.status] ?? estimate.status}
+                    {t("status_" + estimate.status)}
                   </Badge>
                 </div>
                 <Typography.Text className="text-sm text-muted-foreground block truncate mt-0.5">
-                  Created {new Date(estimate.created_at).toLocaleDateString()}
+                  {t("created")}{" "}
+                  {new Date(estimate.created_at).toLocaleDateString()}
                   {estimate.customer_id &&
-                    ` · Customer ID: ${estimate.customer_id.slice(0, 8)}`}
+                    ` · ${t("customerId")}: ${estimate.customer_id.slice(0, 8)}`}
                 </Typography.Text>
               </div>
               <div className="text-right">

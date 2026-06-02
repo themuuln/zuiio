@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -54,6 +55,7 @@ export function AppointmentCreateSheet({
   orgId,
   onCreated,
 }: Props) {
+  const t = useTranslations("appointments");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
   );
@@ -86,14 +88,14 @@ export function AppointmentCreateSheet({
       return json.data;
     },
     onSuccess: () => {
-      toast.success("Appointment created");
+      toast.success(t("created"));
       form.reset();
       setSelectedCustomer(null);
       setSelectedVehicle(null);
       onCreated?.();
     },
     onError: (err) =>
-      toast.error(err instanceof Error ? err.message : "Failed to create"),
+      toast.error(err instanceof Error ? err.message : t("failedToCreate")),
   });
 
   const handleSubmit = form.handleSubmit((data) => createMutation.mutate(data));
@@ -102,10 +104,8 @@ export function AppointmentCreateSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg overflow-hidden">
         <SheetHeader>
-          <SheetTitle>New Appointment</SheetTitle>
-          <SheetDescription>
-            Schedule a service appointment for a customer
-          </SheetDescription>
+          <SheetTitle>{t("newAppointment")}</SheetTitle>
+          <SheetDescription>{t("createDescription")}</SheetDescription>
         </SheetHeader>
 
         <form
@@ -116,7 +116,7 @@ export function AppointmentCreateSheet({
           {/* Customer */}
           <div>
             <Typography.Text className="text-sm font-medium mb-2 block">
-              Customer <span className="text-destructive">*</span>
+              {t("customer")} <span className="text-destructive">*</span>
             </Typography.Text>
             <CustomerSelect
               orgId={orgId}
@@ -129,7 +129,7 @@ export function AppointmentCreateSheet({
           {/* Vehicle */}
           <div>
             <Typography.Text className="text-sm font-medium mb-2 block">
-              Vehicle <span className="text-destructive">*</span>
+              {t("vehicle")} <span className="text-destructive">*</span>
             </Typography.Text>
             <VehicleSelect
               orgId={orgId}
@@ -143,11 +143,11 @@ export function AppointmentCreateSheet({
           {/* Title */}
           <Field data-invalid={!!form.formState.errors.title}>
             <FieldLabel>
-              Title <span className="text-destructive">*</span>
+              {t("title")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
-                placeholder="e.g. Oil change, Brake inspection"
+                placeholder={t("titlePlaceholder")}
                 {...form.register("title")}
                 className="h-11"
               />
@@ -160,7 +160,7 @@ export function AppointmentCreateSheet({
           {/* Date */}
           <Field>
             <FieldLabel>
-              Date & Time <span className="text-destructive">*</span>
+              {t("dateTime")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <DatePicker value={scheduledAt} onChange={setScheduledAt} />
@@ -169,10 +169,10 @@ export function AppointmentCreateSheet({
 
           {/* Description */}
           <Field>
-            <FieldLabel>Description</FieldLabel>
+            <FieldLabel>{t("description")}</FieldLabel>
             <FieldContent>
               <Textarea
-                placeholder="Additional details about the appointment..."
+                placeholder={t("descriptionPlaceholder")}
                 rows={3}
                 {...form.register("description")}
               />
@@ -181,10 +181,10 @@ export function AppointmentCreateSheet({
 
           {/* Notes */}
           <Field>
-            <FieldLabel>Internal Notes</FieldLabel>
+            <FieldLabel>{t("internalNotes")}</FieldLabel>
             <FieldContent>
               <Textarea
-                placeholder="Internal notes for staff..."
+                placeholder={t("notesPlaceholder")}
                 rows={2}
                 {...form.register("notes")}
               />
@@ -199,7 +199,7 @@ export function AppointmentCreateSheet({
             variant="outline"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             type="submit"
@@ -211,7 +211,7 @@ export function AppointmentCreateSheet({
               !scheduledAt
             }
           >
-            {createMutation.isPending ? "Creating..." : "Create Appointment"}
+            {createMutation.isPending ? t("creating") : t("createAppointment")}
           </Button>
         </div>
       </SheetContent>

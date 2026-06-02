@@ -57,7 +57,7 @@ export function useFuzzySearch<T>(
       isCaseSensitive: false,
       shouldSort: true,
       includeScore: true,
-      ...(prefix ? { tokenize: true, matchAllTokens: true } : {}),
+      ...(prefix ? { useTokenSearch: true } : {}),
       ...fuseOptions,
     });
   }, [items, keys, threshold, prefix, fuseOptions]);

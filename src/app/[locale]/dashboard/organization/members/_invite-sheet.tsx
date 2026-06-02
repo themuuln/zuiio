@@ -1,9 +1,9 @@
 "use client";
 
 import { Loader2, MailPlus } from "lucide-react";
-import React from "react";
-import { useLocale } from "next-intl";
 import type { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
+import React from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {

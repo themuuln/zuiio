@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle, XCircle } from "lucide-react";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,14 +25,7 @@ import type { EstimateDetail } from "@/lib/types";
 
 // ── Status helpers ────────────────────────────────────────────
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Draft",
-  sent: "Sent",
-  approved: "Approved",
-  declined: "Declined",
-  expired: "Expired",
-  converted: "Converted",
-};
+const STATUS_LABELS: Record<string, string> = {};
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-gray-500",
@@ -45,6 +39,7 @@ const STATUS_COLORS: Record<string, string> = {
 // ── Component ──────────────────────────────────────────────────
 
 export default function EstimateDetailPage() {
+  const t = useTranslations("estimates");
   const params = useParams();
   const estimateId = params.id as string;
   const router = useRouter();
@@ -84,10 +79,10 @@ export default function EstimateDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["estimate", estimateId] });
       queryClient.invalidateQueries({ queryKey: ["estimates"] });
-      toast.success("Status updated");
+      toast.success(t("statusUpdated"));
     },
     onError: (err) =>
-      toast.error(err instanceof Error ? err.message : "Update failed"),
+      toast.error(err instanceof Error ? err.message : t("updateFailed")),
   });
 
   // Convert to work order
@@ -104,11 +99,11 @@ export default function EstimateDetailPage() {
     onSuccess: (data: { id: string }) => {
       queryClient.invalidateQueries({ queryKey: ["estimate", estimateId] });
       queryClient.invalidateQueries({ queryKey: ["estimates"] });
-      toast.success("Quote converted to work order!");
+      toast.success(t("converted"));
       router.push(`/dashboard/work-orders/${data.id}`);
     },
     onError: (err) =>
-      toast.error(err instanceof Error ? err.message : "Conversion failed"),
+      toast.error(err instanceof Error ? err.message : t("conversionFailed")),
   });
 
   if (isLoading) {
@@ -123,7 +118,7 @@ export default function EstimateDetailPage() {
   if (!estimate) {
     return (
       <div className="max-w-4xl mx-auto text-center py-12">
-        <Typography.H3>Quote not found</Typography.H3>
+        <Typography.H3>{t("notFound")}</Typography.H3>
       </div>
     );
   }
@@ -145,7 +140,7 @@ export default function EstimateDetailPage() {
             variant="outline"
             className={`${STATUS_COLORS[estimate.status] ?? "bg-gray-500"} text-white border-0`}
           >
-            {STATUS_LABELS[estimate.status] ?? estimate.status}
+            {t("status_" + estimate.status)}
           </Badge>
 
           {/* Status actions */}
@@ -156,7 +151,7 @@ export default function EstimateDetailPage() {
                 onClick={() => statusMutation.mutate("sent")}
                 disabled={statusMutation.isPending}
               >
-                Mark Sent
+                {t("markSent")}
               </Button>
               <Button
                 variant="default"
@@ -164,7 +159,7 @@ export default function EstimateDetailPage() {
                 disabled={statusMutation.isPending}
               >
                 <CheckCircle className="size-4" />
-                Approve
+                {t("approve")}
               </Button>
             </>
           )}
@@ -183,20 +178,19 @@ export default function EstimateDetailPage() {
               <DialogTrigger>
                 <Button variant="default">
                   <ArrowRight className="size-4" />
-                  Convert to Work Order
+                  {t("convertToWorkOrder")}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Convert to Work Order</DialogTitle>
+                  <DialogTitle>{t("convertToWorkOrder")}</DialogTitle>
                   <DialogDescription>
-                    This will create a new work order with all items from this
-                    quote. The quote will be marked as converted.
+                    {t("convertDescription")}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-2 text-sm">
                   <p>
-                    Customer:{" "}
+                    {t("customerInfo")}:{" "}
                     {[
                       estimate.customer?.first_name,
                       estimate.customer?.last_name,
@@ -206,13 +200,14 @@ export default function EstimateDetailPage() {
                   </p>
                   {estimate.vehicle && (
                     <p>
-                      Vehicle: {estimate.vehicle.plate_number} ·{" "}
+                      {t("vehicleInfo")}: {estimate.vehicle.plate_number} ·{" "}
                       {estimate.vehicle.make} {estimate.vehicle.model}
                     </p>
                   )}
                   <p>Items: {estimate.items?.length ?? 0}</p>
                   <p className="font-semibold">
-                    Total: ₮{Number(estimate.grand_total).toLocaleString()}
+                    {t("total")}: ₮
+                    {Number(estimate.grand_total).toLocaleString()}
                   </p>
                 </div>
                 <DialogFooter>
@@ -223,15 +218,15 @@ export default function EstimateDetailPage() {
                       (btn as HTMLButtonElement)?.click();
                     }}
                   >
-                    Cancel
+                    {t("cancel")}
                   </Button>
                   <Button
                     onClick={() => convertMutation.mutate()}
                     disabled={convertMutation.isPending}
                   >
                     {convertMutation.isPending
-                      ? "Converting..."
-                      : "Create Work Order"}
+                      ? t("converting")
+                      : t("createWorkOrder")}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -245,7 +240,7 @@ export default function EstimateDetailPage() {
               disabled={statusMutation.isPending}
             >
               <XCircle className="size-4" />
-              Decline
+              {t("decline")}
             </Button>
           )}
         </div>
@@ -255,7 +250,7 @@ export default function EstimateDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Customer</CardTitle>
+            <CardTitle className="text-sm">{t("customer")}</CardTitle>
           </CardHeader>
           <CardContent>
             {estimate.customer ? (
@@ -280,7 +275,7 @@ export default function EstimateDetailPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Vehicle</CardTitle>
+            <CardTitle className="text-sm">{t("vehicle")}</CardTitle>
           </CardHeader>
           <CardContent>
             {estimate.vehicle ? (
@@ -310,23 +305,23 @@ export default function EstimateDetailPage() {
       {/* Items */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Line Items</CardTitle>
+          <CardTitle className="text-base">{t("lineItems")}</CardTitle>
         </CardHeader>
         <CardContent>
           {!estimate.items?.length ? (
             <Typography.Text className="text-muted-foreground">
-              No items
+              {t("noItems")}
             </Typography.Text>
           ) : (
             <div className="space-y-2">
               {/* Header */}
               <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-2 pb-1 border-b">
-                <div className="col-span-1">#</div>
-                <div className="col-span-4">Description</div>
-                <div className="col-span-1 text-right">Qty</div>
-                <div className="col-span-2 text-right">Unit Price</div>
-                <div className="col-span-2 text-right">Discount</div>
-                <div className="col-span-2 text-right">Total</div>
+                <div className="col-span-1">{t("number")}</div>
+                <div className="col-span-4">{t("description")}</div>
+                <div className="col-span-1 text-right">{t("qty")}</div>
+                <div className="col-span-2 text-right">{t("unitPrice")}</div>
+                <div className="col-span-2 text-right">{t("discount")}</div>
+                <div className="col-span-2 text-right">{t("total")}</div>
               </div>
               {estimate.items.map((item, idx) => (
                 <div
@@ -377,14 +372,14 @@ export default function EstimateDetailPage() {
         <CardContent className="pt-4">
           <div className="space-y-2 ml-auto w-full max-w-xs">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
+              <span className="text-muted-foreground">{t("subtotal")}</span>
               <span className="font-mono">
                 ₮{Number(estimate.subtotal).toLocaleString()}
               </span>
             </div>
             {Number(estimate.discount_total) > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Discount</span>
+                <span className="text-muted-foreground">{t("discount")}</span>
                 <span className="font-mono text-destructive">
                   -₮{Number(estimate.discount_total).toLocaleString()}
                 </span>
@@ -392,14 +387,14 @@ export default function EstimateDetailPage() {
             )}
             {Number(estimate.tax_total) > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Tax</span>
+                <span className="text-muted-foreground">{t("tax")}</span>
                 <span className="font-mono">
                   ₮{Number(estimate.tax_total).toLocaleString()}
                 </span>
               </div>
             )}
             <div className="flex justify-between text-lg font-semibold border-t pt-2">
-              <span>Total</span>
+              <span>{t("grandTotal")}</span>
               <span className="font-mono">
                 ₮{Number(estimate.grand_total).toLocaleString()}
               </span>
@@ -414,7 +409,7 @@ export default function EstimateDetailPage() {
           {estimate.notes && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Notes</CardTitle>
+                <CardTitle className="text-sm">{t("notes")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Typography.Text className="text-sm whitespace-pre-wrap">
@@ -426,7 +421,7 @@ export default function EstimateDetailPage() {
           {estimate.terms && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Terms</CardTitle>
+                <CardTitle className="text-sm">{t("terms")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Typography.Text className="text-sm whitespace-pre-wrap">
@@ -445,7 +440,7 @@ export default function EstimateDetailPage() {
             <CheckCircle className="size-5 text-green-600 shrink-0" />
             <div className="flex-1">
               <Typography.Text className="font-medium">
-                Converted to work order
+                {t("convertedToWorkOrder")}
               </Typography.Text>
             </div>
             <Button
@@ -457,7 +452,7 @@ export default function EstimateDetailPage() {
                 )
               }
             >
-              View Work Order
+              {t("viewWorkOrder")}
             </Button>
           </CardContent>
         </Card>

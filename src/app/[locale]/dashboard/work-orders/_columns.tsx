@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
@@ -62,10 +63,13 @@ function getDaysSince(dateStr: string): number {
   );
 }
 
-function getAgeDisplay(days: number): string {
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  return `${days} days ago`;
+function getAgeDisplay(
+  days: number,
+  t?: (key: string, values?: Record<string, number>) => string,
+): string {
+  if (days === 0) return t ? t("today") : "Today";
+  if (days === 1) return t ? t("yesterday") : "Yesterday";
+  return t ? t("daysAgo", { days }) : `${days} days ago`;
 }
 
 // ── Column factory ────────────────────────────────────────────
@@ -82,9 +86,10 @@ export function createColumns(
   return [
     {
       accessorKey: "id",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="WO #" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("workOrders");
+        return <DataTableColumnHeader column={column} title={t("id")} />;
+      },
       cell: ({ row }) => (
         <span className="font-mono text-sm text-muted-foreground">
           #{row.original.id.slice(0, 8)}
@@ -93,9 +98,10 @@ export function createColumns(
     },
     {
       id: "customer",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Customer" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("workOrders");
+        return <DataTableColumnHeader column={column} title={t("customer")} />;
+      },
       cell: ({ row }) => {
         const wo = row.original;
         return (
@@ -114,9 +120,10 @@ export function createColumns(
     },
     {
       accessorKey: "vehicle",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Vehicle" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("workOrders");
+        return <DataTableColumnHeader column={column} title={t("vehicle")} />;
+      },
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
           {getVehicleDisplay(row.original)}
@@ -126,9 +133,10 @@ export function createColumns(
     {
       id: "mechanic",
       accessorFn: (row) => row.mechanic?.full_name ?? "",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Mechanic" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("workOrders");
+        return <DataTableColumnHeader column={column} title={t("mechanic")} />;
+      },
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
           {row.original.mechanic?.full_name ?? "—"}
@@ -137,10 +145,12 @@ export function createColumns(
     },
     {
       accessorKey: "status",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("workOrders");
+        return <DataTableColumnHeader column={column} title={t("status")} />;
+      },
       cell: ({ row }) => {
+        const t = useTranslations("workOrders");
         const wo = row.original;
         return (
           <DropdownMenu>
@@ -178,7 +188,7 @@ export function createColumns(
                   onClick={() => cb.onCancel(wo.id)}
                 >
                   <Trash2 className="size-3.5 mr-2" />
-                  Cancel Work Order
+                  {t("cancelWorkOrder")}
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuContent>
@@ -189,14 +199,16 @@ export function createColumns(
     {
       id: "age",
       accessorKey: "created_at",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Age" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("workOrders");
+        return <DataTableColumnHeader column={column} title={t("age")} />;
+      },
       cell: ({ row }) => {
+        const t = useTranslations("workOrders");
         const days = getDaysSince(row.original.created_at);
         return (
           <span className="text-sm text-muted-foreground tabular-nums">
-            {getAgeDisplay(days)}
+            {getAgeDisplay(days, t)}
           </span>
         );
       },
@@ -204,9 +216,10 @@ export function createColumns(
     {
       id: "grand_total",
       accessorKey: "grand_total",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Total" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("workOrders");
+        return <DataTableColumnHeader column={column} title={t("total")} />;
+      },
       cell: ({ row }) => {
         const total = row.original.grand_total;
         return (
@@ -219,7 +232,12 @@ export function createColumns(
     {
       id: "services_cost",
       accessorKey: "services_cost",
-      header: "Services",
+      header: ({ column }) => {
+        const t = useTranslations("workOrders");
+        return (
+          <DataTableColumnHeader column={column} title={t("servicesCost")} />
+        );
+      },
       cell: ({ row }) => {
         const val = row.original.services_cost;
         return (
@@ -232,7 +250,10 @@ export function createColumns(
     {
       id: "parts_cost",
       accessorKey: "parts_cost",
-      header: "Parts Cost",
+      header: ({ column }) => {
+        const t = useTranslations("workOrders");
+        return <DataTableColumnHeader column={column} title={t("partsCost")} />;
+      },
       cell: ({ row }) => {
         const val = row.original.parts_cost;
         return (
@@ -245,9 +266,12 @@ export function createColumns(
     {
       id: "gross_profit",
       accessorKey: "gross_profit",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Gross Profit" />
-      ),
+      header: ({ column }) => {
+        const t = useTranslations("workOrders");
+        return (
+          <DataTableColumnHeader column={column} title={t("grossProfit")} />
+        );
+      },
       cell: ({ row }) => {
         const val = row.original.gross_profit;
         const lossReason = row.original.loss_reason;
@@ -287,7 +311,10 @@ export function createColumns(
     {
       id: "margin_percent",
       accessorKey: "margin_percent",
-      header: "Margin",
+      header: ({ column }) => {
+        const t = useTranslations("workOrders");
+        return <DataTableColumnHeader column={column} title={t("margin")} />;
+      },
       cell: ({ row }) => {
         const val = row.original.margin_percent;
         const lossReason = row.original.loss_reason;
@@ -327,7 +354,10 @@ export function createColumns(
     {
       id: "loss_reason",
       accessorKey: "loss_reason",
-      header: "Loss Reason",
+      header: ({ column }) => {
+        const t = useTranslations("workOrders");
+        return <DataTableColumnHeader column={column} title="Loss Reason" />;
+      },
       cell: ({ row }) => {
         const val = row.original.loss_reason;
         return (
@@ -343,6 +373,7 @@ export function createColumns(
     {
       id: "actions",
       cell: ({ row }) => {
+        const t = useTranslations("workOrders");
         const wo = row.original;
         return (
           <DropdownMenu>
@@ -360,7 +391,7 @@ export function createColumns(
                     (window.location.href = `/dashboard/work-orders/${wo.id}`)
                   }
                 >
-                  View Details
+                  {t("viewDetails")}
                 </DropdownMenuItem>
                 {wo.status !== "Cancelled" && (
                   <DropdownMenuItem
@@ -368,7 +399,7 @@ export function createColumns(
                     onClick={() => cb.onCancel(wo.id)}
                   >
                     <Trash2 className="size-3.5 mr-2" />
-                    Cancel
+                    {t("cancelWorkOrder")}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuGroup>

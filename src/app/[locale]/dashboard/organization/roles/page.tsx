@@ -55,6 +55,7 @@ const roleColors: Record<string, string> = {
 };
 
 export default function RolesPage() {
+  const t = useTranslations("organization.roles");
   const _t = useTranslations();
   const [state, dispatch] = useReducer(rolesReducer, {
     loading: true,
@@ -107,7 +108,7 @@ export default function RolesPage() {
         dispatch({ type: "SET_ROLES", roles });
       }
     } catch {
-      toast.error("Failed to load roles");
+      toast.error(t("failedToLoadRoles"));
     } finally {
       dispatch({ type: "SET_LOADING", value: false });
     }
@@ -145,10 +146,10 @@ export default function RolesPage() {
     <div className="flex flex-col gap-6">
       <div>
         <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          Roles
+          {t("title")}
         </Typography.H1>
         <Typography.Muted className="text-muted-foreground">
-          Organization roles and their permissions
+          {t("subtitle")}
         </Typography.Muted>
       </div>
 
@@ -157,7 +158,7 @@ export default function RolesPage() {
           <CardContent className="flex flex-col items-center py-12">
             <Shield className="size-10 text-muted-foreground/40 mb-3" />
             <Typography.Muted className="text-sm text-muted-foreground">
-              No roles found
+              {t("noRoles")}
             </Typography.Muted>
           </CardContent>
         </Card>
@@ -181,20 +182,22 @@ export default function RolesPage() {
                         variant="outline"
                         className="ml-auto text-[10px] uppercase tracking-wider"
                       >
-                        System
+                        {t("system")}
                       </Badge>
                     )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-2">
                   <Typography.Muted className="text-sm text-muted-foreground">
-                    {role.description || "No description"}
+                    {role.description || t("noDescription")}
                   </Typography.Muted>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span className="font-medium tabular-nums">
                       {role.memberCount}
                     </span>
-                    <span>{role.memberCount === 1 ? "member" : "members"}</span>
+                    <span>
+                      {role.memberCount === 1 ? t("member") : t("members")}
+                    </span>
                   </div>
                 </CardContent>
               </Card>

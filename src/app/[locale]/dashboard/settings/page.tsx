@@ -39,7 +39,10 @@ import { DiagnosisLabelsSection } from "./_diagnosis-labels-section";
 import { OrganizationCard } from "./_organization-card";
 import { PricingRulesSection } from "./_pricing-rules-section";
 import { SettingsNavigation } from "./_settings-navigation";
-import { SETTINGS_SECTIONS, type SettingsSection } from "./_settings-sections";
+import {
+  getSettingsSections,
+  type SettingsSection,
+} from "./_settings-sections";
 import { TelegramSection } from "./_telegram-section";
 import { VehicleNicheForm } from "./_vehicle-niche-form";
 
@@ -126,7 +129,7 @@ function ErrorState({
           </div>
           <div>
             <Typography.Text className="text-sm font-semibold">
-              Failed to load settings
+              t("failedToLoad")
             </Typography.Text>
             <Typography.Muted className="text-sm text-muted-foreground">
               {message}
@@ -243,8 +246,11 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const t = useTranslations("settings");
+  const settingsSections = useMemo(() => getSettingsSections(t), [t]);
+
   const [activeSection, setActiveSection] = useState<string>(
-    SETTINGS_SECTIONS[0]?.value ?? "",
+    settingsSections[0]?.value ?? "",
   );
 
   const orgInfoQuery = useCurrentOrg();
@@ -329,7 +335,7 @@ export default function SettingsPage() {
       const updated = buildFormFromOrganization(json.data);
       setForm(updated);
       void refetch();
-      toast.success("Settings saved");
+      toast.success(t("saved"));
 
       if (updated.language !== currentLocale) {
         setCookie("NEXT_LOCALE", updated.language, 365);
@@ -339,7 +345,7 @@ export default function SettingsPage() {
         return;
       }
 
-      setSuccessMessage("Settings saved");
+      setSuccessMessage(t("saved"));
     } catch (caughtError) {
       const message =
         caughtError instanceof Error
@@ -354,14 +360,14 @@ export default function SettingsPage() {
 
   const filteredSections = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return SETTINGS_SECTIONS;
+    if (!query) return settingsSections;
 
-    return SETTINGS_SECTIONS.filter(
+    return settingsSections.filter(
       (section) =>
         section.title.toLowerCase().includes(query) ||
         section.description.toLowerCase().includes(query),
     );
-  }, [searchQuery]);
+  }, [searchQuery, settingsSections]);
 
   useEffect(() => {
     if (filteredSections.length === 0) return;
@@ -419,7 +425,7 @@ export default function SettingsPage() {
   const selectedSection =
     filteredSections.find((section) => section.value === activeSection) ??
     filteredSections[0] ??
-    SETTINGS_SECTIONS[0];
+    settingsSections[0];
 
   const scrollToSection = (sectionValue: string) => {
     const section = document.getElementById(`settings-section-${sectionValue}`);
@@ -445,7 +451,7 @@ export default function SettingsPage() {
   if (!organization) {
     return (
       <ErrorState
-        message="No organization found"
+        message={t("noOrganization")}
         onRetry={() => orgInfoQuery.refetch()}
       />
     );
@@ -463,7 +469,7 @@ export default function SettingsPage() {
               <div className="flex flex-col gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <Typography.Text className="text-lg font-semibold tracking-tight">
-                    Settings
+                    {t("title")}
                   </Typography.Text>
                   <Badge variant="secondary">{selectedSection.title}</Badge>
                 </div>
@@ -473,7 +479,7 @@ export default function SettingsPage() {
               </div>
             </div>
             <Badge variant="outline" className="w-fit">
-              {filteredSections.length} visible sections
+              {t("visibleSections", { count: filteredSections.length })}
             </Badge>
           </div>
 
@@ -483,7 +489,7 @@ export default function SettingsPage() {
               <Input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search settings..."
+                placeholder={t("searchPlaceholder")}
                 className="h-9 pl-9 text-sm"
               />
             </div>
@@ -493,7 +499,7 @@ export default function SettingsPage() {
                 size="sm"
                 onClick={() => setSearchQuery("")}
               >
-                Clear
+                {t("clear")}
               </Button>
             ) : null}
           </div>
@@ -505,17 +511,17 @@ export default function SettingsPage() {
           <CardContent className="flex flex-col items-center gap-3 py-12">
             <Search className="size-10 text-muted-foreground/40" />
             <Typography.Text className="text-center text-sm text-muted-foreground">
-              No settings match your search
+              t("noMatchSearch")
             </Typography.Text>
             <Typography.Muted className="text-xs text-muted-foreground/70">
-              Try a different keyword or browse all sections
+              t("tryDifferentKeyword")
             </Typography.Muted>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setSearchQuery("")}
             >
-              Clear search
+              t("clearSearch")
             </Button>
           </CardContent>
         </Card>

@@ -173,7 +173,7 @@ function NewVehicleForm() {
     }
 
     if (!selectedCustomer) {
-      setError("Select a customer before creating a vehicle");
+      setError(t("selectCustomerFirst"));
       return;
     }
 
@@ -249,10 +249,10 @@ function NewVehicleForm() {
         </Button>
         <div>
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            New Vehicle
+            {t("addVehicle")}
           </Typography.H1>
           <Typography.Muted className="text-sm text-muted-foreground">
-            Register a vehicle and link it to its current owner.
+            {t("registerVehicleDesc")}
           </Typography.Muted>
         </div>
       </div>
@@ -301,7 +301,7 @@ function NewVehicleForm() {
             ) : (
               <>
                 <SearchInput
-                  placeholder="Search customer by name, phone, or company..."
+                  placeholder={t("searchCustomerPlaceholder")}
                   loading={customerSearching}
                   onSearch={searchCustomers}
                   onFocus={() => searchCustomers("")}
@@ -310,7 +310,7 @@ function NewVehicleForm() {
                 {!Array.isArray(customerResults) ||
                 customerResults.length === 0 ? (
                   <Typography.Muted className="text-sm text-muted-foreground">
-                    Search for an existing customer before adding the vehicle.
+                    {t("searchCustomerHint")}
                   </Typography.Muted>
                 ) : (
                   <div className="flex flex-col gap-2">
@@ -574,14 +574,14 @@ function NewVehicleForm() {
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select fuel type" />
+                  <SelectValue placeholder={t("selectFuelType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Gasoline">Gasoline</SelectItem>
-                  <SelectItem value="Diesel">Diesel</SelectItem>
-                  <SelectItem value="Electric">Electric</SelectItem>
-                  <SelectItem value="Hybrid">Hybrid</SelectItem>
-                  <SelectItem value="LPG">LPG</SelectItem>
+                  <SelectItem value="Gasoline">{t("fuelGasoline")}</SelectItem>
+                  <SelectItem value="Diesel">{t("fuelDiesel")}</SelectItem>
+                  <SelectItem value="Electric">{t("fuelElectric")}</SelectItem>
+                  <SelectItem value="Hybrid">{t("fuelHybrid")}</SelectItem>
+                  <SelectItem value="LPG">{t("fuelLpg")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -603,13 +603,15 @@ function NewVehicleForm() {
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select transmission" />
+                  <SelectValue placeholder={t("selectTransmission")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Automatic">Automatic</SelectItem>
-                  <SelectItem value="Manual">Manual</SelectItem>
-                  <SelectItem value="CVT">CVT</SelectItem>
-                  <SelectItem value="DCT">DCT</SelectItem>
+                  <SelectItem value="Automatic">
+                    {t("transAutomatic")}
+                  </SelectItem>
+                  <SelectItem value="Manual">{t("transManual")}</SelectItem>
+                  <SelectItem value="CVT">{t("transCvt")}</SelectItem>
+                  <SelectItem value="DCT">{t("transDct")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -631,13 +633,13 @@ function NewVehicleForm() {
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select drivetrain" />
+                  <SelectValue placeholder={t("selectDrivetrain")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="AWD">AWD</SelectItem>
-                  <SelectItem value="4WD">4WD</SelectItem>
-                  <SelectItem value="FWD">FWD</SelectItem>
-                  <SelectItem value="RWD">RWD</SelectItem>
+                  <SelectItem value="AWD">{t("driveAwd")}</SelectItem>
+                  <SelectItem value="4WD">{t("drive4wd")}</SelectItem>
+                  <SelectItem value="FWD">{t("driveFwd")}</SelectItem>
+                  <SelectItem value="RWD">{t("driveRwd")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -659,18 +661,22 @@ function NewVehicleForm() {
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select body type" />
+                  <SelectValue placeholder={t("selectBodyType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="SUV">SUV</SelectItem>
-                  <SelectItem value="Sedan">Sedan</SelectItem>
-                  <SelectItem value="Hatchback">Hatchback</SelectItem>
-                  <SelectItem value="Coupe">Coupe</SelectItem>
-                  <SelectItem value="Convertible">Convertible</SelectItem>
-                  <SelectItem value="Wagon">Wagon</SelectItem>
-                  <SelectItem value="Van">Van</SelectItem>
-                  <SelectItem value="Truck">Truck</SelectItem>
-                  <SelectItem value="Bus">Bus</SelectItem>
+                  <SelectItem value="SUV">{t("bodySuv")}</SelectItem>
+                  <SelectItem value="Sedan">{t("bodySedan")}</SelectItem>
+                  <SelectItem value="Hatchback">
+                    {t("bodyHatchback")}
+                  </SelectItem>
+                  <SelectItem value="Coupe">{t("bodyCoupe")}</SelectItem>
+                  <SelectItem value="Convertible">
+                    {t("bodyConvertible")}
+                  </SelectItem>
+                  <SelectItem value="Wagon">{t("bodyWagon")}</SelectItem>
+                  <SelectItem value="Van">{t("bodyVan")}</SelectItem>
+                  <SelectItem value="Truck">{t("bodyTruck")}</SelectItem>
+                  <SelectItem value="Bus">{t("bodyBus")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -729,7 +735,7 @@ function NewVehicleForm() {
                 }
                 rows={3}
                 className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                placeholder="Condition notes, accessories, or customer requests"
+                placeholder={t("notesPlaceholder")}
               />
             </div>
           </CardContent>

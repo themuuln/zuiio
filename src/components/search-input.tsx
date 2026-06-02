@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Search, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   type ComponentProps,
   useCallback,
@@ -33,7 +34,7 @@ export function SearchInput({
   onSearch = () => {},
   onValueChange,
   loading = false,
-  placeholder = "Search...",
+  placeholder,
   debounceMs,
   className,
   value: externalValue,
@@ -41,6 +42,8 @@ export function SearchInput({
   clearOnEscape = true,
   ...inputProps
 }: SearchInputProps) {
+  const t = useTranslations("common");
+  const resolvedPlaceholder = placeholder ?? t("search");
   const { onFocus, ...restInputProps } = inputProps;
   const [value, setValue] = useState(externalValue ?? "");
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -126,8 +129,8 @@ export function SearchInput({
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         onFocus={onFocus}
-        placeholder={placeholder}
-        aria-label={placeholder}
+        placeholder={resolvedPlaceholder}
+        aria-label={resolvedPlaceholder}
         className="h-11 text-base"
         {...restInputProps}
       />
@@ -142,7 +145,10 @@ export function SearchInput({
       )}
       {loading && (
         <InputGroupAddon align="inline-end">
-          <Loader2 className="size-5 animate-spin" aria-label="Searching..." />
+          <Loader2
+            className="size-5 animate-spin"
+            aria-label={t("searching")}
+          />
         </InputGroupAddon>
       )}
       {!loading && value && (
@@ -152,7 +158,7 @@ export function SearchInput({
             size="icon-xs"
             onClick={handleClear}
             data-slot="touch-target"
-            aria-label="Clear search"
+            aria-label={t("clearSearch")}
           >
             <X className="size-4" />
           </Button>

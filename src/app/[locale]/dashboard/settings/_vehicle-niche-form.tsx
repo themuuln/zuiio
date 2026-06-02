@@ -10,6 +10,7 @@ import {
   Loader2,
   Wrench,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -61,6 +62,7 @@ export function VehicleNicheForm({
   organization,
   onRefetch,
 }: VehicleNicheFormProps) {
+  const t = useTranslations("settings");
   const [niche, setNiche] = useState<NicheSettings>(DEFAULT_NICHE);
   const [saving, setSaving] = useState(false);
   const [expandedBrands, setExpandedBrands] = useState<Set<string>>(new Set());
@@ -216,7 +218,7 @@ export function VehicleNicheForm({
       }
 
       onRefetch();
-      toast.success("Vehicle niche settings saved");
+      toast.success(t("nicheSavedToast"));
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to save settings";
@@ -392,14 +394,8 @@ export function VehicleNicheForm({
       {/* Info alert */}
       <Alert variant="default">
         <Info className="size-4" />
-        <AlertTitle>How vehicle niche works</AlertTitle>
-        <AlertDescription>
-          When enabled, only the brands and models you select will appear in
-          vehicle creation forms, work order vehicle selection, and the parts
-          catalog. This keeps your workspace focused on the vehicles your
-          workshop actually services. You can change this at any time and the
-          update takes effect immediately. Existing vehicles are not affected.
-        </AlertDescription>
+        <AlertTitle>{t("howNicheWorks")}</AlertTitle>
+        <AlertDescription>{t("vehicleNicheDetails")}</AlertDescription>
       </Alert>
     </div>
   );

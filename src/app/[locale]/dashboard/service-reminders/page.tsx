@@ -294,7 +294,9 @@ export default function ServiceRemindersPage() {
       toast.success(t("common.saved"));
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to create schedule",
+        err instanceof Error
+          ? err.message
+          : t("serviceReminders.failedToCreate"),
       );
     }
   };
@@ -306,7 +308,9 @@ export default function ServiceRemindersPage() {
       toast.success(t("common.deleted"));
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to delete schedule",
+        err instanceof Error
+          ? err.message
+          : t("serviceReminders.failedToDelete"),
       );
     }
   };
@@ -349,7 +353,9 @@ export default function ServiceRemindersPage() {
       toast.success(t("common.saved"));
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to update schedule",
+        err instanceof Error
+          ? err.message
+          : t("serviceReminders.failedToUpdate"),
       );
     }
   };
@@ -432,11 +438,15 @@ export default function ServiceRemindersPage() {
                 );
                 const json = await res.json();
                 if (json.error) throw new Error(json.error.message);
-                toast.success(`Synced ${json.data.synced} service(s)`);
+                toast.success(
+                  t("serviceReminders.synced", { count: json.data.synced }),
+                );
                 refetch();
               } catch (err) {
                 toast.error(
-                  err instanceof Error ? err.message : "Failed to sync history",
+                  err instanceof Error
+                    ? err.message
+                    : t("serviceReminders.failedToSync"),
                 );
               } finally {
                 setSyncing(false);
@@ -460,11 +470,17 @@ export default function ServiceRemindersPage() {
                 );
                 const json = await res.json();
                 if (json.error) throw new Error(json.error.message);
-                toast.success(`Sent ${json.data.sent} reminder(s)`);
+                toast.success(
+                  t("serviceReminders.sentReminders", {
+                    count: json.data.sent,
+                  }),
+                );
                 refetch();
               } catch (err) {
                 toast.error(
-                  err instanceof Error ? err.message : "Failed to send",
+                  err instanceof Error
+                    ? err.message
+                    : t("serviceReminders.failedToSend"),
                 );
               } finally {
                 setSending(false);
@@ -911,7 +927,7 @@ export default function ServiceRemindersPage() {
                     <TableRow>
                       <TableHead>{t("serviceReminders.vehicle")}</TableHead>
                       <TableHead>{t("serviceReminders.serviceName")}</TableHead>
-                      <TableHead>Interval</TableHead>
+                      <TableHead>{t("serviceReminders.interval")}</TableHead>
                       <TableHead>
                         {t("serviceReminders.lastServiceDate")}
                       </TableHead>
@@ -996,13 +1012,13 @@ function ReminderLogsTab({ orgId }: { orgId: string | undefined }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Vehicle</TableHead>
+              <TableHead>{t("serviceReminders.vehicle")}</TableHead>
               <TableHead>{t("serviceReminders.serviceName")}</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Channel</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Scheduled</TableHead>
-              <TableHead>Sent</TableHead>
+              <TableHead>{t("serviceReminders.type")}</TableHead>
+              <TableHead>{t("serviceReminders.channel")}</TableHead>
+              <TableHead>{t("serviceReminders.status")}</TableHead>
+              <TableHead>{t("serviceReminders.scheduled")}</TableHead>
+              <TableHead>{t("serviceReminders.sentAt")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

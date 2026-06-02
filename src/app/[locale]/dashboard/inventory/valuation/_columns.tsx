@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import { Typography } from "@/components/ui/typography";
 import type { InventoryBalanceWithAvgCost } from "@/lib/types";
@@ -14,9 +15,10 @@ export const columns: ColumnDef<ValuationRow>[] = [
   {
     id: "part_name",
     accessorKey: "part_name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Part Name" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("inventory");
+      return <DataTableColumnHeader column={column} title={t("partName")} />;
+    },
     cell: ({ row }) => (
       <div>
         <Typography.Text className="font-medium">
@@ -30,9 +32,10 @@ export const columns: ColumnDef<ValuationRow>[] = [
   },
   {
     accessorKey: "category",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Category" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("inventory");
+      return <DataTableColumnHeader column={column} title={t("category")} />;
+    },
     cell: ({ row }) => (
       <span className="text-muted-foreground">
         {row.original.category ?? "—"}
@@ -42,9 +45,10 @@ export const columns: ColumnDef<ValuationRow>[] = [
   {
     id: "on_hand",
     accessorKey: "quantity_on_hand",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="On Hand" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("inventory");
+      return <DataTableColumnHeader column={column} title={t("onHand")} />;
+    },
     cell: ({ row }) => (
       <span className="tabular-nums">
         {row.original.quantity_on_hand} {row.original.unit}
@@ -54,9 +58,10 @@ export const columns: ColumnDef<ValuationRow>[] = [
   {
     id: "avg_cost",
     accessorKey: "avgUnitCost",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Avg Unit Cost" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("inventory");
+      return <DataTableColumnHeader column={column} title={t("avgUnitCost")} />;
+    },
     cell: ({ row }) => (
       <span className="tabular-nums">
         {row.original.avgUnitCost.toLocaleString("mn-MN")} ₮
@@ -66,9 +71,10 @@ export const columns: ColumnDef<ValuationRow>[] = [
   {
     id: "total_value",
     accessorKey: "totalValue",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Total Value" />
-    ),
+    header: ({ column }) => {
+      const t = useTranslations("inventory");
+      return <DataTableColumnHeader column={column} title={t("totalValue")} />;
+    },
     cell: ({ row }) => (
       <span className="font-semibold tabular-nums">
         {row.original.totalValue.toLocaleString("mn-MN")} ₮

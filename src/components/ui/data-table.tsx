@@ -264,7 +264,15 @@ export function DataTable<TData, TValue>({
             table.getRowModel().rows.map((row) => (
               <div
                 key={row.id}
-                onClick={() => onRowClick?.(row.original)}
+                onClick={(e) => {
+                  if (
+                    (e.target as HTMLElement).closest(
+                      'button, a, input, select, textarea, [role="button"], [role="menuitem"], [data-slot$="trigger"]',
+                    )
+                  )
+                    return;
+                  onRowClick?.(row.original);
+                }}
                 className={cn(
                   "rounded-lg border border-border bg-card p-4 transition-colors",
                   onRowClick && "cursor-pointer active:bg-muted/50",
@@ -313,7 +321,15 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  onClick={() => onRowClick?.(row.original)}
+                  onClick={(e) => {
+                    if (
+                      (e.target as HTMLElement).closest(
+                        'button, a, input, select, textarea, [role="button"], [role="menuitem"], [data-slot$="trigger"]',
+                      )
+                    )
+                      return;
+                    onRowClick?.(row.original);
+                  }}
                   className={cn(
                     "border-b border-border transition-colors",
                     onRowClick && "cursor-pointer hover:bg-muted/30",

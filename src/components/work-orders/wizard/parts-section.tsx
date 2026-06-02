@@ -264,7 +264,7 @@ export function PartsSection() {
                         }
                         className="h-11"
                         placeholder={t("partName")}
-                        aria-label="Part name"
+                        aria-label={t("partName")}
                       />
                       {partLast && (
                         <Typography.Text
@@ -291,7 +291,7 @@ export function PartsSection() {
                         value={part.quantity}
                         className="w-16 h-11 text-center cursor-pointer"
                         min={1}
-                        aria-label="Quantity"
+                        aria-label={t("quantity")}
                       />
                     </NumericKeypad>
                     <NumericKeypad
@@ -302,7 +302,7 @@ export function PartsSection() {
                         value={part.unit_price || ""}
                         className="w-28 h-11 cursor-pointer"
                         placeholder={t("unitPrice")}
-                        aria-label="Unit price"
+                        aria-label={t("unitPrice")}
                       />
                     </NumericKeypad>
                     <span className="w-24 text-right text-sm font-semibold tabular-nums shrink-0">
@@ -314,7 +314,7 @@ export function PartsSection() {
                       onClick={() => ctx.removePart(idx)}
                       data-slot="touch-target"
                       className="min-w-[44px]"
-                      aria-label="Remove part"
+                      aria-label={t("remove")}
                     >
                       <Trash2 className="size-5 text-destructive" />
                     </Button>

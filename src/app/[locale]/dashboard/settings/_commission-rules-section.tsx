@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Pencil, Percent, Plus, Trash2, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -59,15 +60,24 @@ import {
 import type { MechanicCommissionRule } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 
-const COMMISSION_TYPES = [
-  { value: "percentage_of_labor", label: "% of Labor" },
-  { value: "percentage_of_parts", label: "% of Parts" },
-  { value: "percentage_of_revenue", label: "% of Revenue" },
-  { value: "fixed_per_work_order", label: "Fixed per WO" },
+const COMMISSION_TYPE_VALUES = [
+  "percentage_of_labor",
+  "percentage_of_parts",
+  "percentage_of_revenue",
+  "fixed_per_work_order",
 ] as const;
 
-function getCommissionTypeLabel(type: string): string {
-  return COMMISSION_TYPES.find((t) => t.value === type)?.label ?? type;
+function getCommissionTypeLabel(
+  type: string,
+  t: (key: string) => string,
+): string {
+  const labels: Record<string, string> = {
+    percentage_of_labor: t("typePercentLabor"),
+    percentage_of_parts: t("typePercentParts"),
+    percentage_of_revenue: t("typePercentRevenue"),
+    fixed_per_work_order: t("typeFixedPerWo"),
+  };
+  return labels[type] ?? type;
 }
 
 function getCommissionValueDisplay(rule: MechanicCommissionRule): string {
@@ -122,6 +132,7 @@ function CommissionFormDialog({
   mechanics: MechanicOption[];
   mechanicsLoading: boolean;
 }) {
+  const t = useTranslations("settings");
   const createRule = useCreateCommissionRule(orgId);
   const updateRule = useUpdateCommissionRule(orgId);
   const isEditing = !!editingRule;
@@ -167,15 +178,15 @@ function CommissionFormDialog({
 
       if (isEditing && editingRule) {
         await updateRule.mutateAsync({ id: editingRule.id, body });
-        toast.success("Commission rule updated");
+        toast.success(t("commissionRuleUpdated"));
       } else {
         await createRule.mutateAsync(body);
-        toast.success("Commission rule created");
+        toast.success(t("commissionRuleCreated"));
       }
 
       onOpenChange(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save rule");
+      toast.error(err instanceof Error ? err.message : t("failedToSaveRule"));
     }
   }
 
@@ -184,7 +195,7 @@ function CommissionFormDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Edit Commission Rule" : "Add Commission Rule"}
+            {isEditing ? t("editCommissionRule") : t("createCommissionRule")}
           </DialogTitle>
         </DialogHeader>
         <form
@@ -193,11 +204,11 @@ function CommissionFormDialog({
         >
           <FieldGroup>
             <Field data-invalid={!!form.formState.errors.name}>
-              <FieldLabel htmlFor="rule-name">Rule Name</FieldLabel>
+              <FieldLabel htmlFor="rule-name">{t("ruleName")}</FieldLabel>
               <FieldContent>
                 <Input
                   id="rule-name"
-                  placeholder="e.g., Standard Labor Commission"
+                  placeholder={t("ruleNamePlaceholder")}
                   aria-invalid={!!form.formState.errors.name}
                   {...form.register("name")}
                 />
@@ -208,7 +219,7 @@ function CommissionFormDialog({
             </Field>
 
             <Field>
-              <FieldLabel>Mechanic</FieldLabel>
+              <FieldLabel>{t("mechanicField")}</FieldLabel>
               <FieldContent>
                 {mechanicsLoading ? (
                   <Skeleton className="h-10 w-full" />
@@ -221,7 +232,7 @@ function CommissionFormDialog({
                     }
                   >
                     <ComboboxInput
-                      placeholder="All Mechanics (default rule)"
+                      placeholder={t("mechanicPlaceholder")}
                       showTrigger
                       showClear={!!form.watch("mechanicId")}
                       className="h-11 text-sm"
@@ -235,18 +246,20 @@ function CommissionFormDialog({
                           </ComboboxItem>
                         )}
                       </ComboboxList>
-                      <ComboboxEmpty>No mechanics found</ComboboxEmpty>
+                      <ComboboxEmpty>{t("noMechanicsFound")}</ComboboxEmpty>
                     </ComboboxContent>
                   </Combobox>
                 )}
                 <Typography.Muted className="text-xs text-muted-foreground">
-                  Leave empty to apply to all mechanics
+                  {t("mechanicHint")}
                 </Typography.Muted>
               </FieldContent>
             </Field>
 
             <Field data-invalid={!!form.formState.errors.commissionType}>
-              <FieldLabel htmlFor="commission-type">Commission Type</FieldLabel>
+              <FieldLabel htmlFor="commission-type">
+                {t("commissionType")}
+              </FieldLabel>
               <FieldContent>
                 <select
                   id="commission-type"
@@ -259,9 +272,9 @@ function CommissionFormDialog({
                   }
                   className="flex h-11 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
-                  {COMMISSION_TYPES.map((ct) => (
-                    <option key={ct.value} value={ct.value}>
-                      {ct.label}
+                  {COMMISSION_TYPE_VALUES.map((value) => (
+                    <option key={value} value={value}>
+                      {getCommissionTypeLabel(value, t)}
                     </option>
                   ))}
                 </select>
@@ -377,6 +390,7 @@ interface CommissionRulesSectionProps {
 }
 
 export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
+  const t = useTranslations("settings");
   const { data: rules, isLoading, error } = useCommissionRules(orgId);
   const deleteRule = useDeleteCommissionRule(orgId);
 
@@ -415,13 +429,12 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
   }
 
   async function handleDelete(ruleId: string) {
-    if (!confirm("Are you sure you want to delete this commission rule?"))
-      return;
+    if (!confirm(t("confirmDeleteMessage"))) return;
     try {
       await deleteRule.mutateAsync(ruleId);
-      toast.success("Commission rule deleted");
+      toast.success(t("commissionRuleDeleted"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete rule");
+      toast.error(err instanceof Error ? err.message : t("failedToDeleteRule"));
     }
   }
 
@@ -440,7 +453,7 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
       <Card className="border-destructive/20">
         <CardContent className="py-6">
           <Typography.Text className="text-sm text-destructive">
-            Failed to load commission rules
+            {t("failedToLoadRules")}
           </Typography.Text>
         </CardContent>
       </Card>
@@ -452,11 +465,11 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
       <div className="flex mt-4 flex-col gap-4">
         <div className="flex items-center justify-between">
           <Typography.Muted className="text-sm text-muted-foreground">
-            Configure how mechanics earn commissions on completed work orders.
+            {t("commissionRulesDesc")}
           </Typography.Muted>
           <Button onClick={openAddDialog} size="sm">
             <Plus className="mr-1.5 size-4" />
-            Add Rule
+            {t("addCommissionRule")}
           </Button>
         </div>
 
@@ -468,9 +481,9 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
                   <EmptyMedia variant="icon">
                     <Percent />
                   </EmptyMedia>
-                  <EmptyTitle>No commission rules yet</EmptyTitle>
+                  <EmptyTitle>{t("noCommissionRulesYet")}</EmptyTitle>
                   <EmptyDescription>
-                    Add a rule to start calculating mechanic commissions.
+                    {t("noCommissionRulesDesc")}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
@@ -483,25 +496,25 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="px-4 py-3 font-medium">
-                      Name
+                      {t("tableName")}
                     </TableHead>
                     <TableHead className="px-4 py-3 font-medium">
-                      Mechanic
+                      {t("tableMechanic")}
                     </TableHead>
                     <TableHead className="px-4 py-3 font-medium">
-                      Type
+                      {t("tableType")}
                     </TableHead>
                     <TableHead className="px-4 py-3 font-medium text-right">
-                      Value
+                      {t("tableValue")}
                     </TableHead>
                     <TableHead className="px-4 py-3 font-medium text-right">
-                      Min/Max
+                      {t("tableMinMax")}
                     </TableHead>
                     <TableHead className="px-4 py-3 font-medium">
-                      Status
+                      {t("tableStatus")}
                     </TableHead>
                     <TableHead className="px-4 py-3 font-medium text-right">
-                      Actions
+                      {t("tableActions")}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -513,11 +526,12 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
                       </TableCell>
                       <TableCell className="px-4 py-3 text-muted-foreground">
                         {"mechanic_name" in rule
-                          ? ((rule.mechanic_name as string) ?? "All Mechanics")
-                          : "All Mechanics"}
+                          ? ((rule.mechanic_name as string) ??
+                            t("allMechanics"))
+                          : t("allMechanics")}
                       </TableCell>
                       <TableCell className="px-4 py-3">
-                        {getCommissionTypeLabel(rule.commission_type)}
+                        {getCommissionTypeLabel(rule.commission_type, t)}
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right tabular-nums">
                         {getCommissionValueDisplay(rule)}
@@ -536,7 +550,7 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
                           variant={rule.is_active ? "default" : "secondary"}
                           className="text-xs"
                         >
-                          {rule.is_active ? "Active" : "Inactive"}
+                          {rule.is_active ? t("active") : t("inactive")}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right">

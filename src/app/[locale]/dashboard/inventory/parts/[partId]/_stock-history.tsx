@@ -15,8 +15,8 @@ import type { InventoryMovement } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 import {
   formatDate,
+  getMovementLabels,
   MOVEMENT_COLORS,
-  MOVEMENT_LABELS,
 } from "../../_components/constants";
 
 interface StockHistoryProps {
@@ -26,6 +26,7 @@ interface StockHistoryProps {
 
 export function StockHistory({ movements, isLoading }: StockHistoryProps) {
   const t = useTranslations("inventory");
+  const movementLabels = getMovementLabels(t);
 
   return (
     <Card>
@@ -68,7 +69,7 @@ export function StockHistory({ movements, isLoading }: StockHistoryProps) {
                     {formatDate(m.created_at)}
                   </span>
                   <Badge variant="outline" className={`shrink-0 ${colorClass}`}>
-                    {MOVEMENT_LABELS[m.movement_type] ?? m.movement_type}
+                    {movementLabels[m.movement_type] ?? m.movement_type}
                   </Badge>
                   <span
                     className={`text-sm font-semibold tabular-nums shrink-0 ${

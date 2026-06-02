@@ -338,31 +338,31 @@ export default function ExpensesPage() {
       {/* ── KPI Cards ── */}
       <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         <KpiCard
-          label="Total Expenses"
+          label={t("expenses.totalExpenses")}
           value={stats ? String(stats.totalExpenses) : "\u2014"}
           icon={Wallet}
           loading={statsLoading}
         />
         <KpiCard
-          label="Total Amount"
+          label={t("expenses.totalAmount")}
           value={stats ? formatMNT(stats.totalAmount) : "\u2014"}
           icon={DollarSign}
           loading={statsLoading}
         />
         <KpiCard
-          label="This Month"
+          label={t("expenses.thisMonth")}
           value={stats ? formatMNT(stats.thisMonth) : "\u2014"}
           icon={TrendingUp}
           loading={statsLoading}
         />
         <KpiCard
-          label="Overdue"
+          label={t("sidebar.overdue")}
           value={stats ? String(stats.overdueCount) : "\u2014"}
           icon={AlertCircle}
           loading={statsLoading}
         />
         <KpiCard
-          label="Unpaid"
+          label={t("expenses.unpaid")}
           value={stats ? formatMNT(stats.unpaidAmount) : "\u2014"}
           icon={Clock}
           loading={statsLoading}
@@ -390,10 +390,12 @@ export default function ExpensesPage() {
               }
             >
               <SelectTrigger size="sm" className="min-w-44">
-                <SelectValue placeholder="All Categories" />
+                <SelectValue placeholder={t("inventory.allCategories")} />
               </SelectTrigger>
               <SelectContent align="start">
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">
+                  {t("inventory.allCategories")}
+                </SelectItem>
                 {categories?.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
                     {cat.name}
