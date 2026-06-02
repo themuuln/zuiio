@@ -799,6 +799,7 @@ export function VehicleForm({
                     </Typography.Text>
                     <CustomerForm
                       mode="quick"
+                      disableFormWrapper
                       onSuccess={(cust) => {
                         setSelectedCustomer(cust);
                         setShowQuickCustomer(false);

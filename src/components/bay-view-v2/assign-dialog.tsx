@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, CornerDownRight, Loader2 } from "lucide-react";
+import { Car, CornerDownRight, Loader2, Plus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Typography } from "@/components/ui/typography";
+import { NewCustomerSheet } from "@/components/customers/new-customer-sheet";
+import { NewVehicleSheet } from "@/components/vehicles/new-vehicle-sheet";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";
 
@@ -59,6 +61,8 @@ export function AssignDialog({
   const [searchResults, setSearchResults] = useState<VehicleSearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [creatingWorkOrder, setCreatingWorkOrder] = useState(false);
+  const [showNewVehicle, setShowNewVehicle] = useState(false);
+  const [showNewCustomer, setShowNewCustomer] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -333,14 +337,34 @@ export function AssignDialog({
 
             {/* Empty state - show queue count */}
             {!search && !selectedVehicle && (
-              <div className="flex flex-col items-center justify-center py-5 text-center">
+              <div className="flex flex-col items-center justify-center py-4 text-center">
                 <Car className="size-5 text-muted-foreground/30 mb-1" />
                 <Typography.Muted className="text-xs text-muted-foreground/60">
                   {queue.length} vehicle{queue.length !== 1 ? "s" : ""} in queue
                 </Typography.Muted>
                 <Typography.Muted className="text-[10px] text-muted-foreground/40 mt-0.5">
-                  Search above to find any vehicle
+                  Search above or create a new record
                 </Typography.Muted>
+                <div className="flex items-center gap-2 mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={() => setShowNewVehicle(true)}
+                  >
+                    <Plus className="size-3" />
+                    Add Vehicle
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={() => setShowNewCustomer(true)}
+                  >
+                    <Plus className="size-3" />
+                    Add Customer
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -419,6 +443,22 @@ export function AssignDialog({
                 : `Assign to Bay #${bayNumber}`}
           </Button>
         </div>
+
+        <NewVehicleSheet
+          open={showNewVehicle}
+          onOpenChange={setShowNewVehicle}
+          onSuccess={() => {
+            setShowNewVehicle(false);
+            setTimeout(() => searchRef.current?.focus(), 100);
+          }}
+        />
+        <NewCustomerSheet
+          open={showNewCustomer}
+          onOpenChange={setShowNewCustomer}
+          onSuccess={() => {
+            setShowNewCustomer(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

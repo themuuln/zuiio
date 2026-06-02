@@ -68,9 +68,7 @@ describe("isPlanFeatureEnabled", () => {
   });
 
   it("returns false for features not in the plan", () => {
-    expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.INVENTORY)).toBe(
-      false,
-    );
+    expect(isPlanFeatureEnabled("starter", FEATURE_KEYS.INVENTORY)).toBe(false);
   });
 
   it("returns true for all features on enterprise", () => {
@@ -83,18 +81,16 @@ describe("isPlanFeatureEnabled", () => {
 
 describe("getNextPlanWithFeature", () => {
   it("returns pro for inventory on starter", () => {
-    expect(
-      getNextPlanWithFeature("starter", FEATURE_KEYS.INVENTORY),
-    ).toBe("pro");
+    expect(getNextPlanWithFeature("starter", FEATURE_KEYS.INVENTORY)).toBe(
+      "pro",
+    );
   });
 
   it("returns null for feature already available on current plan", () => {
     expect(
       getNextPlanWithFeature("starter", FEATURE_KEYS.WORK_ORDERS),
     ).toBeNull();
-    expect(
-      getNextPlanWithFeature("pro", FEATURE_KEYS.INVENTORY),
-    ).toBeNull();
+    expect(getNextPlanWithFeature("pro", FEATURE_KEYS.INVENTORY)).toBeNull();
   });
 
   it("returns null for enterprise (no higher tier)", () => {

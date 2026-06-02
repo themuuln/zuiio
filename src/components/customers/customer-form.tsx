@@ -249,6 +249,12 @@ export function CustomerForm({
     }
   });
 
+  // Inline mode: use <div> to avoid nested form HTML
+  const Wrapper = disableFormWrapper ? "div" : "form";
+  const wrapperProps = disableFormWrapper
+    ? { className: "flex flex-col gap-4" }
+    : { onSubmit, className: "flex flex-col gap-4" };
+
   const watchedType = form.watch("type");
   const watchedSource = form.watch("source");
   const phoneValue = form.watch("phone");
@@ -510,7 +516,8 @@ export function CustomerForm({
           </Button>
         )}
         <Button
-          type="submit"
+          type={disableFormWrapper ? "button" : "submit"}
+          onClick={disableFormWrapper ? () => onSubmit() : undefined}
           disabled={createCustomerMutation.isPending}
           className="h-11 px-6 min-w-[140px]"
         >
@@ -526,13 +533,4 @@ export function CustomerForm({
       </div>
     </Wrapper>
   );
-  
-  // Inline mode: use <div> to avoid nested form HTML
-  const Wrapper = disableFormWrapper ? "div" : "form";
-  const wrapperProps = disableFormWrapper
-    ? { className: "flex flex-col gap-4" }
-    : { onSubmit, className: "flex flex-col gap-4" };
-  
-  // Submit button handler for inline mode
-  const handleSubmitClick = disableFormWrapper ? () => onSubmit() : undefined;
-
+}
