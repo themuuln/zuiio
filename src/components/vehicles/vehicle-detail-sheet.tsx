@@ -345,7 +345,8 @@ export function VehicleDetailSheet({
             length: formData.length ? Number(formData.length) : old.length,
             weight: formData.weight ? Number(formData.weight) : old.weight,
             import_date: formData.importDate || old.import_date,
-            country_of_origin: formData.countryOfOrigin || old.country_of_origin,
+            country_of_origin:
+              formData.countryOfOrigin || old.country_of_origin,
             category: formData.category || old.category,
           };
         },
@@ -591,12 +592,32 @@ export function VehicleDetailSheet({
                         [t("drivetrain"), vehicle.drivetrain],
                         [t("bodyType"), vehicle.body_type],
                         [t("steering"), vehicle.steering],
-                        [t("seats"), vehicle.seats ? String(vehicle.seats) : null],
-                        [t("height"), vehicle.height ? `${vehicle.height} mm` : null],
-                        [t("width"), vehicle.width ? `${vehicle.width} mm` : null],
-                        [t("length"), vehicle.length ? `${vehicle.length} mm` : null],
-                        [t("weight"), vehicle.weight ? `${vehicle.weight} kg` : null],
-                        [t("importDate"), vehicle.import_date ? new Date(vehicle.import_date).toLocaleDateString() : null],
+                        [
+                          t("seats"),
+                          vehicle.seats ? String(vehicle.seats) : null,
+                        ],
+                        [
+                          t("height"),
+                          vehicle.height ? `${vehicle.height} mm` : null,
+                        ],
+                        [
+                          t("width"),
+                          vehicle.width ? `${vehicle.width} mm` : null,
+                        ],
+                        [
+                          t("length"),
+                          vehicle.length ? `${vehicle.length} mm` : null,
+                        ],
+                        [
+                          t("weight"),
+                          vehicle.weight ? `${vehicle.weight} kg` : null,
+                        ],
+                        [
+                          t("importDate"),
+                          vehicle.import_date
+                            ? new Date(vehicle.import_date).toLocaleDateString()
+                            : null,
+                        ],
                         [t("countryOfOrigin"), vehicle.country_of_origin],
                         [t("category"), vehicle.category],
                       ] as [string, string | null][]

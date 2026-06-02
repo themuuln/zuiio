@@ -863,8 +863,12 @@ export function VehicleForm({
                       )}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="font-mono text-[11px] leading-relaxed whitespace-nowrap">
-                    A→А B→В C→С E→Е H→Н K→К M→М N→Н<br />
+                  <TooltipContent
+                    side="bottom"
+                    className="font-mono text-[11px] leading-relaxed whitespace-nowrap"
+                  >
+                    A→А B→В C→С E→Е H→Н K→К M→М N→Н
+                    <br />
                     O→О P→Р T→Т U→У V→В X→Х Y→Ү
                   </TooltipContent>
                 </Tooltip>
