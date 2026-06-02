@@ -84,17 +84,17 @@
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
-    "@vitest/coverage-v8": "^3.2.4",
-    "@vitest/ui": "^3.2.4",
+    "@vitest/coverage-v8": "^3.2.6",
+    "@vitest/ui": "^3.2.6",
     "babel-plugin-react-compiler": "1.0.0",
     "jsdom": "^26.1.0",
     "msw": "^2.14.6",
     "react-doctor": "^0.2.14",
-    "react-grab": "^0.1.43",
+    "react-grab": "^0.1.44",
     "shadcn": "^4.9.0",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.9.3",
     "vitepress": "^1.6.4",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.6"
   }
 }

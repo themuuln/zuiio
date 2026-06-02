@@ -64,3 +64,6 @@ docs/.vitepress/dist/
 # --- end babysitter managed ---
 /.a5c/node_modules
 /.rpiv/artifacts/discover
+
+# Sentry Config File
+.env.sentry-build-plugin
