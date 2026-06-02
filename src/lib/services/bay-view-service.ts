@@ -171,13 +171,27 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
     });
   }
 
-  // Get mechanics (users with mechanic role)
-  const { data: mechanics } = await supabase
-    .from("profiles")
-    .select("id, full_name, phone, avatar_url")
+  // Get mechanics (users with mechanic role), via organization_users
+  // so profiles without organization_id set still appear
+  const { data: memberIds } = await supabase
+    .from("organization_users")
+    .select("user_id, roles!inner(name)")
     .eq("organization_id", orgId)
-    .eq("is_active", true)
-    .order("full_name");
+    .eq("roles.name", "Mechanic")
+    .is("removed_at", null);
+
+  const mechUserIds = (memberIds ?? []).map((m) => m.user_id);
+  const mechanics =
+    mechUserIds.length > 0
+      ? await (async () => {
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, full_name, phone, avatar_url")
+            .in("id", mechUserIds)
+            .order("full_name");
+          return profiles ?? [];
+        })()
+      : [];
 
   // Count jobs: main mechanic OR helper
   const helperJobCount = new Map<string, number>();

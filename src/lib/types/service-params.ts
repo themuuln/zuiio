@@ -655,6 +655,7 @@ export interface UpdateVehicleParams {
 
 export interface CreateServiceCatalogParams {
   name: string;
+  name_mn?: string | null;
   description?: string;
   default_price: number;
   category?: string;

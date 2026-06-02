@@ -25,6 +25,7 @@ import type { CreateServiceCatalogParams, ServiceCatalog } from "@/lib/types";
 
 const serviceSchema = z.object({
   name: z.string().min(1, "Service name is required"),
+  name_mn: z.string().optional(),
   default_price: z
     .string()
     .refine(
@@ -65,6 +66,7 @@ export function ServiceForm({
     resolver: zodResolver(serviceSchema),
     defaultValues: {
       name: initialData?.name ?? "",
+      name_mn: initialData?.name_mn ?? "",
       default_price:
         initialData?.default_price != null
           ? String(initialData.default_price)
@@ -80,6 +82,7 @@ export function ServiceForm({
     try {
       const payload: CreateServiceCatalogParams = {
         name: data.name.trim(),
+        name_mn: data.name_mn?.trim() || undefined,
         default_price: Number(data.default_price),
         description:
           currentMode === "full"
@@ -145,6 +148,15 @@ export function ServiceForm({
               {form.formState.errors.name && (
                 <FieldError>{form.formState.errors.name.message}</FieldError>
               )}
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>Монгол нэр</FieldLabel>
+            <FieldContent>
+              <Input
+                placeholder="e.g. Тос солих"
+                {...form.register("name_mn")}
+              />
             </FieldContent>
           </Field>
 

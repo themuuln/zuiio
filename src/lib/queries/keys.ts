@@ -78,6 +78,8 @@ export const serviceKeys = {
   list: (orgId: string) => [...serviceKeys.all(orgId), "list"] as const,
   detail: (orgId: string, id: string) =>
     [...serviceKeys.all(orgId), "detail", id] as const,
+  vehicleModels: (orgId: string, serviceId: string) =>
+    [...serviceKeys.all(orgId), "vehicle-models", serviceId] as const,
 };
 
 export const mechanicKeys = {

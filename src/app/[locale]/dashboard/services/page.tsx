@@ -1,9 +1,9 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Pencil, Plus, X } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { CarFront, Check, Pencil, Plus, X } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -30,22 +30,28 @@ import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { serviceKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useServiceLastUsedPrices } from "@/lib/queries/use-price-memory";
+import { useServiceModelPriceCounts } from "@/lib/queries/use-service-vehicle-models";
 import { formatMNT } from "@/lib/utils";
+import { ServiceModelPricesSheet } from "@/components/services/service-model-prices-sheet";
 import { HighlightText } from "@/lib/utils/search-utils";
 
 interface ServiceItem {
   id: string;
   name: string;
+  name_mn: string | null;
   description: string | null;
   default_price: number;
   category: string | null;
 }
 
 export default function ServicesPage() {
+  const locale = useLocale();
   const t = useTranslations();
   const now = useClientNow();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
+
+  const { data: modelPriceCounts = {} } = useServiceModelPriceCounts(orgId);
 
   const {
     data: services = [],
@@ -70,8 +76,9 @@ export default function ServicesPage() {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [modelPricesService, setModelPricesService] =
+    useState<ServiceItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const originalValuesRef = useRef<ServiceItem | null>(null);
 
   const [editForm, setEditForm] = useState({
     name: "",
@@ -201,7 +208,6 @@ export default function ServicesPage() {
         default_price: "",
         category: "",
       });
-      originalValuesRef.current = null;
     },
     onSettled: () => {
       queryClient.invalidateQueries({
@@ -217,7 +223,6 @@ export default function ServicesPage() {
 
   const handleStartEdit = (service: ServiceItem) => {
     setEditingId(service.id);
-    originalValuesRef.current = service;
     setEditForm({
       name: service.name,
       description: service.description ?? "",
@@ -234,7 +239,6 @@ export default function ServicesPage() {
       default_price: "",
       category: "",
     });
-    originalValuesRef.current = null;
   };
 
   const handleUpdate = () => {
@@ -458,7 +462,22 @@ export default function ServicesPage() {
                     ) : (
                       <>
                         <Typography.Text className="font-medium truncate">
-                          <HighlightText text={s.name} query={search} />
+                          <HighlightText
+                            text={
+                              locale === "mn" && s.name_mn ? s.name_mn : s.name
+                            }
+                            query={search}
+                          />
+                          {locale === "mn" && s.name && (
+                            <span className="ml-2 text-xs text-muted-foreground font-normal">
+                              {s.name}
+                            </span>
+                          )}
+                          {locale !== "mn" && s.name_mn && (
+                            <span className="ml-2 text-xs text-muted-foreground font-normal">
+                              ({s.name_mn})
+                            </span>
+                          )}
                         </Typography.Text>
                         <Typography.Muted className="text-sm text-muted-foreground">
                           {s.category ? (
@@ -520,6 +539,10 @@ export default function ServicesPage() {
                           {formatMNT(lastUsedPrices.data[s.id].unit_price)}
                         </span>
                       )}
+                      <MinimalModelCountBadge
+                        count={modelPriceCounts[s.id] ?? 0}
+                        onClick={() => setModelPricesService(s)}
+                      />
                       <Button
                         variant="ghost"
                         size="icon-xs"
@@ -544,6 +567,45 @@ export default function ServicesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Model-Specific Prices Sheet */}
+      <ServiceModelPricesSheet
+        serviceId={modelPricesService?.id ?? null}
+        serviceName={modelPricesService?.name ?? ""}
+        defaultPrice={modelPricesService?.default_price ?? 0}
+        open={modelPricesService !== null}
+        onOpenChange={(open) => {
+          if (!open) setModelPricesService(null);
+        }}
+      />
     </div>
+  );
+}
+
+/**
+ * Inline badge that shows the count of vehicle models with custom prices.
+ * Receives pre-computed count from batch hook to avoid N+1 API calls.
+ */
+function MinimalModelCountBadge({
+  count,
+  onClick,
+}: {
+  count: number;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon-xs"
+      onClick={onClick}
+      aria-label="Model prices"
+      title="Model-Specific Prices"
+      className="relative"
+    >
+      <CarFront className="size-4" />
+      <span className="absolute -top-0.5 -right-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-medium text-primary-foreground leading-none">
+        {count}
+      </span>
+    </Button>
   );
 }

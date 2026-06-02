@@ -2,7 +2,11 @@ import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import type { ServiceCatalog, ServicePriceHistory } from "@/lib/types";
+import type {
+  ServiceCatalog,
+  ServicePriceHistory,
+  VehicleModel,
+} from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
 
 export async function getServices(
@@ -15,7 +19,7 @@ export async function getServices(
   let query = supabase
     .from("service_catalog")
     .select(
-      "id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, created_at, updated_at, deleted_at",
+      "id, organization_id, name, name_mn, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, created_at, updated_at, deleted_at",
     )
     .eq("organization_id", orgId)
     .is("deleted_at", null)
@@ -37,7 +41,7 @@ export async function getService(id: string): Promise<ServiceCatalog> {
   const { data, error } = await supabase
     .from("service_catalog")
     .select(
-      "id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, global_service_id, branch_id, created_by, updated_by, created_at, updated_at, deleted_at",
+      "id, organization_id, name, name_mn, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, global_service_id, branch_id, created_by, updated_by, created_at, updated_at, deleted_at",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -51,6 +55,7 @@ export async function createService(
   orgId: string,
   params: {
     name: string;
+    name_mn?: string;
     category?: string;
     description?: string;
     default_price: number;
@@ -67,6 +72,7 @@ export async function createService(
     .insert({
       organization_id: orgId,
       name: params.name.trim(),
+      name_mn: params.name_mn?.trim() ?? null,
       category: params.category?.trim() ?? null,
       description: params.description?.trim() ?? null,
       default_price: params.default_price,
@@ -75,7 +81,7 @@ export async function createService(
       updated_by: userId,
     })
     .select(
-      "id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at",
+      "id, organization_id, name, name_mn, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at",
     )
     .single();
 
@@ -92,6 +98,7 @@ export async function updateService(
   orgId: string,
   params: {
     name?: string;
+    name_mn?: string;
     category?: string;
     description?: string;
     default_price?: number;
@@ -106,6 +113,7 @@ export async function updateService(
   const fieldMap: FieldMap<typeof params> = {
     columns: {
       name: "name",
+      name_mn: "name_mn",
       category: "category",
       description: "description",
       default_price: "default_price",
@@ -113,6 +121,7 @@ export async function updateService(
     },
     transforms: {
       name: trim,
+      name_mn: trim,
       category: trim,
       description: trim,
     },
@@ -128,7 +137,7 @@ export async function updateService(
     .eq("organization_id", orgId)
     .is("deleted_at", null)
     .select(
-      "id, organization_id, name, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at",
+      "id, organization_id, name, name_mn, category, description, default_price, is_active, estimated_duration_minutes, interval_months, interval_km, branch_id, created_by, updated_by, created_at, updated_at",
     )
     .single();
 
@@ -185,6 +194,164 @@ export async function getLastSoldPrice(
   return data as unknown as ServicePriceHistory | null;
 }
 
+export interface VehicleModelServiceRow {
+  id: string;
+  vehicle_model_id: string;
+  vehicle_model_make: string;
+  vehicle_model_model: string;
+  specific_price: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+const SERVICE_VMS_SELECT =
+  "id, vehicle_model_id, specific_price, notes, created_at, updated_at, vehicle_model:vehicle_models!vehicle_model_id(make, model)";
+
+/**
+ * Get all vehicle model service prices for a given service.
+ * Returns rows with joined vehicle model info (make, model).
+ */
+export async function getServiceVehicleModels(
+  orgId: string,
+  serviceCatalogId: string,
+): Promise<VehicleModelServiceRow[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("vehicle_model_services")
+    .select(SERVICE_VMS_SELECT)
+    .eq("organization_id", orgId)
+    .eq("service_catalog_id", serviceCatalogId)
+    .order("created_at", { ascending: false });
+
+  if (error)
+    throw new Error(
+      error.message ?? "Failed to fetch vehicle model service prices",
+    );
+
+  return ((data ?? []) as unknown as Array<Record<string, unknown>>).map(
+    (row: Record<string, unknown>) => {
+      const vehicleModel = row.vehicle_model as {
+        make: string;
+        model: string;
+      } | null;
+      return {
+        id: row.id as string,
+        vehicle_model_id: row.vehicle_model_id as string,
+        vehicle_model_make: vehicleModel?.make ?? "",
+        vehicle_model_model: vehicleModel?.model ?? "",
+        specific_price: (row.specific_price as number) ?? null,
+        notes: (row.notes as string) ?? null,
+        created_at: row.created_at as string,
+        updated_at: row.updated_at as string,
+      };
+    },
+  );
+}
+
+/**
+ * Upsert a vehicle model service price.
+ * Creates or updates the specific_price for a service+vehicle_model combination.
+ */
+export async function upsertServiceVehicleModelPrice(
+  orgId: string,
+  serviceCatalogId: string,
+  vehicleModelId: string,
+  specificPrice: number | null,
+): Promise<VehicleModelServiceRow> {
+  const supabase = await createClient();
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const { data, error } = await supabase
+    .from("vehicle_model_services")
+    .upsert(
+      {
+        organization_id: orgId,
+        service_catalog_id: serviceCatalogId,
+        vehicle_model_id: vehicleModelId,
+        specific_price: specificPrice,
+        created_by: userId,
+        updated_by: userId,
+      },
+      {
+        onConflict: "vehicle_model_id, service_catalog_id",
+        ignoreDuplicates: false,
+      },
+    )
+    .select(SERVICE_VMS_SELECT)
+    .single();
+
+  if (error || !data)
+    throw new Error(
+      error?.message ?? "Failed to upsert vehicle model service price",
+    );
+
+  const vm = (data as unknown as Record<string, unknown>).vehicle_model as {
+    make: string;
+    model: string;
+  } | null;
+  const raw = data as unknown as Record<string, unknown>;
+
+  revalidateTag(cacheTags.serviceCatalog(orgId), "max");
+
+  return {
+    id: raw.id as string,
+    vehicle_model_id: raw.vehicle_model_id as string,
+    vehicle_model_make: vm?.make ?? "",
+    vehicle_model_model: vm?.model ?? "",
+    specific_price: raw.specific_price as number | null,
+    notes: raw.notes as string | null,
+    created_at: raw.created_at as string,
+    updated_at: raw.updated_at as string,
+  };
+}
+
+/**
+ * Delete a vehicle model service price entry.
+ */
+export async function deleteServiceVehicleModelPrice(
+  orgId: string,
+  serviceCatalogId: string,
+  vehicleModelId: string,
+): Promise<void> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("vehicle_model_services")
+    .delete()
+    .eq("organization_id", orgId)
+    .eq("service_catalog_id", serviceCatalogId)
+    .eq("vehicle_model_id", vehicleModelId);
+
+  if (error)
+    throw new Error(
+      error.message ?? "Failed to delete vehicle model service price",
+    );
+
+  revalidateTag(cacheTags.serviceCatalog(orgId), "max");
+}
+
+/**
+ * Get all vehicle models for an org (for the model picker UI).
+ */
+export async function getOrgVehicleModels(
+  orgId: string,
+): Promise<Pick<VehicleModel, "id" | "make" | "model">[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("vehicle_models")
+    .select("id, make, model")
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .order("make")
+    .order("model");
+
+  if (error) throw new Error(error.message ?? "Failed to fetch vehicle models");
+  return (data ?? []) as Pick<VehicleModel, "id" | "make" | "model">[];
+}
+
 export async function getServicePriceHistory(
   orgId: string,
   serviceCatalogId: string,
@@ -203,4 +370,31 @@ export async function getServicePriceHistory(
 
   if (error) throw new Error(error.message ?? "Failed to fetch price history");
   return (data ?? []) as unknown as ServicePriceHistory[];
+}
+
+/**
+ * Get a count of custom model-specific prices per service for the whole org.
+ * Returns a map: service_catalog_id → count of models with non-null specific_price.
+ * Used to avoid N+1 queries on the services listing page.
+ */
+export async function getServiceModelPriceCounts(
+  orgId: string,
+): Promise<Record<string, number>> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("vehicle_model_services")
+    .select("service_catalog_id, specific_price")
+    .eq("organization_id", orgId)
+    .not("specific_price", "is", null);
+
+  if (error)
+    throw new Error(error.message ?? "Failed to fetch model price counts");
+
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    const sid = row.service_catalog_id as string;
+    counts[sid] = (counts[sid] || 0) + 1;
+  }
+  return counts;
 }
