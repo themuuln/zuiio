@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 import { matchRoutes } from "./auth-routes";
-import { env } from "./env";
+import { env, getSupabaseKey } from "./env";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -10,7 +10,7 @@ export async function updateSession(request: NextRequest) {
 
   const supabase = createServerClient(
     env("NEXT_PUBLIC_SUPABASE_URL"),
-    env("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"),
+    getSupabaseKey(),
     {
       cookies: {
         getAll() {
