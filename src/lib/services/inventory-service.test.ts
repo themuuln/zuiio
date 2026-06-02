@@ -135,8 +135,8 @@ describe("createPart", () => {
     const createdPart = {
       id: "part-1",
       organization_id: "org-1",
-      name: "Oil Filter",
-      name_mn: null,
+      name: "Тосны шүүлтүүр",
+      name_mn: "Тосны шүүлтүүр",
       part_number: "OF-123",
       category: "Filters",
       description: null,
@@ -155,7 +155,8 @@ describe("createPart", () => {
     const result = await createPart(
       "org-1",
       {
-        name: "Oil Filter",
+        name: "Тосны шүүлтүүр",
+        name_mn: "Тосны шүүлтүүр",
         part_number: "OF-123",
         category: "Filters",
         unit: "piece",
@@ -168,7 +169,8 @@ describe("createPart", () => {
     expect(mockClient.from("parts_catalog").insert).toHaveBeenCalledWith(
       expect.objectContaining({
         organization_id: "org-1",
-        name: "Oil Filter",
+        name: "Тосны шүүлтүүр",
+        name_mn: "Тосны шүүлтүүр",
         part_number: "OF-123",
         category: "Filters",
         unit: "piece",
@@ -183,14 +185,14 @@ describe("createPart", () => {
     );
   });
 
-  it("rejects when name is missing", async () => {
-    await expect(createPart("org-1", { name: "" }, "user-1")).rejects.toThrow(
-      ValidationError,
-    );
+  it("rejects when Mongolian name is missing", async () => {
+    await expect(
+      createPart("org-1", { name_mn: "" }, "user-1"),
+    ).rejects.toThrow(ValidationError);
 
     await expect(
-      createPart("org-1", { name: "   " }, "user-1"),
-    ).rejects.toThrow("Part name is required");
+      createPart("org-1", { name_mn: "   " }, "user-1"),
+    ).rejects.toThrow("Монгол нэр шаардлагатай");
   });
 });
 

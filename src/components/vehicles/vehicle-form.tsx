@@ -575,13 +575,7 @@ export function VehicleForm({
       }
     }
 
-    // Full-mode owner validation
-    if (currentMode === "full" && showOwnerSelect && !selectedCustomer) {
-      const msg = "Customer owner is required";
-      form.setError("root", { message: msg });
-      toast.error(msg);
-      return;
-    }
+    // Customer owner is optional — vehicle can be created without one
 
     setError(null);
 
@@ -708,7 +702,7 @@ export function VehicleForm({
         >
           <CardHeader className="py-4">
             <CardTitle className="text-base flex items-center justify-between">
-              Owner Customer <span className="text-destructive">*</span>
+              Owner Customer
               {selectedCustomer && (
                 <span className="ml-auto text-sm font-normal text-muted-foreground">
                   {getCustomerLabel(selectedCustomer)}

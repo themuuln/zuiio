@@ -11,6 +11,7 @@ export const POST = createSimpleRouteHandler(async ({ user, supabase }) => {
     .from("organization_users")
     .select("organization_id")
     .eq("user_id", user.id)
+    .is("removed_at", null)
     .maybeSingle();
 
   if (!membership) {

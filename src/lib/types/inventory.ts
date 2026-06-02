@@ -31,7 +31,7 @@ export interface PartsCatalogItem {
 }
 
 export interface CreatePartParams {
-  name: string;
+  name?: string;
   name_mn?: string;
   part_number?: string;
   category?: string;

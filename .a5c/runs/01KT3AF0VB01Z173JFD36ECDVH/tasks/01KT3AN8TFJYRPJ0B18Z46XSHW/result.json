@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT3AN8TFJYRPJ0B18Z46XSHW",
+  "taskId": "execute-phase",
+  "invocationKey": "permissions-suite:S000002:execute-phase",
+  "status": "ok",
+  "result": {
+    "buildPassing": true,
+    "changes": [
+      "Created src/lib/plan-features.ts with PLAN_FEATURES map for starter/pro/business/enterprise",
+      "Exported FEATURE_KEYS const object with all known feature keys",
+      "Exported getPlanFeatures(), isPlanFeatureEnabled(), getNextPlanWithFeature() helpers",
+      "Build passed"
+    ],
+    "status": "completed"
+  },
+  "startedAt": "2026-06-02T04:53:35.796Z",
+  "finishedAt": "2026-06-02T04:53:35.796Z",
+  "value": {
+    "buildPassing": true,
+    "changes": [
+      "Created src/lib/plan-features.ts with PLAN_FEATURES map for starter/pro/business/enterprise",
+      "Exported FEATURE_KEYS const object with all known feature keys",
+      "Exported getPlanFeatures(), isPlanFeatureEnabled(), getNextPlanWithFeature() helpers",
+      "Build passed"
+    ],
+    "status": "completed"
+  }
+}

@@ -54,6 +54,8 @@ export type CustomerFormProps = {
   initialData?: Partial<CreateCustomerParams>;
   onSuccess?: (customer: Customer) => void;
   onCancel?: () => void;
+  /** When true, render a <div> instead of <form> to avoid nested form HTML. */
+  disableFormWrapper?: boolean;
 };
 
 export function CustomerForm({
@@ -61,6 +63,7 @@ export function CustomerForm({
   initialData,
   onSuccess,
   onCancel,
+  disableFormWrapper,
 }: CustomerFormProps) {
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? "";
@@ -252,7 +255,7 @@ export function CustomerForm({
   const selectedTypeLabel = t(watchedType);
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4">
+    <Wrapper {...wrapperProps}>
       {/* ── Mode Toggle Tabs ── */}
       <Tabs
         value={currentMode}
@@ -521,6 +524,15 @@ export function CustomerForm({
           )}
         </Button>
       </div>
-    </form>
+    </Wrapper>
   );
-}
+  
+  // Inline mode: use <div> to avoid nested form HTML
+  const Wrapper = disableFormWrapper ? "div" : "form";
+  const wrapperProps = disableFormWrapper
+    ? { className: "flex flex-col gap-4" }
+    : { onSubmit, className: "flex flex-col gap-4" };
+  
+  // Submit button handler for inline mode
+  const handleSubmitClick = disableFormWrapper ? () => onSubmit() : undefined;
+

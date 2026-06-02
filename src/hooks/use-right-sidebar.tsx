@@ -100,6 +100,8 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
   const unregisterTab = useCallback(
     (value: string) =>
       setState((prev) => {
+        const existing = prev.tabs.some((t) => t.value === value);
+        if (!existing) return prev;
         const tabs = prev.tabs.filter((t) => t.value !== value);
         const { [value]: _, ...content } = prev.content;
         const activeTab =

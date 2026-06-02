@@ -73,6 +73,7 @@ export function createRouteHandler(
           .select("organization_id")
           .eq("user_id", user.id)
           .eq("organization_id", orgId)
+          .is("removed_at", null)
           .maybeSingle();
 
         if (!membership) {

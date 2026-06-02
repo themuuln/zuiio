@@ -172,13 +172,15 @@ export async function createPart(
   params: CreatePartParams,
   userId: string,
 ): Promise<PartsCatalogItem> {
-  if (!params.name?.trim()) throw new ValidationError("Part name is required");
+  if (!params.name_mn?.trim())
+    throw new ValidationError("Монгол нэр шаардлагатай");
   const supabase = await createClient();
+  const nameEn = params.name?.trim() || params.name_mn.trim();
   const { data, error } = await supabase
     .from("parts_catalog")
     .insert({
       organization_id: orgId,
-      name: params.name.trim(),
+      name: nameEn,
       name_mn: params.name_mn?.trim() || null,
       part_number: params.part_number?.trim() || null,
       category: params.category?.trim() || null,
@@ -233,6 +235,37 @@ export async function deletePart(id: string, orgId: string): Promise<void> {
     .eq("organization_id", orgId);
   if (error) throw new NotFoundError("Part not found");
   revalidateTag(cacheTags.partsCatalog(orgId), "max");
+}
+
+// ── Part Categories ───────────────────────────────────────────
+
+export async function getPartCategories(
+  orgId: string,
+): Promise<{ id: string; name: string }[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("part_categories")
+    .select("id, name")
+    .eq("organization_id", orgId)
+    .order("name");
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function createPartCategory(
+  orgId: string,
+  name: string,
+  userId: string,
+): Promise<{ id: string; name: string }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("part_categories")
+    .insert({ organization_id: orgId, name: name.trim(), created_by: userId })
+    .select("id, name")
+    .single();
+  if (error) throw new Error(error.message);
+  revalidateTag(cacheTags.partsCatalog(orgId), "max");
+  return data;
 }
 
 // ── Inventory Balances ────────────────────────────────────────

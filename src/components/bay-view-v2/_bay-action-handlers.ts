@@ -103,6 +103,11 @@ export function useBayActionHandlers({
           bay_number: bay,
           status: "Diagnosing" as const,
           mechanic: null,
+          helpers: [] as {
+            id: string;
+            full_name: string | null;
+            avatar_url: string | null;
+          }[],
           customer_name: null,
         };
         return {

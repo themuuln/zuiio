@@ -58,6 +58,7 @@ async function getRoleInOrg(
     .select("role_id, roles(name)")
     .eq("user_id", userId)
     .eq("organization_id", orgId)
+    .is("removed_at", null)
     .maybeSingle();
 
   const rawRoles = membership?.roles;

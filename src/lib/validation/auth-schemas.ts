@@ -14,9 +14,6 @@ export type LoginInput = z.infer<typeof loginSchema>;
 
 export const signupSchema = z
   .object({
-    organizationName: z
-      .string()
-      .min(2, "Organization name must be at least 2 characters"),
     fullName: z.string().min(1, "Full name is required"),
     identifier: z.string().min(1, "Email, phone, or username is required"),
     password: z.string().min(8, "Password must be at least 8 characters"),
@@ -27,6 +24,15 @@ export const signupSchema = z
     path: ["confirmPassword"],
   });
 export type SignupInput = z.infer<typeof signupSchema>;
+
+// ── Create Organization ──
+
+export const createOrganizationSchema = z.object({
+  organizationName: z
+    .string()
+    .min(2, "Organization name must be at least 2 characters"),
+});
+export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>;
 
 // ── Forgot Password ──
 

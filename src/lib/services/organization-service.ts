@@ -153,6 +153,7 @@ export async function getUserOrganization(
     .from("organization_users")
     .select("organization_id")
     .eq("user_id", userId)
+    .is("removed_at", null)
     .maybeSingle();
 
   if (!membership) return null;

@@ -6,13 +6,12 @@ import {
   flattenFieldErrors,
   normalizeMongolianPhone,
 } from "@/lib/form-validation";
-import { finalizeSignup } from "@/lib/services/signup-service";
+
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { signupSchema } from "@/lib/validation/auth-schemas";
 
 type SignupState = ActionState<{
-  organizationName: string;
   fullName: string;
   identifier: string;
 }> & {
@@ -33,7 +32,6 @@ export async function signup(
   formData: FormData,
 ): Promise<SignupState> {
   const raw = {
-    organizationName: (formData.get("organizationName") as string)?.trim() || "",
     fullName: (formData.get("fullName") as string)?.trim() || "",
     identifier: (formData.get("identifier") as string)?.trim() || "",
     password: (formData.get("password") as string) || "",
@@ -44,7 +42,6 @@ export async function signup(
   if (!parsed.success) {
     return {
       values: {
-        organizationName: raw.organizationName,
         fullName: raw.fullName,
         identifier: raw.identifier,
       },
@@ -56,7 +53,6 @@ export async function signup(
   if (parsed.data.password !== parsed.data.confirmPassword) {
     return {
       values: {
-        organizationName: raw.organizationName,
         fullName: raw.fullName,
         identifier: raw.identifier,
       },
@@ -64,7 +60,7 @@ export async function signup(
     };
   }
 
-  const { identifier, password, fullName, organizationName } = parsed.data;
+  const { identifier, password, fullName } = parsed.data;
   const type = detectIdentifierType(identifier);
   const serviceRole = await createServiceRoleClient();
 
@@ -85,7 +81,6 @@ export async function signup(
     if (!/^[a-zA-Z0-9_]+$/.test(usernameValue)) {
       return {
         values: {
-          organizationName: raw.organizationName,
           fullName: raw.fullName,
           identifier: raw.identifier,
         },
@@ -98,7 +93,6 @@ export async function signup(
     if (usernameValue.length < 3 || usernameValue.length > 30) {
       return {
         values: {
-          organizationName: raw.organizationName,
           fullName: raw.fullName,
           identifier: raw.identifier,
         },
@@ -118,7 +112,6 @@ export async function signup(
       email_confirm: true,
       user_metadata: {
         full_name: fullName,
-        org_name: organizationName,
       },
     });
 
@@ -128,7 +121,6 @@ export async function signup(
         : error.message;
       return {
         values: {
-          organizationName: raw.organizationName,
           fullName: raw.fullName,
           identifier: raw.identifier,
         },
@@ -161,22 +153,20 @@ export async function signup(
       redirect("/auth/login");
     }
 
-    // Finalize org setup
-    try {
-      await finalizeSignup(supabase, {
-        orgName: organizationName,
-      });
-    } catch (finalizeError) {
-      console.error("Eager finalizeSignup failed:", finalizeError);
-    }
+    const redirectTo = formData.get("redirectTo") as string | null;
 
-    redirect("/auth/select-organization");
+    if (redirectTo) {
+      // Coming from an invite — no org to create, redirect back to invite page
+      redirect(redirectTo);
+    } else {
+      // Normal signup — redirect to org setup (create or join)
+      redirect("/auth/setup-organization");
+    }
   } catch (error) {
     if (isSupabaseNetworkError(error)) {
       console.error("Supabase signUp network failure", error);
       return {
         values: {
-          organizationName: raw.organizationName,
           fullName: raw.fullName,
           identifier: raw.identifier,
         },

@@ -249,6 +249,8 @@ export const inventoryKeys = {
     [...inventoryKeys.reports(orgId), "usage-trends"] as const,
   slowMoving: (orgId: string) =>
     [...inventoryKeys.reports(orgId), "slow-moving"] as const,
+  categories: (orgId: string) =>
+    [...inventoryKeys.all(orgId), "part-categories"] as const,
 };
 
 export const serviceReminderKeys = {

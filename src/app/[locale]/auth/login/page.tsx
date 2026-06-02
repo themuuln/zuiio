@@ -206,7 +206,11 @@ export default function LoginPage() {
             <Typography.Muted className="mt-3 text-center text-[10px] text-muted-foreground font-sans">
               {t("noAccount")}{" "}
               <Link
-                href="/auth/signup"
+                href={
+                  redirectTo
+                    ? `/auth/signup?redirectTo=${encodeURIComponent(redirectTo)}`
+                    : "/auth/signup"
+                }
                 className="font-medium text-foreground underline-offset-4 hover:underline"
               >
                 {authT("signUp")}

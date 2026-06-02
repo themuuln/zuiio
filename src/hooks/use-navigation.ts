@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
 import { usePathname } from "@/lib/i18n/navigation";
+import { FEATURE_KEYS, type FeatureKey } from "@/lib/plan-features";
+import { useAvailableFeatures } from "./use-available-features";
 
 export interface NavItem {
   labelKey: string;
@@ -226,6 +228,7 @@ const FINANCIALS_GROUP_KEY = "nav.group.financials";
 export function useNavigation() {
   const pathname = usePathname();
   const { isMechanic, loading: roleLoading } = useCurrentUserRole();
+  const { isFeatureEnabled, loading: featuresLoading } = useAvailableFeatures();
 
   const mechanicHomeItem: NavItem = {
     labelKey: "nav.bayView",
@@ -236,12 +239,42 @@ export function useNavigation() {
   // ── Filter nav items based on role (only once role is known) ──
   const isDefinitelyMechanic = !roleLoading && isMechanic;
 
-  const filteredNavGroups = isDefinitelyMechanic
+  // Map nav groups/items to feature keys so they can be gated
+  const navFeatureMap: Record<string, FeatureKey | undefined> = {
+    "nav.group.inventory": FEATURE_KEYS.INVENTORY,
+    "nav.mechanic": FEATURE_KEYS.MECHANIC,
+    "nav.mechanicPerformance": FEATURE_KEYS.MECHANIC_PERFORMANCE,
+    "nav.serviceReminders": FEATURE_KEYS.SERVICE_REMINDERS,
+    "nav.payroll": FEATURE_KEYS.PAYROLL,
+    "nav.estimates": FEATURE_KEYS.ESTIMATES,
+    "nav.appointments": FEATURE_KEYS.APPOINTMENTS,
+    "nav.vehicleModels": FEATURE_KEYS.VEHICLE_MODELS,
+    "nav.endOfDay": FEATURE_KEYS.EOD_CLOSE,
+    "nav.group.financials": FEATURE_KEYS.FINANCE,
+    "/dashboard/inventory/alerts": FEATURE_KEYS.INVENTORY_ALERTS,
+    "/dashboard/inventory/valuation": FEATURE_KEYS.INVENTORY_VALUATION,
+    "/dashboard/inventory/purchase-orders": FEATURE_KEYS.PURCHASE_ORDERS,
+    "/dashboard/inventory/suppliers": FEATURE_KEYS.SUPPLIERS,
+    "/dashboard/inventory/parts-cars": FEATURE_KEYS.PARTS_CARS,
+  };
+
+  const isFeatureAllowed = (href: string): boolean => {
+    const featureKey = navFeatureMap[href];
+    if (!featureKey) return true; // no feature gate = always visible
+    return isFeatureEnabled(featureKey);
+  };
+
+  const isGroupAllowed = (groupLabelKey: string): boolean => {
+    const featureKey = navFeatureMap[groupLabelKey];
+    if (!featureKey) return true;
+    return isFeatureEnabled(featureKey);
+  };
+
+  let filteredNavGroups = isDefinitelyMechanic
     ? navGroups
         .filter((g) => g.labelKey !== FINANCIALS_GROUP_KEY)
         .map((g) => ({
           ...g,
-          // Bay View is already the primary home item — remove from Operations group
           children:
             g.labelKey === "nav.group.operations"
               ? g.children.filter((c) => c.href !== "/dashboard/bay-view")
@@ -249,9 +282,18 @@ export function useNavigation() {
         }))
     : navGroups;
 
+  // Apply feature-flag filtering (after role filtering)
+  filteredNavGroups = filteredNavGroups
+    .filter((g) => isGroupAllowed(g.labelKey))
+    .map((g) => ({
+      ...g,
+      children: g.children.filter((c) => isFeatureAllowed(c.href)),
+    }))
+    .filter((g) => g.children.length > 0); // hide empty groups
+
   const filteredPrimaryItems = isDefinitelyMechanic
     ? [mechanicHomeItem]
-    : primaryItems;
+    : primaryItems.filter((item) => isFeatureAllowed(item.href));
   const filteredSettingsItems = isDefinitelyMechanic ? [] : settingsItems;
   const filteredUtilityItems = utilityItems;
 
@@ -329,6 +371,6 @@ export function useNavigation() {
     breadcrumbs: resolvedBreadcrumbs,
     isActive,
     pathname,
-    roleLoading,
+    roleLoading: roleLoading || featuresLoading,
   };
 }

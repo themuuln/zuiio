@@ -65,6 +65,7 @@ export async function updateSession(request: NextRequest) {
       .select("role_id, roles!inner(name)")
       .eq("user_id", user.sub)
       .eq("is_primary", true)
+      .is("removed_at", null)
       .maybeSingle();
 
     const rawRoles = membership?.roles;

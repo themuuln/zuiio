@@ -14,6 +14,7 @@ import type {
   InvoicePayment,
   Vehicle,
   WorkOrder,
+  WorkOrderHelper,
   WorkOrderPart,
   WorkOrderService,
   WorkOrderStatusHistory,
@@ -54,6 +55,7 @@ export interface WorkOrderDetail extends Record<string, unknown> {
   customer: Customer | null;
   vehicle: Vehicle | null;
   mechanic: { id: string; full_name: string | null } | null;
+  helpers: (WorkOrderHelper & { full_name?: string | null })[];
   services: WorkOrderService[];
   parts: WorkOrderPart[];
   status_history: WorkOrderStatusHistory[];

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT3AWB3SE7R3NJ66W5A0F960",
+  "taskId": "execute-phase",
+  "invocationKey": "permissions-suite:S000003:execute-phase",
+  "status": "ok",
+  "result": {
+    "buildPassing": true,
+    "changes": [
+      "Created GET/PATCH /api/organizations/[id]/features route for feature_flags CRUD",
+      "Created src/hooks/use-available-features.ts combining plan + org feature flags + role checks",
+      "Updated useNavigation() to filter nav groups and items by feature availability",
+      "Added nav-to-feature mapping for inventory group, sub-items, and individual feature-linked pages",
+      "Build passed"
+    ],
+    "status": "completed"
+  },
+  "startedAt": "2026-06-02T04:57:31.620Z",
+  "finishedAt": "2026-06-02T04:57:31.620Z",
+  "value": {
+    "buildPassing": true,
+    "changes": [
+      "Created GET/PATCH /api/organizations/[id]/features route for feature_flags CRUD",
+      "Created src/hooks/use-available-features.ts combining plan + org feature flags + role checks",
+      "Updated useNavigation() to filter nav groups and items by feature availability",
+      "Added nav-to-feature mapping for inventory group, sub-items, and individual feature-linked pages",
+      "Build passed"
+    ],
+    "status": "completed"
+  }
+}

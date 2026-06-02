@@ -132,6 +132,7 @@ export async function finalizeSignup(
     .from("organization_users")
     .select("organization_id")
     .eq("user_id", user.id)
+    .is("removed_at", null)
     .maybeSingle();
 
   if (existingMembership) {

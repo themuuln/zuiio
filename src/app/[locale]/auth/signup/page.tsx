@@ -1,9 +1,11 @@
 "use client";
 
 import { Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -19,6 +21,11 @@ import { signup } from "./actions";
 export default function SignupPage() {
   const t = useTranslations("auth.signup");
   const authT = useTranslations("auth");
+  const inviteT = useTranslations("invite");
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams?.get("redirectTo") ?? "";
+  const hasInvite = redirectTo.startsWith("/invite/");
+
   const [state, formAction, isPending] = useActionState(signup, {});
 
   const prevFormError = useRef(state?.formError);
@@ -31,7 +38,6 @@ export default function SignupPage() {
 
   const fieldErrors = state?.fieldErrors ?? {};
 
-  const [organizationName, setOrganizationName] = useState("");
   const [fullName, setFullName] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -46,10 +52,25 @@ export default function SignupPage() {
           {t("title")}
         </Typography.H2>
         <Typography.Muted className="mt-1 text-sm text-muted-foreground">
-          {t("subtitle")}
+          {hasInvite ? t("inviteSubtitle") : t("subtitle")}
         </Typography.Muted>
       </div>
+
+      {hasInvite && (
+        <Alert variant="default" className="border-primary/30 bg-primary/5">
+          <AlertTitle className="text-sm font-medium">
+            {inviteT("youAreInvited")}
+          </AlertTitle>
+          <AlertDescription className="text-xs text-muted-foreground">
+            {inviteT("signupHint")}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <form action={formAction}>
+        {redirectTo && (
+          <input type="hidden" name="redirectTo" value={redirectTo} />
+        )}
         <FieldGroup>
           {state?.formError && (
             <FieldError key={state.formError}>{state.formError}</FieldError>
@@ -72,27 +93,6 @@ export default function SignupPage() {
             />
             {"fullName" in fieldErrors && (
               <FieldError>{fieldErrors.fullName}</FieldError>
-            )}
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="organizationName">
-              {t("organizationLabel")}{" "}
-              <span className="text-destructive">*</span>
-            </FieldLabel>
-            <Input
-              id="organizationName"
-              name="organizationName"
-              type="text"
-              autoComplete="organization"
-              required
-              value={organizationName}
-              onChange={(e) => setOrganizationName(e.target.value)}
-              placeholder={t("organizationPlaceholder")}
-              aria-invalid={"organizationName" in fieldErrors || undefined}
-            />
-            {"organizationName" in fieldErrors && (
-              <FieldError>{fieldErrors.organizationName}</FieldError>
             )}
           </Field>
 
@@ -199,7 +199,11 @@ export default function SignupPage() {
             <Typography.Muted className="mt-4 text-center text-sm text-muted-foreground">
               {t("haveAccount")}{" "}
               <Link
-                href="/auth/login"
+                href={
+                  redirectTo
+                    ? `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`
+                    : "/auth/login"
+                }
                 className="font-medium text-foreground underline-offset-4 hover:underline"
               >
                 {authT("signIn")}

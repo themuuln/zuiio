@@ -4,6 +4,7 @@ import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import type { BaySlotData, BayViewData } from "@/lib/services/bay-view-service";
 import {
+  assignHelperToWorkOrder,
   assignMechanicToWorkOrder,
   assignVehicleToBay,
   removeVehicleFromBay,
@@ -143,6 +144,11 @@ export function useBayDragHandlers({
             bay_number: bayNumber,
             status: "Diagnosing" as const,
             mechanic: null,
+            helpers: [] as {
+              id: string;
+              full_name: string | null;
+              avatar_url: string | null;
+            }[],
             customer_name:
               ((movedWO as unknown as Record<string, unknown>).customer_name as
                 | string
@@ -187,7 +193,13 @@ export function useBayDragHandlers({
             bay_number: null,
             status: "New" as const,
             mechanic: null,
+            mechanics: null,
             mechanic_id: null,
+            helpers: [] as {
+              id: string;
+              full_name: string | null;
+              avatar_url: string | null;
+            }[],
           } as unknown as WorkOrder & { vehicle: Vehicle | null };
           return {
             ...d,
@@ -233,38 +245,84 @@ export function useBayDragHandlers({
             data?.mechanics.find((m) => m.id === mechId)?.full_name ?? null;
           markPending(targetWoId);
 
-          setData((d) => {
-            if (!d) return d;
-            const nextBays = d.bays.map((b) => {
-              const wo = b.workOrder;
-              let next = b;
-              if (wo && wo.mechanic?.id === mechId) {
-                next = {
-                  ...next,
-                  workOrder: { ...wo, mechanic: null, mechanic_id: null },
-                };
-              }
-              if (next.workOrder?.id === targetWoId && next.workOrder) {
-                next = {
-                  ...next,
-                  workOrder: {
-                    ...next.workOrder,
-                    mechanic: {
-                      id: mechId,
-                      full_name: mechName,
-                      avatar_url: null,
+          // Check if the target work order already has a main mechanic
+          const targetBay = data?.bays.find(
+            (b) => b.workOrder?.id === targetWoId,
+          );
+          const hasMainMechanic =
+            targetBay?.workOrder?.mechanic != null &&
+            targetBay.workOrder.mechanic.id !== mechId;
+
+          if (!hasMainMechanic) {
+            // Assign as MAIN mechanic
+            setData((d) => {
+              if (!d) return d;
+              const nextBays = d.bays.map((b) => {
+                const wo = b.workOrder;
+                let next = b;
+                if (wo && wo.mechanic?.id === mechId) {
+                  next = {
+                    ...next,
+                    workOrder: { ...wo, mechanic: null, mechanic_id: null },
+                  };
+                }
+                if (next.workOrder?.id === targetWoId && next.workOrder) {
+                  next = {
+                    ...next,
+                    workOrder: {
+                      ...next.workOrder,
+                      mechanic: {
+                        id: mechId,
+                        full_name: mechName,
+                        avatar_url: null,
+                      },
+                      mechanic_id: mechId,
+                      status: "In Progress" as const,
                     },
-                    mechanic_id: mechId,
-                    status: "In Progress" as const,
+                  };
+                }
+                return next;
+              });
+              return { ...d, bays: nextBays };
+            });
+
+            await assignMechanicToWorkOrder(targetWoId, mechId);
+          } else {
+            // Assign as HELPER
+            setData((d) => {
+              if (!d) return d;
+              const nextBays = d.bays.map((b) => {
+                if (b.workOrder?.id !== targetWoId) return b;
+                const existingHelpers = (
+                  b.workOrder as unknown as Record<string, unknown>
+                ).helpers as
+                  | {
+                      id: string;
+                      full_name: string | null;
+                      avatar_url: string | null;
+                    }[]
+                  | undefined;
+
+                // Don't add duplicate helper
+                if (existingHelpers?.some((h) => h.id === mechId)) return b;
+
+                return {
+                  ...b,
+                  workOrder: {
+                    ...b.workOrder,
+                    helpers: [
+                      ...(existingHelpers ?? []),
+                      { id: mechId, full_name: mechName, avatar_url: null },
+                    ],
                   },
                 };
-              }
-              return next;
+              });
+              return { ...d, bays: nextBays };
             });
-            return { ...d, bays: nextBays };
-          });
 
-          await assignMechanicToWorkOrder(targetWoId, mechId);
+            await assignHelperToWorkOrder(targetWoId, mechId);
+          }
+
           clearPending(targetWoId);
           fetchData(false);
         }

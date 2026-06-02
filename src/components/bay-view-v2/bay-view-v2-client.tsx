@@ -634,13 +634,22 @@ export function BayViewV2Client() {
   const filteredBays = useMemo(
     () =>
       myJobsOnly
-        ? (data?.bays.map((bay) => ({
-            ...bay,
-            workOrder:
-              bay.workOrder?.mechanic?.id === currentProfile?.id
-                ? bay.workOrder
-                : null,
-          })) ?? [])
+        ? (data?.bays.map((bay) => {
+            if (!bay.workOrder) return bay;
+            const isMain = bay.workOrder.mechanic?.id === currentProfile?.id;
+            const isHelper = (
+              bay.workOrder as unknown as Record<string, unknown>
+            ).helpers
+              ? (
+                  (bay.workOrder as unknown as Record<string, unknown>)
+                    .helpers as { id: string }[]
+                ).some((h) => h.id === currentProfile?.id)
+              : false;
+            return {
+              ...bay,
+              workOrder: isMain || isHelper ? bay.workOrder : null,
+            };
+          }) ?? [])
         : (data?.bays ?? []),
     [data, myJobsOnly, currentProfile?.id],
   );
@@ -1264,6 +1273,20 @@ export function BayViewV2Client() {
                   onRemoveFromBay={handleRemoveFromBay}
                   onOpenDetail={handleOpenDetail}
                   onAssignClick={(n) => setAssignBay(n)}
+                  onRemoveHelper={async (woId, mechId) => {
+                    try {
+                      const { removeHelperFromWorkOrder } = await import(
+                        "@/lib/services/bay-view-service"
+                      );
+                      await removeHelperFromWorkOrder(woId, mechId);
+                      await fetchData(false);
+                    } catch {
+                      setToast({
+                        message: "Failed to remove helper",
+                        variant: "error",
+                      });
+                    }
+                  }}
                 />
               ))}
             </div>
@@ -1403,6 +1426,21 @@ export function BayViewV2Client() {
                               onStatusChange={handleStatusClick}
                               onRemoveFromBay={handleRemoveFromBay}
                               onOpenDetail={handleOpenDetail}
+                              onRemoveHelper={async (woId, mechId) => {
+                                try {
+                                  const { removeHelperFromWorkOrder } =
+                                    await import(
+                                      "@/lib/services/bay-view-service"
+                                    );
+                                  await removeHelperFromWorkOrder(woId, mechId);
+                                  await fetchData(false);
+                                } catch {
+                                  setToast({
+                                    message: "Failed to remove helper",
+                                    variant: "error",
+                                  });
+                                }
+                              }}
                             />
                           </div>
                         ))}
@@ -1522,18 +1560,42 @@ export function BayViewV2Client() {
                             {wo && v ? `${v.make} ${v.model}` : "—"}
                           </TableCell>
                           <TableCell className="hidden md:table-cell py-3">
-                            {wo?.mechanic ? (
-                              <div className="flex items-center gap-1.5">
+                            <div className="flex flex-wrap items-center gap-1">
+                              {wo?.mechanic ? (
                                 <Badge
                                   variant="outline"
-                                  className="bg-background font-medium py-0.5 px-2 text-[10px] rounded-full border-border/40"
+                                  className="bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200/60 dark:border-indigo-800/40 font-medium py-0.5 px-2 text-[10px] rounded-full"
                                 >
                                   {wo.mechanic.full_name}
                                 </Badge>
-                              </div>
-                            ) : (
-                              "—"
-                            )}
+                              ) : (
+                                <span className="text-[10px] text-muted-foreground/50">
+                                  —
+                                </span>
+                              )}
+                              {(() => {
+                                const helpers = (
+                                  wo as unknown as Record<string, unknown>
+                                ).helpers as
+                                  | {
+                                      id: string;
+                                      full_name: string | null;
+                                      avatar_url: string | null;
+                                    }[]
+                                  | undefined;
+                                if (!helpers || helpers.length === 0)
+                                  return null;
+                                return helpers.map((h) => (
+                                  <Badge
+                                    key={h.id}
+                                    variant="outline"
+                                    className="bg-amber-50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/40 font-medium py-0.5 px-2 text-[10px] rounded-full"
+                                  >
+                                    {h.full_name ?? "?"}
+                                  </Badge>
+                                ));
+                              })()}
+                            </div>
                           </TableCell>
                           <TableCell className="text-right font-mono font-medium tabular-nums pr-4 py-3 text-muted-foreground">
                             {wo ? (

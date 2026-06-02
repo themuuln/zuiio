@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
-import { updateUserRole } from "@/lib/services/user-service";
+import { updateMember } from "@/lib/services/user-service";
 
 export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
   await requireActiveSubscription(orgId);
@@ -28,7 +28,12 @@ export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
   }
   const body = await request.json();
   const userId = params.userId;
-  // body: { roleId: string }
-  await updateUserRole(userId, orgId, body.roleId);
+  // body: { fullName?, phone?, roleId?, branchId? }
+  await updateMember(userId, orgId, {
+    fullName: body.fullName,
+    phone: body.phone,
+    roleId: body.roleId,
+    branchId: body.branchId,
+  });
   return NextResponse.json({ success: true });
 });

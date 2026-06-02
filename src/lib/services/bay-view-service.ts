@@ -23,6 +23,11 @@ export interface BaySlotData {
           full_name: string | null;
           avatar_url: string | null;
         } | null;
+        helpers: {
+          id: string;
+          full_name: string | null;
+          avatar_url: string | null;
+        }[];
         customer_name: string | null;
       })
     | null;
@@ -91,8 +96,8 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
 
   const workOrders = activeWOs ?? [];
 
-  // Batch-fetch mechanic profiles for all assigned mechanics
-  const mechanicIds = [
+  // Batch-fetch mechanic profiles for all assigned mechanics (main + helpers)
+  const mainMechanicIds = [
     ...new Set(
       workOrders.flatMap((wo) =>
         wo.mechanic_id ? [wo.mechanic_id as string] : [],
@@ -100,24 +105,55 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
     ),
   ];
 
+  // Also fetch all work_order_helper records for these work orders
+  const activeWoIds = workOrders.map((wo) => wo.id);
+  const { data: helperRecords } = await supabase
+    .from("work_order_helpers")
+    .select("work_order_id, mechanic_id")
+    .in("work_order_id", activeWoIds);
+
+  const helperMechanicIds = [
+    ...new Set((helperRecords ?? []).map((h) => h.mechanic_id)),
+  ];
+
+  const allMechanicIds = [
+    ...new Set([...mainMechanicIds, ...helperMechanicIds]),
+  ];
+
   const mechanicMap = new Map<
     string,
     { id: string; full_name: string | null; avatar_url: string | null }
   >();
-  if (mechanicIds.length > 0) {
+  if (allMechanicIds.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, full_name, avatar_url")
-      .in("id", mechanicIds);
+      .in("id", allMechanicIds);
     for (const p of profiles ?? []) {
       mechanicMap.set(p.id, p);
     }
   }
 
-  // Attach mechanic info and customer name to work orders
+  // Group helper records by work order id
+  const helpersByWo = new Map<
+    string,
+    { id: string; full_name: string | null; avatar_url: string | null }[]
+  >();
+  for (const h of helperRecords ?? []) {
+    if (!helpersByWo.has(h.work_order_id)) {
+      helpersByWo.set(h.work_order_id, []);
+    }
+    const profile = mechanicMap.get(h.mechanic_id);
+    if (profile) {
+      helpersByWo.get(h.work_order_id)!.push(profile);
+    }
+  }
+
+  // Attach mechanic info, helpers, and customer name to work orders
   const woWithDetails = workOrders.map((wo) => ({
     ...wo,
     mechanic: wo.mechanic_id ? (mechanicMap.get(wo.mechanic_id) ?? null) : null,
+    helpers: helpersByWo.get(wo.id) ?? [],
     customer_name: wo.customer?.company_name ?? wo.customer?.full_name ?? null,
   }));
 
@@ -143,9 +179,20 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
     .eq("is_active", true)
     .order("full_name");
 
+  // Count jobs: main mechanic OR helper
+  const helperJobCount = new Map<string, number>();
+  for (const h of helperRecords ?? []) {
+    helperJobCount.set(
+      h.mechanic_id,
+      (helperJobCount.get(h.mechanic_id) ?? 0) + 1,
+    );
+  }
+
   const mechList = (mechanics ?? []).map((p) => ({
     ...p,
-    current_jobs: workOrders.filter((wo) => wo.mechanic_id === p.id).length,
+    current_jobs:
+      workOrders.filter((wo) => wo.mechanic_id === p.id).length +
+      (helperJobCount.get(p.id) ?? 0),
   })) as unknown as (Profile & { current_jobs: number })[];
 
   return {
@@ -224,16 +271,23 @@ export async function assignVehicleToBay(
       .eq("id", workOrderId);
   }
 
-  // Assign to new bay
+  // Assign to new bay (clear mechanic and helpers when moving to new bay)
   const { error } = await supabase
     .from("work_orders")
     .update({
       bay_number: bayNumber,
+      mechanic_id: null,
       status: "Diagnosing" as const,
       updated_at: new Date().toISOString(),
     })
     .eq("id", workOrderId)
     .eq("organization_id", orgId);
+
+  // Also clear any helper assignments when moving to a new bay
+  await supabase
+    .from("work_order_helpers")
+    .delete()
+    .eq("work_order_id", workOrderId);
 
   if (error)
     throw new Error(error.message ?? "Failed to assign vehicle to bay");
@@ -266,6 +320,12 @@ export async function removeVehicleFromBay(workOrderId: string): Promise<void> {
   if (error)
     throw new Error(error.message ?? "Failed to remove vehicle from bay");
 
+  // Clear helpers as well
+  await supabase
+    .from("work_order_helpers")
+    .delete()
+    .eq("work_order_id", workOrderId);
+
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
@@ -295,6 +355,13 @@ export async function assignMechanicToWorkOrder(
 
   if (error) throw new Error(error.message ?? "Failed to assign mechanic");
 
+  // If this mechanic was previously a helper on this WO, remove them from helpers
+  await supabase
+    .from("work_order_helpers")
+    .delete()
+    .eq("work_order_id", workOrderId)
+    .eq("mechanic_id", mechanicId);
+
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
@@ -321,6 +388,104 @@ export async function unassignMechanicFromWorkOrder(
     .eq("organization_id", orgId);
 
   if (error) throw new Error(error.message ?? "Failed to unassign mechanic");
+
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
+  revalidateTag(cacheTags.workOrder(workOrderId), "max");
+  revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
+}
+
+// ── Assign Helper Mechanic ──────────────────────────────────────
+
+export async function assignHelperToWorkOrder(
+  workOrderId: string,
+  mechanicId: string,
+): Promise<void> {
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+
+  // Check if this mechanic is already a helper on this WO
+  const { data: existing } = await supabase
+    .from("work_order_helpers")
+    .select("id")
+    .eq("work_order_id", workOrderId)
+    .eq("mechanic_id", mechanicId)
+    .maybeSingle();
+
+  if (existing) {
+    // Already assigned as helper — no-op
+    return;
+  }
+
+  // Don't add as helper if they're already the main mechanic
+  const { data: wo } = await supabase
+    .from("work_orders")
+    .select("mechanic_id")
+    .eq("id", workOrderId)
+    .single();
+
+  if (wo?.mechanic_id === mechanicId) {
+    return; // Already the main mechanic
+  }
+
+  const { error } = await supabase.from("work_order_helpers").insert({
+    work_order_id: workOrderId,
+    organization_id: orgId,
+    mechanic_id: mechanicId,
+    created_by: user.id,
+  });
+
+  if (error)
+    throw new Error(error.message ?? "Failed to assign helper mechanic");
+
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
+  revalidateTag(cacheTags.workOrder(workOrderId), "max");
+  revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
+}
+
+// ── Remove Helper Mechanic ──────────────────────────────────────
+
+export async function removeHelperFromWorkOrder(
+  workOrderId: string,
+  mechanicId: string,
+): Promise<void> {
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+
+  const { error } = await supabase
+    .from("work_order_helpers")
+    .delete()
+    .eq("work_order_id", workOrderId)
+    .eq("mechanic_id", mechanicId);
+
+  if (error)
+    throw new Error(error.message ?? "Failed to remove helper mechanic");
+
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
+  revalidateTag(cacheTags.workOrder(workOrderId), "max");
+  revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
+}
+
+// ── Clear All Helpers from Work Order ──────────────────────────
+
+export async function clearHelpersFromWorkOrder(
+  workOrderId: string,
+): Promise<void> {
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+
+  await supabase
+    .from("work_order_helpers")
+    .delete()
+    .eq("work_order_id", workOrderId);
 
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");

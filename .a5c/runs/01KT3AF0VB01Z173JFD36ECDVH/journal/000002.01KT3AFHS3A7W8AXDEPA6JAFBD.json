@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-06-02T04:46:42.981Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KT3AFHP09QX81W4M3Z7BYF83",
+    "invocationKey": "permissions-suite:S000001:execute-phase",
+    "invocationHash": "a4708d779b2105b3f5d97c9c8ef72a214853ea0e1d6aec1a3fd58644c1461aea",
+    "stepId": "S000001",
+    "taskId": "execute-phase",
+    "kind": "agent",
+    "label": "Execute phase: Fix permission_action enum + backfill existing orgs",
+    "taskDefRef": "tasks/01KT3AFHP09QX81W4M3Z7BYF83/task.json"
+  },
+  "checksum": "b938b1fbe87abe1330aeb7e414dd411da322ca6b5e3ed5308a970a81b161ce76"
+}

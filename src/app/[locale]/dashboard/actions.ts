@@ -30,6 +30,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     .from("organization_users")
     .select("organization_id")
     .eq("user_id", user.id)
+    .is("removed_at", null)
     .maybeSingle();
 
   const orgId = membership?.organization_id;

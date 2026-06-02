@@ -1,10 +1,18 @@
 "use client";
 
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
 import {
   Field,
   FieldContent,
@@ -15,21 +23,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
-import { useUpdatePart } from "@/lib/queries/use-inventory";
+import {
+  useCreatePartCategory,
+  usePartCategories,
+  useUpdatePart,
+} from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreatePart } from "@/lib/queries/use-wizard-data";
 import type { CreatePartParams, PartsCatalogItem } from "@/lib/types";
 
 // ── Schema ───────────────────────────────────────────────────
-// Number fields are strings in the form (matching <Input type="number">).
-// Validated via refine, converted to number in the submit handler.
 
 const partSchema = z.object({
-  name: z.string().min(1, "Part name is required"),
+  name_mn: z.string().min(1, "Монгол нэр шаардлагатай"),
+  name: z.string().optional(),
   part_number: z.string().optional(),
   default_price: z.string().optional(),
   purchase_price: z.string().optional(),
-  name_mn: z.string().optional(),
   category: z.string().optional(),
   unit: z.string().optional(),
   description: z.string().optional(),
@@ -60,15 +70,20 @@ export function PartForm({
 
   const [currentMode, setCurrentMode] = useState<"quick" | "full">(mode);
   const [error, setError] = useState<string | null>(null);
+  const [categoryInput, setCategoryInput] = useState("");
 
   const createPartMutation = useCreatePart(orgId);
   const updatePartMutation = useUpdatePart(orgId);
+  const { data: categories } = usePartCategories(orgId);
+  const createCategory = useCreatePartCategory(orgId);
   const isUpdate = !!partId;
   const mutation = isUpdate ? updatePartMutation : createPartMutation;
+  const categoryCreatRef = useRef(false);
 
   const form = useForm<PartFormValues>({
     resolver: zodResolver(partSchema),
     defaultValues: {
+      name_mn: initialData?.name_mn ?? "",
       name: initialData?.name ?? "",
       part_number: initialData?.part_number ?? "",
       default_price:
@@ -79,27 +94,50 @@ export function PartForm({
         initialData?.purchase_price != null
           ? String(initialData.purchase_price)
           : "",
-      name_mn: initialData?.name_mn ?? "",
       category: initialData?.category ?? "",
       unit: initialData?.unit ?? "piece",
       description: initialData?.description ?? "",
     },
   });
 
+  const allCategories = categories ?? [];
+  const selectedCategory =
+    allCategories.find((c) => c.name === form.watch("category")) ?? null;
+
+  // Check if the typed input matches an existing category name
+  const inputMatchesCategory = categoryInput
+    ? allCategories.some(
+        (c) => c.name.toLowerCase() === categoryInput.toLowerCase(),
+      )
+    : false;
+
+  const handleCreateCategory = async () => {
+    const rawName = categoryInput.trim();
+    if (!rawName || inputMatchesCategory) return;
+    categoryCreatRef.current = true;
+    try {
+      const created = await createCategory.mutateAsync(rawName);
+      form.setValue("category", created.name);
+      setCategoryInput("");
+    } catch {
+      // toast is handled by mutation
+    }
+  };
+
   const onSubmit = form.handleSubmit(async (data) => {
     setError(null);
 
     try {
+      const nameEn = data.name?.trim();
+      const nameMn = data.name_mn.trim();
+
       const payload: CreatePartParams = {
-        name: data.name.trim(),
+        name: nameEn || nameMn,
         part_number: data.part_number?.trim() || undefined,
         default_price: data.default_price?.trim()
           ? Number(data.default_price)
           : undefined,
-        name_mn:
-          currentMode === "full"
-            ? data.name_mn?.trim() || undefined
-            : undefined,
+        name_mn: nameMn,
         category:
           currentMode === "full"
             ? data.category?.trim() || undefined
@@ -163,83 +201,45 @@ export function PartForm({
       )}
 
       <FieldGroup>
+        {/* ── Names — Mongolian first ── */}
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field data-invalid={!!form.formState.errors.name}>
+          <Field data-invalid={!!form.formState.errors.name_mn}>
             <FieldLabel>
-              Part Name <span className="text-destructive">*</span>
+              Монгол нэр <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
-                placeholder="e.g. Oil Filter"
+                placeholder="Тосны шүүлтүүр"
                 autoFocus
-                aria-invalid={!!form.formState.errors.name}
-                {...form.register("name")}
+                aria-invalid={!!form.formState.errors.name_mn}
+                {...form.register("name_mn")}
               />
-              {form.formState.errors.name && (
-                <FieldError>{form.formState.errors.name.message}</FieldError>
+              {form.formState.errors.name_mn && (
+                <FieldError>{form.formState.errors.name_mn.message}</FieldError>
               )}
             </FieldContent>
           </Field>
 
           <Field>
-            <FieldLabel>Part Number</FieldLabel>
+            <FieldLabel>
+              English Name{" "}
+              <span className="text-xs text-muted-foreground">(optional)</span>
+            </FieldLabel>
             <FieldContent>
-              <Input
-                placeholder="e.g. OF-101"
-                {...form.register("part_number")}
-              />
+              <Input placeholder="e.g. Oil Filter" {...form.register("name")} />
             </FieldContent>
           </Field>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field data-invalid={!!form.formState.errors.default_price}>
-            <FieldLabel>Default Selling Price (₮)</FieldLabel>
-            <FieldContent>
-              <Input
-                type="number"
-                min="0"
-                placeholder="15000"
-                aria-invalid={!!form.formState.errors.default_price}
-                {...form.register("default_price")}
-              />
-              {form.formState.errors.default_price && (
-                <FieldError>
-                  {form.formState.errors.default_price.message}
-                </FieldError>
-              )}
-            </FieldContent>
-          </Field>
-
-          {currentMode === "full" && (
-            <Field data-invalid={!!form.formState.errors.purchase_price}>
-              <FieldLabel>Purchase Price (₮)</FieldLabel>
-              <FieldContent>
-                <Input
-                  type="number"
-                  min="0"
-                  placeholder="10000"
-                  aria-invalid={!!form.formState.errors.purchase_price}
-                  {...form.register("purchase_price")}
-                />
-                {form.formState.errors.purchase_price && (
-                  <FieldError>
-                    {form.formState.errors.purchase_price.message}
-                  </FieldError>
-                )}
-              </FieldContent>
-            </Field>
-          )}
-        </div>
-
-        {currentMode === "full" && (
-          <div className="grid gap-3 sm:grid-cols-2 animate-fade-in">
+        {/* ── Part Number + Category (full) or Part Number + Price (quick) ── */}
+        {currentMode === "full" ? (
+          <div className="grid gap-3 sm:grid-cols-2">
             <Field>
-              <FieldLabel>Mongolian Name (Монгол нэр)</FieldLabel>
+              <FieldLabel>Part Number</FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder="Тосны шүүлтүүр"
-                  {...form.register("name_mn")}
+                  placeholder="e.g. OF-101"
+                  {...form.register("part_number")}
                 />
               </FieldContent>
             </Field>
@@ -247,33 +247,150 @@ export function PartForm({
             <Field>
               <FieldLabel>Category</FieldLabel>
               <FieldContent>
-                <Input
-                  placeholder="e.g. Filters, Suspension"
-                  {...form.register("category")}
-                />
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <FieldLabel>Unit</FieldLabel>
-              <FieldContent>
-                <Input
-                  placeholder="e.g. piece, liter"
-                  {...form.register("unit")}
-                />
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <FieldLabel>Description</FieldLabel>
-              <FieldContent>
-                <Input
-                  placeholder="Optional description"
-                  {...form.register("description")}
-                />
+                <Combobox
+                  items={allCategories}
+                  value={selectedCategory}
+                  onValueChange={(cat) => {
+                    if (cat) {
+                      form.setValue("category", cat.name);
+                    } else {
+                      form.setValue("category", "");
+                    }
+                  }}
+                  onInputValueChange={(val) => setCategoryInput(val)}
+                  isItemEqualToValue={(a, b) => a.id === b.id}
+                  itemToStringLabel={(cat) => cat?.name ?? ""}
+                >
+                  <ComboboxInput
+                    placeholder="e.g. Filters, Suspension"
+                    showTrigger
+                    showClear={!!form.watch("category")}
+                    className="h-11"
+                  />
+                  <ComboboxContent>
+                    <ComboboxList>
+                      {(cat: { id: string; name: string }) => (
+                        <ComboboxItem key={cat.id} value={cat}>
+                          <span>{cat.name}</span>
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                    {categoryInput.trim() && !inputMatchesCategory && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleCreateCategory();
+                        }}
+                        disabled={createCategory.isPending}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer border-t border-border"
+                      >
+                        <Plus className="size-4 shrink-0 text-muted-foreground" />
+                        <span>Create "{categoryInput.trim()}" category</span>
+                        {createCategory.isPending && (
+                          <Loader2 className="size-3 animate-spin ml-auto" />
+                        )}
+                      </button>
+                    )}
+                    <ComboboxEmpty />
+                  </ComboboxContent>
+                </Combobox>
               </FieldContent>
             </Field>
           </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field>
+              <FieldLabel>Part Number</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="e.g. OF-101"
+                  {...form.register("part_number")}
+                />
+              </FieldContent>
+            </Field>
+
+            <Field data-invalid={!!form.formState.errors.default_price}>
+              <FieldLabel>Default Selling Price (₮)</FieldLabel>
+              <FieldContent>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="15000"
+                  aria-invalid={!!form.formState.errors.default_price}
+                  {...form.register("default_price")}
+                />
+                {form.formState.errors.default_price && (
+                  <FieldError>
+                    {form.formState.errors.default_price.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
+          </div>
+        )}
+
+        {/* ── Full Details extra fields ── */}
+        {currentMode === "full" && (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field data-invalid={!!form.formState.errors.default_price}>
+                <FieldLabel>Default Selling Price (₮)</FieldLabel>
+                <FieldContent>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="15000"
+                    aria-invalid={!!form.formState.errors.default_price}
+                    {...form.register("default_price")}
+                  />
+                  {form.formState.errors.default_price && (
+                    <FieldError>
+                      {form.formState.errors.default_price.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+
+              <Field data-invalid={!!form.formState.errors.purchase_price}>
+                <FieldLabel>Purchase Price (₮)</FieldLabel>
+                <FieldContent>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="10000"
+                    aria-invalid={!!form.formState.errors.purchase_price}
+                    {...form.register("purchase_price")}
+                  />
+                  {form.formState.errors.purchase_price && (
+                    <FieldError>
+                      {form.formState.errors.purchase_price.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+
+              <Field>
+                <FieldLabel>Unit</FieldLabel>
+                <FieldContent>
+                  <Input
+                    placeholder="e.g. piece, liter"
+                    {...form.register("unit")}
+                  />
+                </FieldContent>
+              </Field>
+
+              <Field>
+                <FieldLabel>Description</FieldLabel>
+                <FieldContent>
+                  <Input
+                    placeholder="Optional description"
+                    {...form.register("description")}
+                  />
+                </FieldContent>
+              </Field>
+            </div>
+          </>
         )}
       </FieldGroup>
 

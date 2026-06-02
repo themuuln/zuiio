@@ -1,0 +1,1 @@
+{"status":"completed","buildPassing":true,"changes":["Added write and invite to permission_action enum","Created migration fix_permissions_backfill for enum + missing members.update backfill","Applied migration to remote Supabase project","Regenerated TypeScript types","Build passed"]}

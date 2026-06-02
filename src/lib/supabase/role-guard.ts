@@ -30,6 +30,7 @@ export async function getUserRole(): Promise<{
     .select("role_id, roles(name)")
     .eq("user_id", user.id)
     .eq("is_primary", true)
+    .is("removed_at", null)
     .maybeSingle();
 
   const rawRoles = membership?.roles;
@@ -111,6 +112,8 @@ export async function requirePermission(
   } else {
     query = query.eq("is_primary", true);
   }
+
+  query = query.is("removed_at", null);
 
   const { data: membership } = await query.maybeSingle();
 

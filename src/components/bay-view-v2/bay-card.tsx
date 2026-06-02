@@ -235,6 +235,7 @@ interface BayCardProps {
   onRemoveFromBay?: (woId: string) => void;
   onOpenDetail: (woId: string) => void;
   onAssignClick?: (bayNumber: number) => void;
+  onRemoveHelper?: (woId: string, mechanicId: string) => void;
 }
 
 export function BayCardDragPreview({ bay }: { bay: BaySlotData }) {
@@ -322,6 +323,7 @@ export function BayCard({
   onRemoveFromBay,
   onOpenDetail,
   onAssignClick,
+  onRemoveHelper,
 }: BayCardProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: `bay-${bay.bayNumber}`,
@@ -554,17 +556,47 @@ export function BayCard({
                 </div>
 
                 {/* Assign Mechanic area */}
-                <div className="mt-1 flex items-center gap-2 border-t border-border/30 pt-2.5">
-                  <MechanicBadge
-                    workOrderId={wo.id}
-                    mechanic={wo.mechanic}
-                    disabled={isPending}
-                  />
-                  {!wo.mechanic && (
-                    <span className="text-xs text-muted-foreground/50 font-bold select-none">
-                      Unassigned tech
-                    </span>
-                  )}
+                <div className="mt-1 flex flex-col gap-1.5 border-t border-border/30 pt-2.5">
+                  {/* Main mechanic */}
+                  <div className="flex items-center gap-2">
+                    <MechanicBadge
+                      workOrderId={wo.id}
+                      mechanic={wo.mechanic}
+                      disabled={isPending}
+                      role="main"
+                    />
+                    {!wo.mechanic && (
+                      <span className="text-xs text-muted-foreground/50 font-bold select-none">
+                        Unassigned tech
+                      </span>
+                    )}
+                  </div>
+                  {/* Helper mechanics */}
+                  {(() => {
+                    const helpers = (wo as Record<string, unknown>).helpers as
+                      | Array<{
+                          id: string;
+                          full_name: string | null;
+                          avatar_url: string | null;
+                        }>
+                      | undefined;
+                    if (!helpers || helpers.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {helpers.map((helper) => (
+                          <MechanicBadge
+                            key={helper.id}
+                            workOrderId={wo.id}
+                            mechanic={helper}
+                            disabled={isPending}
+                            role="helper"
+                            compact
+                            onRemove={() => onRemoveHelper?.(wo.id, helper.id)}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               </CardContent>
 

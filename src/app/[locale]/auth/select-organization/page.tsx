@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { NewUserSetup } from "@/components/auth/new-user-setup";
 import { OrganizationSelectionForm } from "@/components/auth/organization-selection-form";
+import { PendingInvitesCards } from "@/components/auth/pending-invites-cards";
 import { completeOrganizationLogin } from "@/lib/actions/complete-organization-login";
 import { UnauthorizedError } from "@/lib/errors";
+import { getPendingInvitesForEmail } from "@/lib/services/invite-service";
 import { listUserOrganizations } from "@/lib/services/organization-access-service";
-import { finalizeSignup } from "@/lib/services/signup-service";
 import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata({
@@ -30,34 +30,67 @@ export default async function SelectOrganizationPage({
   searchParams: Promise<{ redirectTo?: string }>;
 }) {
   const t = await getTranslations("auth.selectOrganization");
-  const setupT = await getTranslations("auth.setup");
+  const inviteT = await getTranslations("invite");
   const { redirectTo } = await searchParams;
 
   try {
-    let organizations = await listUserOrganizations();
+    const supabase = await createClient();
 
-    // Auto-create org from user metadata if none exist
-    if (organizations.length === 0) {
+    // ── Check for pending invites ─────────────────────────
+    let pendingInvites: Array<{
+      token: string;
+      organization_name: string;
+      inviter_name: string | null;
+    }> = [];
+
+    const { data: authUser } = await supabase.auth.getUser();
+    const authEmail = authUser?.user?.email;
+
+    if (authEmail) {
+      // Try by auth email (works for email-signup users)
       try {
-        const supabase = await createClient();
-        await finalizeSignup(supabase);
-        organizations = await listUserOrganizations();
-      } catch (setupError) {
-        console.error("Auto organization setup failed:", setupError);
+        const invites = await getPendingInvitesForEmail(authEmail);
+        pendingInvites = invites.map((inv) => ({
+          token: inv.token,
+          organization_name: inv.organization_name,
+          inviter_name: inv.inviter_name,
+        }));
+      } catch (err) {
+        console.error("Failed to check pending invites by email:", err);
       }
     }
 
+    // If no invite found by email and user has a phone (phone-signup),
+    // also check by phone — the invite email often contains the phone number
+    // (e.g. "90409040@gmail.com")
+    if (pendingInvites.length === 0 && authUser?.user?.id) {
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("phone")
+          .eq("id", authUser.user.id)
+          .maybeSingle();
+
+        if (profile?.phone) {
+          const invites = await getPendingInvitesForEmail(profile.phone);
+          if (invites.length > 0) {
+            pendingInvites = invites.map((inv) => ({
+              token: inv.token,
+              organization_name: inv.organization_name,
+              inviter_name: inv.inviter_name,
+            }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check pending invites by phone:", err);
+      }
+    }
+
+    const organizations = await listUserOrganizations();
+
+    // If user has no organizations, redirect to setup-organization page
     if (organizations.length === 0) {
-      return (
-        <NewUserSetup
-          copy={{
-            title: setupT("title"),
-            subtitle: setupT("subtitle"),
-            error: setupT("error"),
-            retry: setupT("retry"),
-          }}
-        />
-      );
+      redirect("/auth/setup-organization");
     }
 
     const isSingleOrg = organizations.length === 1;
@@ -81,27 +114,42 @@ export default async function SelectOrganizationPage({
     }
 
     return (
-      <OrganizationSelectionForm
-        organizations={organizations}
-        action={completeOrganizationLogin}
-        redirectTo={redirectTo}
-        singleOrgMode={isSingleOrg}
-        copy={{
-          title,
-          subtitle,
-          pinExplanation: t("pinExplanation"),
-          organizationLabel: t("organizationLabel"),
-          organizationPlaceholder: t("organizationPlaceholder"),
-          pinLabel: t("pinLabel"),
-          pinPlaceholder: t("pinPlaceholder"),
-          confirmPinLabel: t("confirmPinLabel"),
-          continueLabel: t("continueLabel"),
-          setupLabel: t("setupLabel"),
-          setupHint: t("setupHint"),
-          verifyHint: t("verifyHint"),
-          noOrganizations: setupT("subtitle"),
-        }}
-      />
+      <div className="flex flex-col gap-6">
+        {pendingInvites.length > 0 && (
+          <PendingInvitesCards
+            invites={pendingInvites}
+            copy={{
+              title: inviteT("pendingForYou"),
+              description: inviteT("pendingDescription"), // reuse existing key
+              accept: inviteT("acceptButton"),
+            }}
+          />
+        )}
+
+        {organizations.length > 0 && (
+          <OrganizationSelectionForm
+            organizations={organizations}
+            action={completeOrganizationLogin}
+            redirectTo={redirectTo}
+            singleOrgMode={isSingleOrg}
+            copy={{
+              title,
+              subtitle,
+              pinExplanation: t("pinExplanation"),
+              organizationLabel: t("organizationLabel"),
+              organizationPlaceholder: t("organizationPlaceholder"),
+              pinLabel: t("pinLabel"),
+              pinPlaceholder: t("pinPlaceholder"),
+              confirmPinLabel: t("confirmPinLabel"),
+              continueLabel: t("continueLabel"),
+              setupLabel: t("setupLabel"),
+              setupHint: t("setupHint"),
+              verifyHint: t("verifyHint"),
+              noOrganizations: t("noOrganizations"),
+            }}
+          />
+        )}
+      </div>
     );
   } catch (error) {
     if (!(error instanceof UnauthorizedError)) {

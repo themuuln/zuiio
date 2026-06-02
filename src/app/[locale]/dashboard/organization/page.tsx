@@ -5,17 +5,20 @@ import {
   Building2,
   CalendarClock,
   CreditCard,
+  DollarSign,
   Palette,
   Pencil,
   Save,
+  Settings,
   Shield,
+  Smartphone,
   Users,
   X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
@@ -149,7 +152,7 @@ export default function OrganizationPage() {
     subError?.message ??
     null;
 
-  const formatPlanType = (planType: string) => {
+  const formatPlanType = useCallback((planType: string) => {
     const map: Record<string, string> = {
       starter: "Core",
       pro: "Pro",
@@ -157,12 +160,12 @@ export default function OrganizationPage() {
       enterprise: "Enterprise",
     };
     return map[planType] ?? planType;
-  };
+  }, []);
 
-  const formatDate = (dateStr: string | null) => {
+  const formatDate = useCallback((dateStr: string | null) => {
     if (!dateStr) return "\u2014";
     return new Date(dateStr).toLocaleDateString();
-  };
+  }, []);
 
   const { registerTab, unregisterTab } = useRightSidebar();
 
@@ -560,6 +563,75 @@ export default function OrganizationPage() {
             >
               <Palette className="mr-2 size-4" />
               Theme Settings
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="size-4" />
+              Payroll
+            </CardTitle>
+            <CardDescription>Mechanic pay rates</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <Typography.Muted className="text-sm text-muted-foreground">
+              Set hourly and flat rates for each mechanic.
+            </Typography.Muted>
+            <Button
+              variant="outline"
+              className="w-full"
+              render={<Link href="/dashboard/payroll" />}
+            >
+              <DollarSign className="mr-2 size-4" />
+              Manage Payroll
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Smartphone className="size-4" />
+              Devices
+            </CardTitle>
+            <CardDescription>Mechanic tablet management</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <Typography.Muted className="text-sm text-muted-foreground">
+              Register and manage mechanic devices for bay view.
+            </Typography.Muted>
+            <Button
+              variant="outline"
+              className="w-full"
+              render={<Link href="/dashboard/organization/devices" />}
+            >
+              <Smartphone className="mr-2 size-4" />
+              Manage Devices
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="size-4" />
+              Settings
+            </CardTitle>
+            <CardDescription>Business defaults & rules</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <Typography.Muted className="text-sm text-muted-foreground">
+              Commission rules, pricing rules, business defaults.
+            </Typography.Muted>
+            <Button
+              variant="outline"
+              className="w-full"
+              render={<Link href="/dashboard/settings" />}
+            >
+              <Settings className="mr-2 size-4" />
+              Open Settings
             </Button>
           </CardContent>
         </Card>

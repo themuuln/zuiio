@@ -24,7 +24,8 @@ export async function getOrganizationUsers(
         name
       )
     `)
-    .eq("organization_id", orgId);
+    .eq("organization_id", orgId)
+    .is("removed_at", null);
 
   if (error) {
     throw new Error(error.message ?? "Failed to fetch organization users");
@@ -131,19 +132,7 @@ export async function addUserToOrganization(
 ): Promise<void> {
   const supabase = await createClient();
 
-  // Check if already a member
-  const { data: existing } = await supabase
-    .from("organization_users")
-    .select("user_id")
-    .eq("organization_id", orgId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (existing) {
-    throw new ValidationError("User is already a member of this organization");
-  }
-
-  // Resolve role
+  // Resolve role before any checks (needed for both insert and reactivate)
   let resolvedRoleId = roleId;
   if (!resolvedRoleId) {
     const { data: defaultRole } = await supabase
@@ -168,6 +157,34 @@ export async function addUserToOrganization(
       }
       resolvedRoleId = anyRole.id;
     }
+  }
+
+  // Check if already an active member or previously removed
+  const { data: existingUser } = await supabase
+    .from("organization_users")
+    .select("user_id, removed_at")
+    .eq("organization_id", orgId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existingUser) {
+    if (existingUser.removed_at) {
+      // Re-activate a previously removed member
+      const { error: reactivateError } = await supabase
+        .from("organization_users")
+        .update({ removed_at: null, role_id: resolvedRoleId })
+        .eq("user_id", userId)
+        .eq("organization_id", orgId);
+
+      if (reactivateError) {
+        throw new ValidationError("Failed to reactivate user");
+      }
+
+      revalidateTag(cacheTags.organizationUsers(orgId), "max");
+      return;
+    }
+
+    throw new ValidationError("User is already a member of this organization");
   }
 
   const { error } = await supabase.from("organization_users").insert({
@@ -220,6 +237,94 @@ export async function updateUserRole(
 }
 
 /**
+ * Updates a member's profile and organization membership fields.
+ *
+ * Accepts any subset of: fullName, phone (→ profiles table);
+ * roleId, branchId (→ organization_users table).
+ */
+export async function updateMember(
+  userId: string,
+  orgId: string,
+  params: {
+    fullName?: string | null;
+    phone?: string | null;
+    roleId?: string;
+    branchId?: string | null;
+  },
+): Promise<void> {
+  const supabase = await createClient();
+
+  // ── Update profiles table (user's own data) ──────────────
+  const profileUpdates: Record<string, unknown> = {};
+  if (params.fullName !== undefined) profileUpdates.full_name = params.fullName;
+  if (params.phone !== undefined) profileUpdates.phone = params.phone;
+
+  if (Object.keys(profileUpdates).length > 0) {
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update(profileUpdates)
+      .eq("id", userId);
+
+    if (profileError) {
+      throw new Error(
+        profileError.message ?? "Failed to update member profile",
+      );
+    }
+  }
+
+  // ── Update organization_users table (membership data) ────
+  const membershipUpdates: Record<string, unknown> = {};
+  if (params.roleId !== undefined) membershipUpdates.role_id = params.roleId;
+  if (params.branchId !== undefined)
+    membershipUpdates.branch_id = params.branchId;
+
+  if (Object.keys(membershipUpdates).length > 0) {
+    // If roleId is changing, verify the role belongs to this org
+    if (params.roleId !== undefined) {
+      const { data: role } = await supabase
+        .from("roles")
+        .select("id")
+        .eq("id", params.roleId)
+        .eq("organization_id", orgId)
+        .maybeSingle();
+
+      if (!role) {
+        throw new NotFoundError("Role not found in this organization");
+      }
+    }
+
+    // If branchId is changing to a non-null value, verify the branch belongs to this org
+    if (params.branchId !== undefined && params.branchId !== null) {
+      const { data: branch } = await supabase
+        .from("branches")
+        .select("id")
+        .eq("id", params.branchId)
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .maybeSingle();
+
+      if (!branch) {
+        throw new NotFoundError("Branch not found in this organization");
+      }
+    }
+
+    const { error: membershipError } = await supabase
+      .from("organization_users")
+      .update(membershipUpdates)
+      .eq("user_id", userId)
+      .eq("organization_id", orgId);
+
+    if (membershipError) {
+      throw new NotFoundError(
+        membershipError.message ?? "User membership not found",
+      );
+    }
+  }
+
+  revalidateTag(cacheTags.organizationUsers(orgId), "max");
+}
+
+/**
  * Removes a user from the organization.
  */
 export async function removeUser(userId: string, orgId: string): Promise<void> {
@@ -230,7 +335,8 @@ export async function removeUser(userId: string, orgId: string): Promise<void> {
     .from("organization_users")
     .select("user_id, roles!inner(name)")
     .eq("organization_id", orgId)
-    .eq("roles.name", "Org Owner");
+    .eq("roles.name", "Org Owner")
+    .is("removed_at", null);
 
   const adminCount = allAdmins?.length ?? 0;
   const isTargetAdmin = allAdmins?.some((a) => a.user_id === userId);
@@ -243,7 +349,7 @@ export async function removeUser(userId: string, orgId: string): Promise<void> {
 
   const { error } = await supabase
     .from("organization_users")
-    .delete()
+    .update({ removed_at: new Date().toISOString() })
     .eq("user_id", userId)
     .eq("organization_id", orgId);
 

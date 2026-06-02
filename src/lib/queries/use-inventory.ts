@@ -89,6 +89,51 @@ export function useGlobalPartsCatalog() {
   });
 }
 
+export function usePartCategories(orgId: string | undefined) {
+  return useQuery({
+    queryKey: inventoryKeys.categories(orgId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/part-categories`,
+      );
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data as { id: string; name: string }[];
+    },
+    enabled: !!orgId,
+  });
+}
+
+export function useCreatePartCategory(orgId: string | undefined) {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (name: string) => {
+      if (!orgId) throw new Error("No organization ID");
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory/part-categories`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        },
+      );
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        throw new Error(json.error?.message ?? "Failed to create category");
+      }
+      return json.data as { id: string; name: string };
+    },
+    onSuccess: () => {
+      if (orgId) {
+        qc.invalidateQueries({
+          queryKey: inventoryKeys.categories(orgId),
+        });
+      }
+    },
+  });
+}
+
 export function useInventoryBalances(orgId: string | undefined) {
   return useQuery({
     queryKey: inventoryKeys.balances(orgId ?? ""),

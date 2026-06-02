@@ -4,7 +4,11 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 import { getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
 import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";
 import { createClient } from "@/lib/supabase/server";
-import type { WorkOrderPart, WorkOrderService } from "@/lib/types";
+import type {
+  WorkOrderHelper,
+  WorkOrderPart,
+  WorkOrderService,
+} from "@/lib/types";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
   addPartToWorkOrder,
@@ -63,6 +67,7 @@ function mockWorkOrderDetail(overrides: Record<string, unknown> = {}) {
     customer: null,
     vehicle: null,
     mechanic: null,
+    helpers: [] as WorkOrderHelper[],
     services: [] as WorkOrderService[],
     parts: [] as WorkOrderPart[],
     status_history: [],

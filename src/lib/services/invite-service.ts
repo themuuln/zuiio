@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { InviteUserParams, OrgInvite } from "@/lib/types";
 
 function generateToken(): string {
@@ -56,6 +57,74 @@ export async function createInvite(
   }
 
   return data;
+}
+
+/**
+ * Finds all pending invites for a given email or phone number.
+ *
+ * When `identifier` looks like a phone number (all digits, possibly with +),
+ * it searches `org_invites.email` using a LIKE match (e.g. the invited email
+ * might be "90409040@gmail.com" for phone "90409040"). Otherwise it does an
+ * exact match on the email column.
+ */
+/**
+ * Finds all pending invites for a given email or phone number.
+ * Uses the service role client to bypass RLS (new users who haven't joined
+ * an org yet can't query org_invites via their user session).
+ *
+ * When `identifier` looks like a phone number (all digits, possibly with +),
+ * searches `org_invites.email` using a LIKE match. Otherwise does an exact
+ * match on the email column.
+ */
+export async function getPendingInvitesForEmail(
+  identifier: string,
+): Promise<
+  Array<OrgInvite & { organization_name: string; inviter_name: string | null }>
+> {
+  // Use service role to bypass RLS — new users aren't org members yet
+  const supabase = await createServiceRoleClient();
+
+  const cleaned = identifier.toLowerCase().trim();
+  const isPhone = /^\+?\d{7,15}$/.test(cleaned);
+
+  let query = supabase
+    .from("org_invites")
+    .select(
+      `id, organization_id, email, role_id, token, status, invited_by, message, expires_at, created_at, updated_at,
+      organizations!inner(name)`,
+    )
+    .eq("status", "pending")
+    .gt("expires_at", new Date().toISOString());
+
+  if (isPhone) {
+    // Phone number — match against emails that CONTAIN the digits
+    // e.g. phone "90409040" matches "90409040@gmail.com" or "user90409040@example.com"
+    query = query.ilike("email", `%${cleaned.replace(/\D/g, "")}%`);
+  } else {
+    // Email — exact match
+    query = query.eq("email", cleaned);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to fetch pending invites:", error);
+    return [];
+  }
+
+  return (data ?? []).map((invite: Record<string, unknown>) => {
+    const orgName = Array.isArray(invite.organizations)
+      ? (invite.organizations[0] as { name?: string })?.name
+      : (invite.organizations as { name?: string } | null)?.name;
+
+    return {
+      ...invite,
+      organization_name: orgName ?? "Unknown",
+      inviter_name: null,
+    };
+  }) as Array<
+    OrgInvite & { organization_name: string; inviter_name: string | null }
+  >;
 }
 
 export async function getOrgInvites(orgId: string): Promise<OrgInvite[]> {

@@ -41,6 +41,7 @@ export type DiagnosisLabel = Tables<"diagnosis_labels">;
 export type InventoryMovementType = Enums<"inventory_movement_type">;
 export type InventoryBalance = Tables<"inventory_balances">;
 export type MechanicAssignment = Tables<"mechanic_assignments">;
+export type WorkOrderHelper = Tables<"work_order_helpers">;
 export type WorkOrderPart = Tables<"work_order_parts">;
 export type WorkOrderService = Tables<"work_order_services">;
 export type WorkOrderStatusHistory = Tables<"work_order_status_history">;

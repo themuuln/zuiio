@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 import { Fragment } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sidebar,
   SidebarContent,
@@ -16,6 +15,7 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigation } from "@/hooks/use-navigation";
 import { Link } from "@/lib/i18n/navigation";
 import { onLinkHover } from "@/lib/prefetch";
@@ -144,6 +144,36 @@ export function AppSidebar() {
             ))}
 
             <SidebarSeparator />
+
+            {/* Management (admin-only: org, members, settings) */}
+            {settingsItems.length > 0 && (
+              <>
+                <SidebarGroup className="py-1">
+                  <SidebarGroupContent>
+                    <SidebarMenu className="gap-0.5">
+                      {settingsItems.map((item) => (
+                        <SidebarMenuItem key={item.href}>
+                          <SidebarMenuButton
+                            render={
+                              <Link
+                                href={item.href}
+                                onMouseEnter={onLinkHover(item.href)}
+                              />
+                            }
+                            isActive={isActive(item.href)}
+                            tooltip={t(item.labelKey)}
+                          >
+                            <item.icon className="size-4 shrink-0" />
+                            <span>{t(item.labelKey)}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+                <SidebarSeparator />
+              </>
+            )}
 
             {/* Utility items (Guide) */}
             {utilityItems.length > 0 && (

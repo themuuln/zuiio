@@ -5,6 +5,7 @@ import type {
   DiagnosisLabel,
   Vehicle,
   WorkOrderDetail,
+  WorkOrderHelper,
   WorkOrderPart,
   WorkOrderService,
   WorkOrderStatusHistory,
@@ -43,6 +44,7 @@ export async function getWorkOrderDetail(
     { data: vehicleData },
     { data: mechanicData },
     { data: labelData },
+    { data: helpersData },
   ] = await Promise.all([
     supabase
       .from("work_order_services")
@@ -97,6 +99,13 @@ export async function getWorkOrderDetail(
           .eq("id", wo.diagnosis_label_id)
           .single()
       : { data: null },
+    supabase
+      .from("work_order_helpers")
+      .select(`
+        id, work_order_id, mechanic_id, assigned_at, created_at, created_by,
+        mechanic:mechanic_id (full_name)
+      `)
+      .eq("work_order_id", id),
   ]);
 
   return {
@@ -107,6 +116,21 @@ export async function getWorkOrderDetail(
       id: string;
       full_name: string | null;
     } | null,
+    helpers: (
+      (helpersData ?? []) as unknown as (WorkOrderHelper & {
+        full_name?: string | null;
+      })[]
+    ).map((h) => ({
+      ...h,
+      full_name: (h as unknown as Record<string, unknown>).mechanic
+        ? ((
+            (h as unknown as Record<string, unknown>).mechanic as Record<
+              string,
+              unknown
+            >
+          ).full_name as string | null)
+        : null,
+    })),
     services: (services ?? []) as WorkOrderService[],
     parts: (parts ?? []) as WorkOrderPart[],
     status_history: (statusHistory ?? []) as WorkOrderStatusHistory[],

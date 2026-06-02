@@ -283,7 +283,8 @@ export async function getMechanicsList(
         .from("organization_users")
         .select("user_id, roles!inner(name), branch_id")
         .eq("organization_id", orgId)
-        .eq("roles.name", "Mechanic");
+        .eq("roles.name", "Mechanic")
+        .is("removed_at", null);
 
       const filteredMechanics = branchId
         ? (mechanics ?? []).filter((m) => m.branch_id === branchId)
@@ -2236,7 +2237,8 @@ async function getTechnicianPerformanceBatched(
     .from("organization_users")
     .select("user_id, roles!inner(name), branch_id")
     .eq("organization_id", orgId)
-    .eq("roles.name", "Mechanic");
+    .eq("roles.name", "Mechanic")
+    .is("removed_at", null);
 
   const scopedMechanics = branchId
     ? (mechanics ?? []).filter((m) => m.branch_id === branchId)

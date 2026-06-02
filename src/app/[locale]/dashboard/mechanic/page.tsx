@@ -1,13 +1,17 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
+  Building2,
   CheckCircle2,
   ChevronDown,
   ClipboardList,
   Clock,
   Coins,
+  DollarSign,
   Play,
+  Shield,
   Square,
   UserPlus,
   Users,
@@ -44,16 +48,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
-import { useQueryClient } from "@tanstack/react-query";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
+import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { Link } from "@/lib/i18n/navigation";
 import {
-  useMechanicEod,
-  useMechanicWorkOrders,
-  useMechanicTrend,
   useClockStatus,
   useClockToggle,
+  useMechanicEod,
   useMechanicsList,
+  useMechanicTrend,
+  useMechanicWorkOrders,
 } from "@/lib/queries/use-mechanic-dashboard";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
 import { cn, formatMNT } from "@/lib/utils";
@@ -932,6 +936,58 @@ export default function MechanicPage() {
                   className="w-[200px]"
                 />
               </div>
+            </div>
+
+            {/* Quick-action bar */}
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-card p-3 shadow-sm shadow-black/5">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mr-2 shrink-0">
+                Management
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAddMechanic(true)}
+                className="h-8 text-xs gap-1.5"
+              >
+                <UserPlus className="size-3.5" />
+                Invite Mechanic
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                render={<Link href="/dashboard/organization/members" />}
+              >
+                <Users className="size-3.5" />
+                Members
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                render={<Link href="/dashboard/payroll" />}
+              >
+                <DollarSign className="size-3.5" />
+                Payroll
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                render={<Link href="/dashboard/organization/roles" />}
+              >
+                <Shield className="size-3.5" />
+                Roles
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                render={<Link href="/dashboard/organization" />}
+              >
+                <Building2 className="size-3.5" />
+                Organization
+              </Button>
             </div>
 
             <MechanicDashboard

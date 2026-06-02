@@ -113,23 +113,44 @@ export const POST = createRouteHandler(
     );
 
     let userId: string;
+    let existingMember: { user_id: string; removed_at: string | null } | null =
+      null;
+
+    const isReactivation =
+      !!existingUser &&
+      (await (async () => {
+        const { data: existingMemberCheck } = await supabase
+          .from("organization_users")
+          .select("user_id, removed_at")
+          .eq("organization_id", orgId)
+          .eq("user_id", existingUser!.id)
+          .maybeSingle();
+
+        existingMember = existingMemberCheck;
+
+        if (!existingMemberCheck) return false;
+
+        if (existingMemberCheck.removed_at) {
+          // Re-activate a previously removed member
+          await supabase
+            .from("organization_users")
+            .update({ removed_at: null, role_id: roleId })
+            .eq("user_id", existingUser!.id)
+            .eq("organization_id", orgId);
+          return true;
+        }
+
+        throw new ValidationError(
+          "User is already a member of this organization",
+        );
+      })());
 
     if (existingUser) {
       // User already exists in auth, just add to organization
       userId = existingUser.id;
 
-      // Check if already in this organization
-      const { data: existingMember } = await supabase
-        .from("organization_users")
-        .select("user_id")
-        .eq("organization_id", orgId)
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (existingMember) {
-        throw new ValidationError(
-          "User is already a member of this organization",
-        );
+      if (isReactivation) {
+        // Skip the insert below — already handled
       }
     } else {
       // Create new auth user
@@ -173,18 +194,20 @@ export const POST = createRouteHandler(
       }
     }
 
-    // Add to organization
-    const { error: memberError } = await supabase
-      .from("organization_users")
-      .insert({
-        organization_id: orgId,
-        user_id: userId,
-        role_id: roleId,
-        joined_at: new Date().toISOString(),
-      });
+    // Add to organization (skip if this was a reactivation)
+    if (!existingMember) {
+      const { error: memberError } = await supabase
+        .from("organization_users")
+        .insert({
+          organization_id: orgId,
+          user_id: userId,
+          role_id: roleId,
+          joined_at: new Date().toISOString(),
+        });
 
-    if (memberError) {
-      throw new ValidationError("Failed to add user to organization");
+      if (memberError) {
+        throw new ValidationError("Failed to add user to organization");
+      }
     }
 
     return NextResponse.json(
