@@ -101,6 +101,7 @@ export function BayViewV2Client() {
   );
   const [baySearchQuery, setBaySearchQuery] = useState("");
   const prevShiftReportRef = useRef<ShiftReport | null>(null);
+  const fetchGenerationRef = useRef(0);
 
   // Polling is set up after fetchData is declared below
 
@@ -204,6 +205,7 @@ export function BayViewV2Client() {
 
   const fetchData = useCallback(
     async (showLoader = false) => {
+      const gen = ++fetchGenerationRef.current;
       if (showLoader) setLoading(true);
       try {
         setError(null);
@@ -211,12 +213,18 @@ export function BayViewV2Client() {
           getBayViewDataFresh(branchFilter),
           getShiftReport(branchFilter).catch(() => null),
         ]);
+        // Ignore stale responses from older fetch generations (e.g., when
+        // the user switches branches before the previous fetch completes)
+        if (gen !== fetchGenerationRef.current) return;
         setData(result);
         if (report) setShiftReport(report);
       } catch (err) {
+        if (gen !== fetchGenerationRef.current) return;
         setError(err instanceof Error ? err.message : "Failed to load");
       }
-      setLoading(false);
+      if (gen === fetchGenerationRef.current) {
+        setLoading(false);
+      }
     },
     [branchFilter],
   );
