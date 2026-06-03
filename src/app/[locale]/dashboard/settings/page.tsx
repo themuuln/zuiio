@@ -32,6 +32,7 @@ import {
   DEFAULT_FORM,
   type SettingsForm,
 } from "./_business-defaults-form";
+import { BranchesSection } from "./_branches-section";
 import { CommissionRulesSection } from "./_commission-rules-section";
 import { DataExportSection } from "./_data-export-section";
 import { DataSharingForm } from "./_data-sharing-form";
@@ -197,6 +198,10 @@ function renderSectionContent(
         }
       />
     );
+  }
+
+  if (section.value === "branches") {
+    return <BranchesSection orgId={options.orgId} />;
   }
 
   if (section.value === "commission") {

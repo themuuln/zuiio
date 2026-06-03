@@ -13,6 +13,7 @@ export const GET = createRouteHandler(
       customer_id: searchParams.get("customer_id") ?? undefined,
       date_from: searchParams.get("date_from") ?? undefined,
       date_to: searchParams.get("date_to") ?? undefined,
+      branchId: searchParams.get("branch_id") ?? undefined,
     });
     return NextResponse.json({ data: estimates });
   },

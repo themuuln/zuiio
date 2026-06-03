@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { withBranchFilter } from "@/lib/supabase/with-branch";
 import { createClient } from "@/lib/supabase/server";
 import type { ReminderLog, VehicleServiceSchedule } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
@@ -47,6 +48,7 @@ const scheduleFieldMap: FieldMap<ScheduleUpdateParams> = {
 export async function getServiceSchedules(
   orgId: string,
   vehicleId?: string,
+  branchId?: string | null,
 ): Promise<VehicleServiceSchedule[]> {
   const supabase = await createClient();
 
@@ -62,6 +64,8 @@ export async function getServiceSchedules(
   if (vehicleId) {
     query = query.eq("vehicle_id", vehicleId);
   }
+
+  if (branchId) query = withBranchFilter(query, branchId);
 
   const { data, error } = await query;
 
@@ -347,6 +351,7 @@ export async function backfillSchedulesFromHistory(
 export async function getReminderLogs(
   orgId: string,
   vehicleId?: string,
+  branchId?: string | null,
 ): Promise<ReminderLog[]> {
   const supabase = await createClient();
 
@@ -361,6 +366,18 @@ export async function getReminderLogs(
 
   if (vehicleId) {
     query = query.eq("vehicle_id", vehicleId);
+  }
+
+  if (branchId) {
+    // Filter by vehicle branch since reminder_logs doesn't have branch_id directly
+    const { data: branchVehicles } = await supabase
+      .from("vehicles")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("branch_id", branchId);
+    const vehicleIds = (branchVehicles ?? []).map((v) => v.id);
+    if (vehicleIds.length === 0) return [];
+    query = query.in("vehicle_id", vehicleIds);
   }
 
   const { data, error } = await query;

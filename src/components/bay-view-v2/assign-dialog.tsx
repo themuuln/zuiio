@@ -38,6 +38,7 @@ interface AssignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   bayNumber: number;
+  branchId?: string;
   queue: (WorkOrder & { vehicle: Vehicle | null })[];
   mechanics: { id: string; full_name: string | null }[];
   onAssign: (workOrderId: string, mechanicId?: string) => Promise<void>;
@@ -50,6 +51,7 @@ export function AssignDialog({
   queue,
   mechanics,
   onAssign,
+  branchId,
 }: AssignDialogProps) {
   const [selectedWoId, setSelectedWoId] = useState<string | null>(null);
   const [selectedVehicle, setSelectedVehicle] =
@@ -151,6 +153,7 @@ export function AssignDialog({
             vehicleId: vehicle.id,
             customerId: customerId,
             complaint: "",
+            branchId,
           });
           setSelectedWoId(result.workOrderId);
         } catch (err) {
@@ -161,7 +164,7 @@ export function AssignDialog({
         }
       }
     },
-    [findWorkOrderForVehicle],
+    [findWorkOrderForVehicle, branchId],
   );
 
   const handleConfirm = useCallback(async () => {

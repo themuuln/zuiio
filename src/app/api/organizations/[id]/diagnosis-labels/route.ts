@@ -2,21 +2,24 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
 
-export const GET = createRouteHandler(async ({ orgId, supabase }) => {
-  const { data, error } = await supabase
-    .from("diagnosis_labels")
-    .select(
-      "id, organization_id, name, name_mn, color, sort_order, is_active, created_at, updated_at",
-    )
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("sort_order", { ascending: true })
-    .order("name", { ascending: true });
+export const GET = createRouteHandler(
+  async ({ orgId, supabase }) => {
+    const { data, error } = await supabase
+      .from("diagnosis_labels")
+      .select(
+        "id, organization_id, name, name_mn, color, sort_order, is_active, created_at, updated_at",
+      )
+      .eq("organization_id", orgId)
+      .is("deleted_at", null)
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
 
-  if (error) throw error;
+    if (error) throw error;
 
-  return NextResponse.json({ data: data ?? [] });
-});
+    return NextResponse.json({ data: data ?? [] });
+  },
+  { requiredPermission: { resource: "diagnosis_labels", action: "read" } },
+);
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
@@ -58,4 +61,5 @@ export const POST = createRouteHandler(
 
     return NextResponse.json({ data }, { status: 201 });
   },
+  { requiredPermission: { resource: "diagnosis_labels", action: "create" } },
 );

@@ -41,6 +41,7 @@ export async function updateSession(request: NextRequest) {
     !routes.isAuthRoute &&
     !routes.isInvoiceRoute &&
     !routes.isPortalRoute &&
+    !routes.isBookingRoute &&
     !routes.isInviteRoute &&
     !routes.isPricingRoute &&
     !routes.isPublicRoute

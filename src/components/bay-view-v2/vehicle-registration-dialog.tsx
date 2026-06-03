@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -35,36 +34,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { formatPlateInput } from "@/lib/form-ux";
-import {
-  isValidMongolianPhone,
-  transliterateMongolianPlate,
-} from "@/lib/form-validation";
+import { transliterateMongolianPlate } from "@/lib/form-validation";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { formatMNT } from "@/lib/utils";
-
-// ── Schema ───────────────────────────────────────────────────
-
-const vehicleRegistrationSchema = z.object({
-  make: z.string().min(1, "Brand is required"),
-  model: z.string().min(1, "Model is required"),
-  year: z.string().optional(),
-  color: z.string().optional(),
-  vin: z.string().optional(),
-  engine: z.string().optional(),
-  odometer: z.string().optional(),
-  custFirstName: z.string().optional(),
-  custLastName: z.string().optional(),
-  custPhone: z
-    .string()
-    .optional()
-    .refine(
-      (val) => !val || isValidMongolianPhone(val),
-      "Enter a valid Mongolian phone number (8 digits)",
-    ),
-  complaint: z.string().optional(),
-});
-
-type VehicleRegistrationFormValues = z.infer<typeof vehicleRegistrationSchema>;
+import {
+  EMPTY_LOOKUP,
+  formatDate,
+  formatTime,
+  type LookupResult,
+  resolveQueueIds,
+  type SearchVehicleResult,
+  type VehicleRegistrationFormValues,
+  vehicleRegistrationSchema,
+} from "./_vehicle-registration-schema";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -73,48 +55,8 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   initialMode?: "register" | "lookup";
   onQueued?: () => void;
+  branchId?: string;
 }
-
-interface LookupResult {
-  exists: boolean;
-  vehicle: {
-    id: string;
-    plate_number: string;
-    make: string;
-    model: string;
-    year: number | null;
-    color: string | null;
-    vin: string | null;
-    engine: string | null;
-    transmission: string | null;
-    fuel_type: string | null;
-    odometer: number | null;
-  } | null;
-  customer: {
-    id: string;
-    first_name: string | null;
-    last_name: string | null;
-    phone: string | null;
-  } | null;
-  serviceHistory: {
-    work_order_id: string;
-    status: string;
-    created_at: string;
-    complaint: string | null;
-    diagnosis: string | null;
-    notes: string | null;
-    total: number;
-    mechanic_name: string | null;
-    services: { name: string; price: number }[];
-  }[];
-}
-
-const EMPTY_LOOKUP: LookupResult = {
-  exists: false,
-  vehicle: null,
-  customer: null,
-  serviceHistory: [],
-};
 
 const STATUS_COLORS: Record<string, string> = {
   Completed: "bg-green-500",
@@ -124,23 +66,6 @@ const STATUS_COLORS: Record<string, string> = {
   New: "bg-slate-400",
   Cancelled: "bg-red-400",
 };
-
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatTime(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function ServiceTimeline({
   history,
@@ -237,19 +162,6 @@ function ServiceTimeline({
   );
 }
 
-// ── Helper to resolve current vehicle/customer IDs ─────────────
-
-function resolveQueueIds(
-  savedVehicleId: string | null,
-  savedCustomerId: string | null,
-  lookupResult: LookupResult,
-): { vehicleId: string | null; customerId: string | null } {
-  return {
-    vehicleId: savedVehicleId ?? lookupResult.vehicle?.id ?? null,
-    customerId: savedCustomerId ?? lookupResult.customer?.id ?? null,
-  };
-}
-
 // ── Component ──────────────────────────────────────────────
 
 export function VehicleRegistrationDialog({
@@ -257,6 +169,7 @@ export function VehicleRegistrationDialog({
   onOpenChange,
   initialMode = "register",
   onQueued,
+  branchId,
 }: Props) {
   const t = useTranslations("bayView");
   const [mode, setMode] = useState<"register" | "lookup">(initialMode);
@@ -272,16 +185,7 @@ export function VehicleRegistrationDialog({
   const [saveMode, setSaveMode] = useState<"created" | "updated" | null>(null);
 
   // ── Vehicle search state ─────────────────────────────────────
-  const [searchResults, setSearchResults] = useState<
-    {
-      id: string;
-      plate_number: string;
-      make: string;
-      model: string;
-      year: number | null;
-      color: string | null;
-    }[]
-  >([]);
+  const [searchResults, setSearchResults] = useState<SearchVehicleResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -517,6 +421,7 @@ export function VehicleRegistrationDialog({
           vehicleId: saveResult.vehicle.id,
           customerId: saveResult.customerId ?? "",
           complaint: formData.complaint?.trim() || undefined,
+          branchId,
         });
       } catch (err) {
         setQueueError(
@@ -541,6 +446,7 @@ export function VehicleRegistrationDialog({
           vehicleId,
           customerId,
           complaint: formData.complaint?.trim() || undefined,
+          branchId,
         });
       } catch (err) {
         setQueueError(
@@ -561,6 +467,7 @@ export function VehicleRegistrationDialog({
     onQueued,
     form,
     getSavePayload,
+    branchId,
   ]);
 
   // Determine whether queue action is available

@@ -5,7 +5,7 @@ import { calculateMonthlyPayroll } from "@/lib/services/payroll-service";
 export const POST = createRouteHandler(
   async ({ request, orgId }) => {
     const body = await request.json();
-    const { year, month } = body;
+    const { year, month, branch_id } = body;
 
     if (!year || !month || month < 1 || month > 12) {
       return NextResponse.json(
@@ -14,7 +14,12 @@ export const POST = createRouteHandler(
       );
     }
 
-    const records = await calculateMonthlyPayroll(orgId, year, month);
+    const records = await calculateMonthlyPayroll(
+      orgId,
+      year,
+      month,
+      branch_id ?? null,
+    );
     return NextResponse.json({ data: records });
   },
   { requiredPermission: { resource: "payroll", action: "write" } },

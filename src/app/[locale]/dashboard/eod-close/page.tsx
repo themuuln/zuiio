@@ -33,6 +33,7 @@ import {
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import { formatCurrency } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────
@@ -189,6 +190,8 @@ export default function EodClosePage() {
   const t = useTranslations();
   const { data: org, isPending: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId;
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
 
   const [eodData, setEodData] = useState<EodData | null>(null);
   const [closeStatus, setCloseStatus] = useState<DayCloseStatus | null>(null);
@@ -204,8 +207,10 @@ export default function EodClosePage() {
     setError(null);
 
     try {
+      const eodParams = new URLSearchParams({ type: "eod", date: today });
+      if (branchFilter) eodParams.set("branch_id", branchFilter);
       const [eodRes, closeRes] = await Promise.all([
-        fetch(`/api/organizations/${orgId}/reports?type=eod&date=${today}`),
+        fetch(`/api/organizations/${orgId}/reports?${eodParams.toString()}`),
         fetch(`/api/organizations/${orgId}/day-close?date=${today}`),
       ]);
 

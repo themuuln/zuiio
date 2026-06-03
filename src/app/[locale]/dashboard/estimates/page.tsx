@@ -26,6 +26,7 @@ import { Typography } from "@/components/ui/typography";
 
 import { useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import type { Estimate } from "@/lib/types";
 
 // ── Status helpers ────────────────────────────────────────────
@@ -49,12 +50,19 @@ export default function EstimatesPage() {
   const { data: org } = useCurrentOrg();
   const [statusFilter, setStatusFilter] = useState("all");
   const orgId = org?.orgId ?? "";
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
 
   // Fetch estimates
   const { data: estimates, isLoading } = useQuery({
-    queryKey: ["estimates", orgId],
+    queryKey: ["estimates", orgId, branchFilter],
     queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/estimates`);
+      const params = new URLSearchParams();
+      if (branchFilter) params.set("branch_id", branchFilter);
+      const qs = params.toString();
+      const res = await fetch(
+        `/api/organizations/${orgId}/estimates${qs ? `?${qs}` : ""}`,
+      );
       const json = await res.json();
       return (json.data ?? []) as Estimate[];
     },

@@ -24,8 +24,13 @@ export const customerKeys = {
 
 export const vehicleKeys = {
   all: (orgId: string) => ["organizations", orgId, "vehicles"] as const,
-  list: (orgId: string, query?: string) =>
-    [...vehicleKeys.all(orgId), "list", query ?? ""] as const,
+  list: (orgId: string, query?: string, branchId?: string | null) =>
+    [
+      ...vehicleKeys.all(orgId),
+      "list",
+      query ?? "",
+      branchId ?? "all",
+    ] as const,
   detail: (orgId: string, id: string) =>
     [...vehicleKeys.all(orgId), "detail", id] as const,
 };
@@ -204,14 +209,15 @@ export const reportKeys = {
 
 export const payrollKeys = {
   all: (orgId: string) => [...orgKeys.detail(orgId), "payroll"] as const,
-  payRates: (orgId: string) =>
-    [...payrollKeys.all(orgId), "pay-rates"] as const,
-  records: (orgId: string, year: number, month: number) =>
+  payRates: (orgId: string, branchId?: string) =>
+    [...payrollKeys.all(orgId), "pay-rates", branchId ?? "all"] as const,
+  records: (orgId: string, year: number, month: number, branchId?: string) =>
     [
       ...payrollKeys.all(orgId),
       "records",
       String(year),
       String(month),
+      branchId ?? "all",
     ] as const,
 };
 
@@ -224,33 +230,53 @@ export const dashboardKeys = {
 
 export const inventoryKeys = {
   all: (orgId: string) => ["organizations", orgId, "inventory"] as const,
-  parts: (orgId: string) => [...inventoryKeys.all(orgId), "parts"] as const,
-  movements: (orgId: string) =>
-    [...inventoryKeys.all(orgId), "movements"] as const,
+  parts: (orgId: string, branchId?: string | null) =>
+    branchId
+      ? ([...inventoryKeys.all(orgId), "parts", branchId] as const)
+      : ([...inventoryKeys.all(orgId), "parts"] as const),
+  movements: (orgId: string, branchId?: string | null) =>
+    branchId
+      ? ([...inventoryKeys.all(orgId), "movements", branchId] as const)
+      : ([...inventoryKeys.all(orgId), "movements"] as const),
   suppliers: (orgId: string) =>
     [...inventoryKeys.all(orgId), "suppliers"] as const,
-  purchaseOrders: (orgId: string) =>
-    [...inventoryKeys.all(orgId), "purchase-orders"] as const,
+  purchaseOrders: (orgId: string, branchId?: string | null) =>
+    branchId
+      ? ([...inventoryKeys.all(orgId), "purchase-orders", branchId] as const)
+      : ([...inventoryKeys.all(orgId), "purchase-orders"] as const),
   purchaseOrderDetail: (orgId: string, id: string) =>
     [...inventoryKeys.purchaseOrders(orgId), "detail", id] as const,
   purchaseOrderItems: (poId: string) => ["purchase-order-items", poId] as const,
-  balances: (orgId: string) =>
-    [...inventoryKeys.all(orgId), "balances"] as const,
-  thresholds: (orgId: string) =>
-    [...inventoryKeys.all(orgId), "thresholds"] as const,
+  balances: (orgId: string, branchId?: string | null) =>
+    branchId
+      ? ([...inventoryKeys.all(orgId), "balances", branchId] as const)
+      : ([...inventoryKeys.all(orgId), "balances"] as const),
+  thresholds: (orgId: string, branchId?: string | null) =>
+    branchId
+      ? ([...inventoryKeys.all(orgId), "thresholds", branchId] as const)
+      : ([...inventoryKeys.all(orgId), "thresholds"] as const),
   partsCars: (orgId: string) =>
     [...inventoryKeys.all(orgId), "parts-cars"] as const,
   partsCar: (orgId: string, carId: string) =>
     [...inventoryKeys.partsCars(orgId), carId] as const,
   partsCarParts: (orgId: string, carId: string) =>
     [...inventoryKeys.partsCars(orgId), carId, "parts"] as const,
-  reports: (orgId: string) => [...inventoryKeys.all(orgId), "reports"] as const,
-  turnover: (orgId: string) =>
-    [...inventoryKeys.reports(orgId), "turnover"] as const,
-  usageTrends: (orgId: string) =>
-    [...inventoryKeys.reports(orgId), "usage-trends"] as const,
-  slowMoving: (orgId: string) =>
-    [...inventoryKeys.reports(orgId), "slow-moving"] as const,
+  reports: (orgId: string, branchId?: string | null) =>
+    branchId
+      ? ([...inventoryKeys.all(orgId), "reports", branchId] as const)
+      : ([...inventoryKeys.all(orgId), "reports"] as const),
+  turnover: (orgId: string, branchId?: string | null) =>
+    branchId
+      ? ([...inventoryKeys.reports(orgId, branchId), "turnover"] as const)
+      : ([...inventoryKeys.reports(orgId), "turnover"] as const),
+  usageTrends: (orgId: string, branchId?: string | null) =>
+    branchId
+      ? ([...inventoryKeys.reports(orgId, branchId), "usage-trends"] as const)
+      : ([...inventoryKeys.reports(orgId), "usage-trends"] as const),
+  slowMoving: (orgId: string, branchId?: string | null) =>
+    branchId
+      ? ([...inventoryKeys.reports(orgId, branchId), "slow-moving"] as const)
+      : ([...inventoryKeys.reports(orgId), "slow-moving"] as const),
   categories: (orgId: string) =>
     [...inventoryKeys.all(orgId), "part-categories"] as const,
 };
@@ -258,12 +284,22 @@ export const inventoryKeys = {
 export const serviceReminderKeys = {
   all: (orgId: string) =>
     ["organizations", orgId, "service-reminders"] as const,
-  list: (orgId: string, vehicleId?: string) =>
-    [...serviceReminderKeys.all(orgId), "list", vehicleId ?? ""] as const,
+  list: (orgId: string, vehicleId?: string, branchId?: string) =>
+    [
+      ...serviceReminderKeys.all(orgId),
+      "list",
+      vehicleId ?? "",
+      branchId ?? "all",
+    ] as const,
   detail: (orgId: string, id: string) =>
     [...serviceReminderKeys.all(orgId), "detail", id] as const,
-  logs: (orgId: string, vehicleId?: string) =>
-    [...serviceReminderKeys.all(orgId), "logs", vehicleId ?? ""] as const,
+  logs: (orgId: string, vehicleId?: string, branchId?: string) =>
+    [
+      ...serviceReminderKeys.all(orgId),
+      "logs",
+      vehicleId ?? "",
+      branchId ?? "all",
+    ] as const,
 };
 
 export const commissionKeys = {

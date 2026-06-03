@@ -61,6 +61,7 @@ type PartRow = PartsCatalogItem & { popularity_score?: number };
 
 interface PartsTabProps {
   orgId: string;
+  branchFilter?: string | null;
   search: string;
   onSearchChange: (value: string) => void;
   onNavigate: (tab: string) => void;
@@ -68,6 +69,7 @@ interface PartsTabProps {
 
 export function PartsTab({
   orgId,
+  branchFilter,
   search,
   onSearchChange,
   onNavigate,
@@ -88,9 +90,9 @@ export function PartsTab({
     isLoading: partsLoading,
     error: partsError,
     isError: isPartsError,
-  } = usePartsCatalog(orgId);
-  const { data: balances = [] } = useInventoryBalances(orgId);
-  const { data: thresholds = [] } = useStockThresholds(orgId);
+  } = usePartsCatalog(orgId, branchFilter);
+  const { data: balances = [] } = useInventoryBalances(orgId, branchFilter);
+  const { data: thresholds = [] } = useStockThresholds(orgId, branchFilter);
 
   // Global catalog data
   const {

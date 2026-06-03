@@ -8,13 +8,15 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { WorkOrderDocument } from "@/lib/pdf/work-order-document";
 import { getOrganization } from "@/lib/services/organization-service";
 import { getWorkOrder } from "@/lib/services/work-order-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import { pdfFilename, renderToPdfBuffer } from "@/lib/utils/pdf";
 
-export const GET = createRouteHandler(async ({ params, supabase }) => {
+export const GET = createRouteHandler(async ({ params, supabase, orgId }) => {
+  await requireActiveSubscription(orgId);
   const workOrderId = params.workOrderId;
 
   // Fetch work order with services, parts, customer, vehicle
-  const workOrder = await getWorkOrder(workOrderId);
+  const workOrder = await getWorkOrder(supabase, workOrderId);
 
   // Fetch org + main branch for PDF header
   const [org, { data: branch }, { data: orgSettings }] = await Promise.all([

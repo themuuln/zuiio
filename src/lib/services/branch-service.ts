@@ -1,7 +1,7 @@
 import { revalidateTag } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
 import type {
   Branch,
   CreateBranchParams,
@@ -13,13 +13,14 @@ import { buildUpdates, type FieldMap } from "./build-updates";
  * Creates a new branch for the given organization.
  */
 export async function createBranch(
+  db: SupabaseClient,
   orgId: string,
   params: CreateBranchParams,
 ): Promise<Branch> {
   if (!params.name?.trim())
     throw new ValidationError("Branch name is required");
 
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const { data, error } = await supabase
@@ -52,9 +53,11 @@ export async function createBranch(
 /**
  * Lists all non-deleted branches for an organization.
  */
-export async function getBranches(orgId: string): Promise<Branch[]> {
-  const supabase = await createClient();
-
+export async function getBranches(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<Branch[]> {
+  const supabase = db;
   const { data, error } = await supabase
     .from("branches")
     .select(
@@ -75,11 +78,12 @@ export async function getBranches(orgId: string): Promise<Branch[]> {
  * Updates a branch. Verifies the branch belongs to the org.
  */
 export async function updateBranch(
+  db: SupabaseClient,
   branchId: string,
   orgId: string,
   params: UpdateBranchParams,
 ): Promise<Branch> {
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const trim = (v: unknown) => (v as string).trim() || null;
@@ -129,11 +133,11 @@ export async function updateBranch(
  * Soft-deletes a branch by setting deleted_at.
  */
 export async function deleteBranch(
+  db: SupabaseClient,
   branchId: string,
   orgId: string,
 ): Promise<void> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { error } = await supabase
     .from("branches")
     .update({ deleted_at: new Date().toISOString() })

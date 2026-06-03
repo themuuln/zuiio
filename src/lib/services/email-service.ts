@@ -445,6 +445,95 @@ export async function sendReminderEmail(
   return { id };
 }
 
+// ── Booking Request Email ───────────────────────────────────────
+
+export interface SendBookingRequestEmailParams {
+  to: string;
+  customerName: string;
+  customerPhone: string;
+  vehiclePlate: string;
+  notes: string | null;
+  requestedDate: string;
+  orgName: string;
+  dashboardUrl: string;
+}
+
+function renderBookingRequestEmailHtml(
+  params: SendBookingRequestEmailParams,
+): string {
+  return `
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Шинэ цаг товлох хүсэлт</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+        <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
+          <tr>
+            <td style="background-color:#ffffff;border-radius:12px;padding:40px 32px;text-align:center;">
+              <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#111827;">🔧 Шинэ цаг товлох хүсэлт</h1>
+              <p style="margin:0 0 24px;font-size:15px;color:#6b7280;">${params.orgName}</p>
+              <div style="background-color:#f3f4f6;border-radius:8px;padding:20px;margin-bottom:24px;text-align:left;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Үйлчлүүлэгч</td>
+                    <td style="padding:6px 0;font-weight:600;color:#111827;text-align:right;">${params.customerName}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Утас</td>
+                    <td style="padding:6px 0;font-weight:600;color:#111827;text-align:right;">${params.customerPhone}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Машин</td>
+                    <td style="padding:6px 0;font-weight:600;color:#111827;text-align:right;">${params.vehiclePlate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Хүссэн огноо</td>
+                    <td style="padding:6px 0;font-weight:600;color:#111827;text-align:right;">${params.requestedDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;vertical-align:top;">Тэмдэглэл</td>
+                    <td style="padding:6px 0;font-weight:400;color:#374151;text-align:right;font-style:italic;">${params.notes || "—"}</td>
+                  </tr>
+                </table>
+              </div>
+              <a href="${params.dashboardUrl}" style="display:inline-block;background-color:#2563eb;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:8px;">Хүсэлтийг харах</a>
+              <p style="margin:24px 0 0;font-size:13px;color:#9ca3af;">Энэхүү цаг товлох хүсэлтийг баталгаажуулахын тулд үйлчлүүлэгчтэй холбогдож, тохирох цагийг баталгаажуулна уу.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 32px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#9ca3af;">${params.orgName} &middot; TOLOM систем</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendBookingRequestEmail(
+  params: SendBookingRequestEmailParams,
+): Promise<{ id: string }> {
+  const html = renderBookingRequestEmailHtml(params);
+
+  const { id } = await sendEmail({
+    from: `${params.orgName} <${getFromEmail()}>`,
+    to: [params.to],
+    subject: `🔧 Шинэ захиалга — ${params.customerName} (${params.vehiclePlate})`,
+    html,
+  });
+
+  return { id };
+}
+
 /**
  * Test that SMTP is configured and the transporter can verify.
  */

@@ -22,8 +22,13 @@ export default function ErrorPage({
           Алдаа гарлаа
         </Typography.H2>
         <Typography.Muted className="text-muted-foreground">
-          Уучлаарай, системийн алдаа гарлаа. Дахин оролдоно уу.
+          {error.message || "Уучлаарай, системийн алдаа гарлаа. Дахин оролдоно уу."}
         </Typography.Muted>
+        {error.digest && (
+          <Typography.Muted className="text-xs text-muted-foreground">
+            Error ID: {error.digest}
+          </Typography.Muted>
+        )}
         <Button onClick={() => reset()} variant="default">
           Дахин оролдох
         </Button>

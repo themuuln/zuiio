@@ -85,6 +85,7 @@ import {
   useUpdateOrgSettings,
 } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import {
   type ServiceScheduleItem,
   useCreateServiceSchedule,
@@ -180,20 +181,22 @@ export default function ServiceRemindersPage() {
   const t = useTranslations();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
 
   const {
     data: schedules = [],
     isLoading,
     error,
     refetch,
-  } = useServiceSchedules(orgId);
+  } = useServiceSchedules(orgId, undefined, branchFilter);
 
   const { data: vehicles = [] } = useVehicles(orgId);
 
   const createSchedule = useCreateServiceSchedule(orgId);
   const deleteSchedule = useDeleteServiceSchedule(orgId);
   const updateSchedule = useUpdateServiceSchedule(orgId);
-  const reminderLogs = useReminderLogs(orgId);
+  const reminderLogs = useReminderLogs(orgId, undefined, branchFilter);
   const { registerTab } = useRightSidebar();
 
   const [showAdd, setShowAdd] = useState(false);
@@ -955,16 +958,27 @@ export default function ServiceRemindersPage() {
         </TabsContent>
 
         <TabsContent value="logs" className="mt-4">
-          <ReminderLogsTab orgId={orgId} />
+          <ReminderLogsTab orgId={orgId} branchFilter={branchFilter} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function ReminderLogsTab({ orgId }: { orgId: string | undefined }) {
+function ReminderLogsTab({
+  orgId,
+  branchFilter,
+}: {
+  orgId: string | undefined;
+  branchFilter: string | null;
+}) {
   const t = useTranslations();
-  const { data: logs, isLoading, error, refetch } = useReminderLogs(orgId);
+  const {
+    data: logs,
+    isLoading,
+    error,
+    refetch,
+  } = useReminderLogs(orgId, undefined, branchFilter);
 
   if (isLoading) {
     return (

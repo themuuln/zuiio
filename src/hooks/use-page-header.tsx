@@ -26,6 +26,14 @@ interface PageHeaderContextValue {
   setNewExpenseSheetOpen: (open: boolean) => void;
   isNewWorkOrderSheetOpen: boolean;
   setNewWorkOrderSheetOpen: (open: boolean) => void;
+  isNewSupplierSheetOpen: boolean;
+  setNewSupplierSheetOpen: (open: boolean) => void;
+  isNewPOSheetOpen: boolean;
+  setNewPOSheetOpen: (open: boolean) => void;
+  isNewAppointmentSheetOpen: boolean;
+  setNewAppointmentSheetOpen: (open: boolean) => void;
+  isNewPartsCarSheetOpen: boolean;
+  setNewPartsCarSheetOpen: (open: boolean) => void;
   detailSupplierId: string | null;
   setDetailSupplierId: (id: string | null) => void;
   detailExpenseId: string | null;
@@ -52,6 +60,11 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
   const [isNewVehicleDialogOpen, setNewVehicleDialogOpen] = useState(false);
   const [isNewExpenseSheetOpen, setNewExpenseSheetOpen] = useState(false);
   const [isNewWorkOrderSheetOpen, setNewWorkOrderSheetOpen] = useState(false);
+  const [isNewSupplierSheetOpen, setNewSupplierSheetOpen] = useState(false);
+  const [isNewPOSheetOpen, setNewPOSheetOpen] = useState(false);
+  const [isNewAppointmentSheetOpen, setNewAppointmentSheetOpen] =
+    useState(false);
+  const [isNewPartsCarSheetOpen, setNewPartsCarSheetOpen] = useState(false);
   const [detailSupplierId, setDetailSupplierId] = useState<string | null>(null);
   const [detailExpenseId, setDetailExpenseId] = useState<string | null>(null);
   const [detailPOId, setDetailPOId] = useState<string | null>(null);
@@ -81,6 +94,14 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
         setNewExpenseSheetOpen,
         isNewWorkOrderSheetOpen,
         setNewWorkOrderSheetOpen,
+        isNewSupplierSheetOpen,
+        setNewSupplierSheetOpen,
+        isNewPOSheetOpen,
+        setNewPOSheetOpen,
+        isNewAppointmentSheetOpen,
+        setNewAppointmentSheetOpen,
+        isNewPartsCarSheetOpen,
+        setNewPartsCarSheetOpen,
         detailSupplierId,
         setDetailSupplierId,
         detailExpenseId,

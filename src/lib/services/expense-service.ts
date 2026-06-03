@@ -1,8 +1,9 @@
 import { revalidateTag } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import { withBranchFilter, resolveBranchId } from "@/lib/supabase/with-branch";
 import type {
   CreateExpenseCategoryParams,
   CreateExpenseParams,
@@ -96,11 +97,11 @@ const DEFAULT_CATEGORIES = [
  * Seeds default expense categories for an org if none exist yet.
  */
 export async function seedDefaultExpenseCategories(
+  db: SupabaseClient,
   orgId: string,
   userId: string,
 ): Promise<void> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { count } = await supabase
     .from("expense_categories")
     .select("*", { count: "exact", head: true })
@@ -127,6 +128,7 @@ export async function seedDefaultExpenseCategories(
 
 // ── Get expenses list ──────────────────────────────
 export async function getExpenses(
+  db: SupabaseClient,
   orgId: string,
   options?: {
     search?: string;
@@ -137,10 +139,10 @@ export async function getExpenses(
     limit?: number;
     offset?: number;
     overdue?: boolean;
+    branchId?: string | null;
   },
 ): Promise<ExpenseWithCategory[]> {
-  const supabase = await createClient();
-
+  const supabase = db;
   let query = supabase
     .from("expenses")
     .select(
@@ -149,6 +151,8 @@ export async function getExpenses(
     .eq("organization_id", orgId)
     .is("deleted_at", null)
     .order("expense_date", { ascending: false });
+
+  if (options?.branchId) query = withBranchFilter(query, options.branchId);
 
   if (options?.categoryId) {
     query = query.eq("category_id", options.categoryId);
@@ -204,11 +208,11 @@ export async function getExpenses(
 
 // ── Get single expense ─────────────────────────────
 export async function getExpense(
+  db: SupabaseClient,
   id: string,
   orgId: string,
 ): Promise<ExpenseWithCategory> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data, error } = await supabase
     .from("expenses")
     .select("*, expense_categories(*)")
@@ -231,9 +235,11 @@ export async function getExpense(
 }
 
 // ── Get expense stats ──────────────────────────────
-export async function getExpenseStats(orgId: string): Promise<ExpenseStats> {
-  const supabase = await createClient();
-
+export async function getExpenseStats(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<ExpenseStats> {
+  const supabase = db;
   const { data: allExpenses } = await supabase
     .from("expenses")
     .select(
@@ -321,6 +327,7 @@ export async function getExpenseStats(orgId: string): Promise<ExpenseStats> {
 
 // ── Create expense ─────────────────────────────────
 export async function createExpense(
+  db: SupabaseClient,
   orgId: string,
   params: CreateExpenseParams,
   userId: string,
@@ -333,13 +340,17 @@ export async function createExpense(
     throw new ValidationError("Amount must be greater than 0");
   }
 
-  const supabase = await createClient();
+  const supabase = db;
+
+  const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
+    strict: false,
+  });
 
   const { data, error } = await supabase
     .from("expenses")
     .insert({
       organization_id: orgId,
-      branch_id: params.branchId ?? null,
+      branch_id: resolvedBranchId,
       category_id: params.categoryId ?? null,
       vendor_name: params.vendorName?.trim() || null,
       description: params.description.trim(),
@@ -383,13 +394,13 @@ export async function createExpense(
 
 // ── Update expense ─────────────────────────────────
 export async function updateExpense(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   params: UpdateExpenseParams,
   userId: string,
 ): Promise<Expense> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data: existing, error: fetchError } = await supabase
     .from("expenses")
     .select(
@@ -445,12 +456,12 @@ export async function updateExpense(
 
 // ── Delete expense (soft) ──────────────────────────
 export async function deleteExpense(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   userId: string,
 ): Promise<void> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data: existing } = await supabase
     .from("expenses")
     .select("id")
@@ -483,10 +494,10 @@ export async function deleteExpense(
 
 // ── Get expense categories ─────────────────────────
 export async function getExpenseCategories(
+  db: SupabaseClient,
   orgId: string,
 ): Promise<ExpenseCategory[]> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data, error } = await supabase
     .from("expense_categories")
     .select(
@@ -502,6 +513,7 @@ export async function getExpenseCategories(
 
 // ── Create expense category ────────────────────────
 export async function createExpenseCategory(
+  db: SupabaseClient,
   orgId: string,
   params: CreateExpenseCategoryParams,
   userId: string,
@@ -510,7 +522,7 @@ export async function createExpenseCategory(
     throw new ValidationError("Category name is required");
   }
 
-  const supabase = await createClient();
+  const supabase = db;
 
   // Check for duplicate
   const { data: existing } = await supabase
@@ -553,13 +565,13 @@ export async function createExpenseCategory(
 
 // ── Update expense category ────────────────────────
 export async function updateExpenseCategory(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   params: UpdateExpenseCategoryParams,
   userId: string,
 ): Promise<ExpenseCategory> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const updates = buildUpdates(params, expenseCategoryFieldMap);
   updates.updated_by = userId;
 
@@ -589,12 +601,12 @@ export async function updateExpenseCategory(
 
 // ── Delete expense category (soft) ─────────────────
 export async function deleteExpenseCategory(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   userId: string,
 ): Promise<void> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { error } = await supabase
     .from("expense_categories")
     .update({ deleted_at: new Date().toISOString(), updated_by: userId })

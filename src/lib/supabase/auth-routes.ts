@@ -24,6 +24,7 @@ export interface RouteMatch {
   isInviteRoute: boolean;
   isPricingRoute: boolean;
   isPublicRoute: boolean;
+  isBookingRoute: boolean;
   isLoginRoute: boolean;
   isOwnerRoute: boolean;
   isManagerRoute: boolean;
@@ -38,6 +39,7 @@ export function matchRoutes(pathname: string): RouteMatch {
 
   const isAuthRoute = p.includes("/auth/");
   const isInvoiceRoute = p.startsWith("/invoice/");
+  const isBookingRoute = p.startsWith("/booking/");
   const isPortalRoute = p.startsWith("/portal");
   const isInviteRoute = p.startsWith("/invite/");
   const isPricingRoute = p.startsWith("/pricing");
@@ -74,6 +76,7 @@ export function matchRoutes(pathname: string): RouteMatch {
     isAuthRoute,
     isInvoiceRoute,
     isPortalRoute,
+    isBookingRoute,
     isInviteRoute,
     isPricingRoute,
     isPublicRoute,

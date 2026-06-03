@@ -35,6 +35,7 @@ import {
   usePartsCatalog,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import type { InventoryMovement } from "@/lib/types";
 
 const MOVEMENT_TYPES = [
@@ -61,6 +62,8 @@ export default function MovementsPage() {
   const now = useClientNow();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
   const [typeFilter, setTypeFilter] = useState("");
   const [search, setSearch] = useState("");
   const [showDialog, setShowDialog] = useState(false);
@@ -68,6 +71,7 @@ export default function MovementsPage() {
   const { data: movements = [], isLoading } = useInventoryMovements(
     orgId,
     typeFilter,
+    branchFilter,
   );
   const { data: parts = [] } = usePartsCatalog(orgId);
   const createMovement = useCreateMovement(orgId);

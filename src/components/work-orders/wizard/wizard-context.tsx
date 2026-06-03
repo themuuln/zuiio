@@ -145,6 +145,7 @@ interface WizardActions {
     value: number | string,
   ) => void;
   removeService: (idx: number) => void;
+  setServiceLines: React.Dispatch<React.SetStateAction<ServiceLine[]>>;
 
   setPartSearch: (v: string) => void;
   addPartFromCatalog: (part: PartsCatalogItem) => void;
@@ -166,8 +167,6 @@ interface WizardActions {
   addAllFromLastVisit: () => void;
 
   handleCreate: () => Promise<void>;
-  // handleDiscardDraft: () => void; // draft feature hidden
-  // handleRestoreDraft: () => void; // draft feature hidden
 }
 
 type WizardContextType = WizardState & WizardActions;
@@ -190,7 +189,6 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
   const { push } = useRouter();
   const searchParams = useSearchParams();
   const preselectedCustomerId = searchParams.get("customerId");
-  const preselectedVehicleId = searchParams.get("vehicleId");
 
   const [customerSearch, setCustomerSearch] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -241,14 +239,10 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
   const [showLastVisitSuggestions, setShowLastVisitSuggestions] =
     useState(false);
 
-  // ── Draft auto-save state ──────────────────────────────────────
-  const [draftData, setDraftData] = useState<WizardDraft | null>(null);
-
-  const [_draftRestored, setDraftRestored] = useState(false);
+  // ── Draft state (restore UI hidden per user request) ───────────
+  const [_draftData, setDraftData] = useState<WizardDraft | null>(null);
+  const [_draftRestored, _setDraftRestored] = useState(false);
   const draftCheckedRef = useRef(false);
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile"],
@@ -282,20 +276,6 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
       setSelectedCustomer(preselectedCustomer);
     }
   }, [preselectedCustomer, selectedCustomer]);
-
-  // Auto-select vehicle from URL param
-  const { data: preselectedVehicle } = useQuery({
-    queryKey: ["preselected-vehicle", orgId, preselectedVehicleId],
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/vehicles/${preselectedVehicleId}`,
-      );
-      const json = await res.json();
-      return json.data as Vehicle;
-    },
-    enabled: !!orgId && !!preselectedVehicleId,
-    staleTime: 30_000,
-  });
 
   const { data: catalogData, isInitialLoading: catalogLoading } =
     useServiceCatalog(orgId);
@@ -417,9 +397,20 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
     }
   }, [vehicleLastVisitData, selectedVehicle, selectedCustomer]);
 
-  // ── Draft auto-save effects ────────────────────────────────────
+  // ── beforeunload warning ─────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedDataRef.current) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
 
-  // 1. Check for existing draft on mount
+  // ── Draft: check for existing data on mount ────────────────────
+  // Currently disabled because the draft restore UI is hidden per user request.
+  // When re-enabling, uncomment the restore effects below.
   useEffect(() => {
     if (!orgId || draftCheckedRef.current) return;
     draftCheckedRef.current = true;
@@ -434,59 +425,19 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
     }
   }, [orgId]);
 
-  // 2. Debounced auto-save on critical state changes
-  useEffect(() => {
-    if (!orgId) return;
-    const draft: WizardDraft = {
-      selectedCustomerId: selectedCustomer?.id ?? null,
-      selectedVehicleId: selectedVehicle?.id ?? null,
-      complaint,
-      diagnosisLabelId,
-      description,
-      selectedMechanicId: selectedMechanic || null,
-      serviceLines,
-      partLines,
-      savedAt: Date.now(),
-    };
-    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-    autoSaveTimerRef.current = setTimeout(() => {
-      try {
-        localStorage.setItem(DRAFT_KEY(orgId), JSON.stringify(draft));
-      } catch {
-        // localStorage full or unavailable
-      }
-    }, 2000);
-    return () => {
-      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-    };
-  }, [
-    orgId,
-    selectedCustomer?.id,
-    selectedVehicle?.id,
-    complaint,
-    diagnosisLabelId,
-    description,
-    selectedMechanic,
-    serviceLines,
-    partLines,
-  ]);
-
-  // 3. beforeunload warning
-  useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedDataRef.current) {
-        e.preventDefault();
-      }
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, []);
-
-  // ── Draft restore queries (hidden per user request) ─────────────
+  // ── Draft restore placeholder (hidden per user request) ───────
   // const { data: draftRestoredCustomer } = useQuery({ ... });
   // useEffect(() => { ... set customer from draft ... }, [draftRestoredCustomer]);
-  // const { data: draftRestoredVehicle } = useQuery({ ... });
-  // useEffect(() => { ... set vehicle from draft ... }, [draftRestoredVehicle]);
+  // useEffect(() => {
+  //   if (!draftData) return;
+  //   setComplaint(draftData.complaint ?? "");
+  //   setDiagnosisLabelId(draftData.diagnosisLabelId ?? "");
+  //   setDescription(draftData.description ?? "");
+  //   setSelectedMechanic(draftData.selectedMechanicId ?? "");
+  //   if (draftData.serviceLines?.length) setServiceLines(draftData.serviceLines);
+  //   if (draftData.partLines?.length) setPartLines(draftData.partLines);
+  //   setDraftRestored(true);
+  // }, [draftData]);
 
   const handleSelectCustomer = useCallback((customer: Customer) => {
     setSelectedCustomer(customer);
@@ -638,16 +589,19 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
     (part: PartsCatalogItem) => {
       const price = part.default_price ?? 0;
       const pname = part.name.toLowerCase();
-      // Optimistically use catalog price; upgrade to vehicle-specific if available
+      // Check price history for a better price
+      const historyPrice = partHistory[pname];
+      const effectivePrice =
+        historyPrice && historyPrice > 0 ? historyPrice : price;
       setPartLines((prev) => [
         ...prev,
         {
           part_name: part.name,
           part_number: part.part_number ?? "",
           quantity: 1,
-          unit_price: price,
-          final_price: price,
-          last_price: undefined,
+          unit_price: effectivePrice,
+          final_price: effectivePrice,
+          last_price: historyPrice ? effectivePrice : undefined,
         },
       ]);
       setPartSearch("");
@@ -693,7 +647,7 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
         });
       }
     },
-    [orgId, selectedVehicle],
+    [orgId, selectedVehicle, partHistory],
   );
 
   const addPart = useCallback(() => {
@@ -830,28 +784,6 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
     );
   };
 
-  const _handleDiscardDraft = useCallback(() => {
-    if (!orgId) return;
-    try {
-      localStorage.removeItem(DRAFT_KEY(orgId));
-    } catch {
-      /* ignore */
-    }
-    setDraftData(null);
-    setDraftRestored(false);
-  }, [orgId]);
-
-  const _handleRestoreDraft = useCallback(() => {
-    if (!draftData) return;
-    setComplaint(draftData.complaint ?? "");
-    setDiagnosisLabelId(draftData.diagnosisLabelId ?? "");
-    setDescription(draftData.description ?? "");
-    setSelectedMechanic(draftData.selectedMechanicId ?? "");
-    if (draftData.serviceLines?.length) setServiceLines(draftData.serviceLines);
-    if (draftData.partLines?.length) setPartLines(draftData.partLines);
-    setDraftRestored(true);
-  }, [draftData]);
-
   const customerRef = useRef<HTMLDivElement>(null);
 
   const value: WizardContextType = {
@@ -909,6 +841,7 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
     addService,
     updateService,
     removeService,
+    setServiceLines,
 
     setPartSearch,
     addPartFromCatalog,
@@ -925,8 +858,6 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
     addAllFromLastVisit,
 
     handleCreate,
-    // handleDiscardDraft, // draft feature hidden
-    // handleRestoreDraft, // draft feature hidden
   };
 
   (value as unknown as Record<string, unknown>).customerRef = customerRef;

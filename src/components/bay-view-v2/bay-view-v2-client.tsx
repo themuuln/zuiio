@@ -1,36 +1,7 @@
 "use client";
 
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  TouchSensor,
-  useDroppable,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  Activity,
-  ArrowDown,
-  ArrowUp,
-  Car,
-  CheckCircle2,
-  Clock,
-  Columns3,
-  GripVertical,
-  KeyRound,
-  LayoutDashboard,
-  LayoutGrid,
-  List,
-  Minus,
-  Plus,
-  RefreshCw,
-  Search,
-  Users,
-  Wallet,
-  Wrench,
-  X,
-} from "lucide-react";
+import { DndContext, DragOverlay, useSensor, useSensors } from "@dnd-kit/core";
+import { Building2, GripVertical, List, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -45,45 +16,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Typography } from "@/components/ui/typography";
 import { usePolling } from "@/hooks/use-polling";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
-import type {
-  BaySlotData,
-  BayViewData,
-  ShiftReport,
-} from "@/lib/services/bay-view-service";
+import type { BayViewData, ShiftReport } from "@/lib/services/bay-view-service";
 import {
   assignVehicleToBay,
   getBayViewDataFresh,
   getShiftReport,
 } from "@/lib/services/bay-view-service";
+import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { Vehicle, WorkOrder } from "@/lib/types";
-import { cn, formatMNT, formatPlateNumber } from "@/lib/utils";
+import { formatPlateNumber } from "@/lib/utils";
 import { useBayActionHandlers } from "./_bay-action-handlers";
 import { useBayDragHandlers } from "./_bay-drag-handlers";
+import { BayViewErrorState } from "./_error-state";
+import { GridView } from "./_grid-view";
+import { KanbanView } from "./_kanban-view";
+import { KpiCards } from "./_kpi-cards";
+import { ListView } from "./_list-view";
+import { BayViewLoadingSkeleton } from "./_loading-skeleton";
+import { Toolbar } from "./_toolbar";
+import {
+  type ActiveDragState,
+  GuardedPointerSensor,
+  GuardedTouchSensor,
+  type ToastState,
+  type ViewMode,
+} from "./_types";
 import { AssignDialog } from "./assign-dialog";
-import { BayCard, BayCardDragPreview, STATUS_BADGE_CLASS } from "./bay-card";
+import { BayCardDragPreview } from "./bay-card";
 import { MechanicPanel } from "./mechanic-panel";
 import { MechanicRegistrationDialog } from "./mechanic-registration-dialog";
 import type { PickupCompleteData } from "./pickup-complete-dialog";
@@ -98,86 +60,12 @@ import { ToastMessage } from "./toast-message";
 import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
 import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
 
-type ViewMode = "grid" | "kanban" | "list";
-
-function shouldIgnoreDragActivation(target: EventTarget | null) {
-  if (!(target instanceof HTMLElement)) return false;
-
-  return !!target.closest(
-    '[data-no-dnd="true"], button, a, input, textarea, select',
-  );
-}
-
-class GuardedPointerSensor extends PointerSensor {
-  static activators = [
-    {
-      eventName: "onPointerDown" as const,
-      handler: ({ nativeEvent }: React.PointerEvent) =>
-        !shouldIgnoreDragActivation(nativeEvent.target),
-    },
-  ];
-}
-
-class GuardedTouchSensor extends TouchSensor {
-  static activators = [
-    {
-      eventName: "onTouchStart" as const,
-      handler: ({ nativeEvent }: React.TouchEvent) =>
-        !shouldIgnoreDragActivation(nativeEvent.target),
-    },
-  ];
-}
-
-const VIEW_OPTIONS: {
-  mode: ViewMode;
-  icon: typeof LayoutGrid;
-  labelKey: string;
-}[] = [
-  { mode: "grid", icon: LayoutGrid, labelKey: "gridView" },
-  { mode: "kanban", icon: Columns3, labelKey: "kanbanView" },
-  { mode: "list", icon: List, labelKey: "listView" },
-];
-
-interface ToastState {
-  message: string;
-  variant: "info" | "error";
-}
-
-interface ActiveDragState {
-  type: string;
-  label: string;
-  previewBay?: BaySlotData | null;
-}
-
-function KanbanDropColumn({
-  status,
-  children,
-  className,
-}: {
-  status: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: `kanban-status-${encodeURIComponent(status)}`,
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={cn(
-        "transition-colors duration-200 rounded-xl",
-        isOver && "bg-primary/5 ring-1 ring-primary/20",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
 export function BayViewV2Client() {
   const t = useTranslations("bayView");
+  const selectedBranchId = useSelectedBranchId();
+  const setSelectedBranchId = useSetSelectedBranchId();
+  const branchFilter =
+    selectedBranchId === "all" ? undefined : selectedBranchId;
   const [data, setData] = useState<BayViewData | null>(null);
   const [shiftReport, setShiftReport] = useState<ShiftReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -314,21 +202,24 @@ export function BayViewV2Client() {
     });
   }, []);
 
-  const fetchData = useCallback(async (showLoader = false) => {
-    if (showLoader) setLoading(true);
-    try {
-      setError(null);
-      const [result, report] = await Promise.all([
-        getBayViewDataFresh(),
-        getShiftReport().catch(() => null),
-      ]);
-      setData(result);
-      if (report) setShiftReport(report);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load");
-    }
-    setLoading(false);
-  }, []);
+  const fetchData = useCallback(
+    async (showLoader = false) => {
+      if (showLoader) setLoading(true);
+      try {
+        setError(null);
+        const [result, report] = await Promise.all([
+          getBayViewDataFresh(branchFilter),
+          getShiftReport(branchFilter).catch(() => null),
+        ]);
+        setData(result);
+        if (report) setShiftReport(report);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load");
+      }
+      setLoading(false);
+    },
+    [branchFilter],
+  );
 
   const pollingCb = useCallback(() => fetchData(false), [fetchData]);
   const polling = usePolling(pollingCb, 30000);
@@ -694,6 +585,25 @@ export function BayViewV2Client() {
     polling.resume,
   ]);
 
+  // Search across all branch sections when in "All" mode
+  const searchedBranchSections = useMemo(() => {
+    if (!data?.branchSections) return undefined;
+    if (!baySearchQuery.trim()) return data.branchSections;
+    const q = baySearchQuery.toLowerCase();
+    return data.branchSections.map((section) => ({
+      ...section,
+      bays: section.bays.filter((b) => {
+        const wo = b.workOrder;
+        if (!wo?.vehicle) return false;
+        return (
+          wo.vehicle.plate_number?.toLowerCase().includes(q) ||
+          wo.vehicle.make?.toLowerCase().includes(q) ||
+          wo.vehicle.model?.toLowerCase().includes(q)
+        );
+      }),
+    }));
+  }, [data?.branchSections, baySearchQuery]);
+
   const searchedBays = useFuzzySearch(filteredBays, baySearchQuery, {
     keys: [
       "workOrder.vehicle.plate_number" as string,
@@ -746,44 +656,11 @@ export function BayViewV2Client() {
   ]);
 
   if (loading && !data) {
-    return (
-      <div className="flex flex-col gap-5 p-4">
-        <div className="flex items-center justify-between border-b pb-4">
-          <Skeleton className="h-7 w-44" />
-          <Skeleton className="h-9 w-48" />
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-2">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <Skeleton key={i} className="h-44 rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
+    return <BayViewLoadingSkeleton />;
   }
 
   if (error || !data) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 gap-3 min-h-[400px]">
-        <Typography.Muted className="text-base text-muted-foreground">
-          {error
-            ? "Couldn't load bay view. Check your internet connection."
-            : t("noData")}
-        </Typography.Muted>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fetchData(true)}
-          className="rounded-lg shadow-sm font-semibold"
-        >
-          {t("retry")}
-        </Button>
-      </div>
-    );
+    return <BayViewErrorState error={error} t={t} fetchData={fetchData} />;
   }
 
   const occupiedBays = data.bays.filter((b) => b.workOrder).length;
@@ -815,805 +692,230 @@ export function BayViewV2Client() {
     >
       <div className="flex h-full flex-col bg-muted/20 overflow-hidden rounded-2xl border border-border/40 shadow-sm">
         {/* Sleek Controls Toolbar */}
-        <div className="flex-shrink-0 border-b border-border/40 bg-background/80 backdrop-blur-md p-3 select-none">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            {/* Left Controls (View Selector, Filter, Refresh) */}
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Segmented view selector */}
-              <div className="flex items-center gap-0.5 rounded-lg border border-border/50 bg-muted/40 p-0.5 shadow-sm h-8">
-                {VIEW_OPTIONS.map((opt) => {
-                  const Icon = opt.icon;
-                  const isActive = viewMode === opt.mode;
-                  return (
-                    <button
-                      key={opt.mode}
-                      type="button"
-                      onClick={() => setViewMode(opt.mode)}
-                      className={cn(
-                        "flex items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-all cursor-pointer h-full",
-                        isActive
-                          ? "bg-background text-foreground shadow-sm font-bold border border-border/30"
-                          : "text-muted-foreground/80 hover:bg-muted/70 hover:text-foreground",
-                      )}
-                      title={t(opt.labelKey)}
-                    >
-                      <Icon className="size-3.5" />
-                      <span className="hidden md:inline text-[11px]">
-                        {t(opt.labelKey)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+        <Toolbar
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          userIsMechanic={userIsMechanic}
+          myJobsOnly={myJobsOnly}
+          setMyJobsOnly={setMyJobsOnly}
+          fetchData={fetchData}
+          baySearchQuery={baySearchQuery}
+          setBaySearchQuery={setBaySearchQuery}
+          readyWosCount={readyWosCount}
+          t={t}
+          batchCompletePending={batchCompletePending}
+          setBatchCompleteDialogOpen={setBatchCompleteDialogOpen}
+          setShowVehicleReg={setShowVehicleReg}
+          setShowMechanicReg={setShowMechanicReg}
+          setShowShiftReport={setShowShiftReport}
+          setShowPinSettings={setShowPinSettings}
+          bayCountMutationInFlightRef={bayCountMutationInFlightRef}
+          bayCountDebounceRef={bayCountDebounceRef}
+          bayCountPending={bayCountPending}
+          bayCountInputValue={bayCountInputValue}
+          setBayCountInputValue={setBayCountInputValue}
+          applyBayCountChange={applyBayCountChange}
+          bayCount={data.bayCount}
+          branches={data.branches}
+          selectedBranchId={selectedBranchId}
+          onBranchChange={(id) => {
+            setSelectedBranchId(id);
+          }}
+        />
 
-              {/* My Jobs Filter Toggle */}
-              {userIsMechanic && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={myJobsOnly ? "default" : "outline"}
-                  onClick={() => setMyJobsOnly(!myJobsOnly)}
-                  className={cn(
-                    "h-8 rounded-lg text-xs font-semibold cursor-pointer border-border/50 shadow-sm",
-                    myJobsOnly
-                      ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                      : "hover:bg-accent hover:text-foreground text-muted-foreground",
-                  )}
-                >
-                  {myJobsOnly ? t("myJobs") : t("allJobs")}
-                </Button>
-              )}
-
-              {/* Refresh Button */}
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                onClick={() => fetchData(true)}
-                title={t("refresh")}
-                className="rounded-lg border-border/50 text-muted-foreground shadow-sm hover:text-foreground cursor-pointer"
-              >
-                <RefreshCw className="size-3.5" />
-              </Button>
-
-              {/* Search Bar */}
-              <div className="relative min-w-[180px] max-w-[220px]">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/50" />
-                <Input
-                  type="text"
-                  value={baySearchQuery}
-                  onChange={(e) => setBaySearchQuery(e.target.value)}
-                  placeholder="Search plate, make, model..."
-                  className="h-8 pl-7 pr-7 text-xs"
-                />
-                {baySearchQuery && (
-                  <Button
-                    size="icon-xs"
-                    variant="ghost"
-                    onClick={() => setBaySearchQuery("")}
-                    className="absolute right-0.5 top-1/2 size-6 -translate-y-1/2 p-0 text-muted-foreground/50"
-                  >
-                    <X className="size-3" />
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* Right Controls (Action Buttons & Bay Count) */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Batch Complete Button — only when 2+ ready items */}
-              {readyWosCount >= 2 && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="default"
-                  disabled={batchCompletePending}
-                  onClick={() => setBatchCompleteDialogOpen(true)}
-                  className="h-8 gap-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold shadow-sm hover:bg-emerald-700 cursor-pointer"
-                >
-                  {batchCompletePending ? (
-                    <Spinner className="size-3.5" />
-                  ) : (
-                    <CheckCircle2 className="size-3.5" />
-                  )}
-                  {batchCompletePending
-                    ? t("batchCompleteProcessing")
-                    : t("batchComplete", { count: readyWosCount })}
-                </Button>
-              )}
-
-              {/* Quick Admin Actions Box */}
-              <div className="flex items-center gap-1 rounded-lg border border-border/50 bg-card px-1 shadow-sm h-8">
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        type="button"
-                        size="icon-sm"
-                        variant="ghost"
-                        onClick={() => setShowVehicleReg(true)}
-                        className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
-                      />
-                    }
-                  >
-                    <Car className="size-4" />
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="text-[11px] font-semibold"
-                  >
-                    {t("registerVehicle")}
-                  </TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        type="button"
-                        size="icon-sm"
-                        variant="ghost"
-                        onClick={() => setShowMechanicReg(true)}
-                        className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
-                      />
-                    }
-                  >
-                    <Wrench className="size-4" />
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="text-[11px] font-semibold"
-                  >
-                    {t("registerMechanic")}
-                  </TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        type="button"
-                        size="icon-sm"
-                        variant="ghost"
-                        onClick={() => setShowShiftReport(true)}
-                        className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
-                      />
-                    }
-                  >
-                    <LayoutDashboard className="size-4" />
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="text-[11px] font-semibold"
-                  >
-                    {t("shiftReport")}
-                  </TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        type="button"
-                        size="icon-sm"
-                        variant="ghost"
-                        onClick={() => setShowPinSettings(true)}
-                        className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
-                      />
-                    }
-                  >
-                    <KeyRound className="size-4" />
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="text-[11px] font-semibold"
-                  >
-                    {t("bayPinSettings")}
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-
-              {/* Digital Bay Counter */}
-              <div className="flex items-center gap-1.5 border border-border/50 bg-card rounded-lg p-0.5 pr-2.5 pl-1.5 shadow-sm h-8">
-                <span className="text-[10px] font-mono font-black text-muted-foreground/75 uppercase tracking-wider px-1 select-none">
-                  Bays
-                </span>
-                <div className="flex items-center gap-0.5 rounded border border-border/40 bg-muted/20 p-0.5 h-full">
-                  <Button
-                    type="button"
-                    size="icon-xs"
-                    variant="ghost"
-                    onClick={async () => {
-                      if (!data || bayCountMutationInFlightRef.current) return;
-                      const next = Math.max(1, data.bayCount - 1);
-                      if (next === data.bayCount) return;
-                      setBayCountInputValue(next);
-                      await applyBayCountChange(next);
-                    }}
-                    disabled={bayCountPending || data.bayCount <= 1}
-                    className="size-5 rounded hover:bg-background cursor-pointer text-muted-foreground"
-                  >
-                    <Minus className="size-2.5" />
-                  </Button>
-                  <input
-                    type="number"
-                    min={1}
-                    max={50}
-                    value={bayCountInputValue}
-                    onChange={(e) => {
-                      const raw = e.target.value;
-                      setBayCountInputValue(raw);
-                      const next = parseInt(raw, 10);
-                      if (Number.isNaN(next) || next < 1 || next > 50) return;
-
-                      if (bayCountDebounceRef.current)
-                        clearTimeout(bayCountDebounceRef.current);
-                      bayCountDebounceRef.current = setTimeout(() => {
-                        applyBayCountChange(next);
-                      }, 500);
-                    }}
-                    onBlur={() => {
-                      if (bayCountDebounceRef.current) {
-                        clearTimeout(bayCountDebounceRef.current);
-                        bayCountDebounceRef.current = null;
-                      }
-                      const next = parseInt(String(bayCountInputValue), 10);
-                      if (Number.isNaN(next) || next < 1 || next > 50) {
-                        setBayCountInputValue(data.bayCount);
-                        return;
-                      }
-                      applyBayCountChange(next);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        (e.target as HTMLInputElement).blur();
-                      }
-                    }}
-                    disabled={bayCountPending}
-                    className="h-5 w-7 bg-transparent border-0 text-center text-xs font-bold font-mono text-foreground focus:outline-none focus:ring-0 focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                  />
-                  <Button
-                    type="button"
-                    size="icon-xs"
-                    variant="ghost"
-                    onClick={async () => {
-                      if (!data || bayCountMutationInFlightRef.current) return;
-                      const next = Math.min(50, data.bayCount + 1);
-                      if (next === data.bayCount) return;
-                      setBayCountInputValue(next);
-                      await applyBayCountChange(next);
-                    }}
-                    disabled={bayCountPending || data.bayCount >= 50}
-                    className="size-5 rounded hover:bg-background cursor-pointer text-muted-foreground"
-                  >
-                    <Plus className="size-2.5" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bento Statistics Grid Header */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-3 pt-3 flex-shrink-0 bg-muted/10 border-b border-border/40">
-          {/* Card 1: Bay Utilization */}
-          <Card className="bg-card/65 backdrop-blur border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 p-3.5 flex flex-col gap-2 rounded-xl">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                {t("bayUtilization")}
-              </span>
-              <div className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400">
-                <Activity className="size-4" />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xl font-bold font-mono tracking-tight">
-                {shiftReport?.bayUtilization ?? 0}%
-                {trendDelta && trendDelta.bayUtilization !== 0 && (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-0.5 text-xs font-semibold ml-1.5",
-                      trendDelta.bayUtilization > 0
-                        ? "text-emerald-500"
-                        : "text-red-500",
-                    )}
-                  >
-                    {trendDelta.bayUtilization > 0 ? (
-                      <ArrowUp className="size-2.5" />
-                    ) : (
-                      <ArrowDown className="size-2.5" />
-                    )}
-                    {Math.abs(trendDelta.bayUtilization)}%
-                  </span>
-                )}
-              </span>
-              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                  style={{ width: `${shiftReport?.bayUtilization ?? 0}%` }}
-                />
-              </div>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-medium">
-              {occupiedBays} of {data.bayCount} bays occupied
-            </span>
-          </Card>
-
-          {/* Card 2: Active Workloads */}
-          <Card className="bg-card/65 backdrop-blur border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 p-3.5 flex flex-col justify-between rounded-xl">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                {t("activeJobs")}
-              </span>
-              <div className="flex size-7 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400">
-                <Wrench className="size-4" />
-              </div>
-            </div>
-            <div className="flex items-baseline gap-1 mt-1">
-              <span className="text-xl font-bold font-mono tracking-tight">
-                {shiftReport?.activeJobs ?? 0}
-                {trendDelta && trendDelta.activeJobs !== 0 && (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-0.5 text-xs font-semibold ml-1.5",
-                      trendDelta.activeJobs > 0
-                        ? "text-emerald-500"
-                        : "text-red-500",
-                    )}
-                  >
-                    {trendDelta.activeJobs > 0 ? (
-                      <ArrowUp className="size-2.5" />
-                    ) : (
-                      <ArrowDown className="size-2.5" />
-                    )}
-                    {Math.abs(trendDelta.activeJobs)}
-                  </span>
-                )}
-              </span>
-              <span className="text-[10px] text-muted-foreground font-medium">
-                active
-              </span>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-medium mt-1">
-              +{data.waitingQueue.length} in waiting queue
-            </span>
-          </Card>
-
-          {/* Card 3: Completed Today */}
-          <Card className="bg-card/65 backdrop-blur border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 p-3.5 flex flex-col justify-between rounded-xl">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                {t("completedToday")}
-              </span>
-              <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="size-4" />
-              </div>
-            </div>
-            <div className="flex items-baseline gap-1 mt-1">
-              <span className="text-xl font-bold font-mono tracking-tight">
-                {shiftReport?.completedToday ?? 0}
-                {trendDelta && trendDelta.completedToday !== 0 && (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-0.5 text-xs font-semibold ml-1.5",
-                      trendDelta.completedToday > 0
-                        ? "text-emerald-500"
-                        : "text-red-500",
-                    )}
-                  >
-                    {trendDelta.completedToday > 0 ? (
-                      <ArrowUp className="size-2.5" />
-                    ) : (
-                      <ArrowDown className="size-2.5" />
-                    )}
-                    {Math.abs(trendDelta.completedToday)}
-                  </span>
-                )}
-              </span>
-              <span className="text-[10px] text-muted-foreground font-medium">
-                completed
-              </span>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-medium mt-1">
-              Avg duration: {shiftReport?.avgDurationMinutes ?? 0}m
-            </span>
-          </Card>
-
-          {/* Card 4: Revenue Today */}
-          <Card className="bg-card/65 backdrop-blur border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 p-3.5 flex flex-col justify-between rounded-xl">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                {t("revenueToday")}
-              </span>
-              <div className="flex size-7 items-center justify-center rounded-lg bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400">
-                <Wallet className="size-4" />
-              </div>
-            </div>
-            <div className="flex items-baseline gap-1 mt-1">
-              <span className="text-xl font-bold font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
-                {formatMNT(shiftReport?.revenueToday ?? 0)}
-                {trendDelta && trendDelta.revenueToday !== 0 && (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-0.5 text-xs font-semibold ml-1.5",
-                      trendDelta.revenueToday > 0
-                        ? "text-emerald-500"
-                        : "text-red-500",
-                    )}
-                  >
-                    {trendDelta.revenueToday > 0 ? (
-                      <ArrowUp className="size-2.5" />
-                    ) : (
-                      <ArrowDown className="size-2.5" />
-                    )}
-                    {formatMNT(Math.abs(trendDelta.revenueToday))}
-                  </span>
-                )}
-              </span>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-medium mt-1">
-              Today's invoices paid
-            </span>
-          </Card>
-        </div>
+        <KpiCards
+          shiftReport={shiftReport}
+          trendDelta={trendDelta}
+          occupiedBays={occupiedBays}
+          bayCount={data.bayCount}
+          waitingQueueLength={data.waitingQueue.length}
+          t={t}
+        />
 
         {/* Scrollable View Content */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-muted/5">
-          {viewMode === "grid" && (
-            <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 overflow-y-auto w-full h-full">
-              {searchedBays.map((bay) => (
-                <BayCard
-                  key={bay.bayNumber}
-                  bay={bay}
-                  isPending={
-                    bay.workOrder ? !!pendingWoIds[bay.workOrder.id] : false
-                  }
-                  isKanbanMode={false}
-                  onStatusChange={handleStatusClick}
-                  onRemoveFromBay={handleRemoveFromBay}
-                  onOpenDetail={handleOpenDetail}
-                  onAssignClick={(n) => setAssignBay(n)}
-                  onRemoveHelper={async (woId, mechId) => {
-                    try {
-                      const { removeHelperFromWorkOrder } = await import(
-                        "@/lib/services/bay-view-service"
-                      );
-                      await removeHelperFromWorkOrder(woId, mechId);
-                      await fetchData(false);
-                    } catch {
-                      setToast({
-                        message: "Failed to remove helper",
-                        variant: "error",
-                      });
-                    }
-                  }}
-                />
-              ))}
-            </div>
-          )}
-
-          {viewMode === "kanban" && (
-            <div className="flex h-full gap-4 overflow-x-auto overflow-y-hidden p-4 w-full">
-              {/* Kanban Column: Vacant Bays */}
-              <div className="flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-3.5 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 border-t-slate-300 dark:border-t-slate-800 shadow-sm">
-                <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-4 pb-2.5 select-none">
-                  <div className="font-heading text-xs uppercase tracking-wider font-bold text-muted-foreground">
-                    {t("available")}
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      type="button"
-                      size="icon-xs"
-                      variant="ghost"
-                      onClick={() => {
-                        const emptyBay = data?.bays.find((b) => !b.workOrder);
-                        if (emptyBay) {
-                          setAssignBay(emptyBay.bayNumber);
-                        } else {
+          {viewMode === "grid" &&
+            (searchedBranchSections ? (
+              <div className="flex-1 overflow-y-auto p-4">
+                {searchedBranchSections.map((section) => (
+                  <div key={section.branchId} className="mb-6 last:mb-0">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Building2 className="size-4 text-muted-foreground/60" />
+                      <span className="text-sm font-semibold text-foreground/80">
+                        {section.branchName}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 font-mono">
+                        {section.bays.filter((b) => b.workOrder).length}/
+                        {section.bayCount} bays
+                      </span>
+                    </div>
+                    <GridView
+                      bays={section.bays}
+                      pendingWoIds={pendingWoIds}
+                      onStatusChange={handleStatusClick}
+                      onRemoveFromBay={handleRemoveFromBay}
+                      onOpenDetail={handleOpenDetail}
+                      onAssignClick={(n) => setAssignBay(n)}
+                      onRemoveHelper={async (woId, mechId) => {
+                        try {
+                          const { removeHelperFromWorkOrder } = await import(
+                            "@/lib/services/bay-view-service"
+                          );
+                          await removeHelperFromWorkOrder(woId, mechId);
+                          await fetchData(false);
+                        } catch {
                           setToast({
-                            message: "No empty bays available",
+                            message: "Failed to remove helper",
                             variant: "error",
                           });
                         }
                       }}
-                      className="size-5 rounded hover:bg-muted text-muted-foreground/80 hover:text-foreground cursor-pointer"
-                      title="Assign vehicle to an empty bay"
-                    >
-                      <Plus className="size-3" />
-                    </Button>
-                    <Badge
-                      variant="outline"
-                      className="font-mono font-bold text-[10px] rounded-full h-5"
-                    >
-                      {filteredQueue.length}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex flex-1 flex-col gap-2 px-3 overflow-y-auto no-scrollbar">
-                  {filteredQueue.map((wo) => (
-                    <CondensedQueueItem
-                      key={wo.id}
-                      workOrder={wo}
-                      onClick={() => handleQueueItemClick(wo)}
                     />
-                  ))}
-                  {filteredQueue.length === 0 && (
-                    <div className="flex flex-col items-center justify-center border border-dashed border-border/40 bg-muted/10 py-12 rounded-xl text-center p-4 w-full opacity-60">
-                      <div className="flex size-8 items-center justify-center rounded-full border border-dashed border-muted-foreground/45 bg-background mb-2 shadow-sm">
-                        <Plus className="size-3.5 text-muted-foreground/60" />
-                      </div>
-                      <Typography.Muted className="text-[10px] text-muted-foreground/45 font-semibold">
-                        No Vacant Bays
-                      </Typography.Muted>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ))}
               </div>
+            ) : (
+              <GridView
+                bays={searchedBays}
+                pendingWoIds={pendingWoIds}
+                onStatusChange={handleStatusClick}
+                onRemoveFromBay={handleRemoveFromBay}
+                onOpenDetail={handleOpenDetail}
+                onAssignClick={(n) => setAssignBay(n)}
+                onRemoveHelper={async (woId, mechId) => {
+                  try {
+                    const { removeHelperFromWorkOrder } = await import(
+                      "@/lib/services/bay-view-service"
+                    );
+                    await removeHelperFromWorkOrder(woId, mechId);
+                    await fetchData(false);
+                  } catch {
+                    setToast({
+                      message: "Failed to remove helper",
+                      variant: "error",
+                    });
+                  }
+                }}
+              />
+            ))}
 
-              {["New", "Diagnosing", "In Progress", "Ready for Pickup"].map(
-                (status) => {
-                  const baysWithStatus = searchedBays.filter(
-                    (b) => b.workOrder?.status === status,
-                  );
+          {viewMode === "kanban" &&
+            (searchedBranchSections ? (
+              <div className="flex-1 overflow-y-auto p-4">
+                {searchedBranchSections.map((section) => (
+                  <div key={section.branchId} className="mb-6 last:mb-0">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Building2 className="size-4 text-muted-foreground/60" />
+                      <span className="text-sm font-semibold text-foreground/80">
+                        {section.branchName}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 font-mono">
+                        {section.bays.filter((b) => b.workOrder).length}/
+                        {section.bayCount} bays
+                      </span>
+                    </div>
+                    <KanbanView
+                      searchedBays={section.bays}
+                      assignableBays={section.bays}
+                      queue={filteredQueue}
+                      pendingWoIds={pendingWoIds}
+                      onStatusChange={handleStatusClick}
+                      onRemoveFromBay={handleRemoveFromBay}
+                      onOpenDetail={handleOpenDetail}
+                      onAssignClick={(n) => setAssignBay(n)}
+                      onNoEmptyBays={() =>
+                        setToast({
+                          message: "No empty bays available",
+                          variant: "error",
+                        })
+                      }
+                      onQueueItemClick={handleQueueItemClick}
+                      onRemoveHelper={async (woId, mechId) => {
+                        try {
+                          const { removeHelperFromWorkOrder } = await import(
+                            "@/lib/services/bay-view-service"
+                          );
+                          await removeHelperFromWorkOrder(woId, mechId);
+                          await fetchData(false);
+                        } catch {
+                          setToast({
+                            message: "Failed to remove helper",
+                            variant: "error",
+                          });
+                        }
+                      }}
+                      t={t}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <KanbanView
+                searchedBays={searchedBays}
+                assignableBays={data.bays}
+                queue={filteredQueue}
+                pendingWoIds={pendingWoIds}
+                onStatusChange={handleStatusClick}
+                onRemoveFromBay={handleRemoveFromBay}
+                onOpenDetail={handleOpenDetail}
+                onAssignClick={(n) => setAssignBay(n)}
+                onNoEmptyBays={() =>
+                  setToast({
+                    message: "No empty bays available",
+                    variant: "error",
+                  })
+                }
+                onQueueItemClick={handleQueueItemClick}
+                onRemoveHelper={async (woId, mechId) => {
+                  try {
+                    const { removeHelperFromWorkOrder } = await import(
+                      "@/lib/services/bay-view-service"
+                    );
+                    await removeHelperFromWorkOrder(woId, mechId);
+                    await fetchData(false);
+                  } catch {
+                    setToast({
+                      message: "Failed to remove helper",
+                      variant: "error",
+                    });
+                  }
+                }}
+                t={t}
+              />
+            ))}
 
-                  const columnColors: Record<string, string> = {
-                    New: "border-t-amber-400 bg-amber-400/5",
-                    Diagnosing: "border-t-blue-400 bg-blue-400/5",
-                    "In Progress": "border-t-indigo-500 bg-indigo-500/5",
-                    "Ready for Pickup": "border-t-emerald-500 bg-emerald-500/5",
-                  };
-
-                  return (
-                    <KanbanDropColumn
-                      key={status}
-                      status={status}
-                      className={cn(
-                        "flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-3.5 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 shadow-sm",
-                        columnColors[status] ?? "border-t-primary",
-                      )}
-                    >
-                      <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-4 pb-2.5 select-none">
-                        <div className="font-heading text-xs uppercase tracking-wider font-bold text-foreground/80">
-                          {status}
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Button
-                            type="button"
-                            size="icon-xs"
-                            variant="ghost"
-                            onClick={() => {
-                              const emptyBay = data?.bays.find(
-                                (b) => !b.workOrder,
-                              );
-                              if (emptyBay) {
-                                setAssignBay(emptyBay.bayNumber);
-                              } else {
-                                setToast({
-                                  message: "No empty bays available",
-                                  variant: "error",
-                                });
-                              }
-                            }}
-                            className="size-5 rounded hover:bg-muted text-muted-foreground/80 hover:text-foreground cursor-pointer"
-                            title="Assign vehicle to an empty bay"
-                          >
-                            <Plus className="size-3" />
-                          </Button>
-                          <Badge
-                            variant={
-                              status === "In Progress" ? "default" : "secondary"
-                            }
-                            className="font-mono font-bold text-[10px] rounded-full h-5"
-                          >
-                            {baysWithStatus.length}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="flex flex-1 flex-col gap-3 px-3 overflow-y-auto no-scrollbar">
-                        {baysWithStatus.map((bay) => (
-                          <div
-                            key={bay.bayNumber}
-                            className="flex flex-col shrink-0"
-                          >
-                            <BayCard
-                              bay={bay}
-                              isPending={
-                                bay.workOrder
-                                  ? !!pendingWoIds[bay.workOrder.id]
-                                  : false
-                              }
-                              isKanbanMode
-                              onStatusChange={handleStatusClick}
-                              onRemoveFromBay={handleRemoveFromBay}
-                              onOpenDetail={handleOpenDetail}
-                              onRemoveHelper={async (woId, mechId) => {
-                                try {
-                                  const { removeHelperFromWorkOrder } =
-                                    await import(
-                                      "@/lib/services/bay-view-service"
-                                    );
-                                  await removeHelperFromWorkOrder(woId, mechId);
-                                  await fetchData(false);
-                                } catch {
-                                  setToast({
-                                    message: "Failed to remove helper",
-                                    variant: "error",
-                                  });
-                                }
-                              }}
-                            />
-                          </div>
-                        ))}
-                        {baysWithStatus.length === 0 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const emptyBay = data?.bays.find(
-                                (b) => !b.workOrder,
-                              );
-                              if (emptyBay) {
-                                setAssignBay(emptyBay.bayNumber);
-                              } else {
-                                setToast({
-                                  message: "No empty bays available",
-                                  variant: "error",
-                                });
-                              }
-                            }}
-                            className="flex flex-col items-center justify-center border border-dashed border-border/40 hover:border-primary/40 bg-muted/10 hover:bg-primary/5 py-12 rounded-xl text-center select-none p-4 cursor-pointer group/empty w-full"
-                          >
-                            <div className="flex size-8 items-center justify-center rounded-full border border-dashed border-muted-foreground/45 bg-background group-hover/empty:scale-110 group-hover/empty:border-primary/50 group-hover/empty:text-primary transition-all mb-2 shadow-sm">
-                              <Plus className="size-3.5 text-muted-foreground/60 group-hover/empty:text-primary" />
-                            </div>
-                            <Typography.Muted className="text-[10px] text-muted-foreground/45 font-semibold group-hover/empty:text-primary transition-colors">
-                              Assign Vehicle
-                            </Typography.Muted>
-                          </button>
-                        )}
-                      </div>
-                    </KanbanDropColumn>
-                  );
-                },
-              )}
-            </div>
-          )}
-
-          {viewMode === "list" && (
-            <div className="p-4 overflow-y-auto w-full h-full">
-              <Card className="bg-card/75 backdrop-blur border-border/50 shadow-sm rounded-xl overflow-hidden">
-                <Table className="text-xs">
-                  <TableHeader className="bg-muted/40 select-none">
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 pl-4 py-3">
-                        {t("listHeaderBay")}
-                      </TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 py-3">
-                        {t("listHeaderStatus")}
-                      </TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 py-3">
-                        {t("listHeaderVehicle")}
-                      </TableHead>
-                      <TableHead className="hidden text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 sm:table-cell py-3">
-                        {t("listHeaderModel")}
-                      </TableHead>
-                      <TableHead className="hidden text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 md:table-cell py-3">
-                        {t("listHeaderMechanic")}
-                      </TableHead>
-                      <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 pr-4 py-3">
-                        {t("listHeaderTime")}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {searchedBays.map((bay) => {
-                      const wo = bay.workOrder;
-                      const v = wo?.vehicle;
-                      return (
-                        <TableRow
-                          key={bay.bayNumber}
-                          onClick={() =>
-                            wo
-                              ? handleOpenDetail(wo.id)
-                              : setAssignBay(bay.bayNumber)
-                          }
-                          className={cn(
-                            "border-b border-border/30 transition-colors cursor-pointer",
-                            wo
-                              ? "hover:bg-muted/30"
-                              : "text-muted-foreground/50 hover:bg-accent/30",
-                          )}
-                        >
-                          <TableCell className="font-semibold pl-4 py-3 font-mono">
-                            #{String(bay.bayNumber).padStart(2, "0")}
-                          </TableCell>
-                          <TableCell className="py-3">
-                            {wo ? (
-                              <Badge
-                                variant="outline"
-                                className={cn(
-                                  "text-[9px] uppercase tracking-wider font-bold py-0.5 px-2 rounded-full",
-                                  STATUS_BADGE_CLASS[wo.status],
-                                )}
-                              >
-                                {wo.status}
-                              </Badge>
-                            ) : (
-                              <span className="text-muted-foreground/40 font-medium">
-                                {t("emptyBay")}
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="py-3">
-                            {wo && v ? (
-                              <span className="font-mono text-xs font-bold">
-                                {formatPlateNumber(v.plate_number)}
-                              </span>
-                            ) : wo ? (
-                              "—"
-                            ) : (
-                              <span className="text-[10px] italic text-muted-foreground/40 font-medium">
-                                {t("clickToAssign")}
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="hidden text-foreground font-bold sm:table-cell py-3">
-                            {wo && v ? `${v.make} ${v.model}` : "—"}
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell py-3">
-                            <div className="flex flex-wrap items-center gap-1">
-                              {wo?.mechanic ? (
-                                <Badge
-                                  variant="outline"
-                                  className="bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200/60 dark:border-indigo-800/40 font-medium py-0.5 px-2 text-[10px] rounded-full"
-                                >
-                                  {wo.mechanic.full_name}
-                                </Badge>
-                              ) : (
-                                <span className="text-[10px] text-muted-foreground/50">
-                                  —
-                                </span>
-                              )}
-                              {(() => {
-                                const helpers = (
-                                  wo as unknown as Record<string, unknown>
-                                ).helpers as
-                                  | {
-                                      id: string;
-                                      full_name: string | null;
-                                      avatar_url: string | null;
-                                    }[]
-                                  | undefined;
-                                if (!helpers || helpers.length === 0)
-                                  return null;
-                                return helpers.map((h) => (
-                                  <Badge
-                                    key={h.id}
-                                    variant="outline"
-                                    className="bg-amber-50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/40 font-medium py-0.5 px-2 text-[10px] rounded-full"
-                                  >
-                                    {h.full_name ?? "?"}
-                                  </Badge>
-                                ));
-                              })()}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right font-mono font-medium tabular-nums pr-4 py-3 text-muted-foreground">
-                            {wo ? (
-                              <ElapsedText
-                                startedAt={wo.started_at ?? wo.created_at}
-                              />
-                            ) : (
-                              "—"
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </Card>
-            </div>
-          )}
+          {viewMode === "list" &&
+            (searchedBranchSections ? (
+              <div className="flex-1 overflow-y-auto p-4">
+                {searchedBranchSections.map((section) => (
+                  <div key={section.branchId} className="mb-6 last:mb-0">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Building2 className="size-4 text-muted-foreground/60" />
+                      <span className="text-sm font-semibold text-foreground/80">
+                        {section.branchName}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 font-mono">
+                        {section.bays.filter((b) => b.workOrder).length}/
+                        {section.bayCount} bays
+                      </span>
+                    </div>
+                    <ListView
+                      bays={section.bays}
+                      onOpenDetail={handleOpenDetail}
+                      onAssignClick={(n) => setAssignBay(n)}
+                      t={t}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ListView
+                bays={searchedBays}
+                onOpenDetail={handleOpenDetail}
+                onAssignClick={(n) => setAssignBay(n)}
+                t={t}
+              />
+            ))}
         </div>
       </div>
 
@@ -1625,6 +927,7 @@ export function BayViewV2Client() {
           onCancel={() => setPendingStatusChange(null)}
         />
       )}
+
       {pendingPostService && pendingPostServiceBay && (
         <PostServiceDialog
           open={!!pendingPostService}
@@ -1640,6 +943,7 @@ export function BayViewV2Client() {
           onConfirm={handlePostServiceConfirm}
         />
       )}
+
       {pendingPickupComplete && (
         <PickupCompleteDialog
           open={!!pendingPickupComplete}
@@ -1691,6 +995,7 @@ export function BayViewV2Client() {
         queue={data.waitingQueue}
         mechanics={data.mechanics}
         onAssign={handleAssignToBay}
+        branchId={branchFilter}
       />
 
       <DragOverlay dropAnimation={null}>
@@ -1741,6 +1046,7 @@ export function BayViewV2Client() {
           setToast({ message: "Added to waiting queue", variant: "info" });
           void fetchData(false);
         }}
+        branchId={branchFilter}
       />
       <MechanicRegistrationDialog
         open={showMechanicReg}
@@ -1779,105 +1085,4 @@ export function BayViewV2Client() {
       )}
     </DndContext>
   );
-}
-
-/** Compute wait time text and urgency from a created_at timestamp. */
-function _getWaitTime(createdAt: string): { text: string; urgent: boolean } {
-  const minutes = Math.floor(
-    (Date.now() - new Date(createdAt).getTime()) / 60000,
-  );
-  if (minutes < 15) return { text: `${minutes}m`, urgent: false };
-  if (minutes < 60) return { text: `${minutes}m`, urgent: minutes > 30 };
-  const hours = Math.floor(minutes / 60);
-  return { text: `${hours}h+`, urgent: true };
-}
-
-interface CondensedQueueItemProps {
-  workOrder: WorkOrder & { vehicle: Vehicle | null };
-  onClick: () => void;
-}
-
-/**
- * A compact queue preview item used in the kanban "Available" column.
- * Shows plate number (large, bold) and wait time — no buttons, badges, or mechanic avatar.
- */
-function CondensedQueueItem({ workOrder, onClick }: CondensedQueueItemProps) {
-  const v = workOrder.vehicle;
-  const [waitInfo, setWaitInfo] = useState(() =>
-    _getWaitTime(workOrder.created_at),
-  );
-
-  useEffect(() => {
-    const ref = new Date(workOrder.created_at).getTime();
-    const tick = () => {
-      const minutes = Math.floor((Date.now() - ref) / 60000);
-      if (minutes < 15) setWaitInfo({ text: `${minutes}m`, urgent: false });
-      else if (minutes < 60)
-        setWaitInfo({ text: `${minutes}m`, urgent: minutes > 30 });
-      else
-        setWaitInfo({
-          text: `${Math.floor(minutes / 60)}h+`,
-          urgent: true,
-        });
-    };
-    tick();
-    const interval = setInterval(tick, 30000);
-    return () => clearInterval(interval);
-  }, [workOrder.created_at]);
-
-  if (!v) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="flex flex-col gap-0.5 rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-left shadow-sm hover:bg-accent/30 transition-colors cursor-pointer w-full shrink-0"
-      >
-        <span className="text-sm font-bold font-mono tracking-tight text-foreground">
-          WO {workOrder.id.slice(0, 8)}
-        </span>
-        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-          <Clock className="size-2.5" />
-          {waitInfo.text} wait
-        </span>
-      </button>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex flex-col gap-0.5 rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-left shadow-sm hover:border-primary/30 hover:bg-accent/30 transition-colors cursor-pointer w-full shrink-0"
-    >
-      <span className="text-sm font-bold font-mono tracking-tight text-foreground">
-        {formatPlateNumber(v.plate_number)}
-      </span>
-      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-        <Clock className="size-2.5" />
-        {waitInfo.text} wait
-        {waitInfo.urgent && (
-          <span className="size-1.5 rounded-full bg-amber-500" />
-        )}
-      </span>
-    </button>
-  );
-}
-
-function ElapsedText({ startedAt }: { startedAt: string | null | undefined }) {
-  const [display, setDisplay] = useState("");
-  useEffect(() => {
-    if (!startedAt) {
-      setDisplay("");
-      return;
-    }
-    const ms = new Date(startedAt).getTime();
-    const tick = () => {
-      const d = Math.floor((Date.now() - ms) / 60000);
-      setDisplay(d < 60 ? `${d}m` : `${Math.floor(d / 60)}h ${d % 60}m`);
-    };
-    tick();
-    const interval = setInterval(tick, 30000);
-    return () => clearInterval(interval);
-  }, [startedAt]);
-  return <>{display}</>;
 }

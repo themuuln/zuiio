@@ -38,12 +38,14 @@ import { TableSkeleton } from "./table-skeleton";
 
 interface PurchaseOrdersTabProps {
   orgId: string;
+  branchFilter?: string | null;
   search: string;
   onSearchChange: (value: string) => void;
 }
 
 export function PurchaseOrdersTab({
   orgId,
+  branchFilter,
   search,
   onSearchChange,
 }: PurchaseOrdersTabProps) {
@@ -51,10 +53,13 @@ export function PurchaseOrdersTab({
   const t = useTranslations("inventory");
   const now = useClientNow();
   const poStatusLabels = useMemo(() => getPoStatusLabels(t), [t]);
-  const { data: purchaseOrders = [], isLoading } = usePurchaseOrders(orgId);
+  const { data: purchaseOrders = [], isLoading } = usePurchaseOrders(
+    orgId,
+    branchFilter,
+  );
   const createPO = useCreatePurchaseOrder(orgId);
   const receivePO = useReceivePurchaseOrder(orgId);
-  const { data: parts = [] } = usePartsCatalog(orgId);
+  const { data: parts = [] } = usePartsCatalog(orgId, branchFilter);
   const { data: suppliers = [] } = useSuppliers(orgId);
 
   const [showAddPO, setShowAddPO] = useState(false);

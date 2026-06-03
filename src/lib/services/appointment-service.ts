@@ -6,6 +6,7 @@ import {
   ValidationError,
 } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import { withBranchFilter, resolveBranchId } from "@/lib/supabase/with-branch";
 import type {
   Appointment,
   AppointmentDetail,
@@ -36,6 +37,7 @@ export async function getAppointments(params?: {
   date_from?: string;
   date_to?: string;
   customer_id?: string;
+  branchId?: string;
 }): Promise<AppointmentDetail[]> {
   const supabase = await createClient();
   const orgId = await getOrgId();
@@ -57,6 +59,7 @@ export async function getAppointments(params?: {
   if (params?.status) query = query.eq("status", params.status);
   if (params?.mechanic_id) query = query.eq("mechanic_id", params.mechanic_id);
   if (params?.customer_id) query = query.eq("customer_id", params.customer_id);
+  if (params?.branchId) query = withBranchFilter(query, params.branchId);
 
   if (params?.date) {
     query = query
@@ -172,11 +175,18 @@ export async function createAppointment(
   const user = (await supabase.auth.getUser()).data.user;
   if (!user) throw new UnauthorizedError();
 
+  const resolvedBranchId = await resolveBranchId(
+    supabase,
+    orgId,
+    params.branchId,
+    { strict: false },
+  );
+
   const { data, error } = await supabase
     .from("appointments")
     .insert({
       organization_id: orgId,
-      branch_id: params.branch_id ?? null,
+      branch_id: resolvedBranchId,
       customer_id: params.customer_id,
       vehicle_id: params.vehicle_id,
       title: params.title.trim(),

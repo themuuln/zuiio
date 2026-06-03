@@ -30,14 +30,20 @@ export function useWorkOrders(
   orgId: string | undefined,
   status = "",
   search = "",
+  branchId?: string | null,
 ): UseQueryResult<WorkOrderListItem[], Error> {
   return useQuery({
-    queryKey: [...workOrderKeys.list(orgId ?? "", status), search],
+    queryKey: [
+      ...workOrderKeys.list(orgId ?? "", status),
+      search,
+      branchId ?? "all",
+    ],
     queryFn: () =>
       fetchWorkOrders(orgId!, {
         params: {
           ...(status ? { status } : {}),
           ...(search ? { q: search } : {}),
+          ...(branchId ? { branch_id: branchId } : {}),
         },
       }),
     enabled: !!orgId,

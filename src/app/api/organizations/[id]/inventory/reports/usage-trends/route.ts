@@ -2,8 +2,12 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { getUsageTrends } from "@/lib/services/inventory-reports-service";
 
-export const GET = createRouteHandler(async ({ orgId, params }) => {
-  const months = params.months ? Number.parseInt(params.months, 10) : undefined;
-  const data = await getUsageTrends(orgId, months);
+export const GET = createRouteHandler(async ({ request, orgId }) => {
+  const { searchParams } = new URL(request.url);
+  const months = searchParams.get("months")
+    ? Number.parseInt(searchParams.get("months")!, 10)
+    : undefined;
+  const branchId = searchParams.get("branch_id") ?? undefined;
+  const data = await getUsageTrends(orgId, months, branchId);
   return NextResponse.json({ data });
 });

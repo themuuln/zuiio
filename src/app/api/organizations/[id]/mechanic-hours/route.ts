@@ -12,8 +12,7 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
   let query = supabase
     .from("mechanic_daily_reports")
     .select("mechanic_id, hours_worked, report_date")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null);
+    .eq("organization_id", orgId);
 
   if (startDate) query = query.gte("report_date", startDate);
   if (endDate) query = query.lte("report_date", endDate);

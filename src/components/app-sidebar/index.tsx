@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigation } from "@/hooks/use-navigation";
 import { Link } from "@/lib/i18n/navigation";
 import { onLinkHover } from "@/lib/prefetch";
+import { getNavStatusDotClass } from "@/lib/nav-feature-status";
 import { MechanicSwitcher } from "./_mechanic-switcher";
 import { OrgBranding } from "./_org-branding";
 
@@ -104,6 +105,10 @@ export function AppSidebar() {
                       >
                         <item.icon className="size-4" />
                         <span>{t(item.labelKey)}</span>
+                        <span
+                          className={`ml-auto size-1.5 rounded-full ${getNavStatusDotClass(item.href)}`}
+                          aria-hidden="true"
+                        />
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
@@ -134,6 +139,10 @@ export function AppSidebar() {
                           >
                             <item.icon className="size-4 shrink-0" />
                             <span>{t(item.labelKey)}</span>
+                            <span
+                              className={`ml-auto size-1.5 rounded-full ${getNavStatusDotClass(item.href)}`}
+                              aria-hidden="true"
+                            />
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       ))}
@@ -165,6 +174,10 @@ export function AppSidebar() {
                           >
                             <item.icon className="size-4 shrink-0" />
                             <span>{t(item.labelKey)}</span>
+                            <span
+                              className={`ml-auto size-1.5 rounded-full ${getNavStatusDotClass(item.href)}`}
+                              aria-hidden="true"
+                            />
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       ))}
@@ -194,6 +207,10 @@ export function AppSidebar() {
                         >
                           <item.icon className="size-4" />
                           <span>{t(item.labelKey)}</span>
+                          <span
+                            className={`ml-auto size-1.5 rounded-full ${getNavStatusDotClass(item.href)}`}
+                            aria-hidden="true"
+                          />
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     ))}
@@ -220,6 +237,10 @@ export function AppSidebar() {
               >
                 <settingsShortcut.icon className="size-4" />
                 <span>{t(settingsShortcut.labelKey)}</span>
+                <span
+                  className={`ml-auto size-1.5 rounded-full ${getNavStatusDotClass(settingsShortcut.href)}`}
+                  aria-hidden="true"
+                />
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}

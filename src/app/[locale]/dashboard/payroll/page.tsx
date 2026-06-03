@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import {
   useCalculatePayroll,
   usePayRates,
@@ -52,17 +53,23 @@ export default function PayrollPage() {
   const t = useTranslations();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [editingRates, setEditingRates] = useState<Record<string, string>>({});
 
   // ── Queries ──
-  const { data: payRates = [], isPending: ratesLoading } = usePayRates(orgId);
+  const { data: payRates = [], isPending: ratesLoading } = usePayRates(
+    orgId,
+    branchFilter,
+  );
   const { data: records = [], isPending: recordsLoading } = usePayrollRecords(
     orgId,
     year,
     month,
+    branchFilter,
   );
 
   // ── Mutations ──

@@ -1,6 +1,7 @@
 import { cacheDurations, cacheTags } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
 import { createClient } from "@/lib/supabase/server";
+import { withBranchFilter } from "@/lib/supabase/with-branch";
 
 import type {
   CustomerAcquisitionPoint,
@@ -29,10 +30,6 @@ import type {
 } from "@/lib/types";
 
 // ── Helpers ──────────────────────────────────────────────────
-
-function withBranchFilter<T>(query: T, branchId: string | null): T {
-  return (branchId ? (query as any).eq("branch_id", branchId) : query) as T;
-}
 
 /**
  * Calculate profitability metrics from work order service/part data.

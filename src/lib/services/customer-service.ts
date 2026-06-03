@@ -2,7 +2,8 @@ import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import { withBranchFilter, resolveBranchId } from "@/lib/supabase/with-branch";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   CreateCustomerParams,
   Customer,
@@ -16,11 +17,16 @@ import { buildUpdates, type FieldMap } from "./build-updates";
  * Lists all customers for an organization with optional search.
  */
 export async function getCustomers(
+  db: SupabaseClient,
   orgId: string,
-  options?: { search?: string; page?: number; pageSize?: number },
+  options?: {
+    search?: string;
+    page?: number;
+    pageSize?: number;
+    branchId?: string;
+  },
 ): Promise<PaginatedResponse<CustomerWithVehicleCount>> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const search = options?.search;
   const page = Math.max(1, options?.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, options?.pageSize ?? 50));
@@ -42,6 +48,7 @@ export async function getCustomers(
       `first_name.ilike.${term},last_name.ilike.${term},full_name.ilike.${term},company_name.ilike.${term},contact_person.ilike.${term},phone.ilike.${term},email.ilike.${term}`,
     );
   }
+  if (options?.branchId) query = withBranchFilter(query, options.branchId);
 
   const {
     data: customers,
@@ -91,11 +98,11 @@ export async function getCustomers(
  * These are read-only — the current org can view but not modify them.
  */
 export async function getSharedCustomers(
+  db: SupabaseClient,
   orgId: string,
   options?: { search?: string; page?: number; pageSize?: number },
 ): Promise<PaginatedResponse<CustomerWithVehicleCount>> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const search = options?.search;
   const page = Math.max(1, options?.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, options?.pageSize ?? 50));
@@ -184,11 +191,11 @@ export async function getSharedCustomers(
  * Returns a single customer by ID.
  */
 export async function getCustomer(
+  db: SupabaseClient,
   id: string,
   orgId: string,
 ): Promise<Customer> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data, error } = await supabase
     .from("customers")
     .select(
@@ -211,11 +218,11 @@ export async function getCustomer(
  * Used by the shared customer detail drawer.
  */
 export async function getSharedCustomer(
+  db: SupabaseClient,
   id: string,
   viewerOrgId: string,
 ): Promise<Customer> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data, error } = await supabase
     .from("customers")
     .select(
@@ -248,6 +255,7 @@ export async function getSharedCustomer(
  * Returns vehicles for a shared customer (read-only).
  */
 export async function getSharedCustomerVehicles(
+  db: SupabaseClient,
   customerId: string,
   viewerOrgId: string,
 ): Promise<
@@ -259,8 +267,7 @@ export async function getSharedCustomerVehicles(
     year: number | null;
   }[]
 > {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data } = await supabase
     .from("vehicles")
     .select("id, plate_number, make, model, year")
@@ -275,6 +282,7 @@ export async function getSharedCustomerVehicles(
  * Creates a new customer with audit log.
  */
 export async function createCustomer(
+  db: SupabaseClient,
   orgId: string,
   params: CreateCustomerParams,
   userId: string,
@@ -289,7 +297,7 @@ export async function createCustomer(
     throw new ValidationError("At least one identifying field is required");
   }
 
-  const supabase = await createClient();
+  const supabase = db;
 
   // Check for duplicate phone if provided (warn only — don't block)
   if (params.phone?.trim()) {
@@ -333,6 +341,13 @@ export async function createCustomer(
     }
   }
 
+  const resolvedBranchId = await resolveBranchId(
+    supabase,
+    orgId,
+    params.branchId,
+    { strict: false },
+  );
+
   const { data, error } = await supabase
     .from("customers")
     .insert({
@@ -347,6 +362,7 @@ export async function createCustomer(
       address: params.address?.trim() || null,
       notes: params.notes?.trim() || null,
       source: params.source?.trim() || null,
+      branch_id: resolvedBranchId,
       created_by: userId,
       updated_by: userId,
     })
@@ -379,14 +395,13 @@ export async function createCustomer(
  * Updates a customer with audit log.
  */
 export async function updateCustomer(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   params: UpdateCustomerParams,
   userId: string,
 ): Promise<Customer> {
-  const supabase = await createClient();
-
-  // Get existing customer
+  const supabase = db; // Get existing customer
   const { data: existing, error: fetchError } = await supabase
     .from("customers")
     .select(
@@ -509,12 +524,12 @@ export async function updateCustomer(
  * Soft-deletes a customer.
  */
 export async function deleteCustomer(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   userId: string,
 ): Promise<void> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data: existing } = await supabase
     .from("customers")
     .select("id")
@@ -551,9 +566,10 @@ export async function deleteCustomer(
  * Searches customers by name, phone, or email.
  */
 export async function searchCustomers(
+  db: SupabaseClient,
   orgId: string,
   query: string,
-  options?: { page?: number; pageSize?: number },
+  options?: { page?: number; pageSize?: number; branchId?: string },
 ): Promise<PaginatedResponse<CustomerWithVehicleCount>> {
-  return getCustomers(orgId, { search: query, ...options });
+  return getCustomers(db, orgId, { search: query, ...options });
 }

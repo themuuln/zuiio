@@ -1,7 +1,7 @@
 import { revalidateTag } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
 import type {
   ServiceCatalog,
   ServicePriceHistory,
@@ -10,12 +10,12 @@ import type {
 import { buildUpdates, type FieldMap } from "./build-updates";
 
 export async function getServices(
+  db: SupabaseClient,
   orgId: string,
   category?: string,
   limit = 50,
 ): Promise<ServiceCatalog[]> {
-  const supabase = await createClient();
-
+  const supabase = db;
   let query = supabase
     .from("service_catalog")
     .select(
@@ -35,9 +35,11 @@ export async function getServices(
   return (data ?? []) as unknown as ServiceCatalog[];
 }
 
-export async function getService(id: string): Promise<ServiceCatalog> {
-  const supabase = await createClient();
-
+export async function getService(
+  db: SupabaseClient,
+  id: string,
+): Promise<ServiceCatalog> {
+  const supabase = db;
   const { data, error } = await supabase
     .from("service_catalog")
     .select(
@@ -52,6 +54,7 @@ export async function getService(id: string): Promise<ServiceCatalog> {
 }
 
 export async function createService(
+  db: SupabaseClient,
   orgId: string,
   params: {
     name: string;
@@ -64,7 +67,7 @@ export async function createService(
   if (!params.name?.trim())
     throw new ValidationError("Service name is required");
 
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const { data, error } = await supabase
@@ -94,6 +97,7 @@ export async function createService(
 }
 
 export async function updateService(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   params: {
@@ -105,7 +109,7 @@ export async function updateService(
     is_active?: boolean;
   },
 ): Promise<ServiceCatalog> {
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const trim = (v: unknown) => (v as string).trim() || null;
@@ -148,9 +152,12 @@ export async function updateService(
   return data as unknown as ServiceCatalog;
 }
 
-export async function deleteService(id: string, orgId: string): Promise<void> {
-  const supabase = await createClient();
-
+export async function deleteService(
+  db: SupabaseClient,
+  id: string,
+  orgId: string,
+): Promise<void> {
+  const supabase = db;
   const { error } = await supabase
     .from("service_catalog")
     .update({ deleted_at: new Date().toISOString() })
@@ -164,13 +171,13 @@ export async function deleteService(id: string, orgId: string): Promise<void> {
 }
 
 export async function getLastSoldPrice(
+  db: SupabaseClient,
   orgId: string,
   serviceCatalogId: string,
   vehicleMake?: string,
   vehicleModel?: string,
 ): Promise<ServicePriceHistory | null> {
-  const supabase = await createClient();
-
+  const supabase = db;
   let query = supabase
     .from("service_price_history")
     .select(
@@ -213,11 +220,11 @@ const SERVICE_VMS_SELECT =
  * Returns rows with joined vehicle model info (make, model).
  */
 export async function getServiceVehicleModels(
+  db: SupabaseClient,
   orgId: string,
   serviceCatalogId: string,
 ): Promise<VehicleModelServiceRow[]> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data, error } = await supabase
     .from("vehicle_model_services")
     .select(SERVICE_VMS_SELECT)
@@ -255,12 +262,13 @@ export async function getServiceVehicleModels(
  * Creates or updates the specific_price for a service+vehicle_model combination.
  */
 export async function upsertServiceVehicleModelPrice(
+  db: SupabaseClient,
   orgId: string,
   serviceCatalogId: string,
   vehicleModelId: string,
   specificPrice: number | null,
 ): Promise<VehicleModelServiceRow> {
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const { data, error } = await supabase
@@ -311,12 +319,12 @@ export async function upsertServiceVehicleModelPrice(
  * Delete a vehicle model service price entry.
  */
 export async function deleteServiceVehicleModelPrice(
+  db: SupabaseClient,
   orgId: string,
   serviceCatalogId: string,
   vehicleModelId: string,
 ): Promise<void> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { error } = await supabase
     .from("vehicle_model_services")
     .delete()
@@ -336,10 +344,10 @@ export async function deleteServiceVehicleModelPrice(
  * Get all vehicle models for an org (for the model picker UI).
  */
 export async function getOrgVehicleModels(
+  db: SupabaseClient,
   orgId: string,
 ): Promise<Pick<VehicleModel, "id" | "make" | "model">[]> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data, error } = await supabase
     .from("vehicle_models")
     .select("id, make, model")
@@ -353,11 +361,11 @@ export async function getOrgVehicleModels(
 }
 
 export async function getServicePriceHistory(
+  db: SupabaseClient,
   orgId: string,
   serviceCatalogId: string,
 ): Promise<ServicePriceHistory[]> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data, error } = await supabase
     .from("service_price_history")
     .select(
@@ -378,10 +386,10 @@ export async function getServicePriceHistory(
  * Used to avoid N+1 queries on the services listing page.
  */
 export async function getServiceModelPriceCounts(
+  db: SupabaseClient,
   orgId: string,
 ): Promise<Record<string, number>> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data, error } = await supabase
     .from("vehicle_model_services")
     .select("service_catalog_id, specific_price")

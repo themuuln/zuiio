@@ -100,16 +100,34 @@ export async function upsertPayRate(
 
 /**
  * List all mechanics with their current pay rate.
+ * Optionally filtered by branch (via profile branch assignment).
  * Joins with profiles for mechanic names.
  */
-export async function listPayRates(orgId: string): Promise<PayRate[]> {
+export async function listPayRates(
+  orgId: string,
+  branchId?: string | null,
+): Promise<PayRate[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("mechanic_pay_rates")
     .select("*")
     .eq("organization_id", orgId)
     .is("effective_to", null);
+
+  if (branchId) {
+    // Get mechanic IDs in the selected branch, then filter pay rates
+    const { data: branchMechanics } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("branch_id", branchId);
+    const mechanicIds = (branchMechanics ?? []).map((p) => p.id);
+    if (mechanicIds.length === 0) return [];
+    query = query.in("mechanic_id", mechanicIds);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
 
@@ -138,12 +156,14 @@ export async function listPayRates(orgId: string): Promise<PayRate[]> {
  * Calculate monthly payroll for all mechanics.
  *
  * Idempotent — re-running recalculates and upserts existing records.
+ * Optionally filtered by branch (via profile branch assignment).
  * Returns the created/updated payroll records.
  */
 export async function calculateMonthlyPayroll(
   orgId: string,
   year: number,
   month: number,
+  branchId?: string | null,
 ): Promise<PayrollRecord[]> {
   const supabase = await createClient();
 
@@ -151,13 +171,31 @@ export async function calculateMonthlyPayroll(
   const lastDay = new Date(year, month, 0).getDate();
   const periodEnd = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
 
+  // If branch is specified, get mechanic IDs in that branch first
+  let branchMechanicIds: string[] | undefined;
+  if (branchId) {
+    const { data: branchMechanics } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("branch_id", branchId);
+    branchMechanicIds = (branchMechanics ?? []).map((p) => p.id);
+    if (branchMechanicIds.length === 0) return [];
+  }
+
   // Get all mechanics with hours worked in this period
-  const { data: hoursData } = await supabase
+  let hoursQuery = supabase
     .from("mechanic_daily_reports")
     .select("mechanic_id, hours_worked")
     .eq("organization_id", orgId)
     .gte("report_date", periodStart)
     .lte("report_date", periodEnd);
+
+  if (branchMechanicIds) {
+    hoursQuery = (hoursQuery as any).in("mechanic_id", branchMechanicIds);
+  }
+
+  const { data: hoursData } = await hoursQuery;
 
   if (!hoursData || hoursData.length === 0) return [];
 
@@ -260,11 +298,13 @@ export async function calculateMonthlyPayroll(
 
 /**
  * Get payroll records for a given period.
+ * Optionally filtered by branch (via profile branch assignment).
  */
 export async function getPayrollRecords(
   orgId: string,
   year: number,
   month: number,
+  branchId?: string | null,
 ): Promise<PayrollRecord[]> {
   const supabase = await createClient();
 
@@ -272,12 +312,26 @@ export async function getPayrollRecords(
   const lastDay = new Date(year, month, 0).getDate();
   const periodEnd = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
 
-  const { data } = await supabase
+  let query = supabase
     .from("payroll_records")
     .select("*")
     .eq("organization_id", orgId)
     .eq("period_start", periodStart)
     .eq("period_end", periodEnd);
+
+  if (branchId) {
+    // Get mechanic IDs in the selected branch, then filter records
+    const { data: branchMechanics } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("branch_id", branchId);
+    const mechanicIds = (branchMechanics ?? []).map((p) => p.id);
+    if (mechanicIds.length === 0) return [];
+    query = query.in("mechanic_id", mechanicIds);
+  }
+
+  const { data } = await query;
 
   const records = (data ?? []) as PayrollRecord[];
 

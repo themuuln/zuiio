@@ -2,7 +2,7 @@ Master Plan: Auto Repair ERP / Garage OS called TOLOM
 
 Development Plan + Pricing Plan Only
 
-> **Phase Status Summary** — *Last updated: 2026-06-01*
+> **Phase Status Summary** — *Last updated: 2026-06-03*
 > | Phase | Status |
 > |-------|--------|
 > | Phase 0 — Foundation | ✅ 100% LIVE |
@@ -12,7 +12,7 @@ Development Plan + Pricing Plan Only
 > | Phase 4 — Multi-Branch + Accounting | 🟡 ~40% LIVE |
 > | Phase 5 — Mechanic Mobile App | 🔴 NOT STARTED |
 > | Phase 6 — Platform Expansion | 🟡 ~15% LIVE |
-> | **Built beyond plan** | Expense mgmt, Customer portal, Telegram, Price rules, Parts-cars, Diagnosis labels, Time tracking, Global catalog, Day-close streaks |
+> | **Built beyond plan** | Sidebar nav status dots, Expense mgmt, Customer portal, Telegram, Price rules, Parts-cars, Diagnosis labels, Time tracking, Global catalog, Day-close streaks |
 
 ⎸
 
@@ -147,6 +147,7 @@ Development Plan + Pricing Plan Only
 
 Дараах боломжууд анхны төлөвлөгөөнд ороогүй боловч хийгдсэн:
 
+- **Sidebar Nav Status Dots** (`src/lib/nav-feature-status.ts`) — хажуугийн цэсэнд ногоон/шар тодотголтой төлөвийн үзүүлэлт. Баталгаажсан модулууд ногоон, хөгжиж буй нь шараар тэмдэглэгдэнэ
 - **Зарлагын бүртгэл** (expenses, expense_categories) — бүрэн CRUD
 - **Хэрэглэгчийн портал** — хэрэглэгч өөрийн захиалга, нэхэмжлэх харах
 - **Telegram мэдэгдэл** — өдөр/долоо/сар бүрийн тайлан Telegram-аар

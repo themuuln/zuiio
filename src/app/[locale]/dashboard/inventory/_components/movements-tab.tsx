@@ -32,6 +32,7 @@ type MovementRow = InventoryMovement & { part_name: string };
 
 interface MovementsTabProps {
   orgId: string;
+  branchFilter?: string | null;
   search: string;
   onSearchChange: (value: string) => void;
   movementFilter: string;
@@ -40,6 +41,7 @@ interface MovementsTabProps {
 
 export function MovementsTab({
   orgId,
+  branchFilter,
   search,
   onSearchChange,
   movementFilter,
@@ -51,9 +53,13 @@ export function MovementsTab({
   const movementLabels = useMemo(() => getMovementLabels(t), [t]);
   const movementFilters = useMemo(() => getMovementFilters(t), [t]);
 
-  const { data: movements = [], isLoading } = useInventoryMovements(orgId);
+  const { data: movements = [], isLoading } = useInventoryMovements(
+    orgId,
+    undefined,
+    branchFilter,
+  );
   const createMovement = useCreateMovement(orgId);
-  const { data: balances = [] } = useInventoryBalances(orgId);
+  const { data: balances = [] } = useInventoryBalances(orgId, branchFilter);
 
   const [showAddMovement, setShowAddMovement] = useState(false);
   const [movementForm, setMovementForm] = useState({

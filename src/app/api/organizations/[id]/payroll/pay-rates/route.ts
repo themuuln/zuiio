@@ -3,8 +3,10 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { listPayRates, upsertPayRate } from "@/lib/services/payroll-service";
 
 export const GET = createRouteHandler(
-  async ({ orgId }) => {
-    const rates = await listPayRates(orgId);
+  async ({ request, orgId }) => {
+    const { searchParams } = new URL(request.url);
+    const branchId = searchParams.get("branch_id");
+    const rates = await listPayRates(orgId, branchId);
     return NextResponse.json({ data: rates });
   },
   { requiredPermission: { resource: "payroll", action: "read" } },

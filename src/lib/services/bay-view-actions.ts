@@ -286,6 +286,7 @@ export async function quickRegisterVehicle(params: {
       customerId = existing.id;
     } else if (params.customerFirstName?.trim()) {
       const newCust = await createCustomer(
+        supabase,
         orgId,
         {
           firstName: params.customerFirstName.trim(),
@@ -312,6 +313,7 @@ export async function quickRegisterVehicle(params: {
   if (existingVehicle) {
     // UPDATE existing vehicle
     vehicle = await updateVehicle(
+      supabase,
       existingVehicle.id,
       orgId,
       {
@@ -330,6 +332,7 @@ export async function quickRegisterVehicle(params: {
   } else {
     // CREATE new vehicle
     vehicle = await createVehicle(
+      supabase,
       orgId,
       {
         plateNumber: trimmedPlate,
@@ -584,6 +587,7 @@ export async function addVehicleToQueue(params: {
   vehicleId: string;
   customerId: string;
   complaint?: string;
+  branchId?: string;
 }): Promise<{ workOrderId: string }> {
   const {
     data: { user },
@@ -593,6 +597,23 @@ export async function addVehicleToQueue(params: {
 
   if (!params.vehicleId) throw new ValidationError("Vehicle is required");
   if (!params.customerId) throw new ValidationError("Customer is required");
+
+  // Resolve branch: if not provided, fall back to the main branch
+  let branchId = params.branchId;
+  if (!branchId) {
+    const { data: mainBranch } = await supabase
+      .from("branches")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("is_main", true)
+      .maybeSingle();
+    if (mainBranch) branchId = mainBranch.id;
+  }
+  if (!branchId) {
+    throw new ValidationError(
+      "A branch is required to add a vehicle to the queue.",
+    );
+  }
 
   // Check for duplicate active work order on this vehicle
   const { data: activeWO } = await supabase
@@ -611,9 +632,10 @@ export async function addVehicleToQueue(params: {
     throw new ValidationError(`This vehicle is ${location}.`);
   }
 
-  const result = await createWorkOrder(orgId, {
+  const result = await createWorkOrder(supabase, orgId, {
     customer_id: params.customerId,
     vehicle_id: params.vehicleId,
+    branchId,
     complaint: params.complaint?.trim() || undefined,
   });
 

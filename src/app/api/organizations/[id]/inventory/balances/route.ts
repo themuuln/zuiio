@@ -5,10 +5,12 @@ import {
   getWeightedAverageCosts,
 } from "@/lib/services/inventory-service";
 
-export const GET = createRouteHandler(async ({ orgId }) => {
+export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
+  const { searchParams } = new URL(request.url);
+  const branchId = searchParams.get("branch_id") ?? undefined;
   const [balances, avgCosts] = await Promise.all([
-    getInventoryBalances(orgId),
-    getWeightedAverageCosts(orgId),
+    getInventoryBalances(supabase, orgId, branchId),
+    getWeightedAverageCosts(supabase, orgId, branchId),
   ]);
   const data = balances.map((b) => ({
     ...b,

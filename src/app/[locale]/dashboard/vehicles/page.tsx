@@ -37,6 +37,7 @@ import type { ExportColumn } from "@/lib/export";
 import { useTableFilters } from "@/lib/hooks/use-url-filters";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useDeleteVehicle, useVehicles } from "@/lib/queries/use-vehicles";
+import { useSelectedBranchId } from "@/lib/stores";
 import { createColumns, type VehicleRow } from "./_columns";
 
 export default function VehiclesPage() {
@@ -46,6 +47,8 @@ export default function VehiclesPage() {
   const now = useClientNow();
 
   const { data: org, isError: orgError } = useCurrentOrg();
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
   const {
     data: vehicles,
     isLoading,
@@ -53,7 +56,7 @@ export default function VehiclesPage() {
     isError,
     error,
     refetch,
-  } = useVehicles(org?.orgId, search);
+  } = useVehicles(org?.orgId, search, branchFilter);
   const deleteVehicle = useDeleteVehicle(org?.orgId);
 
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);

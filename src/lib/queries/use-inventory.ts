@@ -72,9 +72,12 @@ const fetchPurchaseOrders = createOrgQuery<PurchaseOrderWithSupplier[]>(
 
 // ── Query hooks ──────────────────────────────────────────────
 
-export function usePartsCatalog(orgId: string | undefined) {
+export function usePartsCatalog(
+  orgId: string | undefined,
+  branchId?: string | null,
+) {
   return useQuery({
-    queryKey: inventoryKeys.parts(orgId ?? ""),
+    queryKey: inventoryKeys.parts(orgId ?? "", branchId),
     queryFn: () => fetchPartsCatalog(orgId ?? ""),
     enabled: !!orgId,
     staleTime: 60_000,
@@ -134,10 +137,16 @@ export function useCreatePartCategory(orgId: string | undefined) {
   });
 }
 
-export function useInventoryBalances(orgId: string | undefined) {
+export function useInventoryBalances(
+  orgId: string | undefined,
+  branchId?: string | null,
+) {
   return useQuery({
-    queryKey: inventoryKeys.balances(orgId ?? ""),
-    queryFn: () => fetchInventoryBalances(orgId ?? ""),
+    queryKey: inventoryKeys.balances(orgId ?? "", branchId),
+    queryFn: () =>
+      fetchInventoryBalances(orgId ?? "", {
+        params: branchId ? { branch_id: branchId } : undefined,
+      }),
     enabled: !!orgId,
     staleTime: 30_000,
   });
@@ -146,12 +155,19 @@ export function useInventoryBalances(orgId: string | undefined) {
 export function useInventoryMovements(
   orgId: string | undefined,
   type?: string,
+  branchId?: string | null,
 ) {
   return useQuery({
-    queryKey: [...inventoryKeys.movements(orgId ?? ""), type ?? "all"],
+    queryKey: [
+      ...inventoryKeys.movements(orgId ?? "", branchId),
+      type ?? "all",
+    ],
     queryFn: () =>
       fetchInventoryMovements(orgId ?? "", {
-        params: type ? { movement_type: type } : undefined,
+        params: {
+          ...(type ? { movement_type: type } : {}),
+          ...(branchId ? { branch_id: branchId } : {}),
+        },
       }),
     enabled: !!orgId,
   });
@@ -165,10 +181,16 @@ export function useSuppliers(orgId: string | undefined) {
   });
 }
 
-export function usePurchaseOrders(orgId: string | undefined) {
+export function usePurchaseOrders(
+  orgId: string | undefined,
+  branchId?: string | null,
+) {
   return useQuery({
-    queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
-    queryFn: () => fetchPurchaseOrders(orgId ?? ""),
+    queryKey: inventoryKeys.purchaseOrders(orgId ?? "", branchId),
+    queryFn: () =>
+      fetchPurchaseOrders(orgId ?? "", {
+        params: branchId ? { branch_id: branchId } : undefined,
+      }),
     enabled: !!orgId,
     staleTime: 30_000,
   });
@@ -190,10 +212,16 @@ export function usePurchaseOrderItems(
   });
 }
 
-export function useStockThresholds(orgId: string | undefined) {
+export function useStockThresholds(
+  orgId: string | undefined,
+  branchId?: string | null,
+) {
   return useQuery({
-    queryKey: inventoryKeys.thresholds(orgId ?? ""),
-    queryFn: () => fetchStockThresholds(orgId ?? ""),
+    queryKey: inventoryKeys.thresholds(orgId ?? "", branchId),
+    queryFn: () =>
+      fetchStockThresholds(orgId ?? "", {
+        params: branchId ? { branch_id: branchId } : undefined,
+      }),
     enabled: !!orgId,
     staleTime: 60_000,
   });
@@ -243,36 +271,48 @@ export function usePartsCarParts(
 
 // ── Inventory Report Hooks ──────────────────────────────────
 
-export function useInventoryTurnover(orgId: string | undefined) {
+export function useInventoryTurnover(
+  orgId: string | undefined,
+  branchId?: string | null,
+) {
   return useQuery({
-    queryKey: inventoryKeys.turnover(orgId ?? ""),
+    queryKey: inventoryKeys.turnover(orgId ?? "", branchId),
     queryFn: () =>
       createOrgQuery<InventoryTurnover>("/inventory/reports/turnover")(
         orgId ?? "",
+        { params: branchId ? { branch_id: branchId } : undefined },
       ),
     enabled: !!orgId,
     staleTime: 5 * 60 * 1000,
   });
 }
 
-export function useUsageTrends(orgId: string | undefined) {
+export function useUsageTrends(
+  orgId: string | undefined,
+  branchId?: string | null,
+) {
   return useQuery({
-    queryKey: inventoryKeys.usageTrends(orgId ?? ""),
+    queryKey: inventoryKeys.usageTrends(orgId ?? "", branchId),
     queryFn: () =>
       createOrgQuery<UsageTrend[]>("/inventory/reports/usage-trends")(
         orgId ?? "",
+        { params: branchId ? { branch_id: branchId } : undefined },
       ),
     enabled: !!orgId,
     staleTime: 5 * 60 * 1000,
   });
 }
 
-export function useSlowMovingStock(orgId: string | undefined) {
+export function useSlowMovingStock(
+  orgId: string | undefined,
+  branchId?: string | null,
+) {
   return useQuery({
-    queryKey: inventoryKeys.slowMoving(orgId ?? ""),
+    queryKey: inventoryKeys.slowMoving(orgId ?? "", branchId),
     queryFn: () =>
       createOrgQuery<SlowMovingItem[]>("/inventory/reports/slow-moving")(
         orgId ?? "",
+        { params: branchId ? { branch_id: branchId } : undefined },
       ),
     enabled: !!orgId,
     staleTime: 5 * 60 * 1000,

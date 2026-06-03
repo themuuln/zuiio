@@ -36,6 +36,7 @@ import type { ExportColumn } from "@/lib/export";
 import { useTableFilters } from "@/lib/hooks/use-url-filters";
 import { useCustomers, useSharedCustomers } from "@/lib/queries/use-customers";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import type { CustomerRow } from "./_columns";
 import { columns, sharedColumns } from "./_columns";
 
@@ -75,6 +76,8 @@ export default function CustomersPage() {
     isLoading: orgLoading,
     isError: orgError,
   } = useCurrentOrg();
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
 
   const {
     data: rawCustomers,
@@ -83,7 +86,7 @@ export default function CustomersPage() {
     isError,
     error,
     refetch,
-  } = useCustomers(org?.orgId, activeView === "my" ? search : "");
+  } = useCustomers(org?.orgId, activeView === "my" ? search : "", branchFilter);
 
   const { data: rawSharedCustomers, isFetching: sharedFetching } =
     useSharedCustomers(org?.orgId, activeView === "shared" ? search : "");

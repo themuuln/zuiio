@@ -64,6 +64,7 @@ describe("createVehicle", () => {
     });
 
     const result = await createVehicle(
+      client,
       ORG_ID,
       {
         plateNumber: "4444УНА",
@@ -106,6 +107,7 @@ describe("createVehicle", () => {
     setupMockClient();
     await expect(
       createVehicle(
+        client,
         ORG_ID,
         { plateNumber: "", make: "Toyota", model: "Camry" },
         USER_ID,
@@ -117,6 +119,7 @@ describe("createVehicle", () => {
     setupMockClient();
     await expect(
       createVehicle(
+        client,
         ORG_ID,
         { plateNumber: "4444УНА", make: "", model: "Camry" },
         USER_ID,
@@ -128,6 +131,7 @@ describe("createVehicle", () => {
     setupMockClient();
     await expect(
       createVehicle(
+        client,
         ORG_ID,
         { plateNumber: "4444УНА", make: "Toyota", model: "" },
         USER_ID,
@@ -144,6 +148,7 @@ describe("createVehicle", () => {
 
     await expect(
       createVehicle(
+        client,
         ORG_ID,
         { plateNumber: "4444УНА", make: "Toyota", model: "Camry" },
         USER_ID,
@@ -171,6 +176,7 @@ describe("createVehicle", () => {
     });
 
     await createVehicle(
+      client,
       ORG_ID,
       {
         plateNumber: "5555УНА",
@@ -212,6 +218,7 @@ describe("createVehicle", () => {
     });
 
     await createVehicle(
+      client,
       ORG_ID,
       { plateNumber: "6666УНА", make: "Ford", model: "Focus" },
       USER_ID,
@@ -235,6 +242,7 @@ describe("createVehicle", () => {
     });
 
     await createVehicle(
+      client,
       ORG_ID,
       { plateNumber: "7777УНА", make: "BMW", model: "X5" },
       USER_ID,
@@ -263,6 +271,7 @@ describe("createVehicle", () => {
     });
 
     await createVehicle(
+      client,
       ORG_ID,
       { plateNumber: "8888УНА", make: "Audi", model: "A4" },
       USER_ID,
@@ -363,7 +372,7 @@ describe("getVehicles", () => {
       error: null,
     });
 
-    const results = await getVehicles(ORG_ID);
+    const results = await getVehicles(client, ORG_ID);
 
     expect(results).toHaveLength(2);
     expect(results[0].owner_name).toBe("John Doe");
@@ -396,7 +405,7 @@ describe("getVehicles", () => {
       error: null,
     });
 
-    const results = await getVehicles(ORG_ID, { search: "ABC" });
+    const results = await getVehicles(client, ORG_ID, { search: "ABC" });
 
     const vehicleBuilder = client.from("vehicles");
     expect(vehicleBuilder.or).toHaveBeenCalledWith(
@@ -413,7 +422,7 @@ describe("getVehicles", () => {
       error: null,
     });
 
-    await getVehicles(ORG_ID, { customerId: "c-42" });
+    await getVehicles(client, ORG_ID, { customerId: "c-42" });
 
     const vehicleBuilder = client.from("vehicles");
     expect(vehicleBuilder.eq).toHaveBeenCalledWith(
@@ -454,7 +463,7 @@ describe("searchByPlate", () => {
       error: null,
     });
 
-    const results = await searchByPlate(ORG_ID, "ABC");
+    const results = await searchByPlate(client, ORG_ID, "ABC");
 
     const vehicleBuilder = client.from("vehicles");
     expect(vehicleBuilder.or).toHaveBeenCalledWith(
@@ -498,6 +507,7 @@ describe("updateVehicle", () => {
     });
 
     const result = await updateVehicle(
+      client,
       "v-1",
       ORG_ID,
       {
@@ -525,7 +535,7 @@ describe("updateVehicle", () => {
     });
 
     await expect(
-      updateVehicle("nonexistent", ORG_ID, { make: "Toyota" }, USER_ID),
+      updateVehicle(client, "nonexistent", ORG_ID, { make: "Toyota" }, USER_ID),
     ).rejects.toThrow(NotFoundError);
   });
 
@@ -541,9 +551,9 @@ describe("updateVehicle", () => {
       error: null,
     });
 
-    await expect(updateVehicle("v-1", ORG_ID, {}, USER_ID)).rejects.toThrow(
-      ValidationError,
-    );
+    await expect(
+      updateVehicle(client, "v-1", ORG_ID, {}, USER_ID),
+    ).rejects.toThrow(ValidationError);
   });
 
   it("when customerId changes — deactivates old ownership, creates new", async () => {
@@ -568,6 +578,7 @@ describe("updateVehicle", () => {
     });
 
     await updateVehicle(
+      client,
       "v-1",
       ORG_ID,
       { plateNumber: "2222УНА", customerId: "c-2" },
@@ -610,7 +621,13 @@ describe("updateVehicle", () => {
       error: null,
     });
 
-    await updateVehicle("v-1", ORG_ID, { plateNumber: "3333УНА" }, USER_ID);
+    await updateVehicle(
+      client,
+      "v-1",
+      ORG_ID,
+      { plateNumber: "3333УНА" },
+      USER_ID,
+    );
 
     expect(createAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -638,7 +655,7 @@ describe("deleteVehicle", () => {
       error: null,
     });
 
-    await deleteVehicle("v-1", ORG_ID, USER_ID);
+    await deleteVehicle(client, "v-1", ORG_ID, USER_ID);
 
     const vehicleBuilder = client.from("vehicles");
     expect(vehicleBuilder.update).toHaveBeenCalledWith(
@@ -656,9 +673,9 @@ describe("deleteVehicle", () => {
       error: null,
     });
 
-    await expect(deleteVehicle("nonexistent", ORG_ID, USER_ID)).rejects.toThrow(
-      NotFoundError,
-    );
+    await expect(
+      deleteVehicle(client, "nonexistent", ORG_ID, USER_ID),
+    ).rejects.toThrow(NotFoundError);
   });
 
   it("creates audit log for soft_delete", async () => {
@@ -668,7 +685,7 @@ describe("deleteVehicle", () => {
       error: null,
     });
 
-    await deleteVehicle("v-1", ORG_ID, USER_ID);
+    await deleteVehicle(client, "v-1", ORG_ID, USER_ID);
 
     expect(createAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -729,7 +746,7 @@ describe("getVehicleServiceHistory", () => {
       error: null,
     });
 
-    const results = await getVehicleServiceHistory(ORG_ID, "v-1");
+    const results = await getVehicleServiceHistory(client, ORG_ID, "v-1");
 
     expect(results).toHaveLength(2);
     expect(results[0].id).toBe("wo-1");
@@ -784,7 +801,7 @@ describe("getCustomerVehicles", () => {
       error: null,
     });
 
-    const results = await getCustomerVehicles(ORG_ID, "c-1");
+    const results = await getCustomerVehicles(client, ORG_ID, "c-1");
 
     expect(results).toHaveLength(2);
     expect(results[0].plate_number).toBe("ABC123");

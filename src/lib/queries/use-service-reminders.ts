@@ -51,12 +51,20 @@ const fetchSchedules =
 export function useServiceSchedules(
   orgId: string | undefined,
   vehicleId?: string,
+  branchId?: string | null,
 ): UseQueryResult<ServiceScheduleItem[], Error> {
   return useQuery({
-    queryKey: serviceReminderKeys.list(orgId ?? "", vehicleId),
+    queryKey: serviceReminderKeys.list(
+      orgId ?? "",
+      vehicleId,
+      branchId ?? "all",
+    ),
     queryFn: () =>
       fetchSchedules(orgId!, {
-        params: vehicleId ? { vehicle_id: vehicleId } : undefined,
+        params: {
+          ...(vehicleId ? { vehicle_id: vehicleId } : {}),
+          ...(branchId ? { branch_id: branchId } : {}),
+        },
       }),
     enabled: !!orgId,
     staleTime: 15_000,
@@ -84,12 +92,20 @@ const fetchReminderLogs = createOrgQuery<ReminderLogItem[]>(
 export function useReminderLogs(
   orgId: string | undefined,
   vehicleId?: string,
+  branchId?: string | null,
 ): UseQueryResult<ReminderLogItem[], Error> {
   return useQuery({
-    queryKey: serviceReminderKeys.logs(orgId ?? "", vehicleId),
+    queryKey: serviceReminderKeys.logs(
+      orgId ?? "",
+      vehicleId,
+      branchId ?? "all",
+    ),
     queryFn: () =>
       fetchReminderLogs(orgId!, {
-        params: vehicleId ? { vehicle_id: vehicleId } : undefined,
+        params: {
+          ...(vehicleId ? { vehicle_id: vehicleId } : {}),
+          ...(branchId ? { branch_id: branchId } : {}),
+        },
       }),
     enabled: !!orgId,
     staleTime: 30_000,

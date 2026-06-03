@@ -12,6 +12,7 @@ import {
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import { DetailsForm } from "./_details-form";
 import { PartHeader } from "./_header";
 import { StockHistory } from "./_stock-history";
@@ -24,18 +25,20 @@ export default function PartDetailPage() {
   const partId = params.partId as string;
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId ?? null;
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
 
   const {
     data: parts = [],
     isLoading: partsLoading,
     error: partsError,
-  } = usePartsCatalog(orgId ?? undefined);
+  } = usePartsCatalog(orgId ?? undefined, branchFilter);
   const { data: balances = [], isLoading: balancesLoading } =
-    useInventoryBalances(orgId ?? undefined);
+    useInventoryBalances(orgId ?? undefined, branchFilter);
   const { data: movements = [], isLoading: movementsLoading } =
-    useInventoryMovements(orgId ?? undefined);
+    useInventoryMovements(orgId ?? undefined, undefined, branchFilter);
   const { data: thresholds = [], isLoading: thresholdsLoading } =
-    useStockThresholds(orgId ?? undefined);
+    useStockThresholds(orgId ?? undefined, branchFilter);
 
   const part = useMemo(
     () => parts.find((p) => p.id === partId),

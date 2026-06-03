@@ -24,6 +24,7 @@ import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
 import { usePurchaseOrders } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import type { PurchaseOrder } from "@/lib/types";
 
 const PO_STATUS_KEYS: Record<string, string> = {
@@ -48,7 +49,12 @@ export default function PurchaseOrdersPage() {
   const now = useClientNow();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
-  const { data: purchaseOrders = [], isLoading } = usePurchaseOrders(orgId);
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
+  const { data: purchaseOrders = [], isLoading } = usePurchaseOrders(
+    orgId,
+    branchFilter,
+  );
   const { setDetailPOId } = usePageHeader();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");

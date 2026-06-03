@@ -25,6 +25,7 @@ import {
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import type { Tab } from "./_components/constants";
 import { getTabs } from "./_components/constants";
 import { MovementsTab } from "./_components/movements-tab";
@@ -37,6 +38,8 @@ export default function InventoryPage() {
   const t = useTranslations("inventory");
   const { data: org, isLoading: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId ?? null;
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
   const { registerTab } = useRightSidebar();
   const [tab, setTab] = useState<Tab>("parts");
   const [search, setSearch] = useState("");
@@ -48,14 +51,22 @@ export default function InventoryPage() {
   );
   const { data: balances = [], error: balancesError } = useInventoryBalances(
     orgId ?? undefined,
+    branchFilter,
   );
   const { data: thresholds = [], error: thresholdsError } = useStockThresholds(
     orgId ?? undefined,
+    branchFilter,
   );
   const inventoryError = partsError || balancesError || thresholdsError;
 
-  const { data: turnover } = useInventoryTurnover(orgId ?? undefined);
-  const { data: slowMoving = [] } = useSlowMovingStock(orgId ?? undefined);
+  const { data: turnover } = useInventoryTurnover(
+    orgId ?? undefined,
+    branchFilter,
+  );
+  const { data: slowMoving = [] } = useSlowMovingStock(
+    orgId ?? undefined,
+    branchFilter,
+  );
 
   const handleTabChange = useCallback((newTab: string) => {
     setTab(newTab as Tab);
@@ -252,6 +263,7 @@ export default function InventoryPage() {
       {tab === "parts" && (
         <PartsTab
           orgId={orgId}
+          branchFilter={branchFilter}
           search={search}
           onSearchChange={setSearch}
           onNavigate={handleTabChange}
@@ -260,6 +272,7 @@ export default function InventoryPage() {
       {tab === "movements" && (
         <MovementsTab
           orgId={orgId}
+          branchFilter={branchFilter}
           search={search}
           onSearchChange={setSearch}
           movementFilter={movementFilter}
@@ -276,6 +289,7 @@ export default function InventoryPage() {
       {tab === "purchase-orders" && (
         <PurchaseOrdersTab
           orgId={orgId}
+          branchFilter={branchFilter}
           search={search}
           onSearchChange={setSearch}
         />

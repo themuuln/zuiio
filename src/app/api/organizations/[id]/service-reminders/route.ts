@@ -10,7 +10,8 @@ import { requireActiveSubscription } from "@/lib/services/subscription-enforceme
 export const GET = createRouteHandler(async ({ request, orgId }) => {
   const { searchParams } = new URL(request.url);
   const vehicleId = searchParams.get("vehicle_id") ?? undefined;
-  const schedules = await getServiceSchedules(orgId, vehicleId);
+  const branchId = searchParams.get("branch_id");
+  const schedules = await getServiceSchedules(orgId, vehicleId, branchId);
   return NextResponse.json({ data: schedules });
 });
 

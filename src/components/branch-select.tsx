@@ -16,6 +16,8 @@ interface BranchSelectProps {
   placeholder: string;
   allLabel: string;
   className?: string;
+  /** When provided, renders an "Add Branch" item at the bottom of the dropdown. */
+  onAddBranch?: () => void;
 }
 
 export function BranchSelect({
@@ -25,6 +27,7 @@ export function BranchSelect({
   placeholder,
   allLabel,
   className,
+  onAddBranch,
 }: BranchSelectProps) {
   return (
     <Select value={value || "all"} onValueChange={(v) => onChange(v ?? "all")}>
@@ -38,6 +41,21 @@ export function BranchSelect({
             {branch.name}
           </SelectItem>
         ))}
+        {onAddBranch && (
+          <>
+            <div className="h-px bg-border my-1" />
+            <button
+              type="button"
+              className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+              onClick={(e) => {
+                e.preventDefault();
+                onAddBranch();
+              }}
+            >
+              + Add Branch
+            </button>
+          </>
+        )}
       </SelectContent>
     </Select>
   );

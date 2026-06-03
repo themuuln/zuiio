@@ -14,6 +14,7 @@ import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import { useInventoryBalances } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import type { ValuationRow } from "./_columns";
 import { columns } from "./_columns";
 
@@ -22,7 +23,12 @@ export default function ValuationPage() {
   const now = useClientNow();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
-  const { data: balances = [], isLoading } = useInventoryBalances(orgId);
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
+  const { data: balances = [], isLoading } = useInventoryBalances(
+    orgId,
+    branchFilter,
+  );
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
 

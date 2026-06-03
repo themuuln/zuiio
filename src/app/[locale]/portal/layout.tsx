@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CalendarPlus,
   Car,
   ClipboardList,
   FileText,
@@ -28,6 +29,11 @@ const NAV_ITEMS = [
   },
   { href: "/portal/invoices", labelKey: "portal.invoices", icon: FileText },
   { href: "/portal/settings", labelKey: "portal.settings", icon: Settings },
+  {
+    href: "/portal/booking",
+    labelKey: "portal.bookService",
+    icon: CalendarPlus,
+  },
 ];
 
 export default function PortalLayout({

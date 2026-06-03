@@ -5,6 +5,7 @@ import {
   toApiErrorResponse,
   UnauthorizedError,
 } from "@/lib/errors";
+import { mutationRateLimiter } from "@/lib/rate-limit";
 import { requirePermission, requireRole } from "@/lib/supabase/role-guard";
 import { createClient } from "@/lib/supabase/server";
 
@@ -31,6 +32,8 @@ interface RouteHandlerOptions {
   minimumRole?: "Org Owner" | "Manager" | "Mechanic" | "Guest";
   /** Specific permission required for this route (checked after minimumRole) */
   requiredPermission?: { resource: string; action: string };
+  /** Apply mutation rate limiting (60 req/min) to this route */
+  rateLimit?: boolean;
 }
 
 // ── Route Handler Factory ─────────────────────────────────────
@@ -93,6 +96,25 @@ export function createRouteHandler(
           options.requiredPermission.action,
           orgId,
         );
+      }
+
+      // Apply mutation rate limiting
+      if (options?.rateLimit) {
+        const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+        const rateCheck = mutationRateLimiter.check(ip);
+        if (!rateCheck.allowed) {
+          return NextResponse.json(
+            { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+            {
+              status: 429,
+              headers: {
+                "Retry-After": String(
+                  Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+                ),
+              },
+            },
+          );
+        }
       }
 
       return await handler({ request, params, orgId, user, supabase });

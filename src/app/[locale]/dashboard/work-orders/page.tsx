@@ -43,6 +43,7 @@ import { useRouter } from "@/lib/i18n/navigation";
 import { workOrderKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
+import { useSelectedBranchId } from "@/lib/stores";
 import {
   useWorkOrders,
   type WorkOrderListItem,
@@ -161,6 +162,8 @@ export default function WorkOrdersPage() {
   const { setNewWorkOrderSheetOpen } = usePageHeader();
 
   const { data: org } = useCurrentOrg();
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
 
   // ── Realtime: invalidate cache when core tables change ──────
   useRealtimeMulti({
@@ -200,7 +203,7 @@ export default function WorkOrdersPage() {
     isFetching,
     error,
     refetch,
-  } = useWorkOrders(org?.orgId, activeStatus, search);
+  } = useWorkOrders(org?.orgId, activeStatus, search, branchFilter);
 
   useEffect(() => {
     if (orders) {

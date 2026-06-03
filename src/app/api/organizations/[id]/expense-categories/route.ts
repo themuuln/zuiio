@@ -7,29 +7,37 @@ import {
   seedDefaultExpenseCategories,
 } from "@/lib/services/expense-service";
 
-export const GET = createRouteHandler(async ({ orgId, user }) => {
-  await seedDefaultExpenseCategories(orgId, user.id);
-  const categories = await getCategories(orgId);
+export const GET = createRouteHandler(async ({ orgId, user, supabase }) => {
+  await seedDefaultExpenseCategories(supabase, orgId, user.id);
+  const categories = await getCategories(supabase, orgId);
   return NextResponse.json({ data: categories });
 });
 
-export const POST = createRouteHandler(async ({ request, orgId, user }) => {
-  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = mutationRateLimiter.check(ip);
-  if (!rateCheck.allowed) {
-    return NextResponse.json(
-      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(
-            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-          ),
+export const POST = createRouteHandler(
+  async ({ request, orgId, user, supabase }) => {
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+    const rateCheck = mutationRateLimiter.check(ip);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+            ),
+          },
         },
-      },
+      );
+    }
+    const body = await request.json();
+    const category = await createExpenseCategory(
+      supabase,
+      orgId,
+      body,
+      user.id,
     );
-  }
-  const body = await request.json();
-  const category = await createExpenseCategory(orgId, body, user.id);
-  return NextResponse.json({ data: category }, { status: 201 });
-});
+    return NextResponse.json({ data: category }, { status: 201 });
+  },
+  { requiredPermission: { resource: "expense_categories", action: "create" } },
+);

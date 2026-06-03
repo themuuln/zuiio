@@ -49,6 +49,7 @@ import {
   useExpenses,
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import type { ExpenseWithCategory } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 import { columns } from "./_columns";
@@ -168,6 +169,9 @@ export default function ExpensesPage() {
   const { data: org, isLoading: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId;
 
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
+
   const paidParam = paidFilter === "all" ? undefined : paidFilter === "paid";
   const overdueParam = paidFilter === "overdue";
 
@@ -184,6 +188,7 @@ export default function ExpensesPage() {
     overdue: overdueParam || undefined,
     startDate: startDate || undefined,
     endDate: endDate || undefined,
+    branchId: branchFilter ?? undefined,
   });
 
   const { data: stats, isLoading: statsLoading } = useExpenseStats(orgId);

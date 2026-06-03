@@ -15,11 +15,18 @@ const fetchRecords = createOrgQuery<PayrollRecord[]>("/payroll/records");
 
 /**
  * List all mechanics with their current pay rate.
+ * Optionally filtered by branch.
  */
-export function usePayRates(orgId: string | undefined) {
+export function usePayRates(
+  orgId: string | undefined,
+  branchId?: string | null,
+) {
   return useQuery({
-    queryKey: payrollKeys.payRates(orgId ?? ""),
-    queryFn: () => fetchPayRates(orgId!),
+    queryKey: payrollKeys.payRates(orgId ?? "", branchId ?? "all"),
+    queryFn: () =>
+      fetchPayRates(orgId!, {
+        params: branchId ? { branch_id: branchId } : undefined,
+      }),
     enabled: !!orgId,
     staleTime: 60_000,
   });
@@ -27,17 +34,23 @@ export function usePayRates(orgId: string | undefined) {
 
 /**
  * Get payroll records for a specific period.
+ * Optionally filtered by branch.
  */
 export function usePayrollRecords(
   orgId: string | undefined,
   year: number,
   month: number,
+  branchId?: string | null,
 ) {
   return useQuery({
-    queryKey: payrollKeys.records(orgId ?? "", year, month),
+    queryKey: payrollKeys.records(orgId ?? "", year, month, branchId ?? "all"),
     queryFn: () =>
       fetchRecords(orgId!, {
-        params: { year: String(year), month: String(month) },
+        params: {
+          year: String(year),
+          month: String(month),
+          ...(branchId ? { branch_id: branchId } : {}),
+        },
       }),
     enabled: !!orgId && year > 0 && month >= 1 && month <= 12,
     staleTime: 30_000,

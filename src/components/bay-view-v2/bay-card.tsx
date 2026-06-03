@@ -6,7 +6,6 @@ import {
   Check,
   CheckCircle,
   ChevronDown,
-  Clock,
   Loader2,
   Play,
   Plus,
@@ -14,7 +13,6 @@ import {
   Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,112 +32,16 @@ import { MongolianLicensePlate } from "@/components/vehicles/license-plate";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
 import { MechanicBadge } from "./mechanic-badge";
+import {
+  STATUS_ACCENT,
+  STATUS_BADGE_CLASS,
+  ALL_STATUSES,
+  STATUS_TRANSLATION_KEYS,
+} from "./_constants";
+import { ElapsedTimer } from "./_elapsed-timer";
+import { DraggableVehicleWrapper } from "./_draggable-vehicle-wrapper";
 
-function formatDuration(ms: number): string {
-  const minutes = Math.floor(ms / 60000);
-  if (minutes < 1) return "<1m";
-  if (minutes < 60) return `${minutes}m`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
-}
-
-const STATUS_ACCENT: Record<string, string> = {
-  New: "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.2)]",
-  Diagnosing: "bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.2)]",
-  "In Progress": "bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.2)]",
-  "Ready for Pickup": "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.2)]",
-  Completed: "bg-emerald-500/40",
-  Cancelled: "bg-rose-400/40",
-};
-
-export const STATUS_BADGE_CLASS: Record<string, string> = {
-  New: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25",
-  Diagnosing:
-    "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25",
-  "In Progress":
-    "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/25",
-  "Ready for Pickup":
-    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
-  Completed:
-    "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/25",
-  Cancelled:
-    "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25",
-};
-
-const ALL_STATUSES = [
-  "New",
-  "Diagnosing",
-  "In Progress",
-  "Ready for Pickup",
-  "Completed",
-  "Cancelled",
-] as const;
-
-function ElapsedTimer({ startedAt }: { startedAt: string | null | undefined }) {
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    if (!startedAt) return;
-    const tick = () => setNow(Date.now());
-    tick();
-    const interval = setInterval(tick, 30000);
-    return () => clearInterval(interval);
-  }, [startedAt]);
-
-  if (!startedAt) return null;
-
-  const ms = new Date(startedAt).getTime();
-  const elapsed = Math.max(0, now - ms);
-  const display = formatDuration(elapsed);
-
-  return (
-    <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/60 px-2 py-0.5 rounded font-mono tabular-nums select-none border border-border/30">
-      <Clock className="size-3 animate-pulse text-primary/70" />
-      {display}
-    </span>
-  );
-}
-
-function DraggableVehicleWrapper({
-  workOrderId,
-  children,
-  disabled,
-}: {
-  workOrderId: string;
-  children: React.ReactNode;
-  disabled?: boolean;
-}) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      id: `vehicle-${workOrderId}`,
-      data: { type: "vehicle", workOrderId },
-      disabled,
-    });
-
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        zIndex: 50,
-      }
-    : undefined;
-
-  return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      style={style}
-      className={cn(
-        "flex flex-1 items-center gap-3.5 cursor-grab active:cursor-grabbing select-none touch-manipulation hover:bg-muted/40 rounded-xl p-2 transition-all border border-transparent hover:border-border/40",
-        isDragging &&
-          "opacity-50 shadow-md bg-muted/20 border-dashed border-primary/30",
-      )}
-    >
-      {children}
-    </div>
-  );
-}
+export { STATUS_BADGE_CLASS };
 
 interface BayCardProps {
   bay: BaySlotData;
@@ -228,15 +130,6 @@ export function BayCardDragPreview({ bay }: { bay: BaySlotData }) {
     </Card>
   );
 }
-
-const STATUS_TRANSLATION_KEYS: Record<string, string> = {
-  New: "statusNew",
-  Diagnosing: "statusDiagnosing",
-  "In Progress": "statusInProgress",
-  "Ready for Pickup": "statusReadyForPickup",
-  Completed: "statusCompleted",
-  Cancelled: "statusCancelled",
-};
 
 export function BayCard({
   bay,

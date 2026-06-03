@@ -84,7 +84,7 @@ export interface CreateAppointmentParams {
   vehicle_id: string;
   title: string;
   scheduled_at: string;
-  branch_id?: string | null;
+  branchId?: string | null;
   description?: string | null;
   end_at?: string | null;
   mechanic_id?: string | null;
@@ -107,7 +107,7 @@ export interface UpdateAppointmentParams {
 export interface CreateEstimateParams {
   customer_id: string;
   vehicle_id: string;
-  branch_id?: string | null;
+  branchId?: string | null;
   notes?: string | null;
   terms?: string | null;
   valid_until?: string | null;
@@ -156,7 +156,7 @@ export interface UpdateEstimateParams {
 export interface CreateWorkOrderParams {
   customer_id: string;
   vehicle_id: string;
-  branch_id?: string;
+  branchId?: string;
   mechanic_id?: string;
   notes?: string;
   complaint?: string;
@@ -194,6 +194,7 @@ export interface WorkOrderFilters {
   date?: string;
   vehicle_plate?: string;
   search?: string;
+  branchId?: string;
 }
 
 // ── Reports ────────────────────────────────────────────────────
@@ -536,6 +537,7 @@ export interface CreateCustomerParams {
   address?: string;
   notes?: string;
   source?: string;
+  branchId?: string | null;
 }
 
 export interface UpdateCustomerParams {
@@ -621,6 +623,7 @@ export interface CreateVehicleParams {
   width?: number;
   length?: number;
   weight?: number;
+  branchId?: string | null;
 }
 
 export interface UpdateVehicleParams {

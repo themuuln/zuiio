@@ -9,7 +9,7 @@ import {
   searchByPlate,
 } from "@/lib/services/vehicle-service";
 
-export const GET = createRouteHandler(async ({ request, orgId }) => {
+export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
   const searchRaw =
     request.nextUrl.searchParams.get("q") ??
     request.nextUrl.searchParams.get("plate") ??
@@ -18,32 +18,35 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
     ? transliterateMongolianPlate(searchRaw.replace(/[\s-]/g, ""))
     : undefined;
   const customerId = request.nextUrl.searchParams.get("customer") ?? undefined;
+  const branchId = request.nextUrl.searchParams.get("branch_id") ?? undefined;
 
   const vehicles = search
-    ? await searchByPlate(orgId, search)
-    : await getVehicles(orgId, { customerId });
+    ? await searchByPlate(supabase, orgId, search)
+    : await getVehicles(supabase, orgId, { customerId, branchId });
 
   return NextResponse.json({ data: vehicles });
 });
 
-export const POST = createRouteHandler(async ({ request, orgId, user }) => {
-  await requireActiveSubscription(orgId);
-  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = mutationRateLimiter.check(ip);
-  if (!rateCheck.allowed) {
-    return NextResponse.json(
-      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(
-            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-          ),
+export const POST = createRouteHandler(
+  async ({ request, orgId, user, supabase }) => {
+    await requireActiveSubscription(orgId);
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+    const rateCheck = mutationRateLimiter.check(ip);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+            ),
+          },
         },
-      },
-    );
-  }
-  const body = await request.json();
-  const vehicle = await createVehicle(orgId, body, user.id);
-  return NextResponse.json({ data: vehicle }, { status: 201 });
-});
+      );
+    }
+    const body = await request.json();
+    const vehicle = await createVehicle(supabase, orgId, body, user.id);
+    return NextResponse.json({ data: vehicle }, { status: 201 });
+  },
+);

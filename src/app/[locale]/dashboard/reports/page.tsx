@@ -60,6 +60,7 @@ import {
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { useSelectedBranchGuard } from "@/hooks/use-selected-branch-guard";
 import type { ExportColumn } from "@/lib/export";
 import { useBranches } from "@/lib/queries/use-branches";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -73,6 +74,7 @@ import {
   useReportServiceBreakdown,
   useReportTargets,
 } from "@/lib/queries/use-reports";
+import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type {
   DailyReport,
   ReportComparison,
@@ -205,11 +207,7 @@ function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
           subtitle={`${t("avgRevenuePerWo")}: ${formatCurrency(Math.round((data.total_commission ?? 0) / Math.max(data.total_work_orders, 1)))}`}
         />
         <ReportKpiCard
-          label={
-            bestMechanic
-              ? bestMechanic.mechanic_name
-              : t("bestMechanic")
-          }
+          label={bestMechanic ? bestMechanic.mechanic_name : t("bestMechanic")}
           value={
             bestMechanic
               ? formatCurrency(bestMechanic.total_revenue)
@@ -236,7 +234,7 @@ function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
             columns={[
               { key: "mechanic_name", label: t("mechanic") },
               { key: "work_orders_completed", label: t("jobs") },
-            { key: "services_performed", label: t("services") },
+              { key: "services_performed", label: t("services") },
               { key: "parts_used", label: t("parts") },
               {
                 key: "total_revenue",
@@ -331,9 +329,7 @@ function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
             {data.mechanics.length > 0 && (
               <TableFooter>
                 <TableRow className="bg-muted/30 font-semibold">
-                  <TableCell className="px-4 py-3">
-                    {t("total")}
-                  </TableCell>
+                  <TableCell className="px-4 py-3">{t("total")}</TableCell>
                   <TableCell className="px-4 py-3 text-right tabular-nums">
                     {data.mechanics.reduce(
                       (s, m) => s + m.work_orders_completed,
@@ -392,23 +388,15 @@ export default function ReportsPage() {
     from: subDays(new Date(), 6),
     to: new Date(),
   }));
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("all");
+  const selectedBranchId = useSelectedBranchId();
+  const setSelectedBranchId = useSetSelectedBranchId();
 
   // ── Init: get org ID ─────────────────────────────────
   const { data: orgInfo } = useCurrentOrg();
   const orgId = orgInfo?.orgId ?? "";
   const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
   const branchesQ = useBranches(orgId);
-
-  useEffect(() => {
-    const branches = branchesQ.data ?? [];
-    const branchStillExists = branches.some(
-      (branch) => branch.id === selectedBranchId,
-    );
-    if (!branchStillExists) {
-      setSelectedBranchId("all");
-    }
-  }, [branchesQ.data, selectedBranchId]);
+  useSelectedBranchGuard(orgId);
 
   // ── Derived params ───────────────────────────────────
   const isEod = reportType === "eod";

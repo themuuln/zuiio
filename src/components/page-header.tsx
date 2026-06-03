@@ -2,14 +2,17 @@
 
 import {
   Car,
+  CalendarPlus,
   ClipboardList,
   Command,
   DollarSign,
+  Package,
   PanelRightClose,
   PanelRightOpen,
   Plus,
   SearchIcon,
   Settings2,
+  Truck,
   UserPlus,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -69,6 +72,10 @@ export function PageHeader({
     setNewVehicleDialogOpen,
     setNewExpenseSheetOpen,
     setNewWorkOrderSheetOpen,
+    setNewSupplierSheetOpen,
+    setNewPOSheetOpen,
+    setNewAppointmentSheetOpen,
+    setNewPartsCarSheetOpen,
   } = usePageHeader();
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
@@ -207,6 +214,38 @@ export function PageHeader({
                   setNewExpenseSheetOpen(true);
                 },
               },
+              {
+                icon: Truck,
+                label: t("inventory.newSupplier"),
+                onSelect: () => {
+                  setSearchOpen(false);
+                  setNewSupplierSheetOpen(true);
+                },
+              },
+              {
+                icon: Package,
+                label: t("inventory.newPurchaseOrder"),
+                onSelect: () => {
+                  setSearchOpen(false);
+                  setNewPOSheetOpen(true);
+                },
+              },
+              {
+                icon: CalendarPlus,
+                label: t("appointments.newAppointment"),
+                onSelect: () => {
+                  setSearchOpen(false);
+                  setNewAppointmentSheetOpen(true);
+                },
+              },
+              {
+                icon: Car,
+                label: "New Parts Car",
+                onSelect: () => {
+                  setSearchOpen(false);
+                  setNewPartsCarSheetOpen(true);
+                },
+              },
             ].map((item, i) => {
               const Icon = item.icon;
               return (
@@ -276,6 +315,10 @@ function QuickCreateActions() {
     setNewVehicleDialogOpen,
     setNewExpenseSheetOpen,
     setNewWorkOrderSheetOpen,
+    setNewSupplierSheetOpen,
+    setNewPOSheetOpen,
+    setNewAppointmentSheetOpen,
+    setNewPartsCarSheetOpen,
   } = usePageHeader();
 
   const createItems = [
@@ -298,6 +341,26 @@ function QuickCreateActions() {
       label: t("expenses.addExpense"),
       icon: DollarSign,
       onClick: () => setNewExpenseSheetOpen(true),
+    },
+    {
+      label: t("inventory.newSupplier"),
+      icon: Truck,
+      onClick: () => setNewSupplierSheetOpen(true),
+    },
+    {
+      label: t("inventory.newPurchaseOrder"),
+      icon: Package,
+      onClick: () => setNewPOSheetOpen(true),
+    },
+    {
+      label: t("appointments.newAppointment"),
+      icon: CalendarPlus,
+      onClick: () => setNewAppointmentSheetOpen(true),
+    },
+    {
+      label: "New Parts Car",
+      icon: Car,
+      onClick: () => setNewPartsCarSheetOpen(true),
     },
   ];
 

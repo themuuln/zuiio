@@ -6,7 +6,8 @@ import {
   isValidMongolianPlate,
   normalizeMongolianPlate,
 } from "@/lib/form-validation";
-import { createClient } from "@/lib/supabase/server";
+import { withBranchFilter, resolveBranchId } from "@/lib/supabase/with-branch";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   CreateVehicleParams,
   UpdateVehicleParams,
@@ -23,16 +24,16 @@ import { ensureVehicleModel } from "./vehicle-models-service";
  * Lists all vehicles for an organization with optional filtering.
  */
 export async function getVehicles(
+  db: SupabaseClient,
   orgId: string,
   options?: {
     search?: string;
     customerId?: string;
     limit?: number;
+    branchId?: string | null;
   },
 ): Promise<VehicleWithOwner[]> {
-  const supabase = await createClient();
-
-  // Not wrapped with withCache — revalidateTag doesn't reliably invalidate
+  const supabase = db; // Not wrapped with withCache — revalidateTag doesn't reliably invalidate
   // unstable_cache in Next.js 16, causing stale reads after mutations.
   // Client-side caching is handled by React Query (staleTime 30s).
   let query = supabase
@@ -53,6 +54,8 @@ export async function getVehicles(
   if (options?.customerId) {
     query = query.eq("vehicle_owners.customer_id", options.customerId);
   }
+
+  if (options?.branchId) query = withBranchFilter(query, options.branchId);
 
   const { data, error } = await query.limit((options?.limit ?? 50) + 1);
 
@@ -76,11 +79,11 @@ export async function getVehicles(
  * Returns a single vehicle with owner info and service history.
  */
 export async function getVehicle(
+  db: SupabaseClient,
   id: string,
   orgId: string,
 ): Promise<VehicleDetail> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data: vehicle, error } = await supabase
     .from("vehicles")
     .select("*")
@@ -141,6 +144,7 @@ export async function getVehicle(
  * Creates a vehicle and links it to a customer via vehicle_owners.
  */
 export async function createVehicle(
+  db: SupabaseClient,
   orgId: string,
   params: CreateVehicleParams,
   userId: string,
@@ -162,7 +166,7 @@ export async function createVehicle(
     throw new ValidationError("Model is required");
   }
 
-  const supabase = await createClient();
+  const supabase = db;
 
   // Check for duplicate plate
   const { data: existing } = await supabase
@@ -179,11 +183,16 @@ export async function createVehicle(
     );
   }
 
+  const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
+    strict: false,
+  });
+
   // Create vehicle
   const { data: vehicle, error: vehicleError } = await supabase
     .from("vehicles")
     .insert({
       organization_id: orgId,
+      branch_id: resolvedBranchId,
       plate_number: plate,
       vin: params.vin?.trim() || null,
       chassis_number: params.chassisNumber?.trim() || null,
@@ -262,13 +271,13 @@ export async function createVehicle(
  * Updates a vehicle.
  */
 export async function updateVehicle(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   params: UpdateVehicleParams,
   userId: string,
 ): Promise<Vehicle> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data: existing, error: fetchError } = await supabase
     .from("vehicles")
     .select("*")
@@ -399,12 +408,12 @@ export async function updateVehicle(
  * Soft-deletes a vehicle.
  */
 export async function deleteVehicle(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   userId: string,
 ): Promise<void> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data: existing } = await supabase
     .from("vehicles")
     .select("id")
@@ -441,21 +450,22 @@ export async function deleteVehicle(
  * Fast plate number search using LIKE query.
  */
 export async function searchByPlate(
+  db: SupabaseClient,
   orgId: string,
   search: string,
 ): Promise<VehicleWithOwner[]> {
-  return getVehicles(orgId, { search });
+  return getVehicles(db, orgId, { search });
 }
 
 /**
  * Gets work orders and services for a specific vehicle.
  */
 export async function getVehicleServiceHistory(
+  db: SupabaseClient,
   orgId: string,
   vehicleId: string,
 ): Promise<(WorkOrder & { work_order_services: Record<string, unknown>[] })[]> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data: workOrders, error } = await supabase
     .from("work_orders")
     .select("*, work_order_services(*)")
@@ -475,11 +485,11 @@ export async function getVehicleServiceHistory(
  * Gets all vehicles owned by a specific customer.
  */
 export async function getCustomerVehicles(
+  db: SupabaseClient,
   orgId: string,
   customerId: string,
 ): Promise<VehicleWithOwner[]> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data: owners, error } = await supabase
     .from("vehicle_owners")
     .select("vehicle_id, vehicles(*)")
@@ -503,6 +513,7 @@ export async function getCustomerVehicles(
  * Gets work orders for a specific customer with vehicle info.
  */
 export async function getCustomerWorkOrders(
+  db: SupabaseClient,
   orgId: string,
   customerId: string,
 ): Promise<
@@ -511,8 +522,7 @@ export async function getCustomerWorkOrders(
     vehicles?: { plate_number: string; make: string; model: string } | null;
   })[]
 > {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data: workOrders, error } = await supabase
     .from("work_orders")
     .select("*, work_order_services(*), vehicles(plate_number, make, model)")

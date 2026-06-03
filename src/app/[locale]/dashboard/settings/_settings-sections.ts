@@ -2,6 +2,7 @@ import {
   Building2,
   Car,
   Database,
+  GitBranch,
   Globe,
   MessageCircle,
   Palette,
@@ -17,6 +18,12 @@ export function getSettingsSections(t: (key: string) => string) {
       title: t("sectionGeneral"),
       description: t("sectionGeneralDesc"),
       icon: Building2,
+    },
+    {
+      value: "branches",
+      title: t("sectionBranches"),
+      description: t("sectionBranchesDesc"),
+      icon: GitBranch,
     },
     {
       value: "appearance",

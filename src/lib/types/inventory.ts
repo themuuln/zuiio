@@ -64,6 +64,7 @@ export interface CreateMovementParams {
   reference_type?: string;
   reference_id?: string;
   notes?: string;
+  branchId?: string | null;
 }
 
 export interface CreateSupplierParams {
@@ -75,6 +76,7 @@ export interface CreateSupplierParams {
   tax_id?: string;
   payment_terms?: string;
   notes?: string;
+  branchId?: string | null;
 }
 
 export interface UpdateSupplierParams {
@@ -93,6 +95,7 @@ export interface CreatePurchaseOrderParams {
   supplier_id?: string;
   order_number: string;
   notes?: string;
+  branchId?: string | null;
   items: Array<{
     part_id: string;
     quantity_ordered: number;
@@ -112,6 +115,7 @@ export interface CreateStockThresholdParams {
   part_id: string;
   minimum_quantity: number;
   notes?: string;
+  branchId?: string | null;
 }
 
 // ── Inventory Reports ────────────────────────────────────────────

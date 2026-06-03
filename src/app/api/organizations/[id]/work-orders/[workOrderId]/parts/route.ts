@@ -6,107 +6,121 @@ import {
   addPartToWorkOrder,
   removePartFromWorkOrder,
   updateWorkOrderPartPrice,
-} from "@/lib/services/work-order-service";
+} from "@/lib/services/work-order-items-service";
+import {
+  addWorkOrderPartSchema,
+  parseBody,
+  updatePartPriceSchema,
+} from "@/lib/validation/work-orders";
 
-export const POST = createRouteHandler(async ({ request, params, orgId }) => {
-  await requireActiveSubscription(orgId);
-  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = mutationRateLimiter.check(ip);
-  if (!rateCheck.allowed) {
-    return NextResponse.json(
-      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(
-            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-          ),
+export const POST = createRouteHandler(
+  async ({ request, params, orgId, supabase }) => {
+    await requireActiveSubscription(orgId);
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+    const rateCheck = mutationRateLimiter.check(ip);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+            ),
+          },
         },
-      },
-    );
-  }
-  const { workOrderId } = params;
-  const body = await request.json();
-  const part = await addPartToWorkOrder(workOrderId, orgId, body);
-  return NextResponse.json({ data: part }, { status: 201 });
-});
+      );
+    }
+    const { workOrderId } = params;
+    const body = await parseBody(request, addWorkOrderPartSchema);
+    const part = await addPartToWorkOrder(supabase, workOrderId, orgId, body);
+    return NextResponse.json({ data: part }, { status: 201 });
+  },
+  { requiredPermission: { resource: "work_orders", action: "update" } },
+);
 
-export const PATCH = createRouteHandler(async ({ request, params, orgId }) => {
-  await requireActiveSubscription(orgId);
-  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = mutationRateLimiter.check(ip);
-  if (!rateCheck.allowed) {
-    return NextResponse.json(
-      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(
-            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-          ),
+export const PATCH = createRouteHandler(
+  async ({ request, params, orgId, supabase }) => {
+    await requireActiveSubscription(orgId);
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+    const rateCheck = mutationRateLimiter.check(ip);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+            ),
+          },
         },
-      },
-    );
-  }
-  const { workOrderId } = params;
-  const { searchParams } = new URL(request.url);
-  const partId = searchParams.get("partId");
-  const body = await request.json();
+      );
+    }
+    const { workOrderId } = params;
+    const { searchParams } = new URL(request.url);
+    const partId = searchParams.get("partId");
+    const body = await parseBody(request, updatePartPriceSchema);
 
-  if (!partId) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "partId query param required",
+    if (!partId) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "partId query param required",
+          },
         },
-      },
-      { status: 400 },
-    );
-  }
+        { status: 400 },
+      );
+    }
 
-  if (body.final_price !== undefined) {
-    await updateWorkOrderPartPrice(partId, workOrderId, {
-      final_price: body.final_price,
-    });
-  }
+    if (body.final_price !== undefined) {
+      await updateWorkOrderPartPrice(supabase, partId, workOrderId, {
+        final_price: body.final_price,
+      });
+    }
 
-  return NextResponse.json({ data: null });
-});
+    return NextResponse.json({ data: null });
+  },
+  { requiredPermission: { resource: "work_orders", action: "update" } },
+);
 
-export const DELETE = createRouteHandler(async ({ request, params, orgId }) => {
-  await requireActiveSubscription(orgId);
-  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = mutationRateLimiter.check(ip);
-  if (!rateCheck.allowed) {
-    return NextResponse.json(
-      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(
-            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-          ),
+export const DELETE = createRouteHandler(
+  async ({ request, params, orgId, supabase }) => {
+    await requireActiveSubscription(orgId);
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+    const rateCheck = mutationRateLimiter.check(ip);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+            ),
+          },
         },
-      },
-    );
-  }
-  const { workOrderId } = params;
-  const { searchParams } = new URL(request.url);
-  const partId = searchParams.get("partId");
+      );
+    }
+    const { workOrderId } = params;
+    const { searchParams } = new URL(request.url);
+    const partId = searchParams.get("partId");
 
-  if (!partId) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "partId query param required",
+    if (!partId) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "partId query param required",
+          },
         },
-      },
-      { status: 400 },
-    );
-  }
+        { status: 400 },
+      );
+    }
 
-  await removePartFromWorkOrder(partId, workOrderId);
-  return NextResponse.json({ data: null });
-});
+    await removePartFromWorkOrder(supabase, partId, workOrderId);
+    return NextResponse.json({ data: null });
+  },
+  { requiredPermission: { resource: "work_orders", action: "update" } },
+);

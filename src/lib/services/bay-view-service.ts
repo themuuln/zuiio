@@ -9,6 +9,7 @@ import {
 } from "@/lib/errors";
 import { createWorkOrder } from "@/lib/services/work-order-service";
 import { createClient } from "@/lib/supabase/server";
+import { withBranchFilter } from "@/lib/supabase/with-branch";
 import type { Profile, Vehicle, WorkOrder } from "@/lib/types";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -33,9 +34,24 @@ export interface BaySlotData {
     | null;
 }
 
+export interface BranchInfo {
+  id: string;
+  name: string;
+}
+
+export interface BranchSectionData {
+  branchId: string;
+  branchName: string;
+  bayCount: number;
+  bays: BaySlotData[];
+}
+
 export interface BayViewData {
   bayCount: number;
   bays: BaySlotData[];
+  branches: BranchInfo[];
+  /** Present when viewing "All" — one section per branch with its bay grid. */
+  branchSections?: BranchSectionData[];
   waitingQueue: (WorkOrder & {
     vehicle: Vehicle | null;
   })[];
@@ -64,23 +80,75 @@ async function getOrgId(): Promise<string> {
   return data;
 }
 
+// ── Helpers for multi-branch sections ─────────────────────────
+
+/**
+ * Build bay slot sections for each branch. Used in "All" mode to display
+ * each branch's bays grouped under a branch name header.
+ */
+function buildBranchSections(
+  woWithDetails: any[],
+  allBranches: { id: string; name: string; settings: unknown }[],
+): BranchSectionData[] {
+  return allBranches.map((branch) => {
+    const bayCount =
+      ((branch.settings as Record<string, unknown> | null)
+        ?.bay_count as number) ?? 6;
+
+    // Bay-assigned work orders belonging to this branch (or legacy null)
+    const branchBayWOs = woWithDetails.filter(
+      (wo: any) =>
+        wo.bay_number != null &&
+        (wo.branch_id === branch.id || wo.branch_id === null),
+    );
+
+    const bays: BaySlotData[] = [];
+    for (let i = 1; i <= bayCount; i++) {
+      const wo = branchBayWOs.find((w: any) => w.bay_number === i) ?? null;
+      bays.push({
+        bayNumber: i,
+        workOrder: wo as unknown as BaySlotData["workOrder"],
+      });
+    }
+
+    return { branchId: branch.id, branchName: branch.name, bayCount, bays };
+  });
+}
+
 // ── Get Bay View Data ──────────────────────────────────────────
 
-async function fetchBayViewData(orgId: string): Promise<BayViewData> {
+async function fetchBayViewData(
+  orgId: string,
+  branchId?: string,
+): Promise<BayViewData> {
   const supabase = await createClient();
-  // Get branch with bay_count setting
-  const { data: branch } = await supabase
-    .from("branches")
-    .select("settings")
-    .eq("organization_id", orgId)
-    .eq("is_main", true)
-    .maybeSingle();
 
+  // Fetch all branches for the org (used for pills and branch sections)
+  const { data: allBranches } = await supabase
+    .from("branches")
+    .select("id, name, settings")
+    .eq("organization_id", orgId)
+    .order("name");
+  const branches: BranchInfo[] = (allBranches ?? []).map((b) => ({
+    id: b.id,
+    name: b.name,
+  }));
+
+  // Determine which branches to build bay data for
+  const targetBranches = branchId
+    ? (allBranches ?? []).filter((b) => b.id === branchId)
+    : (allBranches ?? []);
+
+  // Pick the first target for bay count / backward compat
+  const primaryBranch = targetBranches[0] ?? null;
   const bayCount =
-    ((branch?.settings as unknown as Record<string, unknown> | null)
+    ((primaryBranch?.settings as unknown as Record<string, unknown> | null)
       ?.bay_count as number) ?? 6;
 
-  // Get all active (non-completed/cancelled) work orders
+  // Get all active (non-completed/cancelled) work orders — org-wide, no branch filter.
+  // The branch filter is applied client-side: only bay-assigned work orders from the
+  // current branch populate the bay slots, while ALL queued work orders are shown
+  // regardless of branch (a queued vehicle hasn't been assigned a physical bay yet).
   const { data: activeWOs } = await supabase
     .from("work_orders")
     .select(`
@@ -161,10 +229,17 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
   const inBay = woWithDetails.filter((wo) => wo.bay_number != null);
   const waiting = woWithDetails.filter((wo) => wo.bay_number == null);
 
-  // Build bay slots
+  // When viewing a specific branch, show bay-assigned work orders from that branch
+  // OR legacy work orders without a branch (null). "All" view shows all bays
+  // org-wide. Queued work orders are always shown org-wide regardless of filter.
+  const inBayThisBranch = branchId
+    ? inBay.filter((wo) => wo.branch_id === branchId || wo.branch_id === null)
+    : inBay;
+
+  // Build bay slots (scoped to current branch)
   const bays: BaySlotData[] = [];
   for (let i = 1; i <= bayCount; i++) {
-    const wo = inBay.find((w) => w.bay_number === i) ?? null;
+    const wo = inBayThisBranch.find((w) => w.bay_number === i) ?? null;
     bays.push({
       bayNumber: i,
       workOrder: wo as unknown as BaySlotData["workOrder"],
@@ -173,12 +248,18 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
 
   // Get mechanics (users with mechanic role), via organization_users
   // so profiles without organization_id set still appear
-  const { data: memberIds } = await supabase
+  let memberQuery = supabase
     .from("organization_users")
     .select("user_id, roles!inner(name)")
     .eq("organization_id", orgId)
     .eq("roles.name", "Mechanic")
     .is("removed_at", null);
+
+  if (branchId) {
+    memberQuery = withBranchFilter(memberQuery, branchId) as typeof memberQuery;
+  }
+
+  const { data: memberIds } = await memberQuery;
 
   const mechUserIds = (memberIds ?? []).map((m) => m.user_id);
   const mechanics =
@@ -209,9 +290,16 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
       (helperJobCount.get(p.id) ?? 0),
   })) as unknown as (Profile & { current_jobs: number })[];
 
+  // Build branch sections for "All" mode
+  const branchSections = branchId
+    ? undefined
+    : buildBranchSections(woWithDetails, allBranches ?? []);
+
   return {
     bayCount,
     bays,
+    branches,
+    branchSections,
     waitingQueue: waiting as unknown as BayViewData["waitingQueue"],
     mechanics: mechList,
   };
@@ -221,27 +309,29 @@ async function fetchBayViewData(orgId: string): Promise<BayViewData> {
  * Cached version — good for initial load and auto-refresh polling.
  * Cache is invalidated by revalidateTag calls in mutation functions.
  */
-export async function getBayViewData(): Promise<BayViewData> {
+export async function getBayViewData(branchId?: string): Promise<BayViewData> {
   const {
     data: { user },
   } = await (await createClient()).auth.getUser();
   if (!user) throw new UnauthorizedError();
   const orgId = await getOrgId();
 
-  return fetchBayViewData(orgId);
+  return fetchBayViewData(orgId, branchId);
 }
 
 /**
  * Fresh (uncached) version — call after any mutation to ensure
  * the UI sees the committed database state immediately.
  */
-export async function getBayViewDataFresh(): Promise<BayViewData> {
+export async function getBayViewDataFresh(
+  branchId?: string,
+): Promise<BayViewData> {
   const {
     data: { user },
   } = await (await createClient()).auth.getUser();
   if (!user) throw new UnauthorizedError();
   const orgId = await getOrgId();
-  return fetchBayViewData(orgId);
+  return fetchBayViewData(orgId, branchId);
 }
 
 // ── Assign Vehicle to Bay ─────────────────────────────────────
@@ -847,10 +937,10 @@ export async function seedWaitingQueue(): Promise<{
       }
 
       // createWorkOrder — same RLS path as the API route (works in production)
-      await createWorkOrder(orgId, {
+      await createWorkOrder(supabase, orgId, {
         customer_id: custId,
         vehicle_id: vehId,
-        branch_id: branch.id,
+        branchId: branch.id,
         notes: svc,
       });
 
@@ -972,20 +1062,24 @@ export interface ShiftReport {
   activeJobs: number;
 }
 
-export async function getShiftReport(): Promise<ShiftReport> {
+export async function getShiftReport(branchId?: string): Promise<ShiftReport> {
   const {
     data: { user },
   } = await (await createClient()).auth.getUser();
   if (!user) throw new UnauthorizedError();
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
-  // Get bay count
-  const { data: branch } = await supabase
+  // Get bay count from selected branch or main branch
+  const branchQuery = supabase
     .from("branches")
     .select("settings")
-    .eq("organization_id", orgId)
-    .eq("is_main", true)
-    .maybeSingle();
+    .eq("organization_id", orgId);
+  if (branchId) {
+    branchQuery.eq("id", branchId);
+  } else {
+    branchQuery.eq("is_main", true);
+  }
+  const { data: branch } = await branchQuery.maybeSingle();
 
   const bayCount =
     ((branch?.settings as unknown as Record<string, unknown> | null)
@@ -997,26 +1091,35 @@ export async function getShiftReport(): Promise<ShiftReport> {
 
   const [{ data: completed }, { data: active }, { data: inBay }] =
     await Promise.all([
-      supabase
-        .from("work_orders")
-        .select("total, completed_at, started_at")
-        .eq("organization_id", orgId)
-        .eq("status", "Completed")
-        .gte("completed_at", todayStart.toISOString())
-        .is("deleted_at", null),
-      supabase
-        .from("work_orders")
-        .select("id")
-        .eq("organization_id", orgId)
-        .not("status", "in", '("Completed","Cancelled")')
-        .is("deleted_at", null),
-      supabase
-        .from("work_orders")
-        .select("id")
-        .eq("organization_id", orgId)
-        .not("status", "in", '("Completed","Cancelled")')
-        .is("deleted_at", null)
-        .not("bay_number", "is", null),
+      withBranchFilter(
+        supabase
+          .from("work_orders")
+          .select("total, completed_at, started_at")
+          .eq("organization_id", orgId)
+          .eq("status", "Completed")
+          .gte("completed_at", todayStart.toISOString())
+          .is("deleted_at", null),
+        branchId,
+      ),
+      withBranchFilter(
+        supabase
+          .from("work_orders")
+          .select("id")
+          .eq("organization_id", orgId)
+          .not("status", "in", '("Completed","Cancelled")')
+          .is("deleted_at", null),
+        branchId,
+      ),
+      withBranchFilter(
+        supabase
+          .from("work_orders")
+          .select("id")
+          .eq("organization_id", orgId)
+          .not("status", "in", '("Completed","Cancelled")')
+          .is("deleted_at", null)
+          .not("bay_number", "is", null),
+        branchId,
+      ),
     ]);
 
   const completedToday = completed?.length ?? 0;

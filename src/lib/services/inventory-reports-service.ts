@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
   InventoryTurnover,
   SlowMovingItem,
@@ -15,6 +16,7 @@ import type {
 export async function getInventoryTurnover(
   orgId: string,
   months = 12,
+  branchId?: string | null,
 ): Promise<InventoryTurnover> {
   const supabase = await createClient();
 
@@ -22,22 +24,28 @@ export async function getInventoryTurnover(
   since.setMonth(since.getMonth() - months);
 
   // COGS: total purchase cost in period
-  const { data: purchases } = await supabase
+  let purchasesQuery = supabase
     .from("inventory_movements")
     .select("quantity, unit_cost")
     .eq("organization_id", orgId)
     .eq("movement_type", "purchase")
     .gte("created_at", since.toISOString());
+  if (branchId) purchasesQuery = withBranchFilter(purchasesQuery, branchId);
+
+  const { data: purchases } = await purchasesQuery;
 
   const cogs =
     purchases?.reduce((sum, m) => sum + m.quantity * (m.unit_cost ?? 0), 0) ??
     0;
 
   // Current stock value
-  const { data: balances } = await supabase
+  let balancesQuery = supabase
     .from("inventory_balances")
     .select("quantity_on_hand, default_price")
     .eq("organization_id", orgId);
+  if (branchId) balancesQuery = withBranchFilter(balancesQuery, branchId);
+
+  const { data: balances } = await balancesQuery;
 
   const averageInventoryValue =
     balances?.reduce(
@@ -69,13 +77,14 @@ interface UsageTrendRow {
 export async function getUsageTrends(
   orgId: string,
   months = 6,
+  branchId?: string | null,
 ): Promise<UsageTrend[]> {
   const supabase = await createClient();
 
   const since = new Date();
   since.setMonth(since.getMonth() - months);
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("inventory_movements")
     .select(
       `
@@ -90,6 +99,8 @@ export async function getUsageTrends(
     .eq("movement_type", "sale")
     .gte("created_at", since.toISOString())
     .order("created_at", { ascending: true });
+  if (branchId) query = withBranchFilter(query, branchId);
+  const { data, error } = await query;
 
   if (error) throw new Error(error.message);
 
@@ -140,6 +151,7 @@ export async function getUsageTrends(
 export async function getSlowMovingStock(
   orgId: string,
   thresholdDays = 90,
+  branchId?: string | null,
 ): Promise<SlowMovingItem[]> {
   const supabase = await createClient();
 
@@ -147,13 +159,15 @@ export async function getSlowMovingStock(
   cutoff.setDate(cutoff.getDate() - thresholdDays);
 
   // Get all balances with positive stock
-  const { data: balances } = await supabase
+  let balancesQuery = supabase
     .from("inventory_balances")
     .select(
       "part_id, part_name, part_number, quantity_on_hand, category, last_movement_at",
     )
     .eq("organization_id", orgId)
     .gt("quantity_on_hand", 0);
+  if (branchId) balancesQuery = withBranchFilter(balancesQuery, branchId);
+  const { data: balances } = await balancesQuery;
 
   if (!balances?.length) return [];
 

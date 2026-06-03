@@ -598,11 +598,9 @@ export default function WorkOrderDetailPage() {
     (sum, p) => sum + Number(p.final_price),
     0,
   );
-  const _grandTotal = servicesTotal + partsTotal;
-
   const payments = invoicePaymentsData?.payments ?? [];
   const totalPaid = invoicePaymentsData?.total_paid ?? 0;
-  const balanceDue = invoicePaymentsData?.balance_due ?? _grandTotal;
+  const balanceDue = invoicePaymentsData?.balance_due ?? servicesTotal + partsTotal;
   const invoiceStatus = invoicePaymentsData?.status ?? "";
 
   const servicesCost = (wo.services ?? []).reduce(
@@ -649,16 +647,6 @@ export default function WorkOrderDetailPage() {
           </Typography.Muted>
         </div>
       </div>
-
-      {error && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="p-4">
-            <Typography.Text className="text-sm text-destructive">
-              {error}
-            </Typography.Text>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Status Change */}
       <Card>
@@ -795,7 +783,7 @@ export default function WorkOrderDetailPage() {
           )}
 
           {/* Complaint & Diagnosis Label */}
-          {(wo.complaint || (wo as any).diagnosis_label) && (
+          {(wo.complaint || wo.diagnosis_label) && (
             <div className="flex flex-col gap-2 p-3 bg-muted/30 rounded-lg">
               {wo.complaint && (
                 <div>
@@ -807,7 +795,7 @@ export default function WorkOrderDetailPage() {
                   </Typography.Text>
                 </div>
               )}
-              {(wo as any).diagnosis_label && (
+              {wo.diagnosis_label && (
                 <div className="flex items-center gap-2">
                   <Typography.Muted className="text-xs font-medium text-muted-foreground">
                     {t("diagnosis")}
@@ -816,22 +804,22 @@ export default function WorkOrderDetailPage() {
                     variant="outline"
                     className="gap-1.5"
                     style={{
-                      backgroundColor: (wo as any).diagnosis_label?.color
-                        ? `${(wo as any).diagnosis_label.color}20`
+                      backgroundColor: wo.diagnosis_label?.color
+                        ? `${wo.diagnosis_label.color}20`
                         : undefined,
-                      color: (wo as any).diagnosis_label.color ?? undefined,
+                      color: wo.diagnosis_label.color ?? undefined,
                     }}
                   >
-                    {(wo as any).diagnosis_label.color && (
+                    {wo.diagnosis_label.color && (
                       <span
                         className="size-2 rounded-full"
                         style={{
-                          backgroundColor: (wo as any).diagnosis_label.color,
+                          backgroundColor: wo.diagnosis_label.color,
                         }}
                       />
                     )}
-                    {(wo as any).diagnosis_label.name_mn ??
-                      (wo as any).diagnosis_label.name}
+                    {wo.diagnosis_label.name_mn ??
+                      wo.diagnosis_label.name}
                   </Badge>
                 </div>
               )}

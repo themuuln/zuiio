@@ -25,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import type { Appointment, AppointmentStatus } from "@/lib/types";
 import { AppointmentCreateSheet } from "./_create-sheet";
 
@@ -46,15 +47,19 @@ export default function AppointmentsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [createOpen, setCreateOpen] = useState(false);
   const orgId = org?.orgId ?? "";
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
 
   const today = new Date().toISOString().split("T")[0];
 
   // Fetch appointments
   const { data: appointments, isLoading } = useQuery({
-    queryKey: ["appointments", orgId, today],
+    queryKey: ["appointments", orgId, today, branchFilter],
     queryFn: async () => {
+      const params = new URLSearchParams({ date: today });
+      if (branchFilter) params.set("branch_id", branchFilter);
       const res = await fetch(
-        `/api/organizations/${orgId}/appointments?date=${today}`,
+        `/api/organizations/${orgId}/appointments?${params.toString()}`,
       );
       const json = await res.json();
       return (json.data ?? []) as Appointment[];
@@ -132,6 +137,7 @@ export default function AppointmentsPage() {
                 completed: "",
                 cancelled: "",
                 no_show: "",
+                requested: "",
               }).map((value) => (
                 <SelectItem key={value} value={value}>
                   {t("status_" + value)}
@@ -215,6 +221,7 @@ export default function AppointmentsPage() {
                         completed: "",
                         cancelled: "",
                         no_show: "",
+                        requested: "",
                       }).map((value) => (
                         <SelectItem key={value} value={value}>
                           {t("status_" + value)}

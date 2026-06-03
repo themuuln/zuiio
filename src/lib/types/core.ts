@@ -27,7 +27,8 @@ export type AppointmentStatus =
   | "in_progress"
   | "completed"
   | "cancelled"
-  | "no_show";
+  | "no_show"
+  | "requested";
 export type Estimate = Tables<"estimates">;
 export type EstimateItem = Tables<"estimate_items">;
 export type EstimateStatus =

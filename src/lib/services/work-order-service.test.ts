@@ -11,14 +11,15 @@ import type {
 } from "@/lib/types";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
-  addPartToWorkOrder,
-  addServiceToWorkOrder,
-  assignMechanic,
   cancelWorkOrder,
   createWorkOrder,
   getWorkOrderTotals,
-  updateWorkOrderStatus,
 } from "./work-order-service";
+import {
+  addPartToWorkOrder,
+  addServiceToWorkOrder,
+} from "./work-order-items-service";
+import { assignMechanic, updateWorkOrderStatus } from "./work-order-workflow";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("@/lib/cache/with-cache", () => ({
@@ -93,7 +94,7 @@ describe("createWorkOrder", () => {
       mockWorkOrderDetail({ id: "wo-1" }),
     );
 
-    const result = await createWorkOrder("org-1", {
+    const result = await createWorkOrder(mockClient as any, "org-1", {
       customer_id: "cust-1",
       vehicle_id: "veh-1",
       branch_id: "branch-1",
@@ -170,7 +171,7 @@ describe("createWorkOrder", () => {
       mockWorkOrderDetail({ id: "wo-1", mechanic_id: "mech-1" }),
     );
 
-    await createWorkOrder("org-1", {
+    await createWorkOrder(mockClient as any, "org-1", {
       customer_id: "cust-1",
       vehicle_id: "veh-1",
       mechanic_id: "mech-1",
@@ -222,7 +223,7 @@ describe("createWorkOrder", () => {
       }),
     );
 
-    const result = await createWorkOrder("org-1", {
+    const result = await createWorkOrder(mockClient as any, "org-1", {
       customer_id: "cust-1",
       vehicle_id: "veh-1",
       services: [
@@ -272,7 +273,7 @@ describe("createWorkOrder", () => {
       }),
     );
 
-    const result = await createWorkOrder("org-1", {
+    const result = await createWorkOrder(mockClient as any, "org-1", {
       customer_id: "cust-1",
       vehicle_id: "veh-1",
       parts: [{ part_name: "Oil Filter", unit_price: 15 }],
@@ -292,7 +293,7 @@ describe("createWorkOrder", () => {
       mockWorkOrderDetail({ id: "wo-1" }),
     );
 
-    await createWorkOrder("org-1", {
+    await createWorkOrder(mockClient as any, "org-1", {
       customer_id: "cust-1",
       vehicle_id: "veh-1",
     });
@@ -324,7 +325,12 @@ describe("updateWorkOrderStatus", () => {
       error: null,
     });
 
-    const result = await updateWorkOrderStatus("wo-1", "org-1", "In Progress");
+    const result = await updateWorkOrderStatus(
+      mockClient as any,
+      "wo-1",
+      "org-1",
+      "In Progress",
+    );
 
     expect(mockClient.from).toHaveBeenCalledWith("work_orders");
     expect(mockClient.from("work_orders").update).toHaveBeenCalledWith(
@@ -360,7 +366,12 @@ describe("updateWorkOrderStatus", () => {
       error: null,
     });
 
-    await updateWorkOrderStatus("wo-1", "org-1", "Diagnosing");
+    await updateWorkOrderStatus(
+      mockClient as any,
+      "wo-1",
+      "org-1",
+      "Diagnosing",
+    );
 
     expect(
       mockClient.from("work_order_status_history").insert,
@@ -387,7 +398,12 @@ describe("updateWorkOrderStatus", () => {
       error: null,
     });
 
-    await updateWorkOrderStatus("wo-1", "org-1", "Diagnosing");
+    await updateWorkOrderStatus(
+      mockClient as any,
+      "wo-1",
+      "org-1",
+      "Diagnosing",
+    );
 
     expect(
       mockClient.from("work_order_status_history").insert,
@@ -427,7 +443,12 @@ describe("updateWorkOrderStatus", () => {
       }),
     );
 
-    await updateWorkOrderStatus("wo-1", "org-1", "Completed");
+    await updateWorkOrderStatus(
+      mockClient as any,
+      "wo-1",
+      "org-1",
+      "Completed",
+    );
 
     // Completed_at updated
     expect(mockClient.from("work_orders").update).toHaveBeenCalledWith(
@@ -482,7 +503,12 @@ describe("updateWorkOrderStatus", () => {
     });
 
     await expect(
-      updateWorkOrderStatus("wo-404", "org-1", "In Progress"),
+      updateWorkOrderStatus(
+        mockClient as any,
+        "wo-404",
+        "org-1",
+        "In Progress",
+      ),
     ).rejects.toThrow(NotFoundError);
   });
 });
@@ -500,7 +526,12 @@ describe("assignMechanic", () => {
       error: null,
     });
 
-    const result = await assignMechanic("wo-1", "org-1", "mech-2");
+    const result = await assignMechanic(
+      mockClient as any,
+      "wo-1",
+      "org-1",
+      "mech-2",
+    );
 
     // Previous assignments ended
     expect(mockClient.from("mechanic_assignments").update).toHaveBeenCalledWith(
@@ -542,7 +573,7 @@ describe("assignMechanic", () => {
       error: null,
     });
 
-    await assignMechanic("wo-1", "org-1", "mech-2");
+    await assignMechanic(mockClient as any, "wo-1", "org-1", "mech-2");
 
     expect(mockClient.from("work_orders").update).toHaveBeenCalledWith(
       expect.objectContaining({ mechanic_id: "mech-2" }),
@@ -561,7 +592,7 @@ describe("assignMechanic", () => {
       error: null,
     });
 
-    await assignMechanic("wo-1", "org-1", "mech-2");
+    await assignMechanic(mockClient as any, "wo-1", "org-1", "mech-2");
 
     expect(revalidateTag).toHaveBeenCalledWith("work-order:wo-1", "max");
     expect(revalidateTag).toHaveBeenCalledWith("work-order-detail:wo-1", "max");
@@ -591,13 +622,18 @@ describe("addServiceToWorkOrder", () => {
         error: null,
       });
 
-    const result = await addServiceToWorkOrder("wo-1", "org-1", {
-      service_catalog_id: "sc-1",
-      service_name: "Oil Change",
-      quantity: 2,
-      unit_price: 100,
-      discount_amount: 10,
-    });
+    const result = await addServiceToWorkOrder(
+      mockClient as any,
+      "wo-1",
+      "org-1",
+      {
+        service_catalog_id: "sc-1",
+        service_name: "Oil Change",
+        quantity: 2,
+        unit_price: 100,
+        discount_amount: 10,
+      },
+    );
 
     expect(mockClient.from("work_order_services").insert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -634,7 +670,7 @@ describe("addServiceToWorkOrder", () => {
         error: null,
       });
 
-    await addServiceToWorkOrder("wo-1", "org-1", {
+    await addServiceToWorkOrder(mockClient as any, "wo-1", "org-1", {
       service_catalog_id: "sc-1",
       service_name: "Oil Change",
       unit_price: 100,
@@ -672,7 +708,7 @@ describe("addServiceToWorkOrder", () => {
         error: null,
       });
 
-    await addServiceToWorkOrder("wo-1", "org-1", {
+    await addServiceToWorkOrder(mockClient as any, "wo-1", "org-1", {
       service_catalog_id: "sc-1",
       service_name: "Oil Change",
       unit_price: 100,
@@ -701,7 +737,7 @@ describe("addServiceToWorkOrder", () => {
         error: null,
       });
 
-    await addServiceToWorkOrder("wo-1", "org-1", {
+    await addServiceToWorkOrder(mockClient as any, "wo-1", "org-1", {
       service_catalog_id: "sc-1",
       service_name: "Oil Change",
       unit_price: 100,
@@ -736,12 +772,17 @@ describe("addPartToWorkOrder", () => {
         error: null,
       });
 
-    const result = await addPartToWorkOrder("wo-1", "org-1", {
-      part_name: "Oil Filter",
-      unit_price: 15,
-      quantity: 3,
-      discount_amount: 5,
-    });
+    const result = await addPartToWorkOrder(
+      mockClient as any,
+      "wo-1",
+      "org-1",
+      {
+        part_name: "Oil Filter",
+        unit_price: 15,
+        quantity: 3,
+        discount_amount: 5,
+      },
+    );
 
     expect(mockClient.from("work_order_parts").insert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -776,7 +817,7 @@ describe("addPartToWorkOrder", () => {
         error: null,
       });
 
-    await addPartToWorkOrder("wo-1", "org-1", {
+    await addPartToWorkOrder(mockClient as any, "wo-1", "org-1", {
       part_name: "Oil Filter",
       unit_price: 15,
     });
@@ -810,7 +851,7 @@ describe("addPartToWorkOrder", () => {
         error: null,
       });
 
-    await addPartToWorkOrder("wo-1", "org-1", {
+    await addPartToWorkOrder(mockClient as any, "wo-1", "org-1", {
       part_name: "Oil Filter",
       unit_price: 15,
     });
@@ -824,7 +865,7 @@ describe("cancelWorkOrder", () => {
   it("soft deletes (sets deleted_at, status Cancelled) and inserts status history", async () => {
     mockClient.from("work_orders").update.mockReturnThis();
 
-    await cancelWorkOrder("wo-1", "org-1");
+    await cancelWorkOrder(mockClient as any, "wo-1", "org-1");
 
     expect(mockClient.from("work_orders").update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -846,7 +887,7 @@ describe("cancelWorkOrder", () => {
   it("revalidates multiple caches", async () => {
     mockClient.from("work_orders").update.mockReturnThis();
 
-    await cancelWorkOrder("wo-1", "org-1");
+    await cancelWorkOrder(mockClient as any, "wo-1", "org-1");
 
     expect(revalidateTag).toHaveBeenCalledWith("work-orders:org-1", "max");
     expect(revalidateTag).toHaveBeenCalledWith("work-order:wo-1", "max");
@@ -866,9 +907,9 @@ describe("cancelWorkOrder", () => {
       .from("work_orders")
       .is.mockResolvedValue({ error: { message: "Not found" } });
 
-    await expect(cancelWorkOrder("wo-404", "org-1")).rejects.toThrow(
-      NotFoundError,
-    );
+    await expect(
+      cancelWorkOrder(mockClient as any, "wo-404", "org-1"),
+    ).rejects.toThrow(NotFoundError);
   });
 });
 
@@ -904,7 +945,7 @@ describe("getWorkOrderTotals", () => {
       }),
     );
 
-    const totals = await getWorkOrderTotals("wo-1");
+    const totals = await getWorkOrderTotals(mockClient as any, "wo-1");
 
     expect(totals.servicesTotal).toBe(350); // 100*2 + 50*3
     expect(totals.partsTotal).toBe(200); // 200*1
@@ -950,7 +991,7 @@ describe("getWorkOrderTotals", () => {
       }),
     );
 
-    const totals = await getWorkOrderTotals("wo-1");
+    const totals = await getWorkOrderTotals(mockClient as any, "wo-1");
 
     // Services: (100*2=200) + (50*3=150) = 350
     expect(totals.servicesTotal).toBe(350);
@@ -983,7 +1024,7 @@ describe("getWorkOrderTotals", () => {
       }),
     );
 
-    const totals = await getWorkOrderTotals("wo-1");
+    const totals = await getWorkOrderTotals(mockClient as any, "wo-1");
 
     // servicesTotal=50, servicesDiscount=100 → grandTotal would be -50
     expect(totals.servicesTotal).toBe(50);

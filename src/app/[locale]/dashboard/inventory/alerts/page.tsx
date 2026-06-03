@@ -22,15 +22,18 @@ import {
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 
 export default function AlertsPage() {
   const t = useTranslations("inventory");
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
+  const selectedBranchId = useSelectedBranchId();
+  const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
   const { data: balances = [], isLoading: balancesLoading } =
-    useInventoryBalances(orgId);
+    useInventoryBalances(orgId, branchFilter);
   const { data: thresholds = [], isLoading: thresholdsLoading } =
-    useStockThresholds(orgId);
+    useStockThresholds(orgId, branchFilter);
 
   const alerts = useMemo(() => {
     const thresholdMap = new Map<string, number>();

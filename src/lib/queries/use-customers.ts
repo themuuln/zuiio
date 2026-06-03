@@ -1,5 +1,12 @@
-import { type UseQueryResult, useQuery } from "@tanstack/react-query";
-import type { Customer } from "@/lib/types";
+import {
+  type UseQueryResult,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { toast } from "sonner";
+import { toastRetry } from "@/lib/toast-utils";
+import type { CreateCustomerParams, Customer } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import { customerKeys } from "./keys";
 
@@ -21,17 +28,21 @@ const fetchSharedCustomers = createOrgQuery<CustomerWithVehicleCount[]>(
 );
 
 /**
- * Fetches customers for the given organization, optionally filtered by query.
+ * Fetches customers for the given organization, optionally filtered by query and branch.
  */
 export function useCustomers(
   orgId: string | undefined,
   query = "",
+  branchId?: string | null,
 ): UseQueryResult<CustomerWithVehicleCount[], Error> {
   return useQuery({
-    queryKey: customerKeys.list(orgId ?? "", query),
+    queryKey: [...customerKeys.list(orgId ?? "", query), branchId ?? "all"],
     queryFn: () =>
       fetchCustomers(orgId!, {
-        params: query ? { q: query } : undefined,
+        params: {
+          ...(query ? { q: query } : {}),
+          ...(branchId ? { branch_id: branchId } : {}),
+        },
       }),
     enabled: !!orgId,
     staleTime: 30_000,
@@ -53,5 +64,86 @@ export function useSharedCustomers(
       }),
     enabled: !!orgId,
     staleTime: 30_000,
+  });
+}
+
+// ── Mutations ────────────────────────────────────────────────────
+
+export function useCreateCustomer(orgId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (body: CreateCustomerParams) => {
+      if (!orgId) throw new Error("No organization ID");
+      const res = await fetch(`/api/organizations/${orgId}/customers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      let json: Record<string, unknown>;
+      try {
+        json = await res.json();
+      } catch {
+        throw new Error(`Server returned ${res.status} ${res.statusText}`);
+      }
+      if (!res.ok || json.error) {
+        throw new Error(
+          ((json.error as Record<string, unknown>)?.message as string) ??
+            "Failed to create customer",
+        );
+      }
+      return json.data as Customer;
+    },
+    onSuccess: () => {
+      if (orgId) {
+        queryClient.invalidateQueries({
+          queryKey: customerKeys.all(orgId),
+        });
+      }
+      toast.success("Customer created");
+    },
+    onError: (err: Error, variables) => {
+      toastRetry(err.message, () => mutation.mutateAsync(variables));
+    },
+  });
+
+  return mutation;
+}
+
+export function useCustomerDuplicateCheck(
+  orgId: string | undefined,
+  phone?: string,
+  email?: string,
+) {
+  return useQuery({
+    queryKey: [
+      ...customerKeys.all(orgId ?? ""),
+      "duplicate-check",
+      phone,
+      email,
+    ],
+    queryFn: async () => {
+      if (!orgId) return null;
+      const query = phone || email;
+      if (!query || query.length < 3) return null;
+      const res = await fetch(
+        `/api/organizations/${orgId}/customers?q=${encodeURIComponent(query)}&pageSize=5`,
+      );
+      const json = await res.json();
+      if (!res.ok || json.error) return null;
+      const customers = (json.data?.data ?? json.data ?? []) as Customer[];
+      if (!customers.length) return null;
+      const phoneMatch = phone
+        ? customers.find((c) => c.phone === phone)
+        : null;
+      const emailMatch = email
+        ? customers.find((c) => c.email === email)
+        : null;
+      return { phoneMatch, emailMatch };
+    },
+    enabled:
+      !!orgId &&
+      !!((phone && phone.length >= 3) || (email && email.length >= 3)),
+    staleTime: 10_000,
   });
 }

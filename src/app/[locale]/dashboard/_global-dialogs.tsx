@@ -75,6 +75,35 @@ const PartsCarDetailSheet = dynamic(
   { ssr: false },
 );
 
+const NewSupplierSheet = dynamic(
+  () =>
+    import("@/components/inventory/new-supplier-sheet").then(
+      (m) => m.NewSupplierSheet,
+    ),
+  { ssr: false },
+);
+const NewPurchaseOrderSheet = dynamic(
+  () =>
+    import("@/components/inventory/new-purchase-order-sheet").then(
+      (m) => m.NewPurchaseOrderSheet,
+    ),
+  { ssr: false },
+);
+const AppointmentCreateSheet = dynamic(
+  () =>
+    import("@/app/[locale]/dashboard/appointments/_create-sheet").then(
+      (m) => m.AppointmentCreateSheet,
+    ),
+  { ssr: false },
+);
+const NewPartsCarSheet = dynamic(
+  () =>
+    import("@/components/inventory/new-parts-car-sheet").then(
+      (m) => m.NewPartsCarSheet,
+    ),
+  { ssr: false },
+);
+
 export function GlobalDialogs() {
   const {
     isNewCustomerDialogOpen,
@@ -85,6 +114,14 @@ export function GlobalDialogs() {
     setNewExpenseSheetOpen,
     isNewWorkOrderSheetOpen,
     setNewWorkOrderSheetOpen,
+    isNewSupplierSheetOpen,
+    setNewSupplierSheetOpen,
+    isNewPOSheetOpen,
+    setNewPOSheetOpen,
+    isNewAppointmentSheetOpen,
+    setNewAppointmentSheetOpen,
+    isNewPartsCarSheetOpen,
+    setNewPartsCarSheetOpen,
     detailSupplierId,
     setDetailSupplierId,
     detailExpenseId,
@@ -156,6 +193,23 @@ export function GlobalDialogs() {
           setDetailPartsCarId(open ? detailPartsCarId : null)
         }
         carId={detailPartsCarId}
+      />
+      <NewSupplierSheet
+        open={isNewSupplierSheetOpen}
+        onOpenChange={setNewSupplierSheetOpen}
+      />
+      <NewPurchaseOrderSheet
+        open={isNewPOSheetOpen}
+        onOpenChange={setNewPOSheetOpen}
+      />
+      <AppointmentCreateSheet
+        open={isNewAppointmentSheetOpen}
+        onOpenChange={setNewAppointmentSheetOpen}
+        orgId=""
+      />
+      <NewPartsCarSheet
+        open={isNewPartsCarSheetOpen}
+        onOpenChange={setNewPartsCarSheetOpen}
       />
     </>
   );

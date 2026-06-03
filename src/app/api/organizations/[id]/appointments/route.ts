@@ -18,6 +18,7 @@ export const GET = createRouteHandler(
       date_from: searchParams.get("date_from") ?? undefined,
       date_to: searchParams.get("date_to") ?? undefined,
       customer_id: searchParams.get("customer_id") ?? undefined,
+      branchId: searchParams.get("branch_id") ?? undefined,
     });
     return NextResponse.json({ data: appointments });
   },

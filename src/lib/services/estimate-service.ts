@@ -1,5 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
+import { withBranchFilter, resolveBranchId } from "@/lib/supabase/with-branch";
 import {
   NotFoundError,
   UnauthorizedError,
@@ -8,8 +9,8 @@ import {
 import {
   addPartToWorkOrder,
   addServiceToWorkOrder,
-  recalculateWorkOrderTotals,
-} from "@/lib/services/work-order-service";
+} from "@/lib/services/work-order-items-service";
+import { recalculateWorkOrderTotals } from "@/lib/services/work-order-service";
 import { createClient } from "@/lib/supabase/server";
 import type {
   CreateEstimateParams,
@@ -111,6 +112,7 @@ export async function getEstimates(params?: {
   customer_id?: string;
   date_from?: string;
   date_to?: string;
+  branchId?: string;
 }): Promise<EstimateDetail[]> {
   const supabase = await createClient();
   const orgId = await getOrgId();
@@ -133,6 +135,7 @@ export async function getEstimates(params?: {
 
   if (params?.status) query = query.eq("status", params.status);
   if (params?.customer_id) query = query.eq("customer_id", params.customer_id);
+  if (params?.branchId) query = withBranchFilter(query, params.branchId);
   if (params?.date_from) query = query.gte("created_at", params.date_from);
   if (params?.date_to) query = query.lte("created_at", params.date_to);
 
@@ -196,12 +199,19 @@ export async function createEstimate(
   const { data: estNum } = await supabase.rpc("generate_estimate_number");
   const estimateNumber = (estNum as string) ?? `EST-${Date.now()}`;
 
+  const resolvedBranchId = await resolveBranchId(
+    supabase,
+    orgId,
+    params.branchId,
+    { strict: false },
+  );
+
   // Create the estimate
   const { data: estimate, error } = await supabase
     .from("estimates")
     .insert({
       organization_id: orgId,
-      branch_id: params.branch_id ?? null,
+      branch_id: resolvedBranchId,
       customer_id: params.customer_id,
       vehicle_id: params.vehicle_id,
       estimate_number: estimateNumber,
@@ -422,19 +432,16 @@ export async function convertEstimateToWorkOrder(
   }
 
   // Get a branch for the work order
-  const { data: branch } = await supabase
-    .from("branches")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("is_main", true)
-    .maybeSingle();
+  const resolvedBranchId = await resolveBranchId(supabase, orgId, undefined, {
+    strict: false,
+  });
 
   // Create the work order
   const { data: wo, error: woError } = await supabase
     .from("work_orders")
     .insert({
       organization_id: orgId,
-      branch_id: branch?.id ?? null,
+      branch_id: resolvedBranchId,
       customer_id: estimate.customer_id,
       vehicle_id: estimate.vehicle_id,
       source_estimate_id: estimate.id,
@@ -463,7 +470,7 @@ export async function convertEstimateToWorkOrder(
   // Add each estimate item as a service or part on the work order
   for (const item of estimate.items) {
     if (item.item_type === "service" || item.item_type === "custom") {
-      await addServiceToWorkOrder(wo.id, orgId, {
+      await addServiceToWorkOrder(supabase, wo.id, orgId, {
         service_catalog_id:
           item.source_service_id ?? "00000000-0000-0000-0000-000000000000",
         service_name: item.description,
@@ -474,7 +481,7 @@ export async function convertEstimateToWorkOrder(
         notes: item.notes ?? undefined,
       });
     } else if (item.item_type === "part") {
-      await addPartToWorkOrder(wo.id, orgId, {
+      await addPartToWorkOrder(supabase, wo.id, orgId, {
         part_id: item.source_part_id ?? undefined,
         part_name: item.description,
         part_number: undefined,
@@ -488,7 +495,7 @@ export async function convertEstimateToWorkOrder(
   }
 
   // Recalculate totals
-  await recalculateWorkOrderTotals(wo.id);
+  await recalculateWorkOrderTotals(supabase, wo.id);
 
   // Mark estimate as converted
   await supabase
@@ -509,5 +516,5 @@ export async function convertEstimateToWorkOrder(
 
   // Return the work order detail
   const { getWorkOrder } = await import("@/lib/services/work-order-service");
-  return getWorkOrder(wo.id);
+  return getWorkOrder(supabase, wo.id);
 }

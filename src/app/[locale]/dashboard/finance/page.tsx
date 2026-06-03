@@ -51,6 +51,11 @@ import { useTableFilters } from "@/lib/hooks/use-url-filters";
 import { Link } from "@/lib/i18n/navigation";
 import { useExpenseStats, useExpenses } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useDashboard } from "@/lib/queries/use-dashboard";
+import { useOrgSettings } from "@/lib/queries/use-org-settings";
+import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
+import { BranchSelect } from "@/components/branch-select";
+import { useBranches } from "@/lib/queries/use-branches";
 import type { DashboardData } from "@/lib/types";
 import { formatCurrency, formatMNT } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
@@ -699,94 +704,53 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
   );
 }
 
-interface FinanceDataState {
-  loading: boolean;
-  error: string | null;
-  data: DashboardData | null;
-}
-
-type FinanceDataAction =
-  | { type: "LOAD_START" }
-  | { type: "LOAD_SUCCESS"; data: DashboardData }
-  | { type: "LOAD_ERROR"; error: string }
-  | { type: "LOAD_DONE" };
-
-function financeDataReducer(
-  state: FinanceDataState,
-  action: FinanceDataAction,
-): FinanceDataState {
-  switch (action.type) {
-    case "LOAD_START":
-      return { ...state, loading: true, error: null };
-    case "LOAD_SUCCESS":
-      return { ...state, loading: false, error: null, data: action.data };
-    case "LOAD_ERROR":
-      return { ...state, loading: false, error: action.error };
-    case "LOAD_DONE":
-      return { ...state, loading: false };
-  }
-}
-
 export default function FinancePage() {
   const t = useTranslations();
-  const [financeData, dispatchFinance] = useReducer(financeDataReducer, {
-    loading: false,
-    error: null,
-    data: null,
-  } satisfies FinanceDataState);
-  const { data } = financeData;
   const { registerTab } = useRightSidebar();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("overview");
   const [search, setSearch] = useState("");
 
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const { data: org, isPending: orgLoading, error: orgError } = useCurrentOrg();
   const orgId = org?.orgId ?? null;
-  const loading =
-    orgLoading || (!!orgId && financeData.loading && !hasLoadedOnce);
-  const error = orgError
-    ? "Failed to load organization"
-    : !orgId && !orgLoading
-      ? "No organization found"
-      : financeData.error;
+
+  // ── Branch filter gated by finance_separate_per_branch toggle ──
+  const selectedBranchId = useSelectedBranchId();
+  const { settings: orgSettings } = useOrgSettings(orgId ?? undefined);
+  const financeSeparate =
+    (orgSettings as Record<string, unknown>)?.[
+      "finance_separate_per_branch"
+    ] === true;
+  const branchFilter =
+    financeSeparate && selectedBranchId !== "all" ? selectedBranchId : null;
+  const { data: branches = [] } = useBranches(orgId ?? undefined);
 
   const dateFrom = dateRange?.from?.toISOString().split("T")[0];
   const dateTo = dateRange?.to?.toISOString().split("T")[0];
 
-  const fetchData = useCallback(
-    async (oid: string, df?: string, dt?: string) => {
-      dispatchFinance({ type: "LOAD_START" });
-      try {
-        const params = new URLSearchParams({ type: "dashboard" });
-        if (df && dt) {
-          params.set("date_from", df);
-          params.set("date_to", dt);
-        }
-        const res = await fetch(
-          `/api/organizations/${oid}/reports?${params.toString()}`,
-        );
-        const json = await res.json();
-        if (json.error) {
-          dispatchFinance({ type: "LOAD_ERROR", error: json.error.message });
-        } else {
-          dispatchFinance({ type: "LOAD_SUCCESS", data: json.data });
-        }
-      } catch {
-        toast.error("Failed to load finance data");
-        dispatchFinance({ type: "LOAD_DONE" });
-      }
-    },
-    [],
-  );
+  const {
+    data,
+    isPending: dataLoading,
+    error: dataError,
+  } = useDashboard(orgId ?? undefined, {
+    dateFrom,
+    dateTo,
+    branchId: branchFilter,
+  });
 
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   useEffect(() => {
     if (data) setHasLoadedOnce(true);
   }, [data]);
 
-  useEffect(() => {
-    if (orgId) fetchData(orgId, dateFrom, dateTo);
-  }, [orgId, dateFrom, dateTo, fetchData]);
+  const loading = orgLoading || (!!orgId && dataLoading && !hasLoadedOnce);
+  const error = orgError
+    ? "Failed to load organization"
+    : !orgId && !orgLoading
+      ? "No organization found"
+      : dataError
+        ? dataError.message
+        : null;
 
   useEffect(() => {
     if (!data) return;
@@ -942,6 +906,16 @@ export default function FinancePage() {
           </Typography.Muted>
         </div>
         <div className="flex flex-col items-end gap-3">
+          {financeSeparate && (
+            <BranchSelect
+              value={selectedBranchId}
+              onChange={useSetSelectedBranchId()}
+              branches={branches}
+              placeholder={t("dashboard.branch")}
+              allLabel={t("dashboard.allBranches")}
+              className="min-w-44"
+            />
+          )}
           <DateRangePicker
             value={dateRange}
             onChange={setDateRange}
@@ -980,7 +954,7 @@ export default function FinancePage() {
           search={search}
           onSearchChange={setSearch}
           filteredWorkOrders={filteredWorkOrders}
-          data={data}
+          data={data ?? null}
         />
       )}
 

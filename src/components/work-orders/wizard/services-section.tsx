@@ -190,6 +190,23 @@ export function ServicesSection() {
                   onClick={() => {
                     // Add as custom service (no catalog id)
                     ctx.setServiceSearch("");
+                    const isAdded = ctx.serviceLines.some(
+                      (s) =>
+                        s.name === svc.name && s.service_catalog_id === null,
+                    );
+                    if (isAdded) return;
+                    ctx.setServiceLines((prev) => [
+                      ...prev,
+                      {
+                        service_catalog_id: null,
+                        name: svc.name,
+                        base_price: 0,
+                        quantity: 1,
+                        discount_amount_mnt: 0,
+                        discount_percent: 0,
+                        final_price: 0,
+                      },
+                    ]);
                   }}
                   className="w-full justify-between p-3 min-h-[48px] h-auto border-dashed border border-muted-foreground/20"
                 >

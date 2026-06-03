@@ -2,43 +2,46 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
 
-export const GET = createRouteHandler(async ({ orgId, supabase }) => {
-  const { data, error } = await supabase
-    .from("mechanic_commission_rules")
-    .select(
-      "id, organization_id, mechanic_id, name, commission_type, commission_value, min_commission, max_commission, is_active, priority, created_at, updated_at",
-    )
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("priority", { ascending: false });
+export const GET = createRouteHandler(
+  async ({ orgId, supabase }) => {
+    const { data, error } = await supabase
+      .from("mechanic_commission_rules")
+      .select(
+        "id, organization_id, mechanic_id, name, commission_type, commission_value, min_commission, max_commission, is_active, priority, created_at, updated_at",
+      )
+      .eq("organization_id", orgId)
+      .is("deleted_at", null)
+      .order("priority", { ascending: false });
 
-  if (error) throw error;
+    if (error) throw error;
 
-  const rules = data ?? [];
-  const mechanicIds = rules.flatMap((r) =>
-    r.mechanic_id ? [r.mechanic_id] : [],
-  ) as string[];
+    const rules = data ?? [];
+    const mechanicIds = rules.flatMap((r) =>
+      r.mechanic_id ? [r.mechanic_id] : [],
+    ) as string[];
 
-  const profileMap = new Map<string, string>();
-  if (mechanicIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", mechanicIds);
-    for (const p of profiles ?? []) {
-      profileMap.set(p.id, p.full_name ?? "Unknown");
+    const profileMap = new Map<string, string>();
+    if (mechanicIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", mechanicIds);
+      for (const p of profiles ?? []) {
+        profileMap.set(p.id, p.full_name ?? "Unknown");
+      }
     }
-  }
 
-  const enriched = rules.map((r) => ({
-    ...r,
-    mechanic_name: r.mechanic_id
-      ? (profileMap.get(r.mechanic_id) ?? "Unknown")
-      : null,
-  }));
+    const enriched = rules.map((r) => ({
+      ...r,
+      mechanic_name: r.mechanic_id
+        ? (profileMap.get(r.mechanic_id) ?? "Unknown")
+        : null,
+    }));
 
-  return NextResponse.json({ data: enriched });
-});
+    return NextResponse.json({ data: enriched });
+  },
+  { requiredPermission: { resource: "commission_rules", action: "read" } },
+);
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
@@ -85,4 +88,5 @@ export const POST = createRouteHandler(
 
     return NextResponse.json({ data }, { status: 201 });
   },
+  { requiredPermission: { resource: "commission_rules", action: "create" } },
 );

@@ -1,7 +1,8 @@
 import { revalidateTag } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import { withBranchFilter, resolveBranchId } from "@/lib/supabase/with-branch";
 import type {
   CreateMovementParams,
   CreatePartParams,
@@ -83,13 +84,13 @@ const purchaseOrderFieldMap: FieldMap<UpdatePurchaseOrderParams> = {
 // ── Parts Catalog ─────────────────────────────────────────────
 
 export async function getPartsCatalog(
+  db: SupabaseClient,
   orgId: string,
   page?: number,
   pageSize?: number,
   limit = 50,
 ): Promise<PartsCatalogItem[] | PaginatedResponse<PartsCatalogItem>> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const usePagination = typeof page === "number" && page > 0;
   const effectivePage = usePagination ? page : 1;
   const effectivePageSize = usePagination ? (pageSize ?? 50) : limit;
@@ -152,9 +153,11 @@ export async function getPartsCatalog(
   return result as unknown as PartsCatalogItem[];
 }
 
-export async function getPart(id: string): Promise<PartsCatalogItem> {
-  const supabase = await createClient();
-
+export async function getPart(
+  db: SupabaseClient,
+  id: string,
+): Promise<PartsCatalogItem> {
+  const supabase = db;
   const { data, error } = await supabase
     .from("parts_catalog")
     .select(
@@ -168,13 +171,14 @@ export async function getPart(id: string): Promise<PartsCatalogItem> {
 }
 
 export async function createPart(
+  db: SupabaseClient,
   orgId: string,
   params: CreatePartParams,
   userId: string,
 ): Promise<PartsCatalogItem> {
   if (!params.name_mn?.trim())
     throw new ValidationError("Монгол нэр шаардлагатай");
-  const supabase = await createClient();
+  const supabase = db;
   const nameEn = params.name?.trim() || params.name_mn.trim();
   const { data, error } = await supabase
     .from("parts_catalog")
@@ -202,11 +206,12 @@ export async function createPart(
 }
 
 export async function updatePart(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   params: UpdatePartParams,
 ): Promise<PartsCatalogItem> {
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
   const updates = buildUpdates(params, partFieldMap);
   updates.updated_by = userId;
@@ -225,8 +230,12 @@ export async function updatePart(
   return data;
 }
 
-export async function deletePart(id: string, orgId: string): Promise<void> {
-  const supabase = await createClient();
+export async function deletePart(
+  db: SupabaseClient,
+  id: string,
+  orgId: string,
+): Promise<void> {
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
   const { error } = await supabase
     .from("parts_catalog")
@@ -240,9 +249,10 @@ export async function deletePart(id: string, orgId: string): Promise<void> {
 // ── Part Categories ───────────────────────────────────────────
 
 export async function getPartCategories(
+  db: SupabaseClient,
   orgId: string,
 ): Promise<{ id: string; name: string }[]> {
-  const supabase = await createClient();
+  const supabase = db;
   const { data, error } = await supabase
     .from("part_categories")
     .select("id, name")
@@ -253,11 +263,12 @@ export async function getPartCategories(
 }
 
 export async function createPartCategory(
+  db: SupabaseClient,
   orgId: string,
   name: string,
   userId: string,
 ): Promise<{ id: string; name: string }> {
-  const supabase = await createClient();
+  const supabase = db;
   const { data, error } = await supabase
     .from("part_categories")
     .insert({ organization_id: orgId, name: name.trim(), created_by: userId })
@@ -271,16 +282,19 @@ export async function createPartCategory(
 // ── Inventory Balances ────────────────────────────────────────
 
 export async function getInventoryBalances(
+  db: SupabaseClient,
   orgId: string,
+  branchId?: string | null,
 ): Promise<InventoryBalance[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
+  const supabase = db;
+  let query = supabase
     .from("inventory_balances")
     .select(
       "part_id, part_name, part_number, category, unit, default_price, quantity_on_hand, last_movement_at, organization_id, branch_id",
     )
     .eq("organization_id", orgId);
+  if (branchId) query = withBranchFilter(query, branchId);
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   return data ?? [];
 }
@@ -288,17 +302,20 @@ export async function getInventoryBalances(
 // ── Weighted Average Cost ─────────────────────────────────────
 
 export async function getWeightedAverageCosts(
+  db: SupabaseClient,
   orgId: string,
+  branchId?: string | null,
 ): Promise<Record<string, number>> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
+  const supabase = db;
+  let query = supabase
     .from("inventory_movements")
     .select("part_id, quantity, unit_cost")
     .eq("organization_id", orgId)
     .eq("movement_type", "purchase")
     .not("unit_cost", "is", null);
+  if (branchId) query = withBranchFilter(query, branchId);
 
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
 
   // Compute weighted avg: SUM(quantity * unit_cost) / SUM(quantity)
@@ -320,13 +337,15 @@ export async function getWeightedAverageCosts(
 // ── Inventory Movements ───────────────────────────────────────
 
 export async function getInventoryMovements(
+  db: SupabaseClient,
   orgId: string,
   type?: string,
   limit = 50,
   page?: number,
   pageSize?: number,
+  branchId?: string | null,
 ): Promise<InventoryMovement[] | PaginatedResponse<InventoryMovement>> {
-  const supabase = await createClient();
+  const supabase = db;
   const usePagination = typeof page === "number" && page > 0;
   const effectivePage = usePagination ? page : 1;
   const effectivePageSize = usePagination ? (pageSize ?? 50) : limit;
@@ -349,6 +368,7 @@ export async function getInventoryMovements(
   }
 
   if (type) query = query.eq("movement_type", type);
+  if (branchId) query = withBranchFilter(query, branchId);
   const { data, error, count } = await query;
   if (error) throw new Error(error.message);
 
@@ -372,6 +392,7 @@ export async function getInventoryMovements(
 }
 
 export async function createMovement(
+  db: SupabaseClient,
   orgId: string,
   params: CreateMovementParams,
   userId: string,
@@ -382,7 +403,7 @@ export async function createMovement(
   if (!params.quantity || params.quantity === 0)
     throw new ValidationError("Quantity must be non-zero");
 
-  const supabase = await createClient();
+  const supabase = db;
 
   // Verify part exists
   const { data: part } = await supabase
@@ -392,6 +413,10 @@ export async function createMovement(
     .is("deleted_at", null)
     .single();
   if (!part) throw new NotFoundError("Part not found");
+
+  const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
+    strict: false,
+  });
 
   const { data, error } = await supabase
     .from("inventory_movements")
@@ -405,6 +430,7 @@ export async function createMovement(
       reference_type: params.reference_type ?? null,
       reference_id: params.reference_id ?? null,
       notes: params.notes ?? null,
+      branch_id: resolvedBranchId,
       created_by: userId,
     })
     .select(
@@ -421,11 +447,11 @@ export async function createMovement(
 // ── Suppliers ─────────────────────────────────────────────────
 
 export async function getSupplier(
+  db: SupabaseClient,
   id: string,
   orgId: string,
 ): Promise<Supplier> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data, error } = await supabase
     .from("suppliers")
     .select(
@@ -440,11 +466,12 @@ export async function getSupplier(
 }
 
 export async function getSuppliers(
+  db: SupabaseClient,
   orgId: string,
   page?: number,
   pageSize?: number,
 ): Promise<PaginatedResponse<Supplier>> {
-  const supabase = await createClient();
+  const supabase = db;
   const effectivePage = Math.max(1, page ?? 1);
   const effectivePageSize = Math.min(100, Math.max(1, pageSize ?? 50));
   const from = (effectivePage - 1) * effectivePageSize;
@@ -468,18 +495,24 @@ export async function getSuppliers(
 }
 
 export async function createSupplier(
+  db: SupabaseClient,
   orgId: string,
   params: CreateSupplierParams,
   userId: string,
 ): Promise<Supplier> {
   if (!params.name?.trim())
     throw new ValidationError("Supplier name is required");
-  const supabase = await createClient();
+  const supabase = db;
+  const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
+    strict: false,
+  });
+
   const { data, error } = await supabase
     .from("suppliers")
     .insert({
       organization_id: orgId,
       name: params.name.trim(),
+      branch_id: resolvedBranchId,
       contact_person: params.contact_person?.trim() || null,
       phone: params.phone?.trim() || null,
       email: params.email?.trim() || null,
@@ -501,11 +534,12 @@ export async function createSupplier(
 }
 
 export async function updateSupplier(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   params: UpdateSupplierParams,
 ): Promise<Supplier> {
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
   const updates = buildUpdates(params, supplierFieldMap);
   updates.updated_by = userId;
@@ -524,8 +558,12 @@ export async function updateSupplier(
   return data as unknown as Supplier;
 }
 
-export async function deleteSupplier(id: string, orgId: string): Promise<void> {
-  const supabase = await createClient();
+export async function deleteSupplier(
+  db: SupabaseClient,
+  id: string,
+  orgId: string,
+): Promise<void> {
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
   const { error } = await supabase
     .from("suppliers")
@@ -539,23 +577,28 @@ export async function deleteSupplier(id: string, orgId: string): Promise<void> {
 // ── Purchase Orders ───────────────────────────────────────────
 
 export async function getPurchaseOrders(
+  db: SupabaseClient,
   orgId: string,
   page?: number,
   pageSize?: number,
+  branchId?: string | null,
 ): Promise<PaginatedResponse<PurchaseOrder>> {
-  const supabase = await createClient();
+  const supabase = db;
   const effectivePage = Math.max(1, page ?? 1);
   const effectivePageSize = Math.min(100, Math.max(1, pageSize ?? 50));
   const from = (effectivePage - 1) * effectivePageSize;
   const to = from + effectivePageSize - 1;
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from("purchase_orders")
     .select("*, supplier:suppliers(name)", { count: "exact" })
     .eq("organization_id", orgId)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .range(from, to);
+  if (branchId) query = withBranchFilter(query, branchId);
+
+  const { data, error, count } = await query;
   if (error) throw new Error(error.message);
   return {
     data: (data ?? []) as unknown as PurchaseOrder[],
@@ -567,10 +610,10 @@ export async function getPurchaseOrders(
 }
 
 export async function getPurchaseOrderItems(
+  db: SupabaseClient,
   poId: string,
 ): Promise<(PurchaseOrderItem & { part_name: string })[]> {
-  const supabase = await createClient();
-
+  const supabase = db;
   const { data, error } = await supabase
     .from("purchase_order_items")
     .select(
@@ -586,6 +629,7 @@ export async function getPurchaseOrderItems(
 }
 
 export async function createPurchaseOrder(
+  db: SupabaseClient,
   orgId: string,
   params: CreatePurchaseOrderParams,
   userId: string,
@@ -595,7 +639,11 @@ export async function createPurchaseOrder(
   if (!params.order_number?.trim())
     throw new ValidationError("Order number is required");
 
-  const supabase = await createClient();
+  const supabase = db;
+  const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
+    strict: false,
+  });
+
   const totalAmount = params.items.reduce(
     (sum, item) => sum + item.unit_cost * item.quantity_ordered,
     0,
@@ -605,6 +653,7 @@ export async function createPurchaseOrder(
     .from("purchase_orders")
     .insert({
       organization_id: orgId,
+      branch_id: resolvedBranchId,
       supplier_id: params.supplier_id || null,
       order_number: params.order_number.trim(),
       status: "draft",
@@ -644,11 +693,12 @@ export async function createPurchaseOrder(
 }
 
 export async function updatePurchaseOrder(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   params: UpdatePurchaseOrderParams,
 ): Promise<PurchaseOrder> {
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
   const updates = buildUpdates(params, purchaseOrderFieldMap);
   updates.updated_by = userId;
@@ -668,10 +718,11 @@ export async function updatePurchaseOrder(
 }
 
 export async function receivePurchaseOrder(
+  db: SupabaseClient,
   id: string,
   orgId: string,
 ): Promise<PurchaseOrder> {
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   // Get PO items
@@ -753,27 +804,35 @@ export async function receivePurchaseOrder(
 // ── Stock Thresholds ──────────────────────────────────────────
 
 export async function getStockThresholds(
+  db: SupabaseClient,
   orgId: string,
+  branchId?: string | null,
 ): Promise<StockThreshold[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
+  const supabase = db;
+  let query = supabase
     .from("stock_thresholds")
     .select(
       "id, organization_id, branch_id, part_id, minimum_quantity, maximum_quantity, notes, created_at, updated_at",
     )
     .eq("organization_id", orgId);
+  if (branchId) query = withBranchFilter(query, branchId);
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as StockThreshold[];
 }
 
 export async function setStockThreshold(
+  db: SupabaseClient,
   orgId: string,
   params: CreateStockThresholdParams,
 ): Promise<StockThreshold> {
   if (!params.part_id) throw new ValidationError("Part is required");
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
+    strict: false,
+  });
 
   const { data, error } = await supabase
     .from("stock_thresholds")
@@ -781,6 +840,7 @@ export async function setStockThreshold(
       {
         organization_id: orgId,
         part_id: params.part_id,
+        branch_id: resolvedBranchId,
         minimum_quantity: params.minimum_quantity,
         notes: params.notes || null,
         created_by: userId,
