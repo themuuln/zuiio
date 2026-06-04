@@ -4,11 +4,11 @@ import { TrendingUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
+import { ListPageShell } from "@/components/list-page-shell";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
@@ -73,17 +73,22 @@ export default function ValuationPage() {
     { key: "totalValue", label: t("totalValue"), format: "currency" },
   ];
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          {t("valuationTitle")}
-        </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">
-          {t("valuationSubtitle")}
-        </Typography.Muted>
-      </div>
+  const emptyState = (
+    <div className="flex flex-col items-center gap-4 py-12">
+      <TrendingUp className="size-10 text-muted-foreground/40" />
+      <Typography.Muted className="text-muted-foreground">
+        {t("noValuationData")}
+      </Typography.Muted>
+    </div>
+  );
 
+  return (
+    <ListPageShell
+      title={t("valuationTitle")}
+      description={t("valuationSubtitle")}
+      loading={isLoading && balances.length === 0}
+    >
+      {/* KPI card — total inventory value */}
       <Card className="bg-primary/5 border-primary/10">
         <CardContent className="flex items-center gap-4 py-6">
           <TrendingUp className="size-8 text-primary" />
@@ -119,6 +124,7 @@ export default function ValuationPage() {
         }
       />
 
+      {/* Category filter chips */}
       <div className="flex flex-wrap gap-2">
         <Button
           variant={categoryFilter === "" ? "default" : "outline"}
@@ -141,60 +147,42 @@ export default function ValuationPage() {
 
       <Card>
         <CardContent className="p-0 overflow-x-auto">
-          {isLoading ? (
-            <div className="divide-y divide-border">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-4 p-4">
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-5 w-20" />
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-20" />
+          <DataTable
+            columns={columns}
+            data={filtered}
+            loading={isLoading}
+            emptyState={emptyState}
+            getRowId={(row) =>
+              row.part_id ?? row.part_name ?? Math.random().toString()
+            }
+            pageSize={20}
+            renderMobileCard={(v) => (
+              <div className="flex flex-col gap-2 text-sm">
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium truncate">{v.part_name}</span>
+                  <span className="text-xs text-muted-foreground truncate">
+                    {v.part_number || "—"}
+                  </span>
                 </div>
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-4 py-12">
-              <TrendingUp className="size-10 text-muted-foreground/40" />
-              <Typography.Muted className="text-muted-foreground">
-                {t("noValuationData")}
-              </Typography.Muted>
-            </div>
-          ) : (
-            <DataTable
-              columns={columns}
-              data={filtered}
-              getRowId={(row) =>
-                row.part_id ?? row.part_name ?? Math.random().toString()
-              }
-              pageSize={20}
-              renderMobileCard={(v) => (
-                <div className="flex flex-col gap-2 text-sm">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-medium truncate">{v.part_name}</span>
-                    <span className="text-xs text-muted-foreground truncate">
-                      {v.part_number || "—"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
-                    <span>{v.category || "—"}</span>
-                    <span className="tabular-nums">
-                      {v.quantity_on_hand} {v.unit}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      Avg: {v.avgUnitCost.toLocaleString("mn-MN")} ₮
-                    </span>
-                    <span className="font-semibold tabular-nums text-sm">
-                      {v.totalValue.toLocaleString("mn-MN")} ₮
-                    </span>
-                  </div>
+                <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                  <span>{v.category || "—"}</span>
+                  <span className="tabular-nums">
+                    {v.quantity_on_hand} {v.unit}
+                  </span>
                 </div>
-              )}
-            />
-          )}
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    Avg: {v.avgUnitCost.toLocaleString("mn-MN")} ₮
+                  </span>
+                  <span className="font-semibold tabular-nums text-sm">
+                    {v.totalValue.toLocaleString("mn-MN")} ₮
+                  </span>
+                </div>
+              </div>
+            )}
+          />
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

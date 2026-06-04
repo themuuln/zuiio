@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
 import type { DateRange } from "react-day-picker";
 import { ExportButton } from "@/components/export-button";
+import { ListPageShell } from "@/components/list-page-shell";
 import { ListToolbar } from "@/components/list-toolbar";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
@@ -87,20 +88,6 @@ function KpiCard({
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function TableSkeleton({ rows = 5 }: { rows?: number }) {
-  return (
-    <div className="flex flex-col gap-2 p-4">
-      {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4">
-          {Array.from({ length: 6 }).map((_, j) => (
-            <Skeleton key={j} className="h-5 flex-1" />
-          ))}
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -267,79 +254,29 @@ export default function ExpensesPage() {
     [],
   );
 
-  // ── Render: Loading ──
-
-  if (showLoadingScreen) {
-    return (
-      <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-40" />
-          <Skeleton className="h-10 w-36" />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={`skeleton-${i}`}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-28" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-24" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <Card>
-          <CardContent className="p-0">
-            <TableSkeleton />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // ── Render: Error ──
-
-  if (isError || (!orgId && !orgLoading)) {
-    return (
-      <div className="flex flex-col gap-6 tablet:px-2">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {t("nav.expenses")}
-          </Typography.H1>
-        </div>
-        <Typography.Text className="text-destructive">
-          {error?.message ?? "No organization found"}
-        </Typography.Text>
-        <Button onClick={() => refetch()} variant="outline" className="w-fit">
-          Retry
-        </Button>
-      </div>
-    );
-  }
-
-  // ── Render: Normal ──
+  const displayError =
+    isError || (!orgId && !orgLoading)
+      ? (error?.message ?? "No organization found")
+      : null;
 
   return (
-    <div className="flex flex-col gap-6 tablet:gap-6 tablet:px-2">
-      {/* ── Header ── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {t("nav.expenses")}
-          </Typography.H1>
-          <Typography.Muted className="text-muted-foreground">
-            {expenses?.length ?? 0}{" "}
-            {(expenses?.length ?? 0) === 1 ? "expense" : "expenses"}
-          </Typography.Muted>
-        </div>
+    <ListPageShell
+      title={t("nav.expenses")}
+      description={
+        expenses?.length
+          ? `${expenses.length} ${expenses.length === 1 ? "expense" : "expenses"}`
+          : undefined
+      }
+      loading={showLoadingScreen}
+      error={displayError}
+      onRetry={refetch}
+      headerAction={
         <Button onClick={() => setNewExpenseSheetOpen(true)} size="default">
           <Plus className="size-4" />
           Add Expense
         </Button>
-      </div>
-
+      }
+    >
       {/* ── KPI Cards ── */}
       <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         <KpiCard
@@ -526,6 +463,6 @@ export default function ExpensesPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

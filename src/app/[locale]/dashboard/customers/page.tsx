@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
+import { ListPageShell } from "@/components/list-page-shell";
 import { ListToolbar } from "@/components/list-toolbar";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
@@ -26,9 +27,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
@@ -174,7 +173,7 @@ export default function CustomersPage() {
       <RecentList items={recent} title={t("customers.recentCustomers")} />,
       <Clock className="size-4" />,
     );
-  }, [rawCustomersForView, registerTab]);
+  }, [rawCustomersForView, registerTab, t]);
 
   const inactiveChip: FilterChip = {
     key: "inactive",
@@ -187,63 +186,27 @@ export default function CustomersPage() {
   const isFirstLoad = rawCustomers === undefined && !search;
   const showLoadingScreen = orgLoading || (customersLoading && isFirstLoad);
 
-  // ── Loading state ──────────────────────────────────────────
-
-  if (showLoadingScreen) {
-    return (
-      <div className="tablet-touch flex flex-col gap-6 tablet:gap-6 tablet:px-2">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-10 w-36" />
-        </div>
-        <Skeleton className="h-10 w-full" />
-        <Card>
-          <CardContent className="p-0">
-            <div className="flex flex-col gap-2 p-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <Skeleton key={j} className="h-5 flex-1" />
-                  ))}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (isError || orgError) {
-    return (
-      <div className="tablet-touch flex flex-col gap-6">
-        <Typography.Text className="text-destructive">
-          {error?.message ?? t("noOrganization")}
-        </Typography.Text>
-        <Button onClick={() => refetch()} variant="outline">
-          {t("retry")}
-        </Button>
-      </div>
-    );
-  }
+  const displayError =
+    isError || orgError ? (error?.message ?? t("noOrganization")) : null;
 
   return (
-    <div className="tablet-touch flex flex-col gap-6 tablet:gap-6 tablet:px-2">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {t("title")}
-          </Typography.H1>
-          <Typography.Muted className="text-muted-foreground">
-            {customers.length} customer{customers.length !== 1 ? "s" : ""}
-          </Typography.Muted>
-        </div>
+    <ListPageShell
+      title={t("title")}
+      description={
+        customers.length
+          ? `${customers.length} customer${customers.length !== 1 ? "s" : ""}`
+          : undefined
+      }
+      loading={showLoadingScreen}
+      error={displayError}
+      onRetry={refetch}
+      headerAction={
         <Button onClick={() => setNewCustomerDialogOpen(true)} size="default">
           <Plus className="size-4" />
           {t("addCustomer")}
         </Button>
-      </div>
-
+      }
+    >
       <ToggleGroup
         multiple={false}
         value={[activeView]}
@@ -382,6 +345,6 @@ export default function CustomersPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </ListPageShell>
   );
 }

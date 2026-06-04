@@ -2,9 +2,10 @@
 
 import { Building2, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
+import { ListPageShell } from "@/components/list-page-shell";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,8 +17,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
 import type { ExportColumn } from "@/lib/export";
@@ -58,15 +57,18 @@ export default function SuppliersPage() {
     { key: "address", label: t("address") },
   ];
 
-  const handleDelete = async (id: string) => {
-    if (!confirm(t("deleteSupplier"))) return;
-    try {
-      await deleteSupplier.mutateAsync(id);
-      toast.success(t("supplierDeleted"));
-    } catch {
-      toast.error(t("failedToDelete"));
-    }
-  };
+  const handleDelete = useCallback(
+    async (id: string) => {
+      if (!confirm(t("deleteSupplier"))) return;
+      try {
+        await deleteSupplier.mutateAsync(id);
+        toast.success(t("supplierDeleted"));
+      } catch {
+        toast.error(t("failedToDelete"));
+      }
+    },
+    [t, deleteSupplier],
+  );
 
   const columns = useMemo(
     () =>
@@ -78,16 +80,18 @@ export default function SuppliersPage() {
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          {t("suppliersTitle")}
-        </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">
-          {t("suppliersSubtitle")}
-        </Typography.Muted>
-      </div>
-
+    <ListPageShell
+      title={t("suppliersTitle")}
+      description={t("suppliersSubtitle")}
+      loading={isLoading && suppliers.length === 0}
+      headerAction={
+        <Link href="/dashboard/inventory/suppliers/new">
+          <Button size="default">
+            <Plus className="size-5" /> {t("newSupplier")}
+          </Button>
+        </Link>
+      }
+    >
       <ListToolbar
         search={{
           placeholder: t("searchSuppliers"),
@@ -100,36 +104,18 @@ export default function SuppliersPage() {
           </span>
         }
         actions={
-          <div className="flex items-center gap-2">
-            <ExportButton
-              data={filtered}
-              columns={exportColumns}
-              filename={`suppliers-${now.toISOString().split("T")[0]}.xlsx`}
-              sheetName="Suppliers"
-            />
-            <Link href="/dashboard/inventory/suppliers/new">
-              <Button size="default">
-                <Plus className="size-5" /> {t("newSupplier")}
-              </Button>
-            </Link>
-          </div>
+          <ExportButton
+            data={filtered}
+            columns={exportColumns}
+            filename={`suppliers-${now.toISOString().split("T")[0]}.xlsx`}
+            sheetName="Suppliers"
+          />
         }
       />
 
-      <Card>
-        <CardContent className="p-0 overflow-x-auto">
-          {isLoading ? (
-            <div className="divide-y divide-border">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-4 p-4">
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-5 w-24" />
-                  <Skeleton className="h-5 w-24" />
-                  <Skeleton className="h-5 w-32" />
-                </div>
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
+      {filtered.length === 0 ? (
+        <Card>
+          <CardContent className="p-0">
             <Empty>
               <EmptyHeader>
                 <EmptyMedia variant="icon">
@@ -143,7 +129,11 @@ export default function SuppliersPage() {
                 </Link>
               </EmptyContent>
             </Empty>
-          ) : (
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
             <DataTable
               columns={columns}
               data={filtered}
@@ -163,9 +153,9 @@ export default function SuppliersPage() {
                 </div>
               )}
             />
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+      )}
+    </ListPageShell>
   );
 }
