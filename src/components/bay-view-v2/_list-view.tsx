@@ -139,6 +139,7 @@ export function ListView({
                         </span>
                       )}
                       {(() => {
+                        if (!wo) return null;
                         const helpers = (
                           wo as unknown as Record<string, unknown>
                         ).helpers as

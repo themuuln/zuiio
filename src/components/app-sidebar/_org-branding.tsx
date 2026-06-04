@@ -1,8 +1,9 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Building2, Check, CirclePlus, Store } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { QuickCreateBranchSheet } from "@/components/branches/quick-create-branch-sheet";
 import {
@@ -13,12 +14,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
-import { useBranches } from "@/lib/queries/use-branches";
 import { orgKeys } from "@/lib/queries/keys";
+import { useBranches } from "@/lib/queries/use-branches";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { Organization } from "@/lib/types";
-import { useQuery } from "@tanstack/react-query";
 
 /**
  * Org branding header + branch selector.
@@ -71,28 +71,27 @@ export function OrgBranding() {
 
   const label = (
     <div className="grid min-w-0 flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:group-hover:grid">
-      <span className="truncate text-sm font-semibold">{name}</span>
+      <span className="truncate text-sm font-semibold" suppressHydrationWarning>
+        {name}
+      </span>
       {canSwitchBranches && (
-        <span className="truncate text-[10px] text-sidebar-foreground/50">
+        <span
+          className="truncate text-[10px] text-sidebar-foreground/50"
+          suppressHydrationWarning
+        >
           {activeBranchName}
         </span>
       )}
     </div>
   );
 
-  // Mechanics: static branding only
-  if (isMechanic || !canSwitchBranches) {
-    return (
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3 rounded-xl px-2 h-9 transition-colors group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-start group-data-[collapsible=icon]:rounded-xl group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:self-start group-data-[collapsible=icon]:ml-[-2px] group-data-[collapsible=icon]:group-hover:w-full group-data-[collapsible=icon]:group-hover:h-9 group-data-[collapsible=icon]:group-hover:pl-0 group-data-[collapsible=icon]:group-hover:pr-2 group-data-[collapsible=icon]:group-hover:bg-transparent">
-          {trigger}
-          {label}
-        </div>
-      </div>
-    );
-  }
+  // Always render the same HTML structure (DropdownMenu button) regardless of
+  // role. During SSR, role data is unavailable so isMechanic/isAdmin are false;
+  // the previous conditional returned a <div> on server but a <button> on client,
+  // causing a hydration mismatch. Now role data only controls whether the
+  // dropdown content is shown — the button shell is always identical.
+  const canShowDropdown = canSwitchBranches && !isMechanic;
 
-  // Admins/managers: clickable branch switcher
   return (
     <>
       <DropdownMenu>
@@ -107,66 +106,68 @@ export function OrgBranding() {
             </button>
           }
         />
-        <DropdownMenuContent
-          className="w-56 rounded-lg"
-          align="start"
-          sideOffset={4}
-        >
-          {/* All Branches */}
-          <DropdownMenuItem
-            onClick={() => setSelectedBranchId("all")}
-            className="gap-2 p-2"
+        {canShowDropdown && (
+          <DropdownMenuContent
+            className="w-56 rounded-lg"
+            align="start"
+            sideOffset={4}
           >
-            <div className="flex size-5 items-center justify-center rounded-md bg-sidebar-primary/10 text-sidebar-primary shrink-0">
-              <Building2 className="size-3" />
-            </div>
-            <span className="flex-1 text-xs font-medium">
-              {t("dashboard.allBranches")}
-            </span>
-            {allSelected && (
-              <Check className="size-3.5 shrink-0 text-primary" />
-            )}
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
-
-          {/* Branch list */}
-          {branches.map((branch) => (
+            {/* All Branches */}
             <DropdownMenuItem
-              key={branch.id}
-              onClick={() => setSelectedBranchId(branch.id)}
+              onClick={() => setSelectedBranchId("all")}
               className="gap-2 p-2"
             >
-              <div className="flex size-5 items-center justify-center rounded-md bg-sidebar-accent text-sidebar-accent-foreground shrink-0">
-                <Store className="size-3" />
+              <div className="flex size-5 items-center justify-center rounded-md bg-sidebar-primary/10 text-sidebar-primary shrink-0">
+                <Building2 className="size-3" />
               </div>
-              <div className="grid min-w-0 flex-1">
-                <span className="truncate text-xs font-medium">
-                  {branch.name}
-                </span>
-                {branch.is_main && (
-                  <span className="truncate text-[10px] text-sidebar-foreground/40">
-                    Main
-                  </span>
-                )}
-              </div>
-              {branch.id === selectedBranchId && (
+              <span className="flex-1 text-xs font-medium">
+                {t("dashboard.allBranches")}
+              </span>
+              {allSelected && (
                 <Check className="size-3.5 shrink-0 text-primary" />
               )}
             </DropdownMenuItem>
-          ))}
 
-          <DropdownMenuSeparator />
+            <DropdownMenuSeparator />
 
-          {/* Add Branch */}
-          <DropdownMenuItem
-            onClick={() => setAddBranchOpen(true)}
-            className="gap-2 p-2 text-muted-foreground"
-          >
-            <CirclePlus className="size-4 shrink-0" />
-            <span className="text-xs">Add Branch</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
+            {/* Branch list */}
+            {branches.map((branch) => (
+              <DropdownMenuItem
+                key={branch.id}
+                onClick={() => setSelectedBranchId(branch.id)}
+                className="gap-2 p-2"
+              >
+                <div className="flex size-5 items-center justify-center rounded-md bg-sidebar-accent text-sidebar-accent-foreground shrink-0">
+                  <Store className="size-3" />
+                </div>
+                <div className="grid min-w-0 flex-1">
+                  <span className="truncate text-xs font-medium">
+                    {branch.name}
+                  </span>
+                  {branch.is_main && (
+                    <span className="truncate text-[10px] text-sidebar-foreground/40">
+                      Main
+                    </span>
+                  )}
+                </div>
+                {branch.id === selectedBranchId && (
+                  <Check className="size-3.5 shrink-0 text-primary" />
+                )}
+              </DropdownMenuItem>
+            ))}
+
+            <DropdownMenuSeparator />
+
+            {/* Add Branch */}
+            <DropdownMenuItem
+              onClick={() => setAddBranchOpen(true)}
+              className="gap-2 p-2 text-muted-foreground"
+            >
+              <CirclePlus className="size-4 shrink-0" />
+              <span className="text-xs">Add Branch</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        )}
       </DropdownMenu>
 
       <QuickCreateBranchSheet
