@@ -21,7 +21,6 @@ export const STORES = [
   "work-order-services",
   "work-order-parts",
   "services",
-  "service-catalog",
   "inventory-parts",
   "inventory-movements",
   "inventory-suppliers",

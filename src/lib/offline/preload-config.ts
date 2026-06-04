@@ -25,9 +25,9 @@ export const PRELOAD_ENDPOINTS: PreloadEndpoint[] = [
   // ── Critical: needed for sidebar, nav, basic functionality ──
   {
     store: "organizations",
-    path: "/settings",
+    path: "",
     priority: "critical",
-    label: "Organization settings",
+    label: "Organization",
   },
   {
     store: "branches",
@@ -37,9 +37,10 @@ export const PRELOAD_ENDPOINTS: PreloadEndpoint[] = [
   },
   {
     store: "mechanics",
-    path: "/mechanics",
+    path: "/reports",
     priority: "critical",
     label: "Mechanics",
+    params: { type: "mechanics" },
   },
   {
     store: "services",
@@ -77,14 +78,6 @@ export const PRELOAD_ENDPOINTS: PreloadEndpoint[] = [
     params: { pageSize: "1000" },
   },
   {
-    store: "service-catalog",
-    path: "/services/catalog",
-    priority: "high",
-    label: "Service catalog",
-  },
-
-  // ── Medium: needed for reports, payroll, secondary features ──
-  {
     store: "expenses",
     path: "/expenses",
     priority: "medium",
@@ -95,6 +88,10 @@ export const PRELOAD_ENDPOINTS: PreloadEndpoint[] = [
     path: "/payroll/records",
     priority: "medium",
     label: "Payroll",
+    params: {
+      year: String(new Date().getFullYear()),
+      month: String(new Date().getMonth() + 1),
+    },
   },
   {
     store: "service-reminders",
@@ -122,9 +119,9 @@ export const PRELOAD_ENDPOINTS: PreloadEndpoint[] = [
   },
   {
     store: "day-close",
-    path: "/day-close/status",
+    path: "/day-close",
     priority: "medium",
-    label: "Day close status",
+    label: "Day close",
   },
 
   // ── Low: nice to have, load last ──
