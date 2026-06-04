@@ -6,8 +6,8 @@ import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import { DetailSheet } from "@/components/ui/detail-sheet";
+import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   Table,

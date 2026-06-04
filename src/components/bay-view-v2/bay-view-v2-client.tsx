@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { usePolling } from "@/hooks/use-polling";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { BayViewData, ShiftReport } from "@/lib/services/bay-view-service";
 import {
   assignVehicleToBay,
@@ -29,7 +29,6 @@ import {
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { formatPlateNumber } from "@/lib/utils";
-import type { DateRange } from "react-day-picker";
 import { useBayActionHandlers } from "./_bay-action-handlers";
 import { useBayDragHandlers } from "./_bay-drag-handlers";
 import { BayViewErrorState } from "./_error-state";
@@ -73,7 +72,6 @@ export function BayViewV2Client() {
   const [shiftReport, setShiftReport] = useState<ShiftReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [activeDrag, setActiveDrag] = useState<ActiveDragState | null>(null);
   const [pendingWoIds, setPendingWoIds] = useState<Record<string, boolean>>({});
   const searchParams = useSearchParams();
@@ -733,8 +731,6 @@ export function BayViewV2Client() {
           onBranchChange={(id) => {
             setSelectedBranchId(id);
           }}
-          dateRange={dateRange}
-          onDateRangeChange={setDateRange}
         />
 
         <KpiCards

@@ -1,11 +1,11 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
 import { cn } from "@/lib/utils";
-import type { ReactNode } from "react";
 
 export type CreatePageHeaderProps = {
   backHref: string;

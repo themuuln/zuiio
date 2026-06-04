@@ -25,7 +25,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { PlateInput } from "@/components/ui/plate-input";
 import {
   Item,
   ItemActions,
@@ -33,6 +32,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
+import { PlateInput } from "@/components/ui/plate-input";
 import {
   Select,
   SelectContent,

@@ -31,6 +31,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { DetailSheet } from "@/components/ui/detail-sheet";
 import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import {
   Item,
@@ -38,7 +39,6 @@ import {
   ItemDescription,
   ItemTitle,
 } from "@/components/ui/item";
-import { DetailSheet } from "@/components/ui/detail-sheet";
 import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Typography } from "@/components/ui/typography";
 import { usePageHeader } from "@/hooks/use-page-header";

@@ -24,8 +24,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { DateRange } from "react-day-picker";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "grid" | "kanban" | "list";
@@ -77,10 +75,6 @@ interface ToolbarProps {
   selectedBranchId: string;
   /** Called when a branch pill is clicked */
   onBranchChange: (branchId: string) => void;
-  /** Date range for filtering */
-  dateRange?: DateRange;
-  /** Called when date range changes */
-  onDateRangeChange: (range: DateRange | undefined) => void;
 }
 
 export function Toolbar({
@@ -90,8 +84,7 @@ export function Toolbar({
   myJobsOnly,
   setMyJobsOnly,
   fetchData,
-  dateRange,
-  onDateRangeChange,
+
   baySearchQuery,
   setBaySearchQuery,
   readyWosCount,
@@ -208,14 +201,6 @@ export function Toolbar({
           >
             <RefreshCw className="size-3.5" />
           </Button>
-
-          {/* Date Range Filter */}
-          <DateRangePicker
-            value={dateRange}
-            onChange={onDateRangeChange}
-            className="w-full sm:w-[200px] lg:w-[240px]"
-            align="start"
-          />
 
           {/* Search Bar — takes remaining space */}
           <div className="relative flex-1 min-w-[140px] max-w-none">

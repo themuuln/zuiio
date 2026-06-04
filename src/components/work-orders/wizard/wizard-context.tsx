@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { customerKeys } from "@/lib/queries/keys";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   createContext,
@@ -13,6 +12,7 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
+import { customerKeys } from "@/lib/queries/keys";
 import {
   type GlobalPart,
   type GlobalService,

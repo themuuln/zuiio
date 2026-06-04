@@ -26,9 +26,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { DetailSheet } from "@/components/ui/detail-sheet";
 import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { PlateInput } from "@/components/ui/plate-input";
 import { Input } from "@/components/ui/input";
 import {
   Item,
@@ -36,6 +36,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from "@/components/ui/item";
+import { PlateInput } from "@/components/ui/plate-input";
 import {
   Select,
   SelectContent,
@@ -43,7 +44,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DetailSheet } from "@/components/ui/detail-sheet";
 import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";

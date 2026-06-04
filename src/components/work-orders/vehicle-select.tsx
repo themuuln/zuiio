@@ -21,7 +21,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { PlateInput } from "@/components/ui/plate-input";
 import {
   Item,
   ItemActions,
@@ -29,6 +28,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
+import { PlateInput } from "@/components/ui/plate-input";
 import { Typography } from "@/components/ui/typography";
 import { inputProps } from "@/lib/form-ux";
 import { isValidMongolianPlate } from "@/lib/form-validation";

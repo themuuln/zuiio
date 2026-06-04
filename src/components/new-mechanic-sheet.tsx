@@ -4,6 +4,7 @@ import { CheckCircle, Copy, Loader2, UserPlus } from "lucide-react";
 import { useEffect, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { DetailSheet } from "@/components/ui/detail-sheet";
 import {
   Field,
   FieldContent,
@@ -18,8 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DetailSheet } from "@/components/ui/detail-sheet";
-import { SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 
@@ -114,62 +118,60 @@ function MechanicCredentialsView({
 
   return (
     <DetailSheet open={open} onOpenChange={onOpenChange} size="2xl">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2 text-base">
-            <CheckCircle className="size-4 text-emerald-500" />
-            Mechanic Added
-          </SheetTitle>
-          <SheetDescription>
-            Share these credentials with the mechanic. They can log in
-            immediately.
-          </SheetDescription>
-        </SheetHeader>
+      <SheetHeader>
+        <SheetTitle className="flex items-center gap-2 text-base">
+          <CheckCircle className="size-4 text-emerald-500" />
+          Mechanic Added
+        </SheetTitle>
+        <SheetDescription>
+          Share these credentials with the mechanic. They can log in
+          immediately.
+        </SheetDescription>
+      </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-6 px-4">
-          <div className="rounded-lg border bg-muted/30 p-4">
-            <div className="flex flex-col gap-3">
-              <div>
-                <Typography.Muted className="text-xs">
-                  Username / Phone / Email
-                </Typography.Muted>
-                <Typography.Text className="font-medium">
-                  {createdMechanic.identifier || createdMechanic.email}
-                </Typography.Text>
-              </div>
-              <div>
-                <Typography.Muted className="text-xs">
-                  Password
-                </Typography.Muted>
-                <Typography.Text className="font-mono font-medium">
-                  {createdMechanic.password}
-                </Typography.Text>
-              </div>
-              {createdMechanic.fullName && (
-                <div>
-                  <Typography.Muted className="text-xs">Name</Typography.Muted>
-                  <Typography.Text className="font-medium">
-                    {createdMechanic.fullName}
-                  </Typography.Text>
-                </div>
-              )}
+      <div className="flex flex-1 flex-col gap-6 px-4">
+        <div className="rounded-lg border bg-muted/30 p-4">
+          <div className="flex flex-col gap-3">
+            <div>
+              <Typography.Muted className="text-xs">
+                Username / Phone / Email
+              </Typography.Muted>
+              <Typography.Text className="font-medium">
+                {createdMechanic.identifier || createdMechanic.email}
+              </Typography.Text>
             </div>
-          </div>
-
-          <div className="mt-auto flex flex-col gap-2 pt-4">
-            <Button type="button" onClick={copyCredentials} className="gap-2">
-              <Copy className="size-4" />
-              Copy Credentials
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Done
-            </Button>
+            <div>
+              <Typography.Muted className="text-xs">Password</Typography.Muted>
+              <Typography.Text className="font-mono font-medium">
+                {createdMechanic.password}
+              </Typography.Text>
+            </div>
+            {createdMechanic.fullName && (
+              <div>
+                <Typography.Muted className="text-xs">Name</Typography.Muted>
+                <Typography.Text className="font-medium">
+                  {createdMechanic.fullName}
+                </Typography.Text>
+              </div>
+            )}
           </div>
         </div>
-      </DetailSheet>
+
+        <div className="mt-auto flex flex-col gap-2 pt-4">
+          <Button type="button" onClick={copyCredentials} className="gap-2">
+            <Copy className="size-4" />
+            Copy Credentials
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Done
+          </Button>
+        </div>
+      </div>
+    </DetailSheet>
   );
 }
 
@@ -290,168 +292,165 @@ export function NewMechanicSheet({
   // Show form
   return (
     <DetailSheet open={open} onOpenChange={handleOpenChange} size="2xl">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2 text-base">
-            <UserPlus className="size-4" />
-            Add Mechanic
-          </SheetTitle>
-          <SheetDescription>
-            Create an account for a new mechanic. They&apos;ll receive their
-            credentials to log in.
-          </SheetDescription>
-        </SheetHeader>
+      <SheetHeader>
+        <SheetTitle className="flex items-center gap-2 text-base">
+          <UserPlus className="size-4" />
+          Add Mechanic
+        </SheetTitle>
+        <SheetDescription>
+          Create an account for a new mechanic. They&apos;ll receive their
+          credentials to log in.
+        </SheetDescription>
+      </SheetHeader>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-1 flex-col gap-6 px-4"
-        >
-          <div className="flex flex-col gap-5">
-            <Field data-invalid={!!form.errors.fullName}>
-              <FieldLabel htmlFor="mechanic-fullname">
-                Full Name <span className="text-destructive">*</span>
-              </FieldLabel>
-              <FieldContent>
-                <Input
-                  id="mechanic-fullname"
-                  type="text"
-                  value={form.fullName}
-                  onChange={(e) => {
-                    dispatch({
-                      type: "SET_FIELD",
-                      field: "fullName",
-                      value: e.target.value,
-                    });
-                    if (form.errors.fullName)
-                      dispatch({ type: "CLEAR_ERROR", field: "fullName" });
-                  }}
-                  placeholder="John Smith"
-                />
-                {form.errors.fullName && (
-                  <FieldError>{form.errors.fullName}</FieldError>
-                )}
-              </FieldContent>
-            </Field>
-
-            <Field data-invalid={!!form.errors.identifier}>
-              <FieldLabel htmlFor="mechanic-identifier">
-                Username, Phone, or Email{" "}
-                <span className="text-destructive">*</span>
-              </FieldLabel>
-              <FieldContent>
-                <Input
-                  id="mechanic-identifier"
-                  type="text"
-                  value={form.identifier}
-                  onChange={(e) => {
-                    dispatch({
-                      type: "SET_FIELD",
-                      field: "identifier",
-                      value: e.target.value,
-                    });
-                    if (form.errors.identifier)
-                      dispatch({ type: "CLEAR_ERROR", field: "identifier" });
-                  }}
-                  placeholder="mechanic@example.com, 9911..., or username"
-                />
-                {form.errors.identifier && (
-                  <FieldError>{form.errors.identifier}</FieldError>
-                )}
-              </FieldContent>
-            </Field>
-
-            <Field data-invalid={!!form.errors.password}>
-              <FieldLabel htmlFor="mechanic-password">
-                Password <span className="text-destructive">*</span>
-              </FieldLabel>
-              <FieldContent>
-                <Input
-                  id="mechanic-password"
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => {
-                    dispatch({
-                      type: "SET_FIELD",
-                      field: "password",
-                      value: e.target.value,
-                    });
-                    if (form.errors.password)
-                      dispatch({ type: "CLEAR_ERROR", field: "password" });
-                  }}
-                  placeholder="Min. 8 characters"
-                />
-                {form.errors.password && (
-                  <FieldError>{form.errors.password}</FieldError>
-                )}
-              </FieldContent>
-            </Field>
-
-            <Field data-invalid={!!form.errors.roleId}>
-              <FieldLabel htmlFor="mechanic-role">
-                Role <span className="text-destructive">*</span>
-              </FieldLabel>
-              <FieldContent>
-                <Select
-                  value={form.selectedRoleId}
-                  onValueChange={(value) => {
-                    if (value) {
-                      dispatch({
-                        type: "SET_SELECTED_ROLE",
-                        roleId: value,
-                      });
-                      if (form.errors.roleId)
-                        dispatch({ type: "CLEAR_ERROR", field: "roleId" });
-                    }
-                  }}
-                  disabled={rolesLoading || roles.length === 0}
-                >
-                  <SelectTrigger id="mechanic-role" className="w-full">
-                    <SelectValue
-                      placeholder={
-                        rolesLoading
-                          ? "Loading..."
-                          : roles.length === 0
-                            ? "No roles available"
-                            : undefined
-                      }
-                    >
-                      {form.selectedRoleId
-                        ? roles.find((r) => r.id === form.selectedRoleId)?.name
-                        : undefined}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map((role) => (
-                      <SelectItem key={role.id} value={role.id}>
-                        {role.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {form.errors.roleId && (
-                  <FieldError>{form.errors.roleId}</FieldError>
-                )}
-              </FieldContent>
-            </Field>
-          </div>
-
-          <div className="mt-auto flex flex-col gap-2 pt-4">
-            <Button type="submit" disabled={form.sending}>
-              {form.sending ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              ) : (
-                <UserPlus className="mr-2 size-4" />
+      <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-6 px-4">
+        <div className="flex flex-col gap-5">
+          <Field data-invalid={!!form.errors.fullName}>
+            <FieldLabel htmlFor="mechanic-fullname">
+              Full Name <span className="text-destructive">*</span>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                id="mechanic-fullname"
+                type="text"
+                value={form.fullName}
+                onChange={(e) => {
+                  dispatch({
+                    type: "SET_FIELD",
+                    field: "fullName",
+                    value: e.target.value,
+                  });
+                  if (form.errors.fullName)
+                    dispatch({ type: "CLEAR_ERROR", field: "fullName" });
+                }}
+                placeholder="John Smith"
+              />
+              {form.errors.fullName && (
+                <FieldError>{form.errors.fullName}</FieldError>
               )}
-              Add Mechanic
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => handleOpenChange(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </DetailSheet>
+            </FieldContent>
+          </Field>
+
+          <Field data-invalid={!!form.errors.identifier}>
+            <FieldLabel htmlFor="mechanic-identifier">
+              Username, Phone, or Email{" "}
+              <span className="text-destructive">*</span>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                id="mechanic-identifier"
+                type="text"
+                value={form.identifier}
+                onChange={(e) => {
+                  dispatch({
+                    type: "SET_FIELD",
+                    field: "identifier",
+                    value: e.target.value,
+                  });
+                  if (form.errors.identifier)
+                    dispatch({ type: "CLEAR_ERROR", field: "identifier" });
+                }}
+                placeholder="mechanic@example.com, 9911..., or username"
+              />
+              {form.errors.identifier && (
+                <FieldError>{form.errors.identifier}</FieldError>
+              )}
+            </FieldContent>
+          </Field>
+
+          <Field data-invalid={!!form.errors.password}>
+            <FieldLabel htmlFor="mechanic-password">
+              Password <span className="text-destructive">*</span>
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                id="mechanic-password"
+                type="password"
+                value={form.password}
+                onChange={(e) => {
+                  dispatch({
+                    type: "SET_FIELD",
+                    field: "password",
+                    value: e.target.value,
+                  });
+                  if (form.errors.password)
+                    dispatch({ type: "CLEAR_ERROR", field: "password" });
+                }}
+                placeholder="Min. 8 characters"
+              />
+              {form.errors.password && (
+                <FieldError>{form.errors.password}</FieldError>
+              )}
+            </FieldContent>
+          </Field>
+
+          <Field data-invalid={!!form.errors.roleId}>
+            <FieldLabel htmlFor="mechanic-role">
+              Role <span className="text-destructive">*</span>
+            </FieldLabel>
+            <FieldContent>
+              <Select
+                value={form.selectedRoleId}
+                onValueChange={(value) => {
+                  if (value) {
+                    dispatch({
+                      type: "SET_SELECTED_ROLE",
+                      roleId: value,
+                    });
+                    if (form.errors.roleId)
+                      dispatch({ type: "CLEAR_ERROR", field: "roleId" });
+                  }
+                }}
+                disabled={rolesLoading || roles.length === 0}
+              >
+                <SelectTrigger id="mechanic-role" className="w-full">
+                  <SelectValue
+                    placeholder={
+                      rolesLoading
+                        ? "Loading..."
+                        : roles.length === 0
+                          ? "No roles available"
+                          : undefined
+                    }
+                  >
+                    {form.selectedRoleId
+                      ? roles.find((r) => r.id === form.selectedRoleId)?.name
+                      : undefined}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role) => (
+                    <SelectItem key={role.id} value={role.id}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {form.errors.roleId && (
+                <FieldError>{form.errors.roleId}</FieldError>
+              )}
+            </FieldContent>
+          </Field>
+        </div>
+
+        <div className="mt-auto flex flex-col gap-2 pt-4">
+          <Button type="submit" disabled={form.sending}>
+            {form.sending ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <UserPlus className="mr-2 size-4" />
+            )}
+            Add Mechanic
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => handleOpenChange(false)}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </DetailSheet>
   );
 }

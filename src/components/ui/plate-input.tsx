@@ -1,10 +1,10 @@
 "use client";
 
 import { type ChangeEvent, type FocusEvent, forwardRef, useState } from "react";
-import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 import { formatPlateInput } from "@/lib/form-ux";
 import { transliterateMongolianPlate } from "@/lib/form-validation";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 /**
  * Buuz phonetic keyboard layout — Latin key → Cyrillic character.

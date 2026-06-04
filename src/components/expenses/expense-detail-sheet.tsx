@@ -3,6 +3,7 @@
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
 import {
   AlertDialog,
@@ -16,7 +17,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DetailSheet } from "@/components/ui/detail-sheet";
