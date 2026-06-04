@@ -1,8 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { ResponsiveFormModal } from "@/components/ui/responsive-form-modal";
 import { AppointmentForm } from "@/components/appointments/appointment-form";
+import { ResponsiveFormModal } from "@/components/ui/responsive-form-modal";
 
 interface Props {
   open: boolean;

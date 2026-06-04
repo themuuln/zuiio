@@ -6,8 +6,8 @@ import {
   createWorkOrder,
   getWorkOrders,
 } from "@/lib/services/work-order-service";
-import { createWorkOrderSchema, parseBody } from "@/lib/validation/work-orders";
 import type { WorkOrderStatus } from "@/lib/types";
+import { createWorkOrderSchema, parseBody } from "@/lib/validation/work-orders";
 
 export const GET = createRouteHandler(
   async ({ request, orgId, supabase }) => {

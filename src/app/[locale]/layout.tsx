@@ -6,10 +6,11 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
 import NuqsProvider from "@/components/nuqs-provider";
 import { OfflineBanner } from "@/components/offline-banner";
+import { OfflineQueueIndicator } from "@/components/offline-queue-indicator";
 import QueryProvider from "@/components/query-provider";
-import { SwCleanup } from "@/components/sw-cleanup";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/lib/i18n/routing";
+import { MutationQueueProvider } from "@/lib/offline/mutation-queue-provider";
 import "../globals.css";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
@@ -60,8 +61,11 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <NuqsProvider>
             <QueryProvider>
-              <OfflineBanner />
-              {children}
+              <MutationQueueProvider>
+                <OfflineBanner />
+                {children}
+                <OfflineQueueIndicator />
+              </MutationQueueProvider>
               <Toaster
                 position="bottom-left"
                 richColors
@@ -74,7 +78,6 @@ export default async function LocaleLayout({
           </NuqsProvider>
         </NextIntlClientProvider>
       </TooltipProvider>
-      <SwCleanup />
     </div>
   );
 }

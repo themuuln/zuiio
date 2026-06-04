@@ -22,7 +22,8 @@ export default function ErrorPage({
           Алдаа гарлаа
         </Typography.H2>
         <Typography.Muted className="text-muted-foreground">
-          {error.message || "Уучлаарай, системийн алдаа гарлаа. Дахин оролдоно уу."}
+          {error.message ||
+            "Уучлаарай, системийн алдаа гарлаа. Дахин оролдоно уу."}
         </Typography.Muted>
         {error.digest && (
           <Typography.Muted className="text-xs text-muted-foreground">

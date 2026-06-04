@@ -14,7 +14,6 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
-import { VehicleModelFormSheet } from "./_vehicle-model-form-sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +43,7 @@ import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { vehicleModelKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { HighlightText } from "@/lib/utils/search-utils";
+import { VehicleModelFormSheet } from "./_vehicle-model-form-sheet";
 
 interface VehicleModelItem {
   id: string;

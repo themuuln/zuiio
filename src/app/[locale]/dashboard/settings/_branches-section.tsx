@@ -4,6 +4,8 @@ import { GitBranch, Loader2, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { QuickCreateBranchSheet } from "@/components/branches/quick-create-branch-sheet";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -13,7 +15,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -26,10 +27,11 @@ import {
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
 import { useBranches } from "@/lib/queries/use-branches";
-import { useOrgSettings } from "@/lib/queries/use-org-settings";
-import { useUpdateOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCreateBranch } from "@/lib/queries/use-create-branch";
-import { QuickCreateBranchSheet } from "@/components/branches/quick-create-branch-sheet";
+import {
+  useOrgSettings,
+  useUpdateOrgSettings,
+} from "@/lib/queries/use-org-settings";
 
 interface BranchesSectionProps {
   orgId: string;

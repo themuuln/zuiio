@@ -10,7 +10,7 @@ import {
   assignMechanic,
   updateWorkOrderStatus,
 } from "@/lib/services/work-order-workflow";
-import { updateWorkOrderSchema, parseBody } from "@/lib/validation/work-orders";
+import { parseBody, updateWorkOrderSchema } from "@/lib/validation/work-orders";
 
 export const GET = createRouteHandler(async ({ params, orgId, supabase }) => {
   await requireActiveSubscription(orgId);

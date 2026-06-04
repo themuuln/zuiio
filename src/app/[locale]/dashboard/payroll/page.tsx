@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useSelectedBranchId } from "@/lib/stores";
 import {
   useCalculatePayroll,
   usePayRates,
@@ -40,6 +39,7 @@ import {
   usePayrollRecords,
   useUpdatePayrollRecord,
 } from "@/lib/queries/use-payroll";
+import { useSelectedBranchId } from "@/lib/stores";
 import { formatMNT } from "@/lib/utils";
 
 const STATUS_STYLES: Record<string, string> = {

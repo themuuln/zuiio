@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ServiceLine } from "./use-service-lines";
 import type { PartLine } from "./use-part-lines";
+import type { ServiceLine } from "./use-service-lines";
 
 interface WizardDraft {
   selectedCustomerId: string | null;

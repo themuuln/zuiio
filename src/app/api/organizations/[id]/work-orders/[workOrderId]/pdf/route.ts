@@ -7,8 +7,8 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { WorkOrderDocument } from "@/lib/pdf/work-order-document";
 import { getOrganization } from "@/lib/services/organization-service";
-import { getWorkOrder } from "@/lib/services/work-order-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
+import { getWorkOrder } from "@/lib/services/work-order-service";
 import { pdfFilename, renderToPdfBuffer } from "@/lib/utils/pdf";
 
 export const GET = createRouteHandler(async ({ params, supabase, orgId }) => {

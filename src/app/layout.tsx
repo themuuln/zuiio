@@ -3,7 +3,6 @@ import { JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import Script from "next/script";
 import type { ReactNode } from "react";
-import { SwCleanup } from "@/components/sw-cleanup";
 import ThemeProvider from "@/components/theme-provider";
 import "./globals.css";
 
@@ -65,7 +64,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         )}
       </head>
       <body className="flex min-h-dvh flex-col">
-        <SwCleanup />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

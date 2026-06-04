@@ -600,7 +600,8 @@ export default function WorkOrderDetailPage() {
   );
   const payments = invoicePaymentsData?.payments ?? [];
   const totalPaid = invoicePaymentsData?.total_paid ?? 0;
-  const balanceDue = invoicePaymentsData?.balance_due ?? servicesTotal + partsTotal;
+  const balanceDue =
+    invoicePaymentsData?.balance_due ?? servicesTotal + partsTotal;
   const invoiceStatus = invoicePaymentsData?.status ?? "";
 
   const servicesCost = (wo.services ?? []).reduce(
@@ -818,8 +819,7 @@ export default function WorkOrderDetailPage() {
                         }}
                       />
                     )}
-                    {wo.diagnosis_label.name_mn ??
-                      wo.diagnosis_label.name}
+                    {wo.diagnosis_label.name_mn ?? wo.diagnosis_label.name}
                   </Badge>
                 </div>
               )}
