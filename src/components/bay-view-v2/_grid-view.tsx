@@ -11,6 +11,7 @@ interface GridViewProps {
   onOpenDetail: (woId: string) => void;
   onAssignClick: (bayNumber: number) => void;
   onRemoveHelper: (woId: string, mechId: string) => Promise<void>;
+  orgId?: string | null;
 }
 
 export function GridView({
@@ -21,6 +22,7 @@ export function GridView({
   onOpenDetail,
   onAssignClick,
   onRemoveHelper,
+  orgId,
 }: GridViewProps) {
   return (
     <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 overflow-y-auto w-full h-full">
@@ -35,6 +37,7 @@ export function GridView({
           onOpenDetail={onOpenDetail}
           onAssignClick={onAssignClick}
           onRemoveHelper={onRemoveHelper}
+          orgId={orgId}
         />
       ))}
     </div>

@@ -75,7 +75,7 @@ export function useServiceCatalog(orgId: string | undefined) {
     queryKey: serviceKeys.list(orgId ?? ""),
     queryFn: () => fetchServiceCatalog(orgId!),
     enabled: !!orgId,
-    staleTime: 60_000,
+    staleTime: 300_000, // 5 min — catalog rarely changes after setup
   });
 }
 

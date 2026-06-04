@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { customerKeys } from "@/lib/queries/keys";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   createContext,
@@ -259,7 +260,7 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
 
   // Auto-select customer from URL param
   const { data: preselectedCustomer } = useQuery({
-    queryKey: ["preselected-customer", orgId, preselectedCustomerId],
+    queryKey: customerKeys.detail(orgId ?? "", preselectedCustomerId ?? ""),
     queryFn: async () => {
       const res = await fetch(
         `/api/organizations/${orgId}/customers/${preselectedCustomerId}`,

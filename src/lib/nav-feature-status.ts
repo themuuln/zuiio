@@ -12,6 +12,7 @@ const VALIDATED_HREFS = new Set([
   "/dashboard/vehicles",
   "/dashboard/inventory",
   "/dashboard/services",
+  "/dashboard/settings",
   "/guide",
 ]);
 

@@ -498,13 +498,13 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingRule ? "Edit Price Rule" : "Create Price Rule"}
+              {editingRule ? t("editPriceRule") : t("createPriceRule")}
             </DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label>Rule Name</Label>
+              <Label>{t("ruleName")}</Label>
               <Input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -513,7 +513,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>Description</Label>
+              <Label>{t("description")}</Label>
               <Textarea
                 value={form.description}
                 onChange={(e) =>
@@ -527,7 +527,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
             <Separator />
 
             <div className="flex flex-col gap-2">
-              <Label>Applies To</Label>
+              <Label>{t("appliesTo")}</Label>
               <Select
                 value={form.apply_to || null}
                 onValueChange={(v) =>
@@ -541,9 +541,11 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="both">Parts & Services</SelectItem>
-                  <SelectItem value="part">Parts only</SelectItem>
-                  <SelectItem value="service">Services only</SelectItem>
+                  <SelectItem value="both">{t("appliesBoth")}</SelectItem>
+                  <SelectItem value="part">{t("appliesParts")}</SelectItem>
+                  <SelectItem value="service">
+                    {t("appliesServices")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -551,7 +553,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
             <Separator />
 
             <div className="flex flex-col gap-2">
-              <Label>Vehicle Condition</Label>
+              <Label>{t("vehicleCondition")}</Label>
               <Select
                 value={form.conditions_type || null}
                 onValueChange={(v) =>
@@ -577,7 +579,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
 
             {form.conditions_type === "class" && (
               <div className="flex flex-col gap-2">
-                <Label>Vehicle Classes (comma-separated)</Label>
+                <Label>{t("vehicleClasses")}</Label>
                 <Input
                   value={form.conditions_classes}
                   onChange={(e) =>
@@ -591,7 +593,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
             {(form.conditions_type === "make" ||
               form.conditions_type === "make_model") && (
               <div className="flex flex-col gap-2">
-                <Label>Makes (comma-separated)</Label>
+                <Label>{t("makesLabel")}</Label>
                 <Input
                   value={form.conditions_makes}
                   onChange={(e) =>
@@ -604,7 +606,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
 
             {form.conditions_type === "make_model" && (
               <div className="flex flex-col gap-2">
-                <Label>Models (comma-separated)</Label>
+                <Label>{t("modelsLabel")}</Label>
                 <Input
                   value={form.conditions_models}
                   onChange={(e) =>
@@ -617,7 +619,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
 
             {form.conditions_type === "fuel" && (
               <div className="flex flex-col gap-2">
-                <Label>Fuel Types (comma-separated)</Label>
+                <Label>{t("fuelTypes")}</Label>
                 <Input
                   value={form.conditions_fuel_types}
                   onChange={(e) =>
@@ -630,7 +632,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
 
             {form.conditions_type === "body_type" && (
               <div className="flex flex-col gap-2">
-                <Label>Body Types (comma-separated)</Label>
+                <Label>{t("bodyTypesLabel")}</Label>
                 <Input
                   value={form.conditions_body_types}
                   onChange={(e) =>
@@ -642,7 +644,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
             )}
 
             <div className="flex flex-col gap-2">
-              <Label>Condition Display (what staff see)</Label>
+              <Label>{t("conditionDisplay")}</Label>
               <Input
                 value={form.conditions_description}
                 onChange={(e) =>
@@ -655,7 +657,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
             <Separator />
 
             <div className="flex flex-col gap-2">
-              <Label>Operator</Label>
+              <Label>{t("operator")}</Label>
               <Select
                 value={form.operator || null}
                 onValueChange={(v) =>
@@ -676,7 +678,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>Value</Label>
+              <Label>{t("value")}</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -691,18 +693,16 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                 }
               />
               <Typography.Muted className="text-[11px] text-muted-foreground">
-                {form.operator === "multiply" &&
-                  "e.g. 1.25 = 25% markup, 0.90 = 10% discount"}
-                {form.operator === "add_fixed" && "e.g. 20000 = +20,000₮"}
-                {form.operator === "set_fixed" &&
-                  "e.g. 150000 = exactly 150,000₮"}
-                {form.operator === "percentage_add" && "e.g. 15 = +15%"}
-                {form.operator === "percentage_sub" && "e.g. 10 = -10%"}
+                {form.operator === "multiply" && t("valueMultiplyHint")}
+                {form.operator === "add_fixed" && t("valueAddFixedHint")}
+                {form.operator === "set_fixed" && t("valueSetFixedHint")}
+                {form.operator === "percentage_add" && t("valuePercentAddHint")}
+                {form.operator === "percentage_sub" && t("valuePercentSubHint")}
               </Typography.Muted>
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>Priority (lower = higher priority)</Label>
+              <Label>{t("priorityLabel")}</Label>
               <Input
                 type="number"
                 value={form.priority}
@@ -710,19 +710,18 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                 placeholder="100"
               />
               <Typography.Muted className="text-[11px] text-muted-foreground">
-                First matching rule wins. Specific rules (e.g. by model) should
-                have lower numbers.
+                {t("priorityHint")}
               </Typography.Muted>
             </div>
 
             <Separator />
 
             <div className="flex flex-col gap-2">
-              <Label>Category Filter (optional)</Label>
+              <Label>{t("categoryFilter")}</Label>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs text-muted-foreground">
-                    Part Category
+                    {t("partCategory")}
                   </Label>
                   <Input
                     value={form.part_category}
@@ -734,7 +733,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">
-                    Service Category
+                    {t("serviceCategory")}
                   </Label>
                   <Input
                     value={form.service_category}
@@ -750,17 +749,17 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               onClick={() => saveMutation.mutate({ id: editingRule?.id, form })}
               disabled={!form.name || saveMutation.isPending}
             >
               {saveMutation.isPending
-                ? "Saving..."
+                ? t("saving")
                 : editingRule
-                  ? "Update Rule"
-                  : "Create Rule"}
+                  ? t("updateRule")
+                  : t("createRule")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -773,14 +772,14 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
       >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete Price Rule?</DialogTitle>
+            <DialogTitle>{t("deletePriceRuleTitle")}</DialogTitle>
           </DialogHeader>
           <Typography.Muted className="text-sm text-muted-foreground">
-            This action cannot be undone. The rule will be permanently removed.
+            {t("deletePriceRuleDesc")}
           </Typography.Muted>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -789,7 +788,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
               }}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              {deleteMutation.isPending ? t("saving") : t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT89VTG5H5KVC9YNJ9TPW8XG",
+  "taskId": "refactor-page",
+  "invocationKey": "vehicle-models-ui-improve:S000002:refactor-page",
+  "status": "ok",
+  "result": {
+    "result": "Page refactored. Removed inline form, added VehicleModelFormSheet integration, added AlertDialog for delete, improved tree view with border accent, hover icons, Badge for body_type."
+  },
+  "startedAt": "2026-06-04T03:12:15.249Z",
+  "finishedAt": "2026-06-04T03:12:15.249Z",
+  "value": {
+    "result": "Page refactored. Removed inline form, added VehicleModelFormSheet integration, added AlertDialog for delete, improved tree view with border accent, hover icons, Badge for body_type."
+  }
+}

@@ -80,7 +80,7 @@ export function usePartsCatalog(
     queryKey: inventoryKeys.parts(orgId ?? "", branchId),
     queryFn: () => fetchPartsCatalog(orgId ?? ""),
     enabled: !!orgId,
-    staleTime: 60_000,
+    staleTime: 300_000, // 5 min — catalog rarely changes after setup
   });
 }
 

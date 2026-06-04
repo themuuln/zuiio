@@ -173,9 +173,7 @@ export function PostServiceFormBody({
               }}
             />
             {form.formState.errors.odometer && (
-              <FieldError>
-                {form.formState.errors.odometer.message}
-              </FieldError>
+              <FieldError>{form.formState.errors.odometer.message}</FieldError>
             )}
           </FieldContent>
         </Field>

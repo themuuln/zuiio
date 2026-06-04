@@ -1,26 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useRouter } from "@/lib/i18n/navigation";
-import { saveCompletionData } from "@/lib/services/post-service-service";
 import { workOrderKeys } from "@/lib/queries/keys";
-import type { WorkOrderDetailDrawerProps } from "./_drawer-types";
 import { useDrawerQueries } from "@/lib/queries/use-drawer-queries";
-import { useDrawerMutations } from "./_use-drawer-mutations";
+import { saveCompletionData } from "@/lib/services/post-service-service";
 import { DrawerCelebration } from "./_drawer-celebration";
 import { DrawerFooter } from "./_drawer-footer";
 import { DrawerHeaderSection } from "./_drawer-header";
 import { DrawerLoading, DrawerSkeleton } from "./_drawer-loading";
+import type { WorkOrderDetailDrawerProps } from "./_drawer-types";
 import { UnsavedWarning } from "./_drawer-unsaved-warning";
 import { NotesSection } from "./_notes-section";
 import { PartsSection } from "./_parts-section";
 import { ServicesSection } from "./_services-section";
 import { StatusTimeline } from "./_status-timeline";
 import { TotalsSummary } from "./_totals-summary";
+import { useDrawerMutations } from "./_use-drawer-mutations";
 import type { PickupCompleteData } from "./pickup-complete-form";
 import { PickupCompleteForm } from "./pickup-complete-form";
 import { PostServiceFormBody } from "./post-service-form";
@@ -239,10 +239,12 @@ export function WorkOrderDetailDrawer({
                 showPostServiceForm ? (
                   <PostServiceFormBody
                     vehiclePlate={
-                      (wo.vehicle as { plate_number?: string })?.plate_number ?? ""
+                      (wo.vehicle as { plate_number?: string })?.plate_number ??
+                      ""
                     }
                     currentOdometer={
-                      (wo.vehicle as { odometer?: number | null })?.odometer ?? null
+                      (wo.vehicle as { odometer?: number | null })?.odometer ??
+                      null
                     }
                     services={postFormServices}
                     newStatus="Ready for Pickup"
@@ -250,122 +252,122 @@ export function WorkOrderDetailDrawer({
                     onBack={handleCancelPostService}
                   />
                 ) : (
-                <>
-                  <div className="flex-1 overflow-y-auto min-h-0">
-                    <div className="px-3 py-2">
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                        <div className="lg:col-span-2">
-                          <div className="flex flex-col gap-3">
-                            <ServicesSection
-                              services={wo.services ?? []}
-                              catalog={catalog as any}
-                              serviceSearch={serviceSearch}
-                              showAddService={showAddService}
-                              addingServiceId={addingServiceId}
-                              pendingServicePreview={pendingServicePreview}
-                              editingPriceId={editingServicePriceId}
-                              editingPriceVal={editingServicePriceVal}
-                              onServiceSearchChange={setServiceSearch}
-                              onToggleAddService={() =>
-                                setShowAddService(!showAddService)
-                              }
-                              onAddService={addService as any}
-                              onRemoveService={removeService}
-                              onEditPriceStart={(id, val) => {
-                                setEditingServicePriceId(id);
-                                setEditingServicePriceVal(val);
-                              }}
-                              onEditPriceChange={setEditingServicePriceVal}
-                              onEditPriceSave={handleServicePriceSave}
-                              onEditPriceCancel={() =>
-                                setEditingServicePriceId(null)
-                              }
-                              t={t}
-                            />
+                  <>
+                    <div className="flex-1 overflow-y-auto min-h-0">
+                      <div className="px-3 py-2">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                          <div className="lg:col-span-2">
+                            <div className="flex flex-col gap-3">
+                              <ServicesSection
+                                services={wo.services ?? []}
+                                catalog={catalog as any}
+                                serviceSearch={serviceSearch}
+                                showAddService={showAddService}
+                                addingServiceId={addingServiceId}
+                                pendingServicePreview={pendingServicePreview}
+                                editingPriceId={editingServicePriceId}
+                                editingPriceVal={editingServicePriceVal}
+                                onServiceSearchChange={setServiceSearch}
+                                onToggleAddService={() =>
+                                  setShowAddService(!showAddService)
+                                }
+                                onAddService={addService as any}
+                                onRemoveService={removeService}
+                                onEditPriceStart={(id, val) => {
+                                  setEditingServicePriceId(id);
+                                  setEditingServicePriceVal(val);
+                                }}
+                                onEditPriceChange={setEditingServicePriceVal}
+                                onEditPriceSave={handleServicePriceSave}
+                                onEditPriceCancel={() =>
+                                  setEditingServicePriceId(null)
+                                }
+                                t={t}
+                              />
 
-                            <PartsSection
-                              parts={wo.parts ?? []}
-                              partsCatalog={partsCatalog as any}
-                              lowStockMap={lowStockMap}
-                              partSearch={partSearch}
-                              newPartName={newPartName}
-                              newPartQty={newPartQty}
-                              newPartPrice={newPartPrice}
-                              showAddPart={showAddPart}
-                              addingPart={addingPart}
-                              pendingPartPreview={pendingPartPreview}
-                              editingPriceId={editingPartPriceId}
-                              editingPriceVal={editingPartPriceVal}
-                              onPartSearchChange={setPartSearch}
-                              onNewPartNameChange={setNewPartName}
-                              onNewPartQtyChange={setNewPartQty}
-                              onNewPartPriceChange={setNewPartPrice}
-                              onToggleAddPart={() =>
-                                setShowAddPart(!showAddPart)
-                              }
-                              onAddPart={addPartLine}
-                              onRemovePart={removePart}
-                              onEditPriceStart={(id, val) => {
-                                setEditingPartPriceId(id);
-                                setEditingPartPriceVal(val);
-                              }}
-                              onEditPriceChange={setEditingPartPriceVal}
-                              onEditPriceSave={handlePartPriceSave}
-                              onEditPriceCancel={() =>
-                                setEditingPartPriceId(null)
-                              }
-                              t={t}
-                            />
+                              <PartsSection
+                                parts={wo.parts ?? []}
+                                partsCatalog={partsCatalog as any}
+                                lowStockMap={lowStockMap}
+                                partSearch={partSearch}
+                                newPartName={newPartName}
+                                newPartQty={newPartQty}
+                                newPartPrice={newPartPrice}
+                                showAddPart={showAddPart}
+                                addingPart={addingPart}
+                                pendingPartPreview={pendingPartPreview}
+                                editingPriceId={editingPartPriceId}
+                                editingPriceVal={editingPartPriceVal}
+                                onPartSearchChange={setPartSearch}
+                                onNewPartNameChange={setNewPartName}
+                                onNewPartQtyChange={setNewPartQty}
+                                onNewPartPriceChange={setNewPartPrice}
+                                onToggleAddPart={() =>
+                                  setShowAddPart(!showAddPart)
+                                }
+                                onAddPart={addPartLine}
+                                onRemovePart={removePart}
+                                onEditPriceStart={(id, val) => {
+                                  setEditingPartPriceId(id);
+                                  setEditingPartPriceVal(val);
+                                }}
+                                onEditPriceChange={setEditingPartPriceVal}
+                                onEditPriceSave={handlePartPriceSave}
+                                onEditPriceCancel={() =>
+                                  setEditingPartPriceId(null)
+                                }
+                                t={t}
+                              />
 
-                            <NotesSection
-                              complaint={wo.complaint}
-                              diagnosis={wo.diagnosis}
-                              notes={wo.notes}
+                              <NotesSection
+                                complaint={wo.complaint}
+                                diagnosis={wo.diagnosis}
+                                notes={wo.notes}
+                                t={t}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start">
+                            <StatusTimeline
+                              statusHistory={wo.status_history ?? []}
+                              serviceHistory={wo.service_history ?? []}
                               t={t}
                             />
                           </div>
                         </div>
-
-                        <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start">
-                          <StatusTimeline
-                            statusHistory={wo.status_history ?? []}
-                            serviceHistory={wo.service_history ?? []}
-                            t={t}
-                          />
-                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="mx-3 mb-3">
-                    <TotalsSummary
-                      servicesTotal={servicesTotal}
-                      partsTotal={partsTotal}
-                      grandTotal={Number(wo.total)}
+                    <div className="mx-3 mb-3">
+                      <TotalsSummary
+                        servicesTotal={servicesTotal}
+                        partsTotal={partsTotal}
+                        grandTotal={Number(wo.total)}
+                        t={t}
+                      />
+                    </div>
+
+                    <DrawerFooter
+                      wo={wo}
+                      saving={saving}
+                      confirmStatus={confirmStatus}
+                      statusNotes={statusNotes}
+                      creatingInvoice={creatingInvoice}
+                      canCancel={canCancel}
+                      canInvoice={canInvoice}
+                      onChangeStatus={changeStatus}
+                      onConfirmCancel={() => {
+                        setConfirmStatus(null);
+                        setStatusNotes("");
+                      }}
+                      onStatusNotesChange={setStatusNotes}
+                      onMarkReady={handleReadyForPickup}
+                      onComplete={() => setShowPickupForm(true)}
+                      onCreateInvoice={generateInvoice}
                       t={t}
                     />
-                  </div>
-
-                  <DrawerFooter
-                    wo={wo}
-                    saving={saving}
-                    confirmStatus={confirmStatus}
-                    statusNotes={statusNotes}
-                    creatingInvoice={creatingInvoice}
-                    canCancel={canCancel}
-                    canInvoice={canInvoice}
-                    onChangeStatus={changeStatus}
-                    onConfirmCancel={() => {
-                      setConfirmStatus(null);
-                      setStatusNotes("");
-                    }}
-                    onStatusNotesChange={setStatusNotes}
-                    onMarkReady={handleReadyForPickup}
-                    onComplete={() => setShowPickupForm(true)}
-                    onCreateInvoice={generateInvoice}
-                    t={t}
-                  />
-                </>
+                  </>
                 )
               ) : null}
             </DrawerSkeleton>

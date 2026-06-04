@@ -1703,7 +1703,17 @@
     "vehicleCreated": "Машины загвар үүсгэгдлээ",
     "vehicleUpdated": "Машины загвар шинэчлэгдлээ",
     "vehicleDeleted": "Машины загвар устгагдлаа",
-    "retry": "Дахин оролдох"
+    "retry": "Дахин оролдох",
+    "deleteConfirmation": "Энэ хувилбарыг устгахдаа итгэлтэй байна уу?",
+    "deleteTitle": "Хувилбар устгах",
+    "addVariant": "Хувилбар нэмэх",
+    "details": "Дэлгэрэнгүй",
+    "years": "Онууд",
+    "noVariants": "Хувилбар байхгүй",
+    "make": "Үйлдвэр",
+    "model": "Загвар",
+    "editVariantDescription": "Машины загварын мэдээлэл засах",
+    "addModelDescription": "Шинэ машины загвар нэмэх"
   },
   "pricing": {
     "metaTitle": "Үнийн санал — TOLOM",
@@ -2885,7 +2895,21 @@
     "failedToDeleteRule": "Дүрэм устгахад алдаа гарлаа",
     "confirmDeleteMessage": "Та энэ комиссын дүрмийг устгахдаа итгэлтэй байна уу?",
     "addCommissionRule": "Дүрэм нэмэх",
-    "mechanicHint": "Бүх механикчид хэрэглэх хоосон үлдээнэ үү"
+    "mechanicHint": "Бүх механикчид хэрэглэх хоосон үлдээнэ үү",
+    "makesLabel": "Makes (comma-separated)",
+    "modelsLabel": "Models (comma-separated)",
+    "fuelTypes": "Fuel Types (comma-separated)",
+    "bodyTypesLabel": "Body Types (comma-separated)",
+    "cancel": "Cancel",
+    "updateRule": "Update Rule",
+    "createRule": "Create Rule",
+    "delete": "Delete",
+    "theme": "Theme",
+    "brandColor": "Brand Color",
+    "brandColorPicker": "Pick a brand color",
+    "mechanicField": "Mechanic (optional)",
+    "mechanicPlaceholder": "Search mechanics...",
+    "commissionRulesDesc": "Configure how mechanics earn commissions on work orders."
   },
   "invoice": {
     "statusDraft": "Ноорог",

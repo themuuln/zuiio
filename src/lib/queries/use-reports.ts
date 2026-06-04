@@ -18,7 +18,7 @@ import type {
   ServiceBreakdown,
 } from "@/lib/types";
 import { createOrgQuery } from "./factory";
-import { reportKeys } from "./keys";
+import { mechanicKeys, reportKeys } from "./keys";
 
 // ── Fetchers ────────────────────────────────────────────────
 
@@ -71,7 +71,7 @@ export function useMechanics(
   branchId?: string | null,
 ): UseQueryResult<Array<{ id: string; full_name: string | null }>, Error> {
   return useQuery({
-    queryKey: reportKeys.mechanics(orgId ?? "", branchId),
+    queryKey: mechanicKeys.list(orgId ?? ""),
     queryFn: async () => {
       if (!orgId) {
         throw new Error("Organization is required");

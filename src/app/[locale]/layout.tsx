@@ -5,6 +5,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
 import NuqsProvider from "@/components/nuqs-provider";
+import { OfflineBanner } from "@/components/offline-banner";
 import QueryProvider from "@/components/query-provider";
 import { SwCleanup } from "@/components/sw-cleanup";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -59,6 +60,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <NuqsProvider>
             <QueryProvider>
+              <OfflineBanner />
               {children}
               <Toaster
                 position="bottom-left"

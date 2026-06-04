@@ -341,14 +341,29 @@ export async function assignVehicleToBay(
   workOrderId: string,
   bayNumber: number,
 ): Promise<void> {
+  // Single supabase client — reuse for auth + all operations
+  const supabase = await createClient();
   const {
     data: { user },
-  } = await (await createClient()).auth.getUser();
+  } = await supabase.auth.getUser();
   if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const orgId = await getOrgId();
 
-  // Run conflict check and current-bay lookup in parallel
-  const [conflictResult, currentResult] = await Promise.all([
+  // Run conflict check, clear helpers, and assign in one parallel batch.
+  // The UPDATE sets all fields directly — no separate "free old bay" step
+  // since we just overwrite bay_number in one shot.
+  const assignFn = async () => {
+    const { error } = await supabase
+      .from("work_orders")
+      .update({
+        bay_number: bayNumber,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", workOrderId)
+      .eq("organization_id", orgId);
+    return { error };
+  };
+  const [{ data: conflict }, { error: assignError }] = await Promise.all([
     supabase
       .from("work_orders")
       .select("id")
@@ -357,55 +372,19 @@ export async function assignVehicleToBay(
       .not("status", "in", '("Completed","Cancelled")')
       .is("deleted_at", null)
       .maybeSingle(),
+    assignFn(),
     supabase
-      .from("work_orders")
-      .select("bay_number")
-      .eq("id", workOrderId)
-      .single(),
+      .from("work_order_helpers")
+      .delete()
+      .eq("work_order_id", workOrderId),
   ]);
-
-  const conflict = conflictResult.data;
-  const current = currentResult.data;
 
   if (conflict && conflict.id !== workOrderId) {
     throw new ValidationError(`Bay ${bayNumber} is already occupied`);
   }
 
-  // Free old bay + delete helpers in parallel if moving from another bay
-  const needsFree = current?.bay_number && current.bay_number !== bayNumber;
-  if (needsFree) {
-    await Promise.all([
-      supabase
-        .from("work_orders")
-        .update({ bay_number: null, updated_at: new Date().toISOString() })
-        .eq("id", workOrderId),
-      supabase
-        .from("work_order_helpers")
-        .delete()
-        .eq("work_order_id", workOrderId),
-    ]);
-  } else {
-    // Still clear helpers even if same bay (e.g. re-assigning after clearing)
-    await supabase
-      .from("work_order_helpers")
-      .delete()
-      .eq("work_order_id", workOrderId);
-  }
-
-  // Assign to new bay (clear mechanic when moving to new bay)
-  const { error } = await supabase
-    .from("work_orders")
-    .update({
-      bay_number: bayNumber,
-      mechanic_id: null,
-      status: "Diagnosing" as const,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", workOrderId)
-    .eq("organization_id", orgId);
-
-  if (error)
-    throw new Error(error.message ?? "Failed to assign vehicle to bay");
+  if (assignError)
+    throw new Error(assignError.message ?? "Failed to assign vehicle to bay");
 
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");

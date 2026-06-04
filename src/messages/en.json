@@ -1701,7 +1701,17 @@
     "vehicleCreated": "Vehicle model created",
     "vehicleUpdated": "Vehicle model updated",
     "vehicleDeleted": "Vehicle model deleted",
-    "retry": "Retry"
+    "retry": "Retry",
+    "deleteConfirmation": "Are you sure you want to delete this variant?",
+    "deleteTitle": "Delete variant",
+    "addVariant": "Add Variant",
+    "details": "Details",
+    "years": "Years",
+    "noVariants": "No variants",
+    "make": "Make",
+    "model": "Model",
+    "editVariantDescription": "Update vehicle model details",
+    "addModelDescription": "Add a new vehicle model to your catalog"
   },
   "pricing": {
     "metaTitle": "Pricing — TOLOM",
@@ -2855,7 +2865,21 @@
     "failedToDeleteRule": "Failed to delete rule",
     "confirmDeleteMessage": "Are you sure you want to delete this commission rule?",
     "addCommissionRule": "Add Rule",
-    "mechanicHint": "Leave empty to apply to all mechanics"
+    "mechanicHint": "Leave empty to apply to all mechanics",
+    "makesLabel": "Makes (comma-separated)",
+    "modelsLabel": "Models (comma-separated)",
+    "fuelTypes": "Fuel Types (comma-separated)",
+    "bodyTypesLabel": "Body Types (comma-separated)",
+    "cancel": "Cancel",
+    "updateRule": "Update Rule",
+    "createRule": "Create Rule",
+    "delete": "Delete",
+    "theme": "Theme",
+    "brandColor": "Brand Color",
+    "brandColorPicker": "Pick a brand color",
+    "mechanicField": "Mechanic (optional)",
+    "mechanicPlaceholder": "Search mechanics...",
+    "commissionRulesDesc": "Configure how mechanics earn commissions on work orders."
   },
   "payroll": {
     "title": "Payroll",

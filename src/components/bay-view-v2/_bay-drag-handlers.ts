@@ -123,9 +123,9 @@ export function useBayDragHandlers({
         return;
       }
 
-      // Case 1: Dragging a vehicle to a bay — pure optimistic UI
-      // The vehicle moves instantly to the new bay without a loading spinner.
-      // If the server call fails, the outer catch rolls back prevData + shows a toast.
+      // Case 1: Dragging a vehicle to a bay — shows loading spinner on source
+      // bay while the server call is in flight, then refreshes all data.
+      // No optimistic update — the server response is the source of truth.
       if (activeData?.type === "vehicle" && overId.startsWith("bay-")) {
         const bayNumber = Number.parseInt(overId.replace("bay-", ""), 10);
         const woId = activeData.workOrderId;
@@ -133,50 +133,18 @@ export function useBayDragHandlers({
         const currentBay = data?.bays.find((b) => b.workOrder?.id === woId);
         if (currentBay?.bayNumber === bayNumber) return; // Dropped on its current bay, do nothing!
 
-        setData((d) => {
-          if (!d) return d;
-          const movedWO =
-            d.waitingQueue.find((w) => w.id === woId) ??
-            d.bays.find((b) => b.workOrder?.id === woId)?.workOrder;
-          if (!movedWO) return d;
-          const enriched = {
-            ...movedWO,
-            bay_number: bayNumber,
-            status: "Diagnosing" as const,
-            mechanic: null,
-            helpers: [] as {
-              id: string;
-              full_name: string | null;
-              avatar_url: string | null;
-            }[],
-            customer_name:
-              ((movedWO as unknown as Record<string, unknown>).customer_name as
-                | string
-                | null) ?? null,
-          };
-          return {
-            ...d,
-            waitingQueue: d.waitingQueue.filter((w) => w.id !== woId),
-            bays: d.bays.map((b) =>
-              b.bayNumber === bayNumber
-                ? { ...b, workOrder: enriched }
-                : b.workOrder?.id === woId
-                  ? { ...b, workOrder: null }
-                  : b,
-            ),
-          };
-        });
-
-        // No fetchData after optimistic update — the local state is already correct.
-        // Polling (30s) will reconcile with server. Errors handled via fire-and-forget.
-        assignVehicleToBay(woId, bayNumber).catch((err) => {
-          if (prevData) setData(prevData);
-          console.error("Drag action failed:", err);
+        markPending(woId);
+        try {
+          await assignVehicleToBay(woId, bayNumber);
+          await fetchData(false);
+        } catch (err) {
           setToast({
-            message: "Action failed — changes reverted",
+            message: `Failed to assign: ${err instanceof Error ? err.message : "Unknown error"}`,
             variant: "error",
           });
-        });
+        } finally {
+          clearPending(woId);
+        }
         return;
       }
 

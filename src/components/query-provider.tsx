@@ -9,12 +9,17 @@ function makeQueryClient(): QueryClient {
     defaultOptions: {
       queries: {
         staleTime: 30_000, // 30s — data considered fresh; no refetch within window
-        gcTime: 5 * 60_000, // 5min — keep unused data in cache
+        gcTime: 30 * 60_000, // 30min — keep unused data longer for offline resilience
         retry: 1, // retry once on failure before showing error
-        refetchOnWindowFocus: false, // opted in; set true per-query if needed
+        retryDelay: (attemptIndex) =>
+          Math.min(1000 * 2 ** attemptIndex, 30_000),
+        networkMode: "offlineFirst", // use cache when offline, don't block on network
+        refetchOnReconnect: true, // auto-refetch when back online
+        refetchOnWindowFocus: true, // refetch when tab gets focus (recovery from sleep)
       },
       mutations: {
         retry: 0, // don't retry mutations by default
+        networkMode: "offlineFirst", // allow mutations to queue when offline
       },
     },
   });

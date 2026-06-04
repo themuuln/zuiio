@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { usePolling } from "@/hooks/use-polling";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import type { BayViewData, ShiftReport } from "@/lib/services/bay-view-service";
 import {
@@ -67,6 +68,7 @@ export function BayViewV2Client() {
   const setSelectedBranchId = useSetSelectedBranchId();
   const branchFilter =
     selectedBranchId === "all" ? undefined : selectedBranchId;
+  const { data: orgInfo } = useCurrentOrg();
   const [data, setData] = useState<BayViewData | null>(null);
   const [shiftReport, setShiftReport] = useState<ShiftReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -782,6 +784,7 @@ export function BayViewV2Client() {
                           });
                         }
                       }}
+                      orgId={orgInfo?.orgId}
                     />
                   </div>
                 ))}
@@ -808,6 +811,7 @@ export function BayViewV2Client() {
                     });
                   }
                 }}
+                orgId={orgInfo?.orgId}
               />
             ))}
 
@@ -857,6 +861,7 @@ export function BayViewV2Client() {
                         }
                       }}
                       t={t}
+                      orgId={orgInfo?.orgId}
                     />
                   </div>
                 ))}
@@ -893,6 +898,7 @@ export function BayViewV2Client() {
                   }
                 }}
                 t={t}
+                orgId={orgInfo?.orgId}
               />
             ))}
 
@@ -915,6 +921,7 @@ export function BayViewV2Client() {
                       bays={section.bays}
                       onOpenDetail={handleOpenDetail}
                       onAssignClick={(n) => setAssignBay(n)}
+                      orgId={orgInfo?.orgId}
                       t={t}
                     />
                   </div>
@@ -925,6 +932,7 @@ export function BayViewV2Client() {
                 bays={searchedBays}
                 onOpenDetail={handleOpenDetail}
                 onAssignClick={(n) => setAssignBay(n)}
+                orgId={orgInfo?.orgId}
                 t={t}
               />
             ))}

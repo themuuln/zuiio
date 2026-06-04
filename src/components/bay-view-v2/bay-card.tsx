@@ -1,6 +1,7 @@
 "use client";
 
 import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Car,
   Check,
@@ -13,6 +14,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,17 +31,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Typography } from "@/components/ui/typography";
 import { MongolianLicensePlate } from "@/components/vehicles/license-plate";
+import { prefetchDrawerData } from "@/lib/queries/use-drawer-queries";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
-import { MechanicBadge } from "./mechanic-badge";
 import {
+  ALL_STATUSES,
   STATUS_ACCENT,
   STATUS_BADGE_CLASS,
-  ALL_STATUSES,
   STATUS_TRANSLATION_KEYS,
 } from "./_constants";
-import { ElapsedTimer } from "./_elapsed-timer";
 import { DraggableVehicleWrapper } from "./_draggable-vehicle-wrapper";
+import { ElapsedTimer } from "./_elapsed-timer";
+import { MechanicBadge } from "./mechanic-badge";
 
 export { STATUS_BADGE_CLASS };
 
@@ -52,6 +55,7 @@ interface BayCardProps {
   onOpenDetail: (woId: string) => void;
   onAssignClick?: (bayNumber: number) => void;
   onRemoveHelper?: (woId: string, mechanicId: string) => void;
+  orgId?: string | null;
 }
 
 export function BayCardDragPreview({ bay }: { bay: BaySlotData }) {
@@ -140,12 +144,21 @@ export function BayCard({
   onOpenDetail,
   onAssignClick,
   onRemoveHelper,
+  orgId,
 }: BayCardProps) {
   const t = useTranslations("bayView");
+  const queryClient = useQueryClient();
   const { setNodeRef, isOver } = useDroppable({
     id: `bay-${bay.bayNumber}`,
   });
   const wo = bay.workOrder;
+
+  // Prefetch work order detail on hover for instant drawer open
+  const handleMouseEnter = useCallback(() => {
+    if (wo?.id && orgId) {
+      prefetchDrawerData(queryClient, orgId, wo.id);
+    }
+  }, [wo?.id, orgId, queryClient]);
   const v = wo?.vehicle;
   const isCardDraggable = isKanbanMode && !!wo && !isPending;
   const {
@@ -194,6 +207,7 @@ export function BayCard({
             isPending && "opacity-55 pointer-events-none",
           )}
           onClick={() => wo && onOpenDetail(wo.id)}
+          onMouseEnter={handleMouseEnter}
         >
           {wo && (
             <div
@@ -406,7 +420,6 @@ export function BayCard({
                             workOrderId={wo.id}
                             mechanic={helper}
                             disabled={isPending}
-                            role="helper"
                             compact
                             onRemove={() => onRemoveHelper?.(wo.id, helper.id)}
                           />

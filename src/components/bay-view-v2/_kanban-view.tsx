@@ -63,6 +63,7 @@ interface KanbanViewProps {
   onNoEmptyBays: () => void;
   onQueueItemClick: (wo: WorkOrder & { vehicle: Vehicle | null }) => void;
   onRemoveHelper: (woId: string, mechId: string) => Promise<void>;
+  orgId?: string | null;
   t: (key: string) => string;
 }
 
@@ -78,6 +79,7 @@ export function KanbanView({
   onNoEmptyBays,
   onQueueItemClick,
   onRemoveHelper,
+  orgId,
   t,
 }: KanbanViewProps) {
   function handleFindEmptyBay() {
@@ -187,6 +189,7 @@ export function KanbanView({
                     onRemoveFromBay={onRemoveFromBay}
                     onOpenDetail={onOpenDetail}
                     onRemoveHelper={onRemoveHelper}
+                    orgId={orgId}
                   />
                 </div>
               ))}

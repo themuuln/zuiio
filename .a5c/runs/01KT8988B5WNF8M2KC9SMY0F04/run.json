@@ -1,0 +1,15 @@
+{
+  "runId": "01KT8988B5WNF8M2KC9SMY0F04",
+  "request": "vehicle-models-ui-improve",
+  "processId": "vehicle-models-ui-improve",
+  "harness": "pi",
+  "entrypoint": {
+    "importPath": "../../processes/vehicle-models-ui-improve.js",
+    "exportName": "process"
+  },
+  "processPath": "../../processes/vehicle-models-ui-improve.js",
+  "layoutVersion": "2026.01-storage-preview",
+  "createdAt": "2026-06-04T03:01:27.538Z",
+  "prompt": "improve dashboard/vehicle-models, it looks very ugly, and also use right sheet, just like other places for view detail and edit/add etc",
+  "completionProof": "e329eb77c00416741d9c345e63508953"
+}

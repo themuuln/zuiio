@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT89W8H4QSFF15NF6T8RWM5T",
+  "taskId": "add-i18n-keys",
+  "invocationKey": "vehicle-models-ui-improve:S000003:add-i18n-keys",
+  "status": "ok",
+  "result": {
+    "result": "Added 10 new i18n keys to both en.json and mn.json: deleteConfirmation, deleteTitle, addVariant, details, years, noVariants, make, model, editVariantDescription, addModelDescription"
+  },
+  "startedAt": "2026-06-04T03:12:33.679Z",
+  "finishedAt": "2026-06-04T03:12:33.679Z",
+  "value": {
+    "result": "Added 10 new i18n keys to both en.json and mn.json: deleteConfirmation, deleteTitle, addVariant, details, years, noVariants, make, model, editVariantDescription, addModelDescription"
+  }
+}

@@ -26,24 +26,24 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization } from "@/lib/types";
 import { setCookie } from "@/lib/utils";
 import { AppearanceCustomization } from "./_appearance-customization";
+import { BranchesSection } from "./_branches-section";
 import {
   BusinessDefaultsForm,
   buildFormFromOrganization,
   DEFAULT_FORM,
   type SettingsForm,
 } from "./_business-defaults-form";
-import { BranchesSection } from "./_branches-section";
 import { CommissionRulesSection } from "./_commission-rules-section";
 import { DataExportSection } from "./_data-export-section";
 import { DataSharingForm } from "./_data-sharing-form";
 import { DiagnosisLabelsSection } from "./_diagnosis-labels-section";
 import { OrganizationCard } from "./_organization-card";
 import { PricingRulesSection } from "./_pricing-rules-section";
-import { SettingsNavigation } from "./_settings-navigation";
 import {
   getSettingsSections,
   type SettingsSection,
 } from "./_settings-sections";
+import { SettingsSubSidebar } from "./_settings-sub-sidebar";
 import { TelegramSection } from "./_telegram-section";
 import { VehicleNicheForm } from "./_vehicle-niche-form";
 
@@ -130,7 +130,7 @@ function ErrorState({
           </div>
           <div>
             <Typography.Text className="text-sm font-semibold">
-              t("failedToLoad")
+              {t("settings.failedToLoad")}
             </Typography.Text>
             <Typography.Muted className="text-sm text-muted-foreground">
               {message}
@@ -465,48 +465,47 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <Card className="overflow-hidden border-border/70 bg-card/95 shadow-sm">
-        <CardContent className="flex flex-col gap-5 p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15">
-                <Settings2 className="size-5" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Typography.Text className="text-lg font-semibold tracking-tight">
-                    {t("title")}
-                  </Typography.Text>
-                  <Badge variant="secondary">{selectedSection.title}</Badge>
-                </div>
-                <Typography.Muted className="max-w-2xl text-sm text-muted-foreground">
-                  {selectedSection.description}
-                </Typography.Muted>
-              </div>
+        <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15">
+              <Settings2 className="size-4" />
             </div>
-            <Badge variant="outline" className="w-fit">
-              {t("visibleSections", { count: filteredSections.length })}
-            </Badge>
+            <div className="flex min-w-0 items-center gap-2">
+              <Typography.Text className="text-sm font-semibold tracking-tight">
+                {t("title")}
+              </Typography.Text>
+              <Badge variant="secondary" className="shrink-0 text-[10px]">
+                {selectedSection.title}
+              </Badge>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="relative flex-1 sm:w-48">
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder={t("searchPlaceholder")}
-                className="h-9 pl-9 text-sm"
+                className="h-7 pl-8 text-xs"
               />
             </div>
             {searchQuery ? (
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-xs"
                 onClick={() => setSearchQuery("")}
               >
-                {t("clear")}
+                <span className="sr-only">{t("clear")}</span>
+                <span aria-hidden="true">&times;</span>
               </Button>
             ) : null}
+            <Badge
+              variant="outline"
+              className="hidden shrink-0 text-[10px] sm:inline-flex"
+            >
+              {t("visibleSections", { count: filteredSections.length })}
+            </Badge>
           </div>
         </CardContent>
       </Card>
@@ -516,23 +515,23 @@ export default function SettingsPage() {
           <CardContent className="flex flex-col items-center gap-3 py-12">
             <Search className="size-10 text-muted-foreground/40" />
             <Typography.Text className="text-center text-sm text-muted-foreground">
-              t("noMatchSearch")
+              {t("noMatchSearch")}
             </Typography.Text>
             <Typography.Muted className="text-xs text-muted-foreground/70">
-              t("tryDifferentKeyword")
+              {t("tryDifferentKeyword")}
             </Typography.Muted>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setSearchQuery("")}
             >
-              t("clearSearch")
+              {t("clearSearch")}
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
-          <SettingsNavigation
+        <div className="flex gap-6">
+          <SettingsSubSidebar
             activeSection={selectedSection.value}
             currency={form.defaultCurrency || DEFAULT_FORM.defaultCurrency}
             language={form.language || DEFAULT_FORM.language}
@@ -542,7 +541,7 @@ export default function SettingsPage() {
             timezone={form.timezone || DEFAULT_FORM.timezone}
           />
 
-          <div className="flex min-w-0 flex-col gap-6">
+          <div className="flex min-w-0 flex-1 flex-col gap-6">
             {filteredSections.map((section) => (
               <section
                 key={section.value}

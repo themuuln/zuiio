@@ -1,14 +1,33 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Car, ChevronDown, ChevronRight, Plus, X } from "lucide-react";
+import {
+  Car,
+  ChevronDown,
+  ChevronRight,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
+import { VehicleModelFormSheet } from "./_vehicle-model-form-sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
   EmptyContent,
@@ -17,7 +36,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
@@ -75,36 +93,18 @@ function buildTree(items: VehicleModelItem[]): MakeGroup[] {
     }));
 }
 
-// ── Variant label helper ──────────────────────────────────────
+// ── Variant display helpers ──────────────────────────────────
 
-function variantLabel(v: VariantItem): string {
-  return [v.generation, v.engine, v.body_type].filter(Boolean).join(" · ");
+function variantYears(v: VariantItem): string {
+  if (v.year_start && v.year_end) return `${v.year_start}\u2013${v.year_end}`;
+  if (v.year_start) return `from ${v.year_start}`;
+  if (v.year_end) return `until ${v.year_end}`;
+  return "";
 }
 
-function variantShortLabel(v: VariantItem): string {
-  const parts: string[] = [];
-  if (v.year_start && v.year_end) parts.push(`${v.year_start}-${v.year_end}`);
-  else if (v.year_start) parts.push(`from ${v.year_start}`);
-  else if (v.year_end) parts.push(`until ${v.year_end}`);
-  if (v.engine) parts.push(v.engine);
-  if (v.body_type) parts.push(v.body_type);
-  return parts.join(" · ") || (v.generation ?? "—");
+function variantDetailLine(v: VariantItem): string {
+  return [v.generation, v.engine, v.body_type].filter(Boolean).join(" \u00B7 ");
 }
-
-// ── Body type options ─────────────────────────────────────────
-
-const bodyTypeOptions = [
-  "sedan",
-  "suv",
-  "hatchback",
-  "coupe",
-  "wagon",
-  "pickup",
-  "van",
-  "minivan",
-  "convertible",
-  "crossover",
-];
 
 // ── Page component ────────────────────────────────────────────
 
@@ -134,8 +134,6 @@ export default function VehicleModelsPage() {
   const error = queryError ? queryError.message : null;
 
   const [search, setSearch] = useState("");
-  const [showAdd, setShowAdd] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
 
   // Tree expansion state
   const [expandedMakes, setExpandedMakes] = useState<Set<string>>(new Set());
@@ -145,184 +143,17 @@ export default function VehicleModelsPage() {
 
   const queryClient = useQueryClient();
 
-  // Edit state
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({
-    make: "",
-    model: "",
-    generation: "",
-    year_start: "",
-    year_end: "",
-    engine: "",
-    body_type: "",
-  });
+  // ── Sheet state ────────────────────────────────────────────────
 
-  const resetForm = () => {
-    setEditForm({
-      make: "",
-      model: "",
-      generation: "",
-      year_start: "",
-      year_end: "",
-      engine: "",
-      body_type: "",
-    });
-    setShowDetails(false);
-  };
+  const [formMode, setFormMode] = useState<"add" | "edit">("add");
+  const [formItem, setFormItem] = useState<VehicleModelItem | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
 
-  // ── Mutation hooks ────────────────────────────────────────────
+  // ── Delete confirmation state ──────────────────────────────────
 
-  const addMutation = useMutation({
-    mutationFn: async (formData: typeof editForm) => {
-      const r = await fetch(`/api/organizations/${orgId}/vehicle-models`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          make: formData.make,
-          model: formData.model,
-          generation: formData.generation || null,
-          year_start: formData.year_start
-            ? parseInt(formData.year_start, 10)
-            : null,
-          year_end: formData.year_end ? parseInt(formData.year_end, 10) : null,
-          engine: formData.engine || null,
-          body_type: formData.body_type || null,
-        }),
-      });
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-      return d.data as VehicleModelItem;
-    },
-    onMutate: async (formData) => {
-      await queryClient.cancelQueries({
-        queryKey: vehicleModelKeys.list(orgId ?? ""),
-      });
-      const previous = queryClient.getQueryData<VehicleModelItem[]>(
-        vehicleModelKeys.list(orgId ?? ""),
-      );
-      const optimistic: VehicleModelItem = {
-        id: `temp-${Date.now()}`,
-        make: formData.make,
-        model: formData.model,
-        generation: formData.generation || null,
-        year_start: formData.year_start
-          ? parseInt(formData.year_start, 10)
-          : null,
-        year_end: formData.year_end ? parseInt(formData.year_end, 10) : null,
-        engine: formData.engine || null,
-        body_type: formData.body_type || null,
-      };
-      queryClient.setQueryData<VehicleModelItem[]>(
-        vehicleModelKeys.list(orgId ?? ""),
-        (old) => [...(old ?? []), optimistic],
-      );
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(
-          vehicleModelKeys.list(orgId ?? ""),
-          context.previous,
-        );
-      }
-      toast.error(t("common.somethingWentWrong"));
-    },
-    onSuccess: () => {
-      toast.success(t("vehicleModels.vehicleCreated"));
-      setShowAdd(false);
-      setEditingId(null);
-      resetForm();
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: vehicleModelKeys.list(orgId ?? ""),
-      });
-    },
-  });
+  const [deleteItem, setDeleteItem] = useState<VehicleModelItem | null>(null);
 
-  const updateMutation = useMutation({
-    mutationFn: async ({
-      id,
-      formData,
-    }: {
-      id: string;
-      formData: typeof editForm;
-    }) => {
-      const r = await fetch(
-        `/api/organizations/${orgId}/vehicle-models/${id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            make: formData.make,
-            model: formData.model,
-            generation: formData.generation || null,
-            year_start: formData.year_start
-              ? parseInt(formData.year_start, 10)
-              : null,
-            year_end: formData.year_end
-              ? parseInt(formData.year_end, 10)
-              : null,
-            engine: formData.engine || null,
-            body_type: formData.body_type || null,
-          }),
-        },
-      );
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-      return d.data as VehicleModelItem;
-    },
-    onMutate: async ({ id, formData }) => {
-      await queryClient.cancelQueries({
-        queryKey: vehicleModelKeys.list(orgId ?? ""),
-      });
-      const previous = queryClient.getQueryData<VehicleModelItem[]>(
-        vehicleModelKeys.list(orgId ?? ""),
-      );
-      queryClient.setQueryData<VehicleModelItem[]>(
-        vehicleModelKeys.list(orgId ?? ""),
-        (old) =>
-          (old ?? []).map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  make: formData.make,
-                  model: formData.model,
-                  generation: formData.generation || null,
-                  year_start: formData.year_start
-                    ? parseInt(formData.year_start, 10)
-                    : null,
-                  year_end: formData.year_end
-                    ? parseInt(formData.year_end, 10)
-                    : null,
-                  engine: formData.engine || null,
-                  body_type: formData.body_type || null,
-                }
-              : item,
-          ),
-      );
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(
-          vehicleModelKeys.list(orgId ?? ""),
-          context.previous,
-        );
-      }
-      toast.error(t("common.somethingWentWrong"));
-    },
-    onSuccess: () => {
-      toast.success(t("vehicleModels.vehicleUpdated"));
-      setEditingId(null);
-      resetForm();
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: vehicleModelKeys.list(orgId ?? ""),
-      });
-    },
-  });
+  // ── Delete mutation ────────────────────────────────────────────
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -363,35 +194,10 @@ export default function VehicleModelsPage() {
     },
   });
 
-  // ── CRUD handlers ─────────────────────────────────────────────
-
-  const handleAdd = () => {
-    if (!orgId || !editForm.make.trim() || !editForm.model.trim()) return;
-    addMutation.mutate(editForm);
-  };
-
-  const handleUpdate = (id: string) => {
-    if (!orgId || !editForm.make.trim() || !editForm.model.trim()) return;
-    updateMutation.mutate({ id, formData: editForm });
-  };
-
-  const handleDelete = (id: string) => {
-    if (!orgId) return;
-    deleteMutation.mutate(id);
-  };
-
-  const startEdit = (v: VariantItem) => {
-    setEditingId(v.id);
-    setShowAdd(false);
-    setShowDetails(true);
-    setEditForm({
-      make: v.make,
-      model: v.model,
-      generation: v.generation ?? "",
-      year_start: v.year_start?.toString() ?? "",
-      year_end: v.year_end?.toString() ?? "",
-      engine: v.engine ?? "",
-      body_type: v.body_type ?? "",
+  const confirmDelete = () => {
+    if (!orgId || !deleteItem) return;
+    deleteMutation.mutate(deleteItem.id, {
+      onSettled: () => setDeleteItem(null),
     });
   };
 
@@ -492,202 +298,16 @@ export default function VehicleModelsPage() {
               size="default"
               className="h-12"
               onClick={() => {
-                setShowAdd(!showAdd);
-                setEditingId(null);
-                resetForm();
+                setFormMode("add");
+                setFormItem(null);
+                setFormOpen(true);
               }}
             >
-              <Plus className="size-5" />{" "}
-              {showAdd ? t("cancel") : t("addModel")}
+              <Plus className="size-5" /> {t("addModel")}
             </Button>
           </div>
         }
       />
-
-      {/* ── Add / Edit form ────────────────────────────────── */}
-      {(showAdd || editingId) && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">
-              {editingId ? t("editVariant") : t("addNewModel")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            {/* Required fields */}
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium">
-                  {t("makeRequired")}{" "}
-                  <span className="text-destructive">*</span>
-                </label>
-                <Input
-                  placeholder={t("makePlaceholder")}
-                  value={editForm.make}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({ ...prev, make: e.target.value }))
-                  }
-                  className="h-11"
-                  data-1p-ignore
-                  data-lpignore="true"
-                  autoComplete="off"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium">
-                  {t("modelRequired")}{" "}
-                  <span className="text-destructive">*</span>
-                </label>
-                <Input
-                  placeholder={t("modelPlaceholder")}
-                  value={editForm.model}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({ ...prev, model: e.target.value }))
-                  }
-                  className="h-11"
-                  data-1p-ignore
-                  data-lpignore="true"
-                  autoComplete="off"
-                />
-              </div>
-            </div>
-
-            {/* Toggle details */}
-            <Button
-              onClick={() => setShowDetails(!showDetails)}
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground"
-            >
-              {showDetails ? (
-                <ChevronDown className="size-4" />
-              ) : (
-                <ChevronRight className="size-4" />
-              )}
-              {showDetails ? t("hideDetails") : t("addDetails")}
-            </Button>
-
-            {showDetails && (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium">
-                    {t("generation")}
-                  </label>
-                  <Input
-                    placeholder={t("generationPlaceholder")}
-                    value={editForm.generation}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        generation: e.target.value,
-                      }))
-                    }
-                    className="h-11"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium">{t("yearFrom")}</label>
-                  <Input
-                    type="number"
-                    min="1900"
-                    max="2100"
-                    placeholder="2014"
-                    value={editForm.year_start}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        year_start: e.target.value,
-                      }))
-                    }
-                    className="h-11"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium">{t("yearTo")}</label>
-                  <Input
-                    type="number"
-                    min="1900"
-                    max="2100"
-                    placeholder="2020"
-                    value={editForm.year_end}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        year_end: e.target.value,
-                      }))
-                    }
-                    className="h-11"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium">{t("engine")}</label>
-                  <Input
-                    placeholder={t("enginePlaceholder")}
-                    value={editForm.engine}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        engine: e.target.value,
-                      }))
-                    }
-                    className="h-11"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium">{t("bodyType")}</label>
-                  <select
-                    value={editForm.body_type}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        body_type: e.target.value,
-                      }))
-                    }
-                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">{t("selectBodyType")}</option>
-                    {bodyTypeOptions.map((bt) => (
-                      <option key={bt} value={bt}>
-                        {bt.charAt(0).toUpperCase() + bt.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2 pt-1">
-              <Button
-                onClick={editingId ? () => handleUpdate(editingId) : handleAdd}
-                disabled={
-                  (editingId
-                    ? updateMutation.isPending
-                    : addMutation.isPending) ||
-                  !editForm.make.trim() ||
-                  !editForm.model.trim()
-                }
-                size="default"
-              >
-                {(editingId ? updateMutation.isPending : addMutation.isPending)
-                  ? t("saving")
-                  : editingId
-                    ? t("saveChanges")
-                    : t("saveModel")}
-              </Button>
-              <Button
-                variant="outline"
-                size="default"
-                onClick={() => {
-                  setShowAdd(false);
-                  setEditingId(null);
-                  resetForm();
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* ── Tree View ──────────────────────────────────────── */}
       <Card>
@@ -725,9 +345,9 @@ export default function VehicleModelsPage() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setShowAdd(true);
-                      setEditingId(null);
-                      resetForm();
+                      setFormMode("add");
+                      setFormItem(null);
+                      setFormOpen(true);
                     }}
                   >
                     <Plus className="size-4" /> {t("addFirstModel")}
@@ -750,7 +370,7 @@ export default function VehicleModelsPage() {
                     <Button
                       onClick={() => toggleMake(makeGroup.make)}
                       variant="ghost"
-                      className="w-full justify-start gap-2 px-4 py-3 font-semibold"
+                      className={`w-full justify-start gap-2 px-4 py-3 font-semibold transition-colors hover:bg-muted/30 ${makeOpen ? "border-l-2 border-primary" : ""}`}
                     >
                       {makeOpen ? (
                         <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
@@ -781,7 +401,7 @@ export default function VehicleModelsPage() {
                                   toggleModel(makeGroup.make, modelGroup.model)
                                 }
                                 variant="ghost"
-                                className="w-full justify-start gap-2 pl-10 pr-4 py-2.5"
+                                className="w-full justify-start gap-2 pl-10 pr-4 py-2.5 transition-colors hover:bg-muted/30"
                               >
                                 {modelOpen ? (
                                   <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
@@ -807,48 +427,71 @@ export default function VehicleModelsPage() {
                                   {modelGroup.variants.map((v) => (
                                     <div
                                       key={v.id}
-                                      className="group flex items-center gap-3 pl-16 pr-4 py-2.5 min-h-[40px] hover:bg-muted/20 transition-colors"
+                                      className="group flex items-center gap-3 pl-16 pr-4 py-2.5 min-h-[40px] hover:bg-muted/30 transition-colors"
                                     >
-                                      <div className="flex-1 min-w-0">
-                                        <Typography.Muted className="text-sm text-muted-foreground">
-                                          {variantLabel(v) ? (
-                                            <>
-                                              <HighlightText
-                                                text={variantLabel(v)}
-                                                query={search}
-                                              />
-                                              <span className="mx-1.5 text-muted-foreground/40">
+                                      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                                        <span className="text-sm font-medium truncate">
+                                          <HighlightText
+                                            text={v.model}
+                                            query={search}
+                                          />
+                                        </span>
+                                        <Typography.Muted className="text-xs text-muted-foreground truncate">
+                                          {variantYears(v) && (
+                                            <span>{variantYears(v)}</span>
+                                          )}
+                                          {variantYears(v) &&
+                                            variantDetailLine(v) && (
+                                              <span className="mx-1 text-muted-foreground/40">
                                                 ·
                                               </span>
-                                              <HighlightText
-                                                text={variantShortLabel(v)}
-                                                query={search}
-                                              />
-                                            </>
-                                          ) : (
-                                            <span className="italic text-muted-foreground/60">
-                                              {t("baseVariant")}
-                                            </span>
+                                            )}
+                                          {variantDetailLine(v) && (
+                                            <HighlightText
+                                              text={variantDetailLine(v)}
+                                              query={search}
+                                            />
                                           )}
+                                          {!variantYears(v) &&
+                                            !variantDetailLine(v) && (
+                                              <span className="italic text-muted-foreground/60">
+                                                {t("baseVariant")}
+                                              </span>
+                                            )}
                                         </Typography.Muted>
                                       </div>
+
+                                      {v.body_type && (
+                                        <Badge
+                                          variant="outline"
+                                          className="shrink-0 text-xs"
+                                        >
+                                          {v.body_type}
+                                        </Badge>
+                                      )}
+
                                       <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Button
                                           variant="ghost"
-                                          size="sm"
-                                          onClick={() => startEdit(v)}
-                                          className="h-8 text-xs"
+                                          size="icon-xs"
+                                          onClick={() => {
+                                            setFormMode("edit");
+                                            setFormItem(v);
+                                            setFormOpen(true);
+                                          }}
+                                          className="size-8"
+                                          aria-label={t("editVariant")}
                                         >
-                                          Edit
+                                          <Pencil className="size-3.5" />
                                         </Button>
                                         <Button
                                           variant="ghost"
                                           size="icon-xs"
-                                          onClick={() => handleDelete(v.id)}
-                                          className="size-8"
+                                          onClick={() => setDeleteItem(v)}
+                                          className="size-8 text-destructive/70 hover:text-destructive"
                                           aria-label={t("deleteVariant")}
                                         >
-                                          <X className="size-3.5" />
+                                          <Trash2 className="size-3.5" />
                                         </Button>
                                       </div>
                                     </div>
@@ -867,6 +510,48 @@ export default function VehicleModelsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Vehicle Model Form Sheet ─────────────────────── */}
+      <VehicleModelFormSheet
+        mode={formMode}
+        item={formItem}
+        open={formOpen}
+        onOpenChange={setFormOpen}
+      />
+
+      {/* ── Delete Confirmation Dialog ────────────────────── */}
+      <AlertDialog
+        open={!!deleteItem}
+        onOpenChange={(open) => {
+          if (!open) setDeleteItem(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("deleteVariant")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                {deleteItem?.make} {deleteItem?.model}
+              </span>
+              {deleteItem?.generation && <> ({deleteItem.generation})</>}? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

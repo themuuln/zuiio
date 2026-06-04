@@ -1,5 +1,7 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -10,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { prefetchDrawerData } from "@/lib/queries/use-drawer-queries";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn, formatPlateNumber } from "@/lib/utils";
 import { ElapsedText } from "./_elapsed-text";
@@ -19,6 +22,7 @@ interface ListViewProps {
   bays: BaySlotData[];
   onOpenDetail: (woId: string) => void;
   onAssignClick: (bayNumber: number) => void;
+  orgId?: string | null;
   t: (key: string) => string;
 }
 
@@ -26,8 +30,20 @@ export function ListView({
   bays,
   onOpenDetail,
   onAssignClick,
+  orgId,
   t,
 }: ListViewProps) {
+  const queryClient = useQueryClient();
+
+  const handleRowHover = useCallback(
+    (woId: string | undefined) => {
+      if (woId && orgId) {
+        prefetchDrawerData(queryClient, orgId, woId);
+      }
+    },
+    [orgId, queryClient],
+  );
+
   return (
     <div className="p-4 overflow-y-auto w-full h-full">
       <Card className="bg-card/75 backdrop-blur border-border/50 shadow-sm rounded-xl overflow-hidden">
@@ -64,6 +80,7 @@ export function ListView({
                   onClick={() =>
                     wo ? onOpenDetail(wo.id) : onAssignClick(bay.bayNumber)
                   }
+                  onMouseEnter={() => handleRowHover(wo?.id)}
                   className={cn(
                     "border-b border-border/30 transition-colors cursor-pointer",
                     wo
