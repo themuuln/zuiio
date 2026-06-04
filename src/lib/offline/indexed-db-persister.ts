@@ -1,7 +1,7 @@
 "use client";
 
-import { openDB, type IDBPDatabase } from "idb";
 import type { PersistedClient } from "@tanstack/react-query-persist-client";
+import { type IDBPDatabase, openDB } from "idb";
 
 const DB_NAME = "tolom-query-cache";
 const DB_VERSION = 1;
