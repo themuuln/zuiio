@@ -230,10 +230,11 @@ async function fetchBayViewData(
   const waiting = woWithDetails.filter((wo) => wo.bay_number == null);
 
   // When viewing a specific branch, show bay-assigned work orders from that branch
-  // OR legacy work orders without a branch (null). "All" view shows all bays
-  // org-wide. Queued work orders are always shown org-wide regardless of filter.
+  // only. "All" view shows all bays org-wide. Work orders without a branch_id
+  // are excluded from per-branch views to prevent the same car appearing on
+  // every branch's grid. Queued work orders are always shown org-wide.
   const inBayThisBranch = branchId
-    ? inBay.filter((wo) => wo.branch_id === branchId || wo.branch_id === null)
+    ? inBay.filter((wo) => wo.branch_id === branchId)
     : inBay;
 
   // Build bay slots (scoped to current branch)
@@ -346,36 +347,52 @@ export async function assignVehicleToBay(
   if (!user) throw new UnauthorizedError();
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
-  // Validate bay is free
-  const { data: conflict } = await supabase
-    .from("work_orders")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("bay_number", bayNumber)
-    .not("status", "in", '("Completed","Cancelled")')
-    .is("deleted_at", null)
-    .maybeSingle();
+  // Run conflict check and current-bay lookup in parallel
+  const [conflictResult, currentResult] = await Promise.all([
+    supabase
+      .from("work_orders")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("bay_number", bayNumber)
+      .not("status", "in", '("Completed","Cancelled")')
+      .is("deleted_at", null)
+      .maybeSingle(),
+    supabase
+      .from("work_orders")
+      .select("bay_number")
+      .eq("id", workOrderId)
+      .single(),
+  ]);
+
+  const conflict = conflictResult.data;
+  const current = currentResult.data;
 
   if (conflict && conflict.id !== workOrderId) {
     throw new ValidationError(`Bay ${bayNumber} is already occupied`);
   }
 
-  // If the target work order is currently in another bay, free that bay first
-  const { data: current } = await supabase
-    .from("work_orders")
-    .select("bay_number")
-    .eq("id", workOrderId)
-    .single();
-
-  if (current?.bay_number && current.bay_number !== bayNumber) {
-    // Free the old bay (set to null first to avoid unique constraint)
+  // Free old bay + delete helpers in parallel if moving from another bay
+  const needsFree = current?.bay_number && current.bay_number !== bayNumber;
+  if (needsFree) {
+    await Promise.all([
+      supabase
+        .from("work_orders")
+        .update({ bay_number: null, updated_at: new Date().toISOString() })
+        .eq("id", workOrderId),
+      supabase
+        .from("work_order_helpers")
+        .delete()
+        .eq("work_order_id", workOrderId),
+    ]);
+  } else {
+    // Still clear helpers even if same bay (e.g. re-assigning after clearing)
     await supabase
-      .from("work_orders")
-      .update({ bay_number: null, updated_at: new Date().toISOString() })
-      .eq("id", workOrderId);
+      .from("work_order_helpers")
+      .delete()
+      .eq("work_order_id", workOrderId);
   }
 
-  // Assign to new bay (clear mechanic and helpers when moving to new bay)
+  // Assign to new bay (clear mechanic when moving to new bay)
   const { error } = await supabase
     .from("work_orders")
     .update({
@@ -386,12 +403,6 @@ export async function assignVehicleToBay(
     })
     .eq("id", workOrderId)
     .eq("organization_id", orgId);
-
-  // Also clear any helper assignments when moving to a new bay
-  await supabase
-    .from("work_order_helpers")
-    .delete()
-    .eq("work_order_id", workOrderId);
 
   if (error)
     throw new Error(error.message ?? "Failed to assign vehicle to bay");

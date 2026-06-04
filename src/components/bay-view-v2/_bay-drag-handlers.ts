@@ -123,15 +123,15 @@ export function useBayDragHandlers({
         return;
       }
 
-      // Case 1: Dragging a vehicle to a bay
+      // Case 1: Dragging a vehicle to a bay — pure optimistic UI
+      // The vehicle moves instantly to the new bay without a loading spinner.
+      // If the server call fails, the outer catch rolls back prevData + shows a toast.
       if (activeData?.type === "vehicle" && overId.startsWith("bay-")) {
         const bayNumber = Number.parseInt(overId.replace("bay-", ""), 10);
         const woId = activeData.workOrderId;
 
         const currentBay = data?.bays.find((b) => b.workOrder?.id === woId);
         if (currentBay?.bayNumber === bayNumber) return; // Dropped on its current bay, do nothing!
-
-        markPending(woId);
 
         setData((d) => {
           if (!d) return d;
@@ -167,9 +167,16 @@ export function useBayDragHandlers({
           };
         });
 
-        await assignVehicleToBay(woId, bayNumber);
-        clearPending(woId);
-        fetchData(false);
+        // No fetchData after optimistic update — the local state is already correct.
+        // Polling (30s) will reconcile with server. Errors handled via fire-and-forget.
+        assignVehicleToBay(woId, bayNumber).catch((err) => {
+          if (prevData) setData(prevData);
+          console.error("Drag action failed:", err);
+          setToast({
+            message: "Action failed — changes reverted",
+            variant: "error",
+          });
+        });
         return;
       }
 

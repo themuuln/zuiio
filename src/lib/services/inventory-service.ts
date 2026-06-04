@@ -23,8 +23,7 @@ import type {
   UpdateSupplierParams,
 } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
-
-const trim = (v: unknown) => (v as string).trim() || null;
+import { trimField } from "./trim-field";
 
 const partFieldMap: FieldMap<UpdatePartParams> = {
   columns: {
@@ -39,8 +38,8 @@ const partFieldMap: FieldMap<UpdatePartParams> = {
     global_part_id: "global_part_id",
   },
   transforms: {
-    name: (v) => (v as string).trim(),
-    name_mn: trim,
+    name: trimField,
+    name_mn: trimField,
     part_number: (v) => (v as string) || null,
     category: (v) => (v as string) || null,
     description: (v) => (v as string) || null,
@@ -61,7 +60,7 @@ const supplierFieldMap: FieldMap<UpdateSupplierParams> = {
     is_active: "is_active",
   },
   transforms: {
-    name: (v) => (v as string).trim(),
+    name: trimField,
     contact_person: (v) => (v as string) || null,
     phone: (v) => (v as string) || null,
     email: (v) => (v as string) || null,

@@ -24,6 +24,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "grid" | "kanban" | "list";
@@ -75,6 +77,10 @@ interface ToolbarProps {
   selectedBranchId: string;
   /** Called when a branch pill is clicked */
   onBranchChange: (branchId: string) => void;
+  /** Date range for filtering */
+  dateRange?: DateRange;
+  /** Called when date range changes */
+  onDateRangeChange: (range: DateRange | undefined) => void;
 }
 
 export function Toolbar({
@@ -84,6 +90,8 @@ export function Toolbar({
   myJobsOnly,
   setMyJobsOnly,
   fetchData,
+  dateRange,
+  onDateRangeChange,
   baySearchQuery,
   setBaySearchQuery,
   readyWosCount,
@@ -108,8 +116,8 @@ export function Toolbar({
   return (
     <div className="flex-shrink-0 border-b border-border/40 bg-background/80 backdrop-blur-md p-3 select-none">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {/* Left Controls (View Selector, Branch Pills, Filter, Refresh) */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Left Controls (View Selector, Branch Pills, Filter, Refresh) — search takes remaining space */}
+        <div className="flex flex-wrap items-center gap-2 sm:flex-1 sm:min-w-0 sm:flex-nowrap">
           {/* Branch pills */}
           {branches.length > 1 && (
             <div className="flex items-center gap-0.5 rounded-lg border border-border/50 bg-muted/40 p-0.5 shadow-sm h-8">
@@ -201,8 +209,16 @@ export function Toolbar({
             <RefreshCw className="size-3.5" />
           </Button>
 
-          {/* Search Bar */}
-          <div className="relative min-w-[180px] max-w-[220px]">
+          {/* Date Range Filter */}
+          <DateRangePicker
+            value={dateRange}
+            onChange={onDateRangeChange}
+            className="w-full sm:w-[200px] lg:w-[240px]"
+            align="start"
+          />
+
+          {/* Search Bar — takes remaining space */}
+          <div className="relative flex-1 min-w-[140px] max-w-none">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/50" />
             <Input
               type="text"
@@ -225,7 +241,7 @@ export function Toolbar({
         </div>
 
         {/* Right Controls (Action Buttons & Bay Count) */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 sm:flex-shrink-0">
           {/* Batch Complete Button — only when 2+ ready items */}
           {readyWosCount >= 2 && (
             <Button

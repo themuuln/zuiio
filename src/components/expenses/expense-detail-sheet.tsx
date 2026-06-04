@@ -16,8 +16,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DetailSheet } from "@/components/ui/detail-sheet";
 import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import {
   Field,
@@ -34,16 +36,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 
-import { usePageHeader } from "@/hooks/use-page-header";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import {
   useDeleteExpense,
@@ -52,60 +47,46 @@ import {
   useUpdateExpense,
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import type { ExpenseWithCategory } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
+
+// ── Constants ─────────────────────────────────────────────────
+
+const PAYMENT_METHODS = [
+  "cash",
+  "credit_card",
+  "debit_card",
+  "bank_transfer",
+  "mobile_bank",
+  "other",
+] as const;
 
 // ── Schema ───────────────────────────────────────────────────
 
 const expenseSchema = z.object({
   description: z.string().min(1, "Description is required"),
-  amount: z
-    .string()
-    .min(1, "Amount is required")
-    .refine((val) => {
-      const n = Number(val);
-      return !Number.isNaN(n) && n > 0;
-    }, "Enter a valid amount"),
+  amount: z.string().min(1, "Amount is required"),
+  taxAmount: z.string().optional(),
   expenseDate: z.string().optional(),
   dueDate: z.string().optional(),
   categoryId: z.string().optional(),
   vendorName: z.string().optional(),
-  taxAmount: z.string().optional(),
   paymentMethod: z.string().optional(),
   referenceNumber: z.string().optional(),
-  paid: z.boolean(),
+  paid: z.boolean().default(false),
   notes: z.string().optional(),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
 
-const emptyForm: ExpenseFormValues = {
-  description: "",
-  amount: "",
-  expenseDate: "",
-  dueDate: "",
-  categoryId: "",
-  vendorName: "",
-  taxAmount: "0",
-  paymentMethod: "",
-  referenceNumber: "",
-  paid: false,
-  notes: "",
-};
-
-const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "manual"] as const;
-
-function syncForm(expense: ExpenseWithCategory): ExpenseFormValues {
+function syncForm(expense: NonNullable<ReturnType<typeof useExpense>["data"]>) {
   return {
     description: expense.description,
     amount: String(expense.amount),
-    expenseDate:
-      expense.expense_date?.split("T")[0] ??
-      new Date().toISOString().split("T")[0],
-    dueDate: expense.due_date?.split("T")[0] ?? "",
+    taxAmount: expense.tax_amount ? String(expense.tax_amount) : "",
+    expenseDate: expense.expense_date ?? "",
+    dueDate: expense.due_date ?? "",
     categoryId: expense.category_id ?? "",
     vendorName: expense.vendor_name ?? "",
-    taxAmount: String(expense.tax_amount ?? 0),
     paymentMethod: expense.payment_method ?? "",
     referenceNumber: expense.reference_number ?? "",
     paid: !!expense.paid_at,
@@ -131,163 +112,178 @@ export function ExpenseDetailSheet({
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 
-  const {
-    data: expense,
-    isLoading: loading,
-    error: queryError,
-  } = useExpense(orgId, expenseId ?? "");
+  const { data: expense, isLoading: loading, error } = useExpense(expenseId);
   const { data: categories } = useExpenseCategories(orgId);
   const updateExpense = useUpdateExpense(orgId);
   const deleteExpense = useDeleteExpense(orgId);
-  void usePageHeader();
-
-  const form = useForm<ExpenseFormValues>({
-    resolver: zodResolver(expenseSchema),
-    defaultValues: emptyForm,
-  });
 
   const [editing, setEditing] = useState(false);
 
-  const error = queryError ? queryError.message : null;
+  const form = useForm<ExpenseFormValues>({
+    resolver: zodResolver(expenseSchema),
+    defaultValues: {
+      description: "",
+      amount: "",
+      taxAmount: "",
+      expenseDate: "",
+      dueDate: "",
+      categoryId: "",
+      vendorName: "",
+      paymentMethod: "",
+      referenceNumber: "",
+      paid: false,
+      notes: "",
+    },
+  });
+
   const paid = form.watch("paid");
 
-  // Populate form when expense loads
+  // Reset form when expense loads
   useEffect(() => {
-    if (expense && open) {
+    if (expense) {
       form.reset(syncForm(expense));
     }
-  }, [expense, open, form.reset]);
+  }, [expense, form.reset]);
+
+  // Reset editing state when sheet closes
+  useEffect(() => {
+    if (!open) {
+      setEditing(false);
+    }
+  }, [open]);
 
   const handleOpenChange = useCallback(
     (value: boolean) => {
       if (!value) {
+        form.reset();
         setEditing(false);
-        form.reset(emptyForm);
       }
       onOpenChange(value);
     },
     [onOpenChange, form],
   );
 
-  const handleSave = form.handleSubmit(async (data) => {
+  const handleSave = useCallback(async () => {
     if (!expenseId) return;
-    const amount = parseFloat(data.amount);
-    const taxAmount = data.taxAmount ? parseFloat(data.taxAmount) : 0;
 
-    updateExpense.mutate(
-      {
+    const data = form.getValues();
+    try {
+      await updateExpense.mutateAsync({
         id: expenseId,
-        description: data.description,
-        amount: Number.isNaN(amount) ? 0 : amount,
-        taxAmount: Number.isNaN(taxAmount) ? 0 : taxAmount,
-        expenseDate: data.expenseDate || undefined,
-        dueDate: data.dueDate || null,
-        categoryId: data.categoryId || null,
-        vendorName: data.vendorName || null,
-        paymentMethod: data.paymentMethod || null,
-        referenceNumber: data.referenceNumber || null,
-        paidAt: data.paid ? new Date().toISOString() : null,
-        notes: data.notes || null,
-      },
-      {
-        onSuccess: () => setEditing(false),
-      },
-    );
-  });
+        body: {
+          description: data.description.trim(),
+          amount: parseFloat(data.amount),
+          tax_amount: data.taxAmount ? parseFloat(data.taxAmount) : undefined,
+          expense_date: data.expenseDate || undefined,
+          due_date: data.dueDate || undefined,
+          category_id: data.categoryId || undefined,
+          vendor_name: data.vendorName?.trim() || undefined,
+          payment_method: data.paymentMethod || undefined,
+          reference_number: data.referenceNumber?.trim() || undefined,
+          paid_at: data.paid ? new Date().toISOString() : null,
+          notes: data.notes?.trim() || undefined,
+        },
+      });
+      toast.success(t("expenseUpdated"));
+      setEditing(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("failedToUpdate"));
+    }
+  }, [expenseId, form, updateExpense, t]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(async () => {
     if (!expenseId) return;
-    deleteExpense.mutate(expenseId, {
-      onSuccess: () => handleOpenChange(false),
-    });
-  };
+    try {
+      await deleteExpense.mutateAsync(expenseId);
+      toast.success(t("expenseDeleted"));
+      handleOpenChange(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("failedToDelete"));
+    }
+  }, [expenseId, deleteExpense, t, handleOpenChange]);
 
   const isLoadingData = loading || (open && !expense && !error);
   const notFound = open && !loading && !expense && !error;
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl p-0 gap-0">
-        <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
-          <DetailSheetHeader
-            icon={Pencil}
-            iconLoading={isLoadingData}
-            title={
-              <SheetTitle className="text-base truncate">
-                {isLoadingData
-                  ? "Loading…"
-                  : expense
-                    ? expense.description
-                    : t("details")}
-              </SheetTitle>
-            }
-            subtitle={
-              expense ? (
-                <>
-                  <Badge
-                    variant={expense.paid_at ? "outline" : "secondary"}
-                    className="text-xs"
+    <DetailSheet open={open} onOpenChange={handleOpenChange} size="2xl">
+      <DetailSheet.Header>
+        <DetailSheetHeader
+          icon={Pencil}
+          iconLoading={isLoadingData}
+          title={
+            <DetailSheet.Title className="truncate">
+              {isLoadingData
+                ? "Loading\u2026"
+                : expense
+                  ? expense.description
+                  : t("details")}
+            </DetailSheet.Title>
+          }
+          subtitle={
+            expense ? (
+              <>
+                <Badge
+                  variant={expense.paid_at ? "outline" : "secondary"}
+                  className="text-xs"
+                >
+                  {expense.paid_at ? t("paid") : t("unpaid")}
+                </Badge>
+                {expense.created_at && (
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(expense.created_at).toLocaleDateString()}
+                  </span>
+                )}
+              </>
+            ) : undefined
+          }
+          actions={
+            expense && !editing ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => {
+                    form.reset(syncForm(expense));
+                    setEditing(true);
+                  }}
+                >
+                  <Pencil className="size-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-destructive"
+                      />
+                    }
                   >
-                    {expense.paid_at ? t("paid") : t("unpaid")}
-                  </Badge>
-                  {expense.created_at && (
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(expense.created_at).toLocaleDateString()}
-                    </span>
-                  )}
-                </>
-              ) : undefined
-            }
-            actions={
-              expense && !editing ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => {
-                      form.reset(syncForm(expense));
-                      setEditing(true);
-                    }}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger
-                      render={
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          className="text-destructive"
-                        />
-                      }
-                    >
-                      <Trash2 className="size-4" />
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          {t("deleteConfirm")}
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {t("deleteConfirm")}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>
-                          {commonT("cancel")}
-                        </AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete}>
-                          {commonT("delete")}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              ) : undefined
-            }
-          />
-        </SheetHeader>
+                    <Trash2 className="size-4" />
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t("deleteConfirm")}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete}>
+                        {commonT("delete")}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            ) : undefined
+          }
+        />
+      </DetailSheet.Header>
 
+      <DetailSheet.Body>
         {/* Loading */}
         {isLoadingData && (
           <div className="flex items-center justify-center py-20">
@@ -297,7 +293,7 @@ export function ExpenseDetailSheet({
 
         {/* Error */}
         {error && !loading && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Typography.Muted className="text-sm">{error}</Typography.Muted>
             <Button
               variant="outline"
@@ -311,7 +307,7 @@ export function ExpenseDetailSheet({
 
         {/* Not found */}
         {notFound && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Typography.Muted className="text-sm">
               {t("notFound") ?? "Expense not found"}
             </Typography.Muted>
@@ -333,208 +329,204 @@ export function ExpenseDetailSheet({
               e.preventDefault();
               handleSave();
             }}
-            className="flex-1 overflow-y-auto min-h-0"
           >
-            <div className="p-4">
-              <FieldGroup>
-                {/* Description — required */}
-                <Field data-invalid={!!form.formState.errors.description}>
+            <FieldGroup>
+              {/* Description — required */}
+              <Field data-invalid={!!form.formState.errors.description}>
+                <FieldLabel>
+                  {t("description")} <span className="text-destructive">*</span>
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="eds-description"
+                    placeholder={t("descriptionPlaceholder")}
+                    aria-invalid={!!form.formState.errors.description}
+                    {...form.register("description")}
+                  />
+                  {form.formState.errors.description && (
+                    <FieldError>
+                      {form.formState.errors.description.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Amount — required */}
+                <Field data-invalid={!!form.formState.errors.amount}>
                   <FieldLabel>
-                    {t("description")}{" "}
-                    <span className="text-destructive">*</span>
+                    {t("amount")} <span className="text-destructive">*</span>
                   </FieldLabel>
                   <FieldContent>
                     <Input
-                      id="eds-description"
-                      placeholder={t("descriptionPlaceholder")}
-                      aria-invalid={!!form.formState.errors.description}
-                      {...form.register("description")}
+                      id="eds-amount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="\u20AE"
+                      aria-invalid={!!form.formState.errors.amount}
+                      {...form.register("amount")}
                     />
-                    {form.formState.errors.description && (
+                    {form.formState.errors.amount && (
                       <FieldError>
-                        {form.formState.errors.description.message}
+                        {form.formState.errors.amount.message}
                       </FieldError>
                     )}
                   </FieldContent>
                 </Field>
 
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Amount — required */}
-                  <Field data-invalid={!!form.formState.errors.amount}>
-                    <FieldLabel>
-                      {t("amount")} <span className="text-destructive">*</span>
-                    </FieldLabel>
-                    <FieldContent>
-                      <Input
-                        id="eds-amount"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="₮"
-                        aria-invalid={!!form.formState.errors.amount}
-                        {...form.register("amount")}
-                      />
-                      {form.formState.errors.amount && (
-                        <FieldError>
-                          {form.formState.errors.amount.message}
-                        </FieldError>
-                      )}
-                    </FieldContent>
-                  </Field>
-
-                  {/* Tax Amount — optional */}
-                  <Field>
-                    <FieldLabel>{t("taxAmount")}</FieldLabel>
-                    <FieldContent>
-                      <Input
-                        id="eds-taxAmount"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="₮"
-                        {...form.register("taxAmount")}
-                      />
-                    </FieldContent>
-                  </Field>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Expense Date — optional */}
-                  <Field>
-                    <FieldLabel>{t("expenseDate")}</FieldLabel>
-                    <FieldContent>
-                      <Input
-                        id="eds-date"
-                        type="date"
-                        {...form.register("expenseDate")}
-                      />
-                    </FieldContent>
-                  </Field>
-
-                  {/* Due Date — optional */}
-                  <Field>
-                    <FieldLabel>Due Date</FieldLabel>
-                    <FieldContent>
-                      <Input
-                        id="eds-due-date"
-                        type="date"
-                        {...form.register("dueDate")}
-                      />
-                    </FieldContent>
-                  </Field>
-
-                  {/* Category — optional */}
-                  <Field>
-                    <FieldLabel>{t("category")}</FieldLabel>
-                    <FieldContent>
-                      <Select
-                        value={form.watch("categoryId") || ""}
-                        onValueChange={(val) =>
-                          form.setValue("categoryId", val ?? "")
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder={commonT("all")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories?.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FieldContent>
-                  </Field>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Vendor — optional */}
-                  <Field>
-                    <FieldLabel>{t("vendor")}</FieldLabel>
-                    <FieldContent>
-                      <Input
-                        id="eds-vendor"
-                        placeholder={t("vendorPlaceholder")}
-                        {...form.register("vendorName")}
-                      />
-                    </FieldContent>
-                  </Field>
-
-                  {/* Payment Method — optional */}
-                  <Field>
-                    <FieldLabel>{t("paymentMethod")}</FieldLabel>
-                    <FieldContent>
-                      <Select
-                        value={form.watch("paymentMethod") || ""}
-                        onValueChange={(val) =>
-                          form.setValue("paymentMethod", val ?? "")
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder={commonT("all")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PAYMENT_METHODS.map((method) => (
-                            <SelectItem key={method} value={method}>
-                              {t(method)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FieldContent>
-                  </Field>
-                </div>
-
-                {/* Reference Number — optional */}
+                {/* Tax Amount — optional */}
                 <Field>
-                  <FieldLabel>{t("referenceNumber")}</FieldLabel>
+                  <FieldLabel>{t("taxAmount")}</FieldLabel>
                   <FieldContent>
                     <Input
-                      id="eds-reference"
-                      placeholder={t("referenceNumberPlaceholder")}
-                      {...form.register("referenceNumber")}
+                      id="eds-taxAmount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="\u20AE"
+                      {...form.register("taxAmount")}
                     />
                   </FieldContent>
                 </Field>
+              </div>
 
-                {/* Paid checkbox */}
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="eds-paid"
-                    checked={paid}
-                    onCheckedChange={(checked) =>
-                      form.setValue("paid", checked === true)
-                    }
-                  />
-                  <label
-                    htmlFor="eds-paid"
-                    className="cursor-pointer text-sm font-medium"
-                  >
-                    {t("paid")}
-                  </label>
-                </div>
-
-                {/* Notes — optional */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Expense Date — optional */}
                 <Field>
-                  <FieldLabel>{t("notes")}</FieldLabel>
+                  <FieldLabel>{t("expenseDate")}</FieldLabel>
                   <FieldContent>
-                    <Textarea
-                      id="eds-notes"
-                      rows={3}
-                      placeholder={t("notesPlaceholder")}
-                      {...form.register("notes")}
+                    <Input
+                      id="eds-date"
+                      type="date"
+                      {...form.register("expenseDate")}
                     />
                   </FieldContent>
                 </Field>
-              </FieldGroup>
-            </div>
+
+                {/* Due Date — optional */}
+                <Field>
+                  <FieldLabel>Due Date</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="eds-due-date"
+                      type="date"
+                      {...form.register("dueDate")}
+                    />
+                  </FieldContent>
+                </Field>
+
+                {/* Category — optional */}
+                <Field>
+                  <FieldLabel>{t("category")}</FieldLabel>
+                  <FieldContent>
+                    <Select
+                      value={form.watch("categoryId") || ""}
+                      onValueChange={(val) =>
+                        form.setValue("categoryId", val ?? "")
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={commonT("all")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories?.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FieldContent>
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Vendor — optional */}
+                <Field>
+                  <FieldLabel>{t("vendor")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="eds-vendor"
+                      placeholder={t("vendorPlaceholder")}
+                      {...form.register("vendorName")}
+                    />
+                  </FieldContent>
+                </Field>
+
+                {/* Payment Method — optional */}
+                <Field>
+                  <FieldLabel>{t("paymentMethod")}</FieldLabel>
+                  <FieldContent>
+                    <Select
+                      value={form.watch("paymentMethod") || ""}
+                      onValueChange={(val) =>
+                        form.setValue("paymentMethod", val ?? "")
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={commonT("all")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAYMENT_METHODS.map((method) => (
+                          <SelectItem key={method} value={method}>
+                            {t(method)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FieldContent>
+                </Field>
+              </div>
+
+              {/* Reference Number — optional */}
+              <Field>
+                <FieldLabel>{t("referenceNumber")}</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="eds-reference"
+                    placeholder={t("referenceNumberPlaceholder")}
+                    {...form.register("referenceNumber")}
+                  />
+                </FieldContent>
+              </Field>
+
+              {/* Paid checkbox */}
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="eds-paid"
+                  checked={paid}
+                  onCheckedChange={(checked) =>
+                    form.setValue("paid", checked === true)
+                  }
+                />
+                <label
+                  htmlFor="eds-paid"
+                  className="cursor-pointer text-sm font-medium"
+                >
+                  {t("paid")}
+                </label>
+              </div>
+
+              {/* Notes — optional */}
+              <Field>
+                <FieldLabel>{t("notes")}</FieldLabel>
+                <FieldContent>
+                  <Textarea
+                    id="eds-notes"
+                    rows={3}
+                    placeholder={t("notesPlaceholder")}
+                    {...form.register("notes")}
+                  />
+                </FieldContent>
+              </Field>
+            </FieldGroup>
           </form>
         )}
 
         {/* Read-only view */}
         {!editing && !isLoadingData && expense && (
-          <div className="flex-1 overflow-y-auto min-h-0 p-3 flex flex-col gap-3">
+          <div className="flex flex-col gap-3">
             {/* Amount */}
             <section className="rounded-lg border border-border/60 bg-card/40 p-4">
               <div className="flex items-center justify-between">
@@ -641,39 +633,37 @@ export function ExpenseDetailSheet({
             )}
           </div>
         )}
+      </DetailSheet.Body>
 
-        {/* Footer */}
-        {editing && (
-          <div className="shrink-0 border-t border-border p-4">
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  if (expense) form.reset(syncForm(expense));
-                  setEditing(false);
-                }}
-              >
-                {commonT("cancel")}
-              </Button>
-              <Button
-                type="submit"
-                form="expense-detail-form"
-                className="flex-1 gap-2"
-                disabled={updateExpense.isPending}
-              >
-                {updateExpense.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Pencil className="size-4" />
-                )}
-                {updateExpense.isPending ? commonT("saving") : commonT("save")}
-              </Button>
-            </div>
-          </div>
-        )}
-      </SheetContent>
-    </Sheet>
+      {/* Footer — edit mode only */}
+      {editing && (
+        <DetailSheet.Footer>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            onClick={() => {
+              if (expense) form.reset(syncForm(expense));
+              setEditing(false);
+            }}
+          >
+            {commonT("cancel")}
+          </Button>
+          <Button
+            type="submit"
+            form="expense-detail-form"
+            className="flex-1 gap-2"
+            disabled={updateExpense.isPending}
+          >
+            {updateExpense.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Pencil className="size-4" />
+            )}
+            {updateExpense.isPending ? commonT("saving") : commonT("save")}
+          </Button>
+        </DetailSheet.Footer>
+      )}
+    </DetailSheet>
   );
 }

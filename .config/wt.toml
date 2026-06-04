@@ -1,6 +1,23 @@
-[post-create]
-# Automatically install project dependencies in the new worktree path
-install = "pnpm install"  # or pnpm install, cargo build, etc.
+# Project Configuration — tolom (Next.js + Supabase + pnpm)
+# See: https://worktrunk.dev/hook/
 
-# Use worktrunk's step to copy over your gitignored .env files
-env = "wt step copy-ignored"
+# === Post-Start: runs when a new worktree is created ===
+[[post-start]]
+copy = "wt step copy-ignored"
+
+[[post-start]]
+deps = "pnpm install"
+
+# Dev server on a deterministic port per branch (e.g. feat-data-table-dry → 13747)
+# `tether` starts the dev server in post-start and kills it on worktree removal
+[[post-start]]
+tether = "pnpm run dev -- --port {{ branch | hash_port }}"
+
+# === Pre-Merge: runs before merging into target branch ===
+[[pre-merge]]
+validate = "pnpm validate"
+test = "pnpm test"
+
+# === Display URL in `wt list` ===
+[list]
+url = "http://localhost:{{ branch | hash_port }}"

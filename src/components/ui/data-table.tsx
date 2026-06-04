@@ -22,7 +22,6 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Columns3,
-  Search,
   SortAsc,
   SortDesc,
 } from "lucide-react";
@@ -226,10 +225,9 @@ export function DataTable<TData, TValue>({
     <div className={cn("space-y-4", className)}>
       {/* ── Toolbar ────────────────────────────────────────── */}
       {(toolbar || search || showColumnVisibility) && (
-        <div className="flex items-center gap-3">
-          {search && (
-            <div className="relative max-w-sm flex-1">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="flex items-center justify-between py-4">
+          <div className="flex items-center gap-4">
+            {search && (
               <Input
                 placeholder={search.placeholder ?? "Search..."}
                 value={
@@ -248,11 +246,11 @@ export function DataTable<TData, TValue>({
                       ?.setFilterValue(event.target.value);
                   }
                 }}
-                className="h-8 pl-9"
+                className="max-w-sm"
               />
-            </div>
-          )}
-          {toolbar}
+            )}
+            {toolbar}
+          </div>
           {showColumnVisibility && <DataTableViewOptions table={table} />}
         </div>
       )}
@@ -389,20 +387,20 @@ export function DataTableColumnHeader<TData>({
   }
 
   return (
-    <div className={cn("flex items-center gap-1", className)}>
+    <div className={cn("flex items-center space-x-2", className)}>
       <Button
         variant="ghost"
         size="sm"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="h-8 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground"
+        className="-ml-3 h-8 px-2 text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent"
       >
-        {title}
+        <span>{title}</span>
         {column.getIsSorted() === "asc" ? (
           <SortAsc className="ml-1 size-3.5" />
         ) : column.getIsSorted() === "desc" ? (
           <SortDesc className="ml-1 size-3.5" />
         ) : (
-          <ArrowUpDown className="ml-1 size-3.5 opacity-40" />
+          <ArrowUpDown className="ml-1 size-3.5 shrink-0 text-muted-foreground/50" />
         )}
       </Button>
     </div>
@@ -436,7 +434,10 @@ export function DataTablePagination<TData>({
       <div className="flex items-center gap-6 sm:gap-8">
         {/* Page size */}
         <div className="hidden items-center gap-2 md:flex">
-          <Label htmlFor="rows-per-page" className="text-sm font-medium">
+          <Label
+            htmlFor="rows-per-page"
+            className="text-sm font-medium text-muted-foreground"
+          >
             Rows per page
           </Label>
           <Select

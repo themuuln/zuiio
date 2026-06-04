@@ -42,12 +42,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { DetailSheet } from "@/components/ui/detail-sheet";
+import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { usePageHeader } from "@/hooks/use-page-header";
@@ -405,155 +401,209 @@ export function VehicleDetailSheet({
   const notFound = open && !loading && !vehicle && !error;
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl p-0 gap-0">
-        <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
-          <DetailSheetHeader
-            icon={Pencil}
-            iconLoading={isLoadingData}
-            title={
-              <SheetTitle className="text-base truncate">
-                {isLoadingData
-                  ? "Loading…"
-                  : vehicle
-                    ? vehicle.plate_number
-                    : t("vehicleNotFound")}
-              </SheetTitle>
-            }
-            subtitle={
-              vehicle ? (
-                <span className="text-xs text-muted-foreground">
-                  {[vehicle.year, vehicle.make, vehicle.model]
-                    .filter(Boolean)
-                    .join(" ")}
-                </span>
-              ) : undefined
-            }
-            actions={
-              vehicle && !editing ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => {
-                      setForm(syncForm(vehicle));
-                      setEditing(true);
-                    }}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger
-                      render={
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          className="text-destructive"
-                        />
-                      }
-                    >
-                      <Trash2 className="size-4" />
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          {t("deleteConfirm")}
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {t("deleteConfirm")}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>
-                          {commonT("cancel")}
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteMutation.mutate()}
-                          variant="destructive"
-                        >
-                          {commonT("delete")}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              ) : undefined
-            }
-          />
-        </SheetHeader>
-
-        {/* Loading */}
-        {isLoadingData && (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
-          </div>
-        )}
-
-        {/* Error / Not found */}
-        {(error || notFound) && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
-            <Typography.Muted className="text-sm">
-              {error || "Vehicle not found"}
-            </Typography.Muted>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleOpenChange(false)}
-            >
-              {commonT("cancel")}
-            </Button>
-          </div>
-        )}
-
-        {/* Content */}
-        {!isLoadingData && !error && !notFound && vehicle && (
-          <div className="flex-1 overflow-y-auto min-h-0 flex flex-col">
-            {/* Owner */}
-            {primaryOwner && (
-              <div className="px-4 py-3 border-b border-border/50">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t("owner")}
-                </span>
-                <button
-                  className="mt-1.5 w-full flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2.5 hover:bg-muted/70 transition-colors text-left"
+    <DetailSheet open={open} onOpenChange={handleOpenChange} size="2xl">
+      <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
+        <DetailSheetHeader
+          icon={Pencil}
+          iconLoading={isLoadingData}
+          title={
+            <SheetTitle className="text-base truncate">
+              {isLoadingData
+                ? "Loading…"
+                : vehicle
+                  ? vehicle.plate_number
+                  : t("vehicleNotFound")}
+            </SheetTitle>
+          }
+          subtitle={
+            vehicle ? (
+              <span className="text-xs text-muted-foreground">
+                {[vehicle.year, vehicle.make, vehicle.model]
+                  .filter(Boolean)
+                  .join(" ")}
+              </span>
+            ) : undefined
+          }
+          actions={
+            vehicle && !editing ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => {
-                    handleOpenChange(false);
-                    setDetailCustomerId(primaryOwner.customer_id);
+                    setForm(syncForm(vehicle));
+                    setEditing(true);
                   }}
                 >
-                  <div>
-                    <div className="text-sm font-medium">
-                      {primaryOwner.name}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {primaryOwner.phone || t("noPhoneNumber")}
-                    </div>
-                  </div>
-                  <Phone className="size-4 text-muted-foreground" />
-                </button>
-              </div>
-            )}
+                  <Pencil className="size-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-destructive"
+                      />
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t("deleteConfirm")}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{commonT("cancel")}</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteMutation.mutate()}
+                        variant="destructive"
+                      >
+                        {commonT("delete")}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            ) : undefined
+          }
+        />
+      </SheetHeader>
 
-            {/* Vehicle Info — Read-only */}
-            {!editing && (
-              <div className="px-4 py-3 border-b border-border/50">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t("vehicleInformation")}
-                </span>
-                <div className="mt-2 grid gap-2 grid-cols-2">
+      {/* Loading */}
+      {isLoadingData && (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {/* Error / Not found */}
+      {(error || notFound) && (
+        <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
+          <Typography.Muted className="text-sm">
+            {error || "Vehicle not found"}
+          </Typography.Muted>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleOpenChange(false)}
+          >
+            {commonT("cancel")}
+          </Button>
+        </div>
+      )}
+
+      {/* Content */}
+      {!isLoadingData && !error && !notFound && vehicle && (
+        <div className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+          {/* Owner */}
+          {primaryOwner && (
+            <div className="px-4 py-3 border-b border-border/50">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {t("owner")}
+              </span>
+              <button
+                className="mt-1.5 w-full flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2.5 hover:bg-muted/70 transition-colors text-left"
+                onClick={() => {
+                  handleOpenChange(false);
+                  setDetailCustomerId(primaryOwner.customer_id);
+                }}
+              >
+                <div>
+                  <div className="text-sm font-medium">{primaryOwner.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {primaryOwner.phone || t("noPhoneNumber")}
+                  </div>
+                </div>
+                <Phone className="size-4 text-muted-foreground" />
+              </button>
+            </div>
+          )}
+
+          {/* Vehicle Info — Read-only */}
+          {!editing && (
+            <div className="px-4 py-3 border-b border-border/50">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {t("vehicleInformation")}
+              </span>
+              <div className="mt-2 grid gap-2 grid-cols-2">
+                {(
+                  [
+                    [t("plate"), vehicle.plate_number],
+                    [t("make"), vehicle.make],
+                    [t("model"), vehicle.model],
+                    [t("year"), vehicle.year ? String(vehicle.year) : null],
+                    [t("vin"), vehicle.vin],
+                    [
+                      t("odometer"),
+                      vehicle.odometer
+                        ? `${vehicle.odometer.toLocaleString()} km`
+                        : null,
+                    ],
+                  ] as [string, string | null][]
+                ).map(([label, value]) => (
+                  <div key={label} className="rounded-lg bg-muted/50 px-3 py-2">
+                    <div className="text-xs text-muted-foreground">{label}</div>
+                    <div className="text-sm font-medium">{value || "—"}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Show more */}
+              <button
+                className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setShowMore(!showMore)}
+              >
+                {showMore ? (
+                  <ChevronDown className="size-3" />
+                ) : (
+                  <ChevronRight className="size-3" />
+                )}
+                {showMore ? t("showLess") : t("showMore")}
+              </button>
+              {showMore && (
+                <div className="mt-2 grid gap-2 grid-cols-2 animate-in fade-in duration-200">
                   {(
                     [
-                      [t("plate"), vehicle.plate_number],
-                      [t("make"), vehicle.make],
-                      [t("model"), vehicle.model],
-                      [t("year"), vehicle.year ? String(vehicle.year) : null],
-                      [t("vin"), vehicle.vin],
+                      [t("chassisNumber"), vehicle.chassis_number],
+                      [t("trim"), vehicle.trim],
+                      [t("color"), vehicle.color],
+                      [t("engine"), vehicle.engine],
+                      [t("fuelType"), vehicle.fuel_type],
+                      [t("transmission"), vehicle.transmission],
+                      [t("drivetrain"), vehicle.drivetrain],
+                      [t("bodyType"), vehicle.body_type],
+                      [t("steering"), vehicle.steering],
                       [
-                        t("odometer"),
-                        vehicle.odometer
-                          ? `${vehicle.odometer.toLocaleString()} km`
+                        t("seats"),
+                        vehicle.seats ? String(vehicle.seats) : null,
+                      ],
+                      [
+                        t("height"),
+                        vehicle.height ? `${vehicle.height} mm` : null,
+                      ],
+                      [
+                        t("width"),
+                        vehicle.width ? `${vehicle.width} mm` : null,
+                      ],
+                      [
+                        t("length"),
+                        vehicle.length ? `${vehicle.length} mm` : null,
+                      ],
+                      [
+                        t("weight"),
+                        vehicle.weight ? `${vehicle.weight} kg` : null,
+                      ],
+                      [
+                        t("importDate"),
+                        vehicle.import_date
+                          ? new Date(vehicle.import_date).toLocaleDateString()
                           : null,
                       ],
+                      [t("countryOfOrigin"), vehicle.country_of_origin],
+                      [t("category"), vehicle.category],
                     ] as [string, string | null][]
                   ).map(([label, value]) => (
                     <div
@@ -567,181 +617,110 @@ export function VehicleDetailSheet({
                     </div>
                   ))}
                 </div>
-                {/* Show more */}
-                <button
-                  className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => setShowMore(!showMore)}
-                >
-                  {showMore ? (
-                    <ChevronDown className="size-3" />
-                  ) : (
-                    <ChevronRight className="size-3" />
-                  )}
-                  {showMore ? t("showLess") : t("showMore")}
-                </button>
-                {showMore && (
-                  <div className="mt-2 grid gap-2 grid-cols-2 animate-in fade-in duration-200">
-                    {(
-                      [
-                        [t("chassisNumber"), vehicle.chassis_number],
-                        [t("trim"), vehicle.trim],
-                        [t("color"), vehicle.color],
-                        [t("engine"), vehicle.engine],
-                        [t("fuelType"), vehicle.fuel_type],
-                        [t("transmission"), vehicle.transmission],
-                        [t("drivetrain"), vehicle.drivetrain],
-                        [t("bodyType"), vehicle.body_type],
-                        [t("steering"), vehicle.steering],
-                        [
-                          t("seats"),
-                          vehicle.seats ? String(vehicle.seats) : null,
-                        ],
-                        [
-                          t("height"),
-                          vehicle.height ? `${vehicle.height} mm` : null,
-                        ],
-                        [
-                          t("width"),
-                          vehicle.width ? `${vehicle.width} mm` : null,
-                        ],
-                        [
-                          t("length"),
-                          vehicle.length ? `${vehicle.length} mm` : null,
-                        ],
-                        [
-                          t("weight"),
-                          vehicle.weight ? `${vehicle.weight} kg` : null,
-                        ],
-                        [
-                          t("importDate"),
-                          vehicle.import_date
-                            ? new Date(vehicle.import_date).toLocaleDateString()
-                            : null,
-                        ],
-                        [t("countryOfOrigin"), vehicle.country_of_origin],
-                        [t("category"), vehicle.category],
-                      ] as [string, string | null][]
-                    ).map(([label, value]) => (
-                      <div
-                        key={label}
-                        className="rounded-lg bg-muted/50 px-3 py-2"
-                      >
-                        <div className="text-xs text-muted-foreground">
-                          {label}
-                        </div>
-                        <div className="text-sm font-medium">
-                          {value || "—"}
-                        </div>
-                      </div>
-                    ))}
+              )}
+              {vehicle.notes && (
+                <div className="mt-2 rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="text-xs text-muted-foreground">
+                    {t("notes")}
                   </div>
-                )}
-                {vehicle.notes && (
-                  <div className="mt-2 rounded-lg bg-muted/50 px-3 py-2">
-                    <div className="text-xs text-muted-foreground">
-                      {t("notes")}
-                    </div>
-                    <div className="text-sm whitespace-pre-wrap">
-                      {vehicle.notes}
-                    </div>
+                  <div className="text-sm whitespace-pre-wrap">
+                    {vehicle.notes}
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Edit mode */}
-            {editing && (
-              <form
-                id="vehicle-detail-form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSave();
-                }}
-                className="px-4 py-3 border-b border-border/50"
-              >
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t("vehicleInformation")}
-                </span>
-                <div className="mt-2">
-                  <VehicleEditForm form={form} onChange={setForm} />
-                </div>
-              </form>
-            )}
-
-            {/* Service History */}
-            <div className="px-4 py-3">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                {t("serviceHistory")} ({vehicle.service_history.length})
-              </span>
-              {vehicle.service_history.length === 0 ? (
-                <Typography.Muted className="mt-2 text-sm text-muted-foreground">
-                  {t("noServiceHistory")}
-                </Typography.Muted>
-              ) : (
-                <div className="mt-2 flex flex-col gap-2">
-                  {vehicle.service_history.map((wo) => (
-                    <Item
-                      key={wo.id}
-                      variant="muted"
-                      className="justify-between py-2.5"
-                    >
-                      <ItemContent className="gap-0.5">
-                        <ItemTitle>
-                          <StatusBadge status={wo.status} />
-                          <span className="text-xs text-muted-foreground font-normal">
-                            {formatDate(wo.created_at)}
-                          </span>
-                        </ItemTitle>
-                        <ItemDescription>
-                          {wo.complaint ||
-                            wo.description ||
-                            t("generalService")}
-                        </ItemDescription>
-                      </ItemContent>
-                      <span className="text-sm font-semibold tabular-nums shrink-0 ml-2">
-                        {formatMNT(Number(wo.total))}
-                      </span>
-                    </Item>
-                  ))}
                 </div>
               )}
             </div>
+          )}
 
-            {/* Footer — edit mode */}
-            {editing && (
-              <div className="shrink-0 border-t border-border p-4">
-                <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      if (vehicle) setForm(syncForm(vehicle));
-                      setEditing(false);
-                    }}
+          {/* Edit mode */}
+          {editing && (
+            <form
+              id="vehicle-detail-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSave();
+              }}
+              className="px-4 py-3 border-b border-border/50"
+            >
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {t("vehicleInformation")}
+              </span>
+              <div className="mt-2">
+                <VehicleEditForm form={form} onChange={setForm} />
+              </div>
+            </form>
+          )}
+
+          {/* Service History */}
+          <div className="px-4 py-3">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              {t("serviceHistory")} ({vehicle.service_history.length})
+            </span>
+            {vehicle.service_history.length === 0 ? (
+              <Typography.Muted className="mt-2 text-sm text-muted-foreground">
+                {t("noServiceHistory")}
+              </Typography.Muted>
+            ) : (
+              <div className="mt-2 flex flex-col gap-2">
+                {vehicle.service_history.map((wo) => (
+                  <Item
+                    key={wo.id}
+                    variant="muted"
+                    className="justify-between py-2.5"
                   >
-                    {commonT("cancel")}
-                  </Button>
-                  <Button
-                    type="submit"
-                    form="vehicle-detail-form"
-                    className="flex-1 gap-2"
-                    disabled={editMutation.isPending}
-                  >
-                    {editMutation.isPending ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Save className="size-4" />
-                    )}
-                    {editMutation.isPending ? t("saving") : commonT("save")}
-                  </Button>
-                </div>
+                    <ItemContent className="gap-0.5">
+                      <ItemTitle>
+                        <StatusBadge status={wo.status} />
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {formatDate(wo.created_at)}
+                        </span>
+                      </ItemTitle>
+                      <ItemDescription>
+                        {wo.complaint || wo.description || t("generalService")}
+                      </ItemDescription>
+                    </ItemContent>
+                    <span className="text-sm font-semibold tabular-nums shrink-0 ml-2">
+                      {formatMNT(Number(wo.total))}
+                    </span>
+                  </Item>
+                ))}
               </div>
             )}
           </div>
-        )}
-      </SheetContent>
-    </Sheet>
+
+          {/* Footer — edit mode */}
+          {editing && (
+            <div className="shrink-0 border-t border-border p-4">
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    if (vehicle) setForm(syncForm(vehicle));
+                    setEditing(false);
+                  }}
+                >
+                  {commonT("cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  form="vehicle-detail-form"
+                  className="flex-1 gap-2"
+                  disabled={editMutation.isPending}
+                >
+                  {editMutation.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Save className="size-4" />
+                  )}
+                  {editMutation.isPending ? t("saving") : commonT("save")}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </DetailSheet>
   );
 }
 

@@ -4,6 +4,7 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import type { VehicleModel } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
+import { trimField } from "./trim-field";
 
 export async function getVehicleModels(
   orgId: string,
@@ -128,8 +129,6 @@ export async function updateVehicleModel(
   const supabase = await createClient();
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
-  const trim = (v: unknown) => (v as string).trim() || null;
-
   const fieldMap: FieldMap<typeof params> = {
     columns: {
       make: "make",
@@ -143,12 +142,12 @@ export async function updateVehicleModel(
       is_active: "is_active",
     },
     transforms: {
-      make: trim,
-      model: trim,
-      generation: trim,
-      engine: trim,
-      body_type: trim,
-      class: trim,
+      make: trimField,
+      model: trimField,
+      generation: trimField,
+      engine: trimField,
+      body_type: trimField,
+      class: trimField,
     },
   };
 

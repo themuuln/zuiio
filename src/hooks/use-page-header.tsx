@@ -7,17 +7,54 @@ export interface PageTab {
   label: string;
 }
 
-interface PageHeaderState {
-  tabs: PageTab[];
-  activeTab: string;
-  actions: ReactNode;
-}
+// ─── Sheet / Detail ID Registry ───────────────────────────────
+
+const SHEET_NAMES = [
+  "newCustomer",
+  "newVehicle",
+  "newExpense",
+  "newWorkOrder",
+  "newSupplier",
+  "newPO",
+  "newAppointment",
+  "newPartsCar",
+] as const;
+
+const DETAIL_NAMES = [
+  "supplier",
+  "expense",
+  "po",
+  "vehicle",
+  "customer",
+  "partsCar",
+] as const;
+
+type SheetName = (typeof SHEET_NAMES)[number];
+type DetailName = (typeof DETAIL_NAMES)[number];
+
+const INITIAL_SHEETS = Object.fromEntries(
+  SHEET_NAMES.map((name) => [name, false]),
+) as Record<SheetName, boolean>;
+
+const INITIAL_DETAILS = Object.fromEntries(
+  DETAIL_NAMES.map((name) => [name, null]),
+) as Record<DetailName, string | null>;
+
+// ─── Context ──────────────────────────────────────────────────
 
 interface PageHeaderContextValue {
   state: PageHeaderState;
   setTabs: (tabs: PageTab[]) => void;
   setActiveTab: (tab: string) => void;
   setActions: (actions: ReactNode) => void;
+  // Sheet controls
+  openSheet: (name: SheetName) => void;
+  closeSheet: (name: SheetName) => void;
+  toggleSheet: (name: SheetName) => void;
+  // Detail ID controls
+  setDetailId: (name: DetailName, id: string | null) => void;
+  clearDetailId: (name: DetailName) => void;
+  // Legacy getters (for backward compat — new code should use openSheet/closeSheet)
   isNewCustomerDialogOpen: boolean;
   setNewCustomerDialogOpen: (open: boolean) => void;
   isNewVehicleDialogOpen: boolean;
@@ -48,78 +85,98 @@ interface PageHeaderContextValue {
   setDetailPartsCarId: (id: string | null) => void;
 }
 
+interface PageHeaderState {
+  tabs: PageTab[];
+  activeTab: string;
+  actions: ReactNode;
+  sheets: Record<SheetName, boolean>;
+  detailIds: Record<DetailName, string | null>;
+}
+
 const PageHeaderContext = createContext<PageHeaderContextValue | null>(null);
 
-export function PageHeaderProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<PageHeaderState>({
-    tabs: [],
-    activeTab: "",
-    actions: null,
-  });
-  const [isNewCustomerDialogOpen, setNewCustomerDialogOpen] = useState(false);
-  const [isNewVehicleDialogOpen, setNewVehicleDialogOpen] = useState(false);
-  const [isNewExpenseSheetOpen, setNewExpenseSheetOpen] = useState(false);
-  const [isNewWorkOrderSheetOpen, setNewWorkOrderSheetOpen] = useState(false);
-  const [isNewSupplierSheetOpen, setNewSupplierSheetOpen] = useState(false);
-  const [isNewPOSheetOpen, setNewPOSheetOpen] = useState(false);
-  const [isNewAppointmentSheetOpen, setNewAppointmentSheetOpen] =
-    useState(false);
-  const [isNewPartsCarSheetOpen, setNewPartsCarSheetOpen] = useState(false);
-  const [detailSupplierId, setDetailSupplierId] = useState<string | null>(null);
-  const [detailExpenseId, setDetailExpenseId] = useState<string | null>(null);
-  const [detailPOId, setDetailPOId] = useState<string | null>(null);
-  const [detailVehicleId, setDetailVehicleId] = useState<string | null>(null);
-  const [detailCustomerId, setDetailCustomerId] = useState<string | null>(null);
-  const [detailPartsCarId, setDetailPartsCarId] = useState<string | null>(null);
+// ─── Provider ─────────────────────────────────────────────────
 
-  const setTabs = (tabs: PageTab[]) =>
-    setState((prev) => ({ ...prev, tabs, activeTab: tabs[0]?.value ?? "" }));
-  const setActiveTab = (tab: string) =>
-    setState((prev) => ({ ...prev, activeTab: tab }));
-  const setActions = (actions: ReactNode) =>
-    setState((prev) => ({ ...prev, actions }));
+export function PageHeaderProvider({ children }: { children: ReactNode }) {
+  const [tabs, setTabs] = useState<PageTab[]>([]);
+  const [activeTab, setActiveTab] = useState("");
+  const [actions, setActions] = useState<ReactNode>(null);
+  const [sheets, setSheets] =
+    useState<Record<SheetName, boolean>>(INITIAL_SHEETS);
+  const [detailIds, setDetailIds] =
+    useState<Record<DetailName, string | null>>(INITIAL_DETAILS);
+
+  const openSheet = (name: SheetName) =>
+    setSheets((prev) => ({ ...prev, [name]: true }));
+  const closeSheet = (name: SheetName) =>
+    setSheets((prev) => ({ ...prev, [name]: false }));
+  const toggleSheet = (name: SheetName) =>
+    setSheets((prev) => ({ ...prev, [name]: !prev[name] }));
+
+  const setDetailId = (name: DetailName, id: string | null) =>
+    setDetailIds((prev) => ({ ...prev, [name]: id }));
+  const clearDetailId = (name: DetailName) =>
+    setDetailIds((prev) => ({ ...prev, [name]: null }));
+
+  // Legacy wrapper: convert per-feature setter to generic one
+  const makeSheetSetter = (name: SheetName) => (open: boolean) =>
+    open ? openSheet(name) : closeSheet(name);
+
+  const makeDetailSetter = (name: DetailName) => (id: string | null) =>
+    setDetailId(name, id);
 
   return (
     <PageHeaderContext.Provider
       value={{
-        state,
-        setTabs,
+        state: { tabs, activeTab, actions, sheets, detailIds },
+        setTabs: (newTabs) => {
+          setTabs(newTabs);
+          setActiveTab(newTabs[0]?.value ?? "");
+        },
         setActiveTab,
         setActions,
-        isNewCustomerDialogOpen,
-        setNewCustomerDialogOpen,
-        isNewVehicleDialogOpen,
-        setNewVehicleDialogOpen,
-        isNewExpenseSheetOpen,
-        setNewExpenseSheetOpen,
-        isNewWorkOrderSheetOpen,
-        setNewWorkOrderSheetOpen,
-        isNewSupplierSheetOpen,
-        setNewSupplierSheetOpen,
-        isNewPOSheetOpen,
-        setNewPOSheetOpen,
-        isNewAppointmentSheetOpen,
-        setNewAppointmentSheetOpen,
-        isNewPartsCarSheetOpen,
-        setNewPartsCarSheetOpen,
-        detailSupplierId,
-        setDetailSupplierId,
-        detailExpenseId,
-        setDetailExpenseId,
-        detailPOId,
-        setDetailPOId,
-        detailVehicleId,
-        setDetailVehicleId,
-        detailCustomerId,
-        setDetailCustomerId,
-        detailPartsCarId,
-        setDetailPartsCarId,
+        openSheet,
+        closeSheet,
+        toggleSheet,
+        setDetailId,
+        clearDetailId,
+        // Legacy getters/setters
+        isNewCustomerDialogOpen: sheets["newCustomer"],
+        setNewCustomerDialogOpen: makeSheetSetter("newCustomer"),
+        isNewVehicleDialogOpen: sheets["newVehicle"],
+        setNewVehicleDialogOpen: makeSheetSetter("newVehicle"),
+        isNewExpenseSheetOpen: sheets["newExpense"],
+        setNewExpenseSheetOpen: makeSheetSetter("newExpense"),
+        isNewWorkOrderSheetOpen: sheets["newWorkOrder"],
+        setNewWorkOrderSheetOpen: makeSheetSetter("newWorkOrder"),
+        isNewSupplierSheetOpen: sheets["newSupplier"],
+        setNewSupplierSheetOpen: makeSheetSetter("newSupplier"),
+        isNewPOSheetOpen: sheets["newPO"],
+        setNewPOSheetOpen: makeSheetSetter("newPO"),
+        isNewAppointmentSheetOpen: sheets["newAppointment"],
+        setNewAppointmentSheetOpen: makeSheetSetter("newAppointment"),
+        isNewPartsCarSheetOpen: sheets["newPartsCar"],
+        setNewPartsCarSheetOpen: makeSheetSetter("newPartsCar"),
+        detailSupplierId: detailIds["supplier"],
+        setDetailSupplierId: makeDetailSetter("supplier"),
+        detailExpenseId: detailIds["expense"],
+        setDetailExpenseId: makeDetailSetter("expense"),
+        detailPOId: detailIds["po"],
+        setDetailPOId: makeDetailSetter("po"),
+        detailVehicleId: detailIds["vehicle"],
+        setDetailVehicleId: makeDetailSetter("vehicle"),
+        detailCustomerId: detailIds["customer"],
+        setDetailCustomerId: makeDetailSetter("customer"),
+        detailPartsCarId: detailIds["partsCar"],
+        setDetailPartsCarId: makeDetailSetter("partsCar"),
       }}
     >
       {children}
     </PageHeaderContext.Provider>
   );
 }
+
+// ─── Hook ─────────────────────────────────────────────────────
 
 export function usePageHeader() {
   const ctx = useContext(PageHeaderContext);

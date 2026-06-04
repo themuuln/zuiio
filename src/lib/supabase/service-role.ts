@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/database.types";
 import { env } from "./env";
 
 /**
@@ -17,11 +18,15 @@ export async function createServiceRoleClient() {
     throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
   }
 
-  return createClient(env("NEXT_PUBLIC_SUPABASE_URL"), serviceRoleKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
+  return createClient<Database>(
+    env("NEXT_PUBLIC_SUPABASE_URL"),
+    serviceRoleKey,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
     },
-  });
+  );
 }

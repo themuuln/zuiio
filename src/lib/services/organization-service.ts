@@ -8,6 +8,7 @@ import type {
   UpdateOrganizationParams,
 } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
+import { trimField } from "./trim-field";
 
 export async function createOrganization(
   params: CreateOrganizationParams,
@@ -176,8 +177,6 @@ export async function updateOrganization(
 ): Promise<Organization> {
   const supabase = await createClient();
 
-  const trim = (v: unknown) => (v as string).trim() || null;
-
   const fieldMap: FieldMap<UpdateOrganizationParams> = {
     columns: {
       name: "name",
@@ -186,7 +185,7 @@ export async function updateOrganization(
       sharingEnabled: "sharing_enabled",
     },
     transforms: {
-      name: trim,
+      name: trimField,
     },
   };
 

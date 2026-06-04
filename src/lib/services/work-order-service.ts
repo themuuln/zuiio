@@ -205,6 +205,11 @@ export async function createWorkOrder(
   const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
     strict: false,
   });
+  if (!resolvedBranchId) {
+    throw new ValidationError(
+      "No branch found for this work order. Provide a branchId or ensure a main branch exists.",
+    );
+  }
 
   const { data: wo, error: woError } = await supabase
     .from("work_orders")

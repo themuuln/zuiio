@@ -25,14 +25,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { DetailSheet } from "@/components/ui/detail-sheet";
+import { SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
@@ -238,242 +232,240 @@ export function ServiceModelPricesSheet({
 
   return (
     <>
-      <Sheet open={open} onOpenChange={handleCloseAttempt}>
-        <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col">
-          <SheetHeader>
-            <div className="flex items-center justify-between">
-              <SheetTitle>{t("modelSpecificPrices")}</SheetTitle>
-              <Badge variant="secondary" className="shrink-0">
-                {customCount} / {totalModels} custom
-              </Badge>
-            </div>
-            <SheetDescription>
-              Set different prices per vehicle model for{" "}
-              <span className="font-medium">{serviceName}</span>.
-              <br />
-              Default price:{" "}
-              <span className="font-medium tabular-nums">
-                {formatMNT(defaultPrice)}
-              </span>
-              . Leave a field empty to use the default price.
-            </SheetDescription>
-          </SheetHeader>
-
-          {/* ── Search + Bulk Actions ── */}
-          {!fetchError && (
-            <div className="flex flex-col gap-2 py-3 border-b border-border">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  ref={searchInputRef}
-                  placeholder="Search makes or models..."
-                  value={modelSearch}
-                  onChange={(e) => setModelSearch(e.target.value)}
-                  className="pl-9 pr-8 h-9"
-                />
-                {modelSearch && (
-                  <button
-                    type="button"
-                    onClick={() => setModelSearch("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="size-4" />
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="xs"
-                  className="h-8 text-xs"
-                  onClick={() => setAllPrices(defaultPrice)}
-                  title="Set all models to the default price"
-                >
-                  Set all to default
-                </Button>
-                <Button
-                  variant="outline"
-                  size="xs"
-                  className="h-8 text-xs"
-                  onClick={() => setAllPrices(0)}
-                  title="Set all models to 0 (free)"
-                >
-                  Set all to 0
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  className="h-8 text-xs text-destructive"
-                  onClick={resetAll}
-                  title="Clear all custom prices"
-                >
-                  <RotateCcw className="size-3 mr-1" />
-                  Reset all
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* ── Model List ── */}
-          <div className="flex-1 overflow-y-auto py-4 space-y-4">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="size-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : fetchError ? (
-              <div className="flex flex-col items-center gap-2 py-12 text-center">
-                <AlertTriangle className="size-8 text-destructive/60" />
-                <Typography.Text className="text-destructive">
-                  Failed to load data
-                </Typography.Text>
-                <Typography.Muted className="text-sm text-muted-foreground max-w-sm">
-                  {fetchError instanceof Error
-                    ? fetchError.message
-                    : "An unexpected error occurred"}
-                </Typography.Muted>
-              </div>
-            ) : modelsByMake.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-12 text-center">
-                {modelSearch ? (
-                  <>
-                    <Search className="size-8 text-muted-foreground/40" />
-                    <Typography.Muted className="text-muted-foreground">
-                      No models match "{modelSearch}"
-                    </Typography.Muted>
-                  </>
-                ) : (
-                  <>
-                    <AlertTriangle className="size-8 text-muted-foreground/40" />
-                    <Typography.Muted className="text-muted-foreground">
-                      No vehicle models found.
-                    </Typography.Muted>
-                    <Typography.Muted className="text-sm text-muted-foreground">
-                      Add vehicle models in Settings → Vehicle Models first.
-                    </Typography.Muted>
-                  </>
-                )}
-              </div>
-            ) : (
-              modelsByMake.map(({ make, models }) => (
-                <div key={make}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <Typography.Text className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                      {make}
-                    </Typography.Text>
-                    <span className="text-xs text-muted-foreground">
-                      {models.length}
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    {models.map((vm) => {
-                      const value = localPrices[vm.id] ?? "";
-                      const existingPrice = existingPriceMap[vm.id];
-                      const hasExisting = existingPrice != null;
-                      const isChanged = changedIds.has(vm.id);
-
-                      return (
-                        <div
-                          key={vm.id}
-                          className={`flex items-center gap-3 rounded-lg border p-2.5 transition-colors ${
-                            isChanged
-                              ? "border-primary/60 bg-primary/5"
-                              : hasExisting
-                                ? "border-border bg-muted/30"
-                                : "border-border"
-                          }`}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <Typography.Text className="text-sm font-medium truncate">
-                              {vm.model}
-                            </Typography.Text>
-                            <div className="flex items-center gap-2">
-                              {isChanged ? (
-                                <Typography.Muted className="text-xs text-primary">
-                                  Will save:{" "}
-                                  {value ? formatMNT(Number(value)) : "Default"}
-                                </Typography.Muted>
-                              ) : hasExisting ? (
-                                <Typography.Muted className="text-xs text-muted-foreground">
-                                  Custom: {formatMNT(existingPrice!)}
-                                </Typography.Muted>
-                              ) : (
-                                <Typography.Muted className="text-xs text-muted-foreground">
-                                  Default: {formatMNT(defaultPrice)}
-                                </Typography.Muted>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <Input
-                              type="number"
-                              min="0"
-                              placeholder={String(defaultPrice)}
-                              value={value}
-                              onChange={(e) =>
-                                handlePriceChange(vm.id, e.target.value)
-                              }
-                              className={`h-8 w-24 text-right tabular-nums ${
-                                isChanged ? "border-primary" : ""
-                              }`}
-                            />
-                            {hasExisting && !isChanged && (
-                              <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                onClick={() => {
-                                  setLocalPrices((prev) => ({
-                                    ...prev,
-                                    [vm.id]: "",
-                                  }));
-                                  setChangedIds((prev) =>
-                                    new Set(prev).add(vm.id),
-                                  );
-                                }}
-                                aria-label={t("resetToDefault")}
-                                title={t("resetToDefaultTitle")}
-                              >
-                                <Trash2 className="size-3.5 text-destructive" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))
-            )}
+      <DetailSheet open={open} onOpenChange={handleCloseAttempt} size="lg">
+        <DetailSheet.Header bordered={false}>
+          <div className="flex items-center justify-between">
+            <SheetTitle>{t("modelSpecificPrices")}</SheetTitle>
+            <Badge variant="secondary" className="shrink-0">
+              {customCount} / {totalModels} custom
+            </Badge>
           </div>
+          <SheetDescription>
+            Set different prices per vehicle model for{" "}
+            <span className="font-medium">{serviceName}</span>.
+            <br />
+            Default price:{" "}
+            <span className="font-medium tabular-nums">
+              {formatMNT(defaultPrice)}
+            </span>
+            . Leave a field empty to use the default price.
+          </SheetDescription>
+        </DetailSheet.Header>
 
-          {/* ── Footer ── */}
-          <SheetFooter className="flex-row gap-2 sm:gap-2 pt-4 border-t border-border">
-            <Button
-              variant="outline"
-              className="flex-1 h-11"
-              onClick={handleCloseAttempt}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="flex-1 h-11"
-              onClick={handleSave}
-              disabled={!hasChanges || upsertMutation.isPending}
-            >
-              {upsertMutation.isPending ? (
+        {/* ── Search + Bulk Actions ── */}
+        {!fetchError && (
+          <div className="flex flex-col gap-2 px-4 py-3 border-b border-border">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                ref={searchInputRef}
+                placeholder="Search makes or models..."
+                value={modelSearch}
+                onChange={(e) => setModelSearch(e.target.value)}
+                className="pl-9 pr-8 h-9"
+              />
+              {modelSearch && (
+                <button
+                  type="button"
+                  onClick={() => setModelSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="xs"
+                className="h-8 text-xs"
+                onClick={() => setAllPrices(defaultPrice)}
+                title="Set all models to the default price"
+              >
+                Set all to default
+              </Button>
+              <Button
+                variant="outline"
+                size="xs"
+                className="h-8 text-xs"
+                onClick={() => setAllPrices(0)}
+                title="Set all models to 0 (free)"
+              >
+                Set all to 0
+              </Button>
+              <Button
+                variant="ghost"
+                size="xs"
+                className="h-8 text-xs text-destructive"
+                onClick={resetAll}
+                title="Clear all custom prices"
+              >
+                <RotateCcw className="size-3 mr-1" />
+                Reset all
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Model List ── */}
+        <DetailSheet.Body className="space-y-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : fetchError ? (
+            <div className="flex flex-col items-center gap-2 py-12 text-center">
+              <AlertTriangle className="size-8 text-destructive/60" />
+              <Typography.Text className="text-destructive">
+                Failed to load data
+              </Typography.Text>
+              <Typography.Muted className="text-sm text-muted-foreground max-w-sm">
+                {fetchError instanceof Error
+                  ? fetchError.message
+                  : "An unexpected error occurred"}
+              </Typography.Muted>
+            </div>
+          ) : modelsByMake.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-12 text-center">
+              {modelSearch ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Saving...
+                  <Search className="size-8 text-muted-foreground/40" />
+                  <Typography.Muted className="text-muted-foreground">
+                    No models match "{modelSearch}"
+                  </Typography.Muted>
                 </>
               ) : (
                 <>
-                  <Save className="size-4" />
-                  Save {hasChanges ? `(${changedIds.size})` : ""}
+                  <AlertTriangle className="size-8 text-muted-foreground/40" />
+                  <Typography.Muted className="text-muted-foreground">
+                    No vehicle models found.
+                  </Typography.Muted>
+                  <Typography.Muted className="text-sm text-muted-foreground">
+                    Add vehicle models in Settings → Vehicle Models first.
+                  </Typography.Muted>
                 </>
               )}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+            </div>
+          ) : (
+            modelsByMake.map(({ make, models }) => (
+              <div key={make}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <Typography.Text className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    {make}
+                  </Typography.Text>
+                  <span className="text-xs text-muted-foreground">
+                    {models.length}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {models.map((vm) => {
+                    const value = localPrices[vm.id] ?? "";
+                    const existingPrice = existingPriceMap[vm.id];
+                    const hasExisting = existingPrice != null;
+                    const isChanged = changedIds.has(vm.id);
+
+                    return (
+                      <div
+                        key={vm.id}
+                        className={`flex items-center gap-3 rounded-lg border p-2.5 transition-colors ${
+                          isChanged
+                            ? "border-primary/60 bg-primary/5"
+                            : hasExisting
+                              ? "border-border bg-muted/30"
+                              : "border-border"
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <Typography.Text className="text-sm font-medium truncate">
+                            {vm.model}
+                          </Typography.Text>
+                          <div className="flex items-center gap-2">
+                            {isChanged ? (
+                              <Typography.Muted className="text-xs text-primary">
+                                Will save:{" "}
+                                {value ? formatMNT(Number(value)) : "Default"}
+                              </Typography.Muted>
+                            ) : hasExisting ? (
+                              <Typography.Muted className="text-xs text-muted-foreground">
+                                Custom: {formatMNT(existingPrice!)}
+                              </Typography.Muted>
+                            ) : (
+                              <Typography.Muted className="text-xs text-muted-foreground">
+                                Default: {formatMNT(defaultPrice)}
+                              </Typography.Muted>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Input
+                            type="number"
+                            min="0"
+                            placeholder={String(defaultPrice)}
+                            value={value}
+                            onChange={(e) =>
+                              handlePriceChange(vm.id, e.target.value)
+                            }
+                            className={`h-8 w-24 text-right tabular-nums ${
+                              isChanged ? "border-primary" : ""
+                            }`}
+                          />
+                          {hasExisting && !isChanged && (
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              onClick={() => {
+                                setLocalPrices((prev) => ({
+                                  ...prev,
+                                  [vm.id]: "",
+                                }));
+                                setChangedIds((prev) =>
+                                  new Set(prev).add(vm.id),
+                                );
+                              }}
+                              aria-label={t("resetToDefault")}
+                              title={t("resetToDefaultTitle")}
+                            >
+                              <Trash2 className="size-3.5 text-destructive" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          )}
+        </DetailSheet.Body>
+
+        {/* ── Footer ── */}
+        <DetailSheet.Footer className="flex-row gap-2 sm:gap-2">
+          <Button
+            variant="outline"
+            className="flex-1 h-11"
+            onClick={handleCloseAttempt}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="flex-1 h-11"
+            onClick={handleSave}
+            disabled={!hasChanges || upsertMutation.isPending}
+          >
+            {upsertMutation.isPending ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="size-4" />
+                Save {hasChanges ? `(${changedIds.size})` : ""}
+              </>
+            )}
+          </Button>
+        </DetailSheet.Footer>
+      </DetailSheet>
 
       {/* ── Confirm Discard Dialog ── */}
       <AlertDialog

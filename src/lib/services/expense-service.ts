@@ -15,8 +15,7 @@ import type {
   UpdateExpenseParams,
 } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
-
-const trim = (v: unknown) => (v as string).trim() || null;
+import { trimField } from "./trim-field";
 
 const expenseFieldMap: FieldMap<UpdateExpenseParams> = {
   columns: {
@@ -36,10 +35,10 @@ const expenseFieldMap: FieldMap<UpdateExpenseParams> = {
     recurrenceInterval: "recurrence_interval",
   },
   transforms: {
-    vendorName: trim,
-    description: (v) => (v as string).trim(),
-    referenceNumber: trim,
-    notes: trim,
+    vendorName: trimField,
+    description: trimField,
+    referenceNumber: trimField,
+    notes: trimField,
     paymentMethod: (v) => (v as string) || null,
     recurrenceInterval: (v) => (v as string) || null,
   },
@@ -55,8 +54,8 @@ const expenseCategoryFieldMap: FieldMap<UpdateExpenseCategoryParams> = {
     isActive: "is_active",
   },
   transforms: {
-    name: (v) => (v as string).trim(),
-    description: trim,
+    name: trimField,
+    description: trimField,
   },
 };
 

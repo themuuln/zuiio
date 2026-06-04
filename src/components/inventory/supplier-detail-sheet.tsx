@@ -6,6 +6,7 @@ import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { DetailSheet } from "@/components/ui/detail-sheet";
 import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import {
   Field,
@@ -15,13 +16,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { inputProps } from "@/lib/form-ux";
@@ -136,208 +130,184 @@ export function SupplierDetailSheet({
   const notFound = open && !suppliersLoading && !supplier;
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl p-0 gap-0">
-        <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
-          <DetailSheetHeader
-            icon={Pencil}
-            title={
-              <>
-                <SheetTitle className="text-base">
-                  {t("editSupplier")}
-                </SheetTitle>
-                <SheetDescription className="text-xs text-muted-foreground">
-                  {supplier?.name ?? "..."}
-                </SheetDescription>
-              </>
-            }
-          />
-        </SheetHeader>
+    <DetailSheet open={open} onOpenChange={handleOpenChange} size="2xl">
+      <DetailSheet.Header>
+        <DetailSheetHeader
+          icon={Pencil}
+          title={
+            <>
+              <DetailSheet.Title>{t("editSupplier")}</DetailSheet.Title>
+              <DetailSheet.Description>
+                {supplier?.name ?? "..."}
+              </DetailSheet.Description>
+            </>
+          }
+        />
+      </DetailSheet.Header>
 
-        <form
-          id="supplier-detail-sheet-form"
-          onSubmit={onSubmit}
-          className="flex-1 overflow-y-auto min-h-0"
-        >
-          <div className="p-4 flex flex-col gap-4">
-            {isLoading ? (
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-11 w-full" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-11 w-full" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Skeleton className="h-4 w-14" />
-                    <Skeleton className="h-11 w-full" />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Skeleton className="h-4 w-12" />
-                  <Skeleton className="h-11 w-full" />
-                </div>
+      <DetailSheet.Body>
+        {isLoading ? (
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-11 w-full" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-11 w-full" />
               </div>
-            ) : notFound ? (
-              <div className="flex flex-col items-center gap-4 py-12">
-                <Typography.Muted className="text-muted-foreground">
-                  {t("supplierNotFound")}
-                </Typography.Muted>
-                <Button
-                  variant="outline"
-                  onClick={() => handleOpenChange(false)}
-                >
-                  {t("cancel")}
-                </Button>
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-4 w-14" />
+                <Skeleton className="h-11 w-full" />
               </div>
-            ) : (
-              <FieldGroup>
-                {/* Name — required */}
-                <Field data-invalid={!!form.formState.errors.name}>
-                  <FieldLabel>
-                    {t("name")} <span className="text-destructive">*</span>
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      id="sd-name"
-                      placeholder={t("namePlaceholder")}
-                      aria-invalid={!!form.formState.errors.name}
-                      {...form.register("name")}
-                    />
-                    {form.formState.errors.name && (
-                      <FieldError>
-                        {form.formState.errors.name.message}
-                      </FieldError>
-                    )}
-                  </FieldContent>
-                </Field>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Contact Person — optional */}
-                  <Field>
-                    <FieldLabel>{t("contactPerson")}</FieldLabel>
-                    <FieldContent>
-                      <Input
-                        id="sd-contact"
-                        placeholder={t("contactPersonPlaceholder")}
-                        {...form.register("contactPerson")}
-                      />
-                    </FieldContent>
-                  </Field>
-
-                  {/* Phone — optional */}
-                  <Field>
-                    <FieldLabel>{t("phone")}</FieldLabel>
-                    <FieldContent>
-                      <Input
-                        id="sd-phone"
-                        type="tel"
-                        placeholder={t("phonePlaceholder")}
-                        {...inputProps("phone")}
-                        {...form.register("phone")}
-                      />
-                    </FieldContent>
-                  </Field>
-                </div>
-
-                {/* Email — optional */}
-                <Field>
-                  <FieldLabel>{t("email")}</FieldLabel>
-                  <FieldContent>
-                    <Input
-                      id="sd-email"
-                      type="email"
-                      placeholder={t("emailPlaceholder")}
-                      {...form.register("email")}
-                    />
-                  </FieldContent>
-                </Field>
-
-                {/* Address — optional */}
-                <Field>
-                  <FieldLabel>{t("address")}</FieldLabel>
-                  <FieldContent>
-                    <Input
-                      id="sd-address"
-                      placeholder={t("addressPlaceholder")}
-                      {...form.register("address")}
-                    />
-                  </FieldContent>
-                </Field>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Tax ID — optional */}
-                  <Field>
-                    <FieldLabel>Tax ID</FieldLabel>
-                    <FieldContent>
-                      <Input
-                        id="sd-tax-id"
-                        placeholder={t("taxIdPlaceholder")}
-                        {...inputProps("taxId")}
-                        {...form.register("taxId")}
-                      />
-                    </FieldContent>
-                  </Field>
-
-                  {/* Payment Terms — optional */}
-                  <Field>
-                    <FieldLabel>Payment Terms</FieldLabel>
-                    <FieldContent>
-                      <Input
-                        id="sd-payment-terms"
-                        placeholder={t("paymentTermsPlaceholder")}
-                        {...form.register("paymentTerms")}
-                      />
-                    </FieldContent>
-                  </Field>
-                </div>
-
-                {/* Notes — optional */}
-                <Field>
-                  <FieldLabel>{t("notes")}</FieldLabel>
-                  <FieldContent>
-                    <Input
-                      id="sd-notes"
-                      placeholder={t("notesPlaceholder")}
-                      {...form.register("notes")}
-                    />
-                  </FieldContent>
-                </Field>
-              </FieldGroup>
-            )}
+            </div>
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-11 w-full" />
           </div>
-        </form>
-
-        {/* Footer */}
-        <div className="shrink-0 border-t border-border p-4">
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1"
-              onClick={() => handleOpenChange(false)}
-            >
+        ) : notFound ? (
+          <div className="flex flex-col items-center gap-4 py-12">
+            <Typography.Muted className="text-muted-foreground">
+              {t("supplierNotFound")}
+            </Typography.Muted>
+            <Button variant="outline" onClick={() => handleOpenChange(false)}>
               {t("cancel")}
             </Button>
-            <Button
-              type="submit"
-              form="supplier-detail-sheet-form"
-              className="flex-1 gap-2"
-              disabled={updateSupplier.isPending || isLoading || notFound}
-            >
-              {updateSupplier.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Pencil className="size-4" />
-              )}
-              {updateSupplier.isPending ? t("saving") : t("save")}
-            </Button>
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        ) : (
+          <form id="supplier-detail-sheet-form" onSubmit={onSubmit}>
+            <FieldGroup>
+              <Field data-invalid={!!form.formState.errors.name}>
+                <FieldLabel>
+                  {t("name")} <span className="text-destructive">*</span>
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="sd-name"
+                    placeholder={t("namePlaceholder")}
+                    aria-invalid={!!form.formState.errors.name}
+                    {...form.register("name")}
+                  />
+                  {form.formState.errors.name && (
+                    <FieldError>
+                      {form.formState.errors.name.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel>{t("contactPerson")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="sd-contact"
+                      placeholder={t("contactPersonPlaceholder")}
+                      {...form.register("contactPerson")}
+                    />
+                  </FieldContent>
+                </Field>
+
+                <Field>
+                  <FieldLabel>{t("phone")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="sd-phone"
+                      type="tel"
+                      placeholder={t("phonePlaceholder")}
+                      {...inputProps("phone")}
+                      {...form.register("phone")}
+                    />
+                  </FieldContent>
+                </Field>
+              </div>
+
+              <Field>
+                <FieldLabel>{t("email")}</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="sd-email"
+                    type="email"
+                    placeholder={t("emailPlaceholder")}
+                    {...form.register("email")}
+                  />
+                </FieldContent>
+              </Field>
+
+              <Field>
+                <FieldLabel>{t("address")}</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="sd-address"
+                    placeholder={t("addressPlaceholder")}
+                    {...form.register("address")}
+                  />
+                </FieldContent>
+              </Field>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel>Tax ID</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="sd-tax-id"
+                      placeholder={t("taxIdPlaceholder")}
+                      {...inputProps("taxId")}
+                      {...form.register("taxId")}
+                    />
+                  </FieldContent>
+                </Field>
+
+                <Field>
+                  <FieldLabel>Payment Terms</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="sd-payment-terms"
+                      placeholder={t("paymentTermsPlaceholder")}
+                      {...form.register("paymentTerms")}
+                    />
+                  </FieldContent>
+                </Field>
+              </div>
+
+              <Field>
+                <FieldLabel>{t("notes")}</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="sd-notes"
+                    placeholder={t("notesPlaceholder")}
+                    {...form.register("notes")}
+                  />
+                </FieldContent>
+              </Field>
+            </FieldGroup>
+          </form>
+        )}
+      </DetailSheet.Body>
+
+      {!isLoading && !notFound && (
+        <DetailSheet.Footer>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            onClick={() => handleOpenChange(false)}
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            type="submit"
+            form="supplier-detail-sheet-form"
+            className="flex-1 gap-2"
+            disabled={updateSupplier.isPending}
+          >
+            {updateSupplier.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Pencil className="size-4" />
+            )}
+            {updateSupplier.isPending ? t("saving") : t("save")}
+          </Button>
+        </DetailSheet.Footer>
+      )}
+    </DetailSheet>
   );
 }

@@ -327,24 +327,6 @@ export function WorkOrderDetailDrawer({
           </div>
         )}
 
-        {/* Post-service form overlay inside drawer */}
-        {showPostServiceForm && wo && (
-          <PostServiceForm
-            woId={workOrderId ?? ""}
-            vehicleId={(wo.vehicle_id as string) ?? ""}
-            vehiclePlate={
-              (wo.vehicle as { plate_number?: string })?.plate_number ?? ""
-            }
-            currentOdometer={
-              (wo.vehicle as { odometer?: number | null })?.odometer ?? null
-            }
-            services={postFormServices}
-            newStatus="Ready for Pickup"
-            onConfirm={handlePostServiceFormSubmit}
-            onCancel={handleCancelPostService}
-          />
-        )}
-
         <UnsavedWarning
           show={showUnsavedWarning}
           onDiscard={handleDiscard}
@@ -354,6 +336,24 @@ export function WorkOrderDetailDrawer({
 
         <DrawerCelebration show={showCelebration} message="Completed!" />
       </DrawerContent>
+
+      {/* Post-service form overlay — outside DrawerContent to avoid Vaul + Base UI portal nesting */}
+      {showPostServiceForm && wo && (
+        <PostServiceForm
+          woId={workOrderId ?? ""}
+          vehicleId={(wo.vehicle_id as string) ?? ""}
+          vehiclePlate={
+            (wo.vehicle as { plate_number?: string })?.plate_number ?? ""
+          }
+          currentOdometer={
+            (wo.vehicle as { odometer?: number | null })?.odometer ?? null
+          }
+          services={postFormServices}
+          newStatus="Ready for Pickup"
+          onConfirm={handlePostServiceFormSubmit}
+          onCancel={handleCancelPostService}
+        />
+      )}
 
       {/* Pickup complete form overlay — outside DrawerContent to avoid Vaul + Base UI portal nesting */}
       {showPickupForm && wo && (

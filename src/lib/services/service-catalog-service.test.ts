@@ -20,7 +20,7 @@ vi.mock("@/lib/cache/with-cache", () => ({
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 
 describe("Service Catalog Service", () => {
-  const mockClient = createMockSupabaseClient();
+  const mockClient: any = createMockSupabaseClient();
 
   const mockService = {
     id: "svc-1",
@@ -80,7 +80,7 @@ describe("Service Catalog Service", () => {
         .from("service_catalog")
         .limit.mockResolvedValueOnce({ data: services, error: null });
 
-      const result = await getServices("org-1");
+      const result = await getServices(mockClient, "org-1");
 
       expect(result).toEqual(services);
       expect(mockClient.from).toHaveBeenCalledWith("service_catalog");
@@ -92,7 +92,7 @@ describe("Service Catalog Service", () => {
         .from("service_catalog")
         .limit.mockResolvedValueOnce({ data: services, error: null });
 
-      const result = await getServices("org-1", "Maintenance");
+      const result = await getServices(mockClient, "org-1", "Maintenance");
 
       expect(result).toEqual(services);
       const qb = mockClient.from("unused");
@@ -104,7 +104,7 @@ describe("Service Catalog Service", () => {
         .from("service_catalog")
         .limit.mockResolvedValueOnce({ data: [], error: null });
 
-      const result = await getServices("org-1");
+      const result = await getServices(mockClient, "org-1");
 
       expect(result).toEqual([]);
     });
@@ -118,7 +118,7 @@ describe("Service Catalog Service", () => {
         .from("service_catalog")
         .single.mockResolvedValueOnce({ data: mockService, error: null });
 
-      const result = await getService("svc-1");
+      const result = await getService(mockClient, "svc-1");
 
       expect(result).toEqual(mockService);
       expect(mockClient.from).toHaveBeenCalledWith("service_catalog");
@@ -130,8 +130,10 @@ describe("Service Catalog Service", () => {
         error: { code: "PGRST116", message: "No rows found" },
       });
 
-      await expect(getService("nonexistent")).rejects.toThrow(NotFoundError);
-      await expect(getService("nonexistent")).rejects.toThrow(
+      await expect(getService(mockClient, "nonexistent")).rejects.toThrow(
+        NotFoundError,
+      );
+      await expect(getService(mockClient, "nonexistent")).rejects.toThrow(
         "Service not found",
       );
     });
@@ -145,7 +147,7 @@ describe("Service Catalog Service", () => {
         .from("service_catalog")
         .single.mockResolvedValueOnce({ data: mockService, error: null });
 
-      const result = await createService("org-1", {
+      const result = await createService(mockClient, "org-1", {
         name: "Oil Change",
         category: "Maintenance",
         description: "Full oil change service",
@@ -161,7 +163,7 @@ describe("Service Catalog Service", () => {
         .from("service_catalog")
         .single.mockResolvedValueOnce({ data: mockService, error: null });
 
-      await createService("org-1", {
+      await createService(mockClient, "org-1", {
         name: "Oil Change",
         default_price: 49.99,
       });
@@ -173,15 +175,18 @@ describe("Service Catalog Service", () => {
 
     it("rejects when name is empty (ValidationError)", async () => {
       await expect(
-        createService("org-1", { name: "", default_price: 49.99 }),
+        createService(mockClient, "org-1", { name: "", default_price: 49.99 }),
       ).rejects.toThrow(ValidationError);
 
       await expect(
-        createService("org-1", { name: "", default_price: 49.99 }),
+        createService(mockClient, "org-1", { name: "", default_price: 49.99 }),
       ).rejects.toThrow("Service name is required");
 
       await expect(
-        createService("org-1", { name: "   ", default_price: 49.99 }),
+        createService(mockClient, "org-1", {
+          name: "   ",
+          default_price: 49.99,
+        }),
       ).rejects.toThrow("Service name is required");
     });
 
@@ -190,7 +195,7 @@ describe("Service Catalog Service", () => {
         .from("service_catalog")
         .single.mockResolvedValueOnce({ data: mockService, error: null });
 
-      await createService("org-1", {
+      await createService(mockClient, "org-1", {
         name: "Oil Change",
         default_price: 49.99,
       });
@@ -217,7 +222,7 @@ describe("Service Catalog Service", () => {
         .from("service_catalog")
         .single.mockResolvedValueOnce({ data: updated, error: null });
 
-      const result = await updateService("svc-1", "org-1", {
+      const result = await updateService(mockClient, "svc-1", "org-1", {
         name: "Premium Oil Change",
         description: "Premium full oil change",
         default_price: 79.99,
@@ -234,10 +239,10 @@ describe("Service Catalog Service", () => {
       });
 
       await expect(
-        updateService("nonexistent", "org-1", { name: "Updated" }),
+        updateService(mockClient, "nonexistent", "org-1", { name: "Updated" }),
       ).rejects.toThrow(NotFoundError);
       await expect(
-        updateService("nonexistent", "org-1", { name: "Updated" }),
+        updateService(mockClient, "nonexistent", "org-1", { name: "Updated" }),
       ).rejects.toThrow("Service not found");
     });
 
@@ -246,7 +251,9 @@ describe("Service Catalog Service", () => {
         .from("service_catalog")
         .single.mockResolvedValueOnce({ data: mockService, error: null });
 
-      await updateService("svc-1", "org-1", { name: "Updated Name" });
+      await updateService(mockClient, "svc-1", "org-1", {
+        name: "Updated Name",
+      });
 
       expect(revalidateTag).toHaveBeenCalledWith(
         expect.stringContaining("service-catalog:org-1"),
@@ -263,7 +270,7 @@ describe("Service Catalog Service", () => {
         .from("service_catalog")
         .is.mockResolvedValueOnce({ error: null });
 
-      await deleteService("svc-1", "org-1");
+      await deleteService(mockClient, "svc-1", "org-1");
 
       expect(mockClient.from("service_catalog").update).toHaveBeenCalledWith(
         expect.objectContaining({ deleted_at: expect.any(String) }),
@@ -275,12 +282,12 @@ describe("Service Catalog Service", () => {
         error: { message: "Not found" },
       });
 
-      await expect(deleteService("nonexistent", "org-1")).rejects.toThrow(
-        NotFoundError,
-      );
-      await expect(deleteService("nonexistent", "org-1")).rejects.toThrow(
-        "Service not found or already deleted",
-      );
+      await expect(
+        deleteService(mockClient, "nonexistent", "org-1"),
+      ).rejects.toThrow(NotFoundError);
+      await expect(
+        deleteService(mockClient, "nonexistent", "org-1"),
+      ).rejects.toThrow("Service not found or already deleted");
     });
 
     it("revalidates cache", async () => {
@@ -288,7 +295,7 @@ describe("Service Catalog Service", () => {
         .from("service_catalog")
         .is.mockResolvedValueOnce({ error: null });
 
-      await deleteService("svc-1", "org-1");
+      await deleteService(mockClient, "svc-1", "org-1");
 
       expect(revalidateTag).toHaveBeenCalledWith(
         expect.stringContaining("service-catalog:org-1"),
@@ -308,7 +315,7 @@ describe("Service Catalog Service", () => {
           error: null,
         });
 
-      const result = await getLastSoldPrice("org-1", "svc-1");
+      const result = await getLastSoldPrice(mockClient, "org-1", "svc-1");
 
       expect(result).toEqual(mockPriceHistory);
     });
@@ -324,6 +331,7 @@ describe("Service Catalog Service", () => {
         .maybeSingle.mockResolvedValueOnce({ data: filtered, error: null });
 
       const result = await getLastSoldPrice(
+        mockClient,
         "org-1",
         "svc-1",
         "Toyota",
@@ -341,7 +349,7 @@ describe("Service Catalog Service", () => {
         .from("service_price_history")
         .maybeSingle.mockResolvedValueOnce({ data: null, error: null });
 
-      const result = await getLastSoldPrice("org-1", "svc-1");
+      const result = await getLastSoldPrice(mockClient, "org-1", "svc-1");
 
       expect(result).toBeNull();
     });
@@ -354,7 +362,7 @@ describe("Service Catalog Service", () => {
           error: null,
         });
 
-      await getLastSoldPrice("org-1", "svc-1");
+      await getLastSoldPrice(mockClient, "org-1", "svc-1");
 
       const qb = mockClient.from("unused");
       expect(qb.order).toHaveBeenCalledWith("created_at", {
@@ -376,7 +384,7 @@ describe("Service Catalog Service", () => {
         .from("service_price_history")
         .limit.mockResolvedValueOnce({ data: history, error: null });
 
-      const result = await getServicePriceHistory("org-1", "svc-1");
+      const result = await getServicePriceHistory(mockClient, "org-1", "svc-1");
 
       expect(result).toEqual(history);
     });
@@ -386,7 +394,7 @@ describe("Service Catalog Service", () => {
         .from("service_price_history")
         .limit.mockResolvedValueOnce({ data: [mockPriceHistory], error: null });
 
-      await getServicePriceHistory("org-1", "svc-1");
+      await getServicePriceHistory(mockClient, "org-1", "svc-1");
 
       const qb = mockClient.from("unused");
       expect(qb.limit).toHaveBeenCalledWith(50);
@@ -397,7 +405,7 @@ describe("Service Catalog Service", () => {
         .from("service_price_history")
         .limit.mockResolvedValueOnce({ data: [], error: null });
 
-      const result = await getServicePriceHistory("org-1", "svc-1");
+      const result = await getServicePriceHistory(mockClient, "org-1", "svc-1");
 
       expect(result).toEqual([]);
     });

@@ -17,6 +17,7 @@ import type {
   WorkOrder,
 } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
+import { trimField } from "./trim-field";
 
 import { ensureVehicleModel } from "./vehicle-models-service";
 
@@ -304,7 +305,6 @@ export async function updateVehicle(
     plateUpdates.plate_number = normalized || null;
   }
 
-  const trim = (v: unknown) => (v as string).trim() || null;
   const vehicleFieldMap: FieldMap<UpdateVehicleParams> = {
     columns: {
       vin: "vin",
@@ -334,15 +334,15 @@ export async function updateVehicle(
       weight: "weight",
     },
     transforms: {
-      vin: trim,
-      chassisNumber: trim,
-      make: (v) => (v as string).trim(),
-      model: (v) => (v as string).trim(),
-      trim: trim,
-      color: trim,
-      engine: trim,
-      notes: trim,
-      steering: trim,
+      vin: trimField,
+      chassisNumber: trimField,
+      make: trimField,
+      model: trimField,
+      trim: trimField,
+      color: trimField,
+      engine: trimField,
+      notes: trimField,
+      steering: trimField,
     },
   };
   const updates = {

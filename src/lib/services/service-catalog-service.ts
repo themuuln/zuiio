@@ -8,6 +8,7 @@ import type {
   VehicleModel,
 } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
+import { trimField } from "./trim-field";
 
 export async function getServices(
   db: SupabaseClient,
@@ -112,8 +113,6 @@ export async function updateService(
   const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
-  const trim = (v: unknown) => (v as string).trim() || null;
-
   const fieldMap: FieldMap<typeof params> = {
     columns: {
       name: "name",
@@ -124,10 +123,10 @@ export async function updateService(
       is_active: "is_active",
     },
     transforms: {
-      name: trim,
-      name_mn: trim,
-      category: trim,
-      description: trim,
+      name: trimField,
+      name_mn: trimField,
+      category: trimField,
+      description: trimField,
     },
   };
 

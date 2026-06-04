@@ -12,6 +12,7 @@ import type {
   UpdateCustomerParams,
 } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
+import { trimField } from "./trim-field";
 
 /**
  * Lists all customers for an organization with optional search.
@@ -453,7 +454,6 @@ export async function updateCustomer(
     }
   }
 
-  const trim = (v: unknown) => (v as string).trim() || null;
   const customerFieldMap: FieldMap<UpdateCustomerParams> = {
     columns: {
       type: "type",
@@ -468,15 +468,15 @@ export async function updateCustomer(
       source: "source",
     },
     transforms: {
-      firstName: trim,
-      lastName: trim,
-      companyName: trim,
-      contactPerson: trim,
-      phone: trim,
-      email: trim,
-      address: trim,
-      notes: trim,
-      source: trim,
+      firstName: trimField,
+      lastName: trimField,
+      companyName: trimField,
+      contactPerson: trimField,
+      phone: trimField,
+      email: trimField,
+      address: trimField,
+      notes: trimField,
+      source: trimField,
     },
   };
   const updates = {

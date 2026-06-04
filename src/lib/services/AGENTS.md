@@ -22,6 +22,32 @@ src/lib/services/
 - **Tests are co-located** with the service file. Test files use `*.test.ts` naming.
 - **Cross-service calls are allowed** (e.g., `work-order-service` calling `inventory-service`). No circular dependencies.
 
+## PATCH / Update Null Safety
+
+Every PATCH endpoint in this project uses `buildUpdates()` from `./build-updates.ts`
+to map request params to DB columns with optional transforms.
+
+**Critical rule:** Never use `(v) => (v as string).trim()` as an inline transform.
+It crashes with `TypeError: null.trim()` when the form sends `null` (empty field).
+
+**Always import and use the shared `trimField`** from `./trim-field.ts`:
+```ts
+import { trimField } from "./trim-field";
+
+const fieldMap: FieldMap<typeof params> = {
+  columns: { name: "name" },
+  transforms: { name: trimField },  // ✅ null-safe
+};
+```
+
+**`buildUpdates` behavior:**
+- `undefined` → skipped (not provided in request)
+- `null` → passed through without transform (clear the DB column)
+- `string` → goes through the transform (e.g., trimmed)
+
+If you're adding a new PATCH endpoint, also add a test case in
+`src/lib/services/build-updates.test.ts` covering null/empty/undefined values.
+
 ## Testing
 
 - Vitest, co-located `*.test.ts` files.

@@ -1,55 +1,60 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CarFront, Check, Pencil, Plus, X } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { CarFront, Pencil, Plus, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { ServiceForm } from "@/components/services/service-form";
 import { ServiceModelPricesSheet } from "@/components/services/service-model-prices-sheet";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
-import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { serviceKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useServiceLastUsedPrices } from "@/lib/queries/use-price-memory";
 import { useServiceModelPriceCounts } from "@/lib/queries/use-service-vehicle-models";
+import type { ServiceCatalog } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
-import { HighlightText } from "@/lib/utils/search-utils";
 
-interface ServiceItem {
-  id: string;
-  name: string;
-  name_mn: string | null;
-  description: string | null;
-  default_price: number;
-  category: string | null;
-}
+import { createColumns } from "./_columns";
+import { EditServiceSheet } from "./_edit-service-sheet";
 
 export default function ServicesPage() {
-  const locale = useLocale();
   const t = useTranslations();
   const now = useClientNow();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
+  const queryClient = useQueryClient();
 
   const { data: modelPriceCounts = {} } = useServiceModelPriceCounts(orgId);
 
@@ -57,6 +62,7 @@ export default function ServicesPage() {
     data: services = [],
     isLoading: loading,
     error: queryError,
+    isError,
     refetch,
   } = useQuery({
     queryKey: serviceKeys.list(orgId ?? ""),
@@ -64,7 +70,7 @@ export default function ServicesPage() {
       const r = await fetch(`/api/organizations/${orgId}/services`);
       const d = await r.json();
       if (d.error) throw new Error(d.error.message);
-      return (d.data ?? []) as ServiceItem[];
+      return (d.data ?? []) as ServiceCatalog[];
     },
     enabled: !!orgId,
     staleTime: 30_000,
@@ -72,20 +78,17 @@ export default function ServicesPage() {
 
   const error = queryError ? queryError.message : null;
 
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [modelPricesService, setModelPricesService] =
-    useState<ServiceItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
-  const [editForm, setEditForm] = useState({
-    name: "",
-    description: "",
-    default_price: "",
-    category: "",
-  });
+  const [editingService, setEditingService] = useState<ServiceCatalog | null>(
+    null,
+  );
+  const [serviceToDelete, setServiceToDelete] = useState<ServiceCatalog | null>(
+    null,
+  );
+  const [modelPricesService, setModelPricesService] =
+    useState<ServiceCatalog | null>(null);
 
   const lastUsedPrices = useServiceLastUsedPrices(orgId ?? undefined);
 
@@ -97,7 +100,7 @@ export default function ServicesPage() {
     return Array.from(cats).sort();
   }, [services]);
 
-  const exportColumns: ExportColumn<ServiceItem>[] = useMemo(
+  const exportColumns: ExportColumn<ServiceCatalog>[] = useMemo(
     () => [
       { key: "name", label: "Name" },
       { key: "category", label: "Category" },
@@ -105,6 +108,8 @@ export default function ServicesPage() {
     ],
     [],
   );
+
+  // ── Delete mutation ──
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -118,10 +123,10 @@ export default function ServicesPage() {
       await queryClient.cancelQueries({
         queryKey: serviceKeys.list(orgId ?? ""),
       });
-      const previous = queryClient.getQueryData<ServiceItem[]>(
+      const previous = queryClient.getQueryData<ServiceCatalog[]>(
         serviceKeys.list(orgId ?? ""),
       );
-      queryClient.setQueryData<ServiceItem[]>(
+      queryClient.setQueryData<ServiceCatalog[]>(
         serviceKeys.list(orgId ?? ""),
         (old) => (old ?? []).filter((s) => s.id !== id),
       );
@@ -144,122 +149,48 @@ export default function ServicesPage() {
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: async ({
-      id,
-      formData,
-    }: {
-      id: string;
-      formData: typeof editForm;
-    }) => {
-      const r = await fetch(`/api/organizations/${orgId}/services/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description || null,
-          default_price: parseFloat(formData.default_price) || 0,
-          category: formData.category || null,
-        }),
-      });
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-      return d.data as ServiceItem;
-    },
-    onMutate: async ({ id, formData }) => {
-      await queryClient.cancelQueries({
-        queryKey: serviceKeys.list(orgId ?? ""),
-      });
-      const previous = queryClient.getQueryData<ServiceItem[]>(
-        serviceKeys.list(orgId ?? ""),
-      );
-      queryClient.setQueryData<ServiceItem[]>(
-        serviceKeys.list(orgId ?? ""),
-        (old) =>
-          (old ?? []).map((s) =>
-            s.id === id
-              ? {
-                  ...s,
-                  name: formData.name,
-                  description: formData.description || null,
-                  default_price: parseFloat(formData.default_price) || 0,
-                  category: formData.category || null,
-                }
-              : s,
-          ),
-      );
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(
-          serviceKeys.list(orgId ?? ""),
-          context.previous,
-        );
-      }
-      toast.error("Failed to update service");
-    },
-    onSuccess: () => {
-      toast.success("Service updated");
-      setEditingId(null);
-      setEditForm({
-        name: "",
-        description: "",
-        default_price: "",
-        category: "",
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: serviceKeys.list(orgId ?? ""),
-      });
-    },
-  });
-
-  const handleDelete = (id: string) => {
-    if (!orgId) return;
-    deleteMutation.mutate(id);
-  };
-
-  const handleStartEdit = (service: ServiceItem) => {
-    setEditingId(service.id);
-    setEditForm({
-      name: service.name,
-      description: service.description ?? "",
-      default_price: String(service.default_price),
-      category: service.category ?? "",
+  const confirmDelete = () => {
+    if (!orgId || !serviceToDelete) return;
+    deleteMutation.mutate(serviceToDelete.id, {
+      onSettled: () => setServiceToDelete(null),
     });
   };
 
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditForm({
-      name: "",
-      description: "",
-      default_price: "",
-      category: "",
-    });
-  };
+  // ── Category + search filter ──
 
-  const handleUpdate = () => {
-    if (!orgId || !editingId || !editForm.name.trim()) return;
-    updateMutation.mutate({ id: editingId, formData: editForm });
-  };
+  const filteredServices = useMemo(() => {
+    let filtered = services;
+    if (selectedCategory) {
+      filtered = filtered.filter((s) => s.category === selectedCategory);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          (s.name_mn && s.name_mn.toLowerCase().includes(q)) ||
+          (s.description && s.description.toLowerCase().includes(q)),
+      );
+    }
+    return filtered;
+  }, [services, selectedCategory, search]);
 
-  const categoryFiltered = useMemo(() => {
-    if (!selectedCategory) return services;
-    return services.filter((s) => s.category === selectedCategory);
-  }, [services, selectedCategory]);
+  // ── DataTable columns (stable reference) ──
 
-  const filtered = useFuzzySearch(categoryFiltered, search, {
-    keys: [
-      { name: "name", weight: 0.7 },
-      { name: "category", weight: 0.2 },
-      { name: "description", weight: 0.1 },
-    ],
-    threshold: 0.35,
-    minQueryLength: 1,
-  });
+  const columns = useMemo(
+    () =>
+      createColumns(
+        {
+          onEdit: (s) => setEditingService(s),
+          onDelete: (s) => setServiceToDelete(s),
+          onModelPrices: (s) => setModelPricesService(s),
+        },
+        { modelPriceCounts, lastUsedPrices: lastUsedPrices.data },
+      ),
+    [modelPriceCounts, lastUsedPrices.data],
+  );
+
+  // ── Sidebar tabs ──
 
   const sidebar = useRightSidebar();
 
@@ -313,8 +244,55 @@ export default function ServicesPage() {
     sidebar.unregisterTab,
   ]);
 
+  const isFirstLoad = loading && services.length === 0;
+
+  // ── Render: First load skeleton ──
+
+  if (isFirstLoad) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-1">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-36" />
+        </div>
+        <Skeleton className="h-12 w-full" />
+        <DataTable columns={[]} data={[]} loading />
+      </div>
+    );
+  }
+
+  // ── Render: Error state ──
+
+  if (isError || (!orgId && !orgQuery.isLoading)) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-1">
+          <Typography.H1 className="text-2xl font-semibold tracking-tight">
+            Service Catalog
+          </Typography.H1>
+          <Typography.Muted className="text-muted-foreground">
+            Manage your service prices
+          </Typography.Muted>
+        </div>
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="flex items-center justify-between p-4">
+            <Typography.Text className="text-sm text-destructive">
+              {error ?? "No organization found"}
+            </Typography.Text>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ── Render: Normal ──
+
   return (
     <div className="flex flex-col gap-6">
+      {/* ── Header ── */}
       <div className="flex flex-col gap-1">
         <Typography.H1 className="text-2xl font-semibold tracking-tight">
           Service Catalog
@@ -324,26 +302,26 @@ export default function ServicesPage() {
         </Typography.Muted>
       </div>
 
+      {/* ── Toolbar ── */}
       <ListToolbar
         search={{
           placeholder: "Search services...",
           value: search,
           onChange: setSearch,
-          resultLabel: filtered.length
-            ? `${filtered.length} result${filtered.length === 1 ? "" : "s"}`
+          resultLabel: services.length
+            ? `${services.length} service${services.length === 1 ? "" : "s"}`
             : undefined,
           emptyLabel: search ? `No matches for "${search}"` : undefined,
         }}
         stats={
-          <span>
-            {filtered.length} / {services.length} service
-            {services.length !== 1 ? "s" : ""}
+          <span className="text-sm text-muted-foreground">
+            {services.length} service{services.length !== 1 ? "s" : ""}
           </span>
         }
         actions={
           <div className="flex items-center gap-2">
             <ExportButton
-              data={filtered}
+              data={filteredServices}
               columns={exportColumns}
               filename={`services-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName="Services"
@@ -359,6 +337,7 @@ export default function ServicesPage() {
         }
       />
 
+      {/* ── Add Service Card ── */}
       {showAdd && (
         <Card className="border-border">
           <CardHeader>
@@ -376,6 +355,7 @@ export default function ServicesPage() {
         </Card>
       )}
 
+      {/* ── Category Badges ── */}
       {categories.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           <Badge
@@ -398,25 +378,10 @@ export default function ServicesPage() {
         </div>
       )}
 
-      <Card>
+      {/* ── Table / Empty State ── */}
+      <Card className="py-0">
         <CardContent className="p-0">
-          {orgQuery.isLoading || loading ? (
-            <div className="divide-y divide-border">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="flex items-center gap-4 p-4">
-                  <Skeleton className="h-5 w-40" />
-                  <Skeleton className="h-5 w-24" />
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className="flex flex-col items-center gap-4 py-12">
-              <Typography.Text className="text-destructive">
-                {error}
-              </Typography.Text>
-              <Button onClick={() => refetch()}>Retry</Button>
-            </div>
-          ) : filtered.length === 0 ? (
+          {services.length === 0 && !search && !selectedCategory ? (
             <Empty>
               <EmptyHeader>
                 <EmptyMedia variant="icon">
@@ -425,150 +390,107 @@ export default function ServicesPage() {
                 <EmptyTitle>{t("services.noServices")}</EmptyTitle>
                 <EmptyDescription>{t("services.noServices")}</EmptyDescription>
               </EmptyHeader>
+              <EmptyContent>
+                <Button variant="outline" onClick={() => setShowAdd(true)}>
+                  <Plus className="size-4" />
+                  Add your first service
+                </Button>
+              </EmptyContent>
+            </Empty>
+          ) : filteredServices.length === 0 ? (
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Pencil />
+                </EmptyMedia>
+                <EmptyTitle>{t("services.noServices")}</EmptyTitle>
+                <EmptyDescription>
+                  Try a different search term or category.
+                </EmptyDescription>
+              </EmptyHeader>
             </Empty>
           ) : (
-            <div className="divide-y divide-border">
-              {filtered.map((s) => (
-                <div
-                  key={s.id}
-                  className="flex items-center gap-4 p-4 min-h-[64px]"
-                >
-                  <div className="flex-1 min-w-0">
-                    {editingId === s.id ? (
-                      <div className="flex flex-col gap-1">
-                        <Input
-                          placeholder="Service Name *"
-                          value={editForm.name}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              name: e.target.value,
-                            }))
-                          }
-                          className="h-8 text-sm font-medium"
-                        />
-                        <Input
-                          placeholder="Category (e.g. Oil, Brakes)"
-                          value={editForm.category}
-                          onChange={(e) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              category: e.target.value,
-                            }))
-                          }
-                          className="h-8 text-sm text-muted-foreground"
-                        />
-                      </div>
-                    ) : (
-                      <>
-                        <Typography.Text className="font-medium truncate">
-                          <HighlightText
-                            text={
-                              locale === "mn" && s.name_mn ? s.name_mn : s.name
-                            }
-                            query={search}
-                          />
-                          {locale === "mn" && s.name && (
-                            <span className="ml-2 text-xs text-muted-foreground font-normal">
-                              {s.name}
-                            </span>
-                          )}
-                          {locale !== "mn" && s.name_mn && (
-                            <span className="ml-2 text-xs text-muted-foreground font-normal">
-                              ({s.name_mn})
-                            </span>
-                          )}
-                        </Typography.Text>
-                        <Typography.Muted className="text-sm text-muted-foreground">
-                          {s.category ? (
-                            <HighlightText text={s.category} query={search} />
-                          ) : (
-                            t("services.uncategorized")
-                          )}
-                        </Typography.Muted>
-                      </>
-                    )}
-                  </div>
-
-                  {editingId === s.id ? (
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder="Price"
-                      value={editForm.default_price}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({
-                          ...prev,
-                          default_price: e.target.value,
-                        }))
-                      }
-                      className="h-8 w-24 text-right font-medium tabular-nums shrink-0"
-                    />
-                  ) : (
-                    <span className="font-medium text-lg tabular-nums shrink-0">
-                      {formatMNT(Number(s.default_price))}
-                    </span>
-                  )}
-
-                  {editingId === s.id ? (
-                    <div className="flex items-center gap-1 shrink-0">
+            <DataTable
+              columns={columns}
+              data={filteredServices}
+              getRowId={(row) => row.id}
+              pageSize={20}
+              onRowClick={(row) => setEditingService(row)}
+              renderMobileCard={(service) => {
+                const count = modelPriceCounts[service.id] ?? 0;
+                return (
+                  <div className="flex flex-col gap-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium truncate">
+                        {service.name}
+                      </span>
+                      <span className="font-semibold tabular-nums">
+                        {formatMNT(service.default_price)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        {service.category ?? t("services.uncategorized")}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        {lastUsedPrices.data?.[service.id] && (
+                          <span className="text-amber-600">
+                            Last:{" "}
+                            {formatMNT(
+                              lastUsedPrices.data[service.id].unit_price,
+                            )}
+                          </span>
+                        )}
+                        {count > 0 && (
+                          <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                            <CarFront className="size-3" />
+                            {count}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 pt-1 border-t border-border/50">
                       <Button
+                        variant="ghost"
                         size="icon-xs"
-                        onClick={handleUpdate}
-                        disabled={
-                          updateMutation.isPending || !editForm.name.trim()
-                        }
-                        aria-label="Save"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingService(service);
+                        }}
                       >
-                        <Check className="size-4" />
+                        <Pencil className="size-3.5" />
                       </Button>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon-xs"
-                        onClick={handleCancelEdit}
-                        aria-label="Cancel"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setServiceToDelete(service);
+                        }}
+                        className="text-destructive/70 hover:text-destructive"
                       >
-                        <X className="size-4" />
+                        <Trash2 className="size-3.5" />
                       </Button>
                     </div>
-                  ) : (
-                    <>
-                      {lastUsedPrices.data?.[s.id] && (
-                        <span className="hidden text-xs text-amber-600 tabular-nums md:inline">
-                          {t("services.lastUsedPrice")}:{" "}
-                          {formatMNT(lastUsedPrices.data[s.id].unit_price)}
-                        </span>
-                      )}
-                      <MinimalModelCountBadge
-                        count={modelPriceCounts[s.id] ?? 0}
-                        onClick={() => setModelPricesService(s)}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={() => handleStartEdit(s)}
-                        aria-label="Edit service"
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={() => handleDelete(s.id)}
-                        aria-label="Delete service"
-                      >
-                        <X className="size-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
+                  </div>
+                );
+              }}
+            />
           )}
         </CardContent>
       </Card>
 
-      {/* Model-Specific Prices Sheet */}
+      {/* ── Edit Service Sheet ── */}
+      <EditServiceSheet
+        service={editingService}
+        categories={categories}
+        open={editingService !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingService(null);
+        }}
+      />
+
+      {/* ── Model-Specific Prices Sheet ── */}
       <ServiceModelPricesSheet
         serviceId={modelPricesService?.id ?? null}
         serviceName={modelPricesService?.name ?? ""}
@@ -578,34 +500,39 @@ export default function ServicesPage() {
           if (!open) setModelPricesService(null);
         }}
       />
-    </div>
-  );
-}
 
-/**
- * Inline badge that shows the count of vehicle models with custom prices.
- * Receives pre-computed count from batch hook to avoid N+1 API calls.
- */
-function MinimalModelCountBadge({
-  count,
-  onClick,
-}: {
-  count: number;
-  onClick: () => void;
-}) {
-  return (
-    <Button
-      variant="ghost"
-      size="icon-xs"
-      onClick={onClick}
-      aria-label="Model prices"
-      title="Model-Specific Prices"
-      className="relative"
-    >
-      <CarFront className="size-4" />
-      <span className="absolute -top-0.5 -right-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-medium text-primary-foreground leading-none">
-        {count}
-      </span>
-    </Button>
+      {/* ── Delete Confirmation Dialog ── */}
+      <AlertDialog
+        open={!!serviceToDelete}
+        onOpenChange={(open) => {
+          if (!open) setServiceToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete service</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                {serviceToDelete?.name}
+              </span>
+              ? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

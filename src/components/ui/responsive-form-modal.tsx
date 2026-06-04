@@ -1,6 +1,6 @@
 "use client";
 
-import type * as React from "react";
+import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,15 +16,10 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+
+import { DetailSheet } from "./detail-sheet";
 
 export type ResponsiveFormModalProps = {
   open: boolean;
@@ -35,7 +30,7 @@ export type ResponsiveFormModalProps = {
   className?: string;
   /** Whether to use a centered Dialog on desktop instead of a side Sheet */
   useDialogOnDesktop?: boolean;
-  /** Width size for the side Sheet on desktop (default: "sm") */
+  /** Width size for the side Sheet on desktop (default: "xl") */
   sheetSize?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
 };
 
@@ -51,7 +46,24 @@ export function ResponsiveFormModal({
 }: ResponsiveFormModalProps) {
   const isMobile = useIsMobile();
 
-  // Mobile view: bottom Drawer (sheet)
+  // Inject onSuccess/onCancel into child so it auto-closes on form submission
+  const childrenWithClose = React.Children.map(children, (child) => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child as React.ReactElement<any>, {
+        onSuccess: (...args: unknown[]) => {
+          (child.props as any)?.onSuccess?.(...args);
+          onOpenChange(false);
+        },
+        onCancel: () => {
+          (child.props as any)?.onCancel?.();
+          onOpenChange(false);
+        },
+      });
+    }
+    return child;
+  });
+
+  // Mobile view: bottom Drawer
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
@@ -65,14 +77,14 @@ export function ResponsiveFormModal({
             )}
           </DrawerHeader>
           <ScrollArea className="flex-1 overflow-y-auto px-4 pb-6">
-            <div className={cn("py-2", className)}>{children}</div>
+            <div className={cn("py-2", className)}>{childrenWithClose}</div>
           </ScrollArea>
         </DrawerContent>
       </Drawer>
     );
   }
 
-  // Desktop view Option A: Centered Dialog
+  // Desktop: Centered Dialog
   if (useDialogOnDesktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -91,33 +103,33 @@ export function ResponsiveFormModal({
             )}
           </DialogHeader>
           <ScrollArea className="flex-1 overflow-y-auto px-6 pb-6">
-            <div className="py-2">{children}</div>
+            <div className="py-2">{childrenWithClose}</div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
     );
   }
 
-  // Desktop view Option B: Right Side Sheet (standard TOLOM desktop layout)
+  // Desktop: Right Side Sheet (standard) — now uses DetailSheet
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        size={sheetSize}
-        className="flex flex-col p-0 overflow-hidden"
-      >
-        <SheetHeader className="p-6 pb-2 shrink-0 text-left">
-          <SheetTitle className="text-xl font-bold">{title}</SheetTitle>
-          {description && (
-            <SheetDescription className="text-sm">
-              {description}
-            </SheetDescription>
-          )}
-        </SheetHeader>
-        <ScrollArea className="flex-1 overflow-y-auto px-6 pb-6">
-          <div className={cn("py-2", className)}>{children}</div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+    <DetailSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      size={sheetSize as any}
+    >
+      <DetailSheet.Header className="p-6 pb-2">
+        <DetailSheet.Title className="text-xl font-bold">
+          {title}
+        </DetailSheet.Title>
+        {description && (
+          <DetailSheet.Description className="text-sm">
+            {description}
+          </DetailSheet.Description>
+        )}
+      </DetailSheet.Header>
+      <DetailSheet.Body className="px-6">
+        <div className={cn("py-2", className)}>{childrenWithClose}</div>
+      </DetailSheet.Body>
+    </DetailSheet>
   );
 }

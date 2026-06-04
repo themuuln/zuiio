@@ -23,10 +23,7 @@ export function NewSupplierSheet({
       description={t("newSupplierDescription")}
       sheetSize="2xl"
     >
-      <SupplierForm
-        onSuccess={() => onOpenChange(false)}
-        onCancel={() => onOpenChange(false)}
-      />
+      <SupplierForm />
     </ResponsiveFormModal>
   );
 }

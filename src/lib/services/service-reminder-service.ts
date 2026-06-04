@@ -5,6 +5,7 @@ import { withBranchFilter } from "@/lib/supabase/with-branch";
 import { createClient } from "@/lib/supabase/server";
 import type { ReminderLog, VehicleServiceSchedule } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
+import { trimField } from "./trim-field";
 
 type ScheduleUpdateParams = {
   service_catalog_id?: string | null;
@@ -18,8 +19,6 @@ type ScheduleUpdateParams = {
   reminder_enabled?: boolean;
   notes?: string | null;
 };
-
-const trim = (v: unknown) => (v as string).trim() || null;
 
 const scheduleFieldMap: FieldMap<ScheduleUpdateParams> = {
   columns: {
@@ -35,9 +34,9 @@ const scheduleFieldMap: FieldMap<ScheduleUpdateParams> = {
     notes: "notes",
   },
   transforms: {
-    service_name: (v) => (v as string).trim(),
-    service_catalog_id: trim,
-    notes: trim,
+    service_name: trimField,
+    service_catalog_id: trimField,
+    notes: trimField,
   },
 };
 

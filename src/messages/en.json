@@ -1006,7 +1006,8 @@
     "defaultInterval6": "Цагийн бүс — 60 сар тутамд",
     "ctaTitle": "Create your service catalog",
     "ctaSubtitle": "14-day free trial. No credit card required.",
-    "ctaButton": "Get started free"
+    "ctaButton": "Get started free",
+    "uncategorized": "Uncategorized"
   },
   "serviceReminders": {
     "title": "Service Reminders",

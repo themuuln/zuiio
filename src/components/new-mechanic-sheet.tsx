@@ -18,13 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { DetailSheet } from "@/components/ui/detail-sheet";
+import { SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 
@@ -118,8 +113,7 @@ function MechanicCredentialsView({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl">
+    <DetailSheet open={open} onOpenChange={onOpenChange} size="2xl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 text-base">
             <CheckCircle className="size-4 text-emerald-500" />
@@ -175,8 +169,7 @@ function MechanicCredentialsView({
             </Button>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DetailSheet>
   );
 }
 
@@ -296,8 +289,7 @@ export function NewMechanicSheet({
 
   // Show form
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl">
+    <DetailSheet open={open} onOpenChange={handleOpenChange} size="2xl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 text-base">
             <UserPlus className="size-4" />
@@ -460,7 +452,6 @@ export function NewMechanicSheet({
             </Button>
           </div>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DetailSheet>
   );
 }

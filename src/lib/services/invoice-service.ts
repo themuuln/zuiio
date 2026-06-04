@@ -10,6 +10,7 @@ import type {
   InvoiceWithItems,
 } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
+import { trimField } from "./trim-field";
 
 const invoiceItemFieldMap: FieldMap<Partial<AddInvoiceItemParams>> = {
   columns: {
@@ -21,7 +22,7 @@ const invoiceItemFieldMap: FieldMap<Partial<AddInvoiceItemParams>> = {
     sort_order: "sort_order",
   },
   transforms: {
-    description: (v) => (v as string).trim(),
+    description: trimField,
   },
 };
 

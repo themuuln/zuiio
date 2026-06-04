@@ -8,6 +8,7 @@ import type {
   UpdateBranchParams,
 } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
+import { trimField } from "./trim-field";
 
 /**
  * Creates a new branch for the given organization.
@@ -86,8 +87,6 @@ export async function updateBranch(
   const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
-  const trim = (v: unknown) => (v as string).trim() || null;
-
   const fieldMap: FieldMap<UpdateBranchParams> = {
     columns: {
       name: "name",
@@ -98,7 +97,7 @@ export async function updateBranch(
       settings: "settings",
     },
     transforms: {
-      name: trim,
+      name: trimField,
     },
   };
 

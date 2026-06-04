@@ -506,6 +506,16 @@ export type WorkOrderStatus = "New" | "Diagnosing" | /* ... */;
 - **RLS policies must be tested** — verify Organization A cannot access Organization B's data.
 - Run `npm run test` before opening a PR.
 
+## Worktrunk Workflow
+
+Every task runs in its own git worktree via `wt` (worktrunk). See `~/AGENTS.md #19` for the canonical workflow, or load the `worktrunk` skill.
+
+**Project hooks** (`.config/wt.toml`):
+- `post-start`: copies `.env` + runs `pnpm install`
+- `pre-merge`: runs `pnpm validate && pnpm test`
+
+Worktrees land as sibling directories: `../tolom.<sanitized-branch>/`
+
 ## Commit & Pull Request Guidelines
 
 This repo follows the global guidelines in `~/.factory/AGENTS.md`:

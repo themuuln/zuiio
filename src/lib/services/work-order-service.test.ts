@@ -28,6 +28,10 @@ vi.mock("@/lib/cache/with-cache", () => ({
 vi.mock("@/lib/services/service-reminder-service", () => ({
   syncWorkOrderToSchedules: vi.fn(),
 }));
+vi.mock("@/lib/supabase/with-branch", () => ({
+  withBranchFilter: vi.fn((q) => q),
+  resolveBranchId: vi.fn().mockResolvedValue("branch-1"),
+}));
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 vi.mock("@/lib/services/_queries/work-order-queries", () => ({
   getWorkOrderDetail: vi.fn(),

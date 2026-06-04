@@ -7,14 +7,9 @@ import { ExpenseForm } from "./expense-form";
 type NewExpenseSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: (expense: any) => void;
 };
 
-export function NewExpenseSheet({
-  open,
-  onOpenChange,
-  onSuccess,
-}: NewExpenseSheetProps) {
+export function NewExpenseSheet({ open, onOpenChange }: NewExpenseSheetProps) {
   const t = useTranslations("expenses");
 
   return (
@@ -25,14 +20,7 @@ export function NewExpenseSheet({
       description={t("subtitle")}
       sheetSize="2xl"
     >
-      <ExpenseForm
-        mode="full"
-        onSuccess={(expense) => {
-          onSuccess?.(expense);
-          onOpenChange(false);
-        }}
-        onCancel={() => onOpenChange(false)}
-      />
+      <ExpenseForm mode="full" />
     </ResponsiveFormModal>
   );
 }
