@@ -350,3 +350,17 @@
     background-color: oklch(0.75 0.15 50 / 18%);
   }
 }
+
+/* ── Fix Vaul + Base UI Dialog pointer-events conflict ──────────
+   Vaul (via Radix DismissableLayer) sets pointer-events: none on
+   <body>. Base UI Dialog portals inherit this, becoming unclickable.
+   Restore pointer-events on the portal wrapper so dialog content
+   can receive clicks. The InternalBackdrop must stay non-interactive
+   so clicks pass through to the actual dialog popup. */
+[data-base-ui-portal] {
+  pointer-events: auto;
+}
+
+[data-base-ui-portal] [data-base-ui-inert] {
+  pointer-events: none;
+}
