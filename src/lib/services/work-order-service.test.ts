@@ -11,14 +11,14 @@ import type {
 } from "@/lib/types";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
+  addPartToWorkOrder,
+  addServiceToWorkOrder,
+} from "./work-order-items-service";
+import {
   cancelWorkOrder,
   createWorkOrder,
   getWorkOrderTotals,
 } from "./work-order-service";
-import {
-  addPartToWorkOrder,
-  addServiceToWorkOrder,
-} from "./work-order-items-service";
 import { assignMechanic, updateWorkOrderStatus } from "./work-order-workflow";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));

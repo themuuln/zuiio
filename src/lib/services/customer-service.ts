@@ -1,9 +1,9 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
-import { withBranchFilter, resolveBranchId } from "@/lib/supabase/with-branch";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
   CreateCustomerParams,
   Customer,

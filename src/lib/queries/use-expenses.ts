@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import { expenseKeys } from "@/lib/queries/keys";
 import { toastRetry } from "@/lib/toast-utils";
 import type {
@@ -91,24 +93,41 @@ export function useExpenseCategories(orgId: string | undefined) {
 // ── Create expense ──
 export function useCreateExpense(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async (params: CreateExpenseParams) => {
-      const res = await fetch(`/api/organizations/${orgId}/expenses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
-      });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data;
-    },
-    onSuccess: () => {
-      if (orgId) {
-        queryClient.invalidateQueries({ queryKey: expenseKeys.all(orgId) });
-        queryClient.invalidateQueries({ queryKey: expenseKeys.stats(orgId) });
+      if (isOnline) {
+        const res = await fetch(`/api/organizations/${orgId}/expenses`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params),
+        });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data;
       }
-      toast.success("Expense created");
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/expenses`,
+        method: "POST",
+        body: params,
+        queryKeysToInvalidate: [[...expenseKeys.all(orgId ?? "")]],
+      });
+      return { queued: true } as unknown as unknown;
+    },
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        if (orgId) {
+          queryClient.invalidateQueries({ queryKey: expenseKeys.all(orgId) });
+          queryClient.invalidateQueries({ queryKey: expenseKeys.stats(orgId) });
+        }
+        toast.success("Expense created");
+      }
     },
     onError: (err: Error, variables) => {
       toastRetry(err.message ?? "Failed to create expense", () =>
@@ -122,30 +141,47 @@ export function useCreateExpense(orgId: string | undefined) {
 // ── Update expense ──
 export function useUpdateExpense(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async ({
       id,
       ...params
     }: UpdateExpenseParams & { id: string }) => {
-      const res = await fetch(`/api/organizations/${orgId}/expenses/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
-      });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data;
-    },
-    onSuccess: (_, variables) => {
-      if (orgId) {
-        queryClient.invalidateQueries({ queryKey: expenseKeys.all(orgId) });
-        queryClient.invalidateQueries({
-          queryKey: expenseKeys.detail(orgId, variables.id),
+      if (isOnline) {
+        const res = await fetch(`/api/organizations/${orgId}/expenses/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params),
         });
-        queryClient.invalidateQueries({ queryKey: expenseKeys.stats(orgId) });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data;
       }
-      toast.success("Expense updated");
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/expenses/${id}`,
+        method: "PATCH",
+        body: params,
+        queryKeysToInvalidate: [[...expenseKeys.all(orgId ?? "")]],
+      });
+      return { queued: true } as unknown as unknown;
+    },
+    onSuccess: (data, _variables, _context) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        if (orgId) {
+          queryClient.invalidateQueries({ queryKey: expenseKeys.all(orgId) });
+          queryClient.invalidateQueries({
+            queryKey: expenseKeys.detail(orgId, _variables.id),
+          });
+          queryClient.invalidateQueries({ queryKey: expenseKeys.stats(orgId) });
+        }
+        toast.success("Expense updated");
+      }
     },
     onError: (err: Error, variables) => {
       toastRetry(err.message ?? "Failed to update expense", () =>
@@ -159,19 +195,36 @@ export function useUpdateExpense(orgId: string | undefined) {
 // ── Delete expense ──
 export function useDeleteExpense(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/organizations/${orgId}/expenses/${id}`, {
+      if (isOnline) {
+        const res = await fetch(`/api/organizations/${orgId}/expenses/${id}`, {
+          method: "DELETE",
+        });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/expenses/${id}`,
         method: "DELETE",
+        body: undefined,
+        queryKeysToInvalidate: [[...expenseKeys.all(orgId ?? "")]],
       });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
     },
-    onSuccess: () => {
-      if (orgId)
-        queryClient.invalidateQueries({ queryKey: expenseKeys.all(orgId) });
-      toast.success("Expense deleted");
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown> | undefined;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        if (orgId)
+          queryClient.invalidateQueries({ queryKey: expenseKeys.all(orgId) });
+        toast.success("Expense deleted");
+      }
     },
     onError: (err: Error, variables) => {
       toastRetry(err.message ?? "Failed to delete expense", () =>
@@ -185,20 +238,32 @@ export function useDeleteExpense(orgId: string | undefined) {
 // ── Create category (optimistic) ──
 export function useCreateExpenseCategory(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async (params: CreateExpenseCategoryParams) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/expense-categories`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(params),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data;
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/expense-categories`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(params),
+          },
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/expense-categories`,
+        method: "POST",
+        body: params,
+        queryKeysToInvalidate: [[...expenseKeys.all(orgId ?? "")]],
+      });
+      return { queued: true } as unknown as unknown;
     },
     onMutate: async (params) => {
       const key = expenseKeys.categories(orgId ?? "");
@@ -234,8 +299,13 @@ export function useCreateExpenseCategory(orgId: string | undefined) {
         mutation.mutateAsync(variables),
       );
     },
-    onSuccess: () => {
-      toast.success("Category created");
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        toast.success("Category created");
+      }
     },
     onSettled: () => {
       if (orgId)
@@ -250,23 +320,35 @@ export function useCreateExpenseCategory(orgId: string | undefined) {
 // ── Update category (optimistic) ──
 export function useUpdateExpenseCategory(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async ({
       id,
       ...params
     }: UpdateExpenseCategoryParams & { id: string }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/expense-categories/${id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(params),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data;
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/expense-categories/${id}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(params),
+          },
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/expense-categories/${id}`,
+        method: "PATCH",
+        body: params,
+        queryKeysToInvalidate: [[...expenseKeys.all(orgId ?? "")]],
+      });
+      return { queued: true } as unknown as unknown;
     },
     onMutate: async ({ id, ...params }) => {
       const key = expenseKeys.categories(orgId ?? "");
@@ -294,8 +376,13 @@ export function useUpdateExpenseCategory(orgId: string | undefined) {
         mutation.mutateAsync(variables),
       );
     },
-    onSuccess: () => {
-      toast.success("Category updated");
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        toast.success("Category updated");
+      }
     },
     onSettled: () => {
       if (orgId)
@@ -310,17 +397,29 @@ export function useUpdateExpenseCategory(orgId: string | undefined) {
 // ── Delete category (optimistic) ──
 export function useDeleteExpenseCategory(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/expense-categories/${id}`,
-        {
-          method: "DELETE",
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/expense-categories/${id}`,
+          {
+            method: "DELETE",
+          },
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/expense-categories/${id}`,
+        method: "DELETE",
+        body: undefined,
+        queryKeysToInvalidate: [[...expenseKeys.all(orgId ?? "")]],
+      });
     },
     onMutate: async (id) => {
       const key = expenseKeys.categories(orgId ?? "");
@@ -344,8 +443,13 @@ export function useDeleteExpenseCategory(orgId: string | undefined) {
         mutation.mutateAsync(variables),
       );
     },
-    onSuccess: () => {
-      toast.success("Category deleted");
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown> | undefined;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        toast.success("Category deleted");
+      }
     },
     onSettled: () => {
       if (orgId)

@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import { toastRetry } from "@/lib/toast-utils";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
 import { createOrgQuery } from "./factory";
@@ -146,6 +148,8 @@ export function usePartPriceHistory(
 
 export function useUpdateWorkOrderStatus(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async ({
@@ -159,17 +163,27 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
       notes?: string;
       loss_reason?: string;
     }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status, notes, loss_reason }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as WorkOrderDetail;
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/work-orders/${woId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status, notes, loss_reason }),
+          },
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data as WorkOrderDetail;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/work-orders/${woId}`,
+        method: "PATCH",
+        body: { status, notes, loss_reason },
+        queryKeysToInvalidate: [[...workOrderKeys.all(orgId ?? "")]],
+      });
+      return { queued: true } as unknown as WorkOrderDetail;
     },
     onMutate: async (variables) => {
       const detailKey = workOrderKeys.detail(orgId ?? "", variables.woId);
@@ -186,26 +200,30 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
       }
       return { previous };
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.all(orgId ?? ""),
-      });
+    onSuccess: (data, variables) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.all(orgId ?? ""),
+        });
 
-      // Invalidate inventory cache when WO is completed
-      // (inventory movements are created server-side at completion)
-      if (variables.status === "Completed") {
-        queryClient.invalidateQueries({
-          queryKey: inventoryKeys.balances(orgId ?? ""),
-        });
-        queryClient.invalidateQueries({
-          queryKey: inventoryKeys.movements(orgId ?? ""),
-        });
+        // Invalidate inventory cache when WO is completed
+        if (variables.status === "Completed") {
+          queryClient.invalidateQueries({
+            queryKey: inventoryKeys.balances(orgId ?? ""),
+          });
+          queryClient.invalidateQueries({
+            queryKey: inventoryKeys.movements(orgId ?? ""),
+          });
+        }
+
+        toast.success(`Status changed to ${variables.status}`);
       }
-
-      toast.success(`Status changed to ${variables.status}`);
     },
     onError: (err: Error, variables, context) => {
       if (context?.previous) {
@@ -222,6 +240,8 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
 
 export function useAssignMechanic(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async ({
@@ -231,17 +251,27 @@ export function useAssignMechanic(orgId: string | undefined) {
       woId: string;
       mechanicId: string | null;
     }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mechanic_id: mechanicId }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as WorkOrderDetail;
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/work-orders/${woId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mechanic_id: mechanicId }),
+          },
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data as WorkOrderDetail;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/work-orders/${woId}`,
+        method: "PATCH",
+        body: { mechanic_id: mechanicId },
+        queryKeysToInvalidate: [[...workOrderKeys.all(orgId ?? "")]],
+      });
+      return { queued: true } as unknown as WorkOrderDetail;
     },
     onMutate: async (variables) => {
       const detailKey = workOrderKeys.detail(orgId ?? "", variables.woId);
@@ -256,14 +286,19 @@ export function useAssignMechanic(orgId: string | undefined) {
       }
       return { previous };
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.all(orgId ?? ""),
-      });
-      toast.success("Mechanic assigned");
+    onSuccess: (data, variables) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.all(orgId ?? ""),
+        });
+        toast.success("Mechanic assigned");
+      }
     },
     onError: (err: Error, variables, context) => {
       if (context?.previous) {
@@ -280,6 +315,8 @@ export function useAssignMechanic(orgId: string | undefined) {
 
 export function useAddService(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async ({
@@ -294,17 +331,27 @@ export function useAddService(orgId: string | undefined) {
         unit_price: number;
       };
     }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}/services`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data;
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/work-orders/${woId}/services`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          },
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/work-orders/${woId}/services`,
+        method: "POST",
+        body,
+        queryKeysToInvalidate: [[...workOrderKeys.all(orgId ?? "")]],
+      });
+      return { queued: true } as unknown as unknown;
     },
     onMutate: async (variables) => {
       // Cancel outgoing refetches so they don't overwrite our optimistic update
@@ -312,14 +359,19 @@ export function useAddService(orgId: string | undefined) {
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
       });
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.all(orgId ?? ""),
-      });
-      toast.success("Service added");
+    onSuccess: (data, variables) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.all(orgId ?? ""),
+        });
+        toast.success("Service added");
+      }
     },
     onError: (err: Error, variables) => {
       toastRetry(err.message, () => mutation.mutateAsync(variables));
@@ -330,6 +382,8 @@ export function useAddService(orgId: string | undefined) {
 
 export function useRemoveService(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async ({
@@ -339,31 +393,45 @@ export function useRemoveService(orgId: string | undefined) {
       woId: string;
       serviceId: string;
     }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}/services`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: serviceId }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data;
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/work-orders/${woId}/services`,
+          {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: serviceId }),
+          },
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/work-orders/${woId}/services`,
+        method: "DELETE",
+        body: { id: serviceId },
+        queryKeysToInvalidate: [[...workOrderKeys.all(orgId ?? "")]],
+      });
     },
     onMutate: async (variables) => {
       await queryClient.cancelQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
       });
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.all(orgId ?? ""),
-      });
-      toast.success("Service removed");
+    onSuccess: (data, variables) => {
+      const d = data as unknown as Record<string, unknown> | undefined;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.all(orgId ?? ""),
+        });
+        toast.success("Service removed");
+      }
     },
     onError: (err: Error, variables) => {
       toastRetry(err.message, () => mutation.mutateAsync(variables));
@@ -374,6 +442,8 @@ export function useRemoveService(orgId: string | undefined) {
 
 export function useAddPart(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async ({
@@ -387,17 +457,27 @@ export function useAddPart(orgId: string | undefined) {
         unit_price: number;
       };
     }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}/parts`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data;
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/work-orders/${woId}/parts`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          },
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/work-orders/${woId}/parts`,
+        method: "POST",
+        body,
+        queryKeysToInvalidate: [[...workOrderKeys.all(orgId ?? "")]],
+      });
+      return { queued: true } as unknown as unknown;
     },
     onMutate: async (variables) => {
       // Cancel outgoing refetches so they don't overwrite our optimistic update
@@ -405,14 +485,19 @@ export function useAddPart(orgId: string | undefined) {
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
       });
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.all(orgId ?? ""),
-      });
-      toast.success("Part added");
+    onSuccess: (data, variables) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.all(orgId ?? ""),
+        });
+        toast.success("Part added");
+      }
     },
     onError: (err: Error, variables) => {
       toastRetry(err.message, () => mutation.mutateAsync(variables));
@@ -423,34 +508,50 @@ export function useAddPart(orgId: string | undefined) {
 
 export function useRemovePart(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async ({ woId, partId }: { woId: string; partId: string }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}/parts`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: partId }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data;
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/work-orders/${woId}/parts`,
+          {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: partId }),
+          },
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/work-orders/${woId}/parts`,
+        method: "DELETE",
+        body: { id: partId },
+        queryKeysToInvalidate: [[...workOrderKeys.all(orgId ?? "")]],
+      });
     },
     onMutate: async (variables) => {
       await queryClient.cancelQueries({
         queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
       });
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.all(orgId ?? ""),
-      });
-      toast.success("Part removed");
+    onSuccess: (data, variables) => {
+      const d = data as unknown as Record<string, unknown> | undefined;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.all(orgId ?? ""),
+        });
+        toast.success("Part removed");
+      }
     },
     onError: (err: Error, variables) => {
       toastRetry(err.message, () => mutation.mutateAsync(variables));
@@ -461,29 +562,50 @@ export function useRemovePart(orgId: string | undefined) {
 
 export function useCreateInvoice(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async ({ woId }: { woId: string }) => {
-      const res = await fetch(`/api/organizations/${orgId}/invoices`, {
+      if (isOnline) {
+        const res = await fetch(`/api/organizations/${orgId}/invoices`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ work_order_id: woId }),
+        });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data as {
+          id: string;
+          invoice_number: string;
+          public_token: string;
+        };
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/invoices`,
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ work_order_id: woId }),
+        body: { work_order_id: woId },
+        queryKeysToInvalidate: [[...workOrderKeys.all(orgId ?? "")]],
       });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as {
+      return { queued: true } as unknown as {
         id: string;
         invoice_number: string;
         public_token: string;
       };
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.all(orgId ?? ""),
-      });
+    onSuccess: (data, variables) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.detail(orgId ?? "", variables.woId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.all(orgId ?? ""),
+        });
+      }
     },
     onError: (err: Error, variables) => {
       toastRetry(err.message, () => mutation.mutateAsync(variables));
@@ -517,6 +639,8 @@ export function useInvoicePayments(
 
 export function useRecordPayment(orgId: string | undefined) {
   const qc = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
   const mutation = useMutation({
     mutationFn: async ({
       invoiceId,
@@ -528,21 +652,36 @@ export function useRecordPayment(orgId: string | undefined) {
       reference?: string;
       notes?: string;
     }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/invoices/${invoiceId}/payments`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
-      );
-      if (!res.ok) throw new Error("Failed to record payment");
-      return res.json();
-    },
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({
-        queryKey: ["invoice-payments", orgId, variables.invoiceId],
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/invoices/${invoiceId}/payments`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          },
+        );
+        if (!res.ok) throw new Error("Failed to record payment");
+        return res.json();
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/invoices/${invoiceId}/payments`,
+        method: "POST",
+        body,
+        queryKeysToInvalidate: [["invoice-payments", orgId, invoiceId]],
       });
+      return { queued: true } as unknown as unknown;
+    },
+    onSuccess: (data, variables) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        qc.invalidateQueries({
+          queryKey: ["invoice-payments", orgId, variables.invoiceId],
+        });
+      }
     },
     onError: (err: Error, variables) => {
       toastRetry(err.message, () => mutation.mutateAsync(variables));

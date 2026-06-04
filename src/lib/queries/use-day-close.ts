@@ -12,6 +12,9 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import { toastRetry } from "@/lib/toast-utils";
 import type { EndOfDaySummary } from "@/lib/types";
 import { createOrgQuery } from "./factory";
@@ -87,31 +90,52 @@ export function useCloseDay(
   date: string,
 ): UseMutationResult<CloseDayResponse, Error, void> {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async () => {
       if (!orgId) throw new Error("No org selected");
-      const res = await fetch(`/api/organizations/${orgId}/day-close`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? err.message ?? "Failed to close day");
+
+      if (isOnline) {
+        const res = await fetch(`/api/organizations/${orgId}/day-close`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error ?? err.message ?? "Failed to close day");
+        }
+        const json = await res.json();
+        return json.data as CloseDayResponse;
       }
-      const json = await res.json();
-      return json.data as CloseDayResponse;
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/day-close`,
+        method: "POST",
+        body: { date },
+        queryKeysToInvalidate: [
+          [...dayCloseKeys.status(orgId, date)],
+          [...reportKeys.summary(orgId, "eod", date, null)],
+        ],
+      });
+      return { queued: true } as unknown as CloseDayResponse;
     },
-    onSuccess: () => {
-      // Invalidate both caches so page refreshes with latest state
-      if (orgId) {
-        queryClient.invalidateQueries({
-          queryKey: dayCloseKeys.status(orgId, date),
-        });
-        queryClient.invalidateQueries({
-          queryKey: reportKeys.summary(orgId, "eod", date, null),
-        });
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        // Invalidate both caches so page refreshes with latest state
+        if (orgId) {
+          queryClient.invalidateQueries({
+            queryKey: dayCloseKeys.status(orgId, date),
+          });
+          queryClient.invalidateQueries({
+            queryKey: reportKeys.summary(orgId, "eod", date, null),
+          });
+        }
       }
     },
     onError: (error) => {

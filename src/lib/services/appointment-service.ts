@@ -6,7 +6,7 @@ import {
   ValidationError,
 } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import { withBranchFilter, resolveBranchId } from "@/lib/supabase/with-branch";
+import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
   Appointment,
   AppointmentDetail,

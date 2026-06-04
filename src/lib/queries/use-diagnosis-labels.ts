@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import { diagnosisLabelKeys } from "@/lib/queries/keys";
 import { toastRetry } from "@/lib/toast-utils";
 import type { DiagnosisLabel } from "@/lib/types";
@@ -18,15 +20,30 @@ export function useDiagnosisLabels(orgId: string | undefined) {
 
 export function useCreateDiagnosisLabel(orgId: string | undefined) {
   const qc = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
   const mutation = useMutation({
     mutationFn: async (body: Partial<DiagnosisLabel>) => {
-      const res = await fetch(`/api/organizations/${orgId}/diagnosis-labels`, {
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/diagnosis-labels`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          },
+        );
+        if (!res.ok) throw new Error("Failed to create diagnosis label");
+        return res.json();
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/diagnosis-labels`,
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body,
+        queryKeysToInvalidate: [[...diagnosisLabelKeys.list(orgId ?? "")]],
       });
-      if (!res.ok) throw new Error("Failed to create diagnosis label");
-      return res.json();
+      return { queued: true } as unknown as unknown;
     },
     onMutate: async (body) => {
       const key = diagnosisLabelKeys.list(orgId ?? "");
@@ -60,7 +77,14 @@ export function useCreateDiagnosisLabel(orgId: string | undefined) {
       }
       toastRetry(err.message, () => mutation.mutateAsync(body));
     },
-    onSuccess: () => toast.success("Label created"),
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        toast.success("Label created");
+      }
+    },
     onSettled: () =>
       qc.invalidateQueries({ queryKey: diagnosisLabelKeys.list(orgId ?? "") }),
   });
@@ -69,6 +93,8 @@ export function useCreateDiagnosisLabel(orgId: string | undefined) {
 
 export function useUpdateDiagnosisLabel(orgId: string | undefined) {
   const qc = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
   const mutation = useMutation({
     mutationFn: async ({
       id,
@@ -77,16 +103,26 @@ export function useUpdateDiagnosisLabel(orgId: string | undefined) {
       id: string;
       body: Partial<DiagnosisLabel>;
     }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/diagnosis-labels/${id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
-      );
-      if (!res.ok) throw new Error("Failed to update diagnosis label");
-      return res.json();
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/diagnosis-labels/${id}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          },
+        );
+        if (!res.ok) throw new Error("Failed to update diagnosis label");
+        return res.json();
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/diagnosis-labels/${id}`,
+        method: "PATCH",
+        body,
+        queryKeysToInvalidate: [[...diagnosisLabelKeys.list(orgId ?? "")]],
+      });
+      return { queued: true } as unknown as unknown;
     },
     onMutate: async ({ id, body }) => {
       const key = diagnosisLabelKeys.list(orgId ?? "");
@@ -113,7 +149,14 @@ export function useUpdateDiagnosisLabel(orgId: string | undefined) {
       }
       toastRetry(err.message, () => mutation.mutateAsync(vars));
     },
-    onSuccess: () => toast.success("Label updated"),
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        toast.success("Label updated");
+      }
+    },
     onSettled: () =>
       qc.invalidateQueries({ queryKey: diagnosisLabelKeys.list(orgId ?? "") }),
   });
@@ -172,15 +215,27 @@ export function useReorderDiagnosisLabels(orgId: string | undefined) {
 
 export function useDeleteDiagnosisLabel(orgId: string | undefined) {
   const qc = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
   const mutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/diagnosis-labels/${id}`,
-        {
-          method: "DELETE",
-        },
-      );
-      if (!res.ok) throw new Error("Failed to delete diagnosis label");
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/diagnosis-labels/${id}`,
+          {
+            method: "DELETE",
+          },
+        );
+        if (!res.ok) throw new Error("Failed to delete diagnosis label");
+        return;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/diagnosis-labels/${id}`,
+        method: "DELETE",
+        body: undefined,
+        queryKeysToInvalidate: [[...diagnosisLabelKeys.list(orgId ?? "")]],
+      });
     },
     onMutate: async (id) => {
       const key = diagnosisLabelKeys.list(orgId ?? "");
@@ -203,7 +258,14 @@ export function useDeleteDiagnosisLabel(orgId: string | undefined) {
       }
       toastRetry(err.message, () => mutation.mutateAsync(id));
     },
-    onSuccess: () => toast.success("Label deleted"),
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown> | undefined;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        toast.success("Label deleted");
+      }
+    },
     onSettled: () =>
       qc.invalidateQueries({ queryKey: diagnosisLabelKeys.list(orgId ?? "") }),
   });

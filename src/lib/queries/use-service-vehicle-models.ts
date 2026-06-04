@@ -2,6 +2,9 @@
  * React Query hooks for vehicle-model-specific service pricing.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import { serviceKeys, vehicleModelKeys } from "./keys";
 
 export interface VehicleModelServiceRow {
@@ -46,6 +49,8 @@ export function useUpsertServiceVehicleModelPrice(
   serviceId: string | undefined,
 ) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async (params: {
@@ -54,26 +59,46 @@ export function useUpsertServiceVehicleModelPrice(
     }) => {
       if (!orgId || !serviceId) throw new Error("Missing orgId or serviceId");
 
-      const res = await fetch(
-        `/api/organizations/${orgId}/services/${serviceId}/vehicle-models`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            vehicle_model_id: params.vehicle_model_id,
-            specific_price: params.specific_price,
-          }),
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/services/${serviceId}/vehicle-models`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              vehicle_model_id: params.vehicle_model_id,
+              specific_price: params.specific_price,
+            }),
+          },
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data as VehicleModelServiceRow;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/services/${serviceId}/vehicle-models`,
+        method: "POST",
+        body: {
+          vehicle_model_id: params.vehicle_model_id,
+          specific_price: params.specific_price,
         },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data as VehicleModelServiceRow;
+        queryKeysToInvalidate: [
+          [...serviceKeys.vehicleModels(orgId, serviceId)],
+        ],
+      });
+      return { queued: true } as unknown as VehicleModelServiceRow;
     },
-    onSuccess: () => {
-      if (orgId && serviceId) {
-        queryClient.invalidateQueries({
-          queryKey: serviceKeys.vehicleModels(orgId, serviceId),
-        });
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        if (orgId && serviceId) {
+          queryClient.invalidateQueries({
+            queryKey: serviceKeys.vehicleModels(orgId, serviceId),
+          });
+        }
       }
     },
   });
@@ -87,27 +112,46 @@ export function useDeleteServiceVehicleModelPrice(
   serviceId: string | undefined,
 ) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async (vehicleModelId: string) => {
       if (!orgId || !serviceId) throw new Error("Missing orgId or serviceId");
 
-      const res = await fetch(
-        `/api/organizations/${orgId}/services/${serviceId}/vehicle-models`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ vehicle_model_id: vehicleModelId }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/services/${serviceId}/vehicle-models`,
+          {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ vehicle_model_id: vehicleModelId }),
+          },
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/services/${serviceId}/vehicle-models`,
+        method: "DELETE",
+        body: { vehicle_model_id: vehicleModelId },
+        queryKeysToInvalidate: [
+          [...serviceKeys.vehicleModels(orgId, serviceId)],
+        ],
+      });
     },
-    onSuccess: () => {
-      if (orgId && serviceId) {
-        queryClient.invalidateQueries({
-          queryKey: serviceKeys.vehicleModels(orgId, serviceId),
-        });
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown> | undefined;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        if (orgId && serviceId) {
+          queryClient.invalidateQueries({
+            queryKey: serviceKeys.vehicleModels(orgId, serviceId),
+          });
+        }
       }
     },
   });

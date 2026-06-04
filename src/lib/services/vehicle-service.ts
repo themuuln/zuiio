@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
@@ -6,8 +7,7 @@ import {
   isValidMongolianPlate,
   normalizeMongolianPlate,
 } from "@/lib/form-validation";
-import { withBranchFilter, resolveBranchId } from "@/lib/supabase/with-branch";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
   CreateVehicleParams,
   UpdateVehicleParams,

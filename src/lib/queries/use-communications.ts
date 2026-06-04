@@ -1,6 +1,8 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import { toastRetry } from "@/lib/toast-utils";
 import type {
   CreateCustomerCommunicationParams,
@@ -36,23 +38,37 @@ export function useCreateCustomerCommunication(
   customerId: string | undefined,
 ) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async (variables: CreateCustomerCommunicationParams) => {
-      const url = `/api/organizations/${orgId}/customers/${customerId}/communications`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(variables),
-      });
-      if (!res.ok) {
+      if (isOnline) {
+        const url = `/api/organizations/${orgId}/customers/${customerId}/communications`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(variables),
+        });
+        if (!res.ok) {
+          const json = await res.json();
+          throw new Error(
+            json.error?.message ?? "Failed to create communication",
+          );
+        }
         const json = await res.json();
-        throw new Error(
-          json.error?.message ?? "Failed to create communication",
-        );
+        return json.data as CustomerCommunication;
       }
-      const json = await res.json();
-      return json.data as CustomerCommunication;
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/customers/${customerId}/communications`,
+        method: "POST",
+        body: variables,
+        queryKeysToInvalidate: [
+          [...customerCommunicationKeys.all(orgId ?? "", customerId ?? "")],
+        ],
+      });
+      return { queued: true } as unknown as CustomerCommunication;
     },
     onMutate: async (variables) => {
       const queryKey = customerCommunicationKeys.all(
@@ -99,8 +115,13 @@ export function useCreateCustomerCommunication(
       }
       toastRetry(err.message, () => mutation.mutateAsync(variables));
     },
-    onSuccess: () => {
-      toast.success("Communication created");
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        toast.success("Communication created");
+      }
     },
     onSettled: () => {
       void queryClient.invalidateQueries({
@@ -119,19 +140,32 @@ export function useDeleteCustomerCommunication(
   customerId: string | undefined,
 ) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async (commId: string) => {
-      const url = `/api/organizations/${orgId}/customers/${customerId}/communications/${commId}`;
-      const res = await fetch(url, { method: "DELETE" });
-      if (!res.ok) {
+      if (isOnline) {
+        const url = `/api/organizations/${orgId}/customers/${customerId}/communications/${commId}`;
+        const res = await fetch(url, { method: "DELETE" });
+        if (!res.ok) {
+          const json = await res.json();
+          throw new Error(
+            json.error?.message ?? "Failed to delete communication",
+          );
+        }
         const json = await res.json();
-        throw new Error(
-          json.error?.message ?? "Failed to delete communication",
-        );
+        return json.data;
       }
-      const json = await res.json();
-      return json.data;
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/customers/${customerId}/communications/${commId}`,
+        method: "DELETE",
+        body: undefined,
+        queryKeysToInvalidate: [
+          [...customerCommunicationKeys.all(orgId ?? "", customerId ?? "")],
+        ],
+      });
     },
     onMutate: async (commId) => {
       const queryKey = customerCommunicationKeys.all(
@@ -166,8 +200,13 @@ export function useDeleteCustomerCommunication(
       }
       toastRetry(err.message, () => mutation.mutateAsync(commId));
     },
-    onSuccess: () => {
-      toast.success("Communication deleted");
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown> | undefined;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        toast.success("Communication deleted");
+      }
     },
     onSettled: () => {
       void queryClient.invalidateQueries({

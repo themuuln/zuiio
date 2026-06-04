@@ -2,6 +2,8 @@ import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { logSupabaseResult } from "@/lib/supabase/logger";
 import type { UserProfile } from "@/lib/types";
 
 /**
@@ -253,6 +255,10 @@ export async function updateMember(
   },
 ): Promise<void> {
   const supabase = await createClient();
+  // Service role client needed for profiles updates — RLS only allows
+  // users to update their own profile (id = auth.uid()), but an org owner
+  // editing another member's profile is not the profile owner.
+  const serviceRole = await createServiceRoleClient();
 
   // ── Update profiles table (user's own data) ──────────────
   const profileUpdates: Record<string, unknown> = {};
@@ -260,10 +266,15 @@ export async function updateMember(
   if (params.phone !== undefined) profileUpdates.phone = params.phone;
 
   if (Object.keys(profileUpdates).length > 0) {
-    const { error: profileError } = await supabase
+    const { error: profileError } = await serviceRole
       .from("profiles")
       .update(profileUpdates)
       .eq("id", userId);
+
+    logSupabaseResult(profileError, "profiles.update", {
+      userId,
+      ...profileUpdates,
+    });
 
     if (profileError) {
       throw new Error(

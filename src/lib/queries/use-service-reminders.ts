@@ -1,5 +1,8 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import { createOrgQuery } from "./factory";
 import { serviceReminderKeys } from "./keys";
 
@@ -114,6 +117,8 @@ export function useReminderLogs(
 
 export function useCreateServiceSchedule(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async (payload: {
@@ -128,27 +133,47 @@ export function useCreateServiceSchedule(orgId: string | undefined) {
       next_due_km?: number | null;
       notes?: string;
     }) => {
-      const res = await fetch(`/api/organizations/${orgId}/service-reminders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error?.message ?? "Failed to create schedule");
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/service-reminders`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          },
+        );
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error?.message ?? "Failed to create schedule");
+        }
+        return res.json();
       }
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: serviceReminderKeys.all(orgId ?? ""),
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/service-reminders`,
+        method: "POST",
+        body: payload,
+        queryKeysToInvalidate: [[...serviceReminderKeys.all(orgId ?? "")]],
       });
+      return { queued: true } as unknown as unknown;
+    },
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: serviceReminderKeys.all(orgId ?? ""),
+        });
+      }
     },
   });
 }
 
 export function useUpdateServiceSchedule(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async ({
@@ -166,46 +191,78 @@ export function useUpdateServiceSchedule(orgId: string | undefined) {
       reminder_enabled?: boolean;
       notes?: string | null;
     }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/service-reminders/${id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        },
-      );
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error?.message ?? "Failed to update schedule");
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/service-reminders/${id}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          },
+        );
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error?.message ?? "Failed to update schedule");
+        }
+        return res.json();
       }
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: serviceReminderKeys.all(orgId ?? ""),
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/service-reminders/${id}`,
+        method: "PATCH",
+        body: payload,
+        queryKeysToInvalidate: [[...serviceReminderKeys.all(orgId ?? "")]],
       });
+      return { queued: true } as unknown as unknown;
+    },
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: serviceReminderKeys.all(orgId ?? ""),
+        });
+      }
     },
   });
 }
 
 export function useDeleteServiceSchedule(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/service-reminders/${id}`,
-        { method: "DELETE" },
-      );
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error?.message ?? "Failed to delete schedule");
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/service-reminders/${id}`,
+          { method: "DELETE" },
+        );
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error?.message ?? "Failed to delete schedule");
+        }
+        return;
       }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: serviceReminderKeys.all(orgId ?? ""),
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/service-reminders/${id}`,
+        method: "DELETE",
+        body: undefined,
+        queryKeysToInvalidate: [[...serviceReminderKeys.all(orgId ?? "")]],
       });
+    },
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown> | undefined;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: serviceReminderKeys.all(orgId ?? ""),
+        });
+      }
     },
   });
 }

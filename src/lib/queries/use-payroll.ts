@@ -2,6 +2,9 @@
  * React Query hooks for payroll — pay rates and payroll records.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import type { PayRate, PayrollRecord } from "@/lib/services/payroll-service";
 import { createOrgQuery } from "./factory";
 import { payrollKeys } from "./keys";
@@ -64,6 +67,8 @@ export function usePayrollRecords(
  */
 export function usePayRateUpsert(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async ({
@@ -75,20 +80,38 @@ export function usePayRateUpsert(orgId: string | undefined) {
       hourlyRate: number;
       effectiveFrom: string;
     }) => {
-      const res = await fetch(`/api/organizations/${orgId}/payroll/pay-rates`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mechanicId, hourlyRate, effectiveFrom }),
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/payroll/pay-rates`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mechanicId, hourlyRate, effectiveFrom }),
+          },
+        );
+        const json = await res.json();
+        if (!res.ok)
+          throw new Error(json.error?.message ?? "Failed to save pay rate");
+        return json.data as PayRate;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/payroll/pay-rates`,
+        method: "POST",
+        body: { mechanicId, hourlyRate, effectiveFrom },
+        queryKeysToInvalidate: [[...payrollKeys.payRates(orgId ?? "")]],
       });
-      const json = await res.json();
-      if (!res.ok)
-        throw new Error(json.error?.message ?? "Failed to save pay rate");
-      return json.data as PayRate;
+      return { queued: true } as unknown as PayRate;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: payrollKeys.payRates(orgId ?? ""),
-      });
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: payrollKeys.payRates(orgId ?? ""),
+        });
+      }
     },
   });
 }
@@ -98,27 +121,49 @@ export function usePayRateUpsert(orgId: string | undefined) {
  */
 export function useCalculatePayroll(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async ({ year, month }: { year: number; month: number }) => {
-      const res = await fetch(`/api/organizations/${orgId}/payroll/calculate`, {
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/payroll/calculate`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ year, month }),
+          },
+        );
+        const json = await res.json();
+        if (!res.ok)
+          throw new Error(json.error?.message ?? "Payroll calculation failed");
+        return json.data as PayrollRecord[];
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/payroll/calculate`,
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ year, month }),
+        body: { year, month },
+        queryKeysToInvalidate: [
+          [...payrollKeys.records(orgId ?? "", year, month)],
+        ],
       });
-      const json = await res.json();
-      if (!res.ok)
-        throw new Error(json.error?.message ?? "Payroll calculation failed");
-      return json.data as PayrollRecord[];
+      return { queued: true } as unknown as PayrollRecord[];
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: payrollKeys.records(
-          orgId ?? "",
-          variables.year,
-          variables.month,
-        ),
-      });
+    onSuccess: (data, variables) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: payrollKeys.records(
+            orgId ?? "",
+            variables.year,
+            variables.month,
+          ),
+        });
+      }
     },
   });
 }
@@ -128,6 +173,8 @@ export function useCalculatePayroll(orgId: string | undefined) {
  */
 export function useUpdatePayrollRecord(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async ({
@@ -141,27 +188,44 @@ export function useUpdatePayrollRecord(orgId: string | undefined) {
       year: number;
       month: number;
     }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/payroll/records/${recordId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action }),
-        },
-      );
-      const json = await res.json();
-      if (!res.ok)
-        throw new Error(json.error?.message ?? "Failed to update record");
-      return json.data as PayrollRecord;
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: payrollKeys.records(
-          orgId ?? "",
-          variables.year,
-          variables.month,
-        ),
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/payroll/records/${recordId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action }),
+          },
+        );
+        const json = await res.json();
+        if (!res.ok)
+          throw new Error(json.error?.message ?? "Failed to update record");
+        return json.data as PayrollRecord;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/payroll/records/${recordId}`,
+        method: "PATCH",
+        body: { action },
+        queryKeysToInvalidate: [
+          [...payrollKeys.records(orgId ?? "", year, month)],
+        ],
       });
+      return { queued: true } as unknown as PayrollRecord;
+    },
+    onSuccess: (data, variables) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: payrollKeys.records(
+            orgId ?? "",
+            variables.year,
+            variables.month,
+          ),
+        });
+      }
     },
   });
 }

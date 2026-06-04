@@ -1,13 +1,9 @@
-import { revalidateTag } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { getWorkOrderDetail as _getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
-import {
-  addServiceToWorkOrder,
-  addPartToWorkOrder,
-} from "./work-order-items-service";
-import { withBranchFilter, resolveBranchId } from "@/lib/supabase/with-branch";
+import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
   CreateWorkOrderParams,
   Customer,
@@ -16,6 +12,10 @@ import type {
   WorkOrderDetail,
   WorkOrderFilters,
 } from "@/lib/types";
+import {
+  addPartToWorkOrder,
+  addServiceToWorkOrder,
+} from "./work-order-items-service";
 
 // ── Work order with minimal joined data for list views
 interface WorkOrderWithRefs extends WorkOrder {

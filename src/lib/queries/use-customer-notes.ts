@@ -5,6 +5,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import { toastRetry } from "@/lib/toast-utils";
 import type { CustomerNote, CustomerNoteType } from "@/lib/types";
 import { createOrgQuery } from "./factory";
@@ -42,20 +44,32 @@ export function useCreateCustomerNote(
   customerId: string | undefined,
 ) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
   const mutation = useMutation({
     mutationFn: async (variables: CreateNoteVariables) => {
-      const url = `/api/organizations/${orgId}/customers/${customerId}/notes`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(variables),
-      });
-      if (!res.ok) {
+      if (isOnline) {
+        const url = `/api/organizations/${orgId}/customers/${customerId}/notes`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(variables),
+        });
+        if (!res.ok) {
+          const json = await res.json();
+          throw new Error(json.error?.message ?? "Failed to create note");
+        }
         const json = await res.json();
-        throw new Error(json.error?.message ?? "Failed to create note");
+        return json.data as CustomerNote;
       }
-      const json = await res.json();
-      return json.data as CustomerNote;
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/customers/${customerId}/notes`,
+        method: "POST",
+        body: variables,
+        queryKeysToInvalidate: [[...customerNoteKeys.all(orgId ?? "")]],
+      });
+      return { queued: true } as unknown as CustomerNote;
     },
     onMutate: async (variables) => {
       await queryClient.cancelQueries({
@@ -92,8 +106,13 @@ export function useCreateCustomerNote(
       }
       toastRetry(err.message, () => mutation.mutateAsync(variables));
     },
-    onSuccess: () => {
-      toast.success("Note created");
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        toast.success("Note created");
+      }
     },
     onSettled: () => {
       void queryClient.invalidateQueries({
@@ -112,17 +131,28 @@ export function useDeleteCustomerNote(
   customerId: string | undefined,
 ) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async (noteId: string) => {
-      const url = `/api/organizations/${orgId}/customers/${customerId}/notes/${noteId}`;
-      const res = await fetch(url, { method: "DELETE" });
-      if (!res.ok) {
+      if (isOnline) {
+        const url = `/api/organizations/${orgId}/customers/${customerId}/notes/${noteId}`;
+        const res = await fetch(url, { method: "DELETE" });
+        if (!res.ok) {
+          const json = await res.json();
+          throw new Error(json.error?.message ?? "Failed to delete note");
+        }
         const json = await res.json();
-        throw new Error(json.error?.message ?? "Failed to delete note");
+        return json.data;
       }
-      const json = await res.json();
-      return json.data;
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/customers/${customerId}/notes/${noteId}`,
+        method: "DELETE",
+        body: undefined,
+        queryKeysToInvalidate: [[...customerNoteKeys.all(orgId ?? "")]],
+      });
     },
     onMutate: async (noteId) => {
       await queryClient.cancelQueries({
@@ -148,8 +178,13 @@ export function useDeleteCustomerNote(
       }
       toastRetry(err.message, () => mutation.mutateAsync(noteId));
     },
-    onSuccess: () => {
-      toast.success("Note deleted");
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown> | undefined;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        toast.success("Note deleted");
+      }
     },
     onSettled: () => {
       void queryClient.invalidateQueries({

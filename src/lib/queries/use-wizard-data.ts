@@ -4,6 +4,9 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import type {
   CreateCustomerParams,
   CreatePartParams,
@@ -492,45 +495,63 @@ export function useVehiclePartPrices(
  */
 export function useCreateCustomer(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async (body: CreateCustomerParams) => {
       if (!orgId) throw new Error("No organization ID");
-      const res = await fetch(`/api/organizations/${orgId}/customers`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      let json: Record<string, unknown>;
-      try {
-        json = await res.json();
-      } catch {
-        throw new Error(
-          `Server returned ${res.status} ${res.statusText}. Please try again.`,
-        );
-      }
-      if (!res.ok || json.error) {
-        const err = new Error(
-          ((json.error as Record<string, unknown>)?.message as string) ??
-            "Failed to create customer",
-        );
-        if ((json.error as Record<string, unknown>)?.code) {
-          (err as { code?: string }).code = (
-            json.error as Record<string, unknown>
-          ).code as string;
-          (err as { details?: unknown }).details = (
-            json.error as Record<string, unknown>
-          ).details;
-        }
-        throw err;
-      }
-      return json.data as Customer;
-    },
-    onSuccess: () => {
-      if (orgId) {
-        queryClient.invalidateQueries({
-          queryKey: customerKeys.all(orgId),
+
+      if (isOnline) {
+        const res = await fetch(`/api/organizations/${orgId}/customers`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
         });
+        let json: Record<string, unknown>;
+        try {
+          json = await res.json();
+        } catch {
+          throw new Error(
+            `Server returned ${res.status} ${res.statusText}. Please try again.`,
+          );
+        }
+        if (!res.ok || json.error) {
+          const err = new Error(
+            ((json.error as Record<string, unknown>)?.message as string) ??
+              "Failed to create customer",
+          );
+          if ((json.error as Record<string, unknown>)?.code) {
+            (err as { code?: string }).code = (
+              json.error as Record<string, unknown>
+            ).code as string;
+            (err as { details?: unknown }).details = (
+              json.error as Record<string, unknown>
+            ).details;
+          }
+          throw err;
+        }
+        return json.data as Customer;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/customers`,
+        method: "POST",
+        body,
+        queryKeysToInvalidate: [[...customerKeys.all(orgId)]],
+      });
+      return { queued: true } as unknown as Customer;
+    },
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        if (orgId) {
+          queryClient.invalidateQueries({
+            queryKey: customerKeys.all(orgId),
+          });
+        }
       }
     },
   });
@@ -541,26 +562,44 @@ export function useCreateCustomer(orgId: string | undefined) {
  */
 export function useCreateVehicle(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async (body: CreateVehicleParams) => {
       if (!orgId) throw new Error("No organization ID");
-      const res = await fetch(`/api/organizations/${orgId}/vehicles`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? "Failed to create vehicle");
-      }
-      return json.data as Vehicle;
-    },
-    onSuccess: () => {
-      if (orgId) {
-        queryClient.invalidateQueries({
-          queryKey: vehicleKeys.all(orgId),
+
+      if (isOnline) {
+        const res = await fetch(`/api/organizations/${orgId}/vehicles`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
         });
+        const json = await res.json();
+        if (!res.ok || json.error) {
+          throw new Error(json.error?.message ?? "Failed to create vehicle");
+        }
+        return json.data as Vehicle;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/vehicles`,
+        method: "POST",
+        body,
+        queryKeysToInvalidate: [[...vehicleKeys.all(orgId)]],
+      });
+      return { queued: true } as unknown as Vehicle;
+    },
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        if (orgId) {
+          queryClient.invalidateQueries({
+            queryKey: vehicleKeys.all(orgId),
+          });
+        }
       }
     },
   });
@@ -571,6 +610,8 @@ export function useCreateVehicle(orgId: string | undefined) {
  */
 export function useCreateWorkOrder(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async (body: {
@@ -598,22 +639,38 @@ export function useCreateWorkOrder(orgId: string | undefined) {
       }[];
     }) => {
       if (!orgId) throw new Error("No organization ID");
-      const res = await fetch(`/api/organizations/${orgId}/work-orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? "Failed to create work order");
-      }
-      return json.data as { id: string };
-    },
-    onSuccess: () => {
-      if (orgId) {
-        queryClient.invalidateQueries({
-          queryKey: workOrderKeys.all(orgId),
+
+      if (isOnline) {
+        const res = await fetch(`/api/organizations/${orgId}/work-orders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
         });
+        const json = await res.json();
+        if (!res.ok || json.error) {
+          throw new Error(json.error?.message ?? "Failed to create work order");
+        }
+        return json.data as { id: string };
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/work-orders`,
+        method: "POST",
+        body,
+        queryKeysToInvalidate: [[...workOrderKeys.all(orgId)]],
+      });
+      return { queued: true } as unknown as { id: string };
+    },
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        if (orgId) {
+          queryClient.invalidateQueries({
+            queryKey: workOrderKeys.all(orgId),
+          });
+        }
       }
     },
   });
@@ -621,26 +678,44 @@ export function useCreateWorkOrder(orgId: string | undefined) {
 
 export function useCreateService(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async (body: CreateServiceCatalogParams) => {
       if (!orgId) throw new Error("No organization ID");
-      const res = await fetch(`/api/organizations/${orgId}/services`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? "Failed to create service");
-      }
-      return json.data as ServiceCatalog;
-    },
-    onSuccess: () => {
-      if (orgId) {
-        queryClient.invalidateQueries({
-          queryKey: serviceKeys.list(orgId),
+
+      if (isOnline) {
+        const res = await fetch(`/api/organizations/${orgId}/services`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
         });
+        const json = await res.json();
+        if (!res.ok || json.error) {
+          throw new Error(json.error?.message ?? "Failed to create service");
+        }
+        return json.data as ServiceCatalog;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/services`,
+        method: "POST",
+        body,
+        queryKeysToInvalidate: [[...serviceKeys.list(orgId)]],
+      });
+      return { queued: true } as unknown as ServiceCatalog;
+    },
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        if (orgId) {
+          queryClient.invalidateQueries({
+            queryKey: serviceKeys.list(orgId),
+          });
+        }
       }
     },
   });
@@ -648,36 +723,54 @@ export function useCreateService(orgId: string | undefined) {
 
 export function useCreatePart(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   return useMutation({
     mutationFn: async (body: CreatePartParams) => {
       if (!orgId) throw new Error("No organization ID");
-      const res = await fetch(`/api/organizations/${orgId}/inventory/parts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      let json: Record<string, unknown>;
-      try {
-        json = await res.json();
-      } catch {
-        throw new Error(
-          `Server returned ${res.status} ${res.statusText}. Please try again.`,
-        );
-      }
-      if (!res.ok || json.error) {
-        throw new Error(
-          ((json.error as Record<string, unknown>)?.message as string) ??
-            "Failed to create part",
-        );
-      }
-      return json.data as PartsCatalogItem;
-    },
-    onSuccess: () => {
-      if (orgId) {
-        queryClient.invalidateQueries({
-          queryKey: inventoryKeys.parts(orgId),
+
+      if (isOnline) {
+        const res = await fetch(`/api/organizations/${orgId}/inventory/parts`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
         });
+        let json: Record<string, unknown>;
+        try {
+          json = await res.json();
+        } catch {
+          throw new Error(
+            `Server returned ${res.status} ${res.statusText}. Please try again.`,
+          );
+        }
+        if (!res.ok || json.error) {
+          throw new Error(
+            ((json.error as Record<string, unknown>)?.message as string) ??
+              "Failed to create part",
+          );
+        }
+        return json.data as PartsCatalogItem;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/inventory/parts`,
+        method: "POST",
+        body,
+        queryKeysToInvalidate: [[...inventoryKeys.parts(orgId)]],
+      });
+      return { queued: true } as unknown as PartsCatalogItem;
+    },
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        if (orgId) {
+          queryClient.invalidateQueries({
+            queryKey: inventoryKeys.parts(orgId),
+          });
+        }
       }
     },
   });

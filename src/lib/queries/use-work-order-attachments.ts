@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import { toastRetry } from "@/lib/toast-utils";
 import type { WorkOrderAttachment } from "@/lib/types";
 import { createOrgQuery } from "./factory";
@@ -19,6 +21,7 @@ export function useAttachments(orgId: string | undefined, woId: string) {
 
 export function useCreateAttachment(orgId: string | undefined, woId: string) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
 
   const mutation = useMutation({
     mutationFn: async (body: {
@@ -29,6 +32,10 @@ export function useCreateAttachment(orgId: string | undefined, woId: string) {
       public_url?: string;
       file_type: "photo" | "document" | "other";
     }) => {
+      // File uploads require internet — cannot queue
+      if (!isOnline) {
+        throw new Error("File uploads require an internet connection");
+      }
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${woId}/attachments`,
         {
@@ -56,22 +63,38 @@ export function useCreateAttachment(orgId: string | undefined, woId: string) {
 
 export function useDeleteAttachment(orgId: string | undefined, woId: string) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async (attachmentId: string) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}/attachments?attachmentId=${attachmentId}`,
-        { method: "DELETE" },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: attachmentKeys.list(orgId ?? "", woId),
+      if (isOnline) {
+        const res = await fetch(
+          `/api/organizations/${orgId}/work-orders/${woId}/attachments?attachmentId=${attachmentId}`,
+          { method: "DELETE" },
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        return json.data;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/work-orders/${woId}/attachments?attachmentId=${attachmentId}`,
+        method: "DELETE",
+        body: undefined,
+        queryKeysToInvalidate: [[...attachmentKeys.list(orgId ?? "", woId)]],
       });
-      toast.success("Photo removed");
+    },
+    onSuccess: (data) => {
+      const d = data as unknown as Record<string, unknown> | undefined;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: attachmentKeys.list(orgId ?? "", woId),
+        });
+        toast.success("Photo removed");
+      }
     },
     onError: (err: Error, attachmentId) => {
       toastRetry(err.message, () => mutation.mutateAsync(attachmentId));

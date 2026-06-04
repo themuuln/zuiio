@@ -5,6 +5,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import { toastRetry } from "@/lib/toast-utils";
 import type { CreateCustomerParams, Customer } from "@/lib/types";
 import { createOrgQuery } from "./factory";
@@ -71,36 +73,55 @@ export function useSharedCustomers(
 
 export function useCreateCustomer(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async (body: CreateCustomerParams) => {
       if (!orgId) throw new Error("No organization ID");
-      const res = await fetch(`/api/organizations/${orgId}/customers`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      let json: Record<string, unknown>;
-      try {
-        json = await res.json();
-      } catch {
-        throw new Error(`Server returned ${res.status} ${res.statusText}`);
-      }
-      if (!res.ok || json.error) {
-        throw new Error(
-          ((json.error as Record<string, unknown>)?.message as string) ??
-            "Failed to create customer",
-        );
-      }
-      return json.data as Customer;
-    },
-    onSuccess: () => {
-      if (orgId) {
-        queryClient.invalidateQueries({
-          queryKey: customerKeys.all(orgId),
+
+      if (isOnline) {
+        const res = await fetch(`/api/organizations/${orgId}/customers`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
         });
+        let json: Record<string, unknown>;
+        try {
+          json = await res.json();
+        } catch {
+          throw new Error(`Server returned ${res.status} ${res.statusText}`);
+        }
+        if (!res.ok || json.error) {
+          throw new Error(
+            ((json.error as Record<string, unknown>)?.message as string) ??
+              "Failed to create customer",
+          );
+        }
+        return json.data as Customer;
       }
-      toast.success("Customer created");
+
+      // Offline — enqueue for later sync
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}/customers`,
+        method: "POST",
+        body,
+        queryKeysToInvalidate: [[...customerKeys.all(orgId)]],
+      });
+      return { queued: true } as unknown as Customer;
+    },
+    onSuccess: (data) => {
+      const d = data as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        if (orgId) {
+          queryClient.invalidateQueries({
+            queryKey: customerKeys.all(orgId),
+          });
+        }
+        toast.success("Customer created");
+      }
     },
     onError: (err: Error, variables) => {
       toastRetry(err.message, () => mutation.mutateAsync(variables));

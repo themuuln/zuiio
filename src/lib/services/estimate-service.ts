@@ -1,6 +1,5 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import { withBranchFilter, resolveBranchId } from "@/lib/supabase/with-branch";
 import {
   NotFoundError,
   UnauthorizedError,
@@ -12,6 +11,7 @@ import {
 } from "@/lib/services/work-order-items-service";
 import { recalculateWorkOrderTotals } from "@/lib/services/work-order-service";
 import { createClient } from "@/lib/supabase/server";
+import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
   CreateEstimateParams,
   EstimateDetail,

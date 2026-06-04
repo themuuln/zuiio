@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import { toastRetry } from "@/lib/toast-utils";
 import { orgKeys } from "./keys";
 
@@ -46,28 +48,46 @@ export function useOrgSettings(orgId: string | undefined): {
  */
 export function useUpdateOrgSettings(orgId: string | undefined) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
+  const queue = useMutationQueue();
 
   const mutation = useMutation({
     mutationFn: async (settings: Partial<OrgSettings>) => {
       if (!orgId) throw new Error("No organization ID");
-      const res = await fetch(`/api/organizations/${orgId}`, {
+
+      if (isOnline) {
+        const res = await fetch(`/api/organizations/${orgId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ settings }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(
+            body?.error?.message ?? `Failed to save (${res.status})`,
+          );
+        }
+        return (await res.json()).data;
+      }
+
+      await queue.enqueue({
+        endpoint: `/api/organizations/${orgId}`,
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ settings }),
+        body: { settings },
+        queryKeysToInvalidate: [[...orgKeys.settings(orgId)]],
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(
-          body?.error?.message ?? `Failed to save (${res.status})`,
-        );
-      }
-      return (await res.json()).data;
+      return { queued: true } as unknown as unknown;
     },
-    onSuccess: () => {
-      if (orgId) {
-        queryClient.invalidateQueries({ queryKey: orgKeys.settings(orgId) });
+    onSuccess: (data) => {
+      const d = data as Record<string, unknown>;
+      if (d?.queued) {
+        toast.info("Saved offline — will sync when connected");
+      } else {
+        if (orgId) {
+          queryClient.invalidateQueries({ queryKey: orgKeys.settings(orgId) });
+        }
+        toast.success("Settings saved");
       }
-      toast.success("Settings saved");
     },
     onError: (err: Error, variables) => {
       toastRetry(err.message, () => mutation.mutateAsync(variables));
