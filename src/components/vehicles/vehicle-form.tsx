@@ -853,9 +853,13 @@ export function VehicleForm({
                     side="bottom"
                     className="font-mono text-[11px] leading-relaxed whitespace-nowrap"
                   >
-                    A→А B→В C→С E→Е H→Н K→К M→М N→Н
+                    A→А B→Б C→Ц D→Д E→Э F→Ф G→Г
                     <br />
-                    O→О P→Р T→Т U→У V→В X→Х Y→Ү
+                    H→Х I→И J→Ж K→К L→Л M→М N→Н
+                    <br />
+                    O→О P→П Q→Ө R→Р S→С T→Т
+                    <br />
+                    U→У V→В W→Ү X→Х Y→Ы Z→З
                   </TooltipContent>
                 </Tooltip>
               </div>
