@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useRouter } from "@/lib/i18n/navigation";
 import { saveCompletionData } from "@/lib/services/post-service-service";
+import { workOrderKeys } from "@/lib/queries/keys";
 import type { WorkOrderDetailDrawerProps } from "./_drawer-types";
-import { useDrawerData } from "./_use-drawer-data";
+import { useDrawerQueries } from "@/lib/queries/use-drawer-queries";
 import { useDrawerMutations } from "./_use-drawer-mutations";
 import { DrawerCelebration } from "./_drawer-celebration";
 import { DrawerFooter } from "./_drawer-footer";
@@ -21,7 +23,7 @@ import { StatusTimeline } from "./_status-timeline";
 import { TotalsSummary } from "./_totals-summary";
 import type { PickupCompleteData } from "./pickup-complete-form";
 import { PickupCompleteForm } from "./pickup-complete-form";
-import { PostServiceForm } from "./post-service-form";
+import { PostServiceFormBody } from "./post-service-form";
 
 // ── Drawer ───────────────────────────────────────────────────
 
@@ -33,22 +35,48 @@ export function WorkOrderDetailDrawer({
 }: WorkOrderDetailDrawerProps) {
   const t = useTranslations("bayView");
   const { push } = useRouter();
+  const queryClient = useQueryClient();
 
-  // ── Data layer ──
+  // ── Data layer (React Query) ──
 
   const {
+    orgId,
+    orgIdRef,
     wo,
     setWo,
-    loading,
-    error,
-    hasLoadedOnce,
-    orgIdRef,
-    fetchWo,
     catalog,
     partsCatalog,
     lowStockMap,
     mechanics,
-  } = useDrawerData(workOrderId, open);
+    isLoading,
+    error,
+  } = useDrawerQueries(workOrderId);
+
+  // Track first successful load for layout-preserving skeleton
+  const hasLoadedOnceRef = useRef(false);
+  useEffect(() => {
+    if (wo) hasLoadedOnceRef.current = true;
+  }, [wo]);
+  const hasLoadedOnce = hasLoadedOnceRef.current;
+
+  // fetchWo: refetch the work order detail query (called by mutations after writes)
+  const fetchWo = useCallback(
+    async (silent = false) => {
+      if (!orgId || !workOrderId) return;
+      if (silent) {
+        // Background refetch — don't show loading spinner
+        await queryClient.invalidateQueries({
+          queryKey: workOrderKeys.detail(orgId, workOrderId),
+        });
+      } else {
+        // Full refetch
+        await queryClient.refetchQueries({
+          queryKey: workOrderKeys.detail(orgId, workOrderId),
+        });
+      }
+    },
+    [orgId, workOrderId, queryClient],
+  );
 
   // ── Mutations layer ──
 
@@ -126,8 +154,8 @@ export function WorkOrderDetailDrawer({
   // ── Pickup complete ──
 
   async function handlePickupSubmit(data: PickupCompleteData) {
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId || !wo?.vehicle_id) return;
+    const orgIdVal = orgIdRef.current;
+    if (!orgIdVal || !workOrderId || !wo?.vehicle_id) return;
 
     try {
       await saveCompletionData({
@@ -140,7 +168,7 @@ export function WorkOrderDetailDrawer({
       });
 
       const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}`,
+        `/api/organizations/${orgIdVal}/work-orders/${workOrderId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -182,18 +210,20 @@ export function WorkOrderDetailDrawer({
       <DrawerContent className="flex max-h-[90vh] md:max-h-[85vh] w-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl flex-col gap-0 p-0 mx-auto md:bottom-4 md:rounded-xl md:border border-border/80 shadow-2xl">
         <DrawerHeaderSection
           wo={wo}
-          loading={loading}
+          loading={isLoading && !hasLoadedOnce}
           mechanics={mechanics}
           saving={saving}
           onAssignMechanic={assignMechanic}
           onClose={() => handleOpenChange(false)}
+          showBack={showPostServiceForm}
+          onBack={handleCancelPostService}
           t={t}
         />
 
         <DrawerLoading
-          loading={loading}
+          loading={isLoading && !hasLoadedOnce}
           hasLoadedOnce={hasLoadedOnce}
-          error={error}
+          error={error?.message ?? null}
           onRetry={() => fetchWo()}
         />
 
@@ -201,11 +231,25 @@ export function WorkOrderDetailDrawer({
         {hasLoadedOnce && (
           <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
             <DrawerSkeleton
-              loading={loading}
-              error={error}
+              loading={isLoading}
+              error={error?.message ?? null}
               onRetry={() => fetchWo()}
             >
               {wo ? (
+                showPostServiceForm ? (
+                  <PostServiceFormBody
+                    vehiclePlate={
+                      (wo.vehicle as { plate_number?: string })?.plate_number ?? ""
+                    }
+                    currentOdometer={
+                      (wo.vehicle as { odometer?: number | null })?.odometer ?? null
+                    }
+                    services={postFormServices}
+                    newStatus="Ready for Pickup"
+                    onConfirm={handlePostServiceFormSubmit}
+                    onBack={handleCancelPostService}
+                  />
+                ) : (
                 <>
                   <div className="flex-1 overflow-y-auto min-h-0">
                     <div className="px-3 py-2">
@@ -322,6 +366,7 @@ export function WorkOrderDetailDrawer({
                     t={t}
                   />
                 </>
+                )
               ) : null}
             </DrawerSkeleton>
           </div>
@@ -336,24 +381,6 @@ export function WorkOrderDetailDrawer({
 
         <DrawerCelebration show={showCelebration} message="Completed!" />
       </DrawerContent>
-
-      {/* Post-service form overlay — outside DrawerContent to avoid Vaul + Base UI portal nesting */}
-      {showPostServiceForm && wo && (
-        <PostServiceForm
-          woId={workOrderId ?? ""}
-          vehicleId={(wo.vehicle_id as string) ?? ""}
-          vehiclePlate={
-            (wo.vehicle as { plate_number?: string })?.plate_number ?? ""
-          }
-          currentOdometer={
-            (wo.vehicle as { odometer?: number | null })?.odometer ?? null
-          }
-          services={postFormServices}
-          newStatus="Ready for Pickup"
-          onConfirm={handlePostServiceFormSubmit}
-          onCancel={handleCancelPostService}
-        />
-      )}
 
       {/* Pickup complete form overlay — outside DrawerContent to avoid Vaul + Base UI portal nesting */}
       {showPickupForm && wo && (

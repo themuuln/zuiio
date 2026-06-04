@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, Loader2, User, Wrench, X } from "lucide-react";
+import { ArrowLeft, Car, Loader2, User, Wrench, X } from "lucide-react";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { Button } from "@/components/ui/button";
 import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -15,6 +15,8 @@ interface DrawerHeaderProps {
   saving: boolean;
   onAssignMechanic: (mechanicId: string) => Promise<void>;
   onClose: () => void;
+  showBack?: boolean;
+  onBack?: () => void;
   t: (key: string) => string;
 }
 
@@ -25,6 +27,8 @@ export function DrawerHeaderSection({
   saving,
   onAssignMechanic,
   onClose,
+  showBack,
+  onBack,
   t,
 }: DrawerHeaderProps) {
   // Ensure the assigned mechanic is always in the list, even if they
@@ -126,15 +130,28 @@ export function DrawerHeaderSection({
               />
             </div>
           )}
-          {wo?.status && <StatusPill status={wo.status} />}
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={onClose}
-            aria-label={t("close")}
-          >
-            <X className="size-4" />
-          </Button>
+          {showBack ? (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={onBack}
+              aria-label="Back"
+            >
+              <ArrowLeft className="size-4" />
+            </Button>
+          ) : (
+            <>
+              {wo?.status && <StatusPill status={wo.status} />}
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={onClose}
+                aria-label={t("close")}
+              >
+                <X className="size-4" />
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </DrawerHeader>
