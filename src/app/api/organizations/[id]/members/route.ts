@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { invalidateReportCache } from "@/lib/cache/server";
 import { ValidationError } from "@/lib/errors";
 import { normalizeMongolianPhone } from "@/lib/form-validation";
 import { mutationRateLimiter } from "@/lib/rate-limit";
@@ -217,6 +218,9 @@ export const POST = createRouteHandler(
         throw new ValidationError("Failed to add user to organization");
       }
     }
+
+    // Invalidate mechanics list cache so admin sees the new member immediately
+    invalidateReportCache(orgId);
 
     return NextResponse.json(
       {
