@@ -428,8 +428,44 @@ npm run build
 | `supabase_list_tables` | List tables in schema |
 | `supabase_list_migrations` | List applied migrations |
 | `supabase_get_advisors` | Security/performance advisories |
-| `supabase_get_logs` | Project logs by service type |
+| `supabase_get_logs` | Project logs by service type (api, postgres, auth, edge-function, storage, realtime) |
 | `supabase_search_docs` | Search Supabase documentation |
+
+### Debugging with Supabase Logs (MCP)
+
+When debugging Supabase-related issues (failed queries, silent failures, auth problems), check the logs first via MCP before writing ad-hoc test queries.
+
+**Available log services:**
+
+| `service` | What it shows | Use for |
+|-----------|---------------|--------|
+| `api` | PostgREST HTTP requests + status codes | 400/401/403/500 errors, slow queries |
+| `postgres` | Postgres query errors | SQL errors, constraint violations, GROUP BY issues |
+| `auth` | Auth events (login, signup, token) | Auth failures, session issues |
+| `edge-function` | Edge function invocations | Webhook errors, scheduled job failures |
+| `storage` | Storage operations | Upload/download failures |
+| `realtime` | Realtime connections | Connection drops |
+
+**Workflow:**
+
+```
+1. Check API logs:  supabase_get_logs(service="api") → look for 4xx/5xx status codes
+2. Check Postgres:  supabase_get_logs(service="postgres") → look for ERROR severity
+3. Check Auth:      supabase_get_logs(service="auth") → look for failed logins
+```
+
+**What logs catch vs. what they miss:**
+
+| Scenario | Visible in logs? |
+|----------|-----------------|
+| SQL syntax error | ✅ `postgres` logs show ERROR |
+| Missing column/constraint | ✅ `postgres` logs show ERROR |
+| Auth token expired | ✅ `auth` logs show the event |
+| HTTP 500 from API | ✅ `api` logs show status 500 |
+| **RLS silent block (UPDATE returns 200 + empty data)** | ❌ API shows 200 — no error logged |
+| **RLS silent block (SELECT returns [])** | ❌ API shows 200 — no error logged |
+
+For silent RLS blocks, use `logSupabaseResult()` from `@/lib/supabase/logger` in service code, or query the table directly via `supabase_execute_sql` to verify data exists.
 
 ### Type Sync Rule
 
