@@ -14,11 +14,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -201,19 +201,19 @@ export function PostServiceDialog({
   const isComplete = newStatus === "Completed";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base">
+    <Drawer open={open} onOpenChange={onOpenChange} nested>
+      <DrawerContent className="max-h-[85vh]">
+        <DrawerHeader>
+          <DrawerTitle className="flex items-center gap-2 text-base">
             <Car className="size-4 text-muted-foreground" />
             {isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
             <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50  px-2 py-0.5 ml-1">
               {vehiclePlate}
             </span>
-          </DialogTitle>
-        </DialogHeader>
+          </DrawerTitle>
+        </DrawerHeader>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-4">
           {/* Odometer */}
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
@@ -318,8 +318,8 @@ export function PostServiceDialog({
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
