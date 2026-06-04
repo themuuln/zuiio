@@ -28,6 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { PlateInput } from "@/components/ui/plate-input";
 import { Input } from "@/components/ui/input";
 import {
   Item,
@@ -47,11 +48,8 @@ import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { usePageHeader } from "@/hooks/use-page-header";
-import { formatPlateInput, inputProps } from "@/lib/form-ux";
-import {
-  isValidMongolianPlate,
-  transliterateMongolianPlate,
-} from "@/lib/form-validation";
+import { inputProps } from "@/lib/form-ux";
+import { isValidMongolianPlate } from "@/lib/form-validation";
 import { vehicleKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { WorkOrderStatus } from "@/lib/types";
@@ -776,25 +774,22 @@ function VehicleEditForm({
   const [showMore, setShowMore] = useState(false);
 
   const setField = (field: keyof VehicleFormState, value: string) => {
-    const processed =
-      field === "plateNumber"
-        ? formatPlateInput(transliterateMongolianPlate(value))
-        : value;
-    onChange((prev) => ({ ...prev, [field]: processed }));
+    onChange((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
     <div className="flex flex-col gap-3">
       <div className="grid gap-3 grid-cols-2">
-        <FormField
-          label={t("plate")}
-          field="plateNumber"
-          form={form}
-          onFieldChange={setField}
-          className="col-span-2"
-          uppercase
-          placeholder="ABC123"
-        />
+        <Field className="col-span-2 relative">
+          <FieldLabel htmlFor="vds-plateNumber">{t("plate")}</FieldLabel>
+          <PlateInput
+            id="vds-plateNumber"
+            value={form.plateNumber}
+            onChange={(v) => onChange((p) => ({ ...p, plateNumber: v }))}
+            placeholder="ABC123"
+            {...inputProps("plate")}
+          />
+        </Field>
         <FormField
           label={t("make")}
           field="make"

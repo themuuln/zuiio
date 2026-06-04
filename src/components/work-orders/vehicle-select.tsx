@@ -21,6 +21,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PlateInput } from "@/components/ui/plate-input";
 import {
   Item,
   ItemActions,
@@ -29,11 +30,8 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { Typography } from "@/components/ui/typography";
-import { formatPlateInput, inputProps } from "@/lib/form-ux";
-import {
-  isValidMongolianPlate,
-  transliterateMongolianPlate,
-} from "@/lib/form-validation";
+import { inputProps } from "@/lib/form-ux";
+import { isValidMongolianPlate } from "@/lib/form-validation";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useMakes, useModelsByMake } from "@/lib/queries/use-vehicle-models";
 import type { Vehicle } from "@/lib/types";
@@ -324,19 +322,14 @@ export function VehicleSelect({
                   New Vehicle
                 </Typography.Text>
                 <Field data-invalid={!!form.formState.errors.plate_number}>
-                  <FieldContent>
-                    <Input
+                  <FieldContent className="relative">
+                    <PlateInput
                       placeholder="e.g. 4444УНА"
                       aria-invalid={!!form.formState.errors.plate_number}
                       className="h-11"
+                      value={form.watch("plate_number")}
+                      onChange={(v) => form.setValue("plate_number", v)}
                       {...inputProps("plate")}
-                      {...form.register("plate_number", {
-                        onChange: (e) => {
-                          e.target.value = formatPlateInput(
-                            transliterateMongolianPlate(e.target.value),
-                          );
-                        },
-                      })}
                       autoFocus
                     />
                     {form.formState.errors.plate_number && (

@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { BuuzHint } from "@/components/ui/plate-input";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { formatPlateInput } from "@/lib/form-ux";
@@ -188,6 +189,7 @@ export function VehicleRegistrationDialog({
   const [searchResults, setSearchResults] = useState<SearchVehicleResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [plateFocused, setPlateFocused] = useState(false);
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // ── Queue state ──────────────────────────────────────────────
@@ -534,9 +536,11 @@ export function VehicleRegistrationDialog({
                     handleSearch(val);
                   }}
                   onFocus={() => {
+                    setPlateFocused(true);
                     if (searchResults.length > 0) setShowDropdown(true);
                   }}
                   onBlur={() => {
+                    setPlateFocused(false);
                     setTimeout(() => setShowDropdown(false), 200);
                   }}
                   onKeyDown={(e) => {
@@ -546,10 +550,15 @@ export function VehicleRegistrationDialog({
                     }
                   }}
                   placeholder={`${t("enterPlate")} — ${t("lookupSubtitle")}`}
-                  className="pl-10 pr-8"
+                  className="h-11 pl-10 pr-8 font-mono uppercase"
                 />
                 {searchLoading && (
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground animate-spin" />
+                )}
+                {plateFocused && !showDropdown && (
+                  <div className="absolute left-0 top-full z-50 mt-1.5 rounded-lg border border-border bg-popover p-2.5 shadow-md transition-all duration-150">
+                    <BuuzHint />
+                  </div>
                 )}
                 {/* Autocomplete dropdown */}
                 {showDropdown && searchResults.length > 0 && (

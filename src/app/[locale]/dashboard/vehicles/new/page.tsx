@@ -10,6 +10,7 @@ import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PlateInput } from "@/components/ui/plate-input";
 import {
   Select,
   SelectContent,
@@ -21,11 +22,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { usePageHeader } from "@/hooks/use-page-header";
-import { formatPlateInput, inputProps } from "@/lib/form-ux";
-import {
-  isValidMongolianPlate,
-  transliterateMongolianPlate,
-} from "@/lib/form-validation";
+import { inputProps } from "@/lib/form-ux";
+import { isValidMongolianPlate } from "@/lib/form-validation";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { customerKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -350,25 +348,18 @@ function NewVehicleForm() {
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div>
+            <div className="relative">
               <label
                 className="mb-1 block text-sm font-medium"
                 htmlFor="plateNumber"
               >
                 {t("plate")} <span className="text-destructive">*</span>
               </label>
-              <Input
+              <PlateInput
                 id="plateNumber"
                 value={form.plateNumber}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    plateNumber: formatPlateInput(
-                      transliterateMongolianPlate(event.target.value),
-                    ),
-                  }))
-                }
-                className={`h-11 font-mono ${fieldErrors.plateNumber ? "border-destructive" : ""}`}
+                onChange={(v) => setForm((c) => ({ ...c, plateNumber: v }))}
+                className={`h-11 ${fieldErrors.plateNumber ? "border-destructive" : ""}`}
                 placeholder="1234 UBA"
                 aria-invalid={!!fieldErrors.plateNumber}
                 {...inputProps("plate")}

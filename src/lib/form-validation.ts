@@ -47,24 +47,37 @@ export function isValidNonNegativeNumber(value: string): boolean {
   return !Number.isNaN(n) && n >= 0;
 }
 
-// Latin → Cyrillic look-alike mapping for Mongolian license plates.
-// People commonly type Latin letters that visually resemble Cyrillic ones.
+// Latin → Cyrillic mapping for Mongolian license plates.
+// Uses the Buuz phonetic layout — the IME most Mongolians use.
+// Phonetically: H sounds like Х, not Н; E sounds like Э, not Е.
+// Source: https://github.com/odbayar/buuz
 const LATIN_TO_CYRILLIC: Record<string, string> = {
   A: "А",
-  B: "В",
-  C: "С",
-  E: "Е",
-  H: "Н",
+  B: "Б",
+  C: "Ц",
+  D: "Д",
+  E: "Э",
+  F: "Ф",
+  G: "Г",
+  H: "Х",
+  I: "И",
+  J: "Ж",
   K: "К",
+  L: "Л",
   M: "М",
   N: "Н",
   O: "О",
-  P: "Р",
+  P: "П",
+  Q: "Ө",
+  R: "Р",
+  S: "С",
   T: "Т",
   U: "У",
   V: "В",
+  W: "Ү",
   X: "Х",
-  Y: "Ү",
+  Y: "Ы",
+  Z: "З",
 };
 
 /**
@@ -95,7 +108,7 @@ export function normalizeMongolianPlate(plate: string): string {
  */
 export function isValidMongolianPlate(plate: string): boolean {
   const normalized = normalizeMongolianPlate(plate);
-  return /^\d{4}[А-ЯӨҮ]{3}$/.test(normalized);
+  return /^\d{4}[А-ЯӨҮҢ]{3}$/.test(normalized);
 }
 
 // ── Form Error Infrastructure ─────────────────────────────────

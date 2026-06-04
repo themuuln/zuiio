@@ -1,6 +1,7 @@
 import { Car, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BuuzHint } from "@/components/ui/plate-input";
 import { formatPlateInput } from "@/lib/form-ux";
 import { transliterateMongolianPlate } from "@/lib/form-validation";
 import type { SearchVehicleResult } from "./_vehicle-registration-schema";
@@ -21,6 +22,8 @@ interface PlateSearchInputProps {
   placeholder: string;
   lookupLabel: string;
   plateRef: React.RefObject<HTMLInputElement | null>;
+  /** Whether the plate input is focused — controls Buuz hint visibility */
+  plateFocused: boolean;
 }
 
 export function PlateSearchInput({
@@ -39,6 +42,7 @@ export function PlateSearchInput({
   placeholder,
   lookupLabel,
   plateRef,
+  plateFocused,
 }: PlateSearchInputProps) {
   return (
     <div className="flex gap-2">
@@ -58,10 +62,15 @@ export function PlateSearchInput({
           onBlur={onBlur}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
-          className="pl-10 pr-8"
+          className="h-11 pl-10 pr-8 font-mono uppercase"
         />
         {searchLoading && (
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground animate-spin" />
+        )}
+        {plateFocused && (
+          <div className="absolute left-0 top-full z-50 mt-1.5 rounded-lg border border-border bg-popover p-2.5 shadow-md transition-all duration-150">
+            <BuuzHint />
+          </div>
         )}
         {showDropdown && searchResults.length > 0 && (
           <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-60 overflow-auto">

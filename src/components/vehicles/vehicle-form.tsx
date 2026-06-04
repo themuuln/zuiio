@@ -25,6 +25,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PlateInput } from "@/components/ui/plate-input";
 import {
   Item,
   ItemActions,
@@ -48,11 +49,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";
-import { formatPlateInput, inputProps } from "@/lib/form-ux";
-import {
-  isValidMongolianPlate,
-  transliterateMongolianPlate,
-} from "@/lib/form-validation";
+import { inputProps } from "@/lib/form-ux";
+import { isValidMongolianPlate } from "@/lib/form-validation";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { vehicleKeys } from "@/lib/queries/keys";
 import {
@@ -824,16 +822,11 @@ export function VehicleForm({
               Plate Number <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
-              <div className="flex gap-2">
-                <Input
+              <div className="relative flex gap-2">
+                <PlateInput
                   value={form.watch("plateNumber")}
-                  onChange={(e) => {
-                    const formatted = formatPlateInput(
-                      transliterateMongolianPlate(e.target.value),
-                    );
-                    form.setValue("plateNumber", formatted);
-                  }}
-                  className="h-11 flex-1 font-mono uppercase"
+                  onChange={(v) => form.setValue("plateNumber", v)}
+                  className="h-11 flex-1"
                   placeholder="4444УНА"
                   lang="mn"
                   aria-invalid={!!form.formState.errors.plateNumber}
