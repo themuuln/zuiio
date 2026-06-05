@@ -9,6 +9,48 @@ Sub-AGENTS.md exist for high-complexity directories. Read this first, then drill
 | Business logic | `src/lib/services/AGENTS.md` |
 | Shared components | `src/components/AGENTS.md` |
 
+### Feature Module AGENTS.md
+
+Every dashboard feature module has its own AGENTS.md. Read the relevant one when working in that module.
+
+| Module | Path | Lines |
+|--------|------|-------|
+| Dashboard (root) | `src/app/[locale]/dashboard/AGENTS.md` | 101 |
+| Work Orders | `.../dashboard/work-orders/AGENTS.md` | 121 |
+| Inventory | `.../dashboard/inventory/AGENTS.md` | 156 |
+| Customers | `.../dashboard/customers/AGENTS.md` | 114 |
+| Organization | `.../dashboard/organization/AGENTS.md` | 117 |
+| Estimates | `.../dashboard/estimates/AGENTS.md` | 98 |
+| Reports | `.../dashboard/reports/AGENTS.md` | 88 |
+| Settings | `.../dashboard/settings/AGENTS.md` | 84 |
+| Vehicles | `.../dashboard/vehicles/AGENTS.md` | 79 |
+| Vehicle Models | `.../dashboard/vehicle-models/AGENTS.md` | 74 |
+| Expenses | `.../dashboard/expenses/AGENTS.md` | 73 |
+| Finance | `.../dashboard/finance/AGENTS.md` | 72 |
+| Bay View v2 | `.../dashboard/bay-view-v2/AGENTS.md` | 71 |
+| Payroll | `.../dashboard/payroll/AGENTS.md` | 70 |
+| Services | `.../dashboard/services/AGENTS.md` | 68 |
+| Service Reminders | `.../dashboard/service-reminders/AGENTS.md` | 61 |
+| Admin | `.../dashboard/admin/AGENTS.md` | 59 |
+| Mechanic | `.../dashboard/mechanic/AGENTS.md` | 53 |
+| Appointments | `.../dashboard/appointments/AGENTS.md` | 53 |
+| Mechanic Performance | `.../dashboard/mechanic-performance/AGENTS.md` | 51 |
+| EOD Close | `.../dashboard/eod-close/AGENTS.md` | 50 |
+| Bay View v1 | `.../dashboard/bay-view/AGENTS.md` | 42 |
+| Guide | `.../dashboard/guide/AGENTS.md` | 38 |
+
+## Auto-loaded Skills
+
+Load these skills automatically when the task matches their trigger. Read the SKILL.md before writing any code.
+
+| Skill | Trigger | Path |
+|-------|---------|------|
+| `optimistic-ui` | Writing, reviewing, or fixing mutation handlers (`useMutation`, `useOrgMutation`, `onMutate`, `setQueryData`), toast patterns, or multi-select optimistic state | `.agents/skills/optimistic-ui/SKILL.md` |
+| `supabase` | Any Supabase task (DB, Auth, Edge Functions, RLS, migrations) | `.agents/skills/supabase/SKILL.md` |
+| `react-doctor` | Finishing a feature, fixing a bug, before committing React code | `.agents/skills/react-doctor/SKILL.md` |
+
+When working on mutation hooks in `src/lib/queries/` or components with `toast.success()`, always load `optimistic-ui` first and apply its validation checklist before declaring done.
+
 ## Project Overview
 
 TOLOM is a vertical operating system for auto service businesses — a multi-tenant SaaS platform built with Next.js, Supabase, PostgreSQL, and later Flutter for the mechanic mobile app. See `MASTER_PLAN.md` for the full product vision, roadmap, and pricing strategy.
@@ -360,6 +402,99 @@ curl -s -X POST -b "$COOKIE" -H "Content-Type: application/json" \
 2. **Build + production server before any API test.** Run `npm run build && PORT=$(nextport) npm run start` at the start of any session involving backend work. Never test against dev mode — the 8s compilation tax kills iteration speed.
 3. **Always check the response shape.** An empty `data:[]` could mean "no records" or "silent SQL failure". When in doubt, run the query via MCP `supabase_execute_sql`.
 4. **Test the full lifecycle before moving on.** For payroll: create rate → calculate → approve → pay → recalculate (verify status preserved). Each step validates the previous one.
+
+## Optimistic UI
+
+> **Load `.agents/skills/optimistic-ui/SKILL.md` before writing any mutation code.** The skill contains the full patterns, anti-patterns, and validation checklist.
+
+Mutations must update the UI **synchronously** before the fetch fires. Don't block the user on a loading spinner — show the result instantly, rollback on error.
+
+### Core Rules
+
+1. **Never block optimistic updates with a busy guard.** `if (busy) return` before the state update causes the UI to freeze on rapid clicks. Optimistic state fires on every click; only the fetch can be gated.
+2. **Use stable keys for reconciliation.** `useEffect` dependencies must be primitive strings, not object references. `serverValue` is a new array every render — derive a stable `JSON.stringify`/sorted-IDs key outside the effect.
+3. **Track in-flight fetches with a counter, not a boolean.** A boolean busy flag blocks subsequent clicks. A `fetchCountRef` counter lets the UI stay responsive while tracking pending operations.
+4. **Dismiss-then-show toasts.** Call `toast.dismiss()` before `toast.success()` so rapid interactions collapse into one visible toast instead of stacking.
+
+### Implementation Pattern
+
+```tsx
+// ✅ CORRECT — optimistic + stable reconciliation
+function MyComponent({ serverData, onMutation }) {
+  const [optimistic, setOptimistic] = useState<T[] | null>(null);
+  const lastRequestedRef = useRef<string | null>(null);
+  const fetchCountRef = useRef(0);
+  const prevIdsRef = useRef<string[]>([]);
+
+  const serverValue = buildFromServerData(serverData);
+
+  // Stable key for reconciliation (not an object reference)
+  const serverKey = serverValue.map(m => m.id).sort().join(",");
+  const lastKey = lastRequestedRef.current;
+
+  useEffect(() => {
+    if (!optimistic || !lastKey || fetchCountRef.current > 0) return;
+    if (serverKey === lastKey) {
+      setOptimistic(null);           // server caught up
+      lastRequestedRef.current = null;
+    }
+  }, [serverKey, lastKey, optimistic]);
+
+  const value = optimistic ?? serverValue;
+
+  // Keep ref in sync every render (for diffing in handler)
+  prevIdsRef.current = value.map(m => m.id);
+
+  const handleChange = useCallback(async (newValue: T[]) => {
+    // 1. Optimistic — fires on EVERY click, never guarded
+    setOptimistic(newValue);
+    const newIds = newValue.map(m => m.id);
+    lastRequestedRef.current = [...newIds].sort().join(",");
+    const oldIds = prevIdsRef.current;
+    prevIdsRef.current = newIds;
+
+    // 2. Diff what changed
+    const added = newValue.filter(m => !new Set(oldIds).has(m.id));
+    const removed = oldIds.filter(id => !new Set(newIds).has(id));
+
+    // 3. Fetch (tracked, not blocking)
+    for (const item of added) {
+      fetchCountRef.current++;
+      try {
+        await fetch(...);
+        toast.dismiss(); toast.success("Added");
+        onMutation();
+      } catch {
+        toast.error("Failed");
+      } finally {
+        fetchCountRef.current--;
+      }
+    }
+  }, [...]);
+
+  return <Combobox value={value} onValueChange={handleChange} />;
+}
+```
+
+### Anti-Patterns
+
+| Anti-Pattern | Why It Breaks | Fix |
+|---|---|---|
+| `if (busy) return` before `setOptimistic` | Second click is silently dropped — UI freezes | Remove guard, use `fetchCountRef` for fetch-only gating |
+| `useEffect` depends on object/value refs | Runs every render (new array/object reference), causes flicker | Derive stable `string` key: `ids.sort().join(",")` |
+| `setOptimistic(null)` inside render IIFE | State update during render → extra re-renders | Move to `useEffect` |
+| Per-fetch toasts on rapid clicks | Toast spam (5 clicks = 5 toasts) | `toast.dismiss()` before each `toast.success()` |
+| Boolean busyRef blocks handler | Skips optimistic update AND ref diff, losing the click | Use `fetchCountRef` counter, never guard the handler |
+
+### Error Rollback
+
+On fetch failure, clear optimistic so server state takes over:
+```tsx
+} catch {
+  setOptimistic(null); // rollback to last known server state
+  toast.error("Failed");
+}
+```
 
 ## Architecture Notes
 
