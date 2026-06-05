@@ -95,6 +95,7 @@ export function PartsCarDetailSheet({
     if (!carId) return;
     try {
       await startDisassembly.mutateAsync(carId);
+      toast.dismiss();
       toast.success(t("toast.started"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("toast.startError"));
@@ -105,6 +106,7 @@ export function PartsCarDetailSheet({
     if (!carId) return;
     try {
       await completeDisassembly.mutateAsync(carId);
+      toast.dismiss();
       toast.success(t("toast.completed"));
     } catch (err) {
       toast.error(
@@ -174,6 +176,7 @@ export function PartsCarDetailSheet({
     if (!carId) return;
     try {
       const result = await publishToCatalog.mutateAsync(carId);
+      toast.dismiss();
       toast.success(t("toast.published", { count: result.publishedCount }));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("toast.publishError"));

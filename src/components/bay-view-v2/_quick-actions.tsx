@@ -56,6 +56,7 @@ export function QuickActions({
         toast.error(json.error.message ?? "Failed to save note");
         return;
       }
+      toast.dismiss();
       toast.success(t("noteAdded") ?? "Note added");
       setNoteText("");
       setShowNoteInput(false);

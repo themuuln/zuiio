@@ -113,6 +113,7 @@ function MechanicCredentialsView({
     const loginUser = createdMechanic.identifier || createdMechanic.email;
     const text = `Username/Phone/Email: ${loginUser}\nPassword: ${createdMechanic.password}`;
     navigator.clipboard.writeText(text);
+    toast.dismiss();
     toast.success("Credentials copied to clipboard");
   };
 
@@ -269,6 +270,7 @@ export function NewMechanicSheet({
       }
 
       dispatch({ type: "SET_CREATED", mechanic: body.data });
+      toast.dismiss();
       toast.success("Mechanic added successfully");
     } catch (err) {
       toast.error(

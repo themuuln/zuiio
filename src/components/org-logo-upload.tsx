@@ -67,6 +67,7 @@ export default function OrgLogoUpload({
       }
 
       onLogoChange(urlData.publicUrl);
+      toast.dismiss();
       toast.success("Logo uploaded");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
@@ -94,6 +95,7 @@ export default function OrgLogoUpload({
       }
 
       onLogoChange(null);
+      toast.dismiss();
       toast.success("Logo removed");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to remove logo");

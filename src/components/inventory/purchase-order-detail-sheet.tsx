@@ -71,6 +71,7 @@ export function PurchaseOrderDetailSheet({
     if (!poId) return;
     try {
       await receivePO.mutateAsync(poId);
+      toast.dismiss();
       toast.success(t("poReceived"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("failedToReceive"));
@@ -85,6 +86,7 @@ export function PurchaseOrderDetailSheet({
           id: poId,
           body: { status: status as PurchaseOrder["status"] },
         });
+        toast.dismiss();
         toast.success(t("poUpdated"));
       } catch (err) {
         toast.error(err instanceof Error ? err.message : t("failedToUpdate"));

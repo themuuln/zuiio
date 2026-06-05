@@ -82,6 +82,7 @@ export function useCreateDiagnosisLabel(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Label created");
       }
     },
@@ -154,6 +155,7 @@ export function useUpdateDiagnosisLabel(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Label updated");
       }
     },
@@ -263,6 +265,7 @@ export function useDeleteDiagnosisLabel(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Label deleted");
       }
     },

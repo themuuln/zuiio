@@ -83,6 +83,7 @@ export function useUpdateBayViewStatus(branchId: string | undefined) {
       toast.error("Failed to update status");
     },
     onSuccess: () => {
+      toast.dismiss();
       toast.success("Status updated");
     },
     onSettled: () => {
@@ -146,6 +147,7 @@ export function useAssignVehicleToBay(branchId: string | undefined) {
       toast.error("Failed to assign to bay");
     },
     onSuccess: (_data, vars) => {
+      toast.dismiss();
       toast.success(`Assigned to Bay ${vars.bayNumber}`);
     },
     onSettled: () => {
@@ -194,6 +196,7 @@ export function useRemoveVehicleFromBay(branchId: string | undefined) {
       toast.error("Failed to remove from bay");
     },
     onSuccess: () => {
+      toast.dismiss();
       toast.success("Removed from bay");
     },
     onSettled: () => {
@@ -235,6 +238,7 @@ export function useUpdateBayCount(branchId: string | undefined) {
       toast.error("Failed to update bay count");
     },
     onSuccess: () => {
+      toast.dismiss();
       toast.success("Bay count updated");
     },
     onSettled: () => {

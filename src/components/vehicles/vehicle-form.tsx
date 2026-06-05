@@ -171,6 +171,10 @@ export type VehicleFormProps = {
   showOwnerSelect?: boolean;
   onSuccess?: (vehicle: Vehicle) => void;
   onCancel?: () => void;
+  /** Show Cancel/Save buttons inside the form (default: true) */
+  showButtons?: boolean;
+  /** Custom form element id (for linking external submit buttons) */
+  formId?: string;
 };
 
 export function VehicleForm({
@@ -180,6 +184,8 @@ export function VehicleForm({
   showOwnerSelect = true,
   onSuccess,
   onCancel,
+  showButtons = true,
+  formId = "vehicle-form",
 }: VehicleFormProps) {
   const queryClient = useQueryClient();
   const orgQuery = useCurrentOrg();
@@ -439,6 +445,7 @@ export function VehicleForm({
       // Weight (kg)
       if (d.weight) form.setValue("weight", String(d.weight));
 
+      toast.dismiss();
       toast.success("Plate lookup complete");
     } catch {
       toast.error("Lookup failed — try again");
@@ -468,6 +475,7 @@ export function VehicleForm({
       form.setValue("make", newBrand.name);
       form.setValue("model", "");
       setNewBrandName("");
+      toast.dismiss();
       toast.success(`Brand "${name}" created`);
     } catch {
       toast.error("Failed to create brand");
@@ -494,6 +502,7 @@ export function VehicleForm({
       });
       form.setValue("model", newModel.name);
       setNewModelName("");
+      toast.dismiss();
       toast.success(`Model "${name}" created`);
     } catch {
       toast.error("Failed to create model");
@@ -653,7 +662,7 @@ export function VehicleForm({
   });
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-6">
+    <form id={formId} onSubmit={onSubmit} className="flex flex-col gap-6">
       {/* ── Mode Toggle Tabs ── */}
       <Tabs
         value={currentMode}
@@ -1338,34 +1347,36 @@ export function VehicleForm({
         </CardContent>
       </Card>
 
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        {onCancel && (
-          <Button
-            variant="outline"
-            type="button"
-            onClick={onCancel}
-            className="h-11 px-6"
-          >
-            {commonT("cancel")}
-          </Button>
-        )}
-        <Button
-          type="submit"
-          disabled={
-            form.formState.isSubmitting || createVehicleMutation.isPending
-          }
-          className="h-11 px-6 min-w-[140px]"
-        >
-          {form.formState.isSubmitting || createVehicleMutation.isPending ? (
-            <span className="flex items-center gap-2 justify-center">
-              <Loader2 className="size-4 animate-spin" />
-              Saving...
-            </span>
-          ) : (
-            t("addVehicle")
+      {showButtons && (
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          {onCancel && (
+            <Button
+              variant="outline"
+              type="button"
+              onClick={onCancel}
+              className="h-11 px-6"
+            >
+              {commonT("cancel")}
+            </Button>
           )}
-        </Button>
-      </div>
+          <Button
+            type="submit"
+            disabled={
+              form.formState.isSubmitting || createVehicleMutation.isPending
+            }
+            className="h-11 px-6 min-w-[140px]"
+          >
+            {form.formState.isSubmitting || createVehicleMutation.isPending ? (
+              <span className="flex items-center gap-2 justify-center">
+                <Loader2 className="size-4 animate-spin" />
+                Saving...
+              </span>
+            ) : (
+              t("addVehicle")
+            )}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

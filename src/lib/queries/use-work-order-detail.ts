@@ -222,6 +222,7 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
           });
         }
 
+        toast.dismiss();
         toast.success(`Status changed to ${variables.status}`);
       }
     },
@@ -297,6 +298,7 @@ export function useAssignMechanic(orgId: string | undefined) {
         queryClient.invalidateQueries({
           queryKey: workOrderKeys.all(orgId ?? ""),
         });
+        toast.dismiss();
         toast.success("Mechanic assigned");
       }
     },
@@ -370,6 +372,7 @@ export function useAddService(orgId: string | undefined) {
         queryClient.invalidateQueries({
           queryKey: workOrderKeys.all(orgId ?? ""),
         });
+        toast.dismiss();
         toast.success("Service added");
       }
     },
@@ -430,6 +433,7 @@ export function useRemoveService(orgId: string | undefined) {
         queryClient.invalidateQueries({
           queryKey: workOrderKeys.all(orgId ?? ""),
         });
+        toast.dismiss();
         toast.success("Service removed");
       }
     },
@@ -496,6 +500,7 @@ export function useAddPart(orgId: string | undefined) {
         queryClient.invalidateQueries({
           queryKey: workOrderKeys.all(orgId ?? ""),
         });
+        toast.dismiss();
         toast.success("Part added");
       }
     },
@@ -550,6 +555,7 @@ export function useRemovePart(orgId: string | undefined) {
         queryClient.invalidateQueries({
           queryKey: workOrderKeys.all(orgId ?? ""),
         });
+        toast.dismiss();
         toast.success("Part removed");
       }
     },

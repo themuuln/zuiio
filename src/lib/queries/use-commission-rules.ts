@@ -90,6 +90,7 @@ export function useCreateCommissionRule(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Commission rule created");
       }
     },
@@ -161,6 +162,7 @@ export function useUpdateCommissionRule(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Commission rule updated");
       }
     },
@@ -219,6 +221,7 @@ export function useDeleteCommissionRule(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Commission rule deleted");
       }
     },

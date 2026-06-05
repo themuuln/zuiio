@@ -184,6 +184,7 @@ export function ExpenseDetailSheet({
           notes: data.notes?.trim() || undefined,
         },
       });
+      toast.dismiss();
       toast.success(t("expenseUpdated"));
       setEditing(false);
     } catch (err) {
@@ -195,6 +196,7 @@ export function ExpenseDetailSheet({
     if (!expenseId) return;
     try {
       await deleteExpense.mutateAsync(expenseId);
+      toast.dismiss();
       toast.success(t("expenseDeleted"));
       handleOpenChange(false);
     } catch (err) {

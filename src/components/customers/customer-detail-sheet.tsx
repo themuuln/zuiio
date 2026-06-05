@@ -254,6 +254,7 @@ export function CustomerDetailSheet({
       return json.data;
     },
     onSettled: () => {
+      toast.dismiss();
       toast.success(t("deleted"));
       handleOpenChange(false);
     },

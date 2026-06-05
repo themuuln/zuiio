@@ -71,6 +71,7 @@ export function BranchForm({
         email: values.email || undefined,
       };
       const branch = await createBranch.mutateAsync(params);
+      toast.dismiss();
       toast.success(t("common.saved"));
       onSuccess?.(branch);
     } catch (error) {

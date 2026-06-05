@@ -120,6 +120,7 @@ export function useCreateCustomer(orgId: string | undefined) {
             queryKey: customerKeys.all(orgId),
           });
         }
+        toast.dismiss();
         toast.success("Customer created");
       }
     },

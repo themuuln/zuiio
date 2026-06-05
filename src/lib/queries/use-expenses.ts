@@ -126,6 +126,7 @@ export function useCreateExpense(orgId: string | undefined) {
           queryClient.invalidateQueries({ queryKey: expenseKeys.all(orgId) });
           queryClient.invalidateQueries({ queryKey: expenseKeys.stats(orgId) });
         }
+        toast.dismiss();
         toast.success("Expense created");
       }
     },
@@ -180,6 +181,7 @@ export function useUpdateExpense(orgId: string | undefined) {
           });
           queryClient.invalidateQueries({ queryKey: expenseKeys.stats(orgId) });
         }
+        toast.dismiss();
         toast.success("Expense updated");
       }
     },
@@ -223,6 +225,7 @@ export function useDeleteExpense(orgId: string | undefined) {
       } else {
         if (orgId)
           queryClient.invalidateQueries({ queryKey: expenseKeys.all(orgId) });
+        toast.dismiss();
         toast.success("Expense deleted");
       }
     },
@@ -304,6 +307,7 @@ export function useCreateExpenseCategory(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Category created");
       }
     },
@@ -381,6 +385,7 @@ export function useUpdateExpenseCategory(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Category updated");
       }
     },
@@ -448,6 +453,7 @@ export function useDeleteExpenseCategory(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Category deleted");
       }
     },

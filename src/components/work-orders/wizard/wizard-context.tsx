@@ -774,6 +774,7 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
           } catch {
             /* ignore */
           }
+          toast.dismiss();
           toast.success("Work order created");
           onCreated?.();
           push(`/dashboard/work-orders/${data.id}`);

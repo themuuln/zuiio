@@ -360,6 +360,7 @@ export function VehicleDetailSheet({
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.all(orgId ?? "") });
       setEditing(false);
+      toast.dismiss();
       toast.success(t("vehicleUpdated"));
     },
   });
@@ -375,6 +376,7 @@ export function VehicleDetailSheet({
       return json.data;
     },
     onSettled: () => {
+      toast.dismiss();
       toast.success(t("deleted"));
       handleOpenChange(false);
     },

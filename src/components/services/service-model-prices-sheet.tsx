@@ -216,6 +216,7 @@ export function ServiceModelPricesSheet({
       return;
     }
 
+    toast.dismiss();
     toast.success(
       `${changedIds.size} model price${changedIds.size > 1 ? "s" : ""} updated`,
     );

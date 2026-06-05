@@ -73,6 +73,7 @@ export function NotesSection({
         toast.error(json.error.message ?? "Failed to save");
         return;
       }
+      toast.dismiss();
       toast.success(t("saved") ?? "Saved");
       setEditingField(null);
       setEditValue("");

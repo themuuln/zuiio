@@ -119,6 +119,7 @@ export function SupplierDetailSheet({
           notes: data.notes || undefined,
         },
       });
+      toast.dismiss();
       toast.success(t("supplierUpdated"));
       handleOpenChange(false);
     } catch (err) {

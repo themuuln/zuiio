@@ -120,6 +120,7 @@ export function useCreateCustomerCommunication(
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Communication created");
       }
     },
@@ -205,6 +206,7 @@ export function useDeleteCustomerCommunication(
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Communication deleted");
       }
     },

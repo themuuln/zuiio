@@ -52,6 +52,7 @@ export function useCreateAttachment(orgId: string | undefined, woId: string) {
       queryClient.invalidateQueries({
         queryKey: attachmentKeys.list(orgId ?? "", woId),
       });
+      toast.dismiss();
       toast.success("Photo uploaded");
     },
     onError: (err: Error, variables) => {
@@ -93,6 +94,7 @@ export function useDeleteAttachment(orgId: string | undefined, woId: string) {
         queryClient.invalidateQueries({
           queryKey: attachmentKeys.list(orgId ?? "", woId),
         });
+        toast.dismiss();
         toast.success("Photo removed");
       }
     },

@@ -104,6 +104,7 @@ export function NewPartsCarSheet({
           : new Date().toISOString().split("T")[0],
         notes: data.notes || undefined,
       });
+      toast.dismiss();
       toast.success("Машин бүртгэгдлээ");
       handleOpenChange(false);
     } catch (err) {

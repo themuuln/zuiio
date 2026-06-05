@@ -475,6 +475,7 @@ export function useCreateSupplier(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Supplier created");
       }
     },
@@ -548,6 +549,7 @@ export function useUpdateSupplier(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Supplier updated");
       }
     },
@@ -608,6 +610,7 @@ export function useDeleteSupplier(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Supplier deleted");
       }
     },
@@ -691,6 +694,7 @@ export function useUpdatePart(orgId: string | undefined) {
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
       } else {
+        toast.dismiss();
         toast.success("Part updated");
       }
     },

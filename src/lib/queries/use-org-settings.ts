@@ -86,6 +86,7 @@ export function useUpdateOrgSettings(orgId: string | undefined) {
         if (orgId) {
           queryClient.invalidateQueries({ queryKey: orgKeys.settings(orgId) });
         }
+        toast.dismiss();
         toast.success("Settings saved");
       }
     },

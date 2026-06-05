@@ -79,6 +79,7 @@ export function useDeleteVehicle(orgId: string | undefined) {
       } else {
         if (orgId)
           queryClient.invalidateQueries({ queryKey: vehicleKeys.all(orgId) });
+        toast.dismiss();
         toast.success("Vehicle deleted");
       }
     },
@@ -131,6 +132,7 @@ export function useCreateVehicle(orgId: string | undefined) {
             queryKey: vehicleKeys.all(orgId),
           });
         }
+        toast.dismiss();
         toast.success("Vehicle created");
       }
     },

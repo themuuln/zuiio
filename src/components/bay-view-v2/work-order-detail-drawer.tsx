@@ -227,6 +227,7 @@ export function WorkOrderDetailDrawer({
         toast.error(json.error.message ?? "Failed to complete");
       } else {
         await fetchWo(true);
+        toast.dismiss();
         toast.success("Work order completed");
         setShowPickupForm(false);
         setShowCelebration(true);
