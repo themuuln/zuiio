@@ -6,7 +6,7 @@ import {
   getWorkOrderServicesWithIntervals,
   savePostServiceData,
 } from "@/lib/services/post-service-service";
-import type { WorkOrderDetail } from "@/lib/types";
+import type { WorkOrderDetail, WorkOrderService } from "@/lib/types";
 
 import type { CatalogServiceItem } from "./_drawer-types";
 import type { PostServiceFormData } from "./_schema";
@@ -133,6 +133,7 @@ export function useDrawerMutations({
         toast.error(json.error.message ?? "Failed to update status");
       } else {
         await fetchWo(true);
+        toast.dismiss();
         toast.success(`Status changed to ${newStatus}`);
         onRefresh();
       }
@@ -177,7 +178,7 @@ export function useDrawerMutations({
 
   // Optimistic add: service appears immediately with editable price
   function addService(svc: CatalogServiceItem) {
-    const tempId = `temp-${crypto.randomUUID()}`;
+    const tempId = `temp-${Math.random().toString(36).slice(2, 11)}`;
     const defaultPrice = Number(svc.default_price ?? 0);
     setAddingServiceId(tempId);
     setEditingServicePriceId(tempId);
@@ -195,8 +196,18 @@ export function useDrawerMutations({
             quantity: 1,
             unit_price: defaultPrice,
             final_price: defaultPrice,
+            discount_amount: 0,
+            discount_percentage: 0,
+            unit_cost: 0,
+            last_sold_price: null,
+            notes: null,
+            description: null,
+            mechanic_id: null,
+            work_order_id: workOrderId,
+            organization_id: null,
+            created_by: null,
             created_at: new Date().toISOString(),
-          } as any,
+          } as WorkOrderService,
         ],
       };
     });
@@ -248,6 +259,7 @@ export function useDrawerMutations({
           ),
         };
       });
+      toast.dismiss();
       toast.success(`Added service: ${svc.service_name}`);
       onRefresh();
     } catch {
@@ -385,6 +397,7 @@ export function useDrawerMutations({
           parts: [...(prev.parts ?? []), newPart],
         };
       });
+      toast.dismiss();
       toast.success(`Added part: ${trimmedPartName}`);
       onRefresh();
       setNewPartName("");
@@ -542,6 +555,7 @@ export function useDrawerMutations({
         }
         return;
       }
+      toast.dismiss();
       toast.success("Price updated");
       onRefresh();
     } catch {
@@ -611,6 +625,7 @@ export function useDrawerMutations({
         }
         return;
       }
+      toast.dismiss();
       toast.success("Price updated");
       onRefresh();
     } catch {
@@ -645,6 +660,7 @@ export function useDrawerMutations({
       if (json.error) {
         toast.error(json.error.message);
       } else {
+        toast.dismiss();
         toast.success(`Invoice ${json.data.invoice_number} created`);
         setInvoicePublicToken(json.data.public_token);
         window.open(`/invoice/${json.data.public_token}`, "_blank");
@@ -709,6 +725,7 @@ export function useDrawerMutations({
         toast.error(json.error.message ?? "Failed to update status");
       } else {
         await fetchWo(true);
+        toast.dismiss();
         toast.success("Ready for Pickup — recommendations saved");
         onRefresh();
       }

@@ -216,7 +216,10 @@ export function useOrgMutation<TData, TVariables = void>(
       }
 
       const msg = getSuccessMsg(variables);
-      if (msg) toast.success(msg);
+      if (msg) {
+        toast.dismiss();
+        toast.success(msg);
+      }
 
       onSuccess?.(data, variables);
     },
