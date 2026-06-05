@@ -309,19 +309,63 @@ async function fetchMechanicKpis(
     .from("work_order_parts")
     .select("final_price, work_order_id")
     .in("work_order_id", woIds);
-  const { data: completionData } =
+  const [completionData, woCustomerRows] = await Promise.all([
     woIds.length > 0
-      ? await supabase
+      ? supabase
           .from("service_completion_data")
-          .select("work_order_id, customer_satisfaction")
+          .select(
+            "work_order_id, customer_satisfaction, customer_feedback, created_at",
+          )
           .in("work_order_id", woIds)
-          .not("customer_satisfaction", "is", null)
-      : { data: [] as any[] };
+      : { data: [] as any[] },
+    woIds.length > 0
+      ? supabase
+          .from("work_orders")
+          .select("id, customer_id")
+          .in("id", woIds)
+          .not("customer_id", "is", null)
+      : { data: [] as any[] },
+  ]);
 
   const woSatMap = new Map<string, number>();
-  for (const c of completionData ?? []) {
+  const woReviewData = new Map<
+    string,
+    { satisfaction: number; feedback: string | null; date: string }
+  >();
+  for (const c of completionData.data ?? []) {
     if (c.customer_satisfaction != null) {
       woSatMap.set(c.work_order_id, c.customer_satisfaction);
+      woReviewData.set(c.work_order_id, {
+        satisfaction: c.customer_satisfaction,
+        feedback: c.customer_feedback ?? null,
+        date: c.created_at ?? "",
+      });
+    }
+  }
+
+  // Fetch customer names for feedback display
+  const customerIds = [
+    ...new Set(
+      (woCustomerRows.data ?? []).map((w) => w.customer_id).filter(Boolean),
+    ),
+  ] as string[];
+  const custNameMap = new Map<string, string>();
+  if (customerIds.length > 0) {
+    const { data: customers } = await supabase
+      .from("customers")
+      .select("id, first_name, last_name")
+      .in("id", customerIds);
+    for (const c of customers ?? []) {
+      custNameMap.set(
+        c.id,
+        [c.first_name, c.last_name].filter(Boolean).join(" ") || "Customer",
+      );
+    }
+  }
+  const woCustNameMap = new Map<string, string>();
+  for (const wo of woCustomerRows.data ?? []) {
+    if (wo.customer_id) {
+      woCustNameMap.set(wo.id, custNameMap.get(wo.customer_id) ?? "Customer");
     }
   }
 
@@ -363,6 +407,21 @@ async function fetchMechanicKpis(
         satCount++;
       }
     }
+    const recentReviews = mWoIds
+      .map((wid) => {
+        const review = woReviewData.get(wid);
+        if (!review) return null;
+        return {
+          rating: review.satisfaction,
+          feedback: review.feedback,
+          customer_name: woCustNameMap.get(wid) ?? null,
+          date: review.date,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => new Date(b!.date).getTime() - new Date(a!.date).getTime())
+      .slice(0, 10) as ReportMechanicKpi["recent_reviews"];
+
     kpis.push({
       mechanic_id: mid,
       mechanic_name: profileMap.get(mid) ?? "Unknown",
@@ -375,6 +434,7 @@ async function fetchMechanicKpis(
       avg_satisfaction:
         satCount > 0 ? Math.round((satSum / satCount) * 10) / 10 : null,
       total_reviews: satCount,
+      recent_reviews: recentReviews,
     });
   }
 

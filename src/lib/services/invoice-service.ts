@@ -4,6 +4,7 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { sendInvoiceEmail } from "@/lib/services/email-service";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   Invoice,
   InvoiceItem,
@@ -28,8 +29,11 @@ const invoiceItemFieldMap: FieldMap<Partial<AddInvoiceItemParams>> = {
 };
 
 // ── Generate the next invoice number for an org ───
-export async function generateInvoiceNumber(orgId: string): Promise<string> {
-  const supabase = await createClient();
+export async function generateInvoiceNumber(
+  orgId: string,
+  supabaseOverride?: SupabaseClient,
+): Promise<string> {
+  const supabase = supabaseOverride ?? (await createClient());
 
   // Get org settings for prefix
   const { data: settings } = await supabase
@@ -189,10 +193,13 @@ export async function createInvoiceFromWorkOrder(
     dueDays?: number;
     notes?: string;
     terms?: string;
+    supabase?: SupabaseClient;
+    userId?: string;
   },
 ): Promise<InvoiceWithItems> {
-  const supabase = await createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const supabase = options?.supabase ?? (await createClient());
+  const userId =
+    options?.userId ?? (await supabase.auth.getUser()).data.user?.id;
 
   // Fetch work order with all dependencies
   const { data: wo } = await supabase
@@ -280,7 +287,7 @@ export async function createInvoiceFromWorkOrder(
   const total = Math.max(0, subtotal - discountTotal);
 
   // Generate invoice number
-  const invoiceNumber = await generateInvoiceNumber(orgId);
+  const invoiceNumber = await generateInvoiceNumber(orgId, supabase);
 
   // Customer name
   const customerName = customer
@@ -359,22 +366,60 @@ export async function createInvoiceFromWorkOrder(
     sort_order: (services?.length ?? 0) + i,
   }));
 
-  if (serviceItems.length > 0) {
+  // Batch insert all items in a single query
+  const allItems = [...serviceItems, ...partItems];
+  if (allItems.length > 0) {
     const { error: itemsError } = await supabase
       .from("invoice_items")
-      .insert(serviceItems);
-    if (itemsError) throw new Error(itemsError.message);
-  }
-
-  if (partItems.length > 0) {
-    const { error: itemsError } = await supabase
-      .from("invoice_items")
-      .insert(partItems);
+      .insert(allItems);
     if (itemsError) throw new Error(itemsError.message);
   }
 
   revalidateTag(cacheTags.invoices(orgId), "max");
-  return getInvoice(invoice.id);
+
+  // Return directly instead of re-fetching — avoids extra queries + createClient
+  return {
+    id: invoice.id,
+    organization_id: orgId,
+    branch_id: null,
+    invoice_number: invoiceNumber,
+    status: "draft",
+    subtotal,
+    discount_total: discountTotal,
+    tax_total: 0,
+    total,
+    amount_paid: 0,
+    balance_due: total,
+    issued_at: new Date().toISOString(),
+    due_at: dueAt.toISOString(),
+    customer_id: wo.customer_id,
+    customer_name: customerName,
+    customer_phone: customer?.phone ?? null,
+    customer_email: customer?.email ?? null,
+    customer_address: customer?.address ?? null,
+    vehicle_id: wo.vehicle_id,
+    vehicle_plate: vehicle?.plate_number ?? null,
+    vehicle_details: vehicleDetails,
+    work_order_id: workOrderId,
+    notes: options?.notes ?? null,
+    terms: options?.terms ?? "Payment due upon receipt.",
+    footer: null,
+    public_token: null,
+    email_sent_at: null,
+    paid_at: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    created_by: userId ?? null,
+    updated_by: userId ?? null,
+    deleted_at: null,
+    items: allItems.map((item, i) => ({
+      id: `pending-${i}`,
+      invoice_id: invoice.id,
+      ...item,
+      created_at: new Date().toISOString(),
+    })) as unknown as InvoiceItem[],
+    payments: [],
+  } as unknown as InvoiceWithItems;
 }
 
 // ── Standalone invoice (no work order) ──────────────

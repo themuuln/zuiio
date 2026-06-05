@@ -32,6 +32,8 @@ export type ResponsiveFormModalProps = {
   useDialogOnDesktop?: boolean;
   /** Width size for the side Sheet on desktop (default: "xl") */
   sheetSize?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
+  /** Z-index layer for stacked overlays. 0 = default (z-50), 1 = z-51, etc. */
+  zLayer?: number;
 };
 
 export function ResponsiveFormModal({
@@ -43,6 +45,7 @@ export function ResponsiveFormModal({
   className,
   useDialogOnDesktop = false,
   sheetSize = "xl",
+  zLayer = 0,
 }: ResponsiveFormModalProps) {
   const isMobile = useIsMobile();
 
@@ -89,6 +92,7 @@ export function ResponsiveFormModal({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
+          zLayer={zLayer}
           className={cn(
             "sm:max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden",
             className,
@@ -116,6 +120,7 @@ export function ResponsiveFormModal({
       open={open}
       onOpenChange={onOpenChange}
       size={sheetSize as any}
+      zLayer={zLayer}
     >
       <DetailSheet.Header className="p-6 pb-2">
         <DetailSheet.Title className="text-xl font-bold">

@@ -2,6 +2,7 @@
 
 import { Car, CornerDownRight, Loader2, Plus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { zStack } from "@/lib/z-stack";
 import { NewCustomerSheet } from "@/components/customers/new-customer-sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,26 @@ export function AssignDialog({
   const [creatingWorkOrder, setCreatingWorkOrder] = useState(false);
   const [showNewVehicle, setShowNewVehicle] = useState(false);
   const [showNewCustomer, setShowNewCustomer] = useState(false);
+  const [childZLayer, setChildZLayer] = useState(0);
+  // Push z-layer when a child sheet opens so it stacks above the Dialog
+  const childZRef = useRef(false);
+  useEffect(() => {
+    const childOpen = showNewVehicle || showNewCustomer;
+    if (childOpen && !childZRef.current) {
+      childZRef.current = true;
+      setChildZLayer(zStack.push());
+    } else if (!childOpen && childZRef.current) {
+      childZRef.current = false;
+      zStack.pop();
+    }
+    return () => {
+      if (childZRef.current) {
+        childZRef.current = false;
+        zStack.pop();
+      }
+    };
+  }, [showNewVehicle, showNewCustomer]);
+
   const searchRef = useRef<HTMLInputElement>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -476,6 +497,7 @@ export function AssignDialog({
         open={showNewVehicle}
         onOpenChange={setShowNewVehicle}
         initialPlateNumber={search.trim() || undefined}
+        zLayer={childZLayer}
         onSuccess={() => {
           setShowNewVehicle(false);
           setSearch("");
@@ -485,6 +507,7 @@ export function AssignDialog({
       <NewCustomerSheet
         open={showNewCustomer}
         onOpenChange={setShowNewCustomer}
+        zLayer={childZLayer}
         onSuccess={() => {
           setShowNewCustomer(false);
         }}

@@ -521,6 +521,7 @@
     "startDiagnosing": "Start Diagnosing",
     "startWork": "Start Work",
     "invoice": "Invoice",
+    "createInvoice": "Create Invoice",
     "creating": "Creating...",
     "mech": "Mech:",
     "confirmComplete": "This will mark the work order as complete.",

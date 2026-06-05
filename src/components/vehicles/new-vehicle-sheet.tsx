@@ -9,6 +9,8 @@ type NewVehicleSheetProps = {
   onOpenChange: (open: boolean) => void;
   onSuccess?: (vehicleId: string) => void;
   initialPlateNumber?: string;
+  /** Z-index layer for stacked overlays. 0 = default (z-50), 1 = z-51, etc. */
+  zLayer?: number;
 };
 
 export function NewVehicleSheet({
@@ -16,6 +18,7 @@ export function NewVehicleSheet({
   onOpenChange,
   onSuccess,
   initialPlateNumber,
+  zLayer = 0,
 }: NewVehicleSheetProps) {
   const t = useTranslations("vehicles");
 
@@ -26,6 +29,7 @@ export function NewVehicleSheet({
       title={t("addVehicle")}
       description={t("createSubtitle")}
       sheetSize="2xl"
+      zLayer={zLayer}
     >
       <VehicleForm
         mode="full"

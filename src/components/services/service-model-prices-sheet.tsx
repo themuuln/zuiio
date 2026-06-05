@@ -472,7 +472,7 @@ export function ServiceModelPricesSheet({
         open={showConfirmDiscard}
         onOpenChange={setShowConfirmDiscard}
       >
-        <AlertDialogContent>
+        <AlertDialogContent zLayer={1}>
           <AlertDialogHeader>
             <AlertDialogTitle>Discard unsaved changes?</AlertDialogTitle>
             <AlertDialogDescription>

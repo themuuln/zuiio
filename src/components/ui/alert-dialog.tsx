@@ -5,6 +5,24 @@ import type * as React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+/**
+ * Z-index layer classes for stacked overlays.
+ * Layer 0 = default z-50, layer 1 = z-51, etc.
+ */
+const zLayerClasses = [
+  "z-50",
+  "z-51",
+  "z-52",
+  "z-53",
+  "z-54",
+  "z-55",
+  "z-56",
+  "z-57",
+  "z-58",
+  "z-59",
+  "z-60",
+] as const;
+
 function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
 }
@@ -23,13 +41,15 @@ function AlertDialogPortal({ ...props }: AlertDialogPrimitive.Portal.Props) {
 
 function AlertDialogOverlay({
   className,
+  zLayer = 0,
   ...props
-}: AlertDialogPrimitive.Backdrop.Props) {
+}: AlertDialogPrimitive.Backdrop.Props & { zLayer?: number }) {
   return (
     <AlertDialogPrimitive.Backdrop
       data-slot="alert-dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 isolate bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        zLayerClasses[zLayer] ?? "z-50",
         className,
       )}
       {...props}
@@ -40,19 +60,25 @@ function AlertDialogOverlay({
 function AlertDialogContent({
   className,
   size = "default",
+  zLayer = 0,
   ...props
 }: AlertDialogPrimitive.Popup.Props & {
   size?: "default" | "sm";
+  /** Z-index layer for stacked overlays. 0 = default (z-50), 1 = z-51, etc. */
+  zLayer?: number;
 }) {
+  const zClass = zLayerClasses[zLayer] ?? "z-50";
+
   return (
     <AlertDialogPortal>
-      <AlertDialogOverlay />
+      <AlertDialogOverlay zLayer={zLayer} />
       <AlertDialogPrimitive.Popup
         data-slot="alert-dialog-content"
         data-size={size}
         onPointerDown={(e) => e.stopPropagation()}
         className={cn(
-          "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 pointer-events-auto grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "group/alert-dialog-content fixed top-1/2 left-1/2 pointer-events-auto grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          zClass,
           className,
         )}
         {...props}

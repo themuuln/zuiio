@@ -19,7 +19,7 @@ export function InvoiceQrPopover({ url, children }: InvoiceQrPopoverProps) {
   useEffect(() => {
     if (!url) return;
     QRCode.toDataURL(url, {
-      width: 160,
+      width: 320,
       margin: 2,
       color: { dark: "#000000", light: "#ffffff" },
     }).then(setQrDataUrl);
@@ -34,6 +34,10 @@ export function InvoiceQrPopover({ url, children }: InvoiceQrPopoverProps) {
     timeoutRef.current = setTimeout(() => setOpen(false), 200);
   }
 
+  function handleClick() {
+    window.open(url, "_blank");
+  }
+
   return (
     <div
       ref={containerRef}
@@ -42,31 +46,33 @@ export function InvoiceQrPopover({ url, children }: InvoiceQrPopoverProps) {
       onMouseLeave={handleLeave}
       onFocus={handleEnter}
       onBlur={handleLeave}
+      onClick={handleClick}
     >
       {children}
       {open && qrDataUrl && (
         <div
           className={cn(
-            "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50",
-            "rounded-lg border border-border bg-popover shadow-xl p-3",
-            "flex flex-col items-center gap-2",
+            "absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50",
+            "rounded-xl border border-border bg-popover shadow-2xl p-5",
+            "flex flex-col items-center gap-3",
             "animate-in fade-in zoom-in-95 duration-150",
           )}
+          style={{ width: 280 }}
           onMouseEnter={handleEnter}
           onMouseLeave={handleLeave}
         >
           <img
             src={qrDataUrl}
             alt="Invoice QR code"
-            width={160}
-            height={160}
-            className="rounded-md"
+            width={240}
+            height={240}
+            className="rounded-lg"
           />
-          <span className="text-xs text-muted-foreground text-center leading-tight">
+          <span className="text-sm font-medium text-muted-foreground text-center leading-snug">
             Scan to view invoice
           </span>
           {/* Arrow pointing down to the button */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-border" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-t-[7px] border-t-border" />
         </div>
       )}
     </div>

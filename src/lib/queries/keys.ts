@@ -346,3 +346,11 @@ export const expenseKeys = {
   categories: (orgId: string) =>
     [...expenseKeys.all(orgId), "categories"] as const,
 };
+
+export const bayViewKeys = {
+  all: ["bay-view"] as const,
+  data: (branchId: string | undefined) =>
+    [...bayViewKeys.all, "data", branchId ?? "all"] as const,
+  shiftReport: (branchId: string | undefined) =>
+    [...bayViewKeys.all, "shift-report", branchId ?? "all"] as const,
+};

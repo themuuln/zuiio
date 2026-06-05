@@ -35,6 +35,7 @@ interface MechanicOption {
 
 interface Helper {
   id: string;
+  mechanic_id?: string;
   full_name?: string | null | undefined;
 }
 
@@ -68,12 +69,12 @@ export function MechanicMultiSelect({
 
   const isBusy = saving || busy;
 
-  const helperIds = new Set(helpers.map((h) => h.id));
+  const helperIds = new Set(helpers.map((h) => h.mechanic_id ?? h.id));
   const availableForHelper = mechanics.filter(
     (m) => m.id !== leadMechanicId && !helperIds.has(m.id),
   );
 
-  const helperIdSet = new Set(helpers.map((h) => h.id));
+  const helperIdSet = new Set(helpers.map((h) => h.mechanic_id ?? h.id));
   const availableForLead = mechanics;
 
   async function addHelper(mechanicId: string) {
@@ -204,7 +205,10 @@ export function MechanicMultiSelect({
                       </span>
                       {helperIdSet.has(m.id) && (
                         <span className="flex items-center gap-1 text-xs font-medium text-primary shrink-0">
-                          <Check className="size-4 text-primary" strokeWidth={3} />
+                          <Check
+                            className="size-4 text-primary"
+                            strokeWidth={3}
+                          />
                           Helper
                         </span>
                       )}

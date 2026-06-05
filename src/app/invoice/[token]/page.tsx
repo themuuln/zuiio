@@ -12,6 +12,7 @@ import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -270,9 +271,9 @@ export default function PublicInvoicePage() {
   }
 
   return (
-    <div className="min-h-dvh bg-gray-50/50 dark:bg-gray-950/50 print:bg-white">
+    <div className="min-h-dvh bg-background print:bg-white">
       {/* ── Action bar (hidden when printing) ── */}
-      <div className="sticky top-0 z-10 border-b border-border bg-white/80 backdrop-blur-sm dark:bg-gray-950/80 print:hidden">
+      <div className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-sm print:hidden">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 md:px-8">
           <div className="flex items-center gap-3">
             <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground">
@@ -281,6 +282,7 @@ export default function PublicInvoicePage() {
             <span className="text-sm font-semibold">TOLOM</span>
           </div>
           <div className="flex items-center gap-2">
+            <LocaleSwitcher />
             <ExportButton
               data={items}
               columns={invoiceItemColumns}

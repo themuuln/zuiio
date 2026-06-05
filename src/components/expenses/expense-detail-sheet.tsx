@@ -262,7 +262,7 @@ export function ExpenseDetailSheet({
                   >
                     <Trash2 className="size-4" />
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent zLayer={1}>
                     <AlertDialogHeader>
                       <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
                       <AlertDialogDescription>

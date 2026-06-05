@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Loader2, Plus, Search, User } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CustomerForm } from "@/components/customers/customer-form";
@@ -323,7 +323,10 @@ export function VehicleForm({
 
   // ── Handlers ─────────────────────────────────────────────
 
+  const plateRef = useRef<HTMLInputElement>(null);
+
   const handlePlateLookup = async () => {
+    plateRef.current?.blur();
     const plate = form.getValues("plateNumber").trim();
     if (!plate || plate.length < 7) {
       toast.error("Enter a valid plate number first");
@@ -819,6 +822,7 @@ export function VehicleForm({
             <FieldContent>
               <div className="relative flex gap-2">
                 <PlateInput
+                  ref={plateRef}
                   value={form.watch("plateNumber")}
                   onChange={(v) => form.setValue("plateNumber", v)}
                   className="h-11 flex-1"
@@ -826,6 +830,15 @@ export function VehicleForm({
                   lang="mn"
                   autoFocus={!!initialData?.plateNumber}
                   aria-invalid={!!form.formState.errors.plateNumber}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const plate = form.getValues("plateNumber").trim();
+                      if (plate.length >= 7 && !looking) {
+                        e.preventDefault();
+                        handlePlateLookup();
+                      }
+                    }
+                  }}
                   {...inputProps("plate")}
                 />
                 <Button
@@ -1325,7 +1338,8 @@ export function VehicleForm({
         </CardContent>
       </Card>
 
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">onCancel && (
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        {onCancel && (
           <Button
             variant="outline"
             type="button"
@@ -1334,7 +1348,7 @@ export function VehicleForm({
           >
             {commonT("cancel")}
           </Button>
-        )
+        )}
         <Button
           type="submit"
           disabled={

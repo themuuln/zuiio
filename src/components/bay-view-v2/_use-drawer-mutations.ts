@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   getWorkOrderServicesWithIntervals,
@@ -87,8 +87,13 @@ export function useDrawerMutations({
 
   const [creatingInvoice, setCreatingInvoice] = useState(false);
   const [invoicePublicToken, setInvoicePublicToken] = useState<string | null>(
-    null,
+    wo?.invoice_public_token ?? null,
   );
+
+  // Sync invoice token from work order data (handles async load)
+  useEffect(() => {
+    setInvoicePublicToken(wo?.invoice_public_token ?? null);
+  }, [wo?.invoice_public_token]);
 
   // ── Unsaved changes guard / celebration ──
 
@@ -642,6 +647,7 @@ export function useDrawerMutations({
       } else {
         toast.success(`Invoice ${json.data.invoice_number} created`);
         setInvoicePublicToken(json.data.public_token);
+        window.open(`/invoice/${json.data.public_token}`, "_blank");
       }
     } catch {
       toast.error("Failed to create invoice");

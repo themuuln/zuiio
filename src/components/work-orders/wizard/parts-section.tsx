@@ -279,6 +279,7 @@ export function PartsSection() {
                     </div>
                     <NumericKeypad
                       value={part.quantity}
+                      zLayer={1}
                       onChange={(val) =>
                         ctx.updatePart(
                           idx,
@@ -296,6 +297,7 @@ export function PartsSection() {
                     </NumericKeypad>
                     <NumericKeypad
                       value={part.unit_price}
+                      zLayer={1}
                       onChange={(val) => ctx.updatePart(idx, "unit_price", val)}
                     >
                       <Input

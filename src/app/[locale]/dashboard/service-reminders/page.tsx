@@ -498,7 +498,7 @@ export default function ServiceRemindersPage() {
             <SheetTrigger render={<Button variant="outline" size="icon-xs" />}>
               <Settings className="size-4" />
             </SheetTrigger>
-            <SheetContent side="right" className="w-80 sm:w-96">
+            <SheetContent side="right" zLayer={0} className="w-80 sm:w-96">
               <SheetHeader>
                 <SheetTitle>{t("serviceReminders.configTitle")}</SheetTitle>
                 <SheetDescription>
@@ -568,6 +568,7 @@ export default function ServiceRemindersPage() {
           </Sheet>
 
           <Dialog open={showAdd} onOpenChange={setShowAdd}>
+            {/* zLayer={1} on DialogContent below so this Dialog stacks above the config Sheet if both are open */}
             <DialogTrigger
               render={
                 <Button>
@@ -576,7 +577,7 @@ export default function ServiceRemindersPage() {
                 </Button>
               }
             />
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent zLayer={1} className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>
                   {t("serviceReminders.addNewSchedule")}
@@ -769,7 +770,7 @@ export default function ServiceRemindersPage() {
           </Dialog>
 
           <Dialog open={showEdit} onOpenChange={setShowEdit}>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent zLayer={1} className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>{t("serviceReminders.editSchedule")}</DialogTitle>
               </DialogHeader>

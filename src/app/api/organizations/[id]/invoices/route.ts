@@ -21,7 +21,7 @@ export const GET = createRouteHandler(
 );
 
 export const POST = createRouteHandler(
-  async ({ request, orgId, user }) => {
+  async ({ request, orgId, user, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
@@ -59,6 +59,8 @@ export const POST = createRouteHandler(
         dueDays: body.due_days ?? body.dueDays,
         notes: body.notes,
         terms: body.terms,
+        supabase,
+        userId: user.id,
       },
     );
     return NextResponse.json({ data: invoice }, { status: 201 });

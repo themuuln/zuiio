@@ -228,6 +228,13 @@ export interface ReportProfitability {
 }
 
 /** Per-mechanic KPI row */
+export interface MechanicReview {
+  rating: number;
+  feedback: string | null;
+  customer_name: string | null;
+  date: string;
+}
+
 export interface ReportMechanicKpi {
   mechanic_id: string;
   mechanic_name: string;
@@ -238,6 +245,7 @@ export interface ReportMechanicKpi {
   avg_revenue_per_wo: number;
   avg_satisfaction: number | null;
   total_reviews: number;
+  recent_reviews: MechanicReview[];
 }
 
 export interface DailyReport {

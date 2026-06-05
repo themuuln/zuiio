@@ -3,6 +3,12 @@
 import { CheckCircle2, History, RotateCcw, User, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Typography } from "@/components/ui/typography";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 import type {
   WorkOrderServiceHistoryEntry,
   WorkOrderStatusHistory,
@@ -352,10 +358,21 @@ export function StatusTimeline({
                         </span>
                       ) : null}
                       {entry.helpers.length > 0 ? (
-                        <span className="flex items-center gap-1 text-muted-foreground/70">
-                          +{entry.helpers.length} helper
-                          {entry.helpers.length > 1 ? "s" : ""}
-                        </span>
+                        <TooltipProvider delay={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="flex items-center gap-1 text-muted-foreground/70">
+                                +{entry.helpers.length} helper
+                                {entry.helpers.length > 1 ? "s" : ""}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              {entry.helpers
+                                .map((h) => h.full_name ?? "Unknown")
+                                .join(", ")}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       ) : null}
                     </div>
                   </div>

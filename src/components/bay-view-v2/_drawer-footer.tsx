@@ -163,7 +163,17 @@ export function DrawerFooter({
             <InvoiceQrPopover
               url={`${window.location.origin}/invoice/${invoicePublicToken}`}
             >
-              <Button variant="outline" size="sm" className="h-9 px-3 text-xs">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-3 text-xs"
+                onClick={() =>
+                  window.open(
+                    `${window.location.origin}/invoice/${invoicePublicToken}`,
+                    "_blank",
+                  )
+                }
+              >
                 <FileText className="size-4" />
                 {t("invoice")}
               </Button>
@@ -177,7 +187,7 @@ export function DrawerFooter({
               disabled={saving || creatingInvoice}
             >
               <FileText className="size-4" />
-              {creatingInvoice ? t("creating") : t("invoice")}
+              {creatingInvoice ? t("creating") : t("createInvoice")}
             </Button>
           ))}
 

@@ -205,30 +205,80 @@ async function getMechanicKpis(
   for (const p of profiles ?? [])
     profileMap.set(p.id, p.full_name ?? "Unknown");
 
-  // Get all services/parts for these WOs + satisfaction data
-  const [servicesData, partsData, completionData] = await Promise.all([
-    supabase
-      .from("work_order_services")
-      .select("final_price, work_order_id")
-      .in("work_order_id", woIds),
-    supabase
-      .from("work_order_parts")
-      .select("final_price, work_order_id")
-      .in("work_order_id", woIds),
-    woIds.length > 0
-      ? supabase
-          .from("service_completion_data")
-          .select("work_order_id, customer_satisfaction")
-          .in("work_order_id", woIds)
-          .not("customer_satisfaction", "is", null)
-      : { data: [] as any[] },
-  ]);
+  // Get all services/parts for these WOs + satisfaction data + WO customer info
+  const [servicesData, partsData, completionData, woCustomers] =
+    await Promise.all([
+      supabase
+        .from("work_order_services")
+        .select("final_price, work_order_id")
+        .in("work_order_id", woIds),
+      supabase
+        .from("work_order_parts")
+        .select("final_price, work_order_id")
+        .in("work_order_id", woIds),
+      woIds.length > 0
+        ? supabase
+            .from("service_completion_data")
+            .select(
+              "work_order_id, customer_satisfaction, customer_feedback, created_at",
+            )
+            .in("work_order_id", woIds)
+        : { data: [] as any[] },
+      woIds.length > 0
+        ? supabase
+            .from("work_orders")
+            .select("id, customer_id")
+            .in("id", woIds)
+            .not("customer_id", "is", null)
+        : { data: [] as any[] },
+    ]);
 
   // Build satisfaction map per WO (work_order_id → satisfaction score)
   const woSatisfactionMap = new Map<string, number>();
   for (const c of completionData.data ?? []) {
     if (c.customer_satisfaction != null) {
       woSatisfactionMap.set(c.work_order_id, c.customer_satisfaction);
+    }
+  }
+
+  // Build WO → customer_id map and fetch customer names
+  const woCustomerMap = new Map<string, string>();
+  const customerIds = [
+    ...new Set(
+      (woCustomers.data ?? []).map((w) => w.customer_id).filter(Boolean),
+    ),
+  ] as string[];
+  if (customerIds.length > 0) {
+    const { data: customers } = await supabase
+      .from("customers")
+      .select("id, first_name, last_name")
+      .in("id", customerIds);
+    const custNameMap = new Map<string, string>();
+    for (const c of customers ?? []) {
+      custNameMap.set(
+        c.id,
+        [c.first_name, c.last_name].filter(Boolean).join(" ") || "Customer",
+      );
+    }
+    for (const wo of woCustomers.data ?? []) {
+      if (wo.customer_id) {
+        woCustomerMap.set(wo.id, custNameMap.get(wo.customer_id) ?? "Customer");
+      }
+    }
+  }
+
+  // Build recent reviews per WO for feedback display
+  const woReviewMap = new Map<
+    string,
+    { satisfaction: number; feedback: string | null; date: string }
+  >();
+  for (const c of completionData.data ?? []) {
+    if (c.customer_satisfaction != null) {
+      woReviewMap.set(c.work_order_id, {
+        satisfaction: c.customer_satisfaction,
+        feedback: c.customer_feedback ?? null,
+        date: c.created_at ?? "",
+      });
     }
   }
 
@@ -274,6 +324,22 @@ async function getMechanicKpis(
         reviewCount++;
       }
     }
+    // Build recent reviews for this mechanic (last 10, most recent first)
+    const recentReviews = mWoIds
+      .map((wid) => {
+        const review = woReviewMap.get(wid);
+        if (!review) return null;
+        return {
+          rating: review.satisfaction,
+          feedback: review.feedback,
+          customer_name: woCustomerMap.get(wid) ?? null,
+          date: review.date,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => new Date(b!.date).getTime() - new Date(a!.date).getTime())
+      .slice(0, 10) as ReportMechanicKpi["recent_reviews"];
+
     kpis.push({
       mechanic_id: mid,
       mechanic_name: profileMap.get(mid) ?? "Unknown",
@@ -288,6 +354,7 @@ async function getMechanicKpis(
           ? Math.round((satisfactionSum / reviewCount) * 10) / 10
           : null,
       total_reviews: reviewCount,
+      recent_reviews: recentReviews,
     });
   }
 

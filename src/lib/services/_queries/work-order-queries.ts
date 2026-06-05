@@ -47,6 +47,7 @@ export async function getWorkOrderDetail(
     { data: labelData },
     { data: helpersData },
     { data: priorServiceVisits },
+    { data: existingInvoice },
   ] = await Promise.all([
     supabase
       .from("work_order_services")
@@ -118,6 +119,12 @@ export async function getWorkOrderDetail(
           .order("created_at", { ascending: false })
           .limit(10)
       : { data: [] },
+    supabase
+      .from("invoices")
+      .select("public_token")
+      .eq("work_order_id", id)
+      .is("deleted_at", null)
+      .maybeSingle(),
   ]);
 
   // Fetch helper mechanic profiles separately (work_order_helpers.mechanic_id
@@ -243,5 +250,8 @@ export async function getWorkOrderDetail(
       helpers: priorVisitHelpersMap.get(visit.id) ?? [],
     })),
     diagnosis_label: labelData as DiagnosisLabel | null,
+    invoice_public_token:
+      (existingInvoice as { public_token: string | null } | null)
+        ?.public_token ?? null,
   };
 }

@@ -521,6 +521,7 @@
     "startDiagnosing": "Оношлогоо эхлэх",
     "startWork": "Ажил эхлэх",
     "invoice": "Нэхэмжлэх",
+    "createInvoice": "Нэхэмжлэх үүсгэх",
     "creating": "Үүсгэж байна...",
     "mech": "Мех:",
     "confirmComplete": "Энэ нь ажлын захиалгыг гүйцэтгэсэн болгоно.",

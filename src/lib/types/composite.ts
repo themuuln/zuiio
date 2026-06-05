@@ -74,6 +74,7 @@ export interface WorkOrderDetail extends Record<string, unknown> {
   status_history: WorkOrderStatusHistory[];
   service_history: WorkOrderServiceHistoryEntry[];
   diagnosis_label?: DiagnosisLabel | null;
+  invoice_public_token?: string | null;
   attachments?: WorkOrderAttachment[];
 }
 

@@ -38,7 +38,10 @@ import { useBranches } from "@/lib/queries/use-branches";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { reportError } from "@/lib/sentry-report";
 import { useSelectedBranchId } from "@/lib/stores";
-import type { ReportMechanicKpi } from "@/lib/types/service-params";
+import type {
+  MechanicReview,
+  ReportMechanicKpi,
+} from "@/lib/types/service-params";
 import { formatMNT } from "@/lib/utils";
 
 type Period = "week" | "month" | "quarter";
@@ -56,6 +59,7 @@ interface MechanicPerf {
   revenue_per_hour: number;
   avg_satisfaction: number | null;
   total_reviews: number;
+  recent_reviews: MechanicReview[];
 }
 
 const PERIODS: { key: Period; label: string }[] = [
@@ -212,6 +216,7 @@ export default function MechanicPerformancePage() {
           revenue_per_hour: hours > 0 ? k.total_revenue / hours : 0,
           avg_satisfaction: k.avg_satisfaction ?? null,
           total_reviews: k.total_reviews ?? 0,
+          recent_reviews: k.recent_reviews ?? [],
         };
       });
 
@@ -498,6 +503,7 @@ export default function MechanicPerformancePage() {
                           "total_revenue",
                           "revenue_per_hour",
                           "total_commission",
+                          "avg_satisfaction",
                         ] as const
                       ).map((key) => (
                         <TableHead
@@ -588,6 +594,11 @@ export default function MechanicPerformancePage() {
                               <span className="text-muted-foreground text-[10px]">
                                 ({m.total_reviews})
                               </span>
+                              {m.total_reviews < 5 && (
+                                <span className="text-[9px] text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 px-1 py-0.5 rounded ml-0.5">
+                                  Low
+                                </span>
+                              )}
                             </span>
                           ) : (
                             <span className="text-muted-foreground/50">—</span>
@@ -738,6 +749,55 @@ export default function MechanicPerformancePage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Recent Reviews */}
+                {selectedMechanic.recent_reviews.length > 0 && (
+                  <div>
+                    <Typography.Muted className="text-xs font-medium mb-2">
+                      Recent Reviews ({selectedMechanic.recent_reviews.length})
+                    </Typography.Muted>
+                    <div className="space-y-2">
+                      {selectedMechanic.recent_reviews.map((review, idx) => (
+                        <div
+                          key={`${review.date}-${idx}`}
+                          className="rounded-lg bg-muted/50 px-3 py-2.5"
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1.5">
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`size-3 ${
+                                    i < review.rating
+                                      ? "text-amber-400 fill-amber-400"
+                                      : "text-muted-foreground/20"
+                                  }`}
+                                />
+                              ))}
+                              <span className="text-xs text-muted-foreground ml-1">
+                                {review.customer_name ?? "Anonymous"}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground/60">
+                              {new Date(review.date).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                },
+                              )}
+                            </span>
+                          </div>
+                          {review.feedback && (
+                            <p className="text-xs text-muted-foreground mt-1 italic">
+                              "{review.feedback}"
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Rank context */}
                 <div>
