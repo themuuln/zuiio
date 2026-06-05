@@ -5,6 +5,7 @@ import {
   flattenFieldErrors,
   normalizeMongolianPhone,
 } from "@/lib/form-validation";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { loginSchema } from "@/lib/validation/auth-schemas";
@@ -86,7 +87,7 @@ export async function login(
     .maybeSingle();
 
   if (profileError) {
-    console.error("Login lookup database error:", profileError);
+    reportServerError("Login lookup database error:", profileError);
     return {
       values: { identifier: raw.identifier },
       formError: `Database lookup error: ${profileError.message}`,
@@ -107,7 +108,7 @@ export async function login(
   const { data: authUser, error: authUserError } =
     await serviceRole.auth.admin.getUserById(profile.id);
   if (authUserError) {
-    console.error("Login auth user fetch error:", authUserError);
+    reportServerError("Login auth user fetch error:", authUserError);
     return {
       values: { identifier: raw.identifier },
       formError: `Auth lookup error: ${authUserError.message}`,

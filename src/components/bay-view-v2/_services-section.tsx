@@ -5,17 +5,10 @@ import { useLocale } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { ServiceCatalog } from "@/lib/types";
-
-// Extended type for catalog items that may come from global or org catalog
-type CatalogServiceItem = ServiceCatalog & {
-  _source?: "org" | "global";
-  name_mn?: string | null;
-};
-
 import { Typography } from "@/components/ui/typography";
 import type { WorkOrderService } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
+import type { CatalogServiceItem } from "./_drawer-types";
 
 interface ServicesSectionProps {
   services: WorkOrderService[];
@@ -23,16 +16,15 @@ interface ServicesSectionProps {
   serviceSearch: string;
   showAddService: boolean;
   addingServiceId: string | null;
-  pendingServicePreview: { name: string; price: number } | null;
   editingPriceId: string | null;
   editingPriceVal: string;
   onServiceSearchChange: (val: string) => void;
   onToggleAddService: () => void;
-  onAddService: (svc: CatalogServiceItem) => Promise<void>;
+  onAddService: (svc: CatalogServiceItem) => void;
   onRemoveService: (serviceId: string) => Promise<void>;
   onEditPriceStart: (id: string, val: string) => void;
   onEditPriceChange: (val: string) => void;
-  onEditPriceSave: (id: string) => Promise<void>;
+  onEditPriceSave: (id: string, price: number) => Promise<void>;
   onEditPriceCancel: () => void;
   t: (key: string) => string;
 }
@@ -43,7 +35,6 @@ export function ServicesSection({
   serviceSearch,
   showAddService,
   addingServiceId,
-  pendingServicePreview,
   editingPriceId,
   editingPriceVal,
   onServiceSearchChange,
@@ -60,7 +51,7 @@ export function ServicesSection({
   return (
     <section className="rounded-lg border border-border/60 bg-card/40 p-3">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <div className="flex items-center justify-center size-5 rounded-md bg-primary/10">
             <Wrench className="size-3 text-primary" />
           </div>
@@ -73,17 +64,17 @@ export function ServicesSection({
         </div>
       </div>
 
-      {(services ?? []).length === 0 && !pendingServicePreview ? (
+      {(services ?? []).length === 0 ? (
         <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
-          <Wrench className="size-4 text-muted-foreground/40 mb-1.5" />
+          <Wrench className="size-4 text-muted-foreground/40 mb-2" />
           <span className="text-xs text-muted-foreground">
             {t("noServicesYet")}
           </span>
         </div>
       ) : (
-        <div className="-mx-0.5">
+        <div className="-mx-1">
           {/* Header row */}
-          <div className="flex items-center gap-2 px-1 mb-0.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+          <div className="flex items-center gap-2 px-1 mb-1 text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
             <div className="flex-1">{t("service")}</div>
             <div className="w-14 text-right">{t("qty")}</div>
             <div className="w-20 text-right">{t("price")}</div>
@@ -109,10 +100,24 @@ export function ServicesSection({
                       type="number"
                       className="w-20 h-7 text-right text-xs font-semibold tabular-nums rounded-sm border-primary/60 bg-background px-1 [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       value={editingPriceVal}
-                      onChange={(e) => onEditPriceChange(e.target.value)}
-                      onBlur={() => onEditPriceSave(svc.id)}
+                      onChange={(e) =>
+                        onEditPriceChange(
+                          e.target.value.replace(/^0+(?=\d)/, ""),
+                        )
+                      }
+                      onBlur={() => {
+                        const price = Number(editingPriceVal);
+                        if (!Number.isNaN(price) && price >= 0) {
+                          onEditPriceSave(svc.id, price);
+                        }
+                      }}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") onEditPriceSave(svc.id);
+                        if (e.key === "Enter") {
+                          const price = Number(editingPriceVal);
+                          if (!Number.isNaN(price) && price >= 0) {
+                            onEditPriceSave(svc.id, price);
+                          }
+                        }
                         if (e.key === "Escape") onEditPriceCancel();
                       }}
                       autoFocus
@@ -146,27 +151,6 @@ export function ServicesSection({
                 </div>
               </div>
             ))}
-            {pendingServicePreview && (
-              <div className="flex items-center gap-2 rounded-md border border-dashed border-primary/30 bg-primary/5 p-1.5">
-                <div className="flex-1 min-w-0">
-                  <Typography.Text className="text-sm font-medium truncate">
-                    {pendingServicePreview.name}
-                  </Typography.Text>
-                  <Typography.Text className="text-[10px] text-primary/80">
-                    Adding service...
-                  </Typography.Text>
-                </div>
-                <div className="w-14 text-right text-xs text-muted-foreground tabular-nums">
-                  1
-                </div>
-                <div className="w-20 text-right text-xs font-semibold tabular-nums text-primary">
-                  {formatMNT(pendingServicePreview.price)}
-                </div>
-                <div className="w-7 flex justify-center">
-                  <Loader2 className="size-3 animate-spin text-primary" />
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -206,7 +190,7 @@ export function ServicesSection({
                         }
                       }}
                       disabled={added || !!addingServiceId}
-                      className="w-full justify-start px-2.5 py-1.5 text-xs h-9"
+                      className="w-full justify-start px-3 py-2 text-xs h-9"
                     >
                       <span className="font-medium truncate mr-2 flex-1 text-left">
                         {locale === "mn" && svc.name_mn
@@ -214,9 +198,6 @@ export function ServicesSection({
                           : svc.name}
                       </span>
                       <span className="flex items-center gap-1.5 shrink-0 ml-auto text-muted-foreground group-hover/button:text-foreground">
-                        {addingServiceId === svc.id && (
-                          <Loader2 className="size-3 animate-spin text-primary" />
-                        )}
                         <span className="tabular-nums font-medium">
                           {formatMNT(Number(svc.default_price))}
                         </span>
@@ -245,14 +226,14 @@ export function ServicesSection({
         variant="outline"
         onClick={onToggleAddService}
         disabled={!!addingServiceId}
-        className="mt-2 w-full border-dashed text-xs h-9 gap-1.5 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-200"
+        className="mt-2 w-full border-dashed text-xs h-9 gap-2 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-200"
       >
         {addingServiceId ? (
           <Loader2 className="size-3.5 animate-spin" />
         ) : (
           <Plus className="size-3.5" />
         )}
-        {addingServiceId ? "Adding service..." : t("addService")}
+        {addingServiceId ? "Saving..." : t("addService")}
       </Button>
     </section>
   );

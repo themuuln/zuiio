@@ -61,14 +61,14 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
     >
       <Avatar className="size-6 shrink-0 after:hidden">
         <AvatarFallback
-          className={cn("text-[8px] font-medium", color.bg, color.text)}
+          className={cn("text-[10px] font-medium", color.bg, color.text)}
         >
           {initials}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <Typography.Text className="text-[11px] font-medium truncate leading-tight text-foreground/90">
+        <div className="flex items-center gap-2">
+          <Typography.Text className="text-xs font-medium truncate leading-tight text-foreground/90">
             {mechanic.full_name ?? "Unknown"}
           </Typography.Text>
           <span
@@ -78,7 +78,7 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
             )}
           />
         </div>
-        <Typography.Muted className="text-[9px] text-muted-foreground/60 truncate leading-tight">
+        <Typography.Muted className="text-xs text-muted-foreground/60 truncate leading-tight">
           {isAvailable ? "Available" : `${jobCount} active`}
         </Typography.Muted>
       </div>
@@ -103,7 +103,7 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
             <Badge variant="outline">{mechanics.length}</Badge>
           )}
         </div>
-        <CardDescription className="text-[11px]">
+        <CardDescription className="text-xs">
           Drag a mechanic onto a bay to assign work.
         </CardDescription>
       </CardHeader>
@@ -123,9 +123,9 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
               onClick={() => {
                 window.location.href = "/dashboard/organization/members";
               }}
-              className="mt-2 gap-1.5"
+              className="mt-2 gap-2"
             >
-              <UserPlus className="size-3.5" />
+              <UserPlus className="size-4" />
               Invite mechanic
             </Button>
           </Empty>
@@ -133,11 +133,11 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
           <div className="flex flex-col gap-3">
             {activeMechanics.length > 0 && (
               <div>
-                <div className="mb-1 flex items-center gap-2 px-0.5">
-                  <Typography.Muted className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                <div className="mb-1 flex items-center gap-2 px-1">
+                  <Typography.Muted className="text-xs font-medium uppercase tracking-wider text-muted-foreground/50">
                     Working
                   </Typography.Muted>
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[9px]">
+                  <Badge variant="secondary" className="h-5 px-2 text-xs">
                     {activeMechanics.length}
                   </Badge>
                 </div>
@@ -150,11 +150,11 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
             )}
             {availableMechanics.length > 0 && (
               <div>
-                <div className="mb-1 flex items-center gap-2 px-0.5">
-                  <Typography.Muted className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                <div className="mb-1 flex items-center gap-2 px-1">
+                  <Typography.Muted className="text-xs font-medium uppercase tracking-wider text-muted-foreground/50">
                     Free
                   </Typography.Muted>
-                  <Badge variant="outline" className="h-5 px-1.5 text-[9px]">
+                  <Badge variant="outline" className="h-5 px-2 text-xs">
                     {availableMechanics.length}
                   </Badge>
                 </div>

@@ -48,6 +48,26 @@ const fieldMap: FieldMap<typeof params> = {
 If you're adding a new PATCH endpoint, also add a test case in
 `src/lib/services/build-updates.test.ts` covering null/empty/undefined values.
 
+## Zod Schema ↔ DB Nullability
+
+**Three sources of truth must agree:** DB column nullability, Zod schema, and TypeScript interface. When they drift, requests fail with `VALIDATION_ERROR`.
+
+**Rule:** When adding or updating a Zod schema in `src/lib/validation/`, cross-check every field against the DB column's nullability in `src/lib/database.types.ts`:
+
+| DB column type | Zod schema should use |
+|---|---|
+| `string` (NOT NULL) | `z.string().min(1)` |
+| `string \| null` | `z.string().nullable().optional()` |
+| `number` (NOT NULL) | `z.number()` |
+| `number \| null` | `z.number().nullable().optional()` |
+| `string \| null` (UUID) | `z.string().uuid().nullable().optional()` |
+
+**`.optional()` alone does NOT accept `null`** — it only accepts `undefined`. For DB-nullable columns, always use `.nullable().optional()` (or `.nullish()`).
+
+**Regression guard:** Run `npm run test -- schema-compat` after modifying any validation schema. The test in `src/lib/validation/schema-compat.test.ts` verifies nullability compatibility.
+
+**Also update:** The `AddServiceParams` / `AddPartParams` interfaces in `src/lib/types/service-params.ts` must match — use `string | null` for nullable fields.
+
 ## Testing
 
 - Vitest, co-located `*.test.ts` files.

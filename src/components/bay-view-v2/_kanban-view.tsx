@@ -94,12 +94,12 @@ export function KanbanView({
   return (
     <div className="flex h-full gap-4 overflow-x-auto overflow-y-hidden p-4 w-full">
       {/* Kanban Column: Vacant Bays */}
-      <div className="flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-3.5 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 border-t-slate-300 dark:border-t-slate-800 shadow-sm">
+      <div className="flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-4 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 border-t-slate-300 dark:border-t-slate-800 shadow-sm">
         <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-4 pb-2.5 select-none">
           <div className="font-heading text-xs uppercase tracking-wider font-bold text-muted-foreground">
             {t("available")}
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <Button
               type="button"
               size="icon-xs"
@@ -112,7 +112,7 @@ export function KanbanView({
             </Button>
             <Badge
               variant="outline"
-              className="font-mono font-bold text-[10px] rounded-full h-5"
+              className="font-mono font-bold text-xs rounded-full h-5"
             >
               {queue.length}
             </Badge>
@@ -129,9 +129,9 @@ export function KanbanView({
           {queue.length === 0 && (
             <div className="flex flex-col items-center justify-center border border-dashed border-border/40 bg-muted/10 py-12 rounded-xl text-center p-4 w-full opacity-60">
               <div className="flex size-8 items-center justify-center rounded-full border border-dashed border-muted-foreground/45 bg-background mb-2 shadow-sm">
-                <Plus className="size-3.5 text-muted-foreground/60" />
+                <Plus className="size-4 text-muted-foreground/60" />
               </div>
-              <Typography.Muted className="text-[10px] text-muted-foreground/45 font-semibold">
+              <Typography.Muted className="text-xs text-muted-foreground/45 font-semibold">
                 No Vacant Bays
               </Typography.Muted>
             </div>
@@ -149,7 +149,7 @@ export function KanbanView({
             key={status}
             status={status}
             className={cn(
-              "flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-3.5 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 shadow-sm",
+              "flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-4 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 shadow-sm",
               COLUMN_COLORS[status] ?? "border-t-primary",
             )}
           >
@@ -157,7 +157,7 @@ export function KanbanView({
               <div className="font-heading text-xs uppercase tracking-wider font-bold text-foreground/80">
                 {status}
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <Button
                   type="button"
                   size="icon-xs"
@@ -170,7 +170,7 @@ export function KanbanView({
                 </Button>
                 <Badge
                   variant={status === "In Progress" ? "default" : "secondary"}
-                  className="font-mono font-bold text-[10px] rounded-full h-5"
+                  className="font-mono font-bold text-xs rounded-full h-5"
                 >
                   {baysWithStatus.length}
                 </Badge>
@@ -200,9 +200,9 @@ export function KanbanView({
                   className="flex flex-col items-center justify-center border border-dashed border-border/40 hover:border-primary/40 bg-muted/10 hover:bg-primary/5 py-12 rounded-xl text-center select-none p-4 cursor-pointer group/empty w-full"
                 >
                   <div className="flex size-8 items-center justify-center rounded-full border border-dashed border-muted-foreground/45 bg-background group-hover/empty:scale-110 group-hover/empty:border-primary/50 group-hover/empty:text-primary transition-all mb-2 shadow-sm">
-                    <Plus className="size-3.5 text-muted-foreground/60 group-hover/empty:text-primary" />
+                    <Plus className="size-4 text-muted-foreground/60 group-hover/empty:text-primary" />
                   </div>
-                  <Typography.Muted className="text-[10px] text-muted-foreground/45 font-semibold group-hover/empty:text-primary transition-colors">
+                  <Typography.Muted className="text-xs text-muted-foreground/45 font-semibold group-hover/empty:text-primary transition-colors">
                     Assign Vehicle
                   </Typography.Muted>
                 </button>

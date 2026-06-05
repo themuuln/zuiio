@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AppError } from "@/lib/errors";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -258,7 +259,7 @@ async function bootstrapOrganization(
   });
 
   if (profileError) {
-    console.error("Failed to upsert profile:", profileError.message);
+    reportServerError("Failed to upsert profile:", profileError.message);
   }
 
   // Create default subscription (non-critical — log but don't fail)
@@ -267,6 +268,6 @@ async function bootstrapOrganization(
       target_org_id: org.id,
     });
   } catch (subError) {
-    console.error("Failed to create default subscription:", subError);
+    reportServerError("Failed to create default subscription:", subError);
   }
 }

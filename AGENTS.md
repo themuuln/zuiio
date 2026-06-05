@@ -73,56 +73,9 @@ npm run validate && npm run test
 npm run validate && npm run test && npm run build
 ```
 
-### MCP Servers Available
-
-This project has the following MCP servers connected. Use them instead of raw CLI when possible:
-- **supabase** (23 tools) — migrations, SQL, types, edge functions, docs search
-- **next-devtools** (24 tools) — component insights, server actions, routes
-- **shadcn** (7 tools) — component search, add, docs
-- **context7** (2 tools) — live documentation queries for any library (Next.js, Biome, Supabase, React, etc.)
-- **playwright** (23 tools) — browser testing
-
-Use `context7_query-docs` via MCP to look up live docs without leaving the terminal (e.g., "how does Biome 2.x `includes` work").
-
 ## UI Components & shadcn
 
-### Hard rule: Check before building anything
-
-**Before implementing ANY new UI element:**
-1. Run `npx shadcn@latest search @shadcn -q "<component>"` — search available shadcn components by keyword
-2. Check `src/components/ui/` for already-installed components
-3. Run `npx shadcn@latest docs <component>` to get usage docs
-
-**Raw HTML elements are FORBIDDEN when a shadcn component covers the same use case.** If Component exists in `src/components/ui/`, use it — never build from primitives.
-
-### Component Mapping (Installed Components)
-
-Use these shadcn components instead of raw HTML:
-
-| Need | Use | Instead Of |
-|------|-----|------------|
-| Action/click | `<Button>` | `<button>`, `<div onClick>` |
-| Input field | `<Input>` | `<input>` |
-| Textarea | `<Textarea>` | `<textarea>` |
-| Select (few options) | `<Select>` + `<SelectItem>` | `<select>`, `<NativeSelect>` |
-| Select (many options / search) | `<Combobox>` + `<ComboboxInput>` | `<Select>` with 10+ items |
-| Status/badge label | `<Badge variant="outline\|secondary\|destructive">` | `<span className="rounded-full ...">` |
-| Empty state | `<Empty>` + `<EmptyTitle>` + `<EmptyMedia>` | Custom `<div>` with "No data" |
-| Alert/callout | `<Alert variant="destructive\|default">` | `<div className="bg-red-50 border-red-200 ...">` |
-| Horizontal divider | `<Separator />` | `<hr>`, `<div className="border-t" />` |
-| Skeleton loading | `<Skeleton className="...">` | `<div className="animate-pulse ...">` |
-| Toggle 2-7 options | `<ToggleGroup>` + `<ToggleGroupItem>` | Multiple `<button>` with manual active state |
-| Dialog/modal | `<Dialog>` | Raw `<div role="dialog">` |
-| Side panel | `<Sheet>` | Custom slide-out overlay |
-| Bottom sheet | `<Drawer>` | Custom swipeable panel |
-| Tooltip | `<Tooltip>` + `<TooltipContent>` | `title` attribute, custom hover popup |
-| Form field layout | `<Field>` + `<FieldGroup>` + `<FieldLabel>` | `<div className="space-y-2"><Label>...</div>` |
-| Form input with addon | `<InputGroup>` + `<InputGroupAddon>` | `<div className="flex"><Input /><button>...</div>` |
-| Navigation | `<NavigationMenu>`, `<Breadcrumb>`, `<Sidebar>` | Custom nav lists |
-| Separator menu item | `<DropdownMenuSeparator>` | `<div className="border-t">` in dropdown |
-| Chart | `<ChartContainer>` + `<Chart>` | Raw Recharts components |
-| Accordion | `<Accordion>` + `<AccordionItem>` | Custom expand/collapse |
-| Tabs | `<Tabs>` + `<TabsList>` + `<TabsTrigger>` | Button-based tab switchers |
+Use the **shadcn skill** and **shadcn MCP** to search, add, and get docs for components. Never build from raw HTML when a shadcn component covers the use case.
 
 ### Style Rules
 
@@ -130,19 +83,7 @@ These rules apply to ALL components, not just new ones.
 
 #### Spacing
 - **Use `gap-*` with `flex`/`flex-col`, NOT `space-y-*` or `space-x-*`**
-  ```tsx
-  // ✅ CORRECT
-  <div className="flex flex-col gap-4">
-  // ❌ WRONG
-  <div className="space-y-4">
-  ```
 - **Use `size-*` when width equals height**, NOT `w-* h-*`
-  ```tsx
-  // ✅ CORRECT
-  <Avatar className="size-10" />
-  // ❌ WRONG
-  <Avatar className="w-10 h-10" />
-  ```
 
 #### Colors
 - **Use semantic tokens only:** `bg-background`, `text-foreground`, `bg-muted`, `text-muted-foreground`, `bg-primary`, `text-primary-foreground`, `bg-destructive`, `text-destructive`, `bg-accent`, `text-accent-foreground`, `bg-card`, `text-card-foreground`, `bg-popover`, `text-popover-foreground`, `border-border`, `border-input`, `border-ring`
@@ -151,70 +92,6 @@ These rules apply to ALL components, not just new ones.
 
 #### Truncation
 - **Use `truncate` shorthand** — not `overflow-hidden text-ellipsis whitespace-nowrap`
-
-### Common Anti-Patterns (Must Fix)
-
-#### 1. Custom Badge Spans → `<Badge>`
-❌ `<span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-700">`
-✅ `<Badge variant="outline">Active</Badge>`
-
-The `Badge` component supports these variants: `default`, `secondary`, `destructive`, `outline`, `ghost`, `link`. Use `variant="outline"` for status badges (paid, pending, completed, etc.) and `variant="secondary"` for count badges.
-
-#### 2. Custom Alert/Callout Divs → `<Alert>`
-❌ `<div className="rounded-lg border border-red-200 bg-red-50 p-3"><AlertTriangle />Error</div>`
-✅ `<Alert variant="destructive"><AlertTriangle /><AlertTitle>Error</AlertTitle><AlertDescription>Details</AlertDescription></Alert>`
-
-#### 3. Custom Empty States → `<Empty>`
-❌ `<div className="flex flex-col items-center py-12"><p>No data found</p></div>`
-✅ `<Empty><EmptyHeader><EmptyMedia variant="icon"><Icon /></EmptyMedia><EmptyTitle>No data</EmptyTitle></EmptyHeader></Empty>`
-
-#### 4. Raw `<hr>` / `border-t` Divs → `<Separator>`
-❌ `<hr className="border-border" />`
-❌ `<div className="border-t" />`
-✅ `<Separator />`
-
-Only replace standalone visual dividers — NOT structural container borders on Cards, Dialogs, or Sheet headers.
-
-#### 5. `animate-pulse` Divs → `<Skeleton>`
-❌ `<div className="h-4 w-20 animate-pulse rounded bg-muted-foreground/20" />`
-✅ `<Skeleton className="h-4 w-20" />`
-
-#### 6. Raw `<button>` → `<Button>`
-❌ `<button onClick={...} className="px-4 py-2 bg-primary text-white rounded-md">`
-✅ `<Button onClick={...}>Submit</Button>`
-
-#### 7. Segmented Controls → `<ToggleGroup>`
-❌ Multiple `<button>` elements with manual `bg-primary` active state
-✅ `<ToggleGroup><ToggleGroupItem value="day">Day</ToggleGroupItem>...</ToggleGroup>`
-
-### Component Selection Guide
-
-| If you have... | Use... |
-|---|---|
-| 2-7 mutually exclusive options | `<ToggleGroup>` |
-| 3-20 options, one choice | `<Select>` |
-| 10+ options or user should search | `<Combobox>` |
-| A yes/no toggle | `<Switch>` |
-| Multiple independent choices | `<Checkbox>` |
-| One choice from 2-5 | `<RadioGroup>` |
-| A range value | `<Slider>` |
-| A date selection | `<DatePicker>` |
-| An OTP/code input | `<InputOTP>` |
-
-### Installed shadcn Components
-
-All components in `src/components/ui/` are available for use. Current inventory (58 components):
-
-`Accordion`, `AlertDialog`, `Alert`, `Avatar`, `Badge`, `Breadcrumb`, `Button`, `ButtonGroup`, `Calendar`, `Card`, `Carousel`, `Chart`, `Checkbox`, `Collapsible`, `Combobox`, `Command`, `ContextMenu`, `DatePicker`, `Dialog`, `Drawer`, `DropdownMenu`, `Empty`, `Field`, `HoverCard`, `Input`, `InputGroup`, `InputOTP`, `Kbd`, `Label`, `Menubar`, `NativeSelect`, `NavigationMenu`, `Pagination`, `Popover`, `Progress`, `RadioGroup`, `Resizable`, `ScrollArea`, `Select`, `Separator`, `Sheet`, `Sidebar`, `Skeleton`, `Slider`, `Sonner`, `Spinner`, `Switch`, `Table`, `Tabs`, `Textarea`, `Toggle`, `ToggleGroup`, `Tooltip`, `Typography`
-
-### Adding New Components
-
-```bash
-npx shadcn@latest add <component-name>
-# e.g., npx shadcn@latest add tabs sheet tooltip
-```
-
-After adding, verify against the rules above. Third-party registries (e.g., `@magicui`, `@bundui`) may use hardcoded import paths — fix these to match the project's `@/components/ui/` alias.
 
 ## i18n Message Parity
 
@@ -373,166 +250,20 @@ const statusFilter = useFilter('status');
 - **Inventory must be ledger-based** — never update a `quantity` column directly. Use `inventory_movements` with movement type, source, and audit trail.
 - Business logic lives in Next.js server-side API routes and edge functions, **never in the browser**.
 
-## Supabase CLI & MCP Usage
+## Supabase
 
-### MCP First — CLI Only When MCP Can't
-
-**Default: Use Supabase MCP tools.** Only fall back to CLI when MCP has no equivalent.
-
-| Operation | Preferred Tool | Notes |
-|-----------|---------------|-------|
-| Create migration file | **CLI** `supabase migration new <name>` | MCP has no equivalent — only CLI use case |
-| Apply migration to remote | **MCP** `supabase_apply_migration` | Name + SQL. If migration already exists, use `supabase_execute_sql` |
-| Apply ad-hoc SQL | **MCP** `supabase_execute_sql` | Direct SQL execution, no migration tracking |
-| Execute ad-hoc SQL query | **MCP** `supabase_execute_sql` | SELECT, INSERT, UPDATE, etc. |
-| Generate TS types | **MCP** `supabase_generate_typescript_types` | Direct output, no `2>/dev/null` needed |
-| List/inspect tables | **MCP** `supabase_list_tables` | Schema introspection |
-| List migrations | **MCP** `supabase_list_migrations` | Check applied migrations |
-| Check security/performance | **MCP** `supabase_get_advisors` | Advisory notices |
-| Get logs | **MCP** `supabase_get_logs` | Edge function, auth, API logs |
-| Deploy edge function | **MCP** `supabase_deploy_edge_function` | Upload and deploy |
-| Search docs | **MCP** `supabase_search_docs` | GraphQL-based doc search |
-
-### Applying Migrations (MCP Workflow)
-
-```bash
-# 1. Create migration file locally (CLI — only CLI step)
-supabase migration new <name>
-
-# 2. Write SQL in the migration file
-
-# 3. Apply via MCP (preferred)
-# Use supabase_apply_migration with name + SQL content
-# OR supabase_execute_sql for ad-hoc data changes
-
-# 4. Regenerate types via MCP
-# Use supabase_generate_typescript_types
-
-# 5. Verify
-npm run build
-```
-
-### When CLI Is Still Needed
-
+Use **Supabase MCP** by default. CLI only when MCP can't:
 - `supabase migration new <name>` — create migration file (MCP has no equivalent)
-- `supabase db push --linked` — only if MCP `apply_migration` fails or for batch migration pushes
-- `supabase gen types typescript --linked` — only if MCP `generate_typescript_types` fails
-
-### MCP Tool Quick Reference
-
-| Tool | Purpose |
-|------|---------|
-| `supabase_apply_migration` | Apply SQL migration by name |
-| `supabase_execute_sql` | Run raw SQL (SELECT, INSERT, UPDATE, DDL) |
-| `supabase_generate_typescript_types` | Generate TypeScript types |
-| `supabase_list_tables` | List tables in schema |
-| `supabase_list_migrations` | List applied migrations |
-| `supabase_get_advisors` | Security/performance advisories |
-| `supabase_get_logs` | Project logs by service type (api, postgres, auth, edge-function, storage, realtime) |
-| `supabase_search_docs` | Search Supabase documentation |
-
-### Debugging with Supabase Logs (MCP)
-
-When debugging Supabase-related issues (failed queries, silent failures, auth problems), check the logs first via MCP before writing ad-hoc test queries.
-
-**Available log services:**
-
-| `service` | What it shows | Use for |
-|-----------|---------------|--------|
-| `api` | PostgREST HTTP requests + status codes | 400/401/403/500 errors, slow queries |
-| `postgres` | Postgres query errors | SQL errors, constraint violations, GROUP BY issues |
-| `auth` | Auth events (login, signup, token) | Auth failures, session issues |
-| `edge-function` | Edge function invocations | Webhook errors, scheduled job failures |
-| `storage` | Storage operations | Upload/download failures |
-| `realtime` | Realtime connections | Connection drops |
-
-**Workflow:**
-
-```
-1. Check API logs:  supabase_get_logs(service="api") → look for 4xx/5xx status codes
-2. Check Postgres:  supabase_get_logs(service="postgres") → look for ERROR severity
-3. Check Auth:      supabase_get_logs(service="auth") → look for failed logins
-```
-
-**What logs catch vs. what they miss:**
-
-| Scenario | Visible in logs? |
-|----------|-----------------|
-| SQL syntax error | ✅ `postgres` logs show ERROR |
-| Missing column/constraint | ✅ `postgres` logs show ERROR |
-| Auth token expired | ✅ `auth` logs show the event |
-| HTTP 500 from API | ✅ `api` logs show status 500 |
-| **RLS silent block (UPDATE returns 200 + empty data)** | ❌ API shows 200 — no error logged |
-| **RLS silent block (SELECT returns [])** | ❌ API shows 200 — no error logged |
-
-For silent RLS blocks, use `logSupabaseResult()` from `@/lib/supabase/logger` in service code, or query the table directly via `supabase_execute_sql` to verify data exists.
+- `supabase db push --linked` — if MCP `apply_migration` fails
+- `supabase gen types typescript --linked` — if MCP `generate_typescript_types` fails
 
 ### Type Sync Rule
 
-- **Regenerate TypeScript types after every migration**, regardless of which tool applied it.
-- After MCP: call `supabase-tolom_generate_typescript_types()`.
-- After CLI: `supabase gen types typescript --linked > src/lib/database.types.ts`.
-- Committing a migration without updating `database.types.ts` is a build break — the frontend will reference columns/types that don't exist or miss new ones.
-- Always run `npm run build` after regenerating types to catch mismatches.
+**Regenerate TypeScript types after every migration.** After MCP: `supabase_generate_typescript_types()`. After CLI: `supabase gen types typescript --linked > src/lib/database.types.ts`. Skipping this = build break. Always run `npm run build` after.
 
-### Failure consequence
-Skipping the deploy step causes **"Failed to load..." errors** — API routes/Supabase queries fail because the remote database doesn't have the latest tables/functions. All development blocks until resolved.
+### Database Type Imports
 
-### Database Type Safety — Import Convention
-
-**`src/lib/database.types.ts` is raw generated output — never manually edit it.**
-Running `supabase gen types typescript` (or the MCP equivalent) **overwrites the entire file**.
-The Supabase v6+ generator outputs helpers (`Tables<>`, `Enums<>`) but **no explicit type exports**.
-
-**Rule: Never import from `@/lib/database.types` directly.** Always use `@/lib/types` instead:
-
-```ts
-// ❌ WRONG — breaks when database.types.ts is regenerated
-export type { Customer } from "@/lib/database.types";
-
-// ✅ RIGHT — stable, survives regeneration
-export type { Customer } from "@/lib/types";
-```
-
-The convenience type aliases live in `src/lib/types/index.ts` and reference the raw `Database` type from `database.types.ts` using the helpers:
-
-```ts
-// src/lib/types/index.ts (conceptual — only modify, don't replicate)
-import type { Database } from "@/lib/database.types";
-type Pub = Database["public"];
-
-export type Customer = Pub["Tables"]["customers"]["Row"];
-export type WorkOrderStatus = "New" | "Diagnosing" | /* ... */;
-```
-
-**To prevent regressions**, the lint config (`biome.json`) must enforce this:
-
-```json
-// biome.json
-{
-  "linter": {
-    "rules": {
-      "correctness": {
-        "noRestrictedImports": {
-          "options": {
-            "paths": {
-              "@/lib/database.types": {
-                "message": "Import from @/lib/types instead — database.types.ts is regenerated and may not export this type."
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-**Migration checklist after type regeneration:**
-1. Run `supabase gen types typescript --linked > src/lib/database.types.ts`
-2. Run `npm run build` — if it passes, you're done
-3. If it fails, check whether `src/lib/types/index.ts` needs a new/updated alias for the changed type
-4. Fix only in `src/lib/types/index.ts` — never touch `database.types.ts`
+**Never import from `@/lib/database.types` directly.** It's auto-generated and overwrites on every regeneration. Always use `@/lib/types` — the aliases in `src/lib/types/index.ts` survive regeneration.
 
 ## Testing Guidelines
 
@@ -544,7 +275,7 @@ export type WorkOrderStatus = "New" | "Diagnosing" | /* ... */;
 
 ## Worktrunk Workflow
 
-Every task runs in its own git worktree via `wt` (worktrunk). See `~/AGENTS.md #19` for the canonical workflow, or load the `worktrunk` skill.
+Every task runs in its own git worktree via `wt` (worktrunk). See `~/AGENTS.md §15` for the canonical workflow, or load the `worktrunk` skill.
 
 **Project hooks** (`.config/wt.toml`):
 - `post-start`: copies `.env` + runs `pnpm install`
@@ -554,7 +285,7 @@ Worktrees land as sibling directories: `../tolom.<sanitized-branch>/`
 
 ## Commit & Pull Request Guidelines
 
-This repo follows the global guidelines in `~/.factory/AGENTS.md`:
+This repo follows the global guidelines in `~/AGENTS.md`:
 
 - **Atomic commits** — one logical change per commit.
 - **Do not commit secrets, env files, or local config.**
@@ -636,19 +367,6 @@ curl -s -X POST -b "$COOKIE" -H "Content-Type: application/json" \
 - **Read `MASTER_PLAN.md` before building** — the development order (Phase 0 → Phase 1 → ...) is intentional and should not be reordered.
 - **Phase 0 (multi-tenant foundation) is the completion gate** — no product features until auth, orgs, branches, roles, and RLS are solid.
 
-## Installed Agent Skills (Global)
-
-The following skills are installed globally (`~/.agents/skills/`) and MUST be loaded via `skill(name="...")` when the task matches their domain. They auto-trigger on relevant keywords.
-
-| Skill | When to Load | Trigger Keywords |
-|-------|-------------|-----------------|
-| **frontend-design** | Designing/redesigning any UI — pages, components, layouts. Rejects generic AI aesthetics. | `design UI`, `redesign`, `make it look good`, `frontend`, `landing page`, `aesthetic` |
-| **ui-ux-pro-max** | Choosing colors, typography, layout patterns, or reviewing UX. 50+ styles, 161 palettes, 57 font pairings. | `color palette`, `typography`, `UX pattern`, `design system`, `style guide`, `UI review` |
-| **web-design-guidelines** | Auditing UI code for design and accessibility compliance against Vercel standards. | `audit design`, `check UI`, `accessibility review`, `design review`, `polish` |
-| **marketing-psychology** | Applying behavioral science, cognitive biases, or psychology to conversion, onboarding, or pricing pages. | `psychology`, `cognitive bias`, `conversion`, `behavioral science`, `persuasion`, `A/B test` |
-| **product-management** | Product strategy, roadmap, prioritization, PRDs, OKRs, PMF measurement, stakeholder decisions. | `roadmap`, `prioritize`, `PRD`, `OKR`, `product strategy`, `PMF`, `RICE`, `backlog` |
-
-**Usage**: When a task matches any trigger keyword above, call `skill(name="<skill-name>")` before proceeding.
 
 ## UI Loading Patterns
 

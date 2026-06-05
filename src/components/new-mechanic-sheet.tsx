@@ -303,7 +303,7 @@ export function NewMechanicSheet({
         </SheetDescription>
       </SheetHeader>
 
-      <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-6 px-4">
+      <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-6 px-4 pb-6">
         <div className="flex flex-col gap-5">
           <Field data-invalid={!!form.errors.fullName}>
             <FieldLabel htmlFor="mechanic-fullname">
@@ -391,17 +391,8 @@ export function NewMechanicSheet({
             <FieldContent>
               <Select
                 value={form.selectedRoleId}
-                onValueChange={(value) => {
-                  if (value) {
-                    dispatch({
-                      type: "SET_SELECTED_ROLE",
-                      roleId: value,
-                    });
-                    if (form.errors.roleId)
-                      dispatch({ type: "CLEAR_ERROR", field: "roleId" });
-                  }
-                }}
-                disabled={rolesLoading || roles.length === 0}
+                onValueChange={() => {}}
+                disabled
               >
                 <SelectTrigger id="mechanic-role" className="w-full">
                   <SelectValue

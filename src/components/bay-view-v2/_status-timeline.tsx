@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, History, User, Wrench } from "lucide-react";
+import { CheckCircle2, History, RotateCcw, User, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Typography } from "@/components/ui/typography";
 import type {
@@ -13,6 +13,16 @@ interface StatusTimelineProps {
   statusHistory: WorkOrderStatusHistory[];
   serviceHistory: WorkOrderServiceHistoryEntry[];
   t: (key: string) => string;
+}
+
+interface DedupedEntry {
+  status: string;
+  previous_status: string | null;
+  first_at: string;
+  last_at: string;
+  count: number;
+  notes: string | null;
+  id: string;
 }
 
 const STATUS_COLORS: Record<string, { dot: string; text: string }> = {
@@ -51,6 +61,84 @@ const STATUS_NAMES: Record<string, string> = {
   Cancelled: "statusCancelled",
 };
 
+const STATUS_FLOW = [
+  "New",
+  "Diagnosing",
+  "In Progress",
+  "Ready for Pickup",
+  "Completed",
+];
+
+function isForwardTransition(
+  status: string,
+  previousStatus: string | null,
+): boolean {
+  if (!previousStatus) return true;
+  const toIdx = STATUS_FLOW.indexOf(status);
+  const fromIdx = STATUS_FLOW.indexOf(previousStatus);
+  if (toIdx === -1 || fromIdx === -1) return true;
+  return toIdx > fromIdx;
+}
+
+function formatTimeRange(isoStart: string, isoEnd: string): string {
+  const opts: Intl.DateTimeFormatOptions = {
+    hour: "2-digit",
+    minute: "2-digit",
+  };
+  const start = new Date(isoStart);
+  const end = new Date(isoEnd);
+  const fmt = new Intl.DateTimeFormat([], opts);
+  return `${fmt.format(start)} – ${fmt.format(end)}`;
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function deduplicateHistory(history: WorkOrderStatusHistory[]): DedupedEntry[] {
+  // Sort ASC for grouping, then reverse for display
+  const sorted = [...history].sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
+
+  const result: DedupedEntry[] = [];
+  for (const entry of sorted) {
+    const prev = result[result.length - 1];
+    if (
+      prev &&
+      prev.status === entry.status &&
+      prev.previous_status === entry.previous_status
+    ) {
+      prev.last_at = entry.created_at;
+      prev.count++;
+      if (entry.notes) prev.notes = entry.notes;
+    } else {
+      result.push({
+        status: entry.status,
+        previous_status: entry.previous_status,
+        first_at: entry.created_at,
+        last_at: entry.created_at,
+        count: 1,
+        notes: entry.notes,
+        id: entry.id,
+      });
+    }
+  }
+
+  return result.reverse();
+}
+
 export function StatusTimeline({
   statusHistory,
   serviceHistory,
@@ -58,6 +146,7 @@ export function StatusTimeline({
 }: StatusTimelineProps) {
   const hasStatusHistory = (statusHistory ?? []).length > 0;
   const hasServiceHistory = (serviceHistory ?? []).length > 0;
+  const deduped = hasStatusHistory ? deduplicateHistory(statusHistory) : [];
 
   return (
     <section
@@ -65,7 +154,7 @@ export function StatusTimeline({
       className="rounded-lg border border-border/60 bg-card/40 p-3"
     >
       <div className="flex flex-col gap-1 mb-3">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <div className="flex items-center justify-center size-5 rounded-md bg-purple-500/10">
             <History className="size-3 text-purple-500" />
           </div>
@@ -76,7 +165,7 @@ export function StatusTimeline({
             {t("statusTimeline")}
           </h3>
         </div>
-        <p className="text-[10px] text-muted-foreground/60 leading-normal pl-0.5">
+        <p className="text-xs text-muted-foreground/60 leading-normal pl-1">
           {t("statusTimelineDescription")}
         </p>
       </div>
@@ -94,8 +183,8 @@ export function StatusTimeline({
         <div className="mt-2 flex flex-col gap-4">
           {hasStatusHistory ? (
             <div className="flex flex-col gap-0 pl-1">
-              {statusHistory.map((h, idx) => {
-                const isLast = idx === statusHistory.length - 1;
+              {deduped.map((h, idx) => {
+                const isLast = idx === deduped.length - 1;
                 const colors = STATUS_COLORS[h.status] ?? {
                   dot: "bg-slate-500 ring-slate-500/20",
                   text: "text-slate-600 dark:text-slate-400",
@@ -103,6 +192,12 @@ export function StatusTimeline({
                 const statusLabel = STATUS_NAMES[h.status]
                   ? t(STATUS_NAMES[h.status])
                   : h.status;
+                const forward = isForwardTransition(
+                  h.status,
+                  h.previous_status,
+                );
+                const isBackward = !forward && h.previous_status !== null;
+                const isDuped = h.count > 1;
 
                 return (
                   <div
@@ -110,51 +205,79 @@ export function StatusTimeline({
                     className="relative flex gap-3 pb-4 last:pb-0"
                   >
                     {!isLast && (
-                      <div className="absolute left-[9px] top-6 bottom-0 w-0.5 bg-border/60" />
+                      <div className="absolute left-2 top-6 bottom-0 w-0.5 bg-border/60" />
                     )}
                     <div className="relative z-10 mt-1 shrink-0">
-                      <div
-                        className={cn(
-                          "flex size-5 items-center justify-center rounded-full ring-4 transition-all duration-300",
-                          colors.dot,
-                        )}
-                      >
-                        {h.status === "Completed" ||
-                        h.status === "Ready for Pickup" ? (
-                          <CheckCircle2 className="size-3 text-white" />
-                        ) : (
-                          <div className="size-1.5 rounded-full bg-white" />
-                        )}
-                      </div>
+                      {isBackward ? (
+                        // Backwards: dashed orange-tinted ring
+                        <div
+                          className={cn(
+                            "flex size-5 items-center justify-center rounded-full ring-4 ring-orange-400/20 border border-dashed border-orange-400/60 transition-all duration-300",
+                          )}
+                        >
+                          <RotateCcw className="size-2.5 text-orange-500" />
+                        </div>
+                      ) : (
+                        // Forward: solid colored dot
+                        <div
+                          className={cn(
+                            "flex size-5 items-center justify-center rounded-full ring-4 transition-all duration-300",
+                            colors.dot,
+                          )}
+                        >
+                          {h.status === "Completed" ||
+                          h.status === "Ready for Pickup" ? (
+                            <CheckCircle2 className="size-3 text-white" />
+                          ) : (
+                            <div className="size-1.5 rounded-full bg-white" />
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <div className="flex items-center justify-between gap-2">
                         <span
                           className={cn(
                             "text-xs font-semibold tracking-tight",
-                            colors.text,
+                            isBackward
+                              ? "text-orange-600 dark:text-orange-400"
+                              : colors.text,
                           )}
                         >
                           {statusLabel}
+                          {isDuped && (
+                            <Badge
+                              variant="secondary"
+                              className="ml-1.5 text-xs px-1 py-1 h-4 font-mono"
+                            >
+                              ×{h.count}
+                            </Badge>
+                          )}
                         </span>
-                        <span className="shrink-0 font-mono text-[10px] text-muted-foreground/60">
-                          {new Date(h.created_at).toLocaleDateString([], {
-                            month: "short",
-                            day: "numeric",
-                          })}{" "}
-                          {new Date(h.created_at).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                        <span className="shrink-0 font-mono text-xs text-muted-foreground/60">
+                          {formatDate(h.first_at)}
+                          {isDuped
+                            ? ` ${formatTimeRange(h.first_at, h.last_at)}`
+                            : ` ${formatTime(h.first_at)}`}
                         </span>
                       </div>
                       {h.previous_status && h.previous_status !== h.status ? (
-                        <Typography.Muted className="text-[10px] uppercase tracking-wide text-muted-foreground/70">
-                          {h.previous_status} {"->"} {statusLabel}
+                        <Typography.Muted
+                          className={cn(
+                            "text-[10px] uppercase tracking-wide",
+                            isBackward
+                              ? "text-orange-500/70 dark:text-orange-400/60"
+                              : "text-muted-foreground/70",
+                          )}
+                        >
+                          {isBackward && (
+                            <RotateCcw className="inline size-2.5 mr-0.5 -mt-px" />
+                          )}
+                          {h.previous_status} {"→"} {statusLabel}
                         </Typography.Muted>
                       ) : null}
                       {h.notes ? (
-                        <Typography.Muted className="mt-0.5 break-words rounded-lg border border-border/40 bg-muted/40 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground">
+                        <Typography.Muted className="mt-0.5 break-words rounded-lg border border-border/40 bg-muted/40 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
                           {h.notes}
                         </Typography.Muted>
                       ) : null}
@@ -180,13 +303,13 @@ export function StatusTimeline({
                 {serviceHistory.map((entry) => (
                   <div
                     key={entry.work_order_id}
-                    className="rounded-lg border border-border/50 bg-background/50 p-2.5"
+                    className="rounded-lg border border-border/50 bg-background/50 p-3"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-semibold">
                         {entry.status}
                       </span>
-                      <span className="text-[10px] text-muted-foreground/70">
+                      <span className="text-xs text-muted-foreground/70">
                         {new Date(entry.created_at).toLocaleDateString([], {
                           year: "numeric",
                           month: "short",
@@ -207,7 +330,7 @@ export function StatusTimeline({
                           <Badge
                             key={`${entry.work_order_id}-${service.name}-${service.price}`}
                             variant="outline"
-                            className="gap-1 text-[10px]"
+                            className="gap-1 text-xs"
                           >
                             <Wrench className="size-2.5" />
                             {service.name}
@@ -216,7 +339,7 @@ export function StatusTimeline({
                       </div>
                     ) : null}
 
-                    <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                       {entry.total > 0 ? (
                         <span className="font-medium text-foreground/80">
                           {entry.total.toLocaleString()} MNT

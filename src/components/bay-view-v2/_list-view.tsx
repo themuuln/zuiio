@@ -50,22 +50,22 @@ export function ListView({
         <Table className="text-xs">
           <TableHeader className="bg-muted/40 select-none">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 pl-4 py-3">
+              <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/75 pl-4 py-3">
                 {t("listHeaderBay")}
               </TableHead>
-              <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 py-3">
+              <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/75 py-3">
                 {t("listHeaderStatus")}
               </TableHead>
-              <TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 py-3">
+              <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/75 py-3">
                 {t("listHeaderVehicle")}
               </TableHead>
-              <TableHead className="hidden text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 sm:table-cell py-3">
+              <TableHead className="hidden text-xs font-bold uppercase tracking-wider text-muted-foreground/75 sm:table-cell py-3">
                 {t("listHeaderModel")}
               </TableHead>
-              <TableHead className="hidden text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 md:table-cell py-3">
+              <TableHead className="hidden text-xs font-bold uppercase tracking-wider text-muted-foreground/75 md:table-cell py-3">
                 {t("listHeaderMechanic")}
               </TableHead>
-              <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground/75 pr-4 py-3">
+              <TableHead className="text-right text-xs font-bold uppercase tracking-wider text-muted-foreground/75 pr-4 py-3">
                 {t("listHeaderTime")}
               </TableHead>
             </TableRow>
@@ -96,7 +96,7 @@ export function ListView({
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-[9px] uppercase tracking-wider font-bold py-0.5 px-2 rounded-full",
+                          "text-xs uppercase tracking-wider font-bold py-1 px-2 rounded-full",
                           STATUS_BADGE_CLASS[wo.status],
                         )}
                       >
@@ -116,7 +116,7 @@ export function ListView({
                     ) : wo ? (
                       "—"
                     ) : (
-                      <span className="text-[10px] italic text-muted-foreground/40 font-medium">
+                      <span className="text-xs italic text-muted-foreground/40 font-medium">
                         {t("clickToAssign")}
                       </span>
                     )}
@@ -129,12 +129,12 @@ export function ListView({
                       {wo?.mechanic ? (
                         <Badge
                           variant="outline"
-                          className="bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200/60 dark:border-indigo-800/40 font-medium py-0.5 px-2 text-[10px] rounded-full"
+                          className="bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200/60 dark:border-indigo-800/40 font-medium py-1 px-2 text-xs rounded-full"
                         >
                           {wo.mechanic.full_name}
                         </Badge>
                       ) : (
-                        <span className="text-[10px] text-muted-foreground/50">
+                        <span className="text-xs text-muted-foreground/50">
                           —
                         </span>
                       )}
@@ -154,7 +154,7 @@ export function ListView({
                           <Badge
                             key={h.id}
                             variant="outline"
-                            className="bg-amber-50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/40 font-medium py-0.5 px-2 text-[10px] rounded-full"
+                            className="bg-amber-50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/40 font-medium py-1 px-2 text-xs rounded-full"
                           >
                             {h.full_name ?? "?"}
                           </Badge>

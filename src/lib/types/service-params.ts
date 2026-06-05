@@ -168,7 +168,7 @@ export interface CreateWorkOrderParams {
 }
 
 export interface AddServiceParams {
-  service_catalog_id: string;
+  service_catalog_id: string | null;
   service_name: string;
   quantity?: number;
   unit_price: number;

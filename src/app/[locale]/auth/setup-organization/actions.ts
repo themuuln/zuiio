@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/lib/form-validation";
 import { flattenFieldErrors } from "@/lib/form-validation";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { finalizeSignup } from "@/lib/services/signup-service";
 import { createClient } from "@/lib/supabase/server";
 import { createOrganizationSchema } from "@/lib/validation/auth-schemas";
@@ -43,7 +44,7 @@ export async function createOrganization(
 
     await finalizeSignup(supabase, { orgName: organizationName });
   } catch (error) {
-    console.error("Failed to create organization:", error);
+    reportServerError("Failed to create organization:", error);
     return {
       values: { organizationName: raw.organizationName },
       formError: "Failed to create organization. Please try again.",

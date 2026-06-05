@@ -59,7 +59,7 @@ export function MechanicBadge({
           compact ? "size-6" : "size-8",
         )}
       >
-        <User className={cn(compact ? "size-3" : "size-3.5")} />
+        <User className={cn(compact ? "size-3" : "size-4")} />
       </div>
     );
   }
@@ -73,7 +73,7 @@ export function MechanicBadge({
   })();
   const initials = getMechanicInitials(mechanic.full_name);
   return (
-    <div className="flex items-center gap-0.5 group/badge">
+    <div className="flex items-center gap-1 group/badge">
       <div
         ref={!isHelper ? setNodeRef : undefined}
         {...(!isHelper ? listeners : {})}
@@ -82,8 +82,8 @@ export function MechanicBadge({
         className={cn(
           "flex items-center select-none transition-all touch-manipulation",
           compact
-            ? "gap-1 rounded-full border pl-0.5 pr-2 py-0.5 text-[10px]"
-            : "gap-1.5 rounded-full border backdrop-blur-sm pl-1 pr-2.5 py-1 min-h-[32px]",
+            ? "gap-1 rounded-full border pl-1 pr-2 py-1 text-xs"
+            : "gap-2 rounded-full border backdrop-blur-sm pl-1 pr-3 py-1 min-h-[32px]",
           isHelper
             ? "bg-amber-50/70 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/40"
             : "bg-background/80 border-border/60 cursor-grab active:cursor-grabbing",
@@ -103,7 +103,7 @@ export function MechanicBadge({
           )}
           <AvatarFallback
             className={cn(
-              compact ? "text-[8px]" : "text-xs",
+              compact ? "text-[10px]" : "text-xs",
               "font-medium",
               color.bg,
               color.text,
@@ -114,14 +114,14 @@ export function MechanicBadge({
         </Avatar>
         <span
           className={cn(
-            compact ? "text-[10px] max-w-[80px]" : "text-xs max-w-[110px]",
+            compact ? "text-xs max-w-[80px]" : "text-xs max-w-[110px]",
             "font-medium truncate",
           )}
         >
           {shortName}
         </span>
         {isHelper && (
-          <span className="text-[8px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 ml-0.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 ml-1">
             H
           </span>
         )}
@@ -137,7 +137,7 @@ export function MechanicBadge({
           }}
           className="size-4 rounded-full opacity-0 group-hover/badge:opacity-100 transition-opacity text-muted-foreground/40 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
         >
-          <X className="size-2.5" />
+          <X className="size-3" />
         </Button>
       )}
     </div>

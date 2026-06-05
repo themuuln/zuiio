@@ -34,7 +34,7 @@ export function DraggableVehicleWrapper({
       {...attributes}
       style={style}
       className={cn(
-        "flex flex-1 items-center gap-3.5 cursor-grab active:cursor-grabbing select-none touch-manipulation hover:bg-muted/40 rounded-xl p-2 transition-all border border-transparent hover:border-border/40",
+        "flex flex-1 items-center gap-4 cursor-grab active:cursor-grabbing select-none touch-manipulation hover:bg-muted/40 rounded-xl p-2 transition-all border border-transparent hover:border-border/40",
         isDragging &&
           "opacity-50 shadow-md bg-muted/20 border-dashed border-primary/30",
       )}

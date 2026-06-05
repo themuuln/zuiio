@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { PageErrorState } from "@/components/page-state";
+import { reportError } from "@/lib/sentry-report";
 
 export default function LocaleError({
   error,
@@ -11,7 +12,7 @@ export default function LocaleError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    reportError(error, "[locale]");
   }, [error]);
 
   return (

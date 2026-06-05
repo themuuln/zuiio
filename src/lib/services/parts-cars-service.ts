@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { createClient } from "@/lib/supabase/server";
 import type {
   PartsCarParts,
@@ -300,7 +301,10 @@ export async function publishPartsCarPartsToCatalog(
       .eq("organization_id", orgId);
 
     if (linkError) {
-      console.error(`Failed to link part ${part.id} to catalog:`, linkError);
+      reportServerError(
+        `Failed to link part ${part.id} to catalog:`,
+        linkError,
+      );
     }
 
     // Create inventory movement (type = disassembly, adds stock)

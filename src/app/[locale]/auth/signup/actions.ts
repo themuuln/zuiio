@@ -6,7 +6,7 @@ import {
   flattenFieldErrors,
   normalizeMongolianPhone,
 } from "@/lib/form-validation";
-
+import { reportServerError } from "@/lib/sentry-report-server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { signupSchema } from "@/lib/validation/auth-schemas";
@@ -164,7 +164,7 @@ export async function signup(
     }
   } catch (error) {
     if (isSupabaseNetworkError(error)) {
-      console.error("Supabase signUp network failure", error);
+      reportServerError("Supabase signUp network failure", error);
       return {
         values: {
           fullName: raw.fullName,

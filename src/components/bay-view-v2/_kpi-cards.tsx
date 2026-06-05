@@ -37,14 +37,14 @@ export function KpiCards({
   t,
 }: KpiCardsProps) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-3 pt-3 flex-shrink-0 bg-muted/10 border-b border-border/40">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-3 shrink-0 bg-muted/10 border-b border-border/40">
       {/* Card 1: Bay Utilization */}
-      <Card className="bg-card/65 backdrop-blur border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 p-3.5 flex flex-col gap-2 rounded-xl">
+      <Card className="bg-card/65 backdrop-blur border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 p-3 gap-0 flex flex-col rounded-xl">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+          <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
             {t("bayUtilization")}
           </span>
-          <div className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400">
             <Activity className="size-4" />
           </div>
         </div>
@@ -54,16 +54,16 @@ export function KpiCards({
             {trendDelta && trendDelta.bayUtilization !== 0 && (
               <span
                 className={cn(
-                  "inline-flex items-center gap-0.5 text-xs font-semibold ml-1.5",
+                  "inline-flex items-center gap-1 text-xs font-semibold ml-2",
                   trendDelta.bayUtilization > 0
                     ? "text-emerald-500"
                     : "text-red-500",
                 )}
               >
                 {trendDelta.bayUtilization > 0 ? (
-                  <ArrowUp className="size-2.5" />
+                  <ArrowUp className="size-3" />
                 ) : (
-                  <ArrowDown className="size-2.5" />
+                  <ArrowDown className="size-3" />
                 )}
                 {Math.abs(trendDelta.bayUtilization)}%
               </span>
@@ -76,18 +76,18 @@ export function KpiCards({
             />
           </div>
         </div>
-        <span className="text-[10px] text-muted-foreground font-medium">
+        <span className="text-xs text-muted-foreground font-medium">
           {occupiedBays} of {bayCount} bays occupied
         </span>
       </Card>
 
       {/* Card 2: Active Workloads */}
-      <Card className="bg-card/65 backdrop-blur border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 p-3.5 flex flex-col justify-between rounded-xl">
+      <Card className="bg-card/65 backdrop-blur border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 p-3 gap-0 flex flex-col rounded-xl">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+          <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
             {t("activeJobs")}
           </span>
-          <div className="flex size-7 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400">
             <Wrench className="size-4" />
           </div>
         </div>
@@ -97,37 +97,37 @@ export function KpiCards({
             {trendDelta && trendDelta.activeJobs !== 0 && (
               <span
                 className={cn(
-                  "inline-flex items-center gap-0.5 text-xs font-semibold ml-1.5",
+                  "inline-flex items-center gap-1 text-xs font-semibold ml-2",
                   trendDelta.activeJobs > 0
                     ? "text-emerald-500"
                     : "text-red-500",
                 )}
               >
                 {trendDelta.activeJobs > 0 ? (
-                  <ArrowUp className="size-2.5" />
+                  <ArrowUp className="size-3" />
                 ) : (
-                  <ArrowDown className="size-2.5" />
+                  <ArrowDown className="size-3" />
                 )}
                 {Math.abs(trendDelta.activeJobs)}
               </span>
             )}
           </span>
-          <span className="text-[10px] text-muted-foreground font-medium">
+          <span className="text-xs text-muted-foreground font-medium">
             active
           </span>
         </div>
-        <span className="text-[10px] text-muted-foreground font-medium mt-1">
+        <span className="text-xs text-muted-foreground font-medium mt-1">
           +{waitingQueueLength} in waiting queue
         </span>
       </Card>
 
       {/* Card 3: Completed Today */}
-      <Card className="bg-card/65 backdrop-blur border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 p-3.5 flex flex-col justify-between rounded-xl">
+      <Card className="bg-card/65 backdrop-blur border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 p-3 gap-0 flex flex-col rounded-xl">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+          <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
             {t("completedToday")}
           </span>
-          <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="size-4" />
           </div>
         </div>
@@ -137,37 +137,37 @@ export function KpiCards({
             {trendDelta && trendDelta.completedToday !== 0 && (
               <span
                 className={cn(
-                  "inline-flex items-center gap-0.5 text-xs font-semibold ml-1.5",
+                  "inline-flex items-center gap-1 text-xs font-semibold ml-2",
                   trendDelta.completedToday > 0
                     ? "text-emerald-500"
                     : "text-red-500",
                 )}
               >
                 {trendDelta.completedToday > 0 ? (
-                  <ArrowUp className="size-2.5" />
+                  <ArrowUp className="size-3" />
                 ) : (
-                  <ArrowDown className="size-2.5" />
+                  <ArrowDown className="size-3" />
                 )}
                 {Math.abs(trendDelta.completedToday)}
               </span>
             )}
           </span>
-          <span className="text-[10px] text-muted-foreground font-medium">
+          <span className="text-xs text-muted-foreground font-medium">
             completed
           </span>
         </div>
-        <span className="text-[10px] text-muted-foreground font-medium mt-1">
+        <span className="text-xs text-muted-foreground font-medium mt-1">
           Avg duration: {shiftReport?.avgDurationMinutes ?? 0}m
         </span>
       </Card>
 
       {/* Card 4: Revenue Today */}
-      <Card className="bg-card/65 backdrop-blur border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 p-3.5 flex flex-col justify-between rounded-xl">
+      <Card className="bg-card/65 backdrop-blur border-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/20 p-3 gap-0 flex flex-col rounded-xl">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+          <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
             {t("revenueToday")}
           </span>
-          <div className="flex size-7 items-center justify-center rounded-lg bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400">
             <Wallet className="size-4" />
           </div>
         </div>
@@ -177,23 +177,23 @@ export function KpiCards({
             {trendDelta && trendDelta.revenueToday !== 0 && (
               <span
                 className={cn(
-                  "inline-flex items-center gap-0.5 text-xs font-semibold ml-1.5",
+                  "inline-flex items-center gap-1 text-xs font-semibold ml-2",
                   trendDelta.revenueToday > 0
                     ? "text-emerald-500"
                     : "text-red-500",
                 )}
               >
                 {trendDelta.revenueToday > 0 ? (
-                  <ArrowUp className="size-2.5" />
+                  <ArrowUp className="size-3" />
                 ) : (
-                  <ArrowDown className="size-2.5" />
+                  <ArrowDown className="size-3" />
                 )}
                 {formatMNT(Math.abs(trendDelta.revenueToday))}
               </span>
             )}
           </span>
         </div>
-        <span className="text-[10px] text-muted-foreground font-medium mt-1">
+        <span className="text-xs text-muted-foreground font-medium mt-1">
           Today&apos;s invoices paid
         </span>
       </Card>

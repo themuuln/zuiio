@@ -37,10 +37,6 @@ export function useDrawerMutations({
   const [serviceSearch, setServiceSearch] = useState("");
   const [showAddService, setShowAddService] = useState(false);
   const [addingServiceId, setAddingServiceId] = useState<string | null>(null);
-  const [pendingServicePreview, setPendingServicePreview] = useState<{
-    name: string;
-    price: number;
-  } | null>(null);
 
   // ── Part state ──
 
@@ -173,51 +169,94 @@ export function useDrawerMutations({
 
   // ── Services ──
 
-  async function addService(svc: CatalogServiceItem) {
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId || addingServiceId) return;
-    setAddingServiceId(svc.id);
-    setPendingServicePreview({
-      name: svc.name,
-      price: Number(svc.default_price ?? 0),
+  // Optimistic add: service appears immediately with editable price
+  function addService(svc: CatalogServiceItem) {
+    const tempId = `temp-${crypto.randomUUID()}`;
+    const defaultPrice = Number(svc.default_price ?? 0);
+    setAddingServiceId(tempId);
+    setEditingServicePriceId(tempId);
+    setEditingServicePriceVal(String(defaultPrice));
+    setWo((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        services: [
+          ...(prev.services ?? []),
+          {
+            id: tempId,
+            service_name: svc.name,
+            service_catalog_id: svc._source === "global" ? null : svc.id,
+            quantity: 1,
+            unit_price: defaultPrice,
+            final_price: defaultPrice,
+            created_at: new Date().toISOString(),
+          } as any,
+        ],
+      };
     });
     setServiceSearch("");
     setShowAddService(false);
+  }
+
+  // Confirm: send API request, replace temp with real data
+  async function confirmAddService(serviceId: string, price: number) {
+    const orgId = orgIdRef.current;
+    if (!orgId || !workOrderId) return;
+    const svc = wo?.services?.find((s) => s.id === serviceId);
+    if (!svc) return;
     try {
-      const isGlobal = svc._source === "global";
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/services`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            service_catalog_id: isGlobal ? null : svc.id,
-            service_name: svc.name,
-            quantity: 1,
-            unit_price: svc.default_price ?? 0,
+            service_catalog_id: (svc as any).service_catalog_id ?? null,
+            service_name: svc.service_name,
+            quantity: svc.quantity ?? 1,
+            unit_price: price,
           }),
         },
       );
       const json = await res.json();
       if (json.error) {
         toast.error(json.error.message ?? "Failed to add service");
+        // Rollback: remove temp service
+        setWo((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            services: (prev.services ?? []).filter((s) => s.id !== serviceId),
+          };
+        });
         return;
       }
+      // Replace temp with real server data
       const newService = json.data;
       setWo((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
-          services: [...(prev.services ?? []), newService],
+          services: (prev.services ?? []).map((s) =>
+            s.id === serviceId ? newService : s,
+          ),
         };
       });
-      toast.success(`Added service: ${svc.name}`);
+      toast.success(`Added service: ${svc.service_name}`);
       onRefresh();
     } catch {
       toast.error("Failed to add service");
+      // Rollback
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          services: (prev.services ?? []).filter((s) => s.id !== serviceId),
+        };
+      });
     } finally {
       setAddingServiceId(null);
-      setPendingServicePreview(null);
+      setEditingServicePriceId(null);
     }
   }
 
@@ -436,10 +475,16 @@ export function useDrawerMutations({
 
   // ── Price editing ──
 
-  async function handleServicePriceSave(serviceId: string) {
+  async function handleServicePriceSave(serviceId: string, price: number) {
+    // Temp services: confirm the add via API
+    if (serviceId.startsWith("temp-")) {
+      await confirmAddService(serviceId, price);
+      return;
+    }
+
     const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
-    const numVal = Number(editingServicePriceVal);
+    const numVal = price;
     if (Number.isNaN(numVal) || numVal < 0) {
       toast.error("Invalid price");
       return;
@@ -734,7 +779,6 @@ export function useDrawerMutations({
     showAddService,
     setShowAddService,
     addingServiceId,
-    pendingServicePreview,
     editingServicePriceId,
     setEditingServicePriceId,
     editingServicePriceVal,

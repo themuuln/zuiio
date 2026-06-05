@@ -207,7 +207,7 @@ export function PostServiceDialog({
           <DrawerTitle className="flex items-center gap-2 text-base">
             <Car className="size-4 text-muted-foreground" />
             {isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
-            <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50  px-2 py-0.5 ml-1">
+            <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 px-2 py-1 ml-1">
               {vehiclePlate}
             </span>
           </DrawerTitle>
@@ -215,9 +215,9 @@ export function PostServiceDialog({
 
         <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-4">
           {/* Odometer */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-              <Gauge className="size-3.5" />
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <Gauge className="size-4" />
               {t("postServiceOdometer")}
             </Label>
             <Input
@@ -230,10 +230,10 @@ export function PostServiceDialog({
           </div>
 
           {/* Services */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                <MessageSquare className="size-3.5" />
+              <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                <MessageSquare className="size-4" />
                 {t("postServiceServicesTitle")}
                 <Badge variant="secondary">{entries.length}</Badge>
               </span>
@@ -241,7 +241,7 @@ export function PostServiceDialog({
                 variant="ghost"
                 size="sm"
                 onClick={() => setAllExpanded(!allExpanded)}
-                className="gap-0.5 text-[10px] h-auto"
+                className="gap-1 text-xs h-auto"
               >
                 {allExpanded ? (
                   <ChevronUp className="size-3" />
@@ -277,7 +277,7 @@ export function PostServiceDialog({
           </div>
 
           {/* Mechanic notes */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label className="text-xs font-semibold text-muted-foreground">
               Mechanic Notes
             </Label>
@@ -291,7 +291,7 @@ export function PostServiceDialog({
           {/* Error */}
           {error && (
             <div className="flex items-start gap-2  bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
-              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-red-500" />
+              <AlertTriangle className="mt-1 size-4 shrink-0 text-red-500" />
               <Typography.Text className="text-xs text-red-700 dark:text-red-400">
                 {error}
               </Typography.Text>
@@ -343,7 +343,7 @@ function ServiceCard({
       <Button
         variant="ghost"
         onClick={() => onChange({ expanded: !entry.expanded })}
-        className="w-full justify-between px-3 py-2.5 h-auto"
+        className="w-full justify-between px-3 py-3 h-auto"
       >
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-sm font-medium truncate">
@@ -354,17 +354,17 @@ function ServiceCard({
           )}
         </div>
         {entry.expanded ? (
-          <ChevronUp className="size-3.5 shrink-0 text-muted-foreground/50" />
+          <ChevronUp className="size-4 shrink-0 text-muted-foreground/50" />
         ) : (
-          <ChevronDown className="size-3.5 shrink-0 text-muted-foreground/50" />
+          <ChevronDown className="size-4 shrink-0 text-muted-foreground/50" />
         )}
       </Button>
 
       {entry.expanded && (
-        <div className="px-3 pb-3 flex flex-col gap-2.5 border-t border-border/40 pt-2.5">
+        <div className="px-3 pb-3 flex flex-col gap-2 border-t border-border/40 pt-3">
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <Label className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
+              <Label className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
                 {t("postServiceIntervalMonths")}
               </Label>
               <Input
@@ -383,7 +383,7 @@ function ServiceCard({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
+              <Label className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
                 {t("postServiceIntervalKm")}
               </Label>
               <Input
@@ -404,7 +404,7 @@ function ServiceCard({
           </div>
 
           {(nextDate || nextKm) && (
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/30  px-2 py-1.5">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 px-2 py-2">
               <span className="font-medium">{t("postServiceNextDue")}:</span>
               {nextDate && <span>{formatDate(nextDate)}</span>}
               {nextDate && nextKm && <span>·</span>}
@@ -414,7 +414,7 @@ function ServiceCard({
 
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <Label className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
+              <Label className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
                 {t("postServicePriority")}
               </Label>
               <Select
@@ -443,7 +443,7 @@ function ServiceCard({
               </Select>
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider">
+              <Label className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
                 Notes
               </Label>
               <Input

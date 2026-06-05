@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
+import { reportError } from "@/lib/sentry-report";
 
 export default function SettingsError({
   error,
@@ -15,7 +16,7 @@ export default function SettingsError({
   const t = useTranslations();
 
   useEffect(() => {
-    console.error("Settings page error:", error);
+    reportError(error, "dashboard/settings");
   }, [error]);
 
   return (

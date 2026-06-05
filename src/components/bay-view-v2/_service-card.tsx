@@ -54,7 +54,7 @@ export function ServiceCard({
         variant="ghost"
         type="button"
         onClick={() => onChange({ expanded: !entry.expanded })}
-        className="w-full justify-between px-3 py-2.5 h-auto"
+        className="w-full justify-between px-3 py-2 h-auto"
       >
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-sm font-medium truncate">
@@ -73,13 +73,13 @@ export function ServiceCard({
       </Button>
 
       {entry.expanded && (
-        <div className="px-3 pb-3 flex flex-col gap-2.5 border-t border-border/40 pt-2.5">
+        <div className="px-3 pb-3 flex flex-col gap-2 border-t border-border/40 pt-2">
           {/* Intervals row */}
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
               <label
                 htmlFor={`post-service-interval-months-${entry.workOrderServiceId}`}
-                className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider"
+                className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider"
               >
                 {t("postServiceIntervalMonths")}
               </label>
@@ -102,7 +102,7 @@ export function ServiceCard({
             <div className="flex flex-col gap-1">
               <label
                 htmlFor={`post-service-interval-km-${entry.workOrderServiceId}`}
-                className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider"
+                className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider"
               >
                 {t("postServiceIntervalKm")}
               </label>
@@ -126,7 +126,7 @@ export function ServiceCard({
 
           {/* Next due */}
           {(nextDate || nextKm) && (
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/30 rounded-md px-2 py-1.5">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 rounded-md px-2 py-2">
               <span className="font-medium">{t("postServiceNextDue")}:</span>
               {nextDate && <span>{formatDate(nextDate)}</span>}
               {nextDate && nextKm && <span>·</span>}
@@ -139,7 +139,7 @@ export function ServiceCard({
             <div className="flex flex-col gap-1">
               <label
                 htmlFor={`post-service-priority-${entry.workOrderServiceId}`}
-                className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider"
+                className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider"
               >
                 {t("postServicePriority")}
               </label>
@@ -174,7 +174,7 @@ export function ServiceCard({
             <div className="flex flex-col gap-1">
               <label
                 htmlFor={`entry-notes-${entry.workOrderServiceId}`}
-                className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider"
+                className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider"
               >
                 Notes
               </label>

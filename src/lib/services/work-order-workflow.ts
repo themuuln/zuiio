@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError } from "@/lib/errors";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";
 import type { MechanicAssignment, WorkOrder } from "@/lib/types";
 
@@ -88,7 +89,7 @@ export async function updateWorkOrderStatus(
 
     // Schedule sync — fire-and-forget; service reminder schedules are non-critical
     syncWorkOrderToSchedules(id).catch((err) =>
-      console.error(
+      reportServerError(
         `[WO ${id}] Failed to sync work order to schedules: ${err instanceof Error ? err.message : err}`,
       ),
     );
@@ -142,13 +143,13 @@ export async function updateWorkOrderStatus(
           .insert(movements);
 
         if (mvError) {
-          console.error(
+          reportServerError(
             `[WO ${id}] Failed to create inventory movements: ${mvError.message}`,
           );
         }
       }
     } catch (err) {
-      console.error(
+      reportServerError(
         `[WO ${id}] Failed to deduct inventory: ${err instanceof Error ? err.message : err}`,
       );
     }

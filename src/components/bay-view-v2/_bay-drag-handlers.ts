@@ -2,6 +2,7 @@
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
+import { reportServerError } from "@/lib/sentry-report-server";
 import type { BaySlotData, BayViewData } from "@/lib/services/bay-view-service";
 import {
   assignHelperToWorkOrder,
@@ -9,6 +10,7 @@ import {
   assignVehicleToBay,
   removeVehicleFromBay,
   reorderQueue,
+  swapBayNumbers,
   unassignMechanicFromWorkOrder,
 } from "@/lib/services/bay-view-service";
 import type { Vehicle, WorkOrder } from "@/lib/types";
@@ -125,7 +127,7 @@ export function useBayDragHandlers({
 
       // Case 1: Dragging a vehicle to a bay — shows loading spinner on source
       // bay while the server call is in flight, then refreshes all data.
-      // No optimistic update — the server response is the source of truth.
+      // If target bay is occupied, swap both vehicles atomically.
       if (activeData?.type === "vehicle" && overId.startsWith("bay-")) {
         const bayNumber = Number.parseInt(overId.replace("bay-", ""), 10);
         const woId = activeData.workOrderId;
@@ -133,6 +135,55 @@ export function useBayDragHandlers({
         const currentBay = data?.bays.find((b) => b.workOrder?.id === woId);
         if (currentBay?.bayNumber === bayNumber) return; // Dropped on its current bay, do nothing!
 
+        // Check if target bay already has a vehicle — swap instead of assign
+        const targetBay = data?.bays.find((b) => b.bayNumber === bayNumber);
+        const targetWo = targetBay?.workOrder;
+
+        if (targetWo && currentBay) {
+          // Both bays occupied — optimistic swap: move vehicles instantly
+          const srcWo = currentBay.workOrder!;
+          setData((d) => {
+            if (!d) return d;
+            return {
+              ...d,
+              bays: d.bays.map((b) => {
+                if (b.bayNumber === currentBay.bayNumber)
+                  return {
+                    ...b,
+                    workOrder: {
+                      ...targetWo,
+                      bay_number: currentBay.bayNumber,
+                    },
+                  };
+                if (b.bayNumber === bayNumber)
+                  return {
+                    ...b,
+                    workOrder: { ...srcWo, bay_number: bayNumber },
+                  };
+                return b;
+              }),
+            };
+          });
+          try {
+            await swapBayNumbers(
+              woId,
+              currentBay.bayNumber,
+              targetWo.id,
+              bayNumber,
+            );
+            await fetchData(false);
+          } catch (err) {
+            // Roll back optimistic swap
+            setData(prevData);
+            setToast({
+              message: `Swap failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+              variant: "error",
+            });
+          }
+          return;
+        }
+
+        // Target bay is empty — normal assign
         markPending(woId);
         try {
           await assignVehicleToBay(woId, bayNumber);
@@ -439,7 +490,7 @@ export function useBayDragHandlers({
       if (prevData) setData(prevData);
       const woIds = [activeData?.workOrderId].filter(Boolean);
       clearPending(...woIds);
-      console.error("Drag action failed:", err);
+      reportServerError("Drag action failed:", err);
       setToast({
         message: "Action failed — changes reverted",
         variant: "error",

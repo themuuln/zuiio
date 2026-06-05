@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { PageErrorState } from "@/components/page-state";
+import { reportError } from "@/lib/sentry-report";
 
 export default function DashboardError({
   error,
@@ -14,7 +15,7 @@ export default function DashboardError({
   const t = useTranslations("common");
 
   useEffect(() => {
-    console.error(error);
+    reportError(error, "dashboard");
   }, [error]);
 
   return (

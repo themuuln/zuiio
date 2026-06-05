@@ -79,15 +79,17 @@ export function InviteSheet({
     },
   });
 
-  // Reset form when sheet opens
+  // Reset form only when sheet first opens (not when defaultRoleId changes async)
   const { reset } = form;
+  const prevOpen = React.useRef(open);
   React.useEffect(() => {
-    if (open) {
+    if (open && !prevOpen.current) {
       reset({
         identifier: "",
         roleId: defaultRoleId,
       });
     }
+    prevOpen.current = open;
   }, [open, defaultRoleId, reset]);
 
   function handleSubmit(data: InviteFormValues) {

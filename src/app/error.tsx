@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
+import { reportError } from "@/lib/sentry-report";
 
 export default function RootErrorPage({
   error,
@@ -11,6 +13,10 @@ export default function RootErrorPage({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    reportError(error, "root");
+  }, [error]);
+
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-4">
       <div className="text-center">

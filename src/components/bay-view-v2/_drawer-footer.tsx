@@ -51,10 +51,10 @@ export function DrawerFooter({
       {confirmStatus && (
         <Alert variant="destructive">
           <AlertTriangle className="size-3.5" />
-          <AlertTitle className="text-[11px]">
+          <AlertTitle className="text-xs">
             {t("statusNotesGenericTitle", { status: confirmStatus })}?
           </AlertTitle>
-          <AlertDescription className="text-[10px]">
+          <AlertDescription className="text-xs">
             {confirmStatus === "Completed"
               ? t("confirmComplete")
               : t("confirmCancel")}
@@ -66,7 +66,7 @@ export function DrawerFooter({
               onChange={(e) => onStatusNotesChange(e.target.value)}
               className="h-8 text-xs"
             />
-            <div className="flex gap-1.5 justify-end">
+            <div className="flex gap-2 justify-end">
               <Button
                 variant="outline"
                 size="sm"
@@ -92,7 +92,7 @@ export function DrawerFooter({
       )}
 
       {/* Primary status flow + secondary actions */}
-      <div className="flex items-center gap-1.5 justify-end">
+      <div className="flex items-center gap-2 justify-end">
         {wo.status === "New" && (
           <Button
             className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"

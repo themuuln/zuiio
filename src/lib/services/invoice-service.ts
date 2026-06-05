@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { sendInvoiceEmail } from "@/lib/services/email-service";
 import { createClient } from "@/lib/supabase/server";
 import type {
@@ -936,7 +937,7 @@ async function recalculateInvoiceTotals(
     .eq("organization_id", orgId);
 
   if (error) {
-    console.error("Failed to recalculate invoice totals:", error.message);
+    reportServerError("Failed to recalculate invoice totals:", error.message);
   }
 }
 

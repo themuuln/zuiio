@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { InviteUserParams, OrgInvite } from "@/lib/types";
@@ -108,7 +109,7 @@ export async function getPendingInvitesForEmail(
   const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Failed to fetch pending invites:", error);
+    reportServerError("Failed to fetch pending invites:", error);
     return [];
   }
 
@@ -128,7 +129,9 @@ export async function getPendingInvitesForEmail(
 }
 
 export async function getOrgInvites(orgId: string): Promise<OrgInvite[]> {
-  const supabase = await createClient();
+  // Use service role to bypass RLS — consistent with getPendingInvitesForEmail.
+  // The API route already verifies org membership via createRouteHandler.
+  const supabase = await createServiceRoleClient();
 
   const { data, error } = await supabase
     .from("org_invites")

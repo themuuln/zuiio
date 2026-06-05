@@ -31,7 +31,7 @@ function ServiceTimelineEntry({
   return (
     <div key={entry.work_order_id} className="relative flex gap-3 pb-4">
       {!isLast && (
-        <div className="absolute left-[11px] top-5 bottom-0 w-0.5 bg-border" />
+        <div className="absolute left-3 top-5 bottom-0 w-0.5 bg-border" />
       )}
 
       <div className="relative z-10 mt-1 shrink-0">
@@ -51,7 +51,7 @@ function ServiceTimelineEntry({
           <span className="text-xs font-semibold capitalize">
             {entry.status}
           </span>
-          <span className="text-[10px] text-muted-foreground shrink-0">
+          <span className="text-xs text-muted-foreground shrink-0">
             {formatDate(entry.created_at)} {formatTime(entry.created_at)}
           </span>
         </div>
@@ -63,11 +63,11 @@ function ServiceTimelineEntry({
         )}
 
         {entry.services.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1.5">
+          <div className="flex flex-wrap gap-1 mt-2">
             {entry.services.map((s) => (
               <span
                 key={`${s.name}-${s.price}`}
-                className="inline-flex items-center gap-1 bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400"
+                className="inline-flex items-center gap-1 bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400"
               >
                 <Wrench className="size-2.5" />
                 {s.name}
@@ -76,7 +76,7 @@ function ServiceTimelineEntry({
           </div>
         )}
 
-        <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
+        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
           {entry.total > 0 && (
             <span className="font-medium text-foreground/80">
               {formatMNT(entry.total)}
@@ -145,7 +145,7 @@ export function TimelinePanel({
         </div>
         <span className="text-sm font-semibold">{t("serviceTimeline")}</span>
         {serviceHistory.length > 0 && (
-          <span className="bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+          <span className="bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
             {serviceHistory.length}
           </span>
         )}
@@ -176,7 +176,7 @@ export function TimelinePanel({
                 )}
               </div>
               {customer && (
-                <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground border-t border-border/40 pt-2">
+                <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground border-t border-border/40 pt-2">
                   <User className="size-3" />
                   {[customer.first_name, customer.last_name]
                     .filter(Boolean)

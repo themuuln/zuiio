@@ -8,6 +8,7 @@ import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useRouter } from "@/lib/i18n/navigation";
 import { workOrderKeys } from "@/lib/queries/keys";
 import { useDrawerQueries } from "@/lib/queries/use-drawer-queries";
+import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { saveCompletionData } from "@/lib/services/post-service-service";
 import { DrawerCelebration } from "./_drawer-celebration";
 import { DrawerFooter } from "./_drawer-footer";
@@ -17,6 +18,7 @@ import type { WorkOrderDetailDrawerProps } from "./_drawer-types";
 import { UnsavedWarning } from "./_drawer-unsaved-warning";
 import { NotesSection } from "./_notes-section";
 import { PartsSection } from "./_parts-section";
+import { QuickActions } from "./_quick-actions";
 import { ServicesSection } from "./_services-section";
 import { StatusTimeline } from "./_status-timeline";
 import { TotalsSummary } from "./_totals-summary";
@@ -51,6 +53,8 @@ export function WorkOrderDetailDrawer({
     isLoading,
     error,
   } = useDrawerQueries(workOrderId);
+
+  const { settings: orgSettings } = useOrgSettings(orgId ?? undefined);
 
   // Track first successful load for layout-preserving skeleton
   const hasLoadedOnceRef = useRef(false);
@@ -87,7 +91,6 @@ export function WorkOrderDetailDrawer({
     showAddService,
     setShowAddService,
     addingServiceId,
-    pendingServicePreview,
     editingServicePriceId,
     setEditingServicePriceId,
     editingServicePriceVal,
@@ -212,8 +215,13 @@ export function WorkOrderDetailDrawer({
           wo={wo}
           loading={isLoading && !hasLoadedOnce}
           mechanics={mechanics}
+          helpers={wo?.helpers ?? []}
+          orgId={orgId ?? ""}
+          workOrderId={workOrderId ?? ""}
           saving={saving}
+          isAddingService={!!addingServiceId}
           onAssignMechanic={assignMechanic}
+          onHelpersChange={() => fetchWo(true)}
           onClose={() => handleOpenChange(false)}
           showBack={showPostServiceForm}
           onBack={handleCancelPostService}
@@ -226,6 +234,17 @@ export function WorkOrderDetailDrawer({
           error={error?.message ?? null}
           onRetry={() => fetchWo()}
         />
+
+        {/* Quick actions — always visible after first load */}
+        {hasLoadedOnce && wo && orgId && (
+          <QuickActions
+            workOrderId={workOrderId!}
+            orgId={orgId}
+            existingNotes={wo.notes}
+            onNoteAdded={() => fetchWo(true)}
+            t={t}
+          />
+        )}
 
         {/* Content — always rendered after first load (skeleton when refetching) */}
         {hasLoadedOnce && (
@@ -264,7 +283,6 @@ export function WorkOrderDetailDrawer({
                                 serviceSearch={serviceSearch}
                                 showAddService={showAddService}
                                 addingServiceId={addingServiceId}
-                                pendingServicePreview={pendingServicePreview}
                                 editingPriceId={editingServicePriceId}
                                 editingPriceVal={editingServicePriceVal}
                                 onServiceSearchChange={setServiceSearch}
@@ -279,9 +297,6 @@ export function WorkOrderDetailDrawer({
                                 }}
                                 onEditPriceChange={setEditingServicePriceVal}
                                 onEditPriceSave={handleServicePriceSave}
-                                onEditPriceCancel={() =>
-                                  setEditingServicePriceId(null)
-                                }
                                 t={t}
                               />
 
@@ -323,6 +338,9 @@ export function WorkOrderDetailDrawer({
                                 complaint={wo.complaint}
                                 diagnosis={wo.diagnosis}
                                 notes={wo.notes}
+                                orgId={orgId!}
+                                workOrderId={workOrderId!}
+                                onUpdated={() => fetchWo(true)}
                                 t={t}
                               />
                             </div>
@@ -344,6 +362,8 @@ export function WorkOrderDetailDrawer({
                         servicesTotal={servicesTotal}
                         partsTotal={partsTotal}
                         grandTotal={Number(wo.total)}
+                        discountTotal={wo.discount_total ?? 0}
+                        taxRate={orgSettings?.default_tax_rate ?? 0}
                         t={t}
                       />
                     </div>

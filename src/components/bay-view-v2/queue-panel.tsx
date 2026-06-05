@@ -122,8 +122,8 @@ function QueueItem({
       <div className="flex-1 min-w-0">
         {v ? (
           <>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-semibold truncate text-foreground/90">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold truncate text-foreground/90">
                 <HighlightText
                   text={formatPlateNumber(v.plate_number)}
                   query={searchQuery}
@@ -138,7 +138,7 @@ function QueueItem({
                 />
               )}
             </div>
-            <div className="text-[9px] text-muted-foreground/60 truncate leading-tight">
+            <div className="text-xs text-muted-foreground/60 truncate leading-tight">
               <HighlightText text={v.make ?? ""} query={searchQuery} />{" "}
               <HighlightText text={v.model ?? ""} query={searchQuery} />
               {v.year ? ` · ${v.year}` : ""}
@@ -146,7 +146,7 @@ function QueueItem({
             {mechanicName && (
               <div className="flex items-center gap-1 mt-0.5">
                 <span className="size-1  bg-primary/30 shrink-0" />
-                <span className="text-[9px] text-primary/60 truncate font-medium">
+                <span className="text-xs text-primary/60 truncate font-medium">
                   {mechanicName}
                 </span>
               </div>
@@ -154,10 +154,10 @@ function QueueItem({
           </>
         ) : (
           <div>
-            <Typography.Text className="text-[11px] font-medium truncate">
+            <Typography.Text className="text-xs font-medium truncate">
               {workOrder.complaint || `WO ${workOrder.id.slice(0, 8)}`}
             </Typography.Text>
-            <Typography.Muted className="text-[9px] text-muted-foreground">
+            <Typography.Muted className="text-xs text-muted-foreground">
               No vehicle
             </Typography.Muted>
           </div>
@@ -176,7 +176,7 @@ function QueueItem({
             }}
             title="Assign to first empty bay"
           >
-            <CornerDownRight className="size-2.5" />
+            <CornerDownRight className="size-3" />
           </Button>
         )}
         {onAssignToBay &&
@@ -184,7 +184,7 @@ function QueueItem({
           availableBays.length > 0 &&
           isHovered &&
           !isPending && (
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-1">
               {availableBays.slice(0, 4).map((bayNum) => (
                 <Button
                   key={bayNum}
@@ -196,13 +196,13 @@ function QueueItem({
                     onAssignToBay(workOrder.id, bayNum);
                   }}
                   title={`Assign to Bay ${String(bayNum).padStart(2, "0")}`}
-                  className="text-[9px] font-mono font-bold h-5 w-8 p-0"
+                  className="text-xs font-mono font-bold h-5 w-8 p-0"
                 >
                   {String(bayNum).padStart(2, "0")}
                 </Button>
               ))}
               {availableBays.length > 4 && (
-                <span className="text-[8px] text-muted-foreground/50 font-medium ml-0.5">
+                <span className="text-[10px] text-muted-foreground/50 font-medium ml-1">
                   +{availableBays.length - 4}
                 </span>
               )}
@@ -210,7 +210,7 @@ function QueueItem({
           )}
         <span
           className={cn(
-            "inline-flex items-center gap-0.5 text-[9px] font-medium whitespace-nowrap",
+            "inline-flex items-center gap-1 text-xs font-medium whitespace-nowrap",
             waitInfo.urgent ? "text-amber-600" : "text-muted-foreground/40",
           )}
         >
@@ -293,7 +293,7 @@ export function QueuePanel({
           <div className="flex items-center gap-2">
             <CardTitle className="text-sm">Waiting Queue</CardTitle>
             {items.length > 0 && (
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="text-xs">
                 {items.length}
               </Badge>
             )}
@@ -304,7 +304,7 @@ export function QueuePanel({
       <CardContent className="flex min-h-0 flex-1 flex-col gap-3 px-3">
         {items.length > 0 && (
           <div className="relative">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/50" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/50" />
             <Input
               ref={searchRef}
               type="text"
@@ -318,7 +318,7 @@ export function QueuePanel({
                 size="icon-xs"
                 variant="ghost"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-0.5 top-1/2 size-6 -translate-y-1/2 p-0 text-muted-foreground/50"
+                className="absolute right-1 top-1/2 size-6 -translate-y-1/2 p-0 text-muted-foreground/50"
               >
                 <X className="size-3" />
               </Button>
@@ -372,7 +372,7 @@ export function QueuePanel({
                 items={filtered.map((wo) => `vehicle-${wo.id}`)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="flex flex-col gap-1.5 pr-2">
+                <div className="flex flex-col gap-2 pr-2">
                   {filtered.map((wo) => (
                     <QueueItem
                       key={wo.id}

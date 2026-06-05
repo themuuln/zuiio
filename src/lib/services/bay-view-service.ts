@@ -391,6 +391,62 @@ export async function assignVehicleToBay(
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
 }
 
+// ── Swap two occupied bays ─────────────────────────────────────
+
+export async function swapBayNumbers(
+  workOrderIdA: string,
+  bayNumberA: number,
+  workOrderIdB: string,
+  bayNumberB: number,
+): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new UnauthorizedError();
+  const orgId = await getOrgId();
+  const now = new Date().toISOString();
+
+  // Step 1: temporarily clear both bays so no conflict check fires
+  const { error: clearErr } = await supabase
+    .from("work_orders")
+    .update({ bay_number: null, updated_at: now })
+    .in("id", [workOrderIdA, workOrderIdB])
+    .eq("organization_id", orgId);
+  if (clearErr) throw new Error(clearErr.message ?? "Failed to swap bays");
+
+  // Step 2: assign each vehicle to the other's bay (both bays are now free)
+  const { error: swapErr } = await Promise.all([
+    supabase
+      .from("work_orders")
+      .update({ bay_number: bayNumberA, updated_at: now })
+      .eq("id", workOrderIdB)
+      .eq("organization_id", orgId),
+    supabase
+      .from("work_orders")
+      .update({ bay_number: bayNumberB, updated_at: now })
+      .eq("id", workOrderIdA)
+      .eq("organization_id", orgId),
+  ]).then((results) => {
+    const errs = results.map((r) => r.error).filter(Boolean);
+    return { error: errs.length > 0 ? errs[0] : null };
+  });
+  if (swapErr)
+    throw new Error(swapErr.message ?? "Failed to assign vehicle to bay");
+
+  // Step 3: clean up helpers for both work orders
+  await supabase
+    .from("work_order_helpers")
+    .delete()
+    .in("work_order_id", [workOrderIdA, workOrderIdB]);
+
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
+  revalidateTag(cacheTags.workOrder(workOrderIdA), "max");
+  revalidateTag(cacheTags.workOrderDetail(workOrderIdA), "max");
+  revalidateTag(cacheTags.workOrder(workOrderIdB), "max");
+  revalidateTag(cacheTags.workOrderDetail(workOrderIdB), "max");
+}
+
 // ── Remove Vehicle from Bay ───────────────────────────────────
 
 export async function removeVehicleFromBay(workOrderId: string): Promise<void> {

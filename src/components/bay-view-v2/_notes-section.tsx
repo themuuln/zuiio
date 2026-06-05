@@ -1,22 +1,143 @@
 "use client";
 
-import { FileText } from "lucide-react";
+import { FileText, Pencil } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 
 interface NotesSectionProps {
   complaint: string | null;
   diagnosis: string | null;
   notes: string | null;
+  orgId: string;
+  workOrderId: string;
+  onUpdated: () => void;
   t: (key: string) => string;
+}
+
+type EditableField = "complaint" | "diagnosis" | "notes";
+
+function parseNotes(raw: string | null): string {
+  if (!raw) return "";
+  if (typeof raw === "object" && raw !== null) {
+    return (raw as { content: string }).content ?? "";
+  }
+  return String(raw);
 }
 
 export function NotesSection({
   complaint,
   diagnosis,
   notes,
+  orgId,
+  workOrderId,
+  onUpdated,
   t,
 }: NotesSectionProps) {
+  const [editingField, setEditingField] = useState<EditableField | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [saving, setSaving] = useState(false);
+
   if (!complaint && !diagnosis && !notes) return null;
+
+  function startEdit(field: EditableField, currentValue: string | null) {
+    setEditingField(field);
+    setEditValue(
+      field === "notes" ? parseNotes(currentValue) : (currentValue ?? ""),
+    );
+  }
+
+  function cancelEdit() {
+    setEditingField(null);
+    setEditValue("");
+  }
+
+  async function saveField(field: EditableField) {
+    setSaving(true);
+    try {
+      const body: Record<string, string | null> = {};
+      body[field] = editValue.trim() || null;
+
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${workOrderId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message ?? "Failed to save");
+        return;
+      }
+      toast.success(t("saved") ?? "Saved");
+      setEditingField(null);
+      setEditValue("");
+      onUpdated();
+    } catch {
+      toast.error("Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function renderField(
+    field: EditableField,
+    label: string,
+    value: string | null,
+  ) {
+    const isEditing = editingField === field;
+    const displayValue = field === "notes" ? parseNotes(value) : (value ?? "");
+
+    return (
+      <div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+            {label}
+          </span>
+          {!isEditing && displayValue && (
+            <button
+              type="button"
+              onClick={() => startEdit(field, value)}
+              className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-pointer"
+              aria-label={`Edit ${label}`}
+            >
+              <Pencil className="size-2.5" />
+            </button>
+          )}
+        </div>
+        {isEditing ? (
+          <div className="flex flex-col gap-1.5 mt-0.5">
+            <Textarea
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              rows={3}
+              className="text-xs resize-none bg-muted/50 border-border/60"
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                onClick={() => saveField(field)}
+                disabled={saving}
+              >
+                {t("saveNote")}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                {t("cancel")}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Typography.Text className="text-xs mt-0.5 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-foreground/80 leading-relaxed">
+            {displayValue}
+          </Typography.Text>
+        )}
+      </div>
+    );
+  }
 
   return (
     <section className="rounded-lg border border-border/60 bg-card/40 p-3">
@@ -29,38 +150,9 @@ export function NotesSection({
         </span>
       </div>
       <div className="flex flex-col gap-2">
-        {complaint && (
-          <div>
-            <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-              {t("complaint")}
-            </span>
-            <Typography.Text className="text-xs mt-0.5 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-foreground/80 leading-relaxed">
-              {complaint}
-            </Typography.Text>
-          </div>
-        )}
-        {diagnosis && (
-          <div>
-            <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-              {t("diagnosis")}
-            </span>
-            <Typography.Text className="text-xs mt-0.5 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-foreground/80 leading-relaxed">
-              {diagnosis}
-            </Typography.Text>
-          </div>
-        )}
-        {notes && (
-          <div>
-            <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-              {t("internalNotes")}
-            </span>
-            <Typography.Text className="text-xs mt-0.5 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-foreground/80 leading-relaxed">
-              {typeof notes === "object" && notes !== null
-                ? (notes as { content: string }).content
-                : notes}
-            </Typography.Text>
-          </div>
-        )}
+        {complaint && renderField("complaint", t("complaint"), complaint)}
+        {diagnosis && renderField("diagnosis", t("diagnosis"), diagnosis)}
+        {notes && renderField("notes", t("internalNotes"), notes)}
       </div>
     </section>
   );

@@ -86,24 +86,24 @@ export function ShiftReportDialog({ open, onOpenChange }: Props) {
             {/* Key metrics */}
             <div className="grid grid-cols-2 gap-3">
               <div className=" bg-green-50/50 dark:bg-green-950/10 border border-green-200/50 dark:border-green-800/30 p-3 text-center">
-                <div className="flex items-center justify-center size-8  bg-green-500/10 mx-auto mb-1.5">
+                <div className="flex items-center justify-center size-8 bg-green-500/10 mx-auto mb-2">
                   <Car className="size-4 text-green-600" />
                 </div>
                 <div className="text-2xl font-semibold tabular-nums text-green-700 dark:text-green-300">
                   {report.completedToday}
                 </div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">
+                <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
                   {t("completedToday")}
                 </div>
               </div>
               <div className=" bg-blue-50/50 dark:bg-blue-950/10 border border-blue-200/50 dark:border-blue-800/30 p-3 text-center">
-                <div className="flex items-center justify-center size-8  bg-blue-500/10 mx-auto mb-1.5">
+                <div className="flex items-center justify-center size-8 bg-blue-500/10 mx-auto mb-2">
                   <DollarSign className="size-4 text-blue-600" />
                 </div>
                 <div className="text-xl font-semibold tabular-nums text-blue-700 dark:text-blue-300 truncate">
                   {formatMNT(report.revenueToday)}
                 </div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">
+                <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
                   {t("revenueToday")}
                 </div>
               </div>
@@ -112,8 +112,8 @@ export function ShiftReportDialog({ open, onOpenChange }: Props) {
             {/* Detail stats */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <Clock className="size-3.5" />
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="size-4" />
                   {t("avgJobDuration")}
                 </span>
                 <span className="font-semibold tabular-nums">
@@ -124,8 +124,8 @@ export function ShiftReportDialog({ open, onOpenChange }: Props) {
               </div>
               <Separator />
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <Gauge className="size-3.5" />
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <Gauge className="size-4" />
                   {t("bayUtilization")}
                 </span>
                 <span className="font-semibold tabular-nums">
@@ -137,8 +137,8 @@ export function ShiftReportDialog({ open, onOpenChange }: Props) {
               </div>
               <Separator />
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <Users className="size-3.5" />
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <Users className="size-4" />
                   {t("activeJobs")}
                 </span>
                 <span className="font-semibold tabular-nums">

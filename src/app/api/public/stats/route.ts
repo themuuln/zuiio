@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { reportServerError } from "@/lib/sentry-report-server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 300;
@@ -12,7 +13,7 @@ export async function GET() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !anonKey) {
-      console.error("[public/stats] Missing env vars");
+      reportServerError("[public/stats] Missing env vars");
       return NextResponse.json(
         { error: "Configuration error" },
         { status: 500 },
@@ -26,7 +27,7 @@ export async function GET() {
     const { data, error } = await supabase.rpc("get_public_stats");
 
     if (error) {
-      console.error("[public/stats] RPC error:", error);
+      reportServerError("[public/stats] RPC error:", error);
       return NextResponse.json(
         { error: "Failed to fetch stats" },
         { status: 500 },
@@ -39,7 +40,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("[public/stats] Failed to fetch stats:", error);
+    reportServerError("[public/stats] Failed to fetch stats:", error);
     return NextResponse.json(
       { error: "Failed to fetch stats" },
       { status: 500 },

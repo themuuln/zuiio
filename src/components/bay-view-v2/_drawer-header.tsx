@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowLeft, Car, Loader2, User, Wrench, X } from "lucide-react";
-import { MechanicSelect } from "@/components/mechanic-select";
+import { ArrowLeft, Car, Loader2, User, X } from "lucide-react";
+import { MechanicMultiSelect } from "@/components/bay-view-v2/_mechanic-multi-select";
 import { Button } from "@/components/ui/button";
 import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { MongolianLicensePlate } from "@/components/vehicles/license-plate";
@@ -11,9 +11,14 @@ import { StatusPill } from "./status-pill";
 interface DrawerHeaderProps {
   wo: WorkOrderDetail | null;
   loading: boolean;
-  mechanics: Array<{ id: string; full_name: string }>;
+  mechanics: Array<{ id: string; full_name: string; current_jobs?: number }>;
+  helpers: Array<{ id: string; full_name: string | null }>;
+  orgId: string;
+  workOrderId: string;
   saving: boolean;
+  isAddingService: boolean;
   onAssignMechanic: (mechanicId: string) => Promise<void>;
+  onHelpersChange: () => void;
   onClose: () => void;
   showBack?: boolean;
   onBack?: () => void;
@@ -24,8 +29,13 @@ export function DrawerHeaderSection({
   wo,
   loading,
   mechanics,
+  helpers,
+  orgId,
+  workOrderId,
   saving,
+  isAddingService,
   onAssignMechanic,
+  onHelpersChange,
   onClose,
   showBack,
   onBack,
@@ -71,6 +81,9 @@ export function DrawerHeaderSection({
                 <span className="font-mono text-xs text-muted-foreground/80 font-medium">
                   WO#{wo.id.slice(0, 8)}
                 </span>
+              )}
+              {isAddingService && (
+                <Loader2 className="size-3 animate-spin text-primary" />
               )}
             </div>
             {wo?.vehicle && (
@@ -118,17 +131,19 @@ export function DrawerHeaderSection({
 
         {/* Column 3: Status & Mechanic Assignment */}
         <div className="flex items-center md:justify-end gap-3 flex-wrap">
-          {wo && (
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Wrench className="size-3.5 shrink-0" />
-              <MechanicSelect
-                value={wo.mechanic_id ?? ""}
-                onChange={onAssignMechanic}
-                mechanics={effectiveMechanics}
-                disabled={saving}
-                size="sm"
-              />
-            </div>
+          {wo && orgId && workOrderId && (
+            <MechanicMultiSelect
+              leadMechanicId={wo.mechanic_id}
+              leadMechanicName={wo.mechanic?.full_name ?? null}
+              helpers={helpers}
+              mechanics={effectiveMechanics}
+              orgId={orgId}
+              workOrderId={workOrderId}
+              saving={saving}
+              onLeadChange={onAssignMechanic}
+              onHelpersChange={onHelpersChange}
+              size="sm"
+            />
           )}
           {showBack ? (
             <Button

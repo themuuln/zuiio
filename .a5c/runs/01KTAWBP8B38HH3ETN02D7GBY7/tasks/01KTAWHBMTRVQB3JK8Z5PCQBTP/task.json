@@ -1,0 +1,60 @@
+{
+  "agent": {
+    "name": "config-reviewer",
+    "outputSchema": {
+      "properties": {
+        "artifacts": {
+          "type": "array"
+        },
+        "findings": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "findings",
+        "artifacts"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "outputDir": "full-project-audit",
+        "projectDir": "."
+      },
+      "instructions": [
+        "1. Read tsconfig.json — check strict mode, paths, module resolution, target",
+        "2. Read biome.json — check linter rules, formatter, domains config",
+        "3. Read next.config.ts — check security headers, image config, experimental flags",
+        "4. Read postcss.config.mjs — verify Tailwind v4 setup",
+        "5. Read vitest.config.mts — check test setup, coverage thresholds, aliases",
+        "6. Read components.json — verify shadcn config",
+        "7. Read .gitignore — check for missing entries (scratch/, .env*, etc.)",
+        "8. Check for stale config files (.eslintrc, .prettierrc, jest.config)",
+        "9. Compile findings: misconfigurations, missing configs, stale files",
+        "10. Return structured JSON: { findings: [], recommendations: [] }"
+      ],
+      "outputFormat": "JSON with findings and recommendations",
+      "role": "Configuration Reviewer",
+      "task": "Review all project configuration files for correctness and best practices"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KTAWHBMTRVQB3JK8Z5PCQBTP/input.json",
+    "outputJsonPath": "tasks/01KTAWHBMTRVQB3JK8Z5PCQBTP/result.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "audit",
+    "configuration"
+  ],
+  "title": "Configuration Review",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KTAWHBMTRVQB3JK8Z5PCQBTP",
+  "taskId": "configuration-review",
+  "invocationKey": "full-project-audit:S000002:configuration-review",
+  "stepId": "S000002",
+  "inputs": {
+    "outputDir": "full-project-audit",
+    "projectDir": "."
+  }
+}

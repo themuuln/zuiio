@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { createClient } from "@/lib/supabase/server";
 import type {
   CreateOrganizationParams,
@@ -112,7 +113,7 @@ export async function createOrganization(
   });
 
   if (profileError) {
-    console.error("Failed to upsert profile:", profileError.message);
+    reportServerError("Failed to upsert profile:", profileError.message);
   }
 
   try {
@@ -120,7 +121,7 @@ export async function createOrganization(
       target_org_id: org.id,
     });
   } catch (subError) {
-    console.error("Failed to create default subscription:", subError);
+    reportServerError("Failed to create default subscription:", subError);
   }
 
   return org as unknown as Organization;

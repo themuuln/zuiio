@@ -36,7 +36,7 @@ import { GridView } from "./_grid-view";
 import { KanbanView } from "./_kanban-view";
 import { KpiCards } from "./_kpi-cards";
 import { ListView } from "./_list-view";
-import { BayViewLoadingSkeleton } from "./_loading-skeleton";
+
 import { Toolbar } from "./_toolbar";
 import {
   type ActiveDragState,
@@ -666,7 +666,7 @@ export function BayViewV2Client() {
   ]);
 
   if (loading && !data) {
-    return <BayViewLoadingSkeleton />;
+    return null;
   }
 
   if (error || !data) {
@@ -749,16 +749,18 @@ export function BayViewV2Client() {
               <div className="flex-1 overflow-y-auto p-4">
                 {searchedBranchSections.map((section) => (
                   <div key={section.branchId} className="mb-6 last:mb-0">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Building2 className="size-4 text-muted-foreground/60" />
-                      <span className="text-sm font-semibold text-foreground/80">
-                        {section.branchName}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 font-mono">
-                        {section.bays.filter((b) => b.workOrder).length}/
-                        {section.bayCount} bays
-                      </span>
-                    </div>
+                    {searchedBranchSections.length > 1 && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <Building2 className="size-4 text-muted-foreground/60" />
+                        <span className="text-sm font-semibold text-foreground/80">
+                          {section.branchName}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 font-mono">
+                          {section.bays.filter((b) => b.workOrder).length}/
+                          {section.bayCount} bays
+                        </span>
+                      </div>
+                    )}
                     <GridView
                       bays={section.bays}
                       pendingWoIds={pendingWoIds}
@@ -816,16 +818,18 @@ export function BayViewV2Client() {
               <div className="flex-1 overflow-y-auto p-4">
                 {searchedBranchSections.map((section) => (
                   <div key={section.branchId} className="mb-6 last:mb-0">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Building2 className="size-4 text-muted-foreground/60" />
-                      <span className="text-sm font-semibold text-foreground/80">
-                        {section.branchName}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 font-mono">
-                        {section.bays.filter((b) => b.workOrder).length}/
-                        {section.bayCount} bays
-                      </span>
-                    </div>
+                    {searchedBranchSections.length > 1 && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <Building2 className="size-4 text-muted-foreground/60" />
+                        <span className="text-sm font-semibold text-foreground/80">
+                          {section.branchName}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 font-mono">
+                          {section.bays.filter((b) => b.workOrder).length}/
+                          {section.bayCount} bays
+                        </span>
+                      </div>
+                    )}
                     <KanbanView
                       searchedBays={section.bays}
                       assignableBays={section.bays}
@@ -903,16 +907,18 @@ export function BayViewV2Client() {
               <div className="flex-1 overflow-y-auto p-4">
                 {searchedBranchSections.map((section) => (
                   <div key={section.branchId} className="mb-6 last:mb-0">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Building2 className="size-4 text-muted-foreground/60" />
-                      <span className="text-sm font-semibold text-foreground/80">
-                        {section.branchName}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 font-mono">
-                        {section.bays.filter((b) => b.workOrder).length}/
-                        {section.bayCount} bays
-                      </span>
-                    </div>
+                    {searchedBranchSections.length > 1 && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <Building2 className="size-4 text-muted-foreground/60" />
+                        <span className="text-sm font-semibold text-foreground/80">
+                          {section.branchName}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 font-mono">
+                          {section.bays.filter((b) => b.workOrder).length}/
+                          {section.bayCount} bays
+                        </span>
+                      </div>
+                    )}
                     <ListView
                       bays={section.bays}
                       onOpenDetail={handleOpenDetail}

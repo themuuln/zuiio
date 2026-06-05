@@ -25,7 +25,7 @@ export function GridView({
   orgId,
 }: GridViewProps) {
   return (
-    <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 overflow-y-auto w-full h-full">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))] auto-rows-fr gap-4 overflow-y-auto w-full h-full">
       {bays.map((bay) => (
         <BayCard
           key={bay.bayNumber}

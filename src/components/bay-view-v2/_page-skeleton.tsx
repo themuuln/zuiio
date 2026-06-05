@@ -1,0 +1,100 @@
+"use client";
+
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+
+/**
+ * Page-level skeleton shown while the bay view client component loads
+ * via next/dynamic. Matches the exact visual layout of the rendered view
+ * so the transition from skeleton → content is seamless.
+ *
+ * Used by: bay-view/page.tsx, bay-view-v2/page.tsx
+ */
+export function BayViewPageSkeleton() {
+  return (
+    <div className="flex flex-col overflow-hidden">
+      {/* ── Toolbar ── */}
+      <div className="flex items-center gap-2 border-b border-border/40 px-4 py-3">
+        <Skeleton className="h-8 w-24 rounded-lg" />
+        <Skeleton className="h-8 w-20 rounded-lg" />
+        <Skeleton className="h-8 w-20 rounded-lg" />
+        <Skeleton className="size-8 rounded-lg" />
+        <Skeleton className="h-8 flex-1 rounded-lg" />
+        <Skeleton className="size-8 rounded-lg" />
+        <Skeleton className="size-8 rounded-lg" />
+        <Skeleton className="size-8 rounded-lg" />
+        <Skeleton className="size-8 rounded-lg" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-10" />
+          <Skeleton className="size-8 rounded" />
+          <Skeleton className="h-5 w-6 rounded" />
+          <Skeleton className="size-8 rounded" />
+        </div>
+      </div>
+
+      {/* ── KPI Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-3 bg-muted/10 border-b border-border/40 shrink-0 max-h-28">
+        <KpiCardSkeleton hasProgress />
+        <KpiCardSkeleton valueSuffix="active" subtitle="in waiting queue" />
+        <KpiCardSkeleton valueSuffix="completed" subtitle="Avg duration" />
+        <KpiCardSkeleton subtitle="Today's invoices paid" />
+      </div>
+
+      {/* ── Branch Section ── */}
+      <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+        <Skeleton className="size-5 rounded" />
+        <Skeleton className="h-5 w-28" />
+        <Skeleton className="h-5 w-12 rounded-full" />
+      </div>
+
+      {/* ── Bay Grid ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4 pb-4 flex-1">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <BayCardSkeleton key={i} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── KPI card skeleton ── */
+function KpiCardSkeleton({
+  hasProgress,
+  valueSuffix,
+  subtitle,
+}: {
+  hasProgress?: boolean;
+  valueSuffix?: string;
+  subtitle?: string;
+}) {
+  return (
+    <Card className="bg-card/65 backdrop-blur border-border/50 p-3 flex flex-col gap-2 rounded-xl min-h-[88px]">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-2.5 w-20 rounded" />
+        <Skeleton className="size-8 rounded-lg" />
+      </div>
+      <div className="flex items-baseline gap-2">
+        <Skeleton className="h-6 w-12 rounded" />
+        {valueSuffix && <Skeleton className="h-2.5 w-10 rounded" />}
+      </div>
+      {hasProgress && <Skeleton className="h-1.5 w-full rounded-full" />}
+      {subtitle && <Skeleton className="h-2.5 w-24 rounded" />}
+    </Card>
+  );
+}
+
+/* ── Bay card skeleton — matches empty bay card with centered circle + text ── */
+function BayCardSkeleton() {
+  return (
+    <Card className="relative min-h-[160px] flex flex-col border-dashed border-muted-foreground/30 bg-muted/10 rounded-xl overflow-hidden">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:10px_10px]" />
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-2 px-4 py-6">
+        <Skeleton className="size-9 rounded-full" />
+        <div className="flex flex-col items-center gap-1">
+          <Skeleton className="h-3 w-16 rounded" />
+          <Skeleton className="h-2 w-24 rounded" />
+        </div>
+      </div>
+    </Card>
+  );
+}

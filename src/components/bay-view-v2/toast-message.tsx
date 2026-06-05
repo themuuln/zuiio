@@ -28,7 +28,7 @@ export function ToastMessage({
   return (
     <div
       className={cn(
-        "fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2.5 rounded-2xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-300 sm:bottom-10",
+        "fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-300 sm:bottom-10",
         variant === "info" &&
           "border-primary/25 bg-background/90 text-primary shadow-primary/15 ring-1 ring-primary/10",
         variant === "error" &&
@@ -46,7 +46,7 @@ export function ToastMessage({
           variant="ghost"
           size="sm"
           onClick={onDismiss}
-          className="ml-2 h-auto px-1 py-0.5 text-xs"
+          className="ml-2 h-auto px-1 py-1 text-xs"
         >
           ✕
         </Button>

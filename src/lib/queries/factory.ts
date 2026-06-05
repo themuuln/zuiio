@@ -51,7 +51,6 @@ export function createOrgQuery<T>(
 
   return async (orgId: string, fetchOpts?: FetchOptions): Promise<T> => {
     const url = buildUrl(orgId, path, fetchOpts?.params);
-    const cacheKey = buildCacheKey(orgId, path, fetchOpts?.params);
     // Auto-detect store from path if not explicitly provided
     const store = fetchOpts?.offlineStore ?? getStoreForPath(path);
 
@@ -78,27 +77,31 @@ export function createOrgQuery<T>(
             ? ((json.data?.data ?? json.data ?? []) as T)
             : (json.data as T);
 
-        // Cache to IndexedDB for offline use
+        // Cache to IndexedDB for offline use (strip query params so all
+        // variants of the same endpoint share one cache entry)
         if (store && typeof window !== "undefined") {
-          cacheToIndexedDB(store, orgId, cacheKey, data).catch(() => {
+          const baseCacheKey = buildCacheKey(orgId, path);
+          cacheToIndexedDB(store, orgId, baseCacheKey, data).catch(() => {
             // Silently ignore cache write failures
           });
         }
 
         return data;
       } catch (err) {
-        // Network failed — try IndexedDB fallback
+        // Network failed — try IndexedDB fallback (strip query params)
         if (store && typeof window !== "undefined") {
-          const cached = await getFromIndexedDB<T>(store, cacheKey);
+          const baseCacheKey = buildCacheKey(orgId, path);
+          const cached = await getFromIndexedDB<T>(store, baseCacheKey);
           if (cached !== null) return cached;
         }
         throw err;
       }
     }
 
-    // Offline — read from IndexedDB
+    // Offline — read from IndexedDB (strip query params)
     if (store && typeof window !== "undefined") {
-      const cached = await getFromIndexedDB<T>(store, cacheKey);
+      const baseCacheKey = buildCacheKey(orgId, path);
+      const cached = await getFromIndexedDB<T>(store, baseCacheKey);
       if (cached !== null) return cached;
     }
 
@@ -134,6 +137,7 @@ function buildCacheKey(
 /**
  * Cache a successful API response to IndexedDB.
  */
+
 async function cacheToIndexedDB<T>(
   store: StoreName,
   orgId: string,

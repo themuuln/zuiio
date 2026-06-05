@@ -287,7 +287,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
                     )}
                     {mechanics.map((m) => (
                       <SelectItem key={m.id} value={m.id}>
-                        <User className="size-3.5" />
+                        <User className="size-4" />
                         {m.full_name}
                       </SelectItem>
                     ))}

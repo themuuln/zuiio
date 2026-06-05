@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { OrganizationSetupForm } from "@/components/auth/organization-setup-form";
 import { UnauthorizedError } from "@/lib/errors";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { getPendingInvitesForEmail } from "@/lib/services/invite-service";
 import { listUserOrganizations } from "@/lib/services/organization-access-service";
 import { createClient } from "@/lib/supabase/server";
@@ -57,7 +58,7 @@ export default async function SetupOrganizationPage() {
           inviter_name: inv.inviter_name,
         }));
       } catch (err) {
-        console.error("Failed to check pending invites:", err);
+        reportServerError("Failed to check pending invites:", err);
       }
     }
 
@@ -81,7 +82,7 @@ export default async function SetupOrganizationPage() {
           }
         }
       } catch (err) {
-        console.error("Failed to check pending invites by phone:", err);
+        reportServerError("Failed to check pending invites by phone:", err);
       }
     }
 

@@ -113,40 +113,40 @@ export function Toolbar({
         <div className="flex flex-wrap items-center gap-2 sm:flex-1 sm:min-w-0 sm:flex-nowrap">
           {/* Branch pills */}
           {branches.length > 1 && (
-            <div className="flex items-center gap-0.5 rounded-lg border border-border/50 bg-muted/40 p-0.5 shadow-sm h-8">
+            <div className="flex items-center gap-1 rounded-lg border border-border/50 bg-muted/40 p-1 shadow-sm h-8">
               {/* All pill */}
               <button
                 type="button"
                 onClick={() => onBranchChange("all")}
-                className={`flex items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-all cursor-pointer h-full ${
+                className={`flex items-center gap-2 rounded-md px-3 text-xs font-semibold transition-all cursor-pointer h-full ${
                   selectedBranchId === "all"
                     ? "bg-background text-foreground shadow-sm font-bold border border-border/30"
                     : "text-muted-foreground/80 hover:bg-muted/70 hover:text-foreground"
                 }`}
               >
-                <Building2 className="size-3.5" />
-                <span className="hidden sm:inline text-[11px]">All</span>
+                <Building2 className="size-4" />
+                <span className="hidden sm:inline text-xs">All</span>
               </button>
               {branches.map((b) => (
                 <button
                   key={b.id}
                   type="button"
                   onClick={() => onBranchChange(b.id)}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-all cursor-pointer h-full ${
+                  className={`flex items-center gap-2 rounded-md px-3 text-xs font-semibold transition-all cursor-pointer h-full ${
                     selectedBranchId === b.id
                       ? "bg-background text-foreground shadow-sm font-bold border border-border/30"
                       : "text-muted-foreground/80 hover:bg-muted/70 hover:text-foreground"
                   }`}
                 >
-                  <Building2 className="size-3.5" />
-                  <span className="hidden sm:inline text-[11px]">{b.name}</span>
+                  <Building2 className="size-4" />
+                  <span className="hidden sm:inline text-xs">{b.name}</span>
                 </button>
               ))}
             </div>
           )}
 
           {/* Segmented view selector */}
-          <div className="flex items-center gap-0.5 rounded-lg border border-border/50 bg-muted/40 p-0.5 shadow-sm h-8">
+          <div className="flex items-center gap-1 rounded-lg border border-border/50 bg-muted/40 p-1 shadow-sm h-8">
             {VIEW_OPTIONS.map((opt) => {
               const Icon = opt.icon;
               const isActive = viewMode === opt.mode;
@@ -156,15 +156,15 @@ export function Toolbar({
                   type="button"
                   onClick={() => setViewMode(opt.mode)}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-all cursor-pointer h-full",
+                    "flex items-center gap-2 rounded-md px-3 text-xs font-semibold transition-all cursor-pointer h-full",
                     isActive
                       ? "bg-background text-foreground shadow-sm font-bold border border-border/30"
                       : "text-muted-foreground/80 hover:bg-muted/70 hover:text-foreground",
                   )}
                   title={t(opt.labelKey)}
                 >
-                  <Icon className="size-3.5" />
-                  <span className="hidden md:inline text-[11px]">
+                  <Icon className="size-4" />
+                  <span className="hidden md:inline text-xs">
                     {t(opt.labelKey)}
                   </span>
                 </button>
@@ -199,12 +199,12 @@ export function Toolbar({
             title={t("refresh")}
             className="rounded-lg border-border/50 text-muted-foreground shadow-sm hover:text-foreground cursor-pointer"
           >
-            <RefreshCw className="size-3.5" />
+            <RefreshCw className="size-4" />
           </Button>
 
           {/* Search Bar — takes remaining space */}
           <div className="relative flex-1 min-w-[140px] max-w-none">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/50" />
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/50" />
             <Input
               type="text"
               value={baySearchQuery}
@@ -235,12 +235,12 @@ export function Toolbar({
               variant="default"
               disabled={batchCompletePending}
               onClick={() => setBatchCompleteDialogOpen(true)}
-              className="h-8 gap-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold shadow-sm hover:bg-emerald-700 cursor-pointer"
+              className="h-8 gap-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold shadow-sm hover:bg-emerald-700 cursor-pointer"
             >
               {batchCompletePending ? (
-                <Spinner className="size-3.5" />
+                <Spinner className="size-4" />
               ) : (
-                <CheckCircle2 className="size-3.5" />
+                <CheckCircle2 className="size-4" />
               )}
               {batchCompletePending
                 ? t("batchCompleteProcessing")
@@ -266,7 +266,7 @@ export function Toolbar({
               </TooltipTrigger>
               <TooltipContent
                 side="bottom"
-                className="text-[11px] font-semibold"
+                className="text-xs font-semibold"
               >
                 {t("registerVehicle")}
               </TooltipContent>
@@ -288,7 +288,7 @@ export function Toolbar({
               </TooltipTrigger>
               <TooltipContent
                 side="bottom"
-                className="text-[11px] font-semibold"
+                className="text-xs font-semibold"
               >
                 {t("registerMechanic")}
               </TooltipContent>
@@ -310,7 +310,7 @@ export function Toolbar({
               </TooltipTrigger>
               <TooltipContent
                 side="bottom"
-                className="text-[11px] font-semibold"
+                className="text-xs font-semibold"
               >
                 {t("shiftReport")}
               </TooltipContent>
@@ -332,7 +332,7 @@ export function Toolbar({
               </TooltipTrigger>
               <TooltipContent
                 side="bottom"
-                className="text-[11px] font-semibold"
+                className="text-xs font-semibold"
               >
                 {t("bayPinSettings")}
               </TooltipContent>
@@ -340,11 +340,11 @@ export function Toolbar({
           </div>
 
           {/* Digital Bay Counter */}
-          <div className="flex items-center gap-1.5 border border-border/50 bg-card rounded-lg p-0.5 pr-2.5 pl-1.5 shadow-sm h-8">
-            <span className="text-[10px] font-mono font-black text-muted-foreground/75 uppercase tracking-wider px-1 select-none">
+          <div className="flex items-center gap-2 border border-border/50 bg-card rounded-lg p-1 pr-3 pl-2 shadow-sm h-8">
+            <span className="text-xs font-mono font-black text-muted-foreground/75 uppercase tracking-wider px-1 select-none">
               Bays
             </span>
-            <div className="flex items-center gap-0.5 rounded border border-border/40 bg-muted/20 p-0.5 h-full">
+            <div className="flex items-center gap-1 rounded border border-border/40 bg-muted/20 p-1 h-full">
               <Button
                 type="button"
                 size="icon-xs"
@@ -359,7 +359,7 @@ export function Toolbar({
                 disabled={bayCountPending || bayCount <= 1}
                 className="size-5 rounded hover:bg-background cursor-pointer text-muted-foreground"
               >
-                <Minus className="size-2.5" />
+                <Minus className="size-3" />
               </Button>
               <input
                 type="number"
@@ -412,7 +412,7 @@ export function Toolbar({
                 disabled={bayCountPending || bayCount >= 50}
                 className="size-5 rounded hover:bg-background cursor-pointer text-muted-foreground"
               >
-                <Plus className="size-2.5" />
+                <Plus className="size-3" />
               </Button>
             </div>
           </div>

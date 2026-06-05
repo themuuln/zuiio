@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Typography } from "@/components/ui/typography";
 import { NewVehicleSheet } from "@/components/vehicles/new-vehicle-sheet";
+import { reportError } from "@/lib/sentry-report";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";
 
@@ -157,7 +158,7 @@ export function AssignDialog({
           });
           setSelectedWoId(result.workOrderId);
         } catch (err) {
-          console.error("Failed to create work order:", err);
+          reportError("Failed to create work order:", err);
           setSelectedVehicle(null);
         } finally {
           setCreatingWorkOrder(false);
@@ -174,7 +175,7 @@ export function AssignDialog({
       await onAssign(selectedWoId, selectedMechId ?? undefined);
       onOpenChange(false);
     } catch (err) {
-      console.error("Assign failed:", err);
+      reportError("Assign failed:", err);
     } finally {
       setSaving(false);
     }
@@ -239,7 +240,7 @@ export function AssignDialog({
                 className="h-9 text-xs pl-2"
               />
               {searchLoading && (
-                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground animate-spin" />
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground animate-spin" />
               )}
             </div>
 
@@ -261,10 +262,10 @@ export function AssignDialog({
                           e.preventDefault();
                           handleSelectVehicle(vehicle);
                         }}
-                        className="w-full justify-start gap-2.5 px-2.5 py-2 h-auto text-left"
+                        className="w-full justify-start gap-2 px-3 py-2 h-auto text-left"
                       >
-                        <div className="flex size-7 items-center justify-center bg-muted text-muted-foreground shrink-0">
-                          <Car className="size-3.5" />
+                        <div className="flex size-8 items-center justify-center bg-muted text-muted-foreground shrink-0">
+                          <Car className="size-4" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
@@ -272,17 +273,17 @@ export function AssignDialog({
                               {formatPlateNumber(vehicle.plate_number)}
                             </Typography.Text>
                             {vehicle.year && (
-                              <span className="text-[10px] text-muted-foreground">
+                              <span className="text-xs text-muted-foreground">
                                 {vehicle.year}
                               </span>
                             )}
                             {inQueue && (
-                              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
                                 In queue
                               </span>
                             )}
                           </div>
-                          <Typography.Muted className="text-[10px] text-muted-foreground truncate">
+                          <Typography.Muted className="text-xs text-muted-foreground truncate">
                             {vehicle.make} {vehicle.model}
                             {vehicle.customer && (
                               <>
@@ -312,27 +313,27 @@ export function AssignDialog({
 
             {/* Selected vehicle display */}
             {!search && selectedVehicle && (
-              <div className="flex items-center gap-2.5 border border-primary/30 bg-primary/5 px-2.5 py-2 mt-1">
-                <div className="flex size-7 items-center justify-center bg-primary text-primary-foreground">
-                  <Car className="size-3.5" />
+              <div className="flex items-center gap-2 border border-primary/30 bg-primary/5 px-3 py-2 mt-1">
+                <div className="flex size-8 items-center justify-center bg-primary text-primary-foreground">
+                  <Car className="size-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <Typography.Text className="text-xs font-medium truncate">
                     {formatPlateNumber(selectedVehicle.plate_number)}
                   </Typography.Text>
-                  <Typography.Muted className="text-[10px] text-muted-foreground truncate">
+                  <Typography.Muted className="text-xs text-muted-foreground truncate">
                     {selectedVehicle.make} {selectedVehicle.model}
                   </Typography.Muted>
                 </div>
                 {creatingWorkOrder && (
-                  <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
                 )}
               </div>
             )}
 
             {/* Warning for vehicle without customer */}
             {!search && selectedVehicle && !selectedVehicle.customer && (
-              <Typography.Muted className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+              <Typography.Muted className="text-xs text-amber-600 dark:text-amber-400 mt-1">
                 Vehicle needs owner info. Register the vehicle first to add
                 owner details.
               </Typography.Muted>
@@ -345,7 +346,7 @@ export function AssignDialog({
                 <Typography.Muted className="text-xs text-muted-foreground/60">
                   {queue.length} vehicle{queue.length !== 1 ? "s" : ""} in queue
                 </Typography.Muted>
-                <Typography.Muted className="text-[10px] text-muted-foreground/40 mt-0.5">
+                <Typography.Muted className="text-xs text-muted-foreground/40 mt-1">
                   Search above or create a new record
                 </Typography.Muted>
                 <div className="flex items-center gap-2 mt-3">
@@ -407,14 +408,14 @@ export function AssignDialog({
                           setSelectedMechId(isSelected ? null : m.id);
                         }}
                         className={cn(
-                          "w-full justify-start gap-2.5 px-2.5 py-2 h-auto text-left",
+                          "w-full justify-start gap-2 px-3 py-2 h-auto text-left",
                           isSelected
                             ? "border-primary bg-primary/5"
                             : "border-border",
                         )}
                       >
-                        <Avatar className="size-7">
-                          <AvatarFallback className="text-[10px]">
+                        <Avatar className="size-8">
+                          <AvatarFallback className="text-xs">
                             {initials}
                           </AvatarFallback>
                         </Avatar>

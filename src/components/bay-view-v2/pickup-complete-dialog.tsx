@@ -54,7 +54,7 @@ function StarRating({
           size="sm"
           onClick={() => onChange(star)}
           className={cn(
-            "p-0.5 h-auto transition-all duration-150 hover:scale-110 active:scale-95",
+            "p-1 h-auto transition-all duration-150 hover:scale-110 active:scale-95",
             star <= (value ?? 0)
               ? "text-amber-400 drop-shadow-sm"
               : "text-muted-foreground/20 hover:text-muted-foreground/40",
@@ -63,7 +63,7 @@ function StarRating({
         >
           <Star
             className={cn(
-              "size-7",
+              "size-8",
               star <= (value ?? 0) ? "fill-amber-400" : "",
             )}
           />
@@ -124,7 +124,7 @@ export function PickupCompleteDialog({
           <DialogTitle className="flex items-center gap-2 text-base">
             <CheckCircle2 className="size-4 text-emerald-500" />
             {t("pickupCompleteTitle")}
-            <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50  px-2 py-0.5 ml-1">
+            <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 px-2 py-1 ml-1">
               {vehiclePlate}
             </span>
           </DialogTitle>
@@ -136,17 +136,17 @@ export function PickupCompleteDialog({
         <div className="flex flex-col gap-5">
           {/* Satisfaction */}
           <div className="flex flex-col gap-2">
-            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-              <Star className="size-3.5" />
+            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <Star className="size-4" />
               {t("pickupSummarySatisfaction")}
             </Label>
             <StarRating value={satisfaction} onChange={setSatisfaction} />
           </div>
 
           {/* Feedback */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-              <MessageSquare className="size-3.5" />
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <MessageSquare className="size-4" />
               {t("pickupSummaryFeedback")}
             </Label>
             <Input
@@ -157,9 +157,9 @@ export function PickupCompleteDialog({
           </div>
 
           {/* Next appointment */}
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-              <CalendarIcon className="size-3.5" />
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <CalendarIcon className="size-4" />
               {t("pickupSummaryAppointmentDate")}
             </Label>
             <Input

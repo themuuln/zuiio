@@ -75,9 +75,9 @@ export function PartsSection({
   return (
     <section className="rounded-lg border border-border/60 bg-card/40 p-3">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <div className="flex items-center justify-center size-5 rounded-md bg-primary/10">
-            <span className="text-[10px] font-semibold text-primary">P</span>
+            <span className="text-xs font-semibold text-primary">P</span>
           </div>
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {t("parts")}
@@ -91,15 +91,15 @@ export function PartsSection({
       {/* Parts list */}
       {(parts ?? []).length === 0 && !pendingPartPreview ? (
         <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
-          <Package className="size-4 text-muted-foreground/40 mb-1.5" />
+          <Package className="size-4 text-muted-foreground/40 mb-2" />
           <span className="text-xs text-muted-foreground">
             {t("noPartsYet")}
           </span>
         </div>
       ) : (
-        <div className="-mx-0.5">
+        <div className="-mx-1">
           {/* Header row */}
-          <div className="flex items-center gap-2 px-1 mb-0.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+          <div className="flex items-center gap-2 px-1 mb-1 text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
             <div className="flex-1">{t("part")}</div>
             <div className="w-14 text-right">{t("qty")}</div>
             <div className="w-20 text-right">{t("total")}</div>
@@ -113,18 +113,18 @@ export function PartsSection({
               return (
                 <div
                   key={part.id}
-                  className="group flex items-center gap-2 rounded-md p-1.5 hover:bg-muted/40 transition-colors"
+                  className="group flex items-center gap-2 rounded-md p-2 hover:bg-muted/40 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
                     <Typography.Text className="text-sm font-medium truncate">
                       {part.part_name}
                     </Typography.Text>
-                    <Typography.Muted className="text-[10px] text-muted-foreground/60">
+                    <Typography.Muted className="text-xs text-muted-foreground/60">
                       {formatMNT(Number(part.unit_price))}
                       {t("perUnit")}
                     </Typography.Muted>
                     {lowInfo && (
-                      <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground font-medium">
                         <TriangleAlert className="size-3 shrink-0" />
                         Low stock: {lowInfo.quantity} remaining
                       </span>
@@ -139,7 +139,11 @@ export function PartsSection({
                         type="number"
                         className="w-20 h-7 text-right text-xs font-semibold tabular-nums rounded-sm border-primary/60 bg-background px-1 [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         value={editingPriceVal}
-                        onChange={(e) => onEditPriceChange(e.target.value)}
+                        onChange={(e) =>
+                          onEditPriceChange(
+                            e.target.value.replace(/^0+(?=\d)/, ""),
+                          )
+                        }
                         onBlur={() => onEditPriceSave(part.id)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") onEditPriceSave(part.id);
@@ -178,12 +182,12 @@ export function PartsSection({
               );
             })}
             {pendingPartPreview && (
-              <div className="flex items-center gap-2 rounded-md border border-dashed border-amber-500/30 bg-amber-500/5 p-1.5">
+              <div className="flex items-center gap-2 rounded-md border border-dashed border-amber-500/30 bg-amber-500/5 p-2">
                 <div className="flex-1 min-w-0">
                   <Typography.Text className="text-sm font-medium truncate">
                     {pendingPartPreview.name}
                   </Typography.Text>
-                  <Typography.Text className="text-[10px] text-amber-700 dark:text-amber-400">
+                  <Typography.Text className="text-xs text-amber-700 dark:text-amber-400">
                     Adding part...
                   </Typography.Text>
                 </div>
@@ -206,7 +210,7 @@ export function PartsSection({
 
       {/* Add part form */}
       {showAddPart && (
-        <div className="mt-2 flex flex-col gap-1.5 rounded-lg border border-border bg-muted/30 p-2 relative">
+        <div className="mt-2 flex flex-col gap-2 rounded-lg border border-border bg-muted/30 p-2 relative">
           <Input
             value={newPartName}
             onChange={(e) => {
@@ -242,7 +246,7 @@ export function PartsSection({
                         onNewPartPriceChange(Number(part.default_price ?? 0));
                         onPartSearchChange("");
                       }}
-                      className="w-full justify-start px-2.5 py-1.5 text-xs h-auto text-left"
+                      className="w-full justify-start px-3 py-2 text-xs h-auto text-left"
                     >
                       <div className="flex flex-col items-start min-w-0 flex-1">
                         <span className="font-medium truncate w-full">
@@ -251,12 +255,12 @@ export function PartsSection({
                             : part.name}
                         </span>
                         {part.part_number && (
-                          <span className="text-[10px] text-muted-foreground font-mono">
+                          <span className="text-xs text-muted-foreground font-mono">
                             {part.part_number}
                           </span>
                         )}
                         {lowInfo && (
-                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground font-medium">
                             <TriangleAlert className="size-3 shrink-0" />
                             Low stock: {lowInfo.quantity} remaining
                           </span>
@@ -283,7 +287,7 @@ export function PartsSection({
               )}
             </div>
           )}
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             <Input
               type="number"
               value={newPartQty}
@@ -337,7 +341,7 @@ export function PartsSection({
         variant="outline"
         onClick={onToggleAddPart}
         disabled={addingPart}
-        className="mt-2 w-full border-dashed text-xs h-9 gap-1.5 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-200"
+        className="mt-2 w-full border-dashed text-xs h-9 gap-2 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-200"
       >
         {addingPart ? (
           <Loader2 className="size-3.5 animate-spin" />

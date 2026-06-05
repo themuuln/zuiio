@@ -57,13 +57,13 @@ export function CondensedQueueItem({
       <button
         type="button"
         onClick={onClick}
-        className="flex flex-col gap-0.5 rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-left shadow-sm hover:bg-accent/30 transition-colors cursor-pointer w-full shrink-0"
+        className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card px-4 py-3 text-left shadow-sm hover:bg-accent/30 transition-colors cursor-pointer w-full shrink-0"
       >
         <span className="text-sm font-bold font-mono tracking-tight text-foreground">
           WO {workOrder.id.slice(0, 8)}
         </span>
-        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-          <Clock className="size-2.5" />
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+          <Clock className="size-3" />
           {waitInfo.text} wait
         </span>
       </button>
@@ -74,13 +74,13 @@ export function CondensedQueueItem({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col gap-0.5 rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-left shadow-sm hover:border-primary/30 hover:bg-accent/30 transition-colors cursor-pointer w-full shrink-0"
+      className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card px-4 py-3 text-left shadow-sm hover:border-primary/30 hover:bg-accent/30 transition-colors cursor-pointer w-full shrink-0"
     >
       <span className="text-sm font-bold font-mono tracking-tight text-foreground">
         {formatPlateNumber(v.plate_number)}
       </span>
-      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-        <Clock className="size-2.5" />
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+        <Clock className="size-3" />
         {waitInfo.text} wait
         {waitInfo.urgent && (
           <span className="size-1.5 rounded-full bg-amber-500" />

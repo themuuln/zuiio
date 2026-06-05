@@ -7,8 +7,8 @@ import * as Sentry from "@sentry/nextjs";
 Sentry.init({
   dsn: "https://f432265ac8a6824ede3d3ee81b29ecc6@o4511472318939136.ingest.de.sentry.io/4511472327917648",
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1.0,
+  // 15% in production, 100% in dev for full debugging.
+  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.15 : 1.0,
 
   // Enable logs to be sent to Sentry
   enableLogs: true,

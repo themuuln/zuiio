@@ -150,8 +150,8 @@ export function PostServiceFormBody({
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         {/* Odometer */}
         <Field data-invalid={!!form.formState.errors.odometer}>
-          <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-            <Gauge className="size-3.5" />
+          <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+            <Gauge className="size-4" />
             {t("postServiceOdometer")}
           </FieldLabel>
           <FieldContent>
@@ -179,10 +179,10 @@ export function PostServiceFormBody({
         </Field>
 
         {/* Services */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-              <MessageSquare className="size-3.5" />
+            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <MessageSquare className="size-4" />
               {t("postServiceServicesTitle")}
               <Badge variant="secondary">{entries.length}</Badge>
             </span>
@@ -190,7 +190,7 @@ export function PostServiceFormBody({
               variant="ghost"
               size="sm"
               onClick={() => setAllExpanded(!allExpanded)}
-              className="gap-0.5 text-[10px] h-auto"
+              className="gap-1 text-xs h-auto"
               type="button"
             >
               {allExpanded ? (
@@ -243,7 +243,7 @@ export function PostServiceFormBody({
         {/* Error */}
         {error && (
           <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-red-500" />
+            <AlertTriangle className="mt-1 size-4 shrink-0 text-red-500" />
             <Typography.Text className="text-xs text-red-700 dark:text-red-400">
               {error}
             </Typography.Text>
@@ -413,8 +413,8 @@ export function PostServiceForm({
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           {/* Odometer */}
           <Field data-invalid={!!form.formState.errors.odometer}>
-            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-              <Gauge className="size-3.5" />
+            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <Gauge className="size-4" />
               {t("postServiceOdometer")}
             </FieldLabel>
             <FieldContent>
@@ -444,10 +444,10 @@ export function PostServiceForm({
           </Field>
 
           {/* Services */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                <MessageSquare className="size-3.5" />
+              <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                <MessageSquare className="size-4" />
                 {t("postServiceServicesTitle")}
                 <Badge variant="secondary">{entries.length}</Badge>
               </span>
@@ -455,7 +455,7 @@ export function PostServiceForm({
                 variant="ghost"
                 size="sm"
                 onClick={() => setAllExpanded(!allExpanded)}
-                className="gap-0.5 text-[10px] h-auto"
+                className="gap-1 text-xs h-auto"
                 type="button"
               >
                 {allExpanded ? (
@@ -508,7 +508,7 @@ export function PostServiceForm({
           {/* Error */}
           {error && (
             <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
-              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-red-500" />
+              <AlertTriangle className="mt-1 size-4 shrink-0 text-red-500" />
               <Typography.Text className="text-xs text-red-700 dark:text-red-400">
                 {error}
               </Typography.Text>

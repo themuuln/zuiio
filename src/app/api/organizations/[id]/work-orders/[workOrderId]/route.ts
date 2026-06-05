@@ -40,6 +40,36 @@ export const PATCH = createRouteHandler(
     const { workOrderId } = params;
     const body = await parseBody(request, updateWorkOrderSchema);
 
+    // Field updates (complaint, diagnosis, notes) — no status transition needed
+    const hasFieldUpdate =
+      body.complaint !== undefined ||
+      body.diagnosis !== undefined ||
+      body.notes !== undefined;
+
+    if (hasFieldUpdate) {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const updates: Record<string, unknown> = { updated_by: userId };
+      if (body.complaint !== undefined) updates.complaint = body.complaint;
+      if (body.diagnosis !== undefined) updates.diagnosis = body.diagnosis;
+      if (body.notes !== undefined) updates.notes = body.notes;
+
+      const { error } = await supabase
+        .from("work_orders")
+        .update(updates)
+        .eq("id", workOrderId)
+        .eq("organization_id", orgId);
+
+      if (error) {
+        return NextResponse.json(
+          { error: { code: "UPDATE_FAILED", message: error.message } },
+          { status: 500 },
+        );
+      }
+
+      const wo = await getWorkOrder(supabase, workOrderId);
+      return NextResponse.json({ data: wo });
+    }
+
     if (body.status) {
       const wo = await updateWorkOrderStatus(
         supabase,
@@ -52,7 +82,7 @@ export const PATCH = createRouteHandler(
       return NextResponse.json({ data: wo });
     }
 
-    if (body.mechanic_id) {
+    if (body.mechanic_id !== undefined) {
       const assignment = await assignMechanic(
         supabase,
         workOrderId,

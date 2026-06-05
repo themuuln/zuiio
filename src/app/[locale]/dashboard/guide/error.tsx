@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
+import { reportError } from "@/lib/sentry-report";
 
 export default function ErrorPage({
   error,
@@ -12,7 +13,7 @@ export default function ErrorPage({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Page error:", error);
+    reportError(error, "dashboard/guide");
   }, [error]);
 
   return (

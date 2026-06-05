@@ -67,7 +67,7 @@ function StarRating({
           size="sm"
           onClick={() => onChange(star)}
           className={cn(
-            "p-0.5 h-auto rounded-md hover:scale-110 active:scale-95",
+            "p-1 h-auto rounded-md hover:scale-110 active:scale-95",
             star <= (value ?? 0)
               ? "text-amber-400 drop-shadow-sm"
               : "text-muted-foreground/20 hover:text-muted-foreground/40",
@@ -76,7 +76,7 @@ function StarRating({
         >
           <Star
             className={cn(
-              "size-7",
+              "size-8",
               star <= (value ?? 0) ? "fill-amber-400" : "",
             )}
           />
@@ -158,8 +158,8 @@ export function PickupCompleteForm({
         <form onSubmit={onSubmit} className="flex flex-col gap-5 pt-1">
           {/* Satisfaction */}
           <Field>
-            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-              <Star className="size-3.5" />
+            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <Star className="size-4" />
               {t("pickupSummarySatisfaction")}
             </FieldLabel>
             <FieldContent>
@@ -172,8 +172,8 @@ export function PickupCompleteForm({
 
           {/* Feedback */}
           <Field data-invalid={!!form.formState.errors.feedback}>
-            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-              <MessageSquare className="size-3.5" />
+            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <MessageSquare className="size-4" />
               {t("pickupSummaryFeedback")}
             </FieldLabel>
             <FieldContent>
@@ -193,8 +193,8 @@ export function PickupCompleteForm({
 
           {/* Next appointment */}
           <Field data-invalid={!!form.formState.errors.appointmentDate}>
-            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-              <CalendarIcon className="size-3.5" />
+            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <CalendarIcon className="size-4" />
               {t("pickupSummaryAppointmentDate")}
             </FieldLabel>
             <FieldContent>

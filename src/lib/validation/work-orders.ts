@@ -22,19 +22,39 @@ const uuid = z.string().uuid({ message: "Invalid UUID" });
 export const updateWorkOrderSchema = z
   .object({
     status: z.enum(WORK_ORDER_STATUSES).optional(),
-    mechanic_id: uuid.optional(),
+    mechanic_id: uuid.nullable().optional(),
+    complaint: z
+      .string()
+      .max(1000, "Complaint must be under 1000 characters")
+      .nullable()
+      .optional(),
+    diagnosis: z
+      .string()
+      .max(1000, "Diagnosis must be under 1000 characters")
+      .nullable()
+      .optional(),
     notes: z
       .string()
       .max(2000, "Notes must be under 2000 characters")
+      .nullable()
       .optional(),
     loss_reason: z
       .string()
       .max(500, "Loss reason must be under 500 characters")
+      .nullable()
       .optional(),
   })
   .refine(
-    (data) => data.status !== undefined || data.mechanic_id !== undefined,
-    { message: "At least one of status or mechanic_id is required" },
+    (data) =>
+      data.status !== undefined ||
+      data.mechanic_id !== undefined ||
+      data.complaint !== undefined ||
+      data.diagnosis !== undefined ||
+      data.notes !== undefined,
+    {
+      message:
+        "At least one of status, mechanic_id, complaint, diagnosis, or notes is required",
+    },
   );
 export type UpdateWorkOrderInput = z.infer<typeof updateWorkOrderSchema>;
 
@@ -50,54 +70,55 @@ export const cancelWorkOrderSchema = z.object({
 // ── POST /work-orders (create) ─────────────────────────────────
 
 export const addServiceParamsSchema = z.object({
-  service_catalog_id: z.string().min(1, "Service catalog ID is required"),
+  service_catalog_id: z.string().min(1).nullable().optional(),
   service_name: z.string().min(1, "Service name is required").max(200),
   quantity: z.number().int().positive("Quantity must be positive").default(1),
   unit_price: z.number().min(0, "Unit price cannot be negative"),
-  discount_amount: z.number().min(0).optional(),
-  discount_percentage: z.number().min(0).max(100).optional(),
-  notes: z.string().max(1000).optional(),
+  discount_amount: z.number().min(0).nullable().optional(),
+  discount_percentage: z.number().min(0).max(100).nullable().optional(),
+  notes: z.string().max(1000).nullable().optional(),
 });
 
 export const addPartParamsSchema = z.object({
-  part_id: z.string().optional(),
+  part_id: z.string().uuid().nullable().optional(),
   part_name: z.string().min(1, "Part name is required").max(200),
-  part_number: z.string().max(100).optional(),
+  part_number: z.string().max(100).nullable().optional(),
   quantity: z.number().int().positive("Quantity must be positive").default(1),
   unit_price: z.number().min(0, "Unit price cannot be negative"),
-  discount_amount: z.number().min(0).optional(),
-  discount_percentage: z.number().min(0).max(100).optional(),
-  notes: z.string().max(1000).optional(),
+  discount_amount: z.number().min(0).nullable().optional(),
+  discount_percentage: z.number().min(0).max(100).nullable().optional(),
+  notes: z.string().max(1000).nullable().optional(),
 });
 
 export const createWorkOrderSchema = z.object({
   customer_id: uuid,
   vehicle_id: uuid,
-  branchId: z.string().optional(),
-  mechanic_id: uuid.optional(),
-  notes: z.string().max(2000).optional(),
+  branchId: z.string().nullable().optional(),
+  mechanic_id: uuid.nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
   complaint: z
     .string()
     .max(1000, "Complaint must be under 1000 characters")
+    .nullable()
     .optional(),
   diagnosis_label_id: z.string().nullable().optional(),
   services: z.array(addServiceParamsSchema).max(50).optional(),
   parts: z.array(addPartParamsSchema).max(50).optional(),
-  discount_amount: z.number().min(0).optional(),
-  discount_percentage: z.number().min(0).max(100).optional(),
+  discount_amount: z.number().min(0).nullable().optional(),
+  discount_percentage: z.number().min(0).max(100).nullable().optional(),
 });
 export type CreateWorkOrderInput = z.infer<typeof createWorkOrderSchema>;
 
 // ── POST /work-orders/[workOrderId]/services ──────────────────
 
 export const addWorkOrderServiceSchema = z.object({
-  service_catalog_id: z.string().min(1, "Service catalog ID is required"),
+  service_catalog_id: z.string().min(1).nullable().optional(),
   service_name: z.string().min(1, "Service name is required").max(200),
   quantity: z.number().int().positive().default(1),
   unit_price: z.number().min(0, "Unit price cannot be negative"),
-  discount_amount: z.number().min(0).optional(),
-  discount_percentage: z.number().min(0).max(100).optional(),
-  notes: z.string().max(1000).optional(),
+  discount_amount: z.number().min(0).nullable().optional(),
+  discount_percentage: z.number().min(0).max(100).nullable().optional(),
+  notes: z.string().max(1000).nullable().optional(),
 });
 
 // ── PATCH /work-orders/[workOrderId]/services?serviceId= ───────
@@ -109,14 +130,14 @@ export const updateServicePriceSchema = z.object({
 // ── POST /work-orders/[workOrderId]/parts ──────────────────────
 
 export const addWorkOrderPartSchema = z.object({
-  part_id: z.string().optional(),
+  part_id: z.string().uuid().nullable().optional(),
   part_name: z.string().min(1, "Part name is required").max(200),
-  part_number: z.string().max(100).optional(),
+  part_number: z.string().max(100).nullable().optional(),
   quantity: z.number().int().positive().default(1),
   unit_price: z.number().min(0, "Unit price cannot be negative"),
-  discount_amount: z.number().min(0).optional(),
-  discount_percentage: z.number().min(0).max(100).optional(),
-  notes: z.string().max(1000).optional(),
+  discount_amount: z.number().min(0).nullable().optional(),
+  discount_percentage: z.number().min(0).max(100).nullable().optional(),
+  notes: z.string().max(1000).nullable().optional(),
 });
 
 // ── PATCH /work-orders/[workOrderId]/parts?partId= ────────────
@@ -132,7 +153,7 @@ export const createAttachmentSchema = z.object({
   file_size: z.number().int().positive(),
   mime_type: z.string().min(1, "MIME type is required").max(100),
   storage_path: z.string().min(1, "Storage path is required").max(500),
-  public_url: z.string().url("Invalid URL").optional(),
+  public_url: z.string().url("Invalid URL").nullable().optional(),
   file_type: z.enum(["photo", "document", "other"]),
 });
 

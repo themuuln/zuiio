@@ -39,7 +39,7 @@ export function StatusStepper({ currentStatus }: { currentStatus: string }) {
         const isFuture = STEP_ORDER.indexOf(step) > currentIdx;
 
         return (
-          <div key={step} className="flex flex-col items-center gap-1.5">
+          <div key={step} className="flex flex-col items-center gap-2">
             <div
               className={cn(
                 "size-5 rounded-full border flex items-center justify-center text-[9px] font-black transition-all duration-300",
@@ -55,7 +55,7 @@ export function StatusStepper({ currentStatus }: { currentStatus: string }) {
             </div>
             <span
               className={cn(
-                "text-[9px] font-bold leading-none tracking-tight transition-colors",
+                "text-xs font-bold leading-none tracking-tight transition-colors",
                 isCurrent &&
                   "text-indigo-600 dark:text-indigo-400 font-extrabold",
                 !isCurrent && "text-muted-foreground/45",

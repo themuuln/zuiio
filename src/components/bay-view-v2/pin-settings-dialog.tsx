@@ -127,7 +127,7 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
 
         {success ? (
           <div className="flex flex-col items-center gap-3 py-6">
-            <div className="flex items-center justify-center size-12  bg-green-100 dark:bg-green-900/30">
+            <div className="flex items-center justify-center size-12 bg-green-100 dark:bg-green-900/30">
               <CheckCircle2 className="size-6 text-green-600" />
             </div>
             <Typography.Text className="text-sm font-medium text-center">
@@ -140,7 +140,7 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
         ) : (
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
             {error && (
-              <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2.5 text-xs text-red-600 dark:text-red-400">
+              <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-3 text-xs text-red-600 dark:text-red-400">
                 {error}
               </div>
             )}

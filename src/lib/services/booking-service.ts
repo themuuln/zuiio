@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { reportServerError } from "@/lib/sentry-report-server";
 
 // System user used as created_by/updated_by for public booking records
 const SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000001";
@@ -51,7 +52,7 @@ export async function submitBookingRequest(
 
   // 4. Send notification email (fire-and-forget — never block the response)
   sendBookingNotification(supabase, orgId, params).catch((err) => {
-    console.error("Booking notification email failed:", err);
+    reportServerError("Booking notification email failed:", err);
   });
 
   return {
@@ -143,7 +144,7 @@ async function resolveVehicle(
   });
 
   if (ownerError) {
-    console.error("Failed to link vehicle to customer:", ownerError);
+    reportServerError("Failed to link vehicle to customer:", ownerError);
   }
 
   return newVehicle;

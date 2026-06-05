@@ -35,6 +35,7 @@ import { Typography } from "@/components/ui/typography";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useBranches } from "@/lib/queries/use-branches";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { reportError } from "@/lib/sentry-report";
 import { useSelectedBranchId } from "@/lib/stores";
 import type { ReportMechanicKpi } from "@/lib/types/service-params";
 import { formatMNT } from "@/lib/utils";
@@ -229,7 +230,7 @@ export default function MechanicPerformancePage() {
 
       setMechanics(perf);
     } catch (err) {
-      console.error("Failed to load mechanic performance data:", err);
+      reportError(err, "mechanic-performance");
       setMechanics([]);
     } finally {
       setLoading(false);

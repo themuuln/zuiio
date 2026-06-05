@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { finalizeSignup } from "@/lib/services/signup-service";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,7 +16,10 @@ export async function GET(request: NextRequest) {
       try {
         await finalizeSignup(supabase);
       } catch (finalizeError) {
-        console.error("Finalize signup after callback failed:", finalizeError);
+        reportServerError(
+          "Finalize signup after callback failed:",
+          finalizeError,
+        );
       }
 
       const forwardedHost = request.headers.get("x-forwarded-host");

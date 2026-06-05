@@ -4,6 +4,7 @@ import { OrganizationSelectionForm } from "@/components/auth/organization-select
 import { PendingInvitesCards } from "@/components/auth/pending-invites-cards";
 import { completeOrganizationLogin } from "@/lib/actions/complete-organization-login";
 import { UnauthorizedError } from "@/lib/errors";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { getPendingInvitesForEmail } from "@/lib/services/invite-service";
 import { listUserOrganizations } from "@/lib/services/organization-access-service";
 import { createClient } from "@/lib/supabase/server";
@@ -56,7 +57,7 @@ export default async function SelectOrganizationPage({
           inviter_name: inv.inviter_name,
         }));
       } catch (err) {
-        console.error("Failed to check pending invites by email:", err);
+        reportServerError("Failed to check pending invites by email:", err);
       }
     }
 
@@ -82,7 +83,7 @@ export default async function SelectOrganizationPage({
           }
         }
       } catch (err) {
-        console.error("Failed to check pending invites by phone:", err);
+        reportServerError("Failed to check pending invites by phone:", err);
       }
     }
 

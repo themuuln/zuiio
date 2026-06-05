@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { createClient } from "@/lib/supabase/server";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 import type { ReminderLog, VehicleServiceSchedule } from "@/lib/types";
@@ -466,7 +467,7 @@ export async function sendPendingReminders(orgId: string): Promise<number> {
         }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : "Unknown error";
-        console.error(`Failed to send reminder ${log.id}:`, errorMsg);
+        reportServerError(`Failed to send reminder ${log.id}:`, errorMsg);
         return false;
       }
     }),

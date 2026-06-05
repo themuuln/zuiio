@@ -3,7 +3,6 @@
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Car,
   Check,
   CheckCircle,
   ChevronDown,
@@ -31,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Typography } from "@/components/ui/typography";
 import { MongolianLicensePlate } from "@/components/vehicles/license-plate";
+import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
 import { prefetchDrawerData } from "@/lib/queries/use-drawer-queries";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
@@ -73,33 +73,35 @@ export function BayCardDragPreview({ bay }: { bay: BaySlotData }) {
         )}
       />
 
-      <CardHeader className="flex w-full flex-row items-center justify-between border-b border-border/40 bg-muted/5 py-2.5 pl-4 pr-3 select-none">
-        <span className="text-[11px] font-mono font-black tracking-wider text-foreground/80">
+      <CardHeader className="flex w-full flex-row items-center justify-between border-b border-border/40 bg-muted/5 py-3 pl-4 pr-3 select-none">
+        <span className="text-xs font-mono font-black tracking-wider text-foreground/80">
           BAY {String(bay.bayNumber).padStart(2, "0")}
         </span>
         <Badge
           variant="outline"
           className={cn(
-            "h-5 rounded-full border px-2 text-[9px] font-bold uppercase tracking-wider",
+            "h-5 rounded-full border px-2 text-xs font-bold uppercase tracking-wider",
             STATUS_BADGE_CLASS[wo.status],
           )}
         >
           {wo.status === "In Progress" && (
-            <span className="mr-1.5 inline-block size-1.5 rounded-full bg-current animate-pulse" />
+            <span className="mr-2 inline-block size-1.5 rounded-full bg-current animate-pulse" />
           )}
           {wo.status}
         </Badge>
       </CardHeader>
 
-      <CardContent className="flex flex-1 flex-col gap-3.5 px-4 py-3.5">
-        <div className="flex items-center gap-3.5 rounded-xl border border-transparent p-2">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-sm">
-            <Car className="size-5" />
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5 text-left">
+      <CardContent className="relative flex flex-1 flex-col gap-4 px-4 py-4 overflow-hidden">
+        {/* Background brand watermark */}
+        <VehicleMakeLogo
+          make={v?.make}
+          className="absolute -right-2 -bottom-3 size-20 text-primary/[0.06] pointer-events-none select-none"
+          aria-hidden
+        />
+        <div className="relative flex min-w-0 flex-col gap-2 text-left">
             {v ? (
               <>
-                <div className="flex flex-wrap items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
                   <MongolianLicensePlate plate={v.plate_number} />
                   <ElapsedTimer startedAt={wo.started_at ?? wo.created_at} />
                 </div>
@@ -220,11 +222,11 @@ export function BayCard({
 
           {wo ? (
             <>
-              <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 pl-4 pr-3 py-2.5 w-full select-none bg-muted/5">
-                <span className="text-[11px] font-mono font-black text-foreground/80 tracking-wider">
+              <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 pl-4 pr-3 py-3 w-full select-none bg-muted/5">
+                <span className="text-xs font-mono font-black text-foreground/80 tracking-wider">
                   BAY {String(bay.bayNumber).padStart(2, "0")}
                 </span>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   {isPending && (
                     <Loader2 className="size-3 animate-spin text-muted-foreground/60" />
                   )}
@@ -233,15 +235,15 @@ export function BayCard({
                       <Badge
                         variant="outline"
                         className={cn(
-                          "h-5 px-2 text-[9px] font-bold uppercase tracking-wider rounded-full border cursor-pointer",
+                          "h-5 px-2 text-xs font-bold uppercase tracking-wider rounded-full border cursor-pointer",
                           STATUS_BADGE_CLASS[wo.status],
                         )}
                       >
                         {wo.status === "In Progress" && (
-                          <span className="mr-1.5 size-1.5 rounded-full bg-current animate-pulse inline-block" />
+                          <span className="mr-2 size-1.5 rounded-full bg-current animate-pulse inline-block" />
                         )}
                         {t(STATUS_TRANSLATION_KEYS[wo.status])}
-                        <ChevronDown className="ml-1 size-2.5 text-muted-foreground/60" />
+                        <ChevronDown className="ml-1 size-3 text-muted-foreground/60" />
                       </Badge>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" sideOffset={4}>
@@ -271,18 +273,21 @@ export function BayCard({
                 </div>
               </CardHeader>
 
-              <CardContent className="flex flex-col gap-3.5 px-4 py-3.5 flex-1 justify-between">
+              <CardContent className="relative flex flex-col gap-4 px-4 py-4 flex-1 justify-between overflow-hidden">
+                {/* Background brand watermark */}
+                <VehicleMakeLogo
+                  make={v?.make}
+                  className="absolute -right-2 -bottom-3 size-20 text-primary/[0.06] pointer-events-none select-none"
+                  aria-hidden
+                />
                 <DraggableVehicleWrapper
                   workOrderId={wo.id}
                   disabled={isPending || isKanbanMode}
                 >
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary shadow-sm">
-                    <Car className="size-5" />
-                  </div>
-                  <div className="flex-1 min-w-0 flex flex-col gap-1.5 text-left">
+                  <div className="relative flex min-w-0 flex-col gap-2 text-left">
                     {v ? (
                       <>
-                        <div className="flex flex-wrap items-center gap-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
                           <MongolianLicensePlate plate={v.plate_number} />
                           <ElapsedTimer
                             startedAt={wo.started_at ?? wo.created_at}
@@ -310,11 +315,11 @@ export function BayCard({
                 {/* Status Stepper Progression */}
                 <div className="mt-1 flex items-center justify-between w-full relative px-1 select-none isolate">
                   {/* Background Line */}
-                  <div className="absolute top-[10px] left-2.5 right-2.5 h-0.5 bg-border -z-10" />
+                  <div className="absolute top-3 left-3 right-3 h-0.5 bg-border -z-10" />
                   {/* Active Progress Line */}
                   <div
                     className={cn(
-                      "absolute top-[10px] left-2.5 h-0.5 -z-10 transition-all duration-500 ease-in-out rounded-full",
+                      "absolute top-3 left-3 h-0.5 -z-10 transition-all duration-500 ease-in-out rounded-full",
                       wo.status === "Diagnosing" && "bg-blue-500",
                       wo.status === "In Progress" && "bg-indigo-500",
                       (wo.status === "Ready for Pickup" ||
@@ -355,11 +360,11 @@ export function BayCard({
                       return (
                         <div
                           key={step}
-                          className="flex flex-col items-center gap-1.5"
+                          className="flex flex-col items-center gap-2"
                         >
                           <div
                             className={cn(
-                              "size-5 rounded-full border flex items-center justify-center text-[9px] font-black transition-all duration-300",
+                              "size-5 rounded-full border flex items-center justify-center text-xs font-black transition-all duration-300",
                               isPast &&
                                 "bg-emerald-500 border-emerald-500 text-white shadow-sm",
                               isCurrent &&
@@ -372,7 +377,7 @@ export function BayCard({
                           </div>
                           <span
                             className={cn(
-                              "text-[9px] font-bold leading-none tracking-tight transition-colors",
+                              "text-xs font-bold leading-none tracking-tight transition-colors",
                               isCurrent &&
                                 "text-indigo-600 dark:text-indigo-400 font-extrabold",
                               !isCurrent && "text-muted-foreground/45",
@@ -387,7 +392,7 @@ export function BayCard({
                 </div>
 
                 {/* Assign Mechanic area */}
-                <div className="mt-1 flex flex-col gap-1.5 border-t border-border/30 pt-2.5">
+                <div className="mt-1 flex flex-col gap-2 border-t border-border/30 pt-2.5">
                   {/* Main mechanic */}
                   <div className="flex items-center gap-2">
                     <MechanicBadge
@@ -413,7 +418,7 @@ export function BayCard({
                       | undefined;
                     if (!helpers || helpers.length === 0) return null;
                     return (
-                      <div className="flex flex-wrap items-center gap-1.5">
+                      <div className="flex flex-wrap items-center gap-2">
                         {helpers.map((helper) => (
                           <MechanicBadge
                             key={helper.id}
@@ -430,12 +435,12 @@ export function BayCard({
                 </div>
               </CardContent>
 
-              <CardFooter className="mt-auto justify-between border-t border-border/40 bg-muted/20 px-3 py-2.5">
+              <CardFooter className="mt-auto justify-between border-t border-border/40 bg-muted/20 px-3 py-3">
                 <div className="flex items-center gap-1 w-full justify-between">
                   {wo.status === "New" && (
                     <Button
                       size="xs"
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] gap-1 rounded shadow-sm"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         onStatusChange(wo.id, "Diagnosing");
@@ -449,7 +454,7 @@ export function BayCard({
                   {wo.status === "Diagnosing" && (
                     <Button
                       size="xs"
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] gap-1 rounded shadow-sm"
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         onStatusChange(wo.id, "In Progress");
@@ -463,7 +468,7 @@ export function BayCard({
                   {wo.status === "In Progress" && (
                     <Button
                       size="xs"
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] gap-1 rounded shadow-sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         onStatusChange(wo.id, "Ready for Pickup");
@@ -477,7 +482,7 @@ export function BayCard({
                   {wo.status === "Ready for Pickup" && (
                     <Button
                       size="xs"
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] gap-1 rounded shadow-sm"
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         onStatusChange(wo.id, "Completed");
@@ -503,7 +508,7 @@ export function BayCard({
                         disabled={isPending}
                         className="text-muted-foreground/60 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 ml-auto"
                       >
-                        <Trash2 className="size-3.5" />
+                        <Trash2 className="size-4" />
                       </Button>
                     )}
                 </div>
@@ -522,11 +527,11 @@ export function BayCard({
                 <Plus className="size-4 text-muted-foreground/60 group-hover/btn:text-primary transition-colors" />
               </div>
 
-              <div className="flex flex-col gap-0.5 z-10">
-                <span className="text-[11px] font-mono font-black uppercase tracking-wider text-muted-foreground/80 group-hover/btn:text-primary transition-colors">
+              <div className="flex flex-col gap-1 z-10">
+                <span className="text-xs font-mono font-black uppercase tracking-wider text-muted-foreground/80 group-hover/btn:text-primary transition-colors">
                   BAY {String(bay.bayNumber).padStart(2, "0")}
                 </span>
-                <span className="text-[9px] font-medium text-muted-foreground/50 tracking-tight">
+                <span className="text-xs font-medium text-muted-foreground/50 tracking-tight">
                   Available for service
                 </span>
               </div>
