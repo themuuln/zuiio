@@ -61,7 +61,7 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
     >
       <Avatar className="size-6 shrink-0 after:hidden">
         <AvatarFallback
-          className={cn("text-[10px] font-medium", color.bg, color.text)}
+          className={cn("text-xs font-medium", color.bg, color.text)}
         >
           {initials}
         </AvatarFallback>

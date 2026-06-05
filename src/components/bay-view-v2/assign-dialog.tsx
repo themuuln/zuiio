@@ -301,15 +301,46 @@ export function AssignDialog({
               </ScrollArea>
             )}
 
-            {/* No results */}
-            {searchFocused &&
-              search.trim() &&
-              !searchLoading &&
-              searchResults.length === 0 && (
-                <Typography.Muted className="text-xs text-muted-foreground/60 text-center py-4">
-                  No vehicles found
-                </Typography.Muted>
-              )}
+            {/* No results — show Add Vehicle / Add Customer */}
+            {searchFocused && search.trim() && searchResults.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-4 text-center">
+                {searchLoading ? (
+                  <Loader2 className="size-4 text-muted-foreground/40 animate-spin mb-2" />
+                ) : (
+                  <Typography.Muted className="text-xs text-muted-foreground/60 mb-3">
+                    No vehicles found
+                  </Typography.Muted>
+                )}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      clearTimeout(blurTimerRef.current);
+                      setShowNewVehicle(true);
+                    }}
+                  >
+                    <Plus className="size-3" />
+                    Add Vehicle
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      clearTimeout(blurTimerRef.current);
+                      setShowNewCustomer(true);
+                    }}
+                  >
+                    <Plus className="size-3" />
+                    Add Customer
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Selected vehicle display */}
             {!search && selectedVehicle && (
@@ -451,8 +482,10 @@ export function AssignDialog({
         <NewVehicleSheet
           open={showNewVehicle}
           onOpenChange={setShowNewVehicle}
+          initialPlateNumber={search.length === 4 ? search : undefined}
           onSuccess={() => {
             setShowNewVehicle(false);
+            setSearch("");
             setTimeout(() => searchRef.current?.focus(), 100);
           }}
         />

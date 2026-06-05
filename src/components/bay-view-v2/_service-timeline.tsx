@@ -57,7 +57,7 @@ function ServiceTimelineEntry({
         </div>
 
         {entry.complaint && (
-          <Typography.Muted className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+          <Typography.Muted className="text-xs text-muted-foreground mt-1 line-clamp-2">
             {entry.complaint}
           </Typography.Muted>
         )}
@@ -69,7 +69,7 @@ function ServiceTimelineEntry({
                 key={`${s.name}-${s.price}`}
                 className="inline-flex items-center gap-1 bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400"
               >
-                <Wrench className="size-2.5" />
+                <Wrench className="size-3" />
                 {s.name}
               </span>
             ))}
@@ -84,7 +84,7 @@ function ServiceTimelineEntry({
           )}
           {entry.mechanic_name && (
             <span className="flex items-center gap-1">
-              <User className="size-2.5" />
+              <User className="size-3" />
               {entry.mechanic_name}
             </span>
           )}
@@ -140,8 +140,8 @@ export function TimelinePanel({
   return (
     <div className="w-full lg:w-[360px] shrink-0">
       <div className="flex items-center gap-2 mb-4">
-        <div className="flex items-center justify-center size-7 bg-amber-500/10">
-          <HistoryIcon className="size-3.5 text-amber-500" />
+        <div className="flex items-center justify-center size-8 bg-amber-500/10">
+          <HistoryIcon className="size-4 text-amber-500" />
         </div>
         <span className="text-sm font-semibold">{t("serviceTimeline")}</span>
         {serviceHistory.length > 0 && (

@@ -122,20 +122,38 @@ function DefaultLogo({
 interface VehicleMakeLogoProps {
   make: string | null | undefined;
   className?: string;
+  /** Forwarded to react-icons `size` — overrides inline SVG width/height. */
+  size?: number | string;
 }
 
-export function VehicleMakeLogo({ make, className }: VehicleMakeLogoProps) {
+export function VehicleMakeLogo({
+  make,
+  className,
+  size,
+}: VehicleMakeLogoProps) {
   const key = make?.toLowerCase().trim() ?? "";
-  const sizes = cn("size-5", className);
+  const sizes = size ? undefined : cn("size-5", className);
 
   // 1. react-icons brand icons
   const Icon = LOGO_MAP[key];
-  if (Icon) return <Icon className={sizes} />;
+  if (Icon) return <Icon className={sizes ?? className} size={size} />;
 
   // 2. SVG fallbacks (Lexus, Genesis)
   const Fallback = SVG_FALLBACKS[key];
-  if (Fallback) return <Fallback className={sizes} />;
+  if (Fallback)
+    return (
+      <Fallback
+        className={sizes ?? className}
+        style={size ? { width: size, height: size } : undefined}
+      />
+    );
 
   // 3. Letter fallback
-  return <DefaultLogo make={key} className={sizes} />;
+  return (
+    <DefaultLogo
+      make={key}
+      className={sizes ?? className}
+      style={size ? { width: size, height: size } : undefined}
+    />
+  );
 }

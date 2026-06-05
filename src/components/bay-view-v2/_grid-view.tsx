@@ -11,6 +11,10 @@ interface GridViewProps {
   onOpenDetail: (woId: string) => void;
   onAssignClick: (bayNumber: number) => void;
   onRemoveHelper: (woId: string, mechId: string) => Promise<void>;
+  onPauseTimer?: (woId: string) => void;
+  onAddNote?: (woId: string) => void;
+  onQuickAddService?: (woId: string) => void;
+  onQuickAddParts?: (woId: string) => void;
   orgId?: string | null;
 }
 
@@ -22,6 +26,10 @@ export function GridView({
   onOpenDetail,
   onAssignClick,
   onRemoveHelper,
+  onPauseTimer,
+  onAddNote,
+  onQuickAddService,
+  onQuickAddParts,
   orgId,
 }: GridViewProps) {
   return (
@@ -37,6 +45,10 @@ export function GridView({
           onOpenDetail={onOpenDetail}
           onAssignClick={onAssignClick}
           onRemoveHelper={onRemoveHelper}
+          onPauseTimer={onPauseTimer}
+          onAddNote={onAddNote}
+          onQuickAddService={onQuickAddService}
+          onQuickAddParts={onQuickAddParts}
           orgId={orgId}
         />
       ))}

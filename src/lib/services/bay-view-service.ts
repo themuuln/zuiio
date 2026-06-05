@@ -349,14 +349,16 @@ export async function assignVehicleToBay(
   if (!user) throw new UnauthorizedError();
   const orgId = await getOrgId();
 
-  // Run conflict check, clear helpers, and assign in one parallel batch.
-  // The UPDATE sets all fields directly — no separate "free old bay" step
-  // since we just overwrite bay_number in one shot.
+  // Run conflict check, clear old data, and assign in one parallel batch.
   const assignFn = async () => {
     const { error } = await supabase
       .from("work_orders")
       .update({
         bay_number: bayNumber,
+        status: "New" as const,
+        complaint: null,
+        diagnosis: null,
+        notes: null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", workOrderId)
@@ -377,6 +379,11 @@ export async function assignVehicleToBay(
       .from("work_order_helpers")
       .delete()
       .eq("work_order_id", workOrderId),
+    supabase
+      .from("work_order_services")
+      .delete()
+      .eq("work_order_id", workOrderId),
+    supabase.from("work_order_parts").delete().eq("work_order_id", workOrderId),
   ]);
 
   if (conflict && conflict.id !== workOrderId) {
@@ -462,6 +469,9 @@ export async function removeVehicleFromBay(workOrderId: string): Promise<void> {
       bay_number: null,
       mechanic_id: null,
       status: "New" as const,
+      complaint: null,
+      diagnosis: null,
+      notes: null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", workOrderId)
@@ -470,11 +480,18 @@ export async function removeVehicleFromBay(workOrderId: string): Promise<void> {
   if (error)
     throw new Error(error.message ?? "Failed to remove vehicle from bay");
 
-  // Clear helpers as well
-  await supabase
-    .from("work_order_helpers")
-    .delete()
-    .eq("work_order_id", workOrderId);
+  // Clear helpers, services, and parts
+  await Promise.all([
+    supabase
+      .from("work_order_helpers")
+      .delete()
+      .eq("work_order_id", workOrderId),
+    supabase
+      .from("work_order_services")
+      .delete()
+      .eq("work_order_id", workOrderId),
+    supabase.from("work_order_parts").delete().eq("work_order_id", workOrderId),
+  ]);
 
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
@@ -1045,12 +1062,15 @@ export async function assignToFirstAvailableBay(
     }
   }
 
-  // Assign to that bay
+  // Assign to that bay — clear old data, start fresh
   const { error } = await supabase
     .from("work_orders")
     .update({
       bay_number: firstEmpty,
-      status: "Diagnosing" as const,
+      status: "New" as const,
+      complaint: null,
+      diagnosis: null,
+      notes: null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", workOrderId)
@@ -1059,6 +1079,19 @@ export async function assignToFirstAvailableBay(
   if (error) {
     throw new Error(error.message ?? "Failed to assign vehicle to bay");
   }
+
+  // Clear old services and parts
+  await Promise.all([
+    supabase
+      .from("work_order_services")
+      .delete()
+      .eq("work_order_id", workOrderId),
+    supabase.from("work_order_parts").delete().eq("work_order_id", workOrderId),
+    supabase
+      .from("work_order_helpers")
+      .delete()
+      .eq("work_order_id", workOrderId),
+  ]);
 
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");

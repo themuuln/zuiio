@@ -94,8 +94,8 @@ export function NotesSection({
 
     return (
       <div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
             {label}
           </span>
           {!isEditing && displayValue && (
@@ -105,12 +105,12 @@ export function NotesSection({
               className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-pointer"
               aria-label={`Edit ${label}`}
             >
-              <Pencil className="size-2.5" />
+              <Pencil className="size-3" />
             </button>
           )}
         </div>
         {isEditing ? (
-          <div className="flex flex-col gap-1.5 mt-0.5">
+          <div className="flex flex-col gap-2 mt-1">
             <Textarea
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
@@ -131,7 +131,7 @@ export function NotesSection({
             </div>
           </div>
         ) : (
-          <Typography.Text className="text-xs mt-0.5 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-foreground/80 leading-relaxed">
+          <Typography.Text className="text-xs mt-1 p-3 rounded-lg bg-muted/50 border border-border/60 text-foreground/80 leading-relaxed">
             {displayValue}
           </Typography.Text>
         )}
@@ -141,7 +141,7 @@ export function NotesSection({
 
   return (
     <section className="rounded-lg border border-border/60 bg-card/40 p-3">
-      <div className="flex items-center gap-1.5 mb-3">
+      <div className="flex items-center gap-2 mb-3">
         <div className="flex items-center justify-center size-5 rounded-md bg-primary/10">
           <FileText className="size-3 text-primary" />
         </div>

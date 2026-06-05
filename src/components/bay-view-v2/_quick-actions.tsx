@@ -75,9 +75,9 @@ export function QuickActions({
           <button
             type="button"
             onClick={() => setShowNoteInput(true)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-muted/70 px-3 py-1.5 text-xs font-medium text-foreground/80 hover:bg-muted transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-full bg-muted/70 px-3 py-2 text-xs font-medium text-foreground/80 hover:bg-muted transition-colors cursor-pointer"
           >
-            <MessageSquarePlus className="size-3.5" />
+            <MessageSquarePlus className="size-4" />
             {t("addNote")}
           </button>
         ) : null}
@@ -86,9 +86,9 @@ export function QuickActions({
         <button
           type="button"
           onClick={() => toast.info(t("timeTrackingComingSoon"))}
-          className="inline-flex items-center gap-1.5 rounded-full bg-muted/70 px-3 py-1.5 text-xs font-medium text-foreground/80 hover:bg-muted transition-colors cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-full bg-muted/70 px-3 py-2 text-xs font-medium text-foreground/80 hover:bg-muted transition-colors cursor-pointer"
         >
-          <Timer className="size-3.5" />
+          <Timer className="size-4" />
           {t("logTime")}
         </button>
       </div>

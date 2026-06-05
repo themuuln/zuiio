@@ -66,9 +66,9 @@ export function ServiceCard({
           )}
         </div>
         {entry.expanded ? (
-          <ChevronUp className="size-3.5 shrink-0 text-muted-foreground/50" />
+          <ChevronUp className="size-4 shrink-0 text-muted-foreground/50" />
         ) : (
-          <ChevronDown className="size-3.5 shrink-0 text-muted-foreground/50" />
+          <ChevronDown className="size-4 shrink-0 text-muted-foreground/50" />
         )}
       </Button>
 

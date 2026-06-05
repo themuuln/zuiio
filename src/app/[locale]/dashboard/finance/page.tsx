@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
+import { subMonths } from "date-fns";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import type { DateRange } from "react-day-picker";
@@ -707,7 +708,10 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
 export default function FinancePage() {
   const t = useTranslations();
   const { registerTab } = useRightSidebar();
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
+    from: subMonths(new Date(), 3),
+    to: new Date(),
+  }));
   const [tab, setTab] = useState<Tab>("overview");
   const [search, setSearch] = useState("");
 

@@ -60,4 +60,5 @@ export interface WorkOrderDetailDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRefresh: () => void;
+  initialAction?: "add-service" | "add-part" | null;
 }

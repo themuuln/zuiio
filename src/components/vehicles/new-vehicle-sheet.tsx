@@ -8,12 +8,14 @@ type NewVehicleSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: (vehicleId: string) => void;
+  initialPlateNumber?: string;
 };
 
 export function NewVehicleSheet({
   open,
   onOpenChange,
   onSuccess,
+  initialPlateNumber,
 }: NewVehicleSheetProps) {
   const t = useTranslations("vehicles");
 
@@ -27,6 +29,9 @@ export function NewVehicleSheet({
     >
       <VehicleForm
         mode="full"
+        initialData={
+          initialPlateNumber ? { plateNumber: initialPlateNumber } : undefined
+        }
         onSuccess={(vehicle) => {
           onSuccess?.(vehicle.id);
           onOpenChange(false);

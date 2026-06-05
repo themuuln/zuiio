@@ -34,7 +34,7 @@ export function ElapsedTimer({
   const display = formatDuration(elapsed);
 
   return (
-    <span className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-muted/60 px-2 py-0.5 rounded font-mono tabular-nums select-none border border-border/30">
+    <span className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-muted/60 px-2 py-1 rounded font-mono tabular-nums select-none border border-border/30">
       <Clock className="size-3 animate-pulse text-primary/70" />
       {display}
     </span>

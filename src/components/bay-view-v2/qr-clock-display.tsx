@@ -292,7 +292,7 @@ export function QrClockDisplay({
         <div className="flex flex-col items-center gap-4 py-4">
           {/* ── Loading ── */}
           {state === "loading" && (
-            <div className="flex flex-col items-center gap-3 py-8">
+            <div className="flex flex-col items-center gap-2 py-8">
               <Loader2 className="size-8 animate-spin text-muted-foreground/50" />
               <Typography.Muted className="text-sm">
                 {t("qrGenerating")}
@@ -302,7 +302,7 @@ export function QrClockDisplay({
 
           {/* ── Active ── */}
           {state === "active" && qrDataUrl && (
-            <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-center gap-2">
               {/* QR Code */}
               <div className="rounded-xl border border-border/60 bg-white p-3 shadow-sm">
                 {/* biome-ignore lint/performance/noImgElement: data URI, Next.js Image doesn't support base64 */}
@@ -316,13 +316,13 @@ export function QrClockDisplay({
               </div>
 
               {/* Instruction */}
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Smartphone className="size-3.5" />
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Smartphone className="size-4" />
                 <span>{t("qrScanInstructions")}</span>
               </div>
 
               {/* Countdown */}
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
                 <RefreshCw className="size-3" />
                 <span className="tabular-nums">
                   {t("qrRefreshesIn", { seconds: countdown })}
@@ -333,7 +333,7 @@ export function QrClockDisplay({
 
           {/* ── Refreshing ── */}
           {state === "refreshing" && (
-            <div className="flex flex-col items-center gap-3 py-8">
+            <div className="flex flex-col items-center gap-2 py-8">
               <Loader2 className="size-8 animate-spin text-muted-foreground/50" />
               <Typography.Muted className="text-sm">
                 {t("qrRefreshing")}
@@ -343,7 +343,7 @@ export function QrClockDisplay({
 
           {/* ── Confirmed ── */}
           {state === "confirmed" && (
-            <div className="flex flex-col items-center gap-3 py-6">
+            <div className="flex flex-col items-center gap-2 py-6">
               <div className="flex size-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
                 <CheckCircle2 className="size-8 text-emerald-600 dark:text-emerald-400" />
               </div>
@@ -352,7 +352,7 @@ export function QrClockDisplay({
                   {t("qrClockedIn", { name: mechanicName })}
                 </Typography.Text>
                 {confirmedAt && (
-                  <Typography.Muted className="mt-0.5 text-xs">
+                  <Typography.Muted className="mt-1 text-xs">
                     {t("qrAt", { time: formatTime(confirmedAt) })}
                   </Typography.Muted>
                 )}
@@ -362,7 +362,7 @@ export function QrClockDisplay({
 
           {/* ── Error ── */}
           {state === "error" && (
-            <div className="flex flex-col items-center gap-3 py-6">
+            <div className="flex flex-col items-center gap-2 py-6">
               <div className="rounded-full bg-red-100 p-3 dark:bg-red-900/30">
                 <X className="size-6 text-red-500" />
               </div>
@@ -373,9 +373,9 @@ export function QrClockDisplay({
                 variant="outline"
                 size="sm"
                 onClick={() => generateQr()}
-                className="gap-1.5 rounded-lg"
+                className="gap-2 rounded-lg"
               >
-                <RefreshCw className="size-3.5" />
+                <RefreshCw className="size-4" />
                 {t("qrTryAgain")}
               </Button>
             </div>

@@ -8,9 +8,9 @@ import {
 } from "@/lib/services/bay-view-service";
 
 export const POST = createRouteHandler(
-  async ({ req, params, orgId }) => {
+  async ({ request, params, orgId }) => {
     await requireActiveSubscription(orgId);
-    const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
@@ -26,7 +26,7 @@ export const POST = createRouteHandler(
       );
     }
     const { workOrderId } = params;
-    const body = await req.json();
+    const body = await request.json();
     const mechanicId = body?.mechanic_id;
     if (!mechanicId || typeof mechanicId !== "string") {
       return NextResponse.json(
@@ -46,9 +46,9 @@ export const POST = createRouteHandler(
 );
 
 export const DELETE = createRouteHandler(
-  async ({ req, params, orgId }) => {
+  async ({ request, params, orgId }) => {
     await requireActiveSubscription(orgId);
-    const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
@@ -64,7 +64,7 @@ export const DELETE = createRouteHandler(
       );
     }
     const { workOrderId } = params;
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const mechanicId = searchParams.get("mechanicId");
     if (!mechanicId) {
       return NextResponse.json(

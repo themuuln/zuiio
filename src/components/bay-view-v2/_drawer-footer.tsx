@@ -10,10 +10,12 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatMNT } from "@/lib/utils";
 import type { WorkOrderDetail } from "@/lib/types";
 
 interface DrawerFooterProps {
   wo: WorkOrderDetail;
+  grandTotal: number;
   saving: boolean;
   confirmStatus: string | null;
   statusNotes: string;
@@ -31,6 +33,7 @@ interface DrawerFooterProps {
 
 export function DrawerFooter({
   wo,
+  grandTotal,
   saving,
   confirmStatus,
   statusNotes,
@@ -50,7 +53,7 @@ export function DrawerFooter({
       {/* Status change confirmation */}
       {confirmStatus && (
         <Alert variant="destructive">
-          <AlertTriangle className="size-3.5" />
+          <AlertTriangle className="size-4" />
           <AlertTitle className="text-xs">
             {t("statusNotesGenericTitle", { status: confirmStatus })}?
           </AlertTitle>
@@ -59,7 +62,7 @@ export function DrawerFooter({
               ? t("confirmComplete")
               : t("confirmCancel")}
           </AlertDescription>
-          <div className="col-span-full mt-1 flex flex-col gap-1.5">
+          <div className="col-span-full mt-1 flex flex-col gap-2">
             <Input
               placeholder={t("addNotesOptional")}
               value={statusNotes}
@@ -92,14 +95,20 @@ export function DrawerFooter({
       )}
 
       {/* Primary status flow + secondary actions */}
-      <div className="flex items-center gap-2 justify-end">
+      <div className="flex items-center gap-2 justify-between">
+        <span className="text-xs text-muted-foreground">
+          {t("grandTotal")}
+          <span className="ml-1.5 font-semibold tabular-nums text-primary">
+            {formatMNT(grandTotal)}
+          </span>
+        </span>
         {wo.status === "New" && (
           <Button
             className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"
             onClick={() => onChangeStatus("Diagnosing")}
             disabled={saving}
           >
-            <ArrowRight className="size-3.5" />
+            <ArrowRight className="size-4" />
             {t("startDiagnosing")}
           </Button>
         )}
@@ -109,7 +118,7 @@ export function DrawerFooter({
             onClick={() => onChangeStatus("In Progress")}
             disabled={saving}
           >
-            <ArrowRight className="size-3.5" />
+            <ArrowRight className="size-4" />
             {t("startWork")}
           </Button>
         )}
@@ -120,7 +129,7 @@ export function DrawerFooter({
               onClick={onMarkReady}
               disabled={saving}
             >
-              <CheckCircle2 className="size-3.5" />
+              <CheckCircle2 className="size-4" />
               {t("markReady")}
             </Button>
             <Button
@@ -129,7 +138,7 @@ export function DrawerFooter({
               onClick={onComplete}
               disabled={saving}
             >
-              <CheckCircle2 className="size-3.5" />
+              <CheckCircle2 className="size-4" />
               {t("complete")}
             </Button>
           </>
@@ -140,7 +149,7 @@ export function DrawerFooter({
             onClick={onComplete}
             disabled={saving}
           >
-            <CheckCircle2 className="size-3.5" />
+            <CheckCircle2 className="size-4" />
             {t("complete")}
           </Button>
         )}
@@ -154,7 +163,7 @@ export function DrawerFooter({
             onClick={onCreateInvoice}
             disabled={saving || creatingInvoice}
           >
-            <FileText className="size-3.5" />
+            <FileText className="size-4" />
             {creatingInvoice ? t("creating") : t("invoice")}
           </Button>
         )}
@@ -168,7 +177,7 @@ export function DrawerFooter({
             disabled={saving}
             className="h-9 px-3 text-xs text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50"
           >
-            <X className="size-3.5" />
+            <X className="size-4" />
             {t("cancel")}
           </Button>
         )}

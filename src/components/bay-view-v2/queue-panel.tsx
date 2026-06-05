@@ -202,7 +202,7 @@ function QueueItem({
                 </Button>
               ))}
               {availableBays.length > 4 && (
-                <span className="text-[10px] text-muted-foreground/50 font-medium ml-1">
+                <span className="text-xs text-muted-foreground/50 font-medium ml-1">
                   +{availableBays.length - 4}
                 </span>
               )}

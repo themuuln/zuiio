@@ -42,7 +42,7 @@ export function StatusStepper({ currentStatus }: { currentStatus: string }) {
           <div key={step} className="flex flex-col items-center gap-2">
             <div
               className={cn(
-                "size-5 rounded-full border flex items-center justify-center text-[9px] font-black transition-all duration-300",
+                "size-5 rounded-full border flex items-center justify-center text-xs font-black transition-all duration-300",
                 isPast &&
                   "bg-emerald-500 border-emerald-500 text-white shadow-sm",
                 isCurrent &&

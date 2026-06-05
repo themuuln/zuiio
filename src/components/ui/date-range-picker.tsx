@@ -31,6 +31,7 @@ interface DateRangePickerProps {
   className?: string;
   placeholder?: string;
   align?: "start" | "center" | "end";
+  defaultValue?: DateRange;
 }
 
 export function DateRangePicker({
@@ -39,6 +40,7 @@ export function DateRangePicker({
   className,
   placeholder,
   align = "start",
+  defaultValue,
 }: DateRangePickerProps) {
   const t = useTranslations("dateRangePicker");
   const defaultPlaceholder = placeholder || t("placeholder");
@@ -46,6 +48,16 @@ export function DateRangePicker({
   const [month, setMonth] = React.useState<Date>(
     () => value?.from || new Date(),
   );
+
+  // Apply defaultValue on first render if no controlled value is provided
+  const appliedDefault = React.useRef(false);
+  React.useEffect(() => {
+    if (!appliedDefault.current && !value?.from && defaultValue?.from) {
+      appliedDefault.current = true;
+      onChange?.(defaultValue);
+      setMonth(defaultValue.from);
+    }
+  }, [value, defaultValue, onChange]);
 
   React.useEffect(() => {
     if (value?.from) {
@@ -130,10 +142,18 @@ export function DateRangePicker({
       },
     },
     {
-      label: t("last90Days"),
+      label: t("last3Months"),
       group: "extended",
       getValue: () => ({
-        from: subDays(new Date(), 89),
+        from: subMonths(new Date(), 3),
+        to: new Date(),
+      }),
+    },
+    {
+      label: t("last6Months"),
+      group: "extended",
+      getValue: () => ({
+        from: subMonths(new Date(), 6),
         to: new Date(),
       }),
     },
@@ -142,6 +162,14 @@ export function DateRangePicker({
       group: "extended",
       getValue: () => ({
         from: startOfYear(new Date()),
+        to: new Date(),
+      }),
+    },
+    {
+      label: t("lastYear"),
+      group: "extended",
+      getValue: () => ({
+        from: subMonths(new Date(), 12),
         to: new Date(),
       }),
     },

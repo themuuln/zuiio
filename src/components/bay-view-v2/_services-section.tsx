@@ -84,7 +84,7 @@ export function ServicesSection({
             {services?.map((svc) => (
               <div
                 key={svc.id}
-                className="group flex items-center gap-2 rounded-md p-1.5 hover:bg-muted/40 transition-colors"
+                className="group flex items-center gap-2 rounded-md p-2 hover:bg-muted/40 transition-colors"
               >
                 <div className="flex-1 min-w-0">
                   <Typography.Text className="text-sm font-medium truncate">
@@ -197,7 +197,7 @@ export function ServicesSection({
                           ? svc.name_mn
                           : svc.name}
                       </span>
-                      <span className="flex items-center gap-1.5 shrink-0 ml-auto text-muted-foreground group-hover/button:text-foreground">
+                      <span className="flex items-center gap-2 shrink-0 ml-auto text-muted-foreground group-hover/button:text-foreground">
                         <span className="tabular-nums font-medium">
                           {formatMNT(Number(svc.default_price))}
                         </span>
@@ -229,9 +229,9 @@ export function ServicesSection({
         className="mt-2 w-full border-dashed text-xs h-9 gap-2 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-200"
       >
         {addingServiceId ? (
-          <Loader2 className="size-3.5 animate-spin" />
+          <Loader2 className="size-4 animate-spin" />
         ) : (
-          <Plus className="size-3.5" />
+          <Plus className="size-4" />
         )}
         {addingServiceId ? "Saving..." : t("addService")}
       </Button>

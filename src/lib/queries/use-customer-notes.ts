@@ -1,15 +1,7 @@
-import {
-  type UseQueryResult,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useOnlineStatus } from "@/lib/hooks/use-online-status";
-import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
-import { toastRetry } from "@/lib/toast-utils";
+import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { CustomerNote, CustomerNoteType } from "@/lib/types";
 import { createOrgQuery } from "./factory";
+import { useOrgMutation } from "./mutation-factory";
 import { customerNoteKeys } from "./keys";
 
 /**
@@ -37,160 +29,47 @@ interface CreateNoteVariables {
 }
 
 /**
- * Creates a note for a customer and invalidates the notes query.
+ * Creates a note for a customer — optimistic + offline-queue.
  */
 export function useCreateCustomerNote(
   orgId: string | undefined,
   customerId: string | undefined,
 ) {
-  const queryClient = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  const mutation = useMutation({
-    mutationFn: async (variables: CreateNoteVariables) => {
-      if (isOnline) {
-        const url = `/api/organizations/${orgId}/customers/${customerId}/notes`;
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(variables),
-        });
-        if (!res.ok) {
-          const json = await res.json();
-          throw new Error(json.error?.message ?? "Failed to create note");
-        }
-        const json = await res.json();
-        return json.data as CustomerNote;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/customers/${customerId}/notes`,
-        method: "POST",
-        body: variables,
-        queryKeysToInvalidate: [[...customerNoteKeys.all(orgId ?? "")]],
-      });
-      return { queued: true } as unknown as CustomerNote;
-    },
-    onMutate: async (variables) => {
-      await queryClient.cancelQueries({
-        queryKey: customerNoteKeys.all(orgId ?? ""),
-      });
-      const previous = queryClient.getQueryData<CustomerNote[]>(
-        customerNoteKeys.list(orgId ?? "", customerId ?? ""),
-      );
-      if (previous) {
-        const optimistic: CustomerNote = {
-          id: `temp-${Date.now()}`,
-          organization_id: orgId ?? "",
-          customer_id: customerId ?? "",
-          content: variables.content,
-          type: variables.type ?? "general",
-          created_by: "",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          deleted_at: null,
-        };
-        queryClient.setQueryData<CustomerNote[]>(
-          customerNoteKeys.list(orgId ?? "", customerId ?? ""),
-          [...previous, optimistic],
-        );
-      }
-      return { previous };
-    },
-    onError: (err, variables, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData<CustomerNote[]>(
-          customerNoteKeys.list(orgId ?? "", customerId ?? ""),
-          context.previous,
-        );
-      }
-      toastRetry(err.message, () => mutation.mutateAsync(variables));
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        toast.success("Note created");
-      }
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({
-        queryKey: customerNoteKeys.all(orgId ?? ""),
-      });
-    },
+  return useOrgMutation<CustomerNote, CreateNoteVariables>({
+    endpoint: `/api/organizations/${orgId}/customers/${customerId}/notes`,
+    method: "POST",
+    queryKey: customerNoteKeys.all(orgId ?? ""),
+    optimisticUpdate: (old, vars) => [
+      ...old,
+      {
+        id: `temp-${Date.now()}`,
+        organization_id: orgId ?? "",
+        customer_id: customerId ?? "",
+        content: vars.content,
+        type: vars.type ?? "general",
+        created_by: "",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        deleted_at: null,
+      } as CustomerNote,
+    ],
+    successMessage: "Note created",
   });
-  return mutation;
 }
 
 /**
- * Deletes a customer note with optimistic UI.
+ * Deletes a customer note — optimistic + offline-queue.
  */
 export function useDeleteCustomerNote(
   orgId: string | undefined,
   customerId: string | undefined,
 ) {
-  const queryClient = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-
-  const mutation = useMutation({
-    mutationFn: async (noteId: string) => {
-      if (isOnline) {
-        const url = `/api/organizations/${orgId}/customers/${customerId}/notes/${noteId}`;
-        const res = await fetch(url, { method: "DELETE" });
-        if (!res.ok) {
-          const json = await res.json();
-          throw new Error(json.error?.message ?? "Failed to delete note");
-        }
-        const json = await res.json();
-        return json.data;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/customers/${customerId}/notes/${noteId}`,
-        method: "DELETE",
-        body: undefined,
-        queryKeysToInvalidate: [[...customerNoteKeys.all(orgId ?? "")]],
-      });
-    },
-    onMutate: async (noteId) => {
-      await queryClient.cancelQueries({
-        queryKey: customerNoteKeys.all(orgId ?? ""),
-      });
-      const previous = queryClient.getQueryData<CustomerNote[]>(
-        customerNoteKeys.list(orgId ?? "", customerId ?? ""),
-      );
-      if (previous) {
-        queryClient.setQueryData<CustomerNote[]>(
-          customerNoteKeys.list(orgId ?? "", customerId ?? ""),
-          previous.filter((n) => n.id !== noteId),
-        );
-      }
-      return { previous };
-    },
-    onError: (err, noteId, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData<CustomerNote[]>(
-          customerNoteKeys.list(orgId ?? "", customerId ?? ""),
-          context.previous,
-        );
-      }
-      toastRetry(err.message, () => mutation.mutateAsync(noteId));
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown> | undefined;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        toast.success("Note deleted");
-      }
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({
-        queryKey: customerNoteKeys.all(orgId ?? ""),
-      });
-    },
+  return useOrgMutation<CustomerNote, string>({
+    endpoint: (noteId) =>
+      `/api/organizations/${orgId}/customers/${customerId}/notes/${noteId}`,
+    method: "DELETE",
+    queryKey: customerNoteKeys.all(orgId ?? ""),
+    optimisticUpdate: (old, noteId) => old.filter((n) => n.id !== noteId),
+    successMessage: "Note deleted",
   });
-  return mutation;
 }

@@ -103,10 +103,7 @@ export async function getWorkOrderDetail(
       : { data: null },
     supabase
       .from("work_order_helpers")
-      .select(`
-        id, work_order_id, mechanic_id, assigned_at, created_at, created_by,
-        mechanic:mechanic_id (full_name)
-      `)
+      .select("id, work_order_id, mechanic_id, created_at, created_by")
       .eq("work_order_id", id),
     wo.vehicle_id
       ? supabase
@@ -123,6 +120,22 @@ export async function getWorkOrderDetail(
       : { data: [] },
   ]);
 
+  // Fetch helper mechanic profiles separately (work_order_helpers.mechanic_id
+  // references auth.users, not profiles, so PostgREST can't auto-join)
+  const helperMechanicIds = [
+    ...new Set((helpersData ?? []).map((h) => h.mechanic_id)),
+  ] as string[];
+  const { data: helperProfiles } =
+    helperMechanicIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", helperMechanicIds)
+      : { data: [] };
+  const helperProfileMap = new Map(
+    (helperProfiles ?? []).map((p) => [p.id, p.full_name]),
+  );
+
   const priorVisitIds = (priorServiceVisits ?? []).map((visit) => visit.id);
   const priorVisitMechanicIds = [
     ...new Set(
@@ -132,9 +145,13 @@ export async function getWorkOrderDetail(
     ),
   ] as string[];
 
-  const [{ data: priorVisitProfiles }, { data: priorVisitServices }] =
+  const [
+    { data: priorVisitProfiles },
+    { data: priorVisitServices },
+    { data: priorVisitHelpers },
+  ] =
     priorVisitIds.length === 0
-      ? [{ data: [] }, { data: [] }]
+      ? [{ data: [] }, { data: [] }, { data: [] }]
       : await Promise.all([
           supabase
             .from("profiles")
@@ -144,7 +161,38 @@ export async function getWorkOrderDetail(
             .from("work_order_services")
             .select("work_order_id, service_name, final_price")
             .in("work_order_id", priorVisitIds),
+          supabase
+            .from("work_order_helpers")
+            .select("work_order_id, mechanic_id")
+            .in("work_order_id", priorVisitIds),
         ]);
+
+  // Build helper profiles for prior visits
+  const priorVisitHelperIds = [
+    ...new Set((priorVisitHelpers ?? []).map((h) => h.mechanic_id)),
+  ] as string[];
+  const { data: priorVisitHelperProfiles } =
+    priorVisitHelperIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", priorVisitHelperIds)
+      : { data: [] };
+  const priorVisitHelperProfileMap = new Map(
+    (priorVisitHelperProfiles ?? []).map((p) => [p.id, p.full_name]),
+  );
+  const priorVisitHelpersMap = new Map<
+    string,
+    { id: string; full_name: string | null }[]
+  >();
+  for (const h of priorVisitHelpers ?? []) {
+    const existing = priorVisitHelpersMap.get(h.work_order_id) ?? [];
+    existing.push({
+      id: h.mechanic_id,
+      full_name: priorVisitHelperProfileMap.get(h.mechanic_id) ?? null,
+    });
+    priorVisitHelpersMap.set(h.work_order_id, existing);
+  }
 
   const priorVisitMechanicMap = new Map(
     (priorVisitProfiles ?? []).map((profile) => [
@@ -173,20 +221,9 @@ export async function getWorkOrderDetail(
       id: string;
       full_name: string | null;
     } | null,
-    helpers: (
-      (helpersData ?? []) as unknown as (WorkOrderHelper & {
-        full_name?: string | null;
-      })[]
-    ).map((h) => ({
+    helpers: ((helpersData ?? []) as WorkOrderHelper[]).map((h) => ({
       ...h,
-      full_name: (h as unknown as Record<string, unknown>).mechanic
-        ? ((
-            (h as unknown as Record<string, unknown>).mechanic as Record<
-              string,
-              unknown
-            >
-          ).full_name as string | null)
-        : null,
+      full_name: helperProfileMap.get(h.mechanic_id) ?? null,
     })),
     services: (services ?? []) as WorkOrderService[],
     parts: (parts ?? []) as WorkOrderPart[],
@@ -203,6 +240,7 @@ export async function getWorkOrderDetail(
         ? (priorVisitMechanicMap.get(visit.mechanic_id) ?? null)
         : null,
       services: priorVisitServicesMap.get(visit.id) ?? [],
+      helpers: priorVisitHelpersMap.get(visit.id) ?? [],
     })),
     diagnosis_label: labelData as DiagnosisLabel | null,
   };

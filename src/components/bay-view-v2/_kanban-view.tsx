@@ -63,6 +63,10 @@ interface KanbanViewProps {
   onNoEmptyBays: () => void;
   onQueueItemClick: (wo: WorkOrder & { vehicle: Vehicle | null }) => void;
   onRemoveHelper: (woId: string, mechId: string) => Promise<void>;
+  onPauseTimer?: (woId: string) => void;
+  onAddNote?: (woId: string) => void;
+  onQuickAddService?: (woId: string) => void;
+  onQuickAddParts?: (woId: string) => void;
   orgId?: string | null;
   t: (key: string) => string;
 }
@@ -79,6 +83,10 @@ export function KanbanView({
   onNoEmptyBays,
   onQueueItemClick,
   onRemoveHelper,
+  onPauseTimer,
+  onAddNote,
+  onQuickAddService,
+  onQuickAddParts,
   orgId,
   t,
 }: KanbanViewProps) {
@@ -189,6 +197,10 @@ export function KanbanView({
                     onRemoveFromBay={onRemoveFromBay}
                     onOpenDetail={onOpenDetail}
                     onRemoveHelper={onRemoveHelper}
+                    onPauseTimer={onPauseTimer}
+                    onAddNote={onAddNote}
+                    onQuickAddService={onQuickAddService}
+                    onQuickAddParts={onQuickAddParts}
                     orgId={orgId}
                   />
                 </div>

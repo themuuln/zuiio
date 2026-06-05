@@ -31,6 +31,7 @@ export interface WorkOrderServiceHistoryEntry {
   notes: string | null;
   total: number;
   mechanic_name: string | null;
+  helpers: { id: string; full_name: string | null }[];
   services: { name: string; price: number }[];
 }
 

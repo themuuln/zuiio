@@ -215,7 +215,7 @@ export function StatusTimeline({
                             "flex size-5 items-center justify-center rounded-full ring-4 ring-orange-400/20 border border-dashed border-orange-400/60 transition-all duration-300",
                           )}
                         >
-                          <RotateCcw className="size-2.5 text-orange-500" />
+                          <RotateCcw className="size-3 text-orange-500" />
                         </div>
                       ) : (
                         // Forward: solid colored dot
@@ -264,20 +264,20 @@ export function StatusTimeline({
                       {h.previous_status && h.previous_status !== h.status ? (
                         <Typography.Muted
                           className={cn(
-                            "text-[10px] uppercase tracking-wide",
+                            "text-xs uppercase tracking-wide",
                             isBackward
                               ? "text-orange-500/70 dark:text-orange-400/60"
                               : "text-muted-foreground/70",
                           )}
                         >
                           {isBackward && (
-                            <RotateCcw className="inline size-2.5 mr-0.5 -mt-px" />
+                            <RotateCcw className="inline size-3 mr-1 -mt-px" />
                           )}
                           {h.previous_status} {"→"} {statusLabel}
                         </Typography.Muted>
                       ) : null}
                       {h.notes ? (
-                        <Typography.Muted className="mt-0.5 break-words rounded-lg border border-border/40 bg-muted/40 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                        <Typography.Muted className="mt-1 break-words rounded-lg border border-border/40 bg-muted/40 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
                           {h.notes}
                         </Typography.Muted>
                       ) : null}
@@ -294,7 +294,7 @@ export function StatusTimeline({
                 <Typography.Text className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {t("serviceHistory")}
                 </Typography.Text>
-                <Badge variant="secondary" className="text-[10px]">
+                <Badge variant="secondary" className="text-xs">
                   {serviceHistory.length}
                 </Badge>
               </div>
@@ -332,7 +332,7 @@ export function StatusTimeline({
                             variant="outline"
                             className="gap-1 text-xs"
                           >
-                            <Wrench className="size-2.5" />
+                            <Wrench className="size-3" />
                             {service.name}
                           </Badge>
                         ))}
@@ -347,7 +347,7 @@ export function StatusTimeline({
                       ) : null}
                       {entry.mechanic_name ? (
                         <span className="flex items-center gap-1">
-                          <User className="size-2.5" />
+                          <User className="size-3" />
                           {entry.mechanic_name}
                         </span>
                       ) : null}

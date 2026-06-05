@@ -2,9 +2,16 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { cn } from "@/lib/utils";
 import { useRouter } from "@/lib/i18n/navigation";
 import { workOrderKeys } from "@/lib/queries/keys";
 import { useDrawerQueries } from "@/lib/queries/use-drawer-queries";
@@ -26,6 +33,7 @@ import { useDrawerMutations } from "./_use-drawer-mutations";
 import type { PickupCompleteData } from "./pickup-complete-form";
 import { PickupCompleteForm } from "./pickup-complete-form";
 import { PostServiceFormBody } from "./post-service-form";
+import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
 
 // ── Drawer ───────────────────────────────────────────────────
 
@@ -34,6 +42,7 @@ export function WorkOrderDetailDrawer({
   open,
   onOpenChange,
   onRefresh,
+  initialAction,
 }: WorkOrderDetailDrawerProps) {
   const t = useTranslations("bayView");
   const { push } = useRouter();
@@ -152,7 +161,42 @@ export function WorkOrderDetailDrawer({
 
   const [showPickupForm, setShowPickupForm] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
+  const isFirstRender = useRef(true);
   const handleCancelPickup = () => setShowPickupForm(false);
+
+  // Reset fullscreen when drawer closes
+  useEffect(() => {
+    if (!open) setIsFullScreen(false);
+  }, [open]);
+
+  // Handle initial action from bay card quick actions
+  useEffect(() => {
+    if (open && initialAction && hasLoadedOnce) {
+      if (initialAction === "add-service") {
+        setShowAddService(true);
+      } else if (initialAction === "add-part") {
+        setShowAddPart(true);
+      }
+    }
+  }, [open, initialAction, hasLoadedOnce]);
+
+  // Scale animation: shrink → resize → expand
+  useLayoutEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    // Phase 1: shrink (visible for one frame)
+    requestAnimationFrame(() => setTransitioning(true));
+    // Phase 2: apply size change, then expand
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTransitioning(false);
+      });
+    });
+  }, [isFullScreen]);
 
   // ── Pickup complete ──
 
@@ -205,12 +249,21 @@ export function WorkOrderDetailDrawer({
     wo?.services?.reduce((s, svc) => s + Number(svc.final_price), 0) ?? 0;
   const partsTotal =
     wo?.parts?.reduce((s, p) => s + Number(p.final_price), 0) ?? 0;
+  const grandTotal = servicesTotal + partsTotal;
 
   // ── Render ──
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent className="flex max-h-[90vh] md:max-h-[85vh] w-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl flex-col gap-0 p-0 mx-auto md:bottom-4 md:rounded-xl md:border border-border/80 shadow-2xl">
+      <DrawerContent
+        data-fullscreen={isFullScreen || undefined}
+        className={cn(
+          "flex flex-col gap-0 p-0 mx-auto border-border/80 shadow-2xl",
+          isFullScreen
+            ? "fixed inset-0 z-50 h-full w-full rounded-none border-0 data-[vaul-drawer-direction=bottom]:max-h-none data-[vaul-drawer-direction=bottom]:mt-0"
+            : "max-h-[90vh] md:max-h-[85vh] w-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl md:bottom-4 md:rounded-xl md:border",
+        )}
+      >
         <DrawerHeaderSection
           wo={wo}
           loading={isLoading && !hasLoadedOnce}
@@ -220,8 +273,10 @@ export function WorkOrderDetailDrawer({
           workOrderId={workOrderId ?? ""}
           saving={saving}
           isAddingService={!!addingServiceId}
+          isFullScreen={isFullScreen}
           onAssignMechanic={assignMechanic}
           onHelpersChange={() => fetchWo(true)}
+          onToggleFullScreen={() => setIsFullScreen((f) => !f)}
           onClose={() => handleOpenChange(false)}
           showBack={showPostServiceForm}
           onBack={handleCancelPostService}
@@ -248,7 +303,14 @@ export function WorkOrderDetailDrawer({
 
         {/* Content — always rendered after first load (skeleton when refetching) */}
         {hasLoadedOnce && (
-          <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
+          <div
+            className={cn(
+              "flex flex-col min-h-0 flex-1 overflow-hidden transition-all duration-300 ease-out",
+              transitioning
+                ? "scale-[0.98] opacity-95"
+                : "scale-100 opacity-100",
+            )}
+          >
             <DrawerSkeleton
               loading={isLoading}
               error={error?.message ?? null}
@@ -272,8 +334,14 @@ export function WorkOrderDetailDrawer({
                   />
                 ) : (
                   <>
-                    <div className="flex-1 overflow-y-auto min-h-0">
-                      <div className="px-3 py-2">
+                    <div className="relative flex-1 overflow-y-auto min-h-0">
+                      <VehicleMakeLogo
+                        make={wo.vehicle?.make}
+                        size="70%"
+                        className="absolute inset-0 m-auto pointer-events-none select-none text-primary/[0.03]"
+                        aria-hidden
+                      />
+                      <div className="relative px-3 py-2">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                           <div className="lg:col-span-2">
                             <div className="flex flex-col gap-3">
@@ -297,6 +365,9 @@ export function WorkOrderDetailDrawer({
                                 }}
                                 onEditPriceChange={setEditingServicePriceVal}
                                 onEditPriceSave={handleServicePriceSave}
+                                onEditPriceCancel={() =>
+                                  setEditingServicePriceId(null)
+                                }
                                 t={t}
                               />
 
@@ -354,22 +425,23 @@ export function WorkOrderDetailDrawer({
                             />
                           </div>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="mx-3 mb-3">
-                      <TotalsSummary
-                        servicesTotal={servicesTotal}
-                        partsTotal={partsTotal}
-                        grandTotal={Number(wo.total)}
-                        discountTotal={wo.discount_total ?? 0}
-                        taxRate={orgSettings?.default_tax_rate ?? 0}
-                        t={t}
-                      />
+                        <div className="mt-3">
+                          <TotalsSummary
+                            servicesTotal={servicesTotal}
+                            partsTotal={partsTotal}
+                            grandTotal={grandTotal}
+                            discountTotal={wo.discount_total ?? 0}
+                            taxRate={orgSettings?.default_tax_rate ?? 0}
+                            t={t}
+                          />
+                        </div>
+                      </div>
                     </div>
 
                     <DrawerFooter
                       wo={wo}
+                      grandTotal={grandTotal}
                       saving={saving}
                       confirmStatus={confirmStatus}
                       statusNotes={statusNotes}

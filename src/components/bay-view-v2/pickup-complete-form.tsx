@@ -18,6 +18,7 @@ import {
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
+import { AppointmentDatePicker } from "@/components/ui/appointment-date-picker";
 import { Input } from "@/components/ui/input";
 import { useClientNow } from "@/hooks/use-client-now";
 import { useForm } from "@/lib/hooks/use-form";
@@ -109,6 +110,7 @@ export function PickupCompleteForm({
   });
 
   const satisfaction = form.watch("satisfaction");
+  const appointmentDate = form.watch("appointmentDate");
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -198,12 +200,16 @@ export function PickupCompleteForm({
               {t("pickupSummaryAppointmentDate")}
             </FieldLabel>
             <FieldContent>
-              <Input
-                type="date"
-                className="h-10"
-                min={now.toISOString().split("T")[0]}
-                aria-invalid={!!form.formState.errors.appointmentDate}
-                {...form.register("appointmentDate")}
+              <AppointmentDatePicker
+                value={appointmentDate ? new Date(appointmentDate) : undefined}
+                onChange={(d) =>
+                  form.setValue(
+                    "appointmentDate",
+                    d ? d.toISOString().split("T")[0] : "",
+                  )
+                }
+                minDate={now}
+                className="w-full h-10"
               />
               {form.formState.errors.appointmentDate && (
                 <FieldError>

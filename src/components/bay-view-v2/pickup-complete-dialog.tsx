@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AppointmentDatePicker } from "@/components/ui/appointment-date-picker";
 import { useClientNow } from "@/hooks/use-client-now";
 import { cn } from "@/lib/utils";
 
@@ -162,11 +163,13 @@ export function PickupCompleteDialog({
               <CalendarIcon className="size-4" />
               {t("pickupSummaryAppointmentDate")}
             </Label>
-            <Input
-              type="date"
-              value={appointmentDate}
-              onChange={(e) => setAppointmentDate(e.target.value)}
-              min={now.toISOString().split("T")[0]}
+            <AppointmentDatePicker
+              value={appointmentDate ? new Date(appointmentDate) : undefined}
+              onChange={(d) =>
+                setAppointmentDate(d ? d.toISOString().split("T")[0] : "")
+              }
+              minDate={now}
+              className="w-full"
             />
           </div>
 

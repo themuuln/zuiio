@@ -6,10 +6,14 @@ import {
   Check,
   CheckCircle,
   ChevronDown,
+  FileText,
   Loader2,
+  MoreHorizontal,
   Play,
   Plus,
+  Timer,
   Trash2,
+  UserPlus,
   Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -55,6 +59,10 @@ interface BayCardProps {
   onOpenDetail: (woId: string) => void;
   onAssignClick?: (bayNumber: number) => void;
   onRemoveHelper?: (woId: string, mechanicId: string) => void;
+  onPauseTimer?: (woId: string) => void;
+  onAddNote?: (woId: string) => void;
+  onQuickAddService?: (woId: string) => void;
+  onQuickAddParts?: (woId: string) => void;
   orgId?: string | null;
 }
 
@@ -95,37 +103,42 @@ export function BayCardDragPreview({ bay }: { bay: BaySlotData }) {
         {/* Background brand watermark */}
         <VehicleMakeLogo
           make={v?.make}
-          className="absolute -right-2 -bottom-3 size-20 text-primary/[0.06] pointer-events-none select-none"
+          size="85%"
+          className="absolute inset-0 m-auto pointer-events-none select-none text-primary/[0.02]"
           aria-hidden
         />
         <div className="relative flex min-w-0 flex-col gap-2 text-left">
-            {v ? (
-              <>
-                <div className="flex flex-wrap items-center gap-2">
-                  <MongolianLicensePlate plate={v.plate_number} />
-                  <ElapsedTimer startedAt={wo.started_at ?? wo.created_at} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="truncate text-sm font-bold text-foreground/95">
-                    {v.make} {v.model}
+          {v ? (
+            <>
+              <div className="flex flex-wrap items-center gap-2">
+                <MongolianLicensePlate plate={v.plate_number} />
+                <ElapsedTimer startedAt={wo.started_at ?? wo.created_at} />
+              </div>
+              <div className="flex flex-col">
+                <span className="truncate text-sm font-bold text-foreground/95">
+                  {v.make} {v.model}
+                </span>
+                {v.year && (
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    Year: {v.year}
                   </span>
-                  {v.year && (
-                    <span className="text-xs font-semibold text-muted-foreground">
-                      Year: {v.year}
-                    </span>
-                  )}
-                </div>
-              </>
-            ) : (
-              <Typography.Muted className="text-xs italic leading-none text-muted-foreground">
-                No vehicle data
-              </Typography.Muted>
-            )}
-          </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <Typography.Muted className="text-xs italic leading-none text-muted-foreground">
+              No vehicle data
+            </Typography.Muted>
+          )}
         </div>
 
         <div className="flex items-center gap-2 border-t border-border/30 pt-2.5">
-          <MechanicBadge workOrderId={wo.id} mechanic={wo.mechanic} disabled />
+          <MechanicBadge
+            workOrderId={wo.id}
+            mechanic={wo.mechanic}
+            disabled
+            status={wo.status}
+          />
           {!wo.mechanic && (
             <span className="text-xs font-bold text-muted-foreground/50 select-none">
               Unassigned tech
@@ -146,6 +159,10 @@ export function BayCard({
   onOpenDetail,
   onAssignClick,
   onRemoveHelper,
+  onPauseTimer,
+  onAddNote,
+  onQuickAddService,
+  onQuickAddParts,
   orgId,
 }: BayCardProps) {
   const t = useTranslations("bayView");
@@ -198,7 +215,7 @@ export function BayCard({
       >
         <Card
           className={cn(
-            "relative h-full min-h-[160px] flex flex-col transition-all duration-300 py-0 gap-0 overflow-hidden border-border/70",
+            "relative h-full min-h-[160px] flex flex-col transition-all duration-300 py-0 gap-0 rounded-xl border-border/70",
             wo
               ? "bg-card hover:bg-card/90 cursor-pointer shadow-sm hover:shadow-md hover:border-primary/25 border"
               : "border-dashed border-muted-foreground/30 bg-muted/10 hover:bg-muted/15",
@@ -273,11 +290,12 @@ export function BayCard({
                 </div>
               </CardHeader>
 
-              <CardContent className="relative flex flex-col gap-4 px-4 py-4 flex-1 justify-between overflow-hidden">
+              <CardContent className="relative flex flex-col gap-4 px-4 py-4 flex-1 justify-between">
                 {/* Background brand watermark */}
                 <VehicleMakeLogo
                   make={v?.make}
-                  className="absolute -right-2 -bottom-3 size-20 text-primary/[0.06] pointer-events-none select-none"
+                  size="85%"
+                  className="absolute inset-0 m-auto pointer-events-none select-none text-primary/[0.02]"
                   aria-hidden
                 />
                 <DraggableVehicleWrapper
@@ -392,7 +410,7 @@ export function BayCard({
                 </div>
 
                 {/* Assign Mechanic area */}
-                <div className="mt-1 flex flex-col gap-2 border-t border-border/30 pt-2.5">
+                <div className="mt-1 flex flex-row flex-wrap items-center gap-2 border-t border-border/30 pt-2.5">
                   {/* Main mechanic */}
                   <div className="flex items-center gap-2">
                     <MechanicBadge
@@ -400,6 +418,7 @@ export function BayCard({
                       mechanic={wo.mechanic}
                       disabled={isPending}
                       role="main"
+                      status={wo.status}
                     />
                     {!wo.mechanic && (
                       <span className="text-xs text-muted-foreground/50 font-bold select-none">
@@ -435,8 +454,9 @@ export function BayCard({
                 </div>
               </CardContent>
 
-              <CardFooter className="mt-auto justify-between border-t border-border/40 bg-muted/20 px-3 py-3">
-                <div className="flex items-center gap-1 w-full justify-between">
+              <CardFooter className="mt-auto justify-between border-t border-border/40 bg-muted/20 px-3 py-2.5">
+                <div className="flex items-center gap-2 w-full">
+                  {/* Primary action: status progression */}
                   {wo.status === "New" && (
                     <Button
                       size="xs"
@@ -448,7 +468,7 @@ export function BayCard({
                       disabled={isPending}
                     >
                       <Play className="size-3" />
-                      Start Diagnose
+                      Start
                     </Button>
                   )}
                   {wo.status === "Diagnosing" && (
@@ -462,7 +482,7 @@ export function BayCard({
                       disabled={isPending}
                     >
                       <Wrench className="size-3" />
-                      Start Repair
+                      Repair
                     </Button>
                   )}
                   {wo.status === "In Progress" && (
@@ -476,13 +496,13 @@ export function BayCard({
                       disabled={isPending}
                     >
                       <Check className="size-3" />
-                      Mark Ready
+                      Ready
                     </Button>
                   )}
                   {wo.status === "Ready for Pickup" && (
                     <Button
                       size="xs"
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         onStatusChange(wo.id, "Completed");
@@ -490,9 +510,85 @@ export function BayCard({
                       disabled={isPending}
                     >
                       <CheckCircle className="size-3" />
-                      Complete Job
+                      Complete
                     </Button>
                   )}
+
+                  {/* Secondary actions dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={(props) => (
+                        <Button
+                          {...props}
+                          size="icon-xs"
+                          variant="ghost"
+                          onClick={(e) => e.stopPropagation()}
+                          disabled={isPending}
+                          className="text-muted-foreground/60 hover:text-foreground ml-auto"
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      )}
+                    />
+                    <DropdownMenuContent
+                      align="end"
+                      sideOffset={4}
+                      className="w-48"
+                    >
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onPauseTimer?.(wo.id);
+                        }}
+                        className="gap-2 text-xs"
+                      >
+                        <Timer className="size-3.5" />
+                        Pause Timer
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddNote?.(wo.id);
+                        }}
+                        className="gap-2 text-xs"
+                      >
+                        <FileText className="size-3.5" />
+                        Add Note
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onQuickAddService?.(wo.id);
+                        }}
+                        className="gap-2 text-xs"
+                      >
+                        <Wrench className="size-3.5" />
+                        Add Service
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onQuickAddParts?.(wo.id);
+                        }}
+                        className="gap-2 text-xs"
+                      >
+                        <Plus className="size-3.5" />
+                        Add Parts
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenDetail(wo.id);
+                        }}
+                        className="gap-2 text-xs"
+                      >
+                        <UserPlus className="size-3.5" />
+                        Assign Mechanic
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Remove button (shown only when not completed/cancelled) */}
                   {wo.status !== "Completed" &&
                     wo.status !== "Cancelled" &&
                     onRemoveFromBay && (
@@ -506,9 +602,9 @@ export function BayCard({
                         }}
                         title="Remove from bay"
                         disabled={isPending}
-                        className="text-muted-foreground/60 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 ml-auto"
+                        className="text-muted-foreground/60 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
                       >
-                        <Trash2 className="size-4" />
+                        <Trash2 className="size-3.5" />
                       </Button>
                     )}
                 </div>

@@ -79,6 +79,9 @@ export function BayViewV2Client() {
   const woIdFromUrl = searchParams.get("woId");
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(!!woIdFromUrl);
   const [detailWoId, setDetailWoId] = useState<string | null>(woIdFromUrl);
+  const [drawerInitialAction, setDrawerInitialAction] = useState<
+    "add-service" | "add-part" | null
+  >(null);
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     woId: string;
     status: string;
@@ -440,13 +443,35 @@ export function BayViewV2Client() {
     setPendingPickupComplete(null);
   }
 
-  function handleOpenDetail(woId: string) {
+  function handleOpenDetail(
+    woId: string,
+    initialAction?: "add-service" | "add-part",
+  ) {
     setDetailWoId(woId);
+    setDrawerInitialAction(initialAction ?? null);
     setDetailDrawerOpen(true);
     const params = new URLSearchParams(searchParams.toString());
     params.set("woId", woId);
     router.replace(`?${params.toString()}`, { scroll: false });
   }
+
+  // Quick actions from bay card footer
+  const handleQuickAddService = useCallback(
+    (woId: string) => handleOpenDetail(woId, "add-service"),
+    [],
+  );
+  const handleQuickAddParts = useCallback(
+    (woId: string) => handleOpenDetail(woId, "add-part"),
+    [],
+  );
+  const handlePauseTimer = useCallback((woId: string) => {
+    // TODO: implement timer pause API
+    setToast({ message: "Timer pause coming soon", variant: "info" });
+  }, []);
+  const handleAddNote = useCallback(
+    (woId: string) => handleOpenDetail(woId),
+    [],
+  );
 
   const availableBays = useMemo(
     () => data?.bays.filter((b) => !b.workOrder).map((b) => b.bayNumber) ?? [],
@@ -755,7 +780,7 @@ export function BayViewV2Client() {
                         <span className="text-sm font-semibold text-foreground/80">
                           {section.branchName}
                         </span>
-                        <span className="text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 font-mono">
+                        <span className="text-xs text-muted-foreground/50 bg-muted px-2 py-1 font-mono">
                           {section.bays.filter((b) => b.workOrder).length}/
                           {section.bayCount} bays
                         </span>
@@ -824,7 +849,7 @@ export function BayViewV2Client() {
                         <span className="text-sm font-semibold text-foreground/80">
                           {section.branchName}
                         </span>
-                        <span className="text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 font-mono">
+                        <span className="text-xs text-muted-foreground/50 bg-muted px-2 py-1 font-mono">
                           {section.bays.filter((b) => b.workOrder).length}/
                           {section.bayCount} bays
                         </span>
@@ -913,7 +938,7 @@ export function BayViewV2Client() {
                         <span className="text-sm font-semibold text-foreground/80">
                           {section.branchName}
                         </span>
-                        <span className="text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 font-mono">
+                        <span className="text-xs text-muted-foreground/50 bg-muted px-2 py-1 font-mono">
                           {section.bays.filter((b) => b.workOrder).length}/
                           {section.bayCount} bays
                         </span>
@@ -1042,12 +1067,14 @@ export function BayViewV2Client() {
             setDetailDrawerOpen(open);
             if (!open) {
               setDetailWoId(null);
+              setDrawerInitialAction(null);
               const params = new URLSearchParams(searchParams.toString());
               params.delete("woId");
               router.replace(`?${params.toString()}`, { scroll: false });
             }
           }}
           onRefresh={() => fetchData(false)}
+          initialAction={drawerInitialAction}
         />
       </ErrorBoundary>
 
