@@ -1,11 +1,13 @@
 "use client";
 
+import type { QueryClient } from "@tanstack/react-query";
 import type { BayViewData } from "@/lib/services/bay-view-service";
 import {
   assignToFirstAvailableBay,
   removeVehicleFromBay,
   updateWorkOrderStatus,
 } from "@/lib/services/bay-view-service";
+import { workOrderKeys } from "@/lib/queries/keys";
 
 interface ToastState {
   message: string;
@@ -13,6 +15,7 @@ interface ToastState {
 }
 
 interface UseBayActionHandlersParams {
+  queryClient: QueryClient;
   data: BayViewData | null;
   setData: React.Dispatch<React.SetStateAction<BayViewData | null>>;
   setPendingStatusChange: React.Dispatch<
@@ -25,6 +28,7 @@ interface UseBayActionHandlersParams {
 }
 
 export function useBayActionHandlers({
+  queryClient,
   data,
   setData,
   setPendingStatusChange,
@@ -101,7 +105,7 @@ export function useBayActionHandlers({
         const enriched = {
           ...movedWO,
           bay_number: bay,
-          status: "Diagnosing" as const,
+          status: "New" as const,
           mechanic: null,
           helpers: [] as {
             id: string;
@@ -128,6 +132,9 @@ export function useBayActionHandlers({
     } finally {
       clearPending(woId);
       fetchData(false);
+      queryClient.invalidateQueries({
+        queryKey: workOrderKeys.detail("", woId),
+      });
     }
   }
 

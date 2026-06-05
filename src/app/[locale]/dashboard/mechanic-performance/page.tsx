@@ -6,6 +6,7 @@ import {
   Crown,
   DollarSign,
   Loader2,
+  Star,
   Users,
   Wrench,
 } from "lucide-react";
@@ -53,6 +54,8 @@ interface MechanicPerf {
   hours_worked: number;
   total_commission: number;
   revenue_per_hour: number;
+  avg_satisfaction: number | null;
+  total_reviews: number;
 }
 
 const PERIODS: { key: Period; label: string }[] = [
@@ -145,6 +148,7 @@ export default function MechanicPerformancePage() {
   // ── Sorting ────────────────────────────────────────
   type SortKey = keyof MechanicPerf;
   type SortDir = "asc" | "desc";
+  // Ensure sort type includes all possible keys
 
   const [sortKey, setSortKey] = useState<SortKey>("total_revenue");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -206,6 +210,8 @@ export default function MechanicPerformancePage() {
           hours_worked: hours,
           total_commission: 0, // Will be populated from commission endpoint
           revenue_per_hour: hours > 0 ? k.total_revenue / hours : 0,
+          avg_satisfaction: k.avg_satisfaction ?? null,
+          total_reviews: k.total_reviews ?? 0,
         };
       });
 
@@ -304,6 +310,14 @@ export default function MechanicPerformancePage() {
       hours: mechanics.reduce((s, m) => s + m.hours_worked, 0),
       revenue: mechanics.reduce((s, m) => s + m.total_revenue, 0),
       commission: mechanics.reduce((s, m) => s + m.total_commission, 0),
+      avgSatisfaction: (() => {
+        const rated = mechanics.filter((m) => m.avg_satisfaction != null);
+        if (rated.length === 0) return 0;
+        return (
+          rated.reduce((s, m) => s + (m.avg_satisfaction ?? 0), 0) /
+          rated.length
+        );
+      })(),
     }),
     [mechanics],
   );
@@ -401,6 +415,18 @@ export default function MechanicPerformancePage() {
             icon={DollarSign}
             loading={loading}
           />
+          <KpiCard
+            label="Avg Satisfaction"
+            value={
+              loading
+                ? "—"
+                : totals.avgSatisfaction > 0
+                  ? `${totals.avgSatisfaction.toFixed(1)} / 5`
+                  : "No reviews"
+            }
+            icon={Star}
+            loading={loading}
+          />
         </div>
 
         {/* Chart + Leaderboard */}
@@ -488,7 +514,9 @@ export default function MechanicPerformancePage() {
                                   ? "Revenue"
                                   : key === "revenue_per_hour"
                                     ? "Rev/Hr"
-                                    : "Commission"}
+                                    : key === "avg_satisfaction"
+                                      ? "Rating"
+                                      : "Commission"}
                             {sortKey === key && (
                               <span className="text-[10px]">
                                 {sortDir === "asc" ? "▲" : "▼"}
@@ -547,6 +575,19 @@ export default function MechanicPerformancePage() {
                           {m.total_commission > 0 ? (
                             <span className="text-green-600">
                               {formatMNT(m.total_commission)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground/50">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-right tabular-nums">
+                          {m.avg_satisfaction != null ? (
+                            <span className="inline-flex items-center gap-1">
+                              <Star className="size-3 text-amber-400 fill-amber-400" />
+                              {m.avg_satisfaction.toFixed(1)}
+                              <span className="text-muted-foreground text-[10px]">
+                                ({m.total_reviews})
+                              </span>
                             </span>
                           ) : (
                             <span className="text-muted-foreground/50">—</span>
@@ -638,6 +679,27 @@ export default function MechanicPerformancePage() {
                       {selectedMechanic.avg_revenue_per_wo > 0
                         ? formatMNT(selectedMechanic.avg_revenue_per_wo)
                         : "—"}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-muted/50 p-3">
+                    <Typography.Muted className="text-xs">
+                      Customer Rating
+                    </Typography.Muted>
+                    <p className="text-xl font-semibold tabular-nums mt-1 flex items-center gap-1.5">
+                      {selectedMechanic.avg_satisfaction != null ? (
+                        <>
+                          <Star className="size-4 text-amber-400 fill-amber-400" />
+                          {selectedMechanic.avg_satisfaction.toFixed(1)}
+                          <span className="text-sm text-muted-foreground font-normal">
+                            / 5 ({selectedMechanic.total_reviews} review
+                            {selectedMechanic.total_reviews !== 1 ? "s" : ""})
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground/50 text-base">
+                          No reviews
+                        </span>
+                      )}
                     </p>
                   </div>
                   <div className="rounded-lg bg-muted/50 p-3">

@@ -74,7 +74,7 @@ export function MechanicMultiSelect({
   );
 
   const helperIdSet = new Set(helpers.map((h) => h.id));
-  const availableForLead = mechanics.filter((m) => !helperIdSet.has(m.id));
+  const availableForLead = mechanics;
 
   async function addHelper(mechanicId: string) {
     if (!workOrderId || isBusy) return;
@@ -203,7 +203,10 @@ export function MechanicMultiSelect({
                         {m.full_name}
                       </span>
                       {helperIdSet.has(m.id) && (
-                        <Check className="size-3 text-primary shrink-0" />
+                        <span className="flex items-center gap-1 text-xs font-medium text-primary shrink-0">
+                          <Check className="size-4 text-primary" strokeWidth={3} />
+                          Helper
+                        </span>
                       )}
                       {m.current_jobs !== undefined && m.current_jobs > 0 && (
                         <span className="text-[10px] text-muted-foreground">

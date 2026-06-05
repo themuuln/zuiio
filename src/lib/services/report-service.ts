@@ -205,8 +205,8 @@ async function getMechanicKpis(
   for (const p of profiles ?? [])
     profileMap.set(p.id, p.full_name ?? "Unknown");
 
-  // Get all services/parts for these WOs
-  const [servicesData, partsData] = await Promise.all([
+  // Get all services/parts for these WOs + satisfaction data
+  const [servicesData, partsData, completionData] = await Promise.all([
     supabase
       .from("work_order_services")
       .select("final_price, work_order_id")
@@ -215,7 +215,22 @@ async function getMechanicKpis(
       .from("work_order_parts")
       .select("final_price, work_order_id")
       .in("work_order_id", woIds),
+    woIds.length > 0
+      ? supabase
+          .from("service_completion_data")
+          .select("work_order_id, customer_satisfaction")
+          .in("work_order_id", woIds)
+          .not("customer_satisfaction", "is", null)
+      : { data: [] as any[] },
   ]);
+
+  // Build satisfaction map per WO (work_order_id → satisfaction score)
+  const woSatisfactionMap = new Map<string, number>();
+  for (const c of completionData.data ?? []) {
+    if (c.customer_satisfaction != null) {
+      woSatisfactionMap.set(c.work_order_id, c.customer_satisfaction);
+    }
+  }
 
   // Build revenue map per WO
   const woRevenueMap = new Map<string, number>();
@@ -247,10 +262,17 @@ async function getMechanicKpis(
     let totalRevenue = 0;
     let servicesCount = 0;
     let partsCount = 0;
+    let satisfactionSum = 0;
+    let reviewCount = 0;
     for (const wid of mWoIds) {
       totalRevenue += woRevenueMap.get(wid) ?? 0;
       servicesCount += woServiceCountMap.get(wid) ?? 0;
       partsCount += woPartCountMap.get(wid) ?? 0;
+      const sat = woSatisfactionMap.get(wid);
+      if (sat != null) {
+        satisfactionSum += sat;
+        reviewCount++;
+      }
     }
     kpis.push({
       mechanic_id: mid,
@@ -261,6 +283,11 @@ async function getMechanicKpis(
       total_revenue: totalRevenue,
       avg_revenue_per_wo:
         mWoIds.length > 0 ? Math.round(totalRevenue / mWoIds.length) : 0,
+      avg_satisfaction:
+        reviewCount > 0
+          ? Math.round((satisfactionSum / reviewCount) * 10) / 10
+          : null,
+      total_reviews: reviewCount,
     });
   }
 

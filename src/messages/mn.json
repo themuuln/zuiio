@@ -465,6 +465,8 @@
     "pickupSummaryFeedback": "Нэмэлт санал хүсэлт",
     "pickupSummarySmsOptIn": "Сануулга ирүүлэх",
     "pickupSummaryAppointmentDate": "Дараагийн үзлэгийн огноо",
+    "optional": "Нэмэлт",
+    "skipReview": "Санал асуулга үлдээх",
     "pickupCompleteTitle": "Гүйцээж санал авах",
     "switchToLookup": "Хайлт руу шилжих",
     "switchToRegister": "Бүртгэл рүү шилжих",

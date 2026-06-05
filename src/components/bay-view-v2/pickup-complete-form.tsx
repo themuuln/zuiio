@@ -163,12 +163,28 @@ export function PickupCompleteForm({
             <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
               <Star className="size-4" />
               {t("pickupSummarySatisfaction")}
+              <span className="text-[10px] font-normal text-muted-foreground/60">
+                ({t("optional")})
+              </span>
             </FieldLabel>
             <FieldContent>
-              <StarRating
-                value={satisfaction}
-                onChange={(v) => form.setValue("satisfaction", v)}
-              />
+              <div className="flex items-center gap-3">
+                <StarRating
+                  value={satisfaction}
+                  onChange={(v) => form.setValue("satisfaction", v)}
+                />
+                {satisfaction != null && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-muted-foreground"
+                    onClick={() => form.setValue("satisfaction", null)}
+                  >
+                    {t("clearDate")}
+                  </Button>
+                )}
+              </div>
             </FieldContent>
           </Field>
 
@@ -177,6 +193,9 @@ export function PickupCompleteForm({
             <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
               <MessageSquare className="size-4" />
               {t("pickupSummaryFeedback")}
+              <span className="text-[10px] font-normal text-muted-foreground/60">
+                ({t("optional")})
+              </span>
             </FieldLabel>
             <FieldContent>
               <Input
@@ -227,20 +246,32 @@ export function PickupCompleteForm({
           )}
 
           {/* Actions */}
-          <div className="flex gap-2 justify-end pt-2 border-t">
+          <div className="flex gap-2 justify-between pt-2 border-t">
             <Button
-              variant="outline"
-              onClick={onCancel}
               type="button"
-              size="default"
+              variant="ghost"
+              onClick={onSubmit}
+              size="sm"
               disabled={saving}
+              className="text-muted-foreground text-xs"
             >
-              {t("cancel")}
+              {t("skipReview")}
             </Button>
-            <Button type="submit" size="default" disabled={saving}>
-              {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
-              {saving ? t("saving") : t("complete")}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={onCancel}
+                type="button"
+                size="default"
+                disabled={saving}
+              >
+                {t("cancel")}
+              </Button>
+              <Button type="submit" size="default" disabled={saving}>
+                {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
+                {saving ? t("saving") : t("complete")}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

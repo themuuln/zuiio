@@ -42,11 +42,6 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { inputProps } from "@/lib/form-ux";
@@ -829,39 +824,24 @@ export function VehicleForm({
                   className="h-11 flex-1"
                   placeholder="4444УНА"
                   lang="mn"
+                  autoFocus={!!initialData?.plateNumber}
                   aria-invalid={!!form.formState.errors.plateNumber}
                   {...inputProps("plate")}
                 />
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-11 shrink-0 w-11"
-                      onClick={handlePlateLookup}
-                      disabled={looking || !form.watch("plateNumber")?.trim()}
-                    >
-                      {looking ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <Search className="size-4" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    className="font-mono text-[11px] leading-relaxed whitespace-nowrap"
-                  >
-                    A→А B→Б C→Ц D→Д E→Э F→Ф G→Г
-                    <br />
-                    H→Х I→И J→Ж K→К L→Л M→М N→Н
-                    <br />
-                    O→О P→П Q→Ө R→Р S→С T→Т
-                    <br />
-                    U→У V→В W→Ү X→Х Y→Ы Z→З
-                  </TooltipContent>
-                </Tooltip>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-11 shrink-0 w-11"
+                  onClick={handlePlateLookup}
+                  disabled={looking || !form.watch("plateNumber")?.trim()}
+                >
+                  {looking ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Search className="size-4" />
+                  )}
+                </Button>
               </div>
               {form.formState.errors.plateNumber && (
                 <FieldError>
@@ -1345,8 +1325,7 @@ export function VehicleForm({
         </CardContent>
       </Card>
 
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        {onCancel && (
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">onCancel && (
           <Button
             variant="outline"
             type="button"
@@ -1355,7 +1334,7 @@ export function VehicleForm({
           >
             {commonT("cancel")}
           </Button>
-        )}
+        )
         <Button
           type="submit"
           disabled={

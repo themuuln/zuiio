@@ -18,7 +18,6 @@ interface UseDrawerMutationsParams {
   setWo: React.Dispatch<React.SetStateAction<WorkOrderDetail | null>>;
   fetchWo: (silent?: boolean, orgIdOverride?: string) => Promise<void>;
   onRefresh: () => void;
-  push: (url: string) => void;
   onOpenChange: (open: boolean) => void;
 }
 
@@ -29,7 +28,6 @@ export function useDrawerMutations({
   setWo,
   fetchWo,
   onRefresh,
-  push,
   onOpenChange,
 }: UseDrawerMutationsParams) {
   // ── Service state ──
@@ -88,6 +86,9 @@ export function useDrawerMutations({
   // ── Invoice ──
 
   const [creatingInvoice, setCreatingInvoice] = useState(false);
+  const [invoicePublicToken, setInvoicePublicToken] = useState<string | null>(
+    null,
+  );
 
   // ── Unsaved changes guard / celebration ──
 
@@ -640,7 +641,7 @@ export function useDrawerMutations({
         toast.error(json.error.message);
       } else {
         toast.success(`Invoice ${json.data.invoice_number} created`);
-        push(`/invoice/${json.data.public_token}`);
+        setInvoicePublicToken(json.data.public_token);
       }
     } catch {
       toast.error("Failed to create invoice");
@@ -804,6 +805,7 @@ export function useDrawerMutations({
     statusNotes,
     setStatusNotes,
     creatingInvoice,
+    invoicePublicToken,
     showPostServiceForm,
     postFormServices,
     showUnsavedWarning,

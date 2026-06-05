@@ -173,7 +173,10 @@ export function useOrgMutation<TData, TVariables = void>(
         endpoint: url,
         method,
         body: buildBody(variables),
-        queryKeysToInvalidate: [[...queryKey], ...invalidateKeys.map((k) => [...k])],
+        queryKeysToInvalidate: [
+          [...queryKey],
+          ...invalidateKeys.map((k) => [...k]),
+        ],
       });
 
       // Synthetic success — queue will replay on reconnect

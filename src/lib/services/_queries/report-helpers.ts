@@ -309,6 +309,21 @@ async function fetchMechanicKpis(
     .from("work_order_parts")
     .select("final_price, work_order_id")
     .in("work_order_id", woIds);
+  const { data: completionData } =
+    woIds.length > 0
+      ? await supabase
+          .from("service_completion_data")
+          .select("work_order_id, customer_satisfaction")
+          .in("work_order_id", woIds)
+          .not("customer_satisfaction", "is", null)
+      : { data: [] as any[] };
+
+  const woSatMap = new Map<string, number>();
+  for (const c of completionData ?? []) {
+    if (c.customer_satisfaction != null) {
+      woSatMap.set(c.work_order_id, c.customer_satisfaction);
+    }
+  }
 
   const woRevMap = new Map<string, number>();
   const woSvcCount = new Map<string, number>();
@@ -336,10 +351,17 @@ async function fetchMechanicKpis(
     let totalRevenue = 0;
     let servicesCount = 0;
     let partsCount = 0;
+    let satSum = 0;
+    let satCount = 0;
     for (const wid of mWoIds) {
       totalRevenue += woRevMap.get(wid) ?? 0;
       servicesCount += woSvcCount.get(wid) ?? 0;
       partsCount += woPartCount.get(wid) ?? 0;
+      const sat = woSatMap.get(wid);
+      if (sat != null) {
+        satSum += sat;
+        satCount++;
+      }
     }
     kpis.push({
       mechanic_id: mid,
@@ -350,6 +372,9 @@ async function fetchMechanicKpis(
       total_revenue: totalRevenue,
       avg_revenue_per_wo:
         mWoIds.length > 0 ? Math.round(totalRevenue / mWoIds.length) : 0,
+      avg_satisfaction:
+        satCount > 0 ? Math.round((satSum / satCount) * 10) / 10 : null,
+      total_reviews: satCount,
     });
   }
 

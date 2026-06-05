@@ -465,6 +465,8 @@
     "pickupSummaryFeedback": "Additional feedback",
     "pickupSummarySmsOptIn": "Send me reminders",
     "pickupSummaryAppointmentDate": "Next appointment date",
+    "optional": "Optional",
+    "skipReview": "Skip review",
     "pickupCompleteTitle": "Complete & Collect Feedback",
     "switchToLookup": "Switch to Lookup",
     "switchToRegister": "Switch to Register",

@@ -12,10 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatMNT } from "@/lib/utils";
 import type { WorkOrderDetail } from "@/lib/types";
+import { InvoiceQrPopover } from "./_invoice-qr-popover";
 
 interface DrawerFooterProps {
   wo: WorkOrderDetail;
   grandTotal: number;
+  invoicePublicToken: string | null;
   saving: boolean;
   confirmStatus: string | null;
   statusNotes: string;
@@ -34,6 +36,7 @@ interface DrawerFooterProps {
 export function DrawerFooter({
   wo,
   grandTotal,
+  invoicePublicToken,
   saving,
   confirmStatus,
   statusNotes,
@@ -95,8 +98,8 @@ export function DrawerFooter({
       )}
 
       {/* Primary status flow + secondary actions */}
-      <div className="flex items-center gap-2 justify-between">
-        <span className="text-xs text-muted-foreground">
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground mr-auto">
           {t("grandTotal")}
           <span className="ml-1.5 font-semibold tabular-nums text-primary">
             {formatMNT(grandTotal)}
@@ -155,18 +158,28 @@ export function DrawerFooter({
         )}
 
         {/* Invoice */}
-        {canInvoice && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 px-3 text-xs"
-            onClick={onCreateInvoice}
-            disabled={saving || creatingInvoice}
-          >
-            <FileText className="size-4" />
-            {creatingInvoice ? t("creating") : t("invoice")}
-          </Button>
-        )}
+        {canInvoice &&
+          (invoicePublicToken ? (
+            <InvoiceQrPopover
+              url={`${window.location.origin}/invoice/${invoicePublicToken}`}
+            >
+              <Button variant="outline" size="sm" className="h-9 px-3 text-xs">
+                <FileText className="size-4" />
+                {t("invoice")}
+              </Button>
+            </InvoiceQrPopover>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 px-3 text-xs"
+              onClick={onCreateInvoice}
+              disabled={saving || creatingInvoice}
+            >
+              <FileText className="size-4" />
+              {creatingInvoice ? t("creating") : t("invoice")}
+            </Button>
+          ))}
 
         {/* Cancel */}
         {canCancel && (

@@ -50,7 +50,7 @@ export function ColorSelect({
   const hex = getHex(value);
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative w-full", className)}>
       {hex && (
         <span
           className="absolute left-2 top-1/2 z-10 size-4 -translate-y-1/2 rounded-sm border border-border"

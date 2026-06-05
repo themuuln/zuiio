@@ -236,6 +236,8 @@ export interface ReportMechanicKpi {
   parts_count: number;
   total_revenue: number;
   avg_revenue_per_wo: number;
+  avg_satisfaction: number | null;
+  total_reviews: number;
 }
 
 export interface DailyReport {

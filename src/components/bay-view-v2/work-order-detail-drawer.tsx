@@ -12,7 +12,7 @@ import {
 import { toast } from "sonner";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
-import { useRouter } from "@/lib/i18n/navigation";
+
 import { workOrderKeys } from "@/lib/queries/keys";
 import { useDrawerQueries } from "@/lib/queries/use-drawer-queries";
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
@@ -45,7 +45,7 @@ export function WorkOrderDetailDrawer({
   initialAction,
 }: WorkOrderDetailDrawerProps) {
   const t = useTranslations("bayView");
-  const { push } = useRouter();
+
   const queryClient = useQueryClient();
 
   // ── Data layer (React Query) ──
@@ -146,6 +146,7 @@ export function WorkOrderDetailDrawer({
     handleDiscard,
     canCancel,
     canInvoice,
+    invoicePublicToken,
   } = useDrawerMutations({
     workOrderId,
     orgIdRef,
@@ -153,7 +154,6 @@ export function WorkOrderDetailDrawer({
     setWo,
     fetchWo,
     onRefresh,
-    push,
     onOpenChange,
   });
 
@@ -442,6 +442,7 @@ export function WorkOrderDetailDrawer({
                     <DrawerFooter
                       wo={wo}
                       grandTotal={grandTotal}
+                      invoicePublicToken={invoicePublicToken}
                       saving={saving}
                       confirmStatus={confirmStatus}
                       statusNotes={statusNotes}

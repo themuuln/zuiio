@@ -4,6 +4,7 @@ import { DndContext, DragOverlay, useSensor, useSensors } from "@dnd-kit/core";
 import { Building2, GripVertical, List, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "@/components/error-boundary";
 import {
@@ -327,12 +328,15 @@ export function BayViewV2Client() {
     setActiveDrag(null);
   }
 
+  const queryClient = useQueryClient();
+
   const {
     handleStatusClick: rawHandleStatusClick,
     handleStatusChangeConfirm,
     handleRemoveFromBay,
     handleBayCountChange,
   } = useBayActionHandlers({
+    queryClient,
     data,
     setData,
     setPendingStatusChange,

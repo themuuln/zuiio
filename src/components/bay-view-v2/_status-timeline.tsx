@@ -351,6 +351,12 @@ export function StatusTimeline({
                           {entry.mechanic_name}
                         </span>
                       ) : null}
+                      {entry.helpers.length > 0 ? (
+                        <span className="flex items-center gap-1 text-muted-foreground/70">
+                          +{entry.helpers.length} helper
+                          {entry.helpers.length > 1 ? "s" : ""}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 ))}

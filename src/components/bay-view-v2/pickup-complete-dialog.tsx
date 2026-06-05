@@ -140,8 +140,23 @@ export function PickupCompleteDialog({
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
               <Star className="size-4" />
               {t("pickupSummarySatisfaction")}
+              <span className="text-[10px] font-normal text-muted-foreground/60">
+                ({t("optional")})
+              </span>
             </Label>
-            <StarRating value={satisfaction} onChange={setSatisfaction} />
+            <div className="flex items-center gap-3">
+              <StarRating value={satisfaction} onChange={setSatisfaction} />
+              {satisfaction != null && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-muted-foreground"
+                  onClick={() => setSatisfaction(null)}
+                >
+                  {t("clearDate")}
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Feedback */}
@@ -149,6 +164,9 @@ export function PickupCompleteDialog({
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
               <MessageSquare className="size-4" />
               {t("pickupSummaryFeedback")}
+              <span className="text-[10px] font-normal text-muted-foreground/60">
+                ({t("optional")})
+              </span>
             </Label>
             <Input
               value={feedback}
@@ -162,6 +180,9 @@ export function PickupCompleteDialog({
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
               <CalendarIcon className="size-4" />
               {t("pickupSummaryAppointmentDate")}
+              <span className="text-[10px] font-normal text-muted-foreground/60">
+                ({t("optional")})
+              </span>
             </Label>
             <AppointmentDatePicker
               value={appointmentDate ? new Date(appointmentDate) : undefined}
@@ -181,19 +202,30 @@ export function PickupCompleteDialog({
           )}
 
           {/* Actions */}
-          <div className="flex gap-2 justify-end pt-2 border-t">
+          <div className="flex gap-2 justify-between pt-2 border-t">
             <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              size="default"
+              variant="ghost"
+              onClick={handleSubmit}
+              size="sm"
               disabled={saving}
+              className="text-muted-foreground text-xs"
             >
-              {t("cancel")}
+              {t("skipReview")}
             </Button>
-            <Button onClick={handleSubmit} size="default" disabled={saving}>
-              {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
-              {saving ? t("saving") : t("complete")}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                size="default"
+                disabled={saving}
+              >
+                {t("cancel")}
+              </Button>
+              <Button onClick={handleSubmit} size="default" disabled={saving}>
+                {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
+                {saving ? t("saving") : t("complete")}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
