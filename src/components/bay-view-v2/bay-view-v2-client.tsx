@@ -59,6 +59,7 @@ import { QueuePanel } from "./queue-panel";
 import { ShiftReportDialog } from "./shift-report-dialog";
 import { StatusNotesModal } from "./status-notes-modal";
 import { ToastMessage } from "./toast-message";
+import { BayViewPageSkeleton } from "./_page-skeleton";
 import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
 import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
 
@@ -215,20 +216,26 @@ export function BayViewV2Client() {
       if (showLoader) setLoading(true);
       try {
         setError(null);
-        const [result, report] = await Promise.all([
-          getBayViewDataFresh(branchFilter),
-          getShiftReport(branchFilter).catch(() => null),
-        ]);
-        // Ignore stale responses from older fetch generations (e.g., when
-        // the user switches branches before the previous fetch completes)
+        // Fire both requests in parallel. Set data immediately when each
+        // arrives so the toolbar + bay grid renders before KPI cards.
+        const bayDataPromise = getBayViewDataFresh(branchFilter);
+        const shiftReportPromise = getShiftReport(branchFilter).catch(
+          () => null,
+        );
+
+        // Set bay data as soon as it arrives (toolbar + grid render first)
+        const bayData = await bayDataPromise;
         if (gen !== fetchGenerationRef.current) return;
-        setData(result);
+        setData(bayData);
+        setLoading(false);
+
+        // Set shift report when it arrives (KPI cards update)
+        const report = await shiftReportPromise;
+        if (gen !== fetchGenerationRef.current) return;
         if (report) setShiftReport(report);
       } catch (err) {
         if (gen !== fetchGenerationRef.current) return;
         setError(err instanceof Error ? err.message : "Failed to load");
-      }
-      if (gen === fetchGenerationRef.current) {
         setLoading(false);
       }
     },
@@ -695,7 +702,7 @@ export function BayViewV2Client() {
   ]);
 
   if (loading && !data) {
-    return null;
+    return <BayViewPageSkeleton />;
   }
 
   if (error || !data) {
@@ -729,7 +736,7 @@ export function BayViewV2Client() {
       onDragEnd={onDragEnd}
       onDragCancel={onDragCancel}
     >
-      <div className="flex h-full flex-col bg-muted/20 overflow-hidden rounded-2xl border border-border/40 shadow-sm">
+      <div className="flex h-full flex-1 flex-col overflow-hidden bg-background rounded-2xl border border-border/30 shadow-sm">
         {/* Sleek Controls Toolbar */}
         <Toolbar
           viewMode={viewMode}
@@ -772,10 +779,10 @@ export function BayViewV2Client() {
         />
 
         {/* Scrollable View Content */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-muted/5">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent">
           {viewMode === "grid" &&
             (searchedBranchSections ? (
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 min-h-0 overflow-y-auto p-5">
                 {searchedBranchSections.map((section) => (
                   <div key={section.branchId} className="mb-6 last:mb-0">
                     {searchedBranchSections.length > 1 && (
@@ -784,7 +791,7 @@ export function BayViewV2Client() {
                         <span className="text-sm font-semibold text-foreground/80">
                           {section.branchName}
                         </span>
-                        <span className="text-xs text-muted-foreground/50 bg-muted px-2 py-1 font-mono">
+                        <span className="text-xs text-muted-foreground/50 bg-muted/60 px-2 py-0.5 rounded-md font-mono">
                           {section.bays.filter((b) => b.workOrder).length}/
                           {section.bayCount} bays
                         </span>
@@ -817,34 +824,36 @@ export function BayViewV2Client() {
                 ))}
               </div>
             ) : (
-              <GridView
-                bays={searchedBays}
-                pendingWoIds={pendingWoIds}
-                onStatusChange={handleStatusClick}
-                onRemoveFromBay={handleRemoveFromBay}
-                onOpenDetail={handleOpenDetail}
-                onAssignClick={(n) => setAssignBay(n)}
-                onRemoveHelper={async (woId, mechId) => {
-                  try {
-                    const { removeHelperFromWorkOrder } = await import(
-                      "@/lib/services/bay-view-service"
-                    );
-                    await removeHelperFromWorkOrder(woId, mechId);
-                    await fetchData(false);
-                  } catch {
-                    setToast({
-                      message: "Failed to remove helper",
-                      variant: "error",
-                    });
-                  }
-                }}
-                orgId={orgInfo?.orgId}
-              />
+              <div className="flex-1 min-h-0 overflow-y-auto p-5">
+                <GridView
+                  bays={searchedBays}
+                  pendingWoIds={pendingWoIds}
+                  onStatusChange={handleStatusClick}
+                  onRemoveFromBay={handleRemoveFromBay}
+                  onOpenDetail={handleOpenDetail}
+                  onAssignClick={(n) => setAssignBay(n)}
+                  onRemoveHelper={async (woId, mechId) => {
+                    try {
+                      const { removeHelperFromWorkOrder } = await import(
+                        "@/lib/services/bay-view-service"
+                      );
+                      await removeHelperFromWorkOrder(woId, mechId);
+                      await fetchData(false);
+                    } catch {
+                      setToast({
+                        message: "Failed to remove helper",
+                        variant: "error",
+                      });
+                    }
+                  }}
+                  orgId={orgInfo?.orgId}
+                />
+              </div>
             ))}
 
           {viewMode === "kanban" &&
             (searchedBranchSections ? (
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 min-h-0 overflow-y-auto p-5">
                 {searchedBranchSections.map((section) => (
                   <div key={section.branchId} className="mb-6 last:mb-0">
                     {searchedBranchSections.length > 1 && (
@@ -853,7 +862,7 @@ export function BayViewV2Client() {
                         <span className="text-sm font-semibold text-foreground/80">
                           {section.branchName}
                         </span>
-                        <span className="text-xs text-muted-foreground/50 bg-muted px-2 py-1 font-mono">
+                        <span className="text-xs text-muted-foreground/50 bg-muted/60 px-2 py-0.5 rounded-md font-mono">
                           {section.bays.filter((b) => b.workOrder).length}/
                           {section.bayCount} bays
                         </span>
@@ -896,44 +905,46 @@ export function BayViewV2Client() {
                 ))}
               </div>
             ) : (
-              <KanbanView
-                searchedBays={searchedBays}
-                assignableBays={data.bays}
-                queue={filteredQueue}
-                pendingWoIds={pendingWoIds}
-                onStatusChange={handleStatusClick}
-                onRemoveFromBay={handleRemoveFromBay}
-                onOpenDetail={handleOpenDetail}
-                onAssignClick={(n) => setAssignBay(n)}
-                onNoEmptyBays={() =>
-                  setToast({
-                    message: "No empty bays available",
-                    variant: "error",
-                  })
-                }
-                onQueueItemClick={handleQueueItemClick}
-                onRemoveHelper={async (woId, mechId) => {
-                  try {
-                    const { removeHelperFromWorkOrder } = await import(
-                      "@/lib/services/bay-view-service"
-                    );
-                    await removeHelperFromWorkOrder(woId, mechId);
-                    await fetchData(false);
-                  } catch {
+              <div className="flex-1 min-h-0 overflow-y-auto p-5">
+                <KanbanView
+                  searchedBays={searchedBays}
+                  assignableBays={data.bays}
+                  queue={filteredQueue}
+                  pendingWoIds={pendingWoIds}
+                  onStatusChange={handleStatusClick}
+                  onRemoveFromBay={handleRemoveFromBay}
+                  onOpenDetail={handleOpenDetail}
+                  onAssignClick={(n) => setAssignBay(n)}
+                  onNoEmptyBays={() =>
                     setToast({
-                      message: "Failed to remove helper",
+                      message: "No empty bays available",
                       variant: "error",
-                    });
+                    })
                   }
-                }}
-                t={t}
-                orgId={orgInfo?.orgId}
-              />
+                  onQueueItemClick={handleQueueItemClick}
+                  onRemoveHelper={async (woId, mechId) => {
+                    try {
+                      const { removeHelperFromWorkOrder } = await import(
+                        "@/lib/services/bay-view-service"
+                      );
+                      await removeHelperFromWorkOrder(woId, mechId);
+                      await fetchData(false);
+                    } catch {
+                      setToast({
+                        message: "Failed to remove helper",
+                        variant: "error",
+                      });
+                    }
+                  }}
+                  t={t}
+                  orgId={orgInfo?.orgId}
+                />
+              </div>
             ))}
 
           {viewMode === "list" &&
             (searchedBranchSections ? (
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 min-h-0 overflow-y-auto p-5">
                 {searchedBranchSections.map((section) => (
                   <div key={section.branchId} className="mb-6 last:mb-0">
                     {searchedBranchSections.length > 1 && (
@@ -942,7 +953,7 @@ export function BayViewV2Client() {
                         <span className="text-sm font-semibold text-foreground/80">
                           {section.branchName}
                         </span>
-                        <span className="text-xs text-muted-foreground/50 bg-muted px-2 py-1 font-mono">
+                        <span className="text-xs text-muted-foreground/50 bg-muted/60 px-2 py-0.5 rounded-md font-mono">
                           {section.bays.filter((b) => b.workOrder).length}/
                           {section.bayCount} bays
                         </span>
@@ -959,13 +970,15 @@ export function BayViewV2Client() {
                 ))}
               </div>
             ) : (
-              <ListView
-                bays={searchedBays}
-                onOpenDetail={handleOpenDetail}
-                onAssignClick={(n) => setAssignBay(n)}
-                orgId={orgInfo?.orgId}
-                t={t}
-              />
+              <div className="flex-1 min-h-0 overflow-y-auto p-5">
+                <ListView
+                  bays={searchedBays}
+                  onOpenDetail={handleOpenDetail}
+                  onAssignClick={(n) => setAssignBay(n)}
+                  orgId={orgInfo?.orgId}
+                  t={t}
+                />
+              </div>
             ))}
         </div>
       </div>

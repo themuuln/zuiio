@@ -123,48 +123,60 @@ async function fetchBayViewData(
 ): Promise<BayViewData> {
   const supabase = await createClient();
 
-  // Fetch all branches for the org (used for pills and branch sections)
-  const { data: allBranches } = await supabase
-    .from("branches")
-    .select("id, name, settings")
-    .eq("organization_id", orgId)
-    .order("name");
+  // ── Batch 1: Independent queries (run in parallel) ──
+  // branches, work_orders, and organization_users have no deps on each other
+  const [{ data: allBranches }, { data: activeWOs }, memberQueryResult] =
+    await Promise.all([
+      // 1a. Branches (for pills, bay count, branch sections)
+      supabase
+        .from("branches")
+        .select("id, name, settings")
+        .eq("organization_id", orgId)
+        .order("name"),
+      // 1b. Active work orders (with vehicle + customer joins)
+      supabase
+        .from("work_orders")
+        .select(`
+        *,
+        vehicle:vehicle_id (*),
+        customer:customer_id (full_name, company_name)
+      `)
+        .eq("organization_id", orgId)
+        .not("status", "in", '("Completed","Cancelled")')
+        .is("deleted_at", null)
+        .order("queue_order", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: true }),
+      // 1c. Mechanic role members (for mechanic panel)
+      (async () => {
+        let q = supabase
+          .from("organization_users")
+          .select("user_id, roles!inner(name)")
+          .eq("organization_id", orgId)
+          .eq("roles.name", "Mechanic")
+          .is("removed_at", null);
+        if (branchId) {
+          q = withBranchFilter(q, branchId) as typeof q;
+        }
+        return q;
+      })(),
+    ]);
+
+  const workOrders = activeWOs ?? [];
+
+  // Derive branches and bay count from batch 1 results
   const branches: BranchInfo[] = (allBranches ?? []).map((b) => ({
     id: b.id,
     name: b.name,
   }));
-
-  // Determine which branches to build bay data for
   const targetBranches = branchId
     ? (allBranches ?? []).filter((b) => b.id === branchId)
     : (allBranches ?? []);
-
-  // Pick the first target for bay count / backward compat
   const primaryBranch = targetBranches[0] ?? null;
   const bayCount =
     ((primaryBranch?.settings as unknown as Record<string, unknown> | null)
       ?.bay_count as number) ?? 6;
 
-  // Get all active (non-completed/cancelled) work orders — org-wide, no branch filter.
-  // The branch filter is applied client-side: only bay-assigned work orders from the
-  // current branch populate the bay slots, while ALL queued work orders are shown
-  // regardless of branch (a queued vehicle hasn't been assigned a physical bay yet).
-  const { data: activeWOs } = await supabase
-    .from("work_orders")
-    .select(`
-      *,
-      vehicle:vehicle_id (*),
-      customer:customer_id (full_name, company_name)
-    `)
-    .eq("organization_id", orgId)
-    .not("status", "in", '("Completed","Cancelled")')
-    .is("deleted_at", null)
-    .order("queue_order", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: true });
-
-  const workOrders = activeWOs ?? [];
-
-  // Batch-fetch mechanic profiles for all assigned mechanics (main + helpers)
+  // Collect IDs needed for batch 2
   const mainMechanicIds = [
     ...new Set(
       workOrders.flatMap((wo) =>
@@ -172,34 +184,69 @@ async function fetchBayViewData(
       ),
     ),
   ];
-
-  // Also fetch all work_order_helper records for these work orders
   const activeWoIds = workOrders.map((wo) => wo.id);
-  const { data: helperRecords } = await supabase
-    .from("work_order_helpers")
-    .select("work_order_id, mechanic_id")
-    .in("work_order_id", activeWoIds);
+  const mechUserIds = (memberQueryResult.data ?? []).map((m: any) => m.user_id);
 
+  // ── Batch 2: Dependent queries (run in parallel) ──
+  const [
+    { data: helperRecords },
+    { data: woMechanicProfiles },
+    { data: mechProfiles },
+  ] = await Promise.all([
+    // 2a. Helper records (needs activeWoIds)
+    activeWoIds.length > 0
+      ? supabase
+          .from("work_order_helpers")
+          .select("work_order_id, mechanic_id")
+          .in("work_order_id", activeWoIds)
+      : Promise.resolve({ data: [] }),
+    // 2b. Mechanic profiles for work order assignments
+    mainMechanicIds.length > 0
+      ? supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .in("id", mainMechanicIds)
+      : Promise.resolve({ data: [] }),
+    // 2c. Mechanic profiles for mechanic panel
+    mechUserIds.length > 0
+      ? supabase
+          .from("profiles")
+          .select("id, full_name, phone, avatar_url")
+          .in("id", mechUserIds)
+          .order("full_name")
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  // ── Assembly ──
   const helperMechanicIds = [
-    ...new Set((helperRecords ?? []).map((h) => h.mechanic_id)),
+    ...new Set((helperRecords ?? []).map((h: any) => h.mechanic_id)),
   ];
-
   const allMechanicIds = [
     ...new Set([...mainMechanicIds, ...helperMechanicIds]),
   ];
 
+  // Fetch remaining mechanic profiles (those only in helpers, not in main)
+  const extraMechIds = allMechanicIds.filter(
+    (id) => !mainMechanicIds.includes(id),
+  );
+  const { data: extraProfiles } =
+    extraMechIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .in("id", extraMechIds)
+      : { data: [] };
+
+  // Build mechanic lookup map
   const mechanicMap = new Map<
     string,
     { id: string; full_name: string | null; avatar_url: string | null }
   >();
-  if (allMechanicIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, full_name, avatar_url")
-      .in("id", allMechanicIds);
-    for (const p of profiles ?? []) {
-      mechanicMap.set(p.id, p);
-    }
+  for (const p of woMechanicProfiles ?? []) {
+    mechanicMap.set(p.id, p);
+  }
+  for (const p of extraProfiles ?? []) {
+    mechanicMap.set(p.id, p);
   }
 
   // Group helper records by work order id
@@ -247,34 +294,6 @@ async function fetchBayViewData(
     });
   }
 
-  // Get mechanics (users with mechanic role), via organization_users
-  // so profiles without organization_id set still appear
-  let memberQuery = supabase
-    .from("organization_users")
-    .select("user_id, roles!inner(name)")
-    .eq("organization_id", orgId)
-    .eq("roles.name", "Mechanic")
-    .is("removed_at", null);
-
-  if (branchId) {
-    memberQuery = withBranchFilter(memberQuery, branchId) as typeof memberQuery;
-  }
-
-  const { data: memberIds } = await memberQuery;
-
-  const mechUserIds = (memberIds ?? []).map((m) => m.user_id);
-  const mechanics =
-    mechUserIds.length > 0
-      ? await (async () => {
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("id, full_name, phone, avatar_url")
-            .in("id", mechUserIds)
-            .order("full_name");
-          return profiles ?? [];
-        })()
-      : [];
-
   // Count jobs: main mechanic OR helper
   const helperJobCount = new Map<string, number>();
   for (const h of helperRecords ?? []) {
@@ -284,7 +303,7 @@ async function fetchBayViewData(
     );
   }
 
-  const mechList = (mechanics ?? []).map((p) => ({
+  const mechList = (mechProfiles ?? []).map((p) => ({
     ...p,
     current_jobs:
       workOrders.filter((wo) => wo.mechanic_id === p.id).length +

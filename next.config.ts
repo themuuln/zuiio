@@ -7,7 +7,7 @@ const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   // Allow Tailscale IP for phone testing from mobile devices
-  allowedDevOrigins: ["100.102.22.106"],
+  allowedDevOrigins: ["100.102.22.106", "192.168.1.121"],
 
   // TypeScript + Biome validation is handled by `pnpm validate` before build,
   // so skip redundant checks during the production bundle.
