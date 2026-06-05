@@ -13,6 +13,19 @@ export type Invoice = Tables<"invoices">;
 export type InvoicePayment = Tables<"invoice_payments">;
 export type InvoiceItem = Tables<"invoice_items">;
 export type WorkOrder = Tables<"work_orders">;
+
+/**
+ * WorkOrder with runtime helpers array added by bay-view-service.
+ * The helpers field is batch-fetched and attached server-side, not in the DB schema.
+ */
+export type WorkOrderWithHelpers = WorkOrder & {
+  helpers: Array<{
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  }>;
+};
+
 export type WorkOrderStatus =
   | "New"
   | "Diagnosing"
