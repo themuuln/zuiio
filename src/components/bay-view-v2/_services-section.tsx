@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Plus, Trash2, Wrench } from "lucide-react";
+import { Plus, Trash2, Wrench } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ interface ServicesSectionProps {
   catalog: CatalogServiceItem[];
   serviceSearch: string;
   showAddService: boolean;
-  addingServiceId: string | null;
   editingPriceId: string | null;
   editingPriceVal: string;
   onServiceSearchChange: (val: string) => void;
@@ -34,7 +33,6 @@ export function ServicesSection({
   catalog,
   serviceSearch,
   showAddService,
-  addingServiceId,
   editingPriceId,
   editingPriceVal,
   onServiceSearchChange,
@@ -163,7 +161,6 @@ export function ServicesSection({
             placeholder={t("searchServices")}
             className="h-8 text-xs"
             autoFocus
-            disabled={!!addingServiceId}
           />
           {serviceSearch && (
             <div className="absolute top-full left-0 right-0 z-50 mt-1 border rounded-lg bg-background shadow-lg max-h-40 overflow-y-auto">
@@ -189,7 +186,7 @@ export function ServicesSection({
                           onAddService(svc);
                         }
                       }}
-                      disabled={added || !!addingServiceId}
+                      disabled={added}
                       className="w-full justify-start px-3 py-2 text-xs h-9"
                     >
                       <span className="font-medium truncate mr-2 flex-1 text-left">
@@ -225,15 +222,10 @@ export function ServicesSection({
       <Button
         variant="outline"
         onClick={onToggleAddService}
-        disabled={!!addingServiceId}
         className="mt-2 w-full border-dashed text-xs h-9 gap-2 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-200"
       >
-        {addingServiceId ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : (
-          <Plus className="size-4" />
-        )}
-        {addingServiceId ? "Saving..." : t("addService")}
+        <Plus className="size-4" />
+        {t("addService")}
       </Button>
     </section>
   );

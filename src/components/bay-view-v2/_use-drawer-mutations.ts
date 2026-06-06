@@ -34,7 +34,8 @@ export function useDrawerMutations({
 
   const [serviceSearch, setServiceSearch] = useState("");
   const [showAddService, setShowAddService] = useState(false);
-  const [addingServiceId, setAddingServiceId] = useState<string | null>(null);
+  const [addingServiceIds, setAddingServiceIds] = useState<Set<string>>(new Set());
+  const [confirmingServiceIds, setConfirmingServiceIds] = useState<Set<string>>(new Set());
 
   // ── Part state ──
 
@@ -180,7 +181,7 @@ export function useDrawerMutations({
   function addService(svc: CatalogServiceItem) {
     const tempId = `temp-${Math.random().toString(36).slice(2, 11)}`;
     const defaultPrice = Number(svc.default_price ?? 0);
-    setAddingServiceId(tempId);
+    setAddingServiceIds((prev) => new Set([...prev, tempId]));
     setEditingServicePriceId(tempId);
     setEditingServicePriceVal(String(defaultPrice));
     setWo((prev) => {
@@ -221,6 +222,8 @@ export function useDrawerMutations({
     if (!orgId || !workOrderId) return;
     const svc = wo?.services?.find((s) => s.id === serviceId);
     if (!svc) return;
+    setConfirmingServiceIds((prev) => new Set([...prev, serviceId]));
+    setEditingServicePriceId(null);
     try {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/services`,
@@ -246,6 +249,11 @@ export function useDrawerMutations({
             services: (prev.services ?? []).filter((s) => s.id !== serviceId),
           };
         });
+        setAddingServiceIds((prev) => {
+          const next = new Set(prev);
+          next.delete(serviceId);
+          return next;
+        });
         return;
       }
       // Replace temp with real server data
@@ -262,6 +270,11 @@ export function useDrawerMutations({
       toast.dismiss();
       toast.success(`Added service: ${svc.service_name}`);
       onRefresh();
+      setAddingServiceIds((prev) => {
+        const next = new Set(prev);
+        next.delete(serviceId);
+        return next;
+      });
     } catch {
       toast.error("Failed to add service");
       // Rollback
@@ -272,9 +285,17 @@ export function useDrawerMutations({
           services: (prev.services ?? []).filter((s) => s.id !== serviceId),
         };
       });
+      setAddingServiceIds((prev) => {
+        const next = new Set(prev);
+        next.delete(serviceId);
+        return next;
+      });
     } finally {
-      setAddingServiceId(null);
-      setEditingServicePriceId(null);
+      setConfirmingServiceIds((prev) => {
+        const next = new Set(prev);
+        next.delete(serviceId);
+        return next;
+      });
     }
   }
 
@@ -409,6 +430,7 @@ export function useDrawerMutations({
     } finally {
       setAddingPart(false);
       setPendingPartPreview(null);
+      // Clear confirming state for this part if we track it
     }
   }
 
@@ -831,11 +853,12 @@ export function useDrawerMutations({
   return {
     // State
     saving,
+    isConfirming: confirmingServiceIds.size > 0,
     serviceSearch,
     setServiceSearch,
     showAddService,
     setShowAddService,
-    addingServiceId,
+    addingServiceIds,
     editingServicePriceId,
     setEditingServicePriceId,
     editingServicePriceVal,

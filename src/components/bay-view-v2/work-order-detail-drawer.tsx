@@ -96,11 +96,11 @@ export function WorkOrderDetailDrawer({
 
   const {
     saving,
+    isConfirming,
     serviceSearch,
     setServiceSearch,
     showAddService,
     setShowAddService,
-    addingServiceId,
     editingServicePriceId,
     setEditingServicePriceId,
     editingServicePriceVal,
@@ -276,7 +276,7 @@ export function WorkOrderDetailDrawer({
           orgId={orgId ?? ""}
           workOrderId={workOrderId ?? ""}
           saving={saving}
-          isAddingService={!!addingServiceId}
+          isAddingService={isConfirming}
           isFullScreen={isFullScreen}
           onAssignMechanic={assignMechanic}
           onHelpersChange={() => fetchWo(true)}
@@ -355,7 +355,6 @@ export function WorkOrderDetailDrawer({
                                 catalog={catalog as any}
                                 serviceSearch={serviceSearch}
                                 showAddService={showAddService}
-                                addingServiceId={addingServiceId}
                                 editingPriceId={editingServicePriceId}
                                 editingPriceVal={editingServicePriceVal}
                                 onServiceSearchChange={setServiceSearch}

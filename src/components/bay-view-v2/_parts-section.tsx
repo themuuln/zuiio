@@ -306,7 +306,6 @@ export function PartsSection({
               }}
               placeholder={t("qty")}
               className="h-8 w-14 text-center text-xs"
-              disabled={addingPart}
             />
             <Input
               type="number"
@@ -322,7 +321,6 @@ export function PartsSection({
               }}
               placeholder={t("unitPrice")}
               className="h-8 flex-1 text-xs"
-              disabled={addingPart}
             />
             <Button
               size="sm"
@@ -340,15 +338,10 @@ export function PartsSection({
       <Button
         variant="outline"
         onClick={onToggleAddPart}
-        disabled={addingPart}
         className="mt-2 w-full border-dashed text-xs h-9 gap-2 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-200"
       >
-        {addingPart ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : (
-          <Plus className="size-4" />
-        )}
-        {addingPart ? "Adding part..." : t("addPart")}
+        <Plus className="size-4" />
+        {t("addPart")}
       </Button>
     </section>
   );
