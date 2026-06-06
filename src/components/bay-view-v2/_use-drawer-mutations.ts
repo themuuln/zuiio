@@ -740,6 +740,39 @@ export function useDrawerMutations({
     }
   }
 
+  // ── Customer assignment ──
+
+  async function assignCustomer(customerId: string | null) {
+    const orgId = orgIdRef.current;
+    if (!orgId || !workOrderId) return;
+    setSaving(true);
+    try {
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${workOrderId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ customer_id: customerId }),
+        },
+      );
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message ?? "Failed to assign customer");
+      } else {
+        await fetchWo(true);
+        onRefresh();
+        toast.dismiss();
+        if (customerId) {
+          toast.success("Customer assigned");
+        }
+      }
+    } catch {
+      toast.error("Failed to assign customer");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   // ── Status transitions ──
 
   const canCancel: boolean =
@@ -835,6 +868,7 @@ export function useDrawerMutations({
     setShowUnsavedWarning,
     showCelebration,
     // Handlers
+    assignCustomer,
     addService,
     removeService,
     handleServicePriceSave,

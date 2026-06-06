@@ -43,6 +43,7 @@ export const updateWorkOrderSchema = z
       .max(500, "Loss reason must be under 500 characters")
       .nullable()
       .optional(),
+    customer_id: uuid.nullable().optional(),
   })
   .refine(
     (data) =>
@@ -50,10 +51,12 @@ export const updateWorkOrderSchema = z
       data.mechanic_id !== undefined ||
       data.complaint !== undefined ||
       data.diagnosis !== undefined ||
-      data.notes !== undefined,
+      data.notes !== undefined ||
+      data.loss_reason !== undefined ||
+      data.customer_id !== undefined,
     {
       message:
-        "At least one of status, mechanic_id, complaint, diagnosis, or notes is required",
+        "At least one of status, mechanic_id, complaint, diagnosis, notes, loss_reason, or customer_id is required",
     },
   );
 export type UpdateWorkOrderInput = z.infer<typeof updateWorkOrderSchema>;

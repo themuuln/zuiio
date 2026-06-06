@@ -34,6 +34,7 @@ import type { PickupCompleteData } from "./pickup-complete-form";
 import { PickupCompleteForm } from "./pickup-complete-form";
 import { PostServiceFormBody } from "./post-service-form";
 import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
+import { CustomerPickerModal } from "./_customer-picker-modal";
 
 // ── Drawer ───────────────────────────────────────────────────
 
@@ -136,6 +137,7 @@ export function WorkOrderDetailDrawer({
     removePart,
     handlePartPriceSave,
     assignMechanic,
+    assignCustomer,
     changeStatus,
     generateInvoice,
     handleReadyForPickup,
@@ -159,6 +161,7 @@ export function WorkOrderDetailDrawer({
 
   // ── Local-only state ──
 
+  const [showCustomerPicker, setShowCustomerPicker] = useState(false);
   const [showPickupForm, setShowPickupForm] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -280,6 +283,7 @@ export function WorkOrderDetailDrawer({
           onToggleFullScreen={() => setIsFullScreen((f) => !f)}
           onClose={() => handleOpenChange(false)}
           showBack={showPostServiceForm}
+          setShowCustomerPicker={setShowCustomerPicker}
           onBack={handleCancelPostService}
           t={t}
         />
@@ -477,6 +481,18 @@ export function WorkOrderDetailDrawer({
 
         <DrawerCelebration show={showCelebration} message="Completed!" />
       </DrawerContent>
+
+      {/* Customer picker modal */}
+      {showCustomerPicker && orgId && (
+        <CustomerPickerModal
+          orgId={orgId}
+          open={showCustomerPicker}
+          onOpenChange={setShowCustomerPicker}
+          onSelect={(customer) => {
+            assignCustomer(customer.id);
+          }}
+        />
+      )}
 
       {/* Pickup complete form overlay — outside DrawerContent to avoid Vaul + Base UI portal nesting */}
       {showPickupForm && wo && (

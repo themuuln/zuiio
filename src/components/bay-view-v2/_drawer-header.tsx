@@ -32,6 +32,7 @@ interface DrawerHeaderProps {
   onClose: () => void;
   showBack?: boolean;
   onBack?: () => void;
+  setShowCustomerPicker?: (v: boolean) => void;
   t: (key: string) => string;
 }
 
@@ -51,6 +52,7 @@ export function DrawerHeaderSection({
   onClose,
   showBack,
   onBack,
+  setShowCustomerPicker,
   t,
 }: DrawerHeaderProps) {
   // Ensure the assigned mechanic is always in the list, even if they
@@ -139,9 +141,16 @@ export function DrawerHeaderSection({
               )}
             </div>
           ) : wo ? (
-            <span className="text-xs text-muted-foreground italic pl-1">
-              No customer data
-            </span>
+            <div className="flex flex-col gap-1">
+              <button
+                type="button"
+                onClick={() => setShowCustomerPicker?.(true)}
+                className="flex items-center gap-2 text-xs text-muted-foreground italic hover:text-foreground transition-colors pl-1"
+              >
+                <User className="size-4 text-muted-foreground/75" />
+                Select customer...
+              </button>
+            </div>
           ) : null}
         </div>
 

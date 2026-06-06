@@ -92,6 +92,28 @@ export const PATCH = createRouteHandler(
       return NextResponse.json({ data: assignment });
     }
 
+    if (body.customer_id !== undefined) {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const { error } = await supabase
+        .from("work_orders")
+        .update({
+          customer_id: body.customer_id,
+          updated_by: userId,
+        })
+        .eq("id", workOrderId)
+        .eq("organization_id", orgId);
+
+      if (error) {
+        return NextResponse.json(
+          { error: { code: "UPDATE_FAILED", message: error.message } },
+          { status: 500 },
+        );
+      }
+
+      const wo = await getWorkOrder(supabase, workOrderId);
+      return NextResponse.json({ data: wo });
+    }
+
     return NextResponse.json(
       { error: { code: "INVALID_REQUEST", message: "No valid action" } },
       { status: 400 },
