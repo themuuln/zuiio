@@ -201,7 +201,7 @@ export function PostServiceDialog({
   const isComplete = newStatus === "Completed";
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} nested>
+    <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[85vh]">
         <DrawerHeader>
           <DrawerTitle className="flex items-center gap-2 text-base">
