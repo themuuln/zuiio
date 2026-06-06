@@ -21,8 +21,12 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
 
-  /* Single worker — the dev server struggles with parallel auth/logins */
+  /* Single worker — login-in-every-file pattern needed this. With storageState
+     global setup, parallel workers are safe. Bump if the server can handle it. */
   workers: 1,
+
+  /* Run global setup (auth login) before all tests */
+  globalSetup: "./e2e/global-setup.ts",
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI
@@ -32,6 +36,8 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
+    /* Reuse auth session saved by global-setup — eliminates per-file login */
+    storageState: "e2e/.auth/user.json",
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
     /* Take screenshot on failure */

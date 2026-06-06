@@ -135,6 +135,37 @@ These rules apply to ALL components, not just new ones.
 #### Truncation
 - **Use `truncate` shorthand** — not `overflow-hidden text-ellipsis whitespace-nowrap`
 
+### Test Selectors for shadcn Components
+
+When writing Playwright tests for shadcn (Radix-based) components, target **ARIA roles and `data-*` attributes** — never CSS class names. Radix primitives render into portals and complex DOM structures that class selectors can't reliably reach.
+
+| Component | Reliable Selector | Fragile Alternative |
+|-----------|------------------|-------------------|
+| **Dialog/Modal** | `page.getByRole('dialog')` | `page.locator('.modal-content')` misses portal |
+| **Dropdown/Select** | `page.locator('[data-state="open"]')` | `page.locator('.select-trigger')` is always present |
+| **Popover** | `page.getByRole('dialog').filter({ hasText: /search/i })` | `page.locator('.popover-content')` fragile to rename |
+| **Combobox** | `page.getByRole('combobox')` then `page.getByRole('option', { name: '...' })` | CSS class chain breaks on dark mode |
+| **Checkbox** | `page.getByRole('checkbox')` + check `isChecked()` | `page.locator('input[type=checkbox]')` hidden by shadcn |
+| **Switch/Toggle** | `page.locator('[data-state="checked"]')` | `page.locator('.peer')` breaks on styling change |
+| **Tabs** | `page.getByRole('tab', { name: '...' })` | `page.locator('[data-slot="tab"]')` changes with shadcn upgrade |
+| **Alert/Destructive** | `page.getByRole('alert')` | `page.locator('.destructive-bg')` renamed on refactor |
+| **Tooltip** | `page.locator('[role="tooltip"]')` | `page.locator('.tooltip-arrow')` appears/disappears |
+
+**Key Radix attributes to use:**
+- `[data-state="open"|"closed"|"checked"|"unchecked"|"active"|"inactive"]`
+- `[data-disabled]` / `[data-placeholder]` / `[data-highlighted]`
+- `[role="dialog"|"tooltip"|"option"|"combobox"|"tab"|"tabpanel"|"alert"]`
+- `[aria-expanded]` / `[aria-selected]` / `[aria-checked]` / `[aria-hidden]`
+
+**Pattern:** Snapshot the page, find the Radix ref, then use Playwright's built-in role/locator:
+```
+# Snapshot shows: [ref=e12] <button data-state="closed" aria-expanded="false">Select fuel type</button>
+# Click to open:
+page.locator('[data-state="closed"]').filter({ hasText: /fuel/i }).click()
+# After open: snapshot shows options with refs
+page.getByRole('option', { name: 'Diesel' }).click()
+```
+
 ## i18n Message Parity
 
 - **Both `mn.json` and `en.json` must be updated together.** When adding or changing any UI string, always add the corresponding key in both locale files. Missing translations cause fallback keys to show in the UI.
@@ -314,6 +345,7 @@ Use **Supabase MCP** by default. CLI only when MCP can't:
 - **Naming**: `describe('WorkOrderService')` / `it('deducts inventory on part addition')`.
 - **RLS policies must be tested** — verify Organization A cannot access Organization B's data.
 - Run `npm run test` before opening a PR.
+- **When writing Playwright tests:** read the [Test Selectors for shadcn](#test-selectors-for-shadcn-components) and [Playwright Route Mocking](#playwright-route-mocking-via-playwright-mcp) sections above for component targeting patterns and network interception.
 
 ## Worktrunk Workflow
 
@@ -345,7 +377,8 @@ This repo follows the global guidelines in `~/AGENTS.md`:
 | Org Owner | `themuuln{num}@gmail.com` | `tolom{num}` |
 | Mechanic | `mechanic{num}` | `tolom{num}` |
 
-Examples: `themuuln4@gmail.com` owns `tolom4`, `mechanic4` works at `tolom4`.
+Default E2E test user (`E2E_EMAIL` / `E2E_PASSWORD` env vars): `themuuln4@gmail.com` / `Tolom!11` (owns `tolom4`).
+Override with `E2E_EMAIL=other@example.com E2E_PASSWORD=... npx playwright test`.
 
 ## Testing Workflow
 
@@ -384,6 +417,40 @@ curl -s -X POST -b "$COOKIE" -H "Content-Type: application/json" \
   http://localhost:{PORT}/api/organizations/$ORG_ID/payroll/calculate
 ```
 
+### Playwright Route Mocking (via Playwright MCP)
+
+When running tests via Playwright MCP (not writing `.spec.ts` files), use `playwright_browser_route` to mock network requests at the browser level. This lets you test error states, empty responses, and edge cases without modifying server code.
+
+**Available tools** (enabled via `--caps=network,storage`):
+- `playwright_browser_route` — Mock a URL pattern with status, body, headers
+- `playwright_browser_route_list` — List all active routes
+- `playwright_browser_unroute` — Remove routes by pattern (omit to clear all)
+- `playwright_browser_network_state_set` — Toggle offline/online
+
+**Concrete patterns for this codebase:**
+
+```
+# Mock Supabase REST API to return empty data
+playwright_browser_route pattern='**/rest/v1/**' status=200 \
+  body='[]' contentType='application/json'
+
+# Mock a 500 error on a specific API route
+playwright_browser_route pattern='**/api/invoices/*' status=500
+
+# Mock rate limit on auth endpoints
+playwright_browser_route pattern='**/api/auth/**' status=429 \
+  body='{"error":"rate_limit_exceeded"}' contentType='application/json'
+
+# Mock slow network (no route, just offline simulation)
+playwright_browser_network_state_set state='offline'
+```
+
+**Workflow:**
+1. Set up routes with `playwright_browser_route`
+2. Navigate to the page with `playwright_browser_navigate`
+3. Interact and snapshot to verify the UI handles the mocked response
+4. Clean up with `playwright_browser_unroute`
+
 ### Common Pitfalls Found in QA
 
 | Issue | Symptom | Fix |
@@ -402,6 +469,17 @@ curl -s -X POST -b "$COOKIE" -H "Content-Type: application/json" \
 2. **Build + production server before any API test.** Run `npm run build && PORT=$(nextport) npm run start` at the start of any session involving backend work. Never test against dev mode — the 8s compilation tax kills iteration speed.
 3. **Always check the response shape.** An empty `data:[]` could mean "no records" or "silent SQL failure". When in doubt, run the query via MCP `supabase_execute_sql`.
 4. **Test the full lifecycle before moving on.** For payroll: create rate → calculate → approve → pay → recalculate (verify status preserved). Each step validates the previous one.
+
+### E2E Auth Session Sharing
+
+All tests reuse a single authenticated session via Playwright's `storageState`:
+- **`e2e/global-setup.ts`** — runs once before all tests. Logs in via the UI, saves session cookies + localStorage to `e2e/.auth/user.json`.
+- **`playwright.config.ts`** — sets `globalSetup` and `storageState: "e2e/.auth/user.json"`. Every test starts already authenticated.
+- **No per-test-file login needed.** Tests that don't need custom auth can skip `loginViaUI()` entirely. Only use `loginViaUI` when testing a different user role.
+
+**If the auth session expires:** Delete `e2e/.auth/user.json` and re-run. The global setup regenerates it.
+
+**`.gitignore`:** `e2e/.auth/*.json` is git-ignored. The `.gitkeep` file preserves the directory in version control.
 
 ## Optimistic UI
 

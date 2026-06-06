@@ -1,7 +1,7 @@
 import { type BrowserContext, expect, type Page } from "@playwright/test";
 
-const TEST_EMAIL = process.env.E2E_EMAIL ?? "Mtuya1355@gmail.com";
-const TEST_PASSWORD = process.env.E2E_PASSWORD ?? "TolomAdmin2025!";
+const TEST_EMAIL = process.env.E2E_EMAIL ?? "themuuln4@gmail.com";
+const TEST_PASSWORD = process.env.E2E_PASSWORD ?? "Tolom!11";
 const TEST_PIN = process.env.E2E_PIN ?? "1234";
 
 /**
