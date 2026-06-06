@@ -76,8 +76,8 @@ export function CustomerPickerModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          first_name: data.first_name.trim(),
-          last_name: data.last_name?.trim() || null,
+          firstName: data.first_name.trim(),
+          lastName: data.last_name?.trim() || null,
           phone: data.phone?.trim() || null,
           type: "individual",
         }),
@@ -143,9 +143,8 @@ export function CustomerPickerModal({
                   <User className="size-5 shrink-0 text-muted-foreground" />
                   <div>
                     <span className="font-medium text-sm">
-                      {[c.first_name, c.last_name]
-                        .filter(Boolean)
-                        .join(" ") || "No name"}
+                      {[c.first_name, c.last_name].filter(Boolean).join(" ") ||
+                        "No name"}
                     </span>
                     {c.phone && (
                       <span className="ml-2 text-xs text-muted-foreground">

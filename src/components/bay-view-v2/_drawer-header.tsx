@@ -131,14 +131,21 @@ export function DrawerHeaderSection({
               <div className="flex items-center gap-2 text-xs text-foreground/80 font-bold">
                 <User className="size-4 text-muted-foreground/75" />
                 <span>
-                  {wo.customer.first_name} {wo.customer.last_name ?? ""}
+                  {[wo.customer.first_name, wo.customer.last_name]
+                    .filter(Boolean)
+                    .join(" ") ||
+                    wo.customer.phone ||
+                    "Unknown"}
                 </span>
               </div>
-              {wo.customer.phone && (
-                <span className="text-xs text-muted-foreground font-semibold pl-5 font-mono">
-                  {wo.customer.phone}
-                </span>
-              )}
+              {wo.customer.phone &&
+                [wo.customer.first_name, wo.customer.last_name]
+                  .filter(Boolean)
+                  .join(" ") && (
+                  <span className="text-xs text-muted-foreground font-semibold pl-5 font-mono">
+                    {wo.customer.phone}
+                  </span>
+                )}
             </div>
           ) : wo ? (
             <div className="flex flex-col gap-1">
@@ -167,7 +174,6 @@ export function DrawerHeaderSection({
               saving={saving}
               onLeadChange={onAssignMechanic}
               onHelpersChange={onHelpersChange}
-              size="sm"
             />
           )}
           {showBack ? (
