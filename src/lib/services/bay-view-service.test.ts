@@ -1,11 +1,13 @@
-import { revalidateTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createClient } from "@/lib/supabase/server";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import { updateWorkOrderStatus } from "./bay-view-service";
+import { updateWorkOrderStatus as canonicalUpdate } from "./work-order-workflow";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
-vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
+vi.mock("./work-order-workflow", () => ({
+  updateWorkOrderStatus: vi.fn(),
+}));
 
 const mockClient = createMockSupabaseClient();
 
@@ -15,58 +17,51 @@ beforeEach(() => {
     mockClient as unknown as Awaited<ReturnType<typeof createClient>>,
   );
   mockClient.rpc.mockResolvedValue({ data: "org-1", error: null });
+  vi.mocked(canonicalUpdate).mockResolvedValue({} as any);
 });
 
 describe("bay-view updateWorkOrderStatus", () => {
-  it("records a history row even when notes are empty", async () => {
-    mockClient.from("work_orders").single.mockResolvedValueOnce({
-      data: { id: "wo-1", organization_id: "org-1", status: "In Progress" },
-      error: null,
-    });
+  it("delegates to the canonical work-order-workflow version", async () => {
+    await updateWorkOrderStatus("wo-1", "Diagnosing", "note");
 
-    await updateWorkOrderStatus("wo-1", "Diagnosing");
-
-    expect(mockClient.from).toHaveBeenCalledWith("work_order_status_history");
-    expect(
-      mockClient.from("work_order_status_history").insert,
-    ).toHaveBeenCalledWith(
-      expect.objectContaining({
-        work_order_id: "wo-1",
-        organization_id: "org-1",
-        previous_status: "In Progress",
-        status: "Diagnosing",
-      }),
+    expect(canonicalUpdate).toHaveBeenCalledWith(
+      mockClient,
+      "wo-1",
+      "org-1",
+      "Diagnosing",
+      "note",
     );
   });
 
-  it("does not create a duplicate history row when the status is unchanged", async () => {
-    mockClient.from("work_orders").single.mockResolvedValueOnce({
-      data: { id: "wo-1", organization_id: "org-1", status: "Diagnosing" },
-      error: null,
-    });
+  it("creates its own Supabase client and resolves orgId", async () => {
+    await updateWorkOrderStatus("wo-1", "Completed");
 
-    await updateWorkOrderStatus("wo-1", "Diagnosing");
-
-    expect(
-      mockClient.from("work_order_status_history").insert,
-    ).not.toHaveBeenCalled();
+    expect(createClient).toHaveBeenCalled();
+    // getOrgId calls rpc
+    expect(mockClient.rpc).toHaveBeenCalled();
   });
 
-  it("revalidates the work-order cache tags", async () => {
-    mockClient.from("work_orders").single.mockResolvedValueOnce({
-      data: { id: "wo-1", organization_id: "org-1", status: "New" },
-      error: null,
-    });
+  it("passes notes through to the canonical version", async () => {
+    await updateWorkOrderStatus("wo-1", "In Progress", "mechanic assigned");
 
-    await updateWorkOrderStatus("wo-1", "Diagnosing");
-
-    expect(revalidateTag).toHaveBeenCalledWith(
-      expect.stringContaining("work-order:wo-1"),
-      "max",
+    expect(canonicalUpdate).toHaveBeenCalledWith(
+      mockClient,
+      "wo-1",
+      "org-1",
+      "In Progress",
+      "mechanic assigned",
     );
-    expect(revalidateTag).toHaveBeenCalledWith(
-      expect.stringContaining("work-order-detail:wo-1"),
-      "max",
+  });
+
+  it("omits notes when not provided", async () => {
+    await updateWorkOrderStatus("wo-1", "New");
+
+    expect(canonicalUpdate).toHaveBeenCalledWith(
+      mockClient,
+      "wo-1",
+      "org-1",
+      "New",
+      undefined,
     );
   });
 });

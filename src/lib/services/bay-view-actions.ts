@@ -585,7 +585,7 @@ export async function getVehicleServiceTimeline(
 
 export async function addVehicleToQueue(params: {
   vehicleId: string;
-  customerId: string;
+  customerId?: string;
   complaint?: string;
   branchId?: string;
 }): Promise<{ workOrderId: string }> {
@@ -596,7 +596,6 @@ export async function addVehicleToQueue(params: {
   const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
 
   if (!params.vehicleId) throw new ValidationError("Vehicle is required");
-  if (!params.customerId) throw new ValidationError("Customer is required");
 
   // Resolve branch: if not provided, fall back to the main branch
   let branchId = params.branchId;

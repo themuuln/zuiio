@@ -75,9 +75,15 @@ export const PATCH = createRouteHandler(
     }
 
     if (body.final_price !== undefined) {
-      await updateWorkOrderPartPrice(supabase, partId, workOrderId, {
-        final_price: body.final_price,
-      });
+      await updateWorkOrderPartPrice(
+        supabase,
+        partId,
+        workOrderId,
+        {
+          final_price: body.final_price,
+        },
+        orgId,
+      );
     }
 
     return NextResponse.json({ data: null });
@@ -119,7 +125,7 @@ export const DELETE = createRouteHandler(
       );
     }
 
-    await removePartFromWorkOrder(supabase, partId, workOrderId);
+    await removePartFromWorkOrder(supabase, partId, workOrderId, orgId);
     return NextResponse.json({ data: null });
   },
   { requiredPermission: { resource: "work_orders", action: "update" } },

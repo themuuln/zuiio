@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
@@ -33,10 +34,13 @@ export function BayViewPageSkeleton() {
       </div>
 
       {/* ── KPI Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-3 bg-muted/10 border-b border-border/40 shrink-0 max-h-28">
+      <div className="flex flex-col lg:flex-row shrink-0 max-h-28">
         <KpiCardSkeleton hasProgress />
+        <Separator orientation="vertical" className="hidden lg:block" />
         <KpiCardSkeleton valueSuffix="active" subtitle="in waiting queue" />
+        <Separator orientation="vertical" className="hidden lg:block" />
         <KpiCardSkeleton valueSuffix="completed" subtitle="Avg duration" />
+        <Separator orientation="vertical" className="hidden lg:block" />
         <KpiCardSkeleton subtitle="Today's invoices paid" />
       </div>
 
@@ -68,7 +72,7 @@ function KpiCardSkeleton({
   subtitle?: string;
 }) {
   return (
-    <Card className="bg-card/65 backdrop-blur border-border/50 p-3 flex flex-col gap-2 rounded-xl min-h-[88px]">
+    <Card className="bg-transparent border-none ring-0 shadow-none px-5 py-4 gap-0 flex flex-col rounded-none flex-1 min-w-0 min-h-[88px]">
       <div className="flex items-center justify-between">
         <Skeleton className="h-2.5 w-20 rounded" />
         <Skeleton className="size-8 rounded-lg" />

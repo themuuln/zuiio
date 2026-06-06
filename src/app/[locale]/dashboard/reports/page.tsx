@@ -81,7 +81,7 @@ import type {
   ReportMechanicKpi,
   ReportProfitability,
 } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, hasMultipleBranches } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -396,6 +396,7 @@ export default function ReportsPage() {
   const orgId = orgInfo?.orgId ?? "";
   const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
   const branchesQ = useBranches(orgId);
+  const branches = branchesQ.data ?? [];
   useSelectedBranchGuard(orgId);
 
   // ── Derived params ───────────────────────────────────
@@ -666,14 +667,16 @@ export default function ReportsPage() {
           ))}
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <BranchSelect
-            value={selectedBranchId}
-            onChange={setSelectedBranchId}
-            branches={branchesQ.data ?? []}
-            placeholder={t("branch")}
-            allLabel={t("allBranches")}
-            className="min-w-44"
-          />
+          {hasMultipleBranches(branches) && (
+            <BranchSelect
+              value={selectedBranchId}
+              onChange={setSelectedBranchId}
+              branches={branches}
+              placeholder={t("branch")}
+              allLabel={t("allBranches")}
+              className="min-w-44"
+            />
+          )}
           <MechanicSelect
             value={mechanicFilter}
             onChange={setMechanicFilter}

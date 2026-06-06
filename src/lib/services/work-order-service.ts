@@ -196,7 +196,6 @@ export async function createWorkOrder(
   orgId: string,
   params: CreateWorkOrderParams,
 ): Promise<WorkOrderDetail> {
-  if (!params.customer_id) throw new ValidationError("Customer is required");
   if (!params.vehicle_id) throw new ValidationError("Vehicle is required");
 
   const supabase = db;
@@ -216,7 +215,7 @@ export async function createWorkOrder(
     .insert({
       organization_id: orgId,
       branch_id: resolvedBranchId,
-      customer_id: params.customer_id,
+      customer_id: params.customer_id ?? null,
       vehicle_id: params.vehicle_id,
       status: "New",
       mechanic_id: params.mechanic_id ?? null,

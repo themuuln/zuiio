@@ -17,7 +17,6 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
 
-  // If you want to set a uniform sample rate for all routes automatically,
-  // you can use the `browserTracingIntegration` option.
-  // integration: Sentry.browserTracingIntegration(),
+  // Disable the "Report a Bug" feedback button
+  integrations: [Sentry.feedbackIntegration({ enabled: false })],
 });

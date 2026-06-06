@@ -34,6 +34,8 @@ export type ResponsiveFormModalProps = {
   sheetSize?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
   /** Z-index layer for stacked overlays. 0 = default (z-50), 1 = z-51, etc. */
   zLayer?: number;
+  /** Optional footer content (rendered in all paths: Drawer, Dialog, and DetailSheet) */
+  footer?: React.ReactNode;
 };
 
 export function ResponsiveFormModal({
@@ -46,6 +48,7 @@ export function ResponsiveFormModal({
   useDialogOnDesktop = false,
   sheetSize = "xl",
   zLayer = 0,
+  footer,
 }: ResponsiveFormModalProps) {
   const isMobile = useIsMobile();
 
@@ -82,6 +85,9 @@ export function ResponsiveFormModal({
           <ScrollArea className="flex-1 overflow-y-auto px-4 pb-6">
             <div className={cn("py-2", className)}>{childrenWithClose}</div>
           </ScrollArea>
+          {footer && (
+            <div className="shrink-0 border-t px-4 py-3">{footer}</div>
+          )}
         </DrawerContent>
       </Drawer>
     );
@@ -109,6 +115,9 @@ export function ResponsiveFormModal({
           <ScrollArea className="flex-1 overflow-y-auto px-6 pb-6">
             <div className="py-2">{childrenWithClose}</div>
           </ScrollArea>
+          {footer && (
+            <div className="shrink-0 border-t px-6 py-3">{footer}</div>
+          )}
         </DialogContent>
       </Dialog>
     );
@@ -135,6 +144,7 @@ export function ResponsiveFormModal({
       <DetailSheet.Body className="px-6">
         <div className={cn("py-2", className)}>{childrenWithClose}</div>
       </DetailSheet.Body>
+      {footer && <DetailSheet.Footer>{footer}</DetailSheet.Footer>}
     </DetailSheet>
   );
 }

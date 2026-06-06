@@ -165,12 +165,7 @@ export function AssignDialog({
           const { addVehicleToQueue } = await import(
             "@/lib/services/bay-view-actions"
           );
-          const customerId = vehicle.customer?.id;
-          if (!customerId) {
-            // No customer — can't create work order, but still show the vehicle
-            setSelectedWoId(null);
-            return;
-          }
+          const customerId = vehicle.customer?.id ?? undefined;
           const result = await addVehicleToQueue({
             vehicleId: vehicle.id,
             customerId: customerId,
@@ -351,14 +346,6 @@ export function AssignDialog({
                     <Loader2 className="size-4 animate-spin text-muted-foreground" />
                   )}
                 </div>
-              )}
-
-              {/* Warning for vehicle without customer */}
-              {!search && selectedVehicle && !selectedVehicle.customer && (
-                <Typography.Muted className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                  Vehicle needs owner info. Register the vehicle first to add
-                  owner details.
-                </Typography.Muted>
               )}
 
               {/* Empty state - show queue count */}

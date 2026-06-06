@@ -68,6 +68,11 @@ export function getInitials(name: string | null | undefined): string {
   return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
 }
 
+/** Returns true when the org has more than one branch (hides branch selector for single-branch orgs). */
+export function hasMultipleBranches(branches: { id: string }[]): boolean {
+  return branches.length > 1;
+}
+
 /** Set a browser cookie by name with expiry in days. */
 export function setCookie(name: string, value: string, days: number): void {
   const expires = new Date(Date.now() + days * 864e5).toUTCString();

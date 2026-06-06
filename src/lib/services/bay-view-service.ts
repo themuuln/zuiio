@@ -11,6 +11,7 @@ import { createWorkOrder } from "@/lib/services/work-order-service";
 import { createClient } from "@/lib/supabase/server";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 import type { Profile, Vehicle, WorkOrder } from "@/lib/types";
+import { updateWorkOrderStatus as updateWorkOrderStatusCanonical } from "./work-order-workflow";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -692,6 +693,11 @@ export type UpdateStatusParams = {
   notes?: string;
 };
 
+/**
+ * Server-action wrapper that delegates to the canonical updateWorkOrderStatus
+ * in work-order-workflow.ts. This ensures inventory deduction, schedule sync,
+ * and full cache invalidation (dashboardMetrics, reports) run on status change.
+ */
 export async function updateWorkOrderStatus(
   workOrderId: string,
   status:
@@ -703,60 +709,15 @@ export async function updateWorkOrderStatus(
     | "Cancelled",
   notes?: string,
 ): Promise<void> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-  const { data: currentWorkOrder, error: currentWorkOrderError } =
-    await supabase
-      .from("work_orders")
-      .select("id, organization_id, status")
-      .eq("id", workOrderId)
-      .eq("organization_id", orgId)
-      .is("deleted_at", null)
-      .single();
-
-  if (currentWorkOrderError || !currentWorkOrder) {
-    throw new NotFoundError("Work order not found");
-  }
-
-  const previousStatus = currentWorkOrder.status;
-  const statusChanged = previousStatus !== status;
-
-  const updates: Record<string, unknown> = {
+  const supabase = await createClient();
+  const orgId = await getOrgId();
+  await updateWorkOrderStatusCanonical(
+    supabase,
+    workOrderId,
+    orgId,
     status,
-    updated_at: new Date().toISOString(),
-  };
-
-  if (status === "Completed" || status === "Cancelled") {
-    updates.bay_number = null;
-    updates.completed_at = new Date().toISOString();
-  }
-
-  const { error } = await supabase
-    .from("work_orders")
-    .update(updates)
-    .eq("id", workOrderId)
-    .eq("organization_id", orgId);
-
-  if (error) throw new Error(error.message ?? "Failed to update status");
-
-  if (statusChanged) {
-    const userId = (await supabase.auth.getUser()).data.user?.id;
-    await supabase.from("work_order_status_history").insert({
-      work_order_id: workOrderId,
-      organization_id: orgId,
-      previous_status: previousStatus,
-      status,
-      notes: notes ?? null,
-      created_by: userId,
-    });
-  }
-
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
-  revalidateTag(cacheTags.workOrder(workOrderId), "max");
-  revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
+    notes,
+  );
 }
 
 // ── Update Bay Count ───────────────────────────────────────────

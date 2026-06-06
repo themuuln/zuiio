@@ -58,7 +58,7 @@ import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { DashboardData } from "@/lib/types";
-import { formatCurrency, formatMNT } from "@/lib/utils";
+import { formatCurrency, formatMNT, hasMultipleBranches } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
 import { KpiCard } from "./_kpi-card";
 import { OverviewTab } from "./_overview-tab";
@@ -910,7 +910,7 @@ export default function FinancePage() {
           </Typography.Muted>
         </div>
         <div className="flex flex-col items-end gap-3">
-          {financeSeparate && (
+          {financeSeparate && hasMultipleBranches(branches) && (
             <BranchSelect
               value={selectedBranchId}
               onChange={useSetSelectedBranchId()}

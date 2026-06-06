@@ -96,6 +96,8 @@ export async function addServiceToWorkOrder(
   await recalculateWorkOrderTotals(db, workOrderId);
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
+  revalidateTag(cacheTags.dashboardMetrics(orgId), "max");
+  revalidateTag(cacheTags.reports(orgId), "max");
 
   return data as unknown as WorkOrderService;
 }
@@ -195,6 +197,8 @@ export async function addPartToWorkOrder(
   await recalculateWorkOrderTotals(db, workOrderId);
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
+  revalidateTag(cacheTags.dashboardMetrics(orgId), "max");
+  revalidateTag(cacheTags.reports(orgId), "max");
 
   return data as unknown as WorkOrderPart;
 }
@@ -205,6 +209,7 @@ export async function updateWorkOrderServicePrice(
   serviceId: string,
   workOrderId: string,
   params: { final_price: number },
+  orgId: string,
 ): Promise<void> {
   const supabase = db;
 
@@ -220,6 +225,8 @@ export async function updateWorkOrderServicePrice(
   await recalculateWorkOrderTotals(db, workOrderId);
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
+  revalidateTag(cacheTags.dashboardMetrics(orgId), "max");
+  revalidateTag(cacheTags.reports(orgId), "max");
 }
 
 // ── Remove Service ─────────────────────────────────────────────
@@ -227,6 +234,7 @@ export async function removeServiceFromWorkOrder(
   db: SupabaseClient,
   serviceId: string,
   workOrderId: string,
+  orgId: string,
 ): Promise<void> {
   const supabase = db;
 
@@ -242,6 +250,8 @@ export async function removeServiceFromWorkOrder(
   await recalculateWorkOrderTotals(db, workOrderId);
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
+  revalidateTag(cacheTags.dashboardMetrics(orgId), "max");
+  revalidateTag(cacheTags.reports(orgId), "max");
 }
 
 // ── Update Part Price ────────────────────────────────────────────
@@ -250,6 +260,7 @@ export async function updateWorkOrderPartPrice(
   partId: string,
   workOrderId: string,
   params: { final_price: number },
+  orgId: string,
 ): Promise<void> {
   const supabase = db;
 
@@ -265,6 +276,8 @@ export async function updateWorkOrderPartPrice(
   await recalculateWorkOrderTotals(db, workOrderId);
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
+  revalidateTag(cacheTags.dashboardMetrics(orgId), "max");
+  revalidateTag(cacheTags.reports(orgId), "max");
 }
 
 // ── Remove Part ────────────────────────────────────────────────
@@ -272,6 +285,7 @@ export async function removePartFromWorkOrder(
   db: SupabaseClient,
   partId: string,
   workOrderId: string,
+  orgId: string,
 ): Promise<void> {
   const supabase = db;
 
@@ -287,4 +301,6 @@ export async function removePartFromWorkOrder(
   await recalculateWorkOrderTotals(db, workOrderId);
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
+  revalidateTag(cacheTags.dashboardMetrics(orgId), "max");
+  revalidateTag(cacheTags.reports(orgId), "max");
 }

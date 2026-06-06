@@ -24,7 +24,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { cn, hasMultipleBranches } from "@/lib/utils";
 
 type ViewMode = "grid" | "kanban" | "list";
 
@@ -112,7 +112,7 @@ export function Toolbar({
         {/* Left Controls (View Selector, Branch Pills, Filter, Refresh) — search takes remaining space */}
         <div className="flex flex-wrap items-center gap-2 sm:flex-1 sm:min-w-0 sm:flex-nowrap">
           {/* Branch pills */}
-          {branches.length > 1 && (
+          {hasMultipleBranches(branches) && (
             <div className="flex items-center gap-1 rounded-lg border border-border/50 bg-muted/40 p-1 shadow-sm h-8">
               {/* All pill */}
               <button
@@ -264,10 +264,7 @@ export function Toolbar({
               >
                 <Car className="size-4" />
               </TooltipTrigger>
-              <TooltipContent
-                side="bottom"
-                className="text-xs font-semibold"
-              >
+              <TooltipContent side="bottom" className="text-xs font-semibold">
                 {t("registerVehicle")}
               </TooltipContent>
             </Tooltip>
@@ -286,10 +283,7 @@ export function Toolbar({
               >
                 <Wrench className="size-4" />
               </TooltipTrigger>
-              <TooltipContent
-                side="bottom"
-                className="text-xs font-semibold"
-              >
+              <TooltipContent side="bottom" className="text-xs font-semibold">
                 {t("registerMechanic")}
               </TooltipContent>
             </Tooltip>
@@ -308,10 +302,7 @@ export function Toolbar({
               >
                 <LayoutDashboard className="size-4" />
               </TooltipTrigger>
-              <TooltipContent
-                side="bottom"
-                className="text-xs font-semibold"
-              >
+              <TooltipContent side="bottom" className="text-xs font-semibold">
                 {t("shiftReport")}
               </TooltipContent>
             </Tooltip>
@@ -330,10 +321,7 @@ export function Toolbar({
               >
                 <KeyRound className="size-4" />
               </TooltipTrigger>
-              <TooltipContent
-                side="bottom"
-                className="text-xs font-semibold"
-              >
+              <TooltipContent side="bottom" className="text-xs font-semibold">
                 {t("bayPinSettings")}
               </TooltipContent>
             </Tooltip>

@@ -5,7 +5,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   CheckCircle,
-  ChevronDown,
   FileText,
   Loader2,
   MoreHorizontal,
@@ -20,12 +19,8 @@ import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +34,6 @@ import { prefetchDrawerData } from "@/lib/queries/use-drawer-queries";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
 import {
-  ALL_STATUSES,
   STATUS_ACCENT,
   STATUS_BADGE_CLASS,
   STATUS_TRANSLATION_KEYS,
@@ -201,10 +195,7 @@ export function BayCard({
   return (
     <div
       ref={setNodeRef}
-      className={cn(
-        "h-full transition-all duration-300",
-        isOver && "scale-[1.02]",
-      )}
+      className={cn("transition-all duration-300", isOver && "scale-[1.02]")}
     >
       <div
         ref={setDraggableCardRef}
@@ -215,7 +206,7 @@ export function BayCard({
       >
         <Card
           className={cn(
-            "relative h-full min-h-[160px] flex flex-col transition-all duration-300 py-0 gap-0 rounded-xl border-border/70",
+            "relative h-full flex flex-col transition-all duration-300 py-0 gap-0 rounded-xl border-border/70",
             wo
               ? "bg-card hover:bg-card/90 cursor-pointer shadow-sm hover:shadow-md hover:border-primary/25 border"
               : "border-dashed border-muted-foreground/30 bg-muted/10 hover:bg-muted/15",
@@ -239,70 +230,39 @@ export function BayCard({
 
           {wo ? (
             <>
-              <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 pl-4 pr-3 py-3 w-full select-none bg-muted/5">
-                <span className="text-xs font-mono font-black text-foreground/80 tracking-wider">
-                  BAY {String(bay.bayNumber).padStart(2, "0")}
-                </span>
+              {/* Header: Bay number + status badge */}
+              <div className="flex items-center justify-between pl-5 pr-3 py-2.5 select-none">
                 <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-black tracking-wider text-foreground/80">
+                    BAY {String(bay.bayNumber).padStart(2, "0")}
+                  </span>
                   {isPending && (
                     <Loader2 className="size-3 animate-spin text-muted-foreground/60" />
                   )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger onClick={(e) => e.stopPropagation()}>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "h-5 px-2 text-xs font-bold uppercase tracking-wider rounded-full border cursor-pointer",
-                          STATUS_BADGE_CLASS[wo.status],
-                        )}
-                      >
-                        {wo.status === "In Progress" && (
-                          <span className="mr-2 size-1.5 rounded-full bg-current animate-pulse inline-block" />
-                        )}
-                        {t(STATUS_TRANSLATION_KEYS[wo.status])}
-                        <ChevronDown className="ml-1 size-3 text-muted-foreground/60" />
-                      </Badge>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" sideOffset={4}>
-                      {ALL_STATUSES.map((status) => (
-                        <DropdownMenuItem
-                          key={status}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onStatusChange(wo.id, status);
-                          }}
-                          className="gap-2 text-xs"
-                        >
-                          <span
-                            className={cn(
-                              "size-2 shrink-0 rounded-full",
-                              STATUS_BADGE_CLASS[status]
-                                ?.match(/text-\w+-\d+/)?.[0]
-                                ?.replace("text", "bg") ??
-                                "bg-muted-foreground",
-                            )}
-                          />
-                          {t(STATUS_TRANSLATION_KEYS[status])}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </div>
-              </CardHeader>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "h-5 px-2 text-xs font-bold uppercase tracking-wider rounded-full border",
+                    STATUS_BADGE_CLASS[wo.status],
+                  )}
+                >
+                  {wo.status === "In Progress" && (
+                    <span className="mr-2 size-1.5 rounded-full bg-current animate-pulse inline-block" />
+                  )}
+                  {t(STATUS_TRANSLATION_KEYS[wo.status])}
+                </Badge>
+              </div>
 
-              <CardContent className="relative flex flex-col gap-4 px-4 py-4 flex-1 justify-between">
-                {/* Background brand watermark */}
-                <VehicleMakeLogo
-                  make={v?.make}
-                  size="85%"
-                  className="absolute inset-0 m-auto pointer-events-none select-none text-primary/[0.02]"
-                  aria-hidden
-                />
+              <Separator />
+
+              {/* Content: Vehicle info + mechanic */}
+              <div className="flex flex-col gap-2.5 px-4 py-3 flex-1">
                 <DraggableVehicleWrapper
                   workOrderId={wo.id}
                   disabled={isPending || isKanbanMode}
                 >
-                  <div className="relative flex min-w-0 flex-col gap-2 text-left">
+                  <div className="flex min-w-0 flex-col gap-1 text-left">
                     {v ? (
                       <>
                         <div className="flex flex-wrap items-center gap-2">
@@ -311,16 +271,10 @@ export function BayCard({
                             startedAt={wo.started_at ?? wo.created_at}
                           />
                         </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-foreground/95 truncate">
-                            {v.make} {v.model}
-                          </span>
-                          {v.year && (
-                            <span className="text-xs text-muted-foreground font-semibold">
-                              Year: {v.year}
-                            </span>
-                          )}
-                        </div>
+                        <span className="text-sm font-bold text-foreground/95 truncate">
+                          {v.make} {v.model}
+                          {v.year ? ` · ${v.year}` : ""}
+                        </span>
                       </>
                     ) : (
                       <Typography.Muted className="text-xs text-muted-foreground italic leading-none">
@@ -330,103 +284,19 @@ export function BayCard({
                   </div>
                 </DraggableVehicleWrapper>
 
-                {/* Status Stepper Progression */}
-                <div className="mt-1 flex items-center justify-between w-full relative px-1 select-none isolate">
-                  {/* Background Line */}
-                  <div className="absolute top-3 left-3 right-3 h-0.5 bg-border -z-10" />
-                  {/* Active Progress Line */}
-                  <div
-                    className={cn(
-                      "absolute top-3 left-3 h-0.5 -z-10 transition-all duration-500 ease-in-out rounded-full",
-                      wo.status === "Diagnosing" && "bg-blue-500",
-                      wo.status === "In Progress" && "bg-indigo-500",
-                      (wo.status === "Ready for Pickup" ||
-                        wo.status === "Completed") &&
-                        "bg-emerald-500",
-                    )}
-                    style={{
-                      width: (() => {
-                        const stepOrder = [
-                          "New",
-                          "Diagnosing",
-                          "In Progress",
-                          "Ready for Pickup",
-                        ];
-                        let currentIdx = stepOrder.indexOf(wo.status);
-                        if (wo.status === "Completed") currentIdx = 3;
-                        if (currentIdx <= 0) return "0%";
-                        const pct = (currentIdx / (stepOrder.length - 1)) * 100;
-                        const offset =
-                          (currentIdx / (stepOrder.length - 1)) * 20;
-                        return `calc(${pct}% - ${offset}px)`;
-                      })(),
-                    }}
+                <div className="flex flex-wrap items-center gap-2">
+                  <MechanicBadge
+                    workOrderId={wo.id}
+                    mechanic={wo.mechanic}
+                    disabled={isPending}
+                    role="main"
+                    status={wo.status}
                   />
-                  {["New", "Diagnosing", "In Progress", "Ready for Pickup"].map(
-                    (step, idx) => {
-                      const stepOrder = [
-                        "New",
-                        "Diagnosing",
-                        "In Progress",
-                        "Ready for Pickup",
-                      ];
-                      const currentIdx = stepOrder.indexOf(wo.status);
-                      const isPast = stepOrder.indexOf(step) < currentIdx;
-                      const isCurrent = step === wo.status;
-                      const isFuture = stepOrder.indexOf(step) > currentIdx;
-
-                      return (
-                        <div
-                          key={step}
-                          className="flex flex-col items-center gap-2"
-                        >
-                          <div
-                            className={cn(
-                              "size-5 rounded-full border flex items-center justify-center text-xs font-black transition-all duration-300",
-                              isPast &&
-                                "bg-emerald-500 border-emerald-500 text-white shadow-sm",
-                              isCurrent &&
-                                "bg-indigo-600 border-indigo-600 text-white scale-110 shadow-sm shadow-indigo-600/30 font-bold",
-                              isFuture &&
-                                "bg-background border-border text-muted-foreground/35",
-                            )}
-                          >
-                            {isPast ? "✓" : idx + 1}
-                          </div>
-                          <span
-                            className={cn(
-                              "text-xs font-bold leading-none tracking-tight transition-colors",
-                              isCurrent &&
-                                "text-indigo-600 dark:text-indigo-400 font-extrabold",
-                              !isCurrent && "text-muted-foreground/45",
-                            )}
-                          >
-                            {step === "Ready for Pickup" ? "Ready" : step}
-                          </span>
-                        </div>
-                      );
-                    },
+                  {!wo.mechanic && (
+                    <span className="text-xs text-muted-foreground/50 font-bold select-none">
+                      Unassigned tech
+                    </span>
                   )}
-                </div>
-
-                {/* Assign Mechanic area */}
-                <div className="mt-1 flex flex-row flex-wrap items-center gap-2 border-t border-border/30 pt-2.5">
-                  {/* Main mechanic */}
-                  <div className="flex items-center gap-2">
-                    <MechanicBadge
-                      workOrderId={wo.id}
-                      mechanic={wo.mechanic}
-                      disabled={isPending}
-                      role="main"
-                      status={wo.status}
-                    />
-                    {!wo.mechanic && (
-                      <span className="text-xs text-muted-foreground/50 font-bold select-none">
-                        Unassigned tech
-                      </span>
-                    )}
-                  </div>
-                  {/* Helper mechanics */}
                   {(() => {
                     const helpers = (wo as Record<string, unknown>).helpers as
                       | Array<{
@@ -436,100 +306,88 @@ export function BayCard({
                         }>
                       | undefined;
                     if (!helpers || helpers.length === 0) return null;
-                    return (
-                      <div className="flex flex-wrap items-center gap-2">
-                        {helpers.map((helper) => (
-                          <MechanicBadge
-                            key={helper.id}
-                            workOrderId={wo.id}
-                            mechanic={helper}
-                            disabled={isPending}
-                            compact
-                            onRemove={() => onRemoveHelper?.(wo.id, helper.id)}
-                          />
-                        ))}
-                      </div>
-                    );
+                    return helpers.map((helper) => (
+                      <MechanicBadge
+                        key={helper.id}
+                        workOrderId={wo.id}
+                        mechanic={helper}
+                        disabled={isPending}
+                        compact
+                        onRemove={() => onRemoveHelper?.(wo.id, helper.id)}
+                      />
+                    ));
                   })()}
                 </div>
-              </CardContent>
+              </div>
 
-              <CardFooter className="mt-auto justify-between border-t border-border/40 bg-muted/20 px-3 py-2.5">
-                <div className="flex items-center gap-2 w-full">
-                  {/* Primary action: status progression */}
-                  {wo.status === "New" && (
-                    <Button
-                      size="xs"
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onStatusChange(wo.id, "Diagnosing");
-                      }}
-                      disabled={isPending}
-                    >
-                      <Play className="size-3" />
-                      Start
-                    </Button>
-                  )}
-                  {wo.status === "Diagnosing" && (
-                    <Button
-                      size="xs"
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onStatusChange(wo.id, "In Progress");
-                      }}
-                      disabled={isPending}
-                    >
-                      <Wrench className="size-3" />
-                      Repair
-                    </Button>
-                  )}
-                  {wo.status === "In Progress" && (
-                    <Button
-                      size="xs"
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onStatusChange(wo.id, "Ready for Pickup");
-                      }}
-                      disabled={isPending}
-                    >
-                      <Check className="size-3" />
-                      Ready
-                    </Button>
-                  )}
-                  {wo.status === "Ready for Pickup" && (
-                    <Button
-                      size="xs"
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onStatusChange(wo.id, "Completed");
-                      }}
-                      disabled={isPending}
-                    >
-                      <CheckCircle className="size-3" />
-                      Complete
-                    </Button>
-                  )}
+              <Separator />
 
-                  {/* Secondary actions dropdown */}
+              {/* Footer: Status action + menu + remove */}
+              <div className="flex items-center gap-2 px-3 py-2">
+                {wo.status === "New" && (
+                  <Button
+                    size="xs"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStatusChange(wo.id, "Diagnosing");
+                    }}
+                    disabled={isPending}
+                  >
+                    <Play className="size-3" /> Start
+                  </Button>
+                )}
+                {wo.status === "Diagnosing" && (
+                  <Button
+                    size="xs"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStatusChange(wo.id, "In Progress");
+                    }}
+                    disabled={isPending}
+                  >
+                    <Wrench className="size-3" /> Repair
+                  </Button>
+                )}
+                {wo.status === "In Progress" && (
+                  <Button
+                    size="xs"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStatusChange(wo.id, "Ready for Pickup");
+                    }}
+                    disabled={isPending}
+                  >
+                    <Check className="size-3" /> Ready
+                  </Button>
+                )}
+                {wo.status === "Ready for Pickup" && (
+                  <Button
+                    size="xs"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1 rounded shadow-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStatusChange(wo.id, "Completed");
+                    }}
+                    disabled={isPending}
+                  >
+                    <CheckCircle className="size-3" /> Complete
+                  </Button>
+                )}
+                <div className="ml-auto flex items-center gap-1">
                   <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={(props) => (
-                        <Button
-                          {...props}
-                          size="icon-xs"
-                          variant="ghost"
-                          onClick={(e) => e.stopPropagation()}
-                          disabled={isPending}
-                          className="text-muted-foreground/60 hover:text-foreground ml-auto"
-                        >
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      )}
-                    />
+                    <DropdownMenuTrigger onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        disabled={isPending}
+                        className="text-muted-foreground/60 hover:text-foreground"
+                      >
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
                       sideOffset={4}
@@ -542,8 +400,7 @@ export function BayCard({
                         }}
                         className="gap-2 text-xs"
                       >
-                        <Timer className="size-3.5" />
-                        Pause Timer
+                        <Timer className="size-3.5" /> Pause Timer
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={(e) => {
@@ -552,8 +409,7 @@ export function BayCard({
                         }}
                         className="gap-2 text-xs"
                       >
-                        <FileText className="size-3.5" />
-                        Add Note
+                        <FileText className="size-3.5" /> Add Note
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={(e) => {
@@ -562,8 +418,7 @@ export function BayCard({
                         }}
                         className="gap-2 text-xs"
                       >
-                        <Wrench className="size-3.5" />
-                        Add Service
+                        <Wrench className="size-3.5" /> Add Service
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={(e) => {
@@ -572,8 +427,7 @@ export function BayCard({
                         }}
                         className="gap-2 text-xs"
                       >
-                        <Plus className="size-3.5" />
-                        Add Parts
+                        <Plus className="size-3.5" /> Add Parts
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={(e) => {
@@ -582,13 +436,10 @@ export function BayCard({
                         }}
                         className="gap-2 text-xs"
                       >
-                        <UserPlus className="size-3.5" />
-                        Assign Mechanic
+                        <UserPlus className="size-3.5" /> Assign Mechanic
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-
-                  {/* Remove button (shown only when not completed/cancelled) */}
                   {wo.status !== "Completed" &&
                     wo.status !== "Cancelled" &&
                     onRemoveFromBay && (
@@ -608,26 +459,25 @@ export function BayCard({
                       </Button>
                     )}
                 </div>
-              </CardFooter>
+              </div>
             </>
           ) : (
             <button
               type="button"
               onClick={() => onAssignClick?.(bay.bayNumber)}
-              className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-6 h-auto min-h-[160px] text-center w-full group/btn cursor-pointer transition-colors relative"
+              className="flex flex-col items-center justify-center gap-3 px-4 py-8 text-center w-full group/btn cursor-pointer transition-colors relative"
             >
-              {/* Grid Pattern Background for Empty State */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:10px_10px]" />
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:12px_12px] transition-opacity duration-300 group-hover/btn:opacity-60" />
 
-              <div className="flex size-9 items-center justify-center rounded-full border border-dashed border-muted-foreground/40 bg-background/80 shadow-sm group-hover/btn:scale-110 group-hover/btn:border-primary/50 group-hover/btn:text-primary transition-all duration-300 z-10">
-                <Plus className="size-4 text-muted-foreground/60 group-hover/btn:text-primary transition-colors" />
+              <div className="flex size-10 items-center justify-center rounded-full border border-dashed border-muted-foreground/30 bg-muted/40 shadow-sm group-hover/btn:scale-110 group-hover/btn:border-primary/50 group-hover/btn:bg-primary/10 group-hover/btn:text-primary transition-all duration-300 z-10">
+                <Plus className="size-5 text-muted-foreground/50 group-hover/btn:text-primary transition-colors" />
               </div>
 
-              <div className="flex flex-col gap-1 z-10">
-                <span className="text-xs font-mono font-black uppercase tracking-wider text-muted-foreground/80 group-hover/btn:text-primary transition-colors">
+              <div className="flex flex-col gap-0.5 z-10">
+                <span className="text-xs font-mono font-black uppercase tracking-wider text-muted-foreground/70 group-hover/btn:text-primary/80 transition-colors">
                   BAY {String(bay.bayNumber).padStart(2, "0")}
                 </span>
-                <span className="text-xs font-medium text-muted-foreground/50 tracking-tight">
+                <span className="text-[11px] font-medium text-muted-foreground/40 tracking-tight">
                   Available for service
                 </span>
               </div>

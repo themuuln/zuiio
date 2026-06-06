@@ -7,7 +7,6 @@ import {
   DollarSign,
   Lightbulb,
   Percent,
-  Plus,
   TrendingUp,
   Users,
   Wrench,
@@ -33,7 +32,7 @@ import { useDashboard } from "@/lib/queries/use-dashboard";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { WorkOrderDetail } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, hasMultipleBranches } from "@/lib/utils";
 import { DailyTimeline } from "./_daily-timeline";
 import { KpiCard } from "./_kpi-cards";
 import { LowStockCard } from "./_low-stock-card";
@@ -72,7 +71,7 @@ export default function DashboardPage() {
       router.replace("/dashboard/bay-view");
     }
   }, [roleLoading, isMechanic, router]);
-  const { setNewWorkOrderSheetOpen } = usePageHeader();
+  usePageHeader();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const selectedBranchId = useSelectedBranchId();
   const setSelectedBranchId = useSetSelectedBranchId();
@@ -335,23 +334,24 @@ export default function DashboardPage() {
 
   // ── Header (shared across partial and full states) ──
   const header = (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div>
-        <Typography.H2 className="m-0">{t("dashboard.welcome")}</Typography.H2>
-        <Typography.Muted className="mt-1">
-          {t("dashboard.subtitle")}
-        </Typography.Muted>
-      </div>
-      <div className="flex flex-col gap-3 sm:items-end">
-        <BranchSelect
-          value={selectedBranchId}
-          onChange={setSelectedBranchId}
-          branches={branches}
-          placeholder={t("dashboard.branch")}
-          allLabel={t("dashboard.allBranches")}
-          className="min-w-44"
-        />
-        <DateFilterBar value={dateRange} onChange={setDateRange} />
+    <div className="sticky top-0 z-10 flex-shrink-0 border-b border-border/40 bg-background/80 backdrop-blur-md px-4 py-2.5 select-none">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <Typography.H2 className="m-0 text-base font-bold">
+          {t("dashboard.welcome")}
+        </Typography.H2>
+        <div className="flex items-center gap-2">
+          {hasMultipleBranches(branches) && (
+            <BranchSelect
+              value={selectedBranchId}
+              onChange={setSelectedBranchId}
+              branches={branches}
+              placeholder={t("dashboard.branch")}
+              allLabel={t("dashboard.allBranches")}
+              className="min-w-44"
+            />
+          )}
+          <DateFilterBar value={dateRange} onChange={setDateRange} />
+        </div>
       </div>
     </div>
   );
@@ -499,15 +499,6 @@ export default function DashboardPage() {
             />
           </>
         )}
-      </div>
-      <div className="flex justify-end">
-        <Button
-          variant="outline"
-          onClick={() => setNewWorkOrderSheetOpen(true)}
-        >
-          <Plus className="mr-2 size-4" />
-          {t("workOrders.newWorkOrder")}
-        </Button>
       </div>
       {data ? <ChartsSection data={data} /> : null}
       {/* ── Timeline (horizontal strip) ── */}

@@ -154,7 +154,7 @@ export interface UpdateEstimateParams {
 // ── Work Orders ────────────────────────────────────────────────
 
 export interface CreateWorkOrderParams {
-  customer_id: string;
+  customer_id?: string;
   vehicle_id: string;
   branchId?: string;
   mechanic_id?: string;

@@ -149,6 +149,12 @@ export async function updateWorkOrderStatus(
         }
       }
     } catch (err) {
+      // Inventory failure is logged but not rethrown — the WO status update
+      // has already been committed and cannot be rolled back. Rethrowing here
+      // would leave the WO in an inconsistent state with a failed response to
+      // the client. Instead, we log the error and continue so the dashboard
+      // cache is still invalidated (showing the revenue from the completed WO).
+      // The inventory discrepancy should be reconciled via manual stock audit.
       reportServerError(
         `[WO ${id}] Failed to deduct inventory: ${err instanceof Error ? err.message : err}`,
       );
@@ -162,6 +168,9 @@ export async function updateWorkOrderStatus(
     cacheTags.dailyWorkOrders(orgId, new Date().toISOString().split("T")[0]),
     "max",
   );
+  // Invalidate dashboard + reports so revenue/profit KPIs update immediately
+  revalidateTag(cacheTags.dashboardMetrics(orgId), "max");
+  revalidateTag(cacheTags.reports(orgId), "max");
 
   if (newStatus === "Completed") {
     revalidateTag(cacheTags.inventoryMovements(orgId), "max");

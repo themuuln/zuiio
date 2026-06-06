@@ -48,6 +48,8 @@ export default defineConfig({
           { text: "Механикийн самбар", link: "/mechanic" },
           { text: "Механикийн гүйцэтгэл", link: "/mechanic-performance" },
           { text: "Ажлын захиалга", link: "/work-orders" },
+          { text: "Үнэлгээ", link: "/estimates" },
+          { text: "Цаг товлолт", link: "/appointments" },
           { text: "Харилцагчид", link: "/customers" },
           { text: "Тээврийн хэрэгсэл", link: "/vehicles" },
           { text: "Өдрийн хаалт", link: "/eod-close" },
@@ -93,6 +95,8 @@ export default defineConfig({
       {
         text: "Бусад",
         items: [
+          { text: "Админ", link: "/admin" },
+          { text: "QR Цаг бүртгэл", link: "/qr-clock-in" },
           { text: "Интеграцууд", link: "/integrations" },
           { text: "Зөвлөмжүүд", link: "/tips" },
         ],
