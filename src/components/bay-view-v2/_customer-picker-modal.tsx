@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, Plus, User } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { z } from "zod";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -31,24 +31,7 @@ export function CustomerPickerModal({
   onOpenChange,
   onSelect,
 }: CustomerPickerModalProps) {
-  const searchContainerRef = useRef<HTMLDivElement>(null);
   const [customerSearch, setCustomerSearch] = useState("");
-
-  // When the dialog opens, focus the search input manually since Base UI's
-  // FloatingFocusManager may not correctly detect the input as focusable
-  // when it's wrapped in InputGroup + @base-ui/react/input.
-  useEffect(() => {
-    if (open) {
-      // Small delay to let the dialog mount and animations start
-      const id = setTimeout(() => {
-        const input = searchContainerRef.current?.querySelector<HTMLElement>(
-          '[data-slot="input-group-control"]',
-        );
-        input?.focus();
-      }, 50);
-      return () => clearTimeout(id);
-    }
-  }, [open]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searching, setSearching] = useState(false);
   const [showQuick, setShowQuick] = useState(false);
@@ -121,7 +104,13 @@ export function CustomerPickerModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" size="md">
+      <DialogContent
+        className="sm:max-w-md"
+        size="md"
+        initialFocus={() =>
+          document.getElementById("customer-picker-search") ?? undefined
+        }
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <User className="size-4" />
@@ -129,8 +118,9 @@ export function CustomerPickerModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3 -mt-2" ref={searchContainerRef}>
+        <div className="flex flex-col gap-3 -mt-2">
           <SearchInput
+            id="customer-picker-search"
             placeholder="Search by name or phone..."
             loading={searching}
             onSearch={handleSearch}
