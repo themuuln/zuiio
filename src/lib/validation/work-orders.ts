@@ -126,9 +126,14 @@ export const addWorkOrderServiceSchema = z.object({
 
 // ── PATCH /work-orders/[workOrderId]/services?serviceId= ───────
 
-export const updateServicePriceSchema = z.object({
-  final_price: z.number().min(0, "Price cannot be negative"),
-});
+export const updateServicePriceSchema = z
+  .object({
+    final_price: z.number().min(0, "Price cannot be negative").optional(),
+    quantity: z.number().int().positive("Quantity must be positive").optional(),
+  })
+  .refine((d) => d.final_price !== undefined || d.quantity !== undefined, {
+    message: "At least one of final_price or quantity is required",
+  });
 
 // ── POST /work-orders/[workOrderId]/parts ──────────────────────
 
@@ -145,9 +150,14 @@ export const addWorkOrderPartSchema = z.object({
 
 // ── PATCH /work-orders/[workOrderId]/parts?partId= ────────────
 
-export const updatePartPriceSchema = z.object({
-  final_price: z.number().min(0, "Price cannot be negative"),
-});
+export const updatePartPriceSchema = z
+  .object({
+    final_price: z.number().min(0, "Price cannot be negative").optional(),
+    quantity: z.number().int().positive("Quantity must be positive").optional(),
+  })
+  .refine((d) => d.final_price !== undefined || d.quantity !== undefined, {
+    message: "At least one of final_price or quantity is required",
+  });
 
 // ── POST /work-orders/[workOrderId]/attachments ────────────────
 

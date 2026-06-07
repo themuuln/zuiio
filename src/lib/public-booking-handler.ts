@@ -64,11 +64,10 @@ export function createPublicBookingHandler(handler: BookingHandler) {
       }
 
       // 3. Create service_role client (bypasses RLS — no auth user)
-      const { createClient } = await import("@supabase/supabase-js");
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      const { createServiceRoleClient } = await import(
+        "@/lib/supabase/service-role"
       );
+      const supabase = await createServiceRoleClient();
 
       // 4. Look up organization by booking_token
       const { data: org, error: orgError } = await supabase

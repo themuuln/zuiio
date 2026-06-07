@@ -208,14 +208,38 @@ export async function updateWorkOrderServicePrice(
   db: SupabaseClient,
   serviceId: string,
   workOrderId: string,
-  params: { final_price: number },
+  params: { final_price?: number; quantity?: number },
   orgId: string,
 ): Promise<void> {
   const supabase = db;
 
+  // Build the update payload
+  const updatePayload: Record<string, number> = {};
+
+  if (params.quantity !== undefined) {
+    // Quantity changed — recalculate final_price from unit_price * quantity
+    const { data: current } = await supabase
+      .from("work_order_services")
+      .select("unit_price")
+      .eq("id", serviceId)
+      .eq("work_order_id", workOrderId)
+      .single();
+
+    const unitPrice = Number(current?.unit_price ?? 0);
+    updatePayload.quantity = params.quantity;
+    updatePayload.final_price = unitPrice * params.quantity;
+  }
+
+  if (params.final_price !== undefined) {
+    // Price overridden directly
+    updatePayload.final_price = params.final_price;
+  }
+
+  if (Object.keys(updatePayload).length === 0) return;
+
   const { error } = await supabase
     .from("work_order_services")
-    .update({ final_price: params.final_price, unit_price: params.final_price })
+    .update(updatePayload)
     .eq("id", serviceId)
     .eq("work_order_id", workOrderId);
 
@@ -259,14 +283,38 @@ export async function updateWorkOrderPartPrice(
   db: SupabaseClient,
   partId: string,
   workOrderId: string,
-  params: { final_price: number },
+  params: { final_price?: number; quantity?: number },
   orgId: string,
 ): Promise<void> {
   const supabase = db;
 
+  // Build the update payload
+  const updatePayload: Record<string, number> = {};
+
+  if (params.quantity !== undefined) {
+    // Quantity changed — recalculate final_price from unit_price * quantity
+    const { data: current } = await supabase
+      .from("work_order_parts")
+      .select("unit_price")
+      .eq("id", partId)
+      .eq("work_order_id", workOrderId)
+      .single();
+
+    const unitPrice = Number(current?.unit_price ?? 0);
+    updatePayload.quantity = params.quantity;
+    updatePayload.final_price = unitPrice * params.quantity;
+  }
+
+  if (params.final_price !== undefined) {
+    // Price overridden directly
+    updatePayload.final_price = params.final_price;
+  }
+
+  if (Object.keys(updatePayload).length === 0) return;
+
   const { error } = await supabase
     .from("work_order_parts")
-    .update({ final_price: params.final_price, unit_price: params.final_price })
+    .update(updatePayload)
     .eq("id", partId)
     .eq("work_order_id", workOrderId);
 

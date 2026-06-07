@@ -40,7 +40,7 @@ export async function updateWorkOrderStatus(
   const { data: currentWorkOrder, error: currentWorkOrderError } =
     await supabase
       .from("work_orders")
-      .select("id, organization_id, status")
+      .select("id, organization_id, status, started_at")
       .eq("id", id)
       .eq("organization_id", orgId)
       .is("deleted_at", null)
@@ -159,6 +159,14 @@ export async function updateWorkOrderStatus(
         `[WO ${id}] Failed to deduct inventory: ${err instanceof Error ? err.message : err}`,
       );
     }
+  }
+
+  // Start job timer when mechanic begins working
+  if (newStatus === "In Progress" && !currentWorkOrder.started_at) {
+    await supabase
+      .from("work_orders")
+      .update({ started_at: new Date().toISOString() })
+      .eq("id", id);
   }
 
   revalidateTag(cacheTags.workOrders(orgId), "max");

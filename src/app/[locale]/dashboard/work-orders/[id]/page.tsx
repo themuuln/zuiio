@@ -209,14 +209,27 @@ export default function WorkOrderDetailPage() {
     }
   }, [partPriceHistoryData, newPart.unit_price]);
 
+  // Mount effect: register sidebar tabs with null content, unregister on unmount
+  useEffect(() => {
+    sidebar.registerTab("vehicle", t("vehicle"), null);
+    sidebar.registerTab("customer", t("customer"), null);
+    sidebar.registerTab("timeline", t("timeline"), null);
+
+    return () => {
+      sidebar.unregisterTab("vehicle");
+      sidebar.unregisterTab("customer");
+      sidebar.unregisterTab("timeline");
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Data effect: update tab content when work order data changes
   useEffect(() => {
     if (!wo) return;
 
     sidebar.setActiveTab("vehicle");
 
-    sidebar.registerTab(
+    sidebar.updateTabContent(
       "vehicle",
-      t("vehicle"),
       <ContactCard
         title={t("vehicle")}
         items={[
@@ -237,9 +250,8 @@ export default function WorkOrderDetailPage() {
       />,
     );
 
-    sidebar.registerTab(
+    sidebar.updateTabContent(
       "customer",
-      t("customer"),
       <ContactCard
         title={t("customer")}
         items={[
@@ -266,9 +278,8 @@ export default function WorkOrderDetailPage() {
       />,
     );
 
-    sidebar.registerTab(
+    sidebar.updateTabContent(
       "timeline",
-      t("timeline"),
       <RecentList
         title={t("statusHistory")}
         items={(wo.status_history ?? []).map((h) => ({
@@ -280,13 +291,7 @@ export default function WorkOrderDetailPage() {
         emptyMessage={t("noStatusChanges")}
       />,
     );
-
-    return () => {
-      sidebar.unregisterTab("vehicle");
-      sidebar.unregisterTab("customer");
-      sidebar.unregisterTab("timeline");
-    };
-  }, [wo, sidebar.registerTab, sidebar.setActiveTab, sidebar.unregisterTab]);
+  }, [wo, sidebar.updateTabContent, sidebar.setActiveTab]);
 
   const serviceExportColumns: ExportColumn<WorkOrderService>[] = useMemo(
     () => [

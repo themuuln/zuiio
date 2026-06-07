@@ -76,7 +76,7 @@ export function GridView({
 
   return (
     <div
-      className="grid gap-4 w-full [grid-auto-rows:auto]"
+      className="grid gap-4 w-full h-full [grid-auto-rows:1fr] min-h-0"
       style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
     >
       {bays.map((bay) => (

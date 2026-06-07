@@ -178,7 +178,7 @@ export interface AddServiceParams {
 }
 
 export interface AddPartParams {
-  part_id?: string;
+  part_id?: string | null;
   part_name: string;
   part_number?: string;
   quantity?: number;

@@ -33,6 +33,12 @@ interface FetchOptions {
    * When set, responses are cached in IndexedDB and served when offline.
    */
   offlineStore?: StoreName;
+  /**
+   * Extra params to include in the IndexedDB cache key (beyond orgId + path).
+   * Use when the same endpoint serves different data based on query params
+   * (e.g. `/reports?type=eod` vs `/reports?type=trend`).
+   */
+  cacheKeyParams?: Record<string, string | number | boolean>;
 }
 
 /**
@@ -53,6 +59,7 @@ export function createOrgQuery<T>(
     const url = buildUrl(orgId, path, fetchOpts?.params);
     // Auto-detect store from path if not explicitly provided
     const store = fetchOpts?.offlineStore ?? getStoreForPath(path);
+    const cacheKeyParams = fetchOpts?.cacheKeyParams;
 
     // Try network first
     if (navigator.onLine) {
@@ -78,9 +85,10 @@ export function createOrgQuery<T>(
             : (json.data as T);
 
         // Cache to IndexedDB for offline use (strip query params so all
-        // variants of the same endpoint share one cache entry)
+        // variants of the same endpoint share one cache entry,
+        // unless cacheKeyParams are provided for type-specific caching)
         if (store && typeof window !== "undefined") {
-          const baseCacheKey = buildCacheKey(orgId, path);
+          const baseCacheKey = buildCacheKey(orgId, path, cacheKeyParams);
           cacheToIndexedDB(store, orgId, baseCacheKey, data).catch(() => {
             // Silently ignore cache write failures
           });
@@ -90,7 +98,7 @@ export function createOrgQuery<T>(
       } catch (err) {
         // Network failed — try IndexedDB fallback (strip query params)
         if (store && typeof window !== "undefined") {
-          const baseCacheKey = buildCacheKey(orgId, path);
+          const baseCacheKey = buildCacheKey(orgId, path, cacheKeyParams);
           const cached = await getFromIndexedDB<T>(store, baseCacheKey);
           if (cached !== null) return cached;
         }
@@ -100,7 +108,7 @@ export function createOrgQuery<T>(
 
     // Offline — read from IndexedDB (strip query params)
     if (store && typeof window !== "undefined") {
-      const baseCacheKey = buildCacheKey(orgId, path);
+      const baseCacheKey = buildCacheKey(orgId, path, cacheKeyParams);
       const cached = await getFromIndexedDB<T>(store, baseCacheKey);
       if (cached !== null) return cached;
     }

@@ -1,12 +1,8 @@
 /**
  * React Query hooks for the mechanic dashboard page.
  *
- * Replaces raw fetch() + useState with:
- * - Automatic caching (staleTime)
- * - Deduplication of concurrent requests
- * - Background refetching via refetchInterval
- * - Stale-while-revalidate (placeholderData from previous)
- * - Optimistic updates for clock toggle
+ * Uses createOrgQuery for offline IndexedDB caching on data hooks.
+ * Clock hooks use raw fetch (real-time data, no offline value).
  */
 import {
   type UseQueryResult,
@@ -16,6 +12,7 @@ import {
 } from "@tanstack/react-query";
 
 import { clockKeys, mechanicKeys } from "./keys";
+import { createOrgQuery } from "./factory";
 
 // ── Types ──────────────────────────────────────────
 
@@ -37,6 +34,7 @@ export interface WorkOrderRow {
   vehicle_plate: string | null;
   vehicle_id: string | null;
   created_at: string;
+  started_at: string | null;
 }
 
 export interface MechanicTrend {
@@ -51,27 +49,18 @@ export interface ClockStatus {
   todayHours: number;
 }
 
-// ── Helpers ─────────────────────────────────────────
+// ── Fetchers (offline-cached via createOrgQuery) ───
 
-function apiUrl(orgId: string, path: string): string {
-  return `/api/organizations/${orgId}${path}`;
-}
-
-async function fetchJson<T>(url: string): Promise<T | null> {
-  const res = await fetch(url);
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error?.message ?? `Request failed (${res.status})`);
-  }
-  const json = await res.json();
-  return (json.data as T) ?? null;
-}
+const fetchReports = createOrgQuery<{
+  mechanics?: MechanicEodSummary[];
+  data?: unknown;
+}>("/reports");
 
 // ── EOD Summary ────────────────────────────────────
 
 /**
  * End-of-day summary for a mechanic (today's completed orders, revenue, etc).
- * Auto-refetches every 30s while the page is active.
+ * Auto-refetches every 30s. Cached to IndexedDB for offline use.
  */
 export function useMechanicEod(
   orgId: string | undefined,
@@ -81,8 +70,10 @@ export function useMechanicEod(
     queryKey: mechanicKeys.eod(orgId ?? "", userId ?? ""),
     queryFn: async () => {
       const today = new Date().toISOString().split("T")[0];
-      const url = `${apiUrl(orgId!, "/reports")}?type=eod&date=${today}&mechanic=${userId!}`;
-      const data = await fetchJson<{ mechanics: MechanicEodSummary[] }>(url);
+      const data = await fetchReports(orgId!, {
+        params: { type: "eod", date: today, mechanic: userId! },
+        cacheKeyParams: { type: "eod" },
+      });
       return data?.mechanics?.[0] ?? null;
     },
     enabled: !!orgId && !!userId,
@@ -97,7 +88,7 @@ export function useMechanicEod(
 /**
  * Active work orders assigned to a mechanic.
  * Fetches orders in New, Diagnosing, In Progress, Ready for Pickup statuses.
- * Auto-refetches every 30s.
+ * Auto-refetches every 30s. Cached to IndexedDB for offline use.
  */
 export function useMechanicWorkOrders(
   orgId: string | undefined,
@@ -106,14 +97,22 @@ export function useMechanicWorkOrders(
   return useQuery({
     queryKey: mechanicKeys.workOrders(orgId ?? "", userId ?? ""),
     queryFn: async () => {
-      const params = new URLSearchParams();
-      params.set("mechanic", userId!);
-      params.append("status", "In Progress");
-      params.append("status", "Diagnosing");
-      params.append("status", "New");
-      params.append("status", "Ready for Pickup");
-      const url = `${apiUrl(orgId!, "/work-orders")}?${params.toString()}`;
-      return (await fetchJson<WorkOrderRow[]>(url)) ?? [];
+      // Build status params manually (factory doesn't support arrays)
+      const statuses = ["In Progress", "Diagnosing", "New", "Ready for Pickup"];
+      const statusParams = new URLSearchParams();
+      statusParams.set("mechanic", userId!);
+      for (const s of statuses) statusParams.append("status", s);
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders?${statusParams.toString()}`,
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(
+          body.error?.message ?? `Request failed (${res.status})`,
+        );
+      }
+      const json = await res.json();
+      return (json.data as WorkOrderRow[]) ?? [];
     },
     enabled: !!orgId && !!userId,
     staleTime: 15_000,
@@ -126,7 +125,7 @@ export function useMechanicWorkOrders(
 
 /**
  * Mechanic trend data (avg job value, jobs per day, weekly trend chart).
- * Auto-refetches every 5min — trends change slowly.
+ * Auto-refetches every 5min. Cached to IndexedDB for offline use.
  */
 export function useMechanicTrend(
   orgId: string | undefined,
@@ -139,8 +138,17 @@ export function useMechanicTrend(
       const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0];
-      const url = `${apiUrl(orgId!, "/reports")}?type=mechanic-trend&mechanic=${userId!}&period=weekly&startDate=${eightWeeksAgo}&endDate=${today}`;
-      return fetchJson<MechanicTrend>(url);
+      const data = await fetchReports(orgId!, {
+        params: {
+          type: "mechanic-trend",
+          mechanic: userId!,
+          period: "weekly",
+          startDate: eightWeeksAgo,
+          endDate: today,
+        },
+        cacheKeyParams: { type: "mechanic-trend", mechanic: userId! },
+      });
+      return (data as unknown as MechanicTrend) ?? null;
     },
     enabled: !!orgId && !!userId,
     staleTime: 120_000,
@@ -153,7 +161,7 @@ export function useMechanicTrend(
 
 /**
  * Current clock-in/out status for the authenticated user.
- * Auto-refetches every 15s to keep elapsed time accurate.
+ * Auto-refetches every 15s. Not cached (real-time data).
  */
 export function useClockStatus(
   orgId: string | undefined,
@@ -161,8 +169,15 @@ export function useClockStatus(
   return useQuery({
     queryKey: clockKeys.status(orgId ?? ""),
     queryFn: async () => {
-      const url = apiUrl(orgId!, "/me/time/status");
-      return fetchJson<ClockStatus>(url);
+      const res = await fetch(`/api/organizations/${orgId}/me/time/status`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(
+          body.error?.message ?? `Request failed (${res.status})`,
+        );
+      }
+      const json = await res.json();
+      return (json.data as ClockStatus) ?? null;
     },
     enabled: !!orgId,
     staleTime: 5000,
@@ -182,8 +197,9 @@ export function useClockToggle(orgId: string | undefined) {
 
   return useMutation({
     mutationFn: async (action: "clock-in" | "clock-out") => {
-      const url = apiUrl(orgId!, `/me/time/${action}`);
-      const res = await fetch(url, { method: "POST" });
+      const res = await fetch(`/api/organizations/${orgId}/me/time/${action}`, {
+        method: "POST",
+      });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error?.message ?? `Failed to ${action}`);
@@ -207,17 +223,18 @@ export interface MechanicItem {
 
 /**
  * Fetch the list of mechanics for admin dashboard selector.
- * Stale after 5min — mechanics list rarely changes.
+ * Stale after 5min. Cached to IndexedDB for offline use.
  */
 export function useMechanicsList(
   orgId: string | undefined,
 ): UseQueryResult<MechanicItem[], Error> {
   return useQuery({
     queryKey: mechanicKeys.list(orgId ?? ""),
-    queryFn: async () => {
-      const url = `${apiUrl(orgId!, "/reports")}?type=mechanics`;
-      return (await fetchJson<MechanicItem[]>(url)) ?? [];
-    },
+    queryFn: () =>
+      fetchReports(orgId!, {
+        params: { type: "mechanics" },
+        cacheKeyParams: { type: "mechanics" },
+      }) as Promise<MechanicItem[]>,
     enabled: !!orgId,
     staleTime: 300_000,
     placeholderData: (prev) => prev,

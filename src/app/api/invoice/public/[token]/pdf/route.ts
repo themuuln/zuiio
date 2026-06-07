@@ -6,6 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { InvoiceDocument } from "@/lib/pdf/invoice-document";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { pdfFilename, renderToPdfBuffer } from "@/lib/utils/pdf";
 
 export async function GET(
@@ -14,16 +15,10 @@ export async function GET(
 ) {
   const { token } = await context.params;
 
-  // Service role client bypasses RLS for public data
-  const { createClient: createServiceClient } = await import(
-    "@supabase/supabase-js"
-  );
-  const supabase = createServiceClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const supabase = await createServiceRoleClient();
 
   // Fetch invoice via public RPC
+  // The RPC returns untyped JSON — cast to access known fields
   const { data: invoiceData, error: invError } = await supabase.rpc(
     "get_public_invoice_by_token",
     { p_token: token },
@@ -37,7 +32,14 @@ export async function GET(
   }
 
   // RPC returns a single object (not array)
-  const invoice = Array.isArray(invoiceData) ? invoiceData[0] : invoiceData;
+  const invoice = (Array.isArray(invoiceData) ? invoiceData[0] : invoiceData) as
+    | {
+        id: string;
+        organization_id: string;
+        invoice_number: string;
+        [key: string]: unknown;
+      }
+    | undefined;
 
   if (!invoice) {
     return NextResponse.json(

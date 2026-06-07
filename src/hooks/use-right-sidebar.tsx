@@ -35,6 +35,7 @@ interface RightSidebarContextValue {
     content: ReactNode,
     icon?: ReactNode,
   ) => void;
+  updateTabContent: (value: string, content: ReactNode) => void;
   unregisterTab: (value: string) => void;
 }
 
@@ -97,6 +98,15 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const updateTabContent = useCallback(
+    (value: string, content: ReactNode) =>
+      setState((prev) => {
+        if (!(value in prev.content)) return prev;
+        return { ...prev, content: { ...prev.content, [value]: content } };
+      }),
+    [],
+  );
+
   const unregisterTab = useCallback(
     (value: string) =>
       setState((prev) => {
@@ -125,6 +135,7 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
       setActiveTab,
       setHasSidebar,
       registerTab,
+      updateTabContent,
       unregisterTab,
     }),
     [
@@ -134,6 +145,7 @@ export function RightSidebarProvider({ children }: { children: ReactNode }) {
       setActiveTab,
       setHasSidebar,
       registerTab,
+      updateTabContent,
       unregisterTab,
     ],
   );

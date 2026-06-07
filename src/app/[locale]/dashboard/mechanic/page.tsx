@@ -11,6 +11,7 @@ import {
   Coins,
   DollarSign,
   Play,
+  Search,
   Shield,
   Square,
   UserPlus,
@@ -25,6 +26,9 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { PickupCompleteData } from "@/components/bay-view-v2/pickup-complete-dialog";
 import { PickupCompleteDialog } from "@/components/bay-view-v2/pickup-complete-dialog";
+import { ElapsedTimer } from "@/components/bay-view-v2/_elapsed-timer";
+import { ShiftReportDialog } from "@/components/bay-view-v2/shift-report-dialog";
+import { StatusNotesModal } from "@/components/bay-view-v2/status-notes-modal";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
@@ -49,6 +53,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
+import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { Link } from "@/lib/i18n/navigation";
 import {
@@ -60,6 +65,7 @@ import {
   useMechanicWorkOrders,
 } from "@/lib/queries/use-mechanic-dashboard";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
+import { mechanicKeys } from "@/lib/queries/keys";
 import { cn, formatMNT } from "@/lib/utils";
 
 const MechanicTrendChart = dynamic(
@@ -78,6 +84,7 @@ interface WorkOrderRow {
   vehicle_plate: string | null;
   vehicle_id: string | null;
   created_at: string;
+  started_at: string | null;
 }
 
 // ── Status config ──────────────────────────────────
@@ -150,7 +157,10 @@ function getStatusCfg(status: string) {
 // ── Helpers ────────────────────────────────────────
 
 function timeAgo(dateStr: string, t: (key: string) => string): string {
-  const mins = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+  const mins = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000),
+  );
   if (mins < 1) return t("common.justNow");
   if (mins < 60) return `${mins}m`;
   const h = Math.floor(mins / 60);
@@ -254,6 +264,7 @@ function WorkOrderRow({
   const t = useTranslations();
   const cfg = getStatusCfg(wo.status);
   const elapsed = timeAgo(wo.created_at, t);
+  const jobTimer = wo.started_at ?? wo.created_at;
 
   const nextStatuses = (() => {
     const transitions = NEXT_STATUSES[wo.status] ?? [];
@@ -310,6 +321,7 @@ function WorkOrderRow({
 
       {/* Right side */}
       <div className="flex items-center gap-2.5 shrink-0">
+        <ElapsedTimer startedAt={jobTimer} />
         <span className="text-sm font-semibold tabular-nums text-foreground/80">
           {formatMNT(wo.total ?? 0)}
         </span>
@@ -446,7 +458,7 @@ function MechanicDashboard({
   const queryClient = useQueryClient();
   const now = useClientNow();
   const { push } = useRouter();
-  const { registerTab, unregisterTab } = useRightSidebar();
+  const { registerTab, updateTabContent, unregisterTab } = useRightSidebar();
 
   // ── Queries ──
   const eodQuery = useMechanicEod(orgId, userId);
@@ -459,6 +471,30 @@ function MechanicDashboard({
     vehiclePlate: string;
     totalCost: number;
   } | null>(null);
+  const [pendingStatusNotes, setPendingStatusNotes] = useState<{
+    woId: string;
+    status: string;
+  } | null>(null);
+  const [showShiftReport, setShowShiftReport] = useState(false);
+  const [woSearch, setWoSearch] = useState("");
+  const [woStatusFilter, setWoStatusFilter] = useState<string | null>(null);
+
+  // ── Realtime: instant updates when work orders change ──
+  useRealtimeMulti({
+    enabled: !!orgId,
+    tables: [
+      {
+        table: "work_orders",
+        queryKey: mechanicKeys.workOrders(orgId, userId),
+        filter: `organization_id=eq.${orgId}`,
+      },
+      {
+        table: "work_orders",
+        queryKey: mechanicKeys.eod(orgId, userId),
+        filter: `organization_id=eq.${orgId}`,
+      },
+    ],
+  });
 
   const eod = eodQuery.data ?? null;
   const assignedWos = woQuery.data ?? [];
@@ -494,6 +530,24 @@ function MechanicDashboard({
     );
   }, [assignedWos]);
 
+  // Filtered work orders (search + status filter)
+  const filteredWos = useMemo(() => {
+    let result = sortedWos;
+    if (woSearch.trim()) {
+      const q = woSearch.toLowerCase();
+      result = result.filter(
+        (wo) =>
+          wo.customer_name?.toLowerCase().includes(q) ||
+          wo.vehicle_plate?.toLowerCase().includes(q) ||
+          wo.description?.toLowerCase().includes(q),
+      );
+    }
+    if (woStatusFilter) {
+      result = result.filter((wo) => wo.status === woStatusFilter);
+    }
+    return result;
+  }, [sortedWos, woSearch, woStatusFilter]);
+
   // ── Mount: register tabs + open sidebar (once) ────────
   useEffect(() => {
     registerTab(
@@ -517,9 +571,8 @@ function MechanicDashboard({
 
   // ── Data: update tab content without reopening ─────────
   useEffect(() => {
-    registerTab(
+    updateTabContent(
       "stats",
-      t("mechanic.stats"),
       <StatusSummary
         title={t("mechanic.today")}
         items={[
@@ -535,12 +588,10 @@ function MechanicDashboard({
           },
         ]}
       />,
-      <BarChart3 className="size-4" />,
     );
 
-    registerTab(
+    updateTabContent(
       "jobs",
-      t("mechanic.jobs"),
       <RecentList
         title={t("mechanic.assigned")}
         items={sortedWos.map((wo) => ({
@@ -554,7 +605,7 @@ function MechanicDashboard({
         emptyMessage={t("mechanic.noActiveWorkOrders")}
       />,
     );
-  }, [eod, assignedWos, sortedWos, dataLoading, registerTab]);
+  }, [eod, assignedWos, sortedWos, dataLoading, updateTabContent]);
 
   const updateStatus = useUpdateWorkOrderStatus(orgId);
   const clockMutation = useClockToggle(orgId);
@@ -568,6 +619,10 @@ function MechanicDashboard({
             ? t("mechanic.clockedOut")
             : t("mechanic.clockedIn"),
         );
+        // Show shift report after clocking out
+        if (clockStatus.clockedIn) {
+          setShowShiftReport(true);
+        }
       },
       onError: (err) => {
         toast.error(
@@ -617,9 +672,15 @@ function MechanicDashboard({
       }
     }
 
-    // Optimistic update on work orders list
+    // Show notes modal for status transitions (not Cancelled — that goes direct)
+    if (newStatus !== "Cancelled") {
+      setPendingStatusNotes({ woId, status: newStatus });
+      return;
+    }
+
+    // Cancelled: go direct (no notes needed)
     queryClient.setQueryData(
-      ["organizations", orgId, "mechanics", userId, "work-orders"],
+      mechanicKeys.workOrders(orgId, userId),
       (prev: WorkOrderRow[] | undefined) =>
         (prev ?? []).map((w) =>
           w.id === woId ? { ...w, status: newStatus } : w,
@@ -629,9 +690,30 @@ function MechanicDashboard({
       await updateStatus.mutateAsync({ woId, status: newStatus });
       toast.success(t("mechanic.statusUpdatedTo", { status: newStatus }));
     } catch {
-      // Refetch will correct optimistic update on error
       queryClient.invalidateQueries({
-        queryKey: ["organizations", orgId, "mechanics", userId, "work-orders"],
+        queryKey: mechanicKeys.workOrders(orgId, userId),
+      });
+    }
+  };
+
+  const handleStatusNotesConfirm = async (
+    woId: string,
+    status: string,
+    notes?: string,
+  ) => {
+    setPendingStatusNotes(null);
+    // Optimistic update
+    queryClient.setQueryData(
+      mechanicKeys.workOrders(orgId, userId),
+      (prev: WorkOrderRow[] | undefined) =>
+        (prev ?? []).map((w) => (w.id === woId ? { ...w, status } : w)),
+    );
+    try {
+      await updateStatus.mutateAsync({ woId, status, notes });
+      toast.success(t("mechanic.statusUpdatedTo", { status }));
+    } catch {
+      queryClient.invalidateQueries({
+        queryKey: mechanicKeys.workOrders(orgId, userId),
       });
     }
   };
@@ -757,9 +839,48 @@ function MechanicDashboard({
               : t("mechanic.myWorkOrders")}
           </span>
           <span className="ml-auto text-[10px] text-muted-foreground/50">
-            {t("mechanic.jobCount", { count: sortedWos.length })}
+            {t("mechanic.jobCount", { count: filteredWos.length })}
           </span>
         </div>
+
+        {/* Search + Status Filter */}
+        {sortedWos.length > 0 && (
+          <div className="flex items-center gap-2 border-b border-border/40 px-4 py-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/50" />
+              <input
+                type="text"
+                placeholder={t("mechanic.searchWorkOrders")}
+                value={woSearch}
+                onChange={(e) => setWoSearch(e.target.value)}
+                className="h-8 w-full rounded-lg border border-border/60 bg-muted/30 pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              {[
+                null,
+                "New",
+                "Diagnosing",
+                "In Progress",
+                "Ready for Pickup",
+              ].map((status) => (
+                <button
+                  key={status ?? "all"}
+                  type="button"
+                  onClick={() => setWoStatusFilter(status)}
+                  className={cn(
+                    "rounded-md px-2 py-1 text-[10px] font-medium transition-colors",
+                    woStatusFilter === status
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground/60 hover:bg-muted/50 hover:text-foreground",
+                  )}
+                >
+                  {status ?? t("mechanic.all")}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {dataLoading ? (
           <div className="flex flex-col gap-0">
@@ -770,18 +891,22 @@ function MechanicDashboard({
               />
             ))}
           </div>
-        ) : sortedWos.length === 0 ? (
+        ) : filteredWos.length === 0 ? (
           <Empty>
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <ClipboardList />
               </EmptyMedia>
-              <EmptyTitle>{t("mechanic.noActiveWorkOrders")}</EmptyTitle>
+              <EmptyTitle>
+                {sortedWos.length === 0
+                  ? t("mechanic.noActiveWorkOrders")
+                  : t("mechanic.noMatchingWorkOrders")}
+              </EmptyTitle>
             </EmptyHeader>
           </Empty>
         ) : (
           <div className="divide-y-0">
-            {sortedWos.map((wo) => (
+            {filteredWos.map((wo) => (
               <WorkOrderRow
                 key={wo.id}
                 wo={wo}
@@ -807,6 +932,20 @@ function MechanicDashboard({
           onConfirm={handlePickupCompleteConfirm}
         />
       )}
+
+      {pendingStatusNotes && (
+        <StatusNotesModal
+          woId={pendingStatusNotes.woId}
+          newStatus={pendingStatusNotes.status}
+          onConfirm={handleStatusNotesConfirm}
+          onCancel={() => setPendingStatusNotes(null)}
+        />
+      )}
+
+      <ShiftReportDialog
+        open={showShiftReport}
+        onOpenChange={setShowShiftReport}
+      />
     </div>
   );
 }

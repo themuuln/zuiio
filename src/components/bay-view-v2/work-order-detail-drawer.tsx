@@ -101,26 +101,10 @@ export function WorkOrderDetailDrawer({
     setServiceSearch,
     showAddService,
     setShowAddService,
-    editingServicePriceId,
-    setEditingServicePriceId,
-    editingServicePriceVal,
-    setEditingServicePriceVal,
-    newPartName,
-    setNewPartName,
-    newPartQty,
-    setNewPartQty,
-    newPartPrice,
-    setNewPartPrice,
     showAddPart,
     setShowAddPart,
-    addingPart,
-    pendingPartPreview,
     partSearch,
     setPartSearch,
-    editingPartPriceId,
-    setEditingPartPriceId,
-    editingPartPriceVal,
-    setEditingPartPriceVal,
     confirmStatus,
     setConfirmStatus,
     statusNotes,
@@ -131,11 +115,13 @@ export function WorkOrderDetailDrawer({
     showUnsavedWarning,
     setShowUnsavedWarning,
     addService,
+    addPart,
     removeService,
     handleServicePriceSave,
-    addPartLine,
+    handleServiceQtySave,
     removePart,
     handlePartPriceSave,
+    handlePartQtySave,
     assignMechanic,
     assignCustomer,
     changeStatus,
@@ -258,14 +244,14 @@ export function WorkOrderDetailDrawer({
   // ── Render ──
 
   return (
-    <Drawer open={open} onOpenChange={handleOpenChange}>
+    <Drawer open={open} onOpenChange={handleOpenChange} modal="trap-focus">
       <DrawerContent
         data-fullscreen={isFullScreen || undefined}
         className={cn(
           "flex flex-col gap-0 p-0 mx-auto border-border/80 shadow-2xl",
           isFullScreen
             ? "fixed inset-0 z-50 h-full w-full rounded-none border-0 data-[vaul-drawer-direction=bottom]:max-h-none data-[vaul-drawer-direction=bottom]:mt-0"
-            : "max-h-[90vh] md:max-h-[85vh] w-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl md:bottom-4 md:rounded-xl md:border",
+            : "h-[90vh] max-h-[90vh] md:h-[85vh] md:max-h-[85vh] w-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl md:bottom-4 md:rounded-xl md:border",
         )}
       >
         <DrawerHeaderSection
@@ -355,23 +341,14 @@ export function WorkOrderDetailDrawer({
                                 catalog={catalog as any}
                                 serviceSearch={serviceSearch}
                                 showAddService={showAddService}
-                                editingPriceId={editingServicePriceId}
-                                editingPriceVal={editingServicePriceVal}
                                 onServiceSearchChange={setServiceSearch}
                                 onToggleAddService={() =>
                                   setShowAddService(!showAddService)
                                 }
                                 onAddService={addService as any}
                                 onRemoveService={removeService}
-                                onEditPriceStart={(id, val) => {
-                                  setEditingServicePriceId(id);
-                                  setEditingServicePriceVal(val);
-                                }}
-                                onEditPriceChange={setEditingServicePriceVal}
                                 onEditPriceSave={handleServicePriceSave}
-                                onEditPriceCancel={() =>
-                                  setEditingServicePriceId(null)
-                                }
+                                onEditQtySave={handleServiceQtySave}
                                 t={t}
                               />
 
@@ -380,32 +357,15 @@ export function WorkOrderDetailDrawer({
                                 partsCatalog={partsCatalog as any}
                                 lowStockMap={lowStockMap}
                                 partSearch={partSearch}
-                                newPartName={newPartName}
-                                newPartQty={newPartQty}
-                                newPartPrice={newPartPrice}
                                 showAddPart={showAddPart}
-                                addingPart={addingPart}
-                                pendingPartPreview={pendingPartPreview}
-                                editingPriceId={editingPartPriceId}
-                                editingPriceVal={editingPartPriceVal}
                                 onPartSearchChange={setPartSearch}
-                                onNewPartNameChange={setNewPartName}
-                                onNewPartQtyChange={setNewPartQty}
-                                onNewPartPriceChange={setNewPartPrice}
                                 onToggleAddPart={() =>
                                   setShowAddPart(!showAddPart)
                                 }
-                                onAddPart={addPartLine}
+                                onAddPart={addPart as any}
                                 onRemovePart={removePart}
-                                onEditPriceStart={(id, val) => {
-                                  setEditingPartPriceId(id);
-                                  setEditingPartPriceVal(val);
-                                }}
-                                onEditPriceChange={setEditingPartPriceVal}
                                 onEditPriceSave={handlePartPriceSave}
-                                onEditPriceCancel={() =>
-                                  setEditingPartPriceId(null)
-                                }
+                                onEditQtySave={handlePartQtySave}
                                 t={t}
                               />
 

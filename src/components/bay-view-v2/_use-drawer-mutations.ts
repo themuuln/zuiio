@@ -6,9 +6,13 @@ import {
   getWorkOrderServicesWithIntervals,
   savePostServiceData,
 } from "@/lib/services/post-service-service";
-import type { WorkOrderDetail, WorkOrderService } from "@/lib/types";
+import type {
+  WorkOrderDetail,
+  WorkOrderPart,
+  WorkOrderService,
+} from "@/lib/types";
 
-import type { CatalogServiceItem } from "./_drawer-types";
+import type { CatalogPartItem, CatalogServiceItem } from "./_drawer-types";
 import type { PostServiceFormData } from "./_schema";
 
 interface UseDrawerMutationsParams {
@@ -34,33 +38,18 @@ export function useDrawerMutations({
 
   const [serviceSearch, setServiceSearch] = useState("");
   const [showAddService, setShowAddService] = useState(false);
-  const [addingServiceIds, setAddingServiceIds] = useState<Set<string>>(new Set());
-  const [confirmingServiceIds, setConfirmingServiceIds] = useState<Set<string>>(new Set());
+  const [addingServiceIds, setAddingServiceIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [confirmingServiceIds, setConfirmingServiceIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   // ── Part state ──
 
-  const [newPartName, setNewPartName] = useState("");
-  const [newPartQty, setNewPartQty] = useState(1);
-  const [newPartPrice, setNewPartPrice] = useState(0);
-  const [addingPart, setAddingPart] = useState(false);
-  const [pendingPartPreview, setPendingPartPreview] = useState<{
-    name: string;
-    quantity: number;
-    unitPrice: number;
-  } | null>(null);
   const [partSearch, setPartSearch] = useState("");
   const [showAddPart, setShowAddPart] = useState(false);
-
-  // ── Price editing state ──
-
-  const [editingServicePriceId, setEditingServicePriceId] = useState<
-    string | null
-  >(null);
-  const [editingServicePriceVal, setEditingServicePriceVal] = useState("");
-  const [editingPartPriceId, setEditingPartPriceId] = useState<string | null>(
-    null,
-  );
-  const [editingPartPriceVal, setEditingPartPriceVal] = useState("");
+  const [addingPartIds, setAddingPartIds] = useState<Set<string>>(new Set());
 
   // ── Saving / busy state ──
 
@@ -182,8 +171,6 @@ export function useDrawerMutations({
     const tempId = `temp-${Math.random().toString(36).slice(2, 11)}`;
     const defaultPrice = Number(svc.default_price ?? 0);
     setAddingServiceIds((prev) => new Set([...prev, tempId]));
-    setEditingServicePriceId(tempId);
-    setEditingServicePriceVal(String(defaultPrice));
     setWo((prev) => {
       if (!prev) return prev;
       return {
@@ -223,7 +210,6 @@ export function useDrawerMutations({
     const svc = wo?.services?.find((s) => s.id === serviceId);
     if (!svc) return;
     setConfirmingServiceIds((prev) => new Set([...prev, serviceId]));
-    setEditingServicePriceId(null);
     try {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/services`,
@@ -382,16 +368,48 @@ export function useDrawerMutations({
 
   // ── Parts ──
 
-  async function addPartLine() {
-    const orgId = orgIdRef.current;
-    const trimmedPartName = newPartName.trim();
-    if (!orgId || !workOrderId || !trimmedPartName || addingPart) return;
-    setAddingPart(true);
-    setPendingPartPreview({
-      name: trimmedPartName,
-      quantity: newPartQty,
-      unitPrice: newPartPrice,
+  // Optimistic add: part appears immediately with editable price
+  function addPart(item: CatalogPartItem) {
+    const tempId = `temp-${Math.random().toString(36).slice(2, 11)}`;
+    const defaultPrice = Number(item.default_price ?? 0);
+    setAddingPartIds((prev) => new Set([...prev, tempId]));
+    setWo((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        parts: [
+          ...(prev.parts ?? []),
+          {
+            id: tempId,
+            part_name: item.name,
+            part_id: item._source === "global" ? null : item.id,
+            quantity: 1,
+            unit_price: defaultPrice,
+            final_price: defaultPrice,
+            discount_amount: 0,
+            discount_percentage: 0,
+            unit_cost: 0,
+            last_sold_price: null,
+            notes: null,
+            part_number: null,
+            work_order_id: workOrderId,
+            organization_id: null,
+            created_by: null,
+            created_at: new Date().toISOString(),
+          } as WorkOrderPart,
+        ],
+      };
     });
+    setPartSearch("");
+    setShowAddPart(false);
+  }
+
+  // Confirm: send API request, replace temp with real data
+  async function confirmAddPart(partId: string, price: number) {
+    const orgId = orgIdRef.current;
+    if (!orgId || !workOrderId) return;
+    const part = wo?.parts?.find((p) => p.id === partId);
+    if (!part) return;
     try {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/parts`,
@@ -399,38 +417,63 @@ export function useDrawerMutations({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            part_name: trimmedPartName,
-            quantity: newPartQty,
-            unit_price: newPartPrice,
+            part_id: (part as any).part_id ?? null,
+            part_name: part.part_name,
+            quantity: part.quantity ?? 1,
+            unit_price: price,
           }),
         },
       );
       const json = await res.json();
       if (json.error) {
         toast.error(json.error.message ?? "Failed to add part");
+        // Rollback: remove temp part
+        setWo((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            parts: (prev.parts ?? []).filter((p) => p.id !== partId),
+          };
+        });
+        setAddingPartIds((prev) => {
+          const next = new Set(prev);
+          next.delete(partId);
+          return next;
+        });
         return;
       }
+      // Replace temp with real server data
       const newPart = json.data;
       setWo((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
-          parts: [...(prev.parts ?? []), newPart],
+          parts: (prev.parts ?? []).map((p) => (p.id === partId ? newPart : p)),
         };
       });
       toast.dismiss();
-      toast.success(`Added part: ${trimmedPartName}`);
+      toast.success(`Added part: ${part.part_name}`);
       onRefresh();
-      setNewPartName("");
-      setNewPartQty(1);
-      setNewPartPrice(0);
-      setShowAddPart(false);
+      setAddingPartIds((prev) => {
+        const next = new Set(prev);
+        next.delete(partId);
+        return next;
+      });
     } catch {
       toast.error("Failed to add part");
-    } finally {
-      setAddingPart(false);
-      setPendingPartPreview(null);
-      // Clear confirming state for this part if we track it
+      // Rollback
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          parts: (prev.parts ?? []).filter((p) => p.id !== partId),
+        };
+      });
+      setAddingPartIds((prev) => {
+        const next = new Set(prev);
+        next.delete(partId);
+        return next;
+      });
     }
   }
 
@@ -549,7 +592,6 @@ export function useDrawerMutations({
       };
     });
 
-    setEditingServicePriceId(null);
     try {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/services?serviceId=${serviceId}`,
@@ -598,10 +640,16 @@ export function useDrawerMutations({
     }
   }
 
-  async function handlePartPriceSave(partId: string) {
+  async function handlePartPriceSave(partId: string, price: number) {
+    // Temp parts: confirm the add via API
+    if (partId.startsWith("temp-")) {
+      await confirmAddPart(partId, price);
+      return;
+    }
+
     const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
-    const numVal = Number(editingPartPriceVal);
+    const numVal = price;
     if (Number.isNaN(numVal) || numVal < 0) {
       toast.error("Invalid price");
       return;
@@ -621,7 +669,6 @@ export function useDrawerMutations({
       };
     });
 
-    setEditingPartPriceId(null);
     try {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}/parts?partId=${partId}`,
@@ -663,6 +710,181 @@ export function useDrawerMutations({
           };
         });
       }
+    }
+  }
+
+  // ── Quantity editing ──
+
+  async function handleServiceQtySave(serviceId: string, qty: number) {
+    const orgId = orgIdRef.current;
+    if (!orgId || !workOrderId) return;
+    const numVal = qty;
+    if (Number.isNaN(numVal) || numVal < 1) {
+      toast.error("Quantity must be at least 1");
+      return;
+    }
+
+    const originalService = wo?.services?.find((s) => s.id === serviceId);
+    const oldQty = originalService ? Number(originalService.quantity) : null;
+    const oldFinalPrice = originalService
+      ? Number(originalService.final_price)
+      : null;
+
+    // Optimistic: compute new final_price from unit_price * newQty
+    const unitPrice = originalService ? Number(originalService.unit_price) : 0;
+    const newFinalPrice = unitPrice * numVal;
+
+    setWo((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        services: (prev.services ?? []).map((s) =>
+          s.id === serviceId
+            ? { ...s, quantity: numVal, final_price: newFinalPrice }
+            : s,
+        ),
+      };
+    });
+
+    try {
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${workOrderId}/services?serviceId=${serviceId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity: numVal }),
+        },
+      );
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message ?? "Failed to update quantity");
+        setWo((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            services: (prev.services ?? []).map((s) =>
+              s.id === serviceId
+                ? {
+                    ...s,
+                    quantity: oldQty ?? 1,
+                    final_price: oldFinalPrice ?? 0,
+                  }
+                : s,
+            ),
+          };
+        });
+        return;
+      }
+      toast.dismiss();
+      toast.success("Quantity updated");
+      onRefresh();
+    } catch {
+      toast.error("Failed to update quantity");
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          services: (prev.services ?? []).map((s) =>
+            s.id === serviceId
+              ? {
+                  ...s,
+                  quantity: oldQty ?? 1,
+                  final_price: oldFinalPrice ?? 0,
+                }
+              : s,
+          ),
+        };
+      });
+    }
+  }
+
+  async function handlePartQtySave(partId: string, qty: number) {
+    // Temp parts: confirm the add via API with current price, then update qty
+    if (partId.startsWith("temp-")) {
+      const part = wo?.parts?.find((p) => p.id === partId);
+      const price = part ? Number(part.final_price ?? part.unit_price ?? 0) : 0;
+      await confirmAddPart(partId, price);
+      return;
+    }
+
+    const orgId = orgIdRef.current;
+    if (!orgId || !workOrderId) return;
+    const numVal = qty;
+    if (Number.isNaN(numVal) || numVal < 1) {
+      toast.error("Quantity must be at least 1");
+      return;
+    }
+
+    const originalPart = wo?.parts?.find((p) => p.id === partId);
+    const oldQty = originalPart ? Number(originalPart.quantity) : null;
+    const oldFinalPrice = originalPart
+      ? Number(originalPart.final_price)
+      : null;
+
+    const unitPrice = originalPart ? Number(originalPart.unit_price) : 0;
+    const newFinalPrice = unitPrice * numVal;
+
+    setWo((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        parts: (prev.parts ?? []).map((p) =>
+          p.id === partId
+            ? { ...p, quantity: numVal, final_price: newFinalPrice }
+            : p,
+        ),
+      };
+    });
+
+    try {
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${workOrderId}/parts?partId=${partId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity: numVal }),
+        },
+      );
+      const json = await res.json();
+      if (json.error) {
+        toast.error(json.error.message ?? "Failed to update quantity");
+        setWo((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            parts: (prev.parts ?? []).map((p) =>
+              p.id === partId
+                ? {
+                    ...p,
+                    quantity: oldQty ?? 1,
+                    final_price: oldFinalPrice ?? 0,
+                  }
+                : p,
+            ),
+          };
+        });
+        return;
+      }
+      toast.dismiss();
+      toast.success("Quantity updated");
+      onRefresh();
+    } catch {
+      toast.error("Failed to update quantity");
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          parts: (prev.parts ?? []).map((p) =>
+            p.id === partId
+              ? {
+                  ...p,
+                  quantity: oldQty ?? 1,
+                  final_price: oldFinalPrice ?? 0,
+                }
+              : p,
+          ),
+        };
+      });
     }
   }
 
@@ -804,40 +1026,21 @@ export function useDrawerMutations({
 
   // ── Computed ──
 
-  const isDirty = (showAddPart && newPartName.trim() !== "") || showAddService;
+  const isDirty = showAddService;
 
   // ── Drawer close handlers ──
 
   function handleOpenChange(nextOpen: boolean) {
-    if (!nextOpen) {
-      const hasPriceEdit =
-        editingServicePriceId !== null || editingPartPriceId !== null;
-
-      if (hasPriceEdit) {
-        setEditingServicePriceId(null);
-        setEditingPartPriceId(null);
-      }
-
-      if (isDirty) {
-        setShowUnsavedWarning(true);
-        return;
-      }
-
-      if (hasPriceEdit) {
-        setTimeout(() => onOpenChange(false), 100);
-        return;
-      }
+    if (!nextOpen && isDirty) {
+      setShowUnsavedWarning(true);
+      return;
     }
     onOpenChange(nextOpen);
   }
 
   function handleSaveAndClose() {
-    if (showAddPart && newPartName.trim()) {
-      addPartLine();
-    }
     setShowAddPart(false);
     setShowAddService(false);
-    setNewPartName("");
     setShowUnsavedWarning(false);
     onOpenChange(false);
   }
@@ -845,7 +1048,6 @@ export function useDrawerMutations({
   function handleDiscard() {
     setShowAddPart(false);
     setShowAddService(false);
-    setNewPartName("");
     setShowUnsavedWarning(false);
     onOpenChange(false);
   }
@@ -859,26 +1061,11 @@ export function useDrawerMutations({
     showAddService,
     setShowAddService,
     addingServiceIds,
-    editingServicePriceId,
-    setEditingServicePriceId,
-    editingServicePriceVal,
-    setEditingServicePriceVal,
-    newPartName,
-    setNewPartName,
-    newPartQty,
-    setNewPartQty,
-    newPartPrice,
-    setNewPartPrice,
     showAddPart,
     setShowAddPart,
-    addingPart,
-    pendingPartPreview,
+    addingPartIds,
     partSearch,
     setPartSearch,
-    editingPartPriceId,
-    setEditingPartPriceId,
-    editingPartPriceVal,
-    setEditingPartPriceVal,
     confirmStatus,
     setConfirmStatus,
     statusNotes,
@@ -895,9 +1082,11 @@ export function useDrawerMutations({
     addService,
     removeService,
     handleServicePriceSave,
-    addPartLine,
+    handleServiceQtySave,
+    addPart,
     removePart,
     handlePartPriceSave,
+    handlePartQtySave,
     assignMechanic,
     changeStatus,
     generateInvoice,

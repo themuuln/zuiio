@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { useShallow } from "zustand/shallow";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -151,7 +152,9 @@ export const useWorkOrderVehicle = () =>
     customerId: s.customerId,
   }));
 export const useWorkOrderTotals = () =>
-  useWorkOrderStore((s) => ({
-    itemCount: s.items.length,
-    totalAmount: s.items.reduce((sum, i) => sum + i.total, 0),
-  }));
+  useWorkOrderStore(
+    useShallow((s) => ({
+      itemCount: s.items.length,
+      totalAmount: s.items.reduce((sum, i) => sum + i.total, 0),
+    })),
+  );

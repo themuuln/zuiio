@@ -70,8 +70,8 @@ export const POST = createRouteHandler(
       authEmail = inputIdentifier;
       // Derive username from the email (strip @domain, lowercase, keep alphanumeric/underscore)
       const emailPrefix = inputIdentifier
-        .split("@")[0]!
-        .toLowerCase()
+        .split("@")[0]
+        ?.toLowerCase()
         .replace(/[^a-z0-9_]/g, "_");
       usernameValue = emailPrefix.slice(0, 30);
     } else if (type === "phone") {
@@ -115,11 +115,22 @@ export const POST = createRouteHandler(
       }
     }
 
-    // Check if user already exists in auth
-    const { data: existingUsers } = await serviceRole.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(
-      (u) => u.email?.toLowerCase() === authEmail.toLowerCase(),
-    );
+    // Check if user already exists in auth.
+    // Supabase listUsers() doesn't support email filtering, so we paginate
+    // in small chunks and stop as soon as we find a match (or exhaust pages).
+    let existingUser: { id: string; email?: string } | null = null;
+    const PAGE_SIZE = 100;
+    for (let page = 1; page <= 10; page++) {
+      const { data: pageData } = await serviceRole.auth.admin.listUsers({
+        page,
+        perPage: PAGE_SIZE,
+      });
+      const users = pageData?.users ?? [];
+      existingUser =
+        users.find((u) => u.email?.toLowerCase() === authEmail.toLowerCase()) ??
+        null;
+      if (existingUser || users.length < PAGE_SIZE) break;
+    }
 
     let userId: string;
     let existingMember: { user_id: string; removed_at: string | null } | null =
@@ -132,7 +143,7 @@ export const POST = createRouteHandler(
           .from("organization_users")
           .select("user_id, removed_at")
           .eq("organization_id", orgId)
-          .eq("user_id", existingUser!.id)
+          .eq("user_id", existingUser?.id)
           .maybeSingle();
 
         existingMember = existingMemberCheck;
@@ -144,7 +155,7 @@ export const POST = createRouteHandler(
           await supabase
             .from("organization_users")
             .update({ removed_at: null, role_id: roleId })
-            .eq("user_id", existingUser!.id)
+            .eq("user_id", existingUser?.id)
             .eq("organization_id", orgId);
           return true;
         }
@@ -228,7 +239,6 @@ export const POST = createRouteHandler(
           userId,
           identifier: inputIdentifier,
           email: authEmail,
-          password, // Return password so admin can share
           fullName: fullName.trim(),
           isNewUser: !existingUser,
         },

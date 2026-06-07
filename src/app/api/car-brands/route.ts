@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createSimpleRouteHandler } from "@/lib/api-handler";
 
-export async function GET() {
-  const supabase = await createClient();
-
+export const GET = createSimpleRouteHandler(async ({ supabase }) => {
   const { data, error } = await supabase
     .from("car_brands")
     .select("id, name, country, is_active")
@@ -18,10 +16,9 @@ export async function GET() {
   }
 
   return NextResponse.json({ data });
-}
+});
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
+export const POST = createSimpleRouteHandler(async ({ request, supabase }) => {
   const body = await request.json();
   const name = body.name?.trim();
 
@@ -58,4 +55,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ data }, { status: 201 });
-}
+});

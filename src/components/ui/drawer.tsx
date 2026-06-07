@@ -28,10 +28,7 @@ function directionToSwipeDirection(direction?: VaulDirection) {
 // ── Root ──────────────────────────────────────────────────────
 
 interface DrawerProps
-  extends Omit<
-    React.ComponentProps<typeof BaseDrawer.Root>,
-    "swipeDirection"
-  > {
+  extends Omit<React.ComponentProps<typeof BaseDrawer.Root>, "swipeDirection"> {
   /** Vaul-compatible direction prop. Maps to Base UI swipeDirection internally. */
   direction?: VaulDirection;
 }
@@ -65,9 +62,7 @@ function DrawerTrigger({
   // Base UI's `render` prop works like Radix's `asChild`
   // When asChild is true, use the single child as the render target
   if (asChild && React.isValidElement(children)) {
-    return (
-      <BaseDrawer.Trigger render={children} {...props} />
-    );
+    return <BaseDrawer.Trigger render={children} {...props} />;
   }
   return (
     <BaseDrawer.Trigger render={render} {...props}>
@@ -138,7 +133,7 @@ function DrawerContent({
           )}
           {...props}
         >
-          <BaseDrawer.Content>
+          <BaseDrawer.Content className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="mx-auto mt-4 hidden h-1 w-[100px] shrink-0 rounded-full bg-muted group-data-[swipe-direction=down]/drawer-content:block [[data-fullscreen]>&]:hidden" />
             {children}
           </BaseDrawer.Content>

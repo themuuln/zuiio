@@ -465,7 +465,7 @@ export function BayCard({
             <button
               type="button"
               onClick={() => onAssignClick?.(bay.bayNumber)}
-              className="flex flex-col items-center justify-center gap-3 px-4 py-8 text-center w-full group/btn cursor-pointer transition-colors relative"
+              className="flex flex-1 flex-col items-center justify-center gap-3 px-4 py-8 text-center w-full group/btn cursor-pointer transition-colors relative"
             >
               <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:12px_12px] transition-opacity duration-300 group-hover/btn:opacity-60" />
 
@@ -476,9 +476,6 @@ export function BayCard({
               <div className="flex flex-col gap-0.5 z-10">
                 <span className="text-xs font-mono font-black uppercase tracking-wider text-muted-foreground/70 group-hover/btn:text-primary/80 transition-colors">
                   BAY {String(bay.bayNumber).padStart(2, "0")}
-                </span>
-                <span className="text-[11px] font-medium text-muted-foreground/40 tracking-tight">
-                  Available for service
                 </span>
               </div>
             </button>

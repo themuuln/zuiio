@@ -79,14 +79,17 @@ export const PATCH = createRouteHandler(
       );
     }
 
-    if (body.final_price !== undefined) {
+    const updateParams: { final_price?: number; quantity?: number } = {};
+    if (body.final_price !== undefined)
+      updateParams.final_price = body.final_price;
+    if (body.quantity !== undefined) updateParams.quantity = body.quantity;
+
+    if (Object.keys(updateParams).length > 0) {
       await updateWorkOrderServicePrice(
         supabase,
         serviceId,
         workOrderId,
-        {
-          final_price: body.final_price,
-        },
+        updateParams,
         orgId,
       );
     }

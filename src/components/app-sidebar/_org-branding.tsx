@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Building2, Check, CirclePlus, Store } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { QuickCreateBranchSheet } from "@/components/branches/quick-create-branch-sheet";
 import {
   DropdownMenu,
@@ -45,6 +45,10 @@ export function OrgBranding() {
   const setSelectedBranchId = useSetSelectedBranchId();
   const { data: branches = [] } = useBranches(orgInfo?.orgId);
   const [addBranchOpen, setAddBranchOpen] = useState(false);
+  // Stable id prevents hydration mismatch — the SidebarContent conditional
+  // (Skeleton vs nav) shifts React useId() counter between server/client,
+  // making Base UI auto-generated id differ.
+  const triggerId = useId();
 
   const logoUrl = org?.logo_url;
   const name = org?.name ?? "TOLOM";
@@ -96,9 +100,11 @@ export function OrgBranding() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
+          id={triggerId}
           render={
             <button
               type="button"
+              suppressHydrationWarning
               className="flex items-center gap-3 rounded-xl px-2 h-9 transition-colors hover:bg-sidebar-accent/50 cursor-pointer group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-start group-data-[collapsible=icon]:rounded-xl group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:self-start group-data-[collapsible=icon]:ml-[-2px] group-data-[collapsible=icon]:group-hover:w-full group-data-[collapsible=icon]:group-hover:h-9 group-data-[collapsible=icon]:group-hover:pl-0 group-data-[collapsible=icon]:group-hover:pr-2 group-data-[collapsible=icon]:group-hover:bg-transparent group-data-[collapsible=icon]:group-hover:hover:bg-sidebar-accent/50"
             >
               {trigger}

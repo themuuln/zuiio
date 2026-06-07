@@ -189,7 +189,7 @@ export function BayViewV2Client() {
     await fetchData(false);
   }
 
-  const { registerTab, unregisterTab } = useRightSidebar();
+  const { registerTab, updateTabContent, unregisterTab } = useRightSidebar();
   const [toast, setToast] = useState<ToastState | null>(null);
   const handleDismissToast = useCallback(() => setToast(null), []);
   const bayCountValueRef = useRef(data?.bayCount ?? 0);
@@ -466,24 +466,6 @@ export function BayViewV2Client() {
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
-  // Quick actions from bay card footer
-  const handleQuickAddService = useCallback(
-    (woId: string) => handleOpenDetail(woId, "add-service"),
-    [],
-  );
-  const handleQuickAddParts = useCallback(
-    (woId: string) => handleOpenDetail(woId, "add-part"),
-    [],
-  );
-  const handlePauseTimer = useCallback((woId: string) => {
-    // TODO: implement timer pause API
-    setToast({ message: "Timer pause coming soon", variant: "info" });
-  }, []);
-  const handleAddNote = useCallback(
-    (woId: string) => handleOpenDetail(woId),
-    [],
-  );
-
   const availableBays = useMemo(
     () => data?.bays.filter((b) => !b.workOrder).map((b) => b.bayNumber) ?? [],
     [data],
@@ -697,6 +679,35 @@ export function BayViewV2Client() {
     registerTab,
     t,
     unregisterTab,
+    availableBays,
+    handleQuickAssignToBay,
+  ]);
+
+  // Update sidebar tab content when data changes. registerTab() bails early
+  // if the tab already exists, so a separate effect is needed to push fresh
+  // content for data-dependent panels (queue items, mechanic list, etc.).
+  useEffect(() => {
+    if (!data) return;
+    updateTabContent(
+      "queue",
+      <QueuePanel
+        items={filteredQueue}
+        pendingWoIds={pendingWoIds}
+        onQuickAssign={handleQuickAssign}
+        mechanics={data.mechanics}
+        onItemClick={handleQueueItemClick}
+        availableBays={availableBays}
+        onAssignToBay={handleQuickAssignToBay}
+      />,
+    );
+    updateTabContent("mechanics", <MechanicPanel mechanics={data.mechanics} />);
+  }, [
+    data,
+    filteredQueue,
+    pendingWoIds,
+    handleQuickAssign,
+    handleQueueItemClick,
+    updateTabContent,
     availableBays,
     handleQuickAssignToBay,
   ]);
