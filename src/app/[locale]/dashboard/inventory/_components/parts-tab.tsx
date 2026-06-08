@@ -210,7 +210,8 @@ export function PartsTab({
           p.name.toLowerCase().includes(q) ||
           (p.name_mn?.toLowerCase().includes(q) ?? false) ||
           (p.part_number?.toLowerCase().includes(q) ?? false) ||
-          (p.category?.toLowerCase().includes(q) ?? false),
+          (p.category?.toLowerCase().includes(q) ?? false) ||
+          (p.location?.toLowerCase().includes(q) ?? false),
       );
     }
 

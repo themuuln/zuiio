@@ -71,6 +71,14 @@ interface VehicleServiceLine {
   final_price: number;
 }
 
+interface VehiclePartLine {
+  id: string;
+  part_name: string | null;
+  part_number: string | null;
+  quantity: number;
+  final_price: number;
+}
+
 interface VehicleServiceHistoryItem {
   id: string;
   status: WorkOrderStatus;
@@ -79,6 +87,7 @@ interface VehicleServiceHistoryItem {
   total: number;
   created_at: string;
   work_order_services: VehicleServiceLine[];
+  work_order_parts: VehiclePartLine[];
 }
 
 interface VehicleDetailResponse {
@@ -690,6 +699,20 @@ export function VehicleDetailSheet({
                             wo.description ||
                             t("generalService")}
                         </ItemDescription>
+                        {wo.work_order_parts &&
+                          wo.work_order_parts.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {wo.work_order_parts.map((p) => (
+                                <span
+                                  key={p.id}
+                                  className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700 border border-blue-200"
+                                >
+                                  🔧 {p.part_name}
+                                  {p.quantity > 1 ? ` ×${p.quantity}` : ""}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                       </ItemContent>
                       <span className="text-sm font-semibold tabular-nums shrink-0 ml-2">
                         {formatMNT(Number(wo.total))}

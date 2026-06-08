@@ -464,11 +464,16 @@ export async function getVehicleServiceHistory(
   db: SupabaseClient,
   orgId: string,
   vehicleId: string,
-): Promise<(WorkOrder & { work_order_services: Record<string, unknown>[] })[]> {
+): Promise<
+  (WorkOrder & {
+    work_order_services: Record<string, unknown>[];
+    work_order_parts: Record<string, unknown>[];
+  })[]
+> {
   const supabase = db;
   const { data: workOrders, error } = await supabase
     .from("work_orders")
-    .select("*, work_order_services(*)")
+    .select("*, work_order_services(*), work_order_parts(*)")
     .eq("organization_id", orgId)
     .eq("vehicle_id", vehicleId)
     .is("deleted_at", null)
@@ -478,6 +483,7 @@ export async function getVehicleServiceHistory(
 
   return (workOrders ?? []) as (WorkOrder & {
     work_order_services: Record<string, unknown>[];
+    work_order_parts: Record<string, unknown>[];
   })[];
 }
 

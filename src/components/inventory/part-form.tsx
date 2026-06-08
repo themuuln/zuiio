@@ -44,6 +44,7 @@ const partSchema = z.object({
   category: z.string().optional(),
   unit: z.string().optional(),
   description: z.string().optional(),
+  location: z.string().optional(),
 });
 
 type PartFormValues = z.infer<typeof partSchema>;
@@ -102,6 +103,7 @@ export function PartForm({
       category: initialData?.category ?? "",
       unit: initialData?.unit ?? "piece",
       description: initialData?.description ?? "",
+      location: initialData?.location ?? "",
     },
   });
 
@@ -159,6 +161,10 @@ export function PartForm({
         purchase_price:
           currentMode === "full" && data.purchase_price?.trim()
             ? Number(data.purchase_price)
+            : undefined,
+        location:
+          currentMode === "full"
+            ? data.location?.trim() || undefined
             : undefined,
         image_url: imageUrl,
         global_part_id: initialData?.global_part_id ?? undefined,
@@ -420,6 +426,16 @@ export function PartForm({
                   <Input
                     placeholder="Optional description"
                     {...form.register("description")}
+                  />
+                </FieldContent>
+              </Field>
+
+              <Field>
+                <FieldLabel>Тавиурын байршил</FieldLabel>
+                <FieldContent>
+                  <Input
+                    placeholder="e.g. A-3-12"
+                    {...form.register("location")}
                   />
                 </FieldContent>
               </Field>

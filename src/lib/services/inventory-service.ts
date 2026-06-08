@@ -35,6 +35,7 @@ const partFieldMap: FieldMap<UpdatePartParams> = {
     unit: "unit",
     default_price: "default_price",
     image_url: "image_url",
+    location: "location",
     is_active: "is_active",
     global_part_id: "global_part_id",
   },
@@ -45,6 +46,7 @@ const partFieldMap: FieldMap<UpdatePartParams> = {
     category: (v) => (v as string) || null,
     description: (v) => (v as string) || null,
     image_url: (v) => (v as string) || null,
+    location: (v) => (v as string) || null,
     global_part_id: (v) => (v as string) || null,
   },
 };
@@ -99,7 +101,7 @@ export async function getPartsCatalog(
   let query = supabase
     .from("parts_catalog")
     .select(
-      "id, organization_id, name, name_mn, part_number, category, unit, default_price, is_active, purchase_price, image_url, created_at, deleted_at, global_part_id",
+      "id, organization_id, name, name_mn, part_number, category, unit, default_price, is_active, purchase_price, image_url, location, created_at, deleted_at, global_part_id",
       usePagination ? { count: "exact" } : undefined,
     )
     .eq("organization_id", orgId)
@@ -162,7 +164,7 @@ export async function getPart(
   const { data, error } = await supabase
     .from("parts_catalog")
     .select(
-      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, location, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .eq("id", id)
     .is("deleted_at", null)
@@ -193,12 +195,13 @@ export async function createPart(
       unit: params.unit || "piece",
       default_price: params.default_price ?? null,
       image_url: params.image_url ?? null,
+      location: params.location?.trim() || null,
       global_part_id: params.global_part_id || null,
       created_by: userId,
       updated_by: userId,
     })
     .select(
-      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, location, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .single();
   if (error || !data)
@@ -224,7 +227,7 @@ export async function updatePart(
     .eq("id", id)
     .eq("organization_id", orgId)
     .select(
-      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
+      "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, location, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .single();
   if (error || !data) throw new NotFoundError("Part not found");

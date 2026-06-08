@@ -110,7 +110,7 @@ export function PartHeader({
       </div>
 
       {/* Quick stats */}
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground mb-1">{t("onHand")}</p>
@@ -157,6 +157,20 @@ export function PartHeader({
             </p>
             <p className="text-xl font-semibold font-mono truncate text-sm">
               {part.part_number ?? "—"}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Байршил</p>
+            <p className="text-xl font-semibold truncate">
+              {part.location ? (
+                <span className="flex items-center gap-1">
+                  📍 {part.location}
+                </span>
+              ) : (
+                "—"
+              )}
             </p>
           </CardContent>
         </Card>
