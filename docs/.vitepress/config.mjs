@@ -66,6 +66,7 @@ export default defineConfig({
         text: "Бараа, санхүү",
         items: [
           { text: "Бараа материал", link: "/inventory" },
+          { text: "Бараа материалын сайжруулалтууд", link: "/inventory-improvements" },
           { text: "Санхүү", link: "/finance" },
           { text: "Зарлагын бүртгэл", link: "/expenses" },
           { text: "Тайлан", link: "/reports" },
