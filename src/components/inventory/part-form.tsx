@@ -3,6 +3,7 @@
 import { AlertTriangle, Loader2, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import PartPhotoUpload from "./part-photo-upload";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -72,6 +73,9 @@ export function PartForm({
   const [currentMode, setCurrentMode] = useState<"quick" | "full">(mode);
   const [error, setError] = useState<string | null>(null);
   const [categoryInput, setCategoryInput] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(
+    initialData?.image_url ?? null,
+  );
 
   const createPartMutation = useCreatePart(orgId);
   const updatePartMutation = useUpdatePart(orgId);
@@ -156,6 +160,7 @@ export function PartForm({
           currentMode === "full" && data.purchase_price?.trim()
             ? Number(data.purchase_price)
             : undefined,
+        image_url: imageUrl,
         global_part_id: initialData?.global_part_id ?? undefined,
       };
 
@@ -206,6 +211,26 @@ export function PartForm({
       )}
 
       <FieldGroup>
+        {/* ── Photo Upload ── */}
+        {currentMode === "full" && (
+          <Field>
+            <FieldLabel>
+              Зураг
+              <span className="text-xs text-muted-foreground ml-1">
+                (optional)
+              </span>
+            </FieldLabel>
+            <FieldContent>
+              <PartPhotoUpload
+                orgId={orgId}
+                partId={partId}
+                imageUrl={imageUrl}
+                onImageChange={setImageUrl}
+              />
+            </FieldContent>
+          </Field>
+        )}
+
         {/* ── Names — Mongolian first ── */}
         <div className="grid gap-3 sm:grid-cols-2">
           <Field data-invalid={!!form.formState.errors.name_mn}>

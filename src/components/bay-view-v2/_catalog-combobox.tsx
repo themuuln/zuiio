@@ -97,20 +97,22 @@ export function CatalogCombobox<T extends CatalogItem>({
             );
           })}
 
-          {filtered.length === 0 && (
+          {search && filtered.length === 0 && (
             <div className="px-3 py-2 text-xs text-muted-foreground">
               {noMatchMessage}
             </div>
           )}
 
-          <Button
-            variant="ghost"
-            onClick={() => onAddNew(search)}
-            className="w-full justify-start px-3 py-2 text-xs h-9 border-t rounded-t-none text-primary font-medium"
-          >
-            <Plus className="size-3 mr-2" />
-            {addAsNewLabel} &ldquo;{search}&rdquo;
-          </Button>
+          {search && (
+            <Button
+              variant="ghost"
+              onClick={() => onAddNew(search)}
+              className="w-full justify-start px-3 py-2 text-xs h-9 border-t rounded-t-none text-primary font-medium"
+            >
+              <Plus className="size-3 mr-2" />
+              {addAsNewLabel} &ldquo;{search}&rdquo;
+            </Button>
+          )}
         </div>
       )}
     </div>

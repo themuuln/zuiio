@@ -31,6 +31,7 @@ export function DetailsForm({ part, onSuccess }: DetailsFormProps) {
             description: part.description ?? undefined,
             unit: part.unit ?? undefined,
             default_price: part.default_price ?? undefined,
+            image_url: part.image_url ?? undefined,
           }}
           onSuccess={onSuccess}
           onCancel={undefined}

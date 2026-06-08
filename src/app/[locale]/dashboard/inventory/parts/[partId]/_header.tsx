@@ -2,6 +2,7 @@
 
 import { AlertTriangle, ArrowLeft, Package } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,9 +75,22 @@ export function PartHeader({
       {/* Title row */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-            <Package className="size-5 text-primary" />
-          </div>
+          {part.image_url ? (
+            <div className="relative size-10 shrink-0 overflow-hidden rounded-xl">
+              <Image
+                src={part.image_url}
+                alt={part.name}
+                width={40}
+                height={40}
+                className="size-full object-cover"
+                unoptimized
+              />
+            </div>
+          ) : (
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <Package className="size-5 text-primary" />
+            </div>
+          )}
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight truncate">
               {part.name}
