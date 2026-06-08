@@ -553,7 +553,6 @@ Grid хэлбэрээр харуулна (2–3 багана).
 | Сервис | Зорилго |
 |--------|---------|
 | `inventory-service.ts` | Parts CRUD, Categories, Balances, Movements, Suppliers, Purchase Orders, Thresholds |
-| `part-photo-upload.tsx` | Зураг авах/сонгох/утгуулах/хадгалах компонент |
 | `inventory-reports-service.ts` | Turnover, Usage Trends, Slow-Moving Stock |
 | `parts-cars-service.ts` | Parts Cars CRUD, Car Parts, Complete Disassembly, Publish to Catalog |
 
