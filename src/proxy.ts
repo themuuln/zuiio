@@ -13,17 +13,19 @@ export default async function proxy(request: NextRequest) {
   }
 
   const authResult = await updateSession(request);
-  if (authResult.status === 307 || authResult.status === 302) {
+  // Pass through redirects (302/307) and rewrites (storefront URL rewriting)
+  if (
+    authResult.status === 307 ||
+    authResult.status === 302 ||
+    authResult.headers.get("x-storefront-rewrite")
+  ) {
     return authResult;
   }
 
   const i18nResponse = handleI18n(request);
 
   if (!request.cookies.has("NEXT_LOCALE")) {
-    const acceptLang = request.headers.get("accept-language") ?? "";
-    const preferred = acceptLang.split(",")[0]?.split("-")[0]?.trim();
-    const locale = preferred === "mn" || preferred === "en" ? preferred : "mn";
-    i18nResponse.cookies.set("NEXT_LOCALE", locale, {
+    i18nResponse.cookies.set("NEXT_LOCALE", "mn", {
       path: "/",
       maxAge: 60 * 60 * 24 * 365,
       sameSite: "lax",
