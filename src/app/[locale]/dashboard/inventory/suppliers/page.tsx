@@ -114,7 +114,7 @@ export default function SuppliersPage() {
       />
 
       {filtered.length === 0 ? (
-        <Card>
+        <Card className="py-0">
           <CardContent className="p-0">
             <Empty>
               <EmptyHeader>
@@ -132,7 +132,7 @@ export default function SuppliersPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
+        <Card className="py-0">
           <CardContent className="p-0">
             <DataTable
               columns={columns}

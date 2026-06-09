@@ -46,7 +46,7 @@ export function ListView({
 
   return (
     <div className="p-4 overflow-y-auto w-full h-full">
-      <Card className="bg-card/75 backdrop-blur border-border/50 shadow-sm rounded-xl overflow-hidden">
+      <Card className="py-0 bg-card/75 backdrop-blur border-border/50 shadow-sm rounded-xl overflow-hidden">
         <Table className="text-xs">
           <TableHeader className="bg-muted/40 select-none">
             <TableRow className="hover:bg-transparent">

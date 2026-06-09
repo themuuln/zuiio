@@ -55,7 +55,7 @@ export function RecentWorkOrdersTable({
   const now = useClientNow();
   return (
     <div className="flex flex-col gap-2">
-      <Card>
+      <Card className="py-0">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
