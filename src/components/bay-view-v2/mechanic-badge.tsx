@@ -95,17 +95,17 @@ export function MechanicBadge({
                     : cn(
                         "bg-background/80 cursor-grab active:cursor-grabbing",
                         status === "New" &&
-                          "border-blue-400/60 dark:border-blue-500/40 ring-1 ring-blue-200/40 dark:ring-blue-500/30",
+                          "border-blue-400/80 dark:border-blue-500/60 ring-1 ring-blue-200/50 dark:ring-blue-500/40",
                         status === "Diagnosing" &&
-                          "border-indigo-400/60 dark:border-indigo-500/40 ring-1 ring-indigo-200/40 dark:ring-indigo-500/30",
+                          "border-violet-400/80 dark:border-violet-500/60 ring-1 ring-violet-200/50 dark:ring-violet-500/40",
                         status === "In Progress" &&
-                          "border-indigo-500/60 dark:border-indigo-400/40 ring-1 ring-indigo-300/40 dark:ring-indigo-400/30",
+                          "border-indigo-400/80 dark:border-indigo-500/60 ring-1 ring-indigo-200/50 dark:ring-indigo-500/40",
                         status === "Ready for Pickup" &&
-                          "border-emerald-400/60 dark:border-emerald-500/40 ring-1 ring-emerald-200/40 dark:ring-emerald-500/30",
+                          "border-emerald-400/80 dark:border-emerald-500/60 ring-1 ring-emerald-200/50 dark:ring-emerald-500/40",
                         status === "Completed" &&
-                          "border-emerald-500/60 dark:border-emerald-400/40 ring-1 ring-emerald-300/40 dark:ring-emerald-400/30",
+                          "border-emerald-500/80 dark:border-emerald-400/60 ring-1 ring-emerald-300/50 dark:ring-emerald-400/40",
                         !status &&
-                          "border-cyan-300/60 dark:border-cyan-600/40 ring-1 ring-cyan-200/40 dark:ring-cyan-600/30",
+                          "border-slate-400/70 dark:border-slate-500/50 ring-1 ring-slate-200/40 dark:ring-slate-500/30",
                       ),
                   isDragging && "opacity-50 shadow-lg",
                   !isHelper &&

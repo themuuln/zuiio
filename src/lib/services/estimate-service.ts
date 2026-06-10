@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import {
@@ -10,7 +11,6 @@ import {
   addServiceToWorkOrder,
 } from "@/lib/services/work-order-items-service";
 import { recalculateWorkOrderTotals } from "@/lib/services/work-order-service";
-import { createClient } from "@/lib/supabase/server";
 import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
   CreateEstimateParams,
@@ -20,17 +20,6 @@ import type {
 } from "@/lib/types";
 
 // ── Helpers ────────────────────────────────────────────────────
-
-async function getOrgId(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const { data } = await supabase.rpc("get_user_organization_id");
-  if (!data) throw new UnauthorizedError("Choose an organization to continue");
-  return data;
-}
 
 /**
  * Calculates line total for a single estimate item.
@@ -54,11 +43,12 @@ function calculateLineTotal(item: {
  * subtotal, discount_total, grand_total.
  * Called after any item mutation.
  */
-async function recalculateEstimateTotals(estimateId: string): Promise<void> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
-
-  const { data: items } = await supabase
+async function recalculateEstimateTotals(
+  db: SupabaseClient,
+  estimateId: string,
+  orgId: string,
+): Promise<void> {
+  const { data: items } = await db
     .from("estimate_items")
     .select(
       "unit_price, quantity, discount_amount, discount_percentage, line_total",
@@ -66,7 +56,7 @@ async function recalculateEstimateTotals(estimateId: string): Promise<void> {
     .eq("estimate_id", estimateId)
     .eq("organization_id", orgId);
 
-  const { data: estimate } = await supabase
+  const { data: estimate } = await db
     .from("estimates")
     .select("discount_amount, discount_percentage, tax_total")
     .eq("id", estimateId)
@@ -90,7 +80,7 @@ async function recalculateEstimateTotals(estimateId: string): Promise<void> {
   const taxTotal = Number(estimate.tax_total ?? 0);
   const grandTotal = Math.max(lineTotals - discountTotal + taxTotal, 0);
 
-  await supabase
+  await db
     .from("estimates")
     .update({
       subtotal: lineTotals,
@@ -107,27 +97,36 @@ async function recalculateEstimateTotals(estimateId: string): Promise<void> {
  * Fetches estimates for the current org with optional filters.
  * Includes customer, vehicle, and item counts.
  */
-export async function getEstimates(params?: {
-  status?: EstimateStatus;
-  customer_id?: string;
-  date_from?: string;
-  date_to?: string;
-  branchId?: string;
-}): Promise<EstimateDetail[]> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+export async function getEstimates(
+  db: SupabaseClient,
+  orgId: string,
+  params?: {
+    status?: EstimateStatus;
+    customer_id?: string;
+    date_from?: string;
+    date_to?: string;
+    branchId?: string;
+    search?: string;
+    page?: number;
+    pageSize?: number;
+  },
+): Promise<{ data: EstimateDetail[]; count: number }> {
+  const usePagination = typeof params?.page === "number" && params.page > 0;
+  const effectivePage = usePagination ? (params.page ?? 1) : 1;
+  const effectivePageSize = usePagination ? (params.pageSize ?? 50) : 50;
 
-  let query = supabase
+  let query = db
     .from("estimates")
     .select(
       `
       *,
-      customer:customers(*),
-      vehicle:vehicles(*),
-      items:estimate_items(*),
+      customer:customers(first_name, last_name, phone),
+      vehicle:vehicles(plate_number, make, model),
+      items:estimate_items(id),
       converted_work_order:converted_work_order_id(id, status, total),
       appointment:appointment_id(id, title, scheduled_at)
     `,
+      usePagination ? { count: "exact" } : undefined,
     )
     .eq("organization_id", orgId)
     .is("deleted_at", null)
@@ -138,9 +137,26 @@ export async function getEstimates(params?: {
   if (params?.branchId) query = withBranchFilter(query, params.branchId);
   if (params?.date_from) query = query.gte("created_at", params.date_from);
   if (params?.date_to) query = query.lte("created_at", params.date_to);
+  if (params?.search?.trim()) {
+    const term = `%${params.search.trim()}%`;
+    query = query.or(
+      `estimate_number.ilike.${term},customer.first_name.ilike.${term},customer.last_name.ilike.${term},vehicle.plate_number.ilike.${term}`,
+    );
+  }
 
-  const { data } = await query;
-  return (data ?? []) as unknown as EstimateDetail[];
+  if (usePagination) {
+    const from = (effectivePage - 1) * effectivePageSize;
+    const to = from + effectivePageSize - 1;
+    query = query.range(from, to);
+  } else {
+    query = query.limit(50);
+  }
+
+  const { data, count } = await query;
+  return {
+    data: (data ?? []) as unknown as EstimateDetail[],
+    count: count ?? 0,
+  };
 }
 
 // ── Get Single Estimate ───────────────────────────────────────
@@ -148,11 +164,12 @@ export async function getEstimates(params?: {
 /**
  * Fetches a single estimate by ID with all relations.
  */
-export async function getEstimate(id: string): Promise<EstimateDetail | null> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
-
-  const { data } = await supabase
+export async function getEstimate(
+  db: SupabaseClient,
+  id: string,
+  orgId: string,
+): Promise<EstimateDetail | null> {
+  const { data } = await db
     .from("estimates")
     .select(
       `
@@ -178,11 +195,13 @@ export async function getEstimate(id: string): Promise<EstimateDetail | null> {
  * Creates a new estimate with items and auto-calculated totals.
  * Generates a human-readable estimate number automatically.
  *
+ * @param db - Supabase client from route handler
  * @param orgId - Organization ID from the route handler
  * @param params - Estimate data including items
  * @returns The full EstimateDetail
  */
 export async function createEstimate(
+  db: SupabaseClient,
   orgId: string,
   params: CreateEstimateParams,
 ): Promise<EstimateDetail> {
@@ -191,23 +210,19 @@ export async function createEstimate(
   if (!params.items?.length)
     throw new ValidationError("At least one item is required");
 
-  const supabase = await createClient();
-  const user = (await supabase.auth.getUser()).data.user;
+  const user = (await db.auth.getUser()).data.user;
   if (!user) throw new UnauthorizedError();
 
   // Generate estimate number
-  const { data: estNum } = await supabase.rpc("generate_estimate_number");
+  const { data: estNum } = await db.rpc("generate_estimate_number");
   const estimateNumber = (estNum as string) ?? `EST-${Date.now()}`;
 
-  const resolvedBranchId = await resolveBranchId(
-    supabase,
-    orgId,
-    params.branchId,
-    { strict: false },
-  );
+  const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
+    strict: false,
+  });
 
   // Create the estimate
-  const { data: estimate, error } = await supabase
+  const { data: estimate, error } = await db
     .from("estimates")
     .insert({
       organization_id: orgId,
@@ -257,22 +272,22 @@ export async function createEstimate(
     created_by: user.id,
   }));
 
-  const { error: itemsError } = await supabase
+  const { error: itemsError } = await db
     .from("estimate_items")
     .insert(itemsToInsert);
 
   if (itemsError) {
     // Clean up the estimate if items failed
-    await supabase.from("estimates").delete().eq("id", estimate.id);
+    await db.from("estimates").delete().eq("id", estimate.id);
     throw new Error(itemsError.message ?? "Failed to create estimate items");
   }
 
   // Recalculate totals
-  await recalculateEstimateTotals(estimate.id);
+  await recalculateEstimateTotals(db, estimate.id, orgId);
 
   revalidateTag(cacheTags.estimates(orgId), "max");
 
-  const created = await getEstimate(estimate.id);
+  const created = await getEstimate(db, estimate.id, orgId);
   if (!created) throw new Error("Failed to fetch created estimate");
   return created;
 }
@@ -285,12 +300,12 @@ export async function createEstimate(
  * Totals are always recalculated.
  */
 export async function updateEstimate(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   params: UpdateEstimateParams,
 ): Promise<EstimateDetail> {
-  const supabase = await createClient();
-  const user = (await supabase.auth.getUser()).data.user;
+  const user = (await db.auth.getUser()).data.user;
 
   const updates: Record<string, unknown> = {
     updated_by: user?.id ?? null,
@@ -307,7 +322,7 @@ export async function updateEstimate(
     updates.discount_percentage = params.discount_percentage;
   if (params.tax_total !== undefined) updates.tax_total = params.tax_total;
 
-  const { error } = await supabase
+  const { error } = await db
     .from("estimates")
     .update(updates)
     .eq("id", id)
@@ -319,7 +334,7 @@ export async function updateEstimate(
   // If items are provided, replace all items
   if (params.items) {
     // Delete existing items
-    await supabase.from("estimate_items").delete().eq("estimate_id", id);
+    await db.from("estimate_items").delete().eq("estimate_id", id);
 
     // Insert new items
     const itemsToInsert = params.items.map((item, i) => ({
@@ -345,7 +360,7 @@ export async function updateEstimate(
       created_by: user?.id ?? null,
     }));
 
-    const { error: itemsError } = await supabase
+    const { error: itemsError } = await db
       .from("estimate_items")
       .insert(itemsToInsert);
 
@@ -353,12 +368,12 @@ export async function updateEstimate(
       throw new Error(itemsError.message ?? "Failed to update estimate items");
   }
 
-  await recalculateEstimateTotals(id);
+  await recalculateEstimateTotals(db, id, orgId);
 
   revalidateTag(cacheTags.estimates(orgId), "max");
   revalidateTag(cacheTags.estimate(id), "max");
 
-  const updated = await getEstimate(id);
+  const updated = await getEstimate(db, id, orgId);
   if (!updated) throw new NotFoundError("Estimate not found");
   return updated;
 }
@@ -369,11 +384,12 @@ export async function updateEstimate(
  * Updates just the status of an estimate.
  */
 export async function updateEstimateStatus(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   status: EstimateStatus,
 ): Promise<EstimateDetail> {
-  return updateEstimate(id, orgId, { status });
+  return updateEstimate(db, id, orgId, { status });
 }
 
 // ── Delete Estimate ───────────────────────────────────────────
@@ -381,10 +397,12 @@ export async function updateEstimateStatus(
 /**
  * Soft-deletes an estimate.
  */
-export async function deleteEstimate(id: string, orgId: string): Promise<void> {
-  const supabase = await createClient();
-
-  const { error } = await supabase
+export async function deleteEstimate(
+  db: SupabaseClient,
+  id: string,
+  orgId: string,
+): Promise<void> {
+  const { error } = await db
     .from("estimates")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", id)
@@ -410,15 +428,15 @@ export async function deleteEstimate(id: string, orgId: string): Promise<void> {
  * The work order appears in Bay View and follows the normal WO lifecycle.
  */
 export async function convertEstimateToWorkOrder(
+  db: SupabaseClient,
   estimateId: string,
   orgId: string,
 ): Promise<import("@/lib/types").WorkOrderDetail> {
-  const supabase = await createClient();
-  const user = (await supabase.auth.getUser()).data.user;
+  const user = (await db.auth.getUser()).data.user;
   if (!user) throw new UnauthorizedError();
 
   // Fetch the estimate with items
-  const estimate = await getEstimate(estimateId);
+  const estimate = await getEstimate(db, estimateId, orgId);
   if (!estimate) throw new NotFoundError("Estimate not found");
   if (estimate.status !== "approved") {
     throw new ValidationError(
@@ -432,12 +450,12 @@ export async function convertEstimateToWorkOrder(
   }
 
   // Get a branch for the work order
-  const resolvedBranchId = await resolveBranchId(supabase, orgId, undefined, {
+  const resolvedBranchId = await resolveBranchId(db, orgId, undefined, {
     strict: false,
   });
 
   // Create the work order
-  const { data: wo, error: woError } = await supabase
+  const { data: wo, error: woError } = await db
     .from("work_orders")
     .insert({
       organization_id: orgId,
@@ -459,7 +477,7 @@ export async function convertEstimateToWorkOrder(
     throw new Error(woError?.message ?? "Failed to create work order");
 
   // Record initial status
-  await supabase.from("work_order_status_history").insert({
+  await db.from("work_order_status_history").insert({
     work_order_id: wo.id,
     organization_id: orgId,
     status: "New",
@@ -470,7 +488,7 @@ export async function convertEstimateToWorkOrder(
   // Add each estimate item as a service or part on the work order
   for (const item of estimate.items) {
     if (item.item_type === "service" || item.item_type === "custom") {
-      await addServiceToWorkOrder(supabase, wo.id, orgId, {
+      await addServiceToWorkOrder(db, wo.id, orgId, {
         service_catalog_id:
           item.source_service_id ?? "00000000-0000-0000-0000-000000000000",
         service_name: item.description,
@@ -481,7 +499,7 @@ export async function convertEstimateToWorkOrder(
         notes: item.notes ?? undefined,
       });
     } else if (item.item_type === "part") {
-      await addPartToWorkOrder(supabase, wo.id, orgId, {
+      await addPartToWorkOrder(db, wo.id, orgId, {
         part_id: item.source_part_id ?? undefined,
         part_name: item.description,
         part_number: undefined,
@@ -495,10 +513,10 @@ export async function convertEstimateToWorkOrder(
   }
 
   // Recalculate totals
-  await recalculateWorkOrderTotals(supabase, wo.id);
+  await recalculateWorkOrderTotals(db, wo.id);
 
   // Mark estimate as converted
-  await supabase
+  await db
     .from("estimates")
     .update({
       status: "converted",
@@ -516,5 +534,5 @@ export async function convertEstimateToWorkOrder(
 
   // Return the work order detail
   const { getWorkOrder } = await import("@/lib/services/work-order-service");
-  return getWorkOrder(supabase, wo.id);
+  return getWorkOrder(db, wo.id);
 }

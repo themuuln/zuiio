@@ -1,0 +1,194 @@
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+
+// ── Query Keys ─────────────────────────────────────────────────
+
+export const followupKeys = {
+  all: ["followups"] as const,
+  lists: () => [...followupKeys.all, "list"] as const,
+  list: (params: Record<string, unknown>) =>
+    [...followupKeys.lists(), params] as const,
+  details: () => [...followupKeys.all, "detail"] as const,
+  detail: (id: string) => [...followupKeys.details(), id] as const,
+};
+
+// ── Types ──────────────────────────────────────────────────────
+
+interface FollowupFilters {
+  customerId?: string;
+  status?: string;
+  assignedTo?: string;
+  page?: number;
+  limit?: number;
+}
+
+interface FollowupData {
+  id: string;
+  subject: string;
+  type: string;
+  status: string;
+  due_at: string;
+  notes: string | null;
+  outcome: string | null;
+  outcome_notes: string | null;
+  customer?: {
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+    email: string | null;
+  } | null;
+  vehicle?: {
+    plate_number: string | null;
+    make: string | null;
+    model: string | null;
+  } | null;
+  assigned_user?: {
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  } | null;
+}
+
+// ── Hooks ──────────────────────────────────────────────────────
+
+export function useFollowups(orgId: string, filters: FollowupFilters = {}) {
+  const params = useMemo(
+    () => ({
+      customerId: filters.customerId,
+      status: filters.status,
+      assignedTo: filters.assignedTo,
+      page: filters.page ?? 1,
+      limit: filters.limit ?? 20,
+    }),
+    [
+      filters.customerId,
+      filters.status,
+      filters.assignedTo,
+      filters.page,
+      filters.limit,
+    ],
+  );
+
+  return useQuery<{
+    data: FollowupData[];
+    count: number;
+  }>({
+    queryKey: followupKeys.list(params),
+    queryFn: async () => {
+      const searchParams = new URLSearchParams();
+      if (params.customerId) searchParams.set("customerId", params.customerId);
+      if (params.status) searchParams.set("status", params.status);
+      if (params.assignedTo) searchParams.set("assignedTo", params.assignedTo);
+      if (params.page && params.page > 1)
+        searchParams.set("page", String(params.page));
+      if (params.limit && params.limit !== 20)
+        searchParams.set("limit", String(params.limit));
+
+      const qs = searchParams.toString();
+      const res = await fetch(
+        `/api/organizations/${orgId}/followups${qs ? `?${qs}` : ""}`,
+      );
+      if (!res.ok) throw new Error("Failed to fetch follow-ups");
+      return res.json();
+    },
+  });
+}
+
+export function useFollowupDetail(orgId: string, followupId: string | null) {
+  return useQuery<{ data: FollowupData }>({
+    queryKey: followupKeys.detail(followupId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/followups/${followupId}`,
+      );
+      if (!res.ok) throw new Error("Failed to fetch follow-up");
+      return res.json();
+    },
+    enabled: !!followupId,
+  });
+}
+
+export function useCreateFollowup(orgId: string) {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      customer_id: string;
+      vehicle_id?: string;
+      work_order_id?: string;
+      estimate_id?: string;
+      invoice_id?: string;
+      type?: string;
+      subject: string;
+      notes?: string;
+      due_at: string;
+      assigned_to?: string;
+    }) => {
+      const res = await fetch(`/api/organizations/${orgId}/followups`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      if (!res.ok) throw new Error("Failed to create follow-up");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: followupKeys.all });
+    },
+  });
+}
+
+export function useUpdateFollowup(orgId: string) {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      followupId,
+      ...input
+    }: {
+      followupId: string;
+      type?: string;
+      subject?: string;
+      notes?: string;
+      due_at?: string;
+      assigned_to?: string;
+      action?: "complete" | "cancel";
+      outcome?: string;
+      outcome_notes?: string;
+    }) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/followups/${followupId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(input),
+        },
+      );
+      if (!res.ok) throw new Error("Failed to update follow-up");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: followupKeys.all });
+    },
+  });
+}
+
+export function useDeleteFollowup(orgId: string) {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (followupId: string) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/followups/${followupId}`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) throw new Error("Failed to delete follow-up");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: followupKeys.all });
+    },
+  });
+}

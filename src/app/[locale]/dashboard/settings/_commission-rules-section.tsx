@@ -289,8 +289,8 @@ function CommissionFormDialog({
             <Field data-invalid={!!form.formState.errors.commissionValue}>
               <FieldLabel htmlFor="commission-value">
                 {watchedCommissionType === "fixed_per_work_order"
-                  ? "Fixed Amount"
-                  : "Commission Percentage"}
+                  ? t("fixedAmount")
+                  : t("commissionPercent")}
               </FieldLabel>
               <FieldContent>
                 <div className="relative">
@@ -328,27 +328,31 @@ function CommissionFormDialog({
 
             <FieldGroup className="grid grid-cols-2 gap-4">
               <Field data-invalid={!!form.formState.errors.minCommission}>
-                <FieldLabel htmlFor="min-commission">Min Commission</FieldLabel>
+                <FieldLabel htmlFor="min-commission">
+                  {t("minCommission")}
+                </FieldLabel>
                 <FieldContent>
                   <Input
                     id="min-commission"
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="Optional"
+                    placeholder={t("optional")}
                     {...form.register("minCommission")}
                   />
                 </FieldContent>
               </Field>
               <Field data-invalid={!!form.formState.errors.maxCommission}>
-                <FieldLabel htmlFor="max-commission">Max Commission</FieldLabel>
+                <FieldLabel htmlFor="max-commission">
+                  {t("maxCommission")}
+                </FieldLabel>
                 <FieldContent>
                   <Input
                     id="max-commission"
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="Optional"
+                    placeholder={t("optional")}
                     {...form.register("maxCommission")}
                   />
                 </FieldContent>
@@ -361,7 +365,7 @@ function CommissionFormDialog({
               checked={form.watch("isActive")}
               onCheckedChange={(v) => form.setValue("isActive", v)}
             />
-            <Label className="cursor-pointer">Active</Label>
+            <Label className="cursor-pointer">{t("active")}</Label>
           </div>
 
           <DialogFooter>
@@ -376,7 +380,7 @@ function CommissionFormDialog({
               {form.formState.isSubmitting && (
                 <Loader2 className="mr-2 size-4 animate-spin" />
               )}
-              {isEditing ? "Update" : "Create"}
+              {isEditing ? t("updateRule") : t("createRule")}
             </Button>
           </DialogFooter>
         </form>

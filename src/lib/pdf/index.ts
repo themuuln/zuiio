@@ -7,6 +7,7 @@
  *   import { WorkOrderDocument } from "@/lib/pdf";
  */
 
+export { EstimateDocument } from "./estimate-document";
 export { InvoiceDocument } from "./invoice-document";
 export type { Locale } from "./pdf-styles";
 export {

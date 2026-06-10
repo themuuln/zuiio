@@ -13,7 +13,13 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/test/**", "src/**/*.test.*", "src/**/*.spec.*"],
+      exclude: [
+        "src/test/**",
+        "src/**/*.test.*",
+        "src/**/*.spec.*",
+        "src/lib/database.types.ts",
+        "src/**/*.d.ts",
+      ],
       thresholds: {
         statements: 40,
         branches: 30,

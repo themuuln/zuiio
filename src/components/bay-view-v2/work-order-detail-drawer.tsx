@@ -10,13 +10,14 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
-import { cn } from "@/lib/utils";
-
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
 import { workOrderKeys } from "@/lib/queries/keys";
 import { useDrawerQueries } from "@/lib/queries/use-drawer-queries";
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { saveCompletionData } from "@/lib/services/post-service-service";
+import { cn } from "@/lib/utils";
+import { CustomerPickerModal } from "./_customer-picker-modal";
 import { DrawerCelebration } from "./_drawer-celebration";
 import { DrawerFooter } from "./_drawer-footer";
 import { DrawerHeaderSection } from "./_drawer-header";
@@ -33,8 +34,6 @@ import { useDrawerMutations } from "./_use-drawer-mutations";
 import type { PickupCompleteData } from "./pickup-complete-form";
 import { PickupCompleteForm } from "./pickup-complete-form";
 import { PostServiceFormBody } from "./post-service-form";
-import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
-import { CustomerPickerModal } from "./_customer-picker-modal";
 
 // ── Drawer ───────────────────────────────────────────────────
 
@@ -169,10 +168,11 @@ export function WorkOrderDetailDrawer({
         setShowAddPart(true);
       }
     }
-  }, [open, initialAction, hasLoadedOnce]);
+  }, [open, initialAction, hasLoadedOnce, setShowAddPart, setShowAddService]);
 
   // Scale animation: shrink → resize → expand
   useLayoutEffect(() => {
+    void isFullScreen;
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
@@ -213,11 +213,11 @@ export function WorkOrderDetailDrawer({
       );
       const json = await res.json();
       if (json.error) {
-        toast.error(json.error.message ?? "Failed to complete");
+        toast.error(json.error.message ?? t("failedToComplete"));
       } else {
         await fetchWo(true);
         toast.dismiss();
-        toast.success("Work order completed");
+        toast.success(t("workOrderCompleted"));
         setShowPickupForm(false);
         setShowCelebration(true);
         setTimeout(() => {
@@ -227,9 +227,7 @@ export function WorkOrderDetailDrawer({
         onRefresh();
       }
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to complete work order",
-      );
+      toast.error(err instanceof Error ? err.message : t("failedToComplete"));
     }
   }
 
@@ -244,14 +242,14 @@ export function WorkOrderDetailDrawer({
   // ── Render ──
 
   return (
-    <Drawer open={open} onOpenChange={handleOpenChange} modal="trap-focus">
-      <DrawerContent
-        data-fullscreen={isFullScreen || undefined}
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
+        showCloseButton={false}
         className={cn(
           "flex flex-col gap-0 p-0 mx-auto border-border/80 shadow-2xl",
           isFullScreen
-            ? "fixed inset-0 z-50 h-full w-full rounded-none border-0 data-[vaul-drawer-direction=bottom]:max-h-none data-[vaul-drawer-direction=bottom]:mt-0"
-            : "h-[90vh] max-h-[90vh] md:h-[85vh] md:max-h-[85vh] w-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl md:bottom-4 md:rounded-xl md:border",
+            ? "fixed inset-0 z-50 h-full w-full max-w-full rounded-none border-0"
+            : "max-w-5xl lg:max-w-6xl xl:max-w-7xl h-[90vh]",
         )}
       >
         <DrawerHeaderSection
@@ -282,9 +280,9 @@ export function WorkOrderDetailDrawer({
         />
 
         {/* Quick actions — always visible after first load */}
-        {hasLoadedOnce && wo && orgId && (
+        {hasLoadedOnce && wo && orgId && workOrderId && (
           <QuickActions
-            workOrderId={workOrderId!}
+            workOrderId={workOrderId}
             orgId={orgId}
             existingNotes={wo.notes}
             onNoteAdded={() => fetchWo(true)}
@@ -369,15 +367,17 @@ export function WorkOrderDetailDrawer({
                                 t={t}
                               />
 
-                              <NotesSection
-                                complaint={wo.complaint}
-                                diagnosis={wo.diagnosis}
-                                notes={wo.notes}
-                                orgId={orgId!}
-                                workOrderId={workOrderId!}
-                                onUpdated={() => fetchWo(true)}
-                                t={t}
-                              />
+                              {orgId && workOrderId ? (
+                                <NotesSection
+                                  complaint={wo.complaint}
+                                  diagnosis={wo.diagnosis}
+                                  notes={wo.notes}
+                                  orgId={orgId}
+                                  workOrderId={workOrderId}
+                                  onUpdated={() => fetchWo(true)}
+                                  t={t}
+                                />
+                              ) : null}
                             </div>
                           </div>
 
@@ -438,8 +438,11 @@ export function WorkOrderDetailDrawer({
           onSaveAndClose={handleSaveAndClose}
         />
 
-        <DrawerCelebration show={showCelebration} message="Completed!" />
-      </DrawerContent>
+        <DrawerCelebration
+          show={showCelebration}
+          message={t("completedCelebration")}
+        />
+      </DialogContent>
 
       {/* Customer picker modal */}
       {showCustomerPicker && orgId && (
@@ -465,6 +468,6 @@ export function WorkOrderDetailDrawer({
           onCancel={handleCancelPickup}
         />
       )}
-    </Drawer>
+    </Dialog>
   );
 }

@@ -34,6 +34,10 @@ export const cacheTags = {
   invoices: (orgId: string) => `invoices:${orgId}`,
   invoice: (id: string) => `invoice:${id}`,
 
+  // Refunds
+  refunds: (orgId: string) => `refunds:${orgId}`,
+  refund: (id: string) => `refund:${id}`,
+
   // Users
   organizationUsers: (orgId: string) => `org-users:${orgId}`,
   userProfile: (userId: string) => `user-profile:${userId}`,

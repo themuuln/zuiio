@@ -1,41 +1,20 @@
 "use client";
 
 import {
-  AlertCircle,
-  Bell,
+  AlertTriangle,
   BellOff,
   Calendar,
-  History,
-  Pencil,
-  Plus,
-  Send,
-  Settings,
-  Trash2,
+  Clock,
+  Search,
+  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
-import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Empty,
   EmptyContent,
@@ -45,34 +24,16 @@ import {
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from "@/components/ui/item";
-import { Label } from "@/components/ui/label";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -80,102 +41,27 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Typography } from "@/components/ui/typography";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import {
-  useOrgSettings,
-  useUpdateOrgSettings,
-} from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
-  type ServiceScheduleItem,
   useCreateServiceSchedule,
   useDeleteServiceSchedule,
   useReminderLogs,
   useServiceSchedules,
+  useUpdateContactStatus,
   useUpdateServiceSchedule,
 } from "@/lib/queries/use-service-reminders";
 import { useVehicles } from "@/lib/queries/use-vehicles";
 import { useSelectedBranchId } from "@/lib/stores";
+import { ActionButtons } from "./_action-buttons";
+import { AddScheduleDialog } from "./_add-schedule-dialog";
+import { ConfigSheet } from "./_config-sheet";
+import { DeleteConfirmDialog } from "./_delete-confirm-dialog";
+import { EditScheduleDialog } from "./_edit-schedule-dialog";
+import { ReminderLogsTab } from "./_reminder-logs-tab";
+import { ScheduleRow } from "./_schedule-row";
+import { formatVehicleLabel, getScheduleDueStatus } from "./_utils";
 
-const formatDate = (dateStr: string) =>
-  new Date(dateStr).toLocaleDateString("mn-MN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-
-function ScheduleRow({
-  item,
-  onEdit,
-  onDelete,
-}: {
-  item: ServiceScheduleItem;
-  onEdit: (item: ServiceScheduleItem) => void;
-  onDelete: (id: string) => void;
-}) {
-  const dueDate = item.next_due_date ? new Date(item.next_due_date) : null;
-  const isOverdue = dueDate && dueDate < new Date();
-  const isSoon =
-    dueDate &&
-    !isOverdue &&
-    dueDate < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-  return (
-    <TableRow>
-      <TableCell className="font-medium">
-        {item.vehicle
-          ? `${item.vehicle.make} ${item.vehicle.model} ${item.vehicle.plate_number}`
-          : "—"}
-      </TableCell>
-      <TableCell>{item.service_name}</TableCell>
-      <TableCell>
-        {item.interval_months ? `${item.interval_months}mo` : "—"}
-        {item.interval_km
-          ? item.interval_months
-            ? ` / ${item.interval_km.toLocaleString()}km`
-            : `${item.interval_km.toLocaleString()}km`
-          : ""}
-      </TableCell>
-      <TableCell>
-        {item.last_service_date ? formatDate(item.last_service_date) : "—"}
-      </TableCell>
-      <TableCell>
-        <span
-          className={`inline-flex items-center gap-1 ${
-            isOverdue
-              ? "text-destructive font-semibold"
-              : isSoon
-                ? "text-amber-600 font-medium"
-                : ""
-          }`}
-        >
-          {item.next_due_date ? formatDate(item.next_due_date) : "—"}
-          {isOverdue && <AlertCircle className="size-4" />}
-        </span>
-      </TableCell>
-      <TableCell>
-        {item.reminder_enabled ? (
-          <Bell className="size-4 text-green-600" />
-        ) : (
-          <BellOff className="size-4 text-muted-foreground" />
-        )}
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon-xs" onClick={() => onEdit(item)}>
-            <Pencil className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => onDelete(item.id)}
-          >
-            <Trash2 className="size-4 text-destructive" />
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-}
+type DueStatus = "overdue" | "due-soon" | "scheduled" | "no-date";
 
 export default function ServiceRemindersPage() {
   const t = useTranslations();
@@ -196,188 +82,134 @@ export default function ServiceRemindersPage() {
   const createSchedule = useCreateServiceSchedule(orgId);
   const deleteSchedule = useDeleteServiceSchedule(orgId);
   const updateSchedule = useUpdateServiceSchedule(orgId);
+  const updateContactStatus = useUpdateContactStatus(orgId);
   const reminderLogs = useReminderLogs(orgId, undefined, branchFilter);
   const { registerTab } = useRightSidebar();
 
-  const [showAdd, setShowAdd] = useState(false);
-  const [newSchedule, setNewSchedule] = useState({
-    vehicle_id: "",
-    service_catalog_id: "",
-    service_name: "",
-    interval_months: "",
-    interval_km: "",
-    last_service_date: "",
-    last_service_odometer: "",
-    next_due_date: "",
-    notes: "",
-  });
+  const [editItem, setEditItem] = useState<{
+    id: string;
+    service_name: string;
+    interval_months: number | null;
+    interval_km: number | null;
+    notes: string | null;
+    reminder_enabled: boolean;
+  } | null>(null);
   const [showEdit, setShowEdit] = useState(false);
-  const [editItem, setEditItem] = useState<ServiceScheduleItem | null>(null);
-  const [editForm, setEditForm] = useState({
-    service_name: "",
-    interval_months: "",
-    interval_km: "",
-    notes: "",
-    reminder_enabled: true,
-  });
-  const [addTab, setAddTab] = useState<"schedule" | "logs">("schedule");
-  const [showConfig, setShowConfig] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [activeTab, setActiveTab] = useState<"schedule" | "logs">("schedule");
+  const [deleteItem, setDeleteItem] = useState<
+    (typeof schedules)[number] | null
+  >(null);
 
-  const { settings: orgSettings } = useOrgSettings(orgId);
-  const updateOrgSettings = useUpdateOrgSettings(orgId);
+  // Filters
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<DueStatus | "all" | "">(
+    "all",
+  );
+  const [reminderFilter, setReminderFilter] = useState<
+    "all" | "enabled" | "disabled" | ""
+  >("all");
 
-  const defaultChannel =
-    (orgSettings?.reminder_default_channel as string) ?? "in_app";
-  const autoEnable = orgSettings?.reminder_auto_enable !== false;
+  // Derived counts
+  const counts = useMemo(() => {
+    const now = new Date();
+    const sevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    let overdue = 0;
+    let dueSoon = 0;
+    let remindersOff = 0;
 
-  const [configChannel, setConfigChannel] = useState(defaultChannel);
-  const [configAutoEnable, setConfigAutoEnable] = useState(autoEnable);
+    for (const s of schedules) {
+      if (s.next_due_date) {
+        const due = new Date(s.next_due_date);
+        if (due < now) overdue++;
+        else if (due < sevenDays) dueSoon++;
+      }
+      if (!s.reminder_enabled) remindersOff++;
+    }
 
-  // Sync state when org settings load
-  const configSynced = useRef(false);
-  if (orgSettings && !configSynced.current) {
-    setConfigChannel(
-      (orgSettings?.reminder_default_channel as string) ?? "in_app",
-    );
-    setConfigAutoEnable(orgSettings?.reminder_auto_enable !== false);
-    configSynced.current = true;
-  }
+    return { total: schedules.length, overdue, dueSoon, remindersOff };
+  }, [schedules]);
 
-  const handleSaveConfig = async () => {
-    await updateOrgSettings.mutateAsync({
-      reminder_default_channel: configChannel,
-      reminder_auto_enable: configAutoEnable,
+  // Filtered schedules
+  const filteredSchedules = useMemo(() => {
+    return schedules.filter((item) => {
+      // Search
+      if (search) {
+        const q = search.toLowerCase();
+        const vehicleMatch = formatVehicleLabel(item.vehicle)
+          .toLowerCase()
+          .includes(q);
+        const serviceMatch = item.service_name.toLowerCase().includes(q);
+        if (!vehicleMatch && !serviceMatch) return false;
+      }
+      // Status filter
+      if (statusFilter && statusFilter !== "all") {
+        const status = getScheduleDueStatus(item);
+        if (status !== statusFilter) return false;
+      }
+      // Reminder filter
+      if (
+        reminderFilter &&
+        reminderFilter === "enabled" &&
+        !item.reminder_enabled
+      )
+        return false;
+      if (
+        reminderFilter &&
+        reminderFilter === "disabled" &&
+        item.reminder_enabled
+      )
+        return false;
+
+      return true;
     });
-    setShowConfig(false);
-  };
+  }, [schedules, search, statusFilter, reminderFilter]);
 
-  const handleAdd = async () => {
-    if (!orgId || !newSchedule.service_name.trim()) {
-      toast.error(t("common.noResults"));
-      return;
-    }
+  const hasFilters =
+    search ||
+    (statusFilter !== "" && statusFilter !== "all") ||
+    (reminderFilter !== "" && reminderFilter !== "all");
 
-    if (!newSchedule.vehicle_id) {
-      toast.error(t("serviceReminders.searchVehicle"));
-      return;
-    }
-
+  const handleDelete = async () => {
+    if (!orgId || !deleteItem) return;
     try {
-      await createSchedule.mutateAsync({
-        vehicle_id: newSchedule.vehicle_id || undefined,
-        service_catalog_id: newSchedule.service_catalog_id || undefined,
-        service_name: newSchedule.service_name.trim(),
-        interval_months: newSchedule.interval_months
-          ? parseInt(newSchedule.interval_months, 10)
-          : null,
-        interval_km: newSchedule.interval_km
-          ? parseInt(newSchedule.interval_km, 10)
-          : null,
-        last_service_date: newSchedule.last_service_date || null,
-        last_service_odometer: newSchedule.last_service_odometer
-          ? parseInt(newSchedule.last_service_odometer, 10)
-          : null,
-        next_due_date: newSchedule.next_due_date || null,
-      });
-
-      setShowAdd(false);
-      setNewSchedule({
-        vehicle_id: "",
-        service_catalog_id: "",
-        service_name: "",
-        interval_months: "",
-        interval_km: "",
-        last_service_date: "",
-        last_service_odometer: "",
-        next_due_date: "",
-        notes: "",
-      });
-      toast.success(t("common.saved"));
-    } catch (err) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : t("serviceReminders.failedToCreate"),
-      );
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!orgId) return;
-    try {
-      await deleteSchedule.mutateAsync(id);
+      await deleteSchedule.mutateAsync(deleteItem.id);
+      toast.dismiss();
       toast.success(t("common.deleted"));
     } catch (err) {
+      toast.dismiss();
       toast.error(
         err instanceof Error
           ? err.message
           : t("serviceReminders.failedToDelete"),
       );
+    } finally {
+      setDeleteItem(null);
     }
   };
 
-  const handleEdit = (item: ServiceScheduleItem) => {
+  const handleEdit = (item: (typeof schedules)[number]) => {
     setEditItem(item);
-    setEditForm({
-      service_name: item.service_name,
-      interval_months: item.interval_months?.toString() ?? "",
-      interval_km: item.interval_km?.toString() ?? "",
-      notes: item.notes ?? "",
-      reminder_enabled: item.reminder_enabled,
-    });
     setShowEdit(true);
   };
 
-  const handleSaveEdit = async () => {
-    if (!orgId || !editItem || !editForm.service_name.trim()) {
-      toast.error(t("common.noResults"));
-      return;
-    }
-
-    try {
-      await updateSchedule.mutateAsync({
-        id: editItem.id,
-        service_name: editForm.service_name.trim(),
-        interval_months: editForm.interval_months
-          ? parseInt(editForm.interval_months, 10)
-          : null,
-        interval_km: editForm.interval_km
-          ? parseInt(editForm.interval_km, 10)
-          : null,
-        notes: editForm.notes || null,
-        reminder_enabled: editForm.reminder_enabled,
-      });
-
-      setShowEdit(false);
-      setEditItem(null);
-      refetch();
-      toast.success(t("common.saved"));
-    } catch (err) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : t("serviceReminders.failedToUpdate"),
-      );
-    }
+  const handleSaveEdit = async (data: {
+    id: string;
+    service_name: string;
+    interval_months: number | null;
+    interval_km: number | null;
+    notes: string | null;
+    reminder_enabled: boolean;
+  }) => {
+    if (!orgId) return;
+    await updateSchedule.mutateAsync(data);
+    refetch();
   };
 
   const listError = error ? error.message : null;
 
+  // Sidebar tabs
   useEffect(() => {
     if (!schedules) return;
-    const now = new Date();
-    const overdue = schedules.filter(
-      (s) => s.next_due_date && new Date(s.next_due_date) < now,
-    ).length;
-    const dueSoon = schedules.filter(
-      (s) =>
-        s.next_due_date &&
-        new Date(s.next_due_date) >= now &&
-        new Date(s.next_due_date) <
-          new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
-    ).length;
 
     registerTab(
       "due-soon",
@@ -387,10 +219,10 @@ export default function ServiceRemindersPage() {
         items={[
           {
             label: t("sidebar.overdue"),
-            count: overdue,
+            count: counts.overdue,
             color: "destructive" as const,
           },
-          { label: t("sidebar.dueIn7Days"), count: dueSoon },
+          { label: t("sidebar.dueIn7Days"), count: counts.dueSoon },
         ]}
       />,
     );
@@ -398,11 +230,15 @@ export default function ServiceRemindersPage() {
     const logs = reminderLogs.data ?? [];
     const recent = logs.slice(0, 10).map((log) => ({
       id: log.id,
-      primary: log.vehicle
-        ? `${log.vehicle.make} ${log.vehicle.model} ${log.vehicle.plate_number}`
-        : log.service_name,
+      primary: log.vehicle ? formatVehicleLabel(log.vehicle) : log.service_name,
       secondary: `${log.status} · ${log.channel}`,
-      timestamp: log.scheduled_at ? formatDate(log.scheduled_at) : undefined,
+      timestamp: log.scheduled_at
+        ? new Date(log.scheduled_at).toLocaleDateString("mn-MN", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })
+        : undefined,
     }));
 
     registerTab(
@@ -414,10 +250,11 @@ export default function ServiceRemindersPage() {
         emptyMessage={t("sidebar.noReminderHistory")}
       />,
     );
-  }, [schedules, reminderLogs.data, registerTab, t]);
+  }, [schedules, counts, reminderLogs.data, registerTab, t]);
 
   return (
     <div className="flex flex-col gap-4 p-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
@@ -428,460 +265,92 @@ export default function ServiceRemindersPage() {
           </Typography.Muted>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon-xs"
-            onClick={async () => {
-              if (!orgId) return;
-              setSyncing(true);
-              try {
-                const res = await fetch(
-                  `/api/organizations/${orgId}/service-reminders/sync-history`,
-                  { method: "POST" },
-                );
-                const json = await res.json();
-                if (json.error) throw new Error(json.error.message);
-                toast.success(
-                  t("serviceReminders.synced", { count: json.data.synced }),
-                );
-                refetch();
-              } catch (err) {
-                toast.error(
-                  err instanceof Error
-                    ? err.message
-                    : t("serviceReminders.failedToSync"),
-                );
-              } finally {
-                setSyncing(false);
-              }
+          <ActionButtons
+            orgId={orgId}
+            onSyncComplete={() => refetch()}
+            onSendComplete={() => refetch()}
+          />
+          <ConfigSheet orgId={orgId} />
+          <AddScheduleDialog
+            vehicles={vehicles}
+            isPending={createSchedule.isPending}
+            onAdd={async (data) => {
+              await createSchedule.mutateAsync(data);
             }}
-            disabled={syncing}
-            title="Sync from work order history"
-          >
-            <History className={`size-4 ${syncing ? "animate-spin" : ""}`} />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-xs"
-            onClick={async () => {
-              if (!orgId) return;
-              setSending(true);
-              try {
-                const res = await fetch(
-                  `/api/organizations/${orgId}/service-reminders/send-pending`,
-                  { method: "POST" },
-                );
-                const json = await res.json();
-                if (json.error) throw new Error(json.error.message);
-                toast.success(
-                  t("serviceReminders.sentReminders", {
-                    count: json.data.sent,
-                  }),
-                );
-                refetch();
-              } catch (err) {
-                toast.error(
-                  err instanceof Error
-                    ? err.message
-                    : t("serviceReminders.failedToSend"),
-                );
-              } finally {
-                setSending(false);
-              }
-            }}
-            disabled={sending}
-            title="Send pending reminders"
-          >
-            <Send className={`size-4 ${sending ? "animate-spin" : ""}`} />
-          </Button>
-          <Sheet open={showConfig} onOpenChange={setShowConfig}>
-            <SheetTrigger render={<Button variant="outline" size="icon-xs" />}>
-              <Settings className="size-4" />
-            </SheetTrigger>
-            <SheetContent side="right" zLayer={0} className="w-80 sm:w-96">
-              <SheetHeader>
-                <SheetTitle>{t("serviceReminders.configTitle")}</SheetTitle>
-                <SheetDescription>
-                  {t("serviceReminders.configDescription")}
-                </SheetDescription>
-              </SheetHeader>
-              <div className="flex mt-6 flex-col gap-6">
-                <div className="flex flex-col gap-3">
-                  <Label htmlFor="default-channel">
-                    {t("serviceReminders.defaultChannel")}
-                  </Label>
-                  <Typography.Muted className="text-xs text-muted-foreground">
-                    {t("serviceReminders.defaultChannelDescription")}
-                  </Typography.Muted>
-                  <Select
-                    value={configChannel}
-                    onValueChange={(v) => v && setConfigChannel(v)}
-                  >
-                    <SelectTrigger id="default-channel">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="in_app">
-                        {t("serviceReminders.channelInApp")}
-                      </SelectItem>
-                      <SelectItem value="email">
-                        {t("serviceReminders.channelEmail")}
-                      </SelectItem>
-                      <SelectItem value="both">
-                        {t("serviceReminders.channelBoth")}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Item
-                  variant="outline"
-                  className="justify-between rounded-lg p-4"
-                >
-                  <ItemContent className="gap-0.5">
-                    <ItemTitle className="text-sm">
-                      {t("serviceReminders.autoEnable")}
-                    </ItemTitle>
-                    <ItemDescription className="text-xs">
-                      {t("serviceReminders.autoEnableDescription")}
-                    </ItemDescription>
-                  </ItemContent>
-                  <ItemActions>
-                    <Switch
-                      checked={configAutoEnable}
-                      onCheckedChange={setConfigAutoEnable}
-                    />
-                  </ItemActions>
-                </Item>
-
-                <Button
-                  className="w-full"
-                  onClick={handleSaveConfig}
-                  disabled={updateOrgSettings.isPending}
-                >
-                  {updateOrgSettings.isPending
-                    ? t("common.saving")
-                    : t("common.save")}
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
-
-          <Dialog open={showAdd} onOpenChange={setShowAdd}>
-            {/* zLayer={1} on DialogContent below so this Dialog stacks above the config Sheet if both are open */}
-            <DialogTrigger
-              render={
-                <Button>
-                  <Plus className="mr-2 size-4" />
-                  {t("serviceReminders.addSchedule")}
-                </Button>
-              }
-            />
-            <DialogContent zLayer={1} className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>
-                  {t("serviceReminders.addNewSchedule")}
-                </DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="vehicle_id">
-                    {t("serviceReminders.vehicle")}
-                  </Label>
-                  <Combobox
-                    items={vehicles}
-                    value={
-                      vehicles.find((v) => v.id === newSchedule.vehicle_id) ??
-                      null
-                    }
-                    onValueChange={(v) => {
-                      setNewSchedule((p) => ({
-                        ...p,
-                        vehicle_id: v?.id ?? "",
-                      }));
-                    }}
-                    isItemEqualToValue={(a, b) => a?.id === b?.id}
-                    itemToStringLabel={(v) =>
-                      v ? `${v.make} ${v.model} (${v.plate_number})` : ""
-                    }
-                  >
-                    <ComboboxInput
-                      placeholder={t("serviceReminders.searchVehicle")}
-                      showTrigger
-                      showClear={!!newSchedule.vehicle_id}
-                      className="h-9 text-xs"
-                    />
-                    <ComboboxContent>
-                      <ComboboxList>
-                        {(v) => (
-                          <ComboboxItem
-                            key={v.id}
-                            value={v}
-                            className="text-xs"
-                          >
-                            <span>
-                              {v.make} {v.model}
-                            </span>
-                            <span className="ml-2 font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
-                              {v.plate_number}
-                            </span>
-                          </ComboboxItem>
-                        )}
-                      </ComboboxList>
-                      <ComboboxEmpty className="text-xs">
-                        {t("serviceReminders.noVehicles")}
-                      </ComboboxEmpty>
-                    </ComboboxContent>
-                  </Combobox>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="service_name">
-                    {t("serviceReminders.serviceName")}
-                  </Label>
-                  <Input
-                    id="service_name"
-                    value={newSchedule.service_name}
-                    onChange={(e) =>
-                      setNewSchedule((p) => ({
-                        ...p,
-                        service_name: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g. Oil Change"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="interval_months">
-                      {t("serviceReminders.intervalMonths")}
-                    </Label>
-                    <Input
-                      id="interval_months"
-                      type="number"
-                      value={newSchedule.interval_months}
-                      onChange={(e) =>
-                        setNewSchedule((p) => ({
-                          ...p,
-                          interval_months: e.target.value,
-                        }))
-                      }
-                      placeholder="6"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="interval_km">
-                      {t("serviceReminders.intervalKm")}
-                    </Label>
-                    <Input
-                      id="interval_km"
-                      type="number"
-                      value={newSchedule.interval_km}
-                      onChange={(e) =>
-                        setNewSchedule((p) => ({
-                          ...p,
-                          interval_km: e.target.value,
-                        }))
-                      }
-                      placeholder="5000"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="last_service_date">
-                      {t("serviceReminders.lastServiceDate")}
-                    </Label>
-                    <DatePicker
-                      value={
-                        newSchedule.last_service_date
-                          ? new Date(newSchedule.last_service_date)
-                          : undefined
-                      }
-                      onChange={(d) => {
-                        if (d) {
-                          const year = d.getFullYear();
-                          const monthStr = String(d.getMonth() + 1).padStart(
-                            2,
-                            "0",
-                          );
-                          const dayStr = String(d.getDate()).padStart(2, "0");
-                          setNewSchedule((p) => ({
-                            ...p,
-                            last_service_date: `${year}-${monthStr}-${dayStr}`,
-                          }));
-                        } else {
-                          setNewSchedule((p) => ({
-                            ...p,
-                            last_service_date: "",
-                          }));
-                        }
-                      }}
-                      className="w-full"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="next_due_date">
-                      {t("serviceReminders.nextDueDate")}
-                    </Label>
-                    <DatePicker
-                      value={
-                        newSchedule.next_due_date
-                          ? new Date(newSchedule.next_due_date)
-                          : undefined
-                      }
-                      onChange={(d) => {
-                        if (d) {
-                          const year = d.getFullYear();
-                          const monthStr = String(d.getMonth() + 1).padStart(
-                            2,
-                            "0",
-                          );
-                          const dayStr = String(d.getDate()).padStart(2, "0");
-                          setNewSchedule((p) => ({
-                            ...p,
-                            next_due_date: `${year}-${monthStr}-${dayStr}`,
-                          }));
-                        } else {
-                          setNewSchedule((p) => ({
-                            ...p,
-                            next_due_date: "",
-                          }));
-                        }
-                      }}
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowAdd(false)}>
-                  {t("common.cancel")}
-                </Button>
-                <Button onClick={handleAdd} disabled={createSchedule.isPending}>
-                  {createSchedule.isPending
-                    ? t("serviceReminders.saving")
-                    : t("serviceReminders.saveSchedule")}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={showEdit} onOpenChange={setShowEdit}>
-            <DialogContent zLayer={1} className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>{t("serviceReminders.editSchedule")}</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-service_name">
-                    {t("serviceReminders.serviceName")}
-                  </Label>
-                  <Input
-                    id="edit-service_name"
-                    value={editForm.service_name}
-                    onChange={(e) =>
-                      setEditForm((p) => ({
-                        ...p,
-                        service_name: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g. Oil Change"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-interval_months">
-                      {t("serviceReminders.intervalMonths")}
-                    </Label>
-                    <Input
-                      id="edit-interval_months"
-                      type="number"
-                      value={editForm.interval_months}
-                      onChange={(e) =>
-                        setEditForm((p) => ({
-                          ...p,
-                          interval_months: e.target.value,
-                        }))
-                      }
-                      placeholder="6"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-interval_km">
-                      {t("serviceReminders.intervalKm")}
-                    </Label>
-                    <Input
-                      id="edit-interval_km"
-                      type="number"
-                      value={editForm.interval_km}
-                      onChange={(e) =>
-                        setEditForm((p) => ({
-                          ...p,
-                          interval_km: e.target.value,
-                        }))
-                      }
-                      placeholder="5000"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-notes">{t("common.notes")}</Label>
-                  <Input
-                    id="edit-notes"
-                    value={editForm.notes}
-                    onChange={(e) =>
-                      setEditForm((p) => ({
-                        ...p,
-                        notes: e.target.value,
-                      }))
-                    }
-                    placeholder="Optional notes"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                  <div className="flex flex-col gap-0.5">
-                    <Label className="text-sm font-medium">
-                      {t("serviceReminders.reminderEnabled")}
-                    </Label>
-                  </div>
-                  <Switch
-                    checked={editForm.reminder_enabled}
-                    onCheckedChange={(checked) =>
-                      setEditForm((p) => ({
-                        ...p,
-                        reminder_enabled: checked,
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowEdit(false)}>
-                  {t("common.cancel")}
-                </Button>
-                <Button
-                  onClick={handleSaveEdit}
-                  disabled={updateSchedule.isPending}
-                >
-                  {updateSchedule.isPending
-                    ? t("common.saving")
-                    : t("common.save")}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          />
         </div>
       </div>
 
+      {/* Summary Cards */}
+      {!isLoading && schedules.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Card className="py-3">
+            <CardContent className="flex items-center gap-3 p-0 px-4">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <Calendar className="size-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold leading-none">
+                  {counts.total}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t("serviceReminders.totalSchedules")}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="py-3">
+            <CardContent className="flex items-center gap-3 p-0 px-4">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10">
+                <AlertTriangle className="size-4 text-destructive" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold leading-none text-destructive">
+                  {counts.overdue}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t("serviceReminders.overdueCount")}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="py-3">
+            <CardContent className="flex items-center gap-3 p-0 px-4">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                <Clock className="size-4 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold leading-none text-amber-600">
+                  {counts.dueSoon}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t("serviceReminders.dueSoonCount")}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="py-3">
+            <CardContent className="flex items-center gap-3 p-0 px-4">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <BellOff className="size-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold leading-none">
+                  {counts.remindersOff}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t("serviceReminders.remindersOff")}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Tabs */}
       <Tabs
-        value={addTab}
-        onValueChange={(v) => setAddTab(v as "schedule" | "logs")}
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as "schedule" | "logs")}
       >
         <TabsList>
           <TabsTrigger value="schedule">
@@ -892,7 +361,87 @@ export default function ServiceRemindersPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="schedule" className="mt-4">
+        {/* Schedule Tab */}
+        <TabsContent value="schedule" className="mt-4 flex flex-col gap-4">
+          {/* Toolbar */}
+          {schedules.length > 0 && (
+            <div className="flex flex-wrap items-center gap-3 rounded-xl bg-muted/50 px-4 py-3">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t("serviceReminders.searchSchedules")}
+                  className="pl-8 h-8 text-xs"
+                />
+              </div>
+              <Select
+                value={statusFilter}
+                onValueChange={(v: string | null) =>
+                  setStatusFilter((v as DueStatus | "all") || "all")
+                }
+              >
+                <SelectTrigger className="w-[140px] h-8 text-xs">
+                  <SelectValue placeholder={t("serviceReminders.filterAll")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {t("serviceReminders.filterAll")}
+                  </SelectItem>
+                  <SelectItem value="overdue">
+                    {t("serviceReminders.filterOverdue")}
+                  </SelectItem>
+                  <SelectItem value="due-soon">
+                    {t("serviceReminders.filterDueSoon")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={reminderFilter}
+                onValueChange={(v: string | null) =>
+                  setReminderFilter(
+                    (v as "all" | "enabled" | "disabled") || "all",
+                  )
+                }
+              >
+                <SelectTrigger className="w-[140px] h-8 text-xs">
+                  <SelectValue placeholder={t("serviceReminders.filterAll")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {t("serviceReminders.filterAll")}
+                  </SelectItem>
+                  <SelectItem value="enabled">
+                    {t("serviceReminders.filterWithReminders")}
+                  </SelectItem>
+                  <SelectItem value="disabled">
+                    {t("serviceReminders.filterWithoutReminders")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {hasFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearch("");
+                    setStatusFilter("all");
+                    setReminderFilter("all");
+                  }}
+                >
+                  <X className="size-3 mr-1" />
+                  {t("serviceReminders.clearFilters")}
+                </Button>
+              )}
+              <span className="text-xs text-muted-foreground ml-auto">
+                {t("serviceReminders.showingCount", {
+                  filtered: filteredSchedules.length,
+                  total: schedules.length,
+                })}
+              </span>
+            </div>
+          )}
+
           <Card>
             <CardContent className="p-0">
               {isLoading ? (
@@ -919,176 +468,113 @@ export default function ServiceRemindersPage() {
                     <EmptyTitle>{t("serviceReminders.noSchedules")}</EmptyTitle>
                   </EmptyHeader>
                   <EmptyContent>
-                    <Button variant="outline" onClick={() => setShowAdd(true)}>
-                      <Plus className="mr-2 size-4" />
-                      {t("serviceReminders.addSchedule")}
-                    </Button>
+                    <AddScheduleDialog
+                      vehicles={vehicles}
+                      isPending={createSchedule.isPending}
+                      onAdd={async (data) => {
+                        await createSchedule.mutateAsync(data);
+                      }}
+                    />
                   </EmptyContent>
                 </Empty>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t("serviceReminders.vehicle")}</TableHead>
-                      <TableHead>{t("serviceReminders.serviceName")}</TableHead>
-                      <TableHead>{t("serviceReminders.interval")}</TableHead>
-                      <TableHead>
-                        {t("serviceReminders.lastServiceDate")}
-                      </TableHead>
-                      <TableHead>{t("serviceReminders.nextDueDate")}</TableHead>
-                      <TableHead>
-                        {t("serviceReminders.reminderEnabled")}
-                      </TableHead>
-                      <TableHead className="w-20" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {schedules.map((item) => (
-                      <ScheduleRow
-                        key={item.id}
-                        item={item}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
+                <>
+                  {/* Table */}
+                  {filteredSchedules.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 p-8 text-center">
+                      <Typography.Muted>
+                        {t("serviceReminders.noMatchingSchedules")}
+                      </Typography.Muted>
+                      {hasFilters && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSearch("");
+                            setStatusFilter("all");
+                            setReminderFilter("all");
+                          }}
+                        >
+                          {t("serviceReminders.clearFilters")}
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t("serviceReminders.vehicle")}</TableHead>
+                          <TableHead>
+                            {t("serviceReminders.serviceName")}
+                          </TableHead>
+                          <TableHead>
+                            {t("serviceReminders.customer")}
+                          </TableHead>
+                          <TableHead>
+                            {t("serviceReminders.interval")}
+                          </TableHead>
+                          <TableHead>
+                            {t("serviceReminders.lastServiceDate")}
+                          </TableHead>
+                          <TableHead>
+                            {t("serviceReminders.nextDueDate")}
+                          </TableHead>
+                          <TableHead>
+                            {t("serviceReminders.reminderEnabled")}
+                          </TableHead>
+                          <TableHead>
+                            {t("serviceReminders.contactStatus")}
+                          </TableHead>
+                          <TableHead className="w-20" />
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredSchedules.map((item) => (
+                          <ScheduleRow
+                            key={item.id}
+                            item={item}
+                            onEdit={handleEdit}
+                            onDelete={(id) =>
+                              setDeleteItem(
+                                schedules.find((s) => s.id === id) ?? null,
+                              )
+                            }
+                            onContactStatusChange={(id, status) =>
+                              updateContactStatus.mutateAsync({ id, status })
+                            }
+                          />
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Logs Tab */}
         <TabsContent value="logs" className="mt-4">
           <ReminderLogsTab orgId={orgId} branchFilter={branchFilter} />
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <EditScheduleDialog
+        item={editItem}
+        open={showEdit}
+        onOpenChange={setShowEdit}
+        onSave={handleSaveEdit}
+        isPending={updateSchedule.isPending}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deleteItem}
+        onOpenChange={(open) => !open && setDeleteItem(null)}
+        item={deleteItem}
+        onConfirm={handleDelete}
+        isPending={deleteSchedule.isPending}
+      />
     </div>
   );
-}
-
-function ReminderLogsTab({
-  orgId,
-  branchFilter,
-}: {
-  orgId: string | undefined;
-  branchFilter: string | null;
-}) {
-  const t = useTranslations();
-  const {
-    data: logs,
-    isLoading,
-    error,
-    refetch,
-  } = useReminderLogs(orgId, undefined, branchFilter);
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col gap-2 p-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={`skel-${i}`} className="h-10 w-full" />
-          ))}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center gap-2 p-8 text-center">
-          <Typography.Text className="text-destructive">
-            {error.message}
-          </Typography.Text>
-          <Button variant="outline" onClick={() => refetch()}>
-            {t("common.retry")}
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!logs || logs.length === 0) {
-    return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <Bell />
-          </EmptyMedia>
-          <EmptyTitle>{t("serviceReminders.noLogs")}</EmptyTitle>
-        </EmptyHeader>
-      </Empty>
-    );
-  }
-
-  return (
-    <Card>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("serviceReminders.vehicle")}</TableHead>
-              <TableHead>{t("serviceReminders.serviceName")}</TableHead>
-              <TableHead>{t("serviceReminders.type")}</TableHead>
-              <TableHead>{t("serviceReminders.channel")}</TableHead>
-              <TableHead>{t("serviceReminders.status")}</TableHead>
-              <TableHead>{t("serviceReminders.scheduled")}</TableHead>
-              <TableHead>{t("serviceReminders.sentAt")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {logs.map((log) => (
-              <TableRow key={log.id}>
-                <TableCell>
-                  {log.vehicle
-                    ? `${log.vehicle.make} ${log.vehicle.model} ${log.vehicle.plate_number}`
-                    : "—"}
-                </TableCell>
-                <TableCell>{log.service_name}</TableCell>
-                <TableCell>
-                  <StatusBadge status={log.reminder_type} />
-                </TableCell>
-                <TableCell>
-                  <ChannelBadge channel={log.channel} />
-                </TableCell>
-                <TableCell>
-                  <StatusBadge status={log.status} />
-                </TableCell>
-                <TableCell>{formatDate(log.scheduled_at)}</TableCell>
-                <TableCell>
-                  {log.sent_at ? formatDate(log.sent_at) : "—"}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const t = useTranslations();
-  const labels: Record<string, string> = {
-    pending: t("serviceReminders.statusPending"),
-    sent: t("serviceReminders.statusSent"),
-    failed: t("serviceReminders.statusFailed"),
-    cancelled: t("serviceReminders.statusCancelled"),
-    service_due: t("serviceReminders.typeServiceDue"),
-    service_overdue: t("serviceReminders.typeServiceOverdue"),
-    custom: t("serviceReminders.typeCustom"),
-  };
-
-  return <Badge variant="outline">{labels[status] ?? status}</Badge>;
-}
-
-function ChannelBadge({ channel }: { channel: string }) {
-  const t = useTranslations();
-  const labels: Record<string, string> = {
-    email: t("serviceReminders.channelEmail"),
-    both: t("serviceReminders.channelBoth"),
-    in_app: t("serviceReminders.channelInApp"),
-  };
-
-  return <Badge variant="outline">{labels[channel] ?? channel}</Badge>;
 }

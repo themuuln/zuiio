@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 // recharts - consider next/dynamic for code splitting
 import {
   Area,
@@ -130,38 +131,58 @@ export default function ChartsSection({ data }: { data: DashboardData }) {
     0,
   );
 
-  const revenueConfig = {
-    revenue: { label: t("reports.revenue"), color: CHART_COLORS[0] },
-  };
-
-  const statusChartConfig = Object.fromEntries(
-    workOrderStatusDistribution.map((s) => [
-      s.status,
-      { label: s.status, color: STATUS_COLORS[s.status] ?? CHART_COLORS[4] },
-    ]),
+  const revenueConfig = useMemo(
+    () => ({
+      revenue: { label: t("reports.revenue"), color: CHART_COLORS[0] },
+    }),
+    [t],
   );
 
-  const categoryChartConfig = Object.fromEntries(
-    serviceCategoryBreakdown.map((c, i) => [
-      c.category,
-      { label: c.category, color: CHART_COLORS[i % CHART_COLORS.length] },
-    ]),
+  const statusChartConfig = useMemo(
+    () =>
+      Object.fromEntries(
+        workOrderStatusDistribution.map((s) => [
+          s.status,
+          {
+            label: s.status,
+            color: STATUS_COLORS[s.status] ?? CHART_COLORS[4],
+          },
+        ]),
+      ),
+    [workOrderStatusDistribution],
   );
 
-  const techConfig = {
-    revenue: { label: t("reports.revenue"), color: CHART_COLORS[0] },
-    completedOrders: {
-      label: t("dashboard.completedOrders"),
-      color: CHART_COLORS[1],
-    },
-  };
+  const categoryChartConfig = useMemo(
+    () =>
+      Object.fromEntries(
+        serviceCategoryBreakdown.map((c, i) => [
+          c.category,
+          { label: c.category, color: CHART_COLORS[i % CHART_COLORS.length] },
+        ]),
+      ),
+    [serviceCategoryBreakdown],
+  );
 
-  const customerConfig = {
-    newCustomers: {
-      label: t("dashboard.newCustomers"),
-      color: CHART_COLORS[1],
-    },
-  };
+  const techConfig = useMemo(
+    () => ({
+      revenue: { label: t("reports.revenue"), color: CHART_COLORS[0] },
+      completedOrders: {
+        label: t("dashboard.completedOrders"),
+        color: CHART_COLORS[1],
+      },
+    }),
+    [t],
+  );
+
+  const customerConfig = useMemo(
+    () => ({
+      newCustomers: {
+        label: t("dashboard.newCustomers"),
+        color: CHART_COLORS[1],
+      },
+    }),
+    [t],
+  );
 
   return (
     <div className="flex flex-col gap-6">

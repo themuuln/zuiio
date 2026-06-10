@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5";
   };
-  graphql_public: {
-    Tables: {
-      [_ in never]: never;
-    };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
-        Returns: Json;
-      };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
   public: {
     Tables: {
       app_config: {
@@ -1535,9 +1510,73 @@ export type Database = {
           },
         ];
       };
+      invoice_refunds: {
+        Row: {
+          amount: number;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          invoice_id: string;
+          method: string;
+          notes: string | null;
+          organization_id: string;
+          reason: string | null;
+          reference: string | null;
+          refunded_at: string;
+          status: Database["public"]["Enums"]["refund_status"];
+          updated_at: string;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          invoice_id: string;
+          method?: string;
+          notes?: string | null;
+          organization_id: string;
+          reason?: string | null;
+          reference?: string | null;
+          refunded_at?: string;
+          status?: Database["public"]["Enums"]["refund_status"];
+          updated_at?: string;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          invoice_id?: string;
+          method?: string;
+          notes?: string | null;
+          organization_id?: string;
+          reason?: string | null;
+          reference?: string | null;
+          refunded_at?: string;
+          status?: Database["public"]["Enums"]["refund_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "invoice_refunds_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoice_refunds_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       invoices: {
         Row: {
           amount_paid: number;
+          amount_refunded: number;
           balance_due: number;
           branch_id: string | null;
           created_at: string;
@@ -1573,6 +1612,7 @@ export type Database = {
         };
         Insert: {
           amount_paid?: number;
+          amount_refunded?: number;
           balance_due?: number;
           branch_id?: string | null;
           created_at?: string;
@@ -1608,6 +1648,7 @@ export type Database = {
         };
         Update: {
           amount_paid?: number;
+          amount_refunded?: number;
           balance_due?: number;
           branch_id?: string | null;
           created_at?: string;
@@ -2483,6 +2524,7 @@ export type Database = {
           description: string | null;
           global_part_id: string | null;
           id: string;
+          image_url: string | null;
           is_active: boolean;
           last_purchase_price: number | null;
           location: string | null;
@@ -2504,6 +2546,7 @@ export type Database = {
           description?: string | null;
           global_part_id?: string | null;
           id?: string;
+          image_url?: string | null;
           is_active?: boolean;
           last_purchase_price?: number | null;
           location?: string | null;
@@ -2525,6 +2568,7 @@ export type Database = {
           description?: string | null;
           global_part_id?: string | null;
           id?: string;
+          image_url?: string | null;
           is_active?: boolean;
           last_purchase_price?: number | null;
           location?: string | null;
@@ -3535,7 +3579,7 @@ export type Database = {
           created_by?: string | null;
           id?: string;
           maximum_quantity?: number | null;
-          minimum_quantity?: number;
+          minimum_quantity: number;
           notes?: string | null;
           organization_id: string;
           part_id: string;
@@ -3684,6 +3728,109 @@ export type Database = {
             columns: ["to_branch_id"];
             isOneToOne: false;
             referencedRelation: "branches";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      store_credit_balances: {
+        Row: {
+          balance: number;
+          created_at: string;
+          customer_id: string;
+          id: string;
+          organization_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          balance?: number;
+          created_at?: string;
+          customer_id: string;
+          id?: string;
+          organization_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          balance?: number;
+          created_at?: string;
+          customer_id?: string;
+          id?: string;
+          organization_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "store_credit_balances_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "store_credit_balances_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      store_credit_transactions: {
+        Row: {
+          amount: number;
+          created_at: string;
+          created_by: string | null;
+          customer_id: string;
+          id: string;
+          notes: string | null;
+          organization_id: string;
+          reference_id: string | null;
+          reference_type: string | null;
+          type: string;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string;
+          created_by?: string | null;
+          customer_id: string;
+          id?: string;
+          notes?: string | null;
+          organization_id: string;
+          reference_id?: string | null;
+          reference_type?: string | null;
+          type: string;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string;
+          created_by?: string | null;
+          customer_id?: string;
+          id?: string;
+          notes?: string | null;
+          organization_id?: string;
+          reference_id?: string | null;
+          reference_type?: string | null;
+          type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "store_credit_transactions_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "store_credit_transactions_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "store_credit_transactions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];
@@ -4182,6 +4329,8 @@ export type Database = {
       vehicle_service_schedules: {
         Row: {
           branch_id: string | null;
+          contact_status: string;
+          contacted_at: string | null;
           created_at: string;
           created_by: string | null;
           deleted_at: string | null;
@@ -4203,6 +4352,8 @@ export type Database = {
         };
         Insert: {
           branch_id?: string | null;
+          contact_status?: string;
+          contacted_at?: string | null;
           created_at?: string;
           created_by?: string | null;
           deleted_at?: string | null;
@@ -4224,6 +4375,8 @@ export type Database = {
         };
         Update: {
           branch_id?: string | null;
+          contact_status?: string;
+          contacted_at?: string | null;
           created_at?: string;
           created_by?: string | null;
           deleted_at?: string | null;
@@ -4950,7 +5103,7 @@ export type Database = {
           mechanic_notes?: string | null;
           notes?: string | null;
           odometer_at_service?: number | null;
-          organization_id?: string;
+          organization_id: string;
           queue_order?: number;
           source_estimate_id?: string | null;
           started_at?: string | null;
@@ -5090,6 +5243,19 @@ export type Database = {
         }[];
       };
       normalize_plate: { Args: { p: string }; Returns: string };
+      record_refund_atomically: {
+        Args: {
+          p_amount: number;
+          p_created_by?: string;
+          p_invoice_id: string;
+          p_method?: string;
+          p_notes?: string;
+          p_organization_id: string;
+          p_reason?: string;
+          p_reference?: string;
+        };
+        Returns: Json;
+      };
       refresh_inventory_balance: {
         Args: { p_part_id: string };
         Returns: undefined;
@@ -5160,7 +5326,8 @@ export type Database = {
         | "paid"
         | "partial"
         | "overdue"
-        | "cancelled";
+        | "cancelled"
+        | "refunded";
       parts_car_location_group:
         | "engine"
         | "transmission"
@@ -5184,6 +5351,7 @@ export type Database = {
         | "write"
         | "invite";
       plan_type: "starter" | "pro" | "business" | "enterprise";
+      refund_status: "pending" | "completed" | "failed" | "cancelled";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -5308,13 +5476,10 @@ export type CompositeTypes<
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    ? DatabaseWithoutInternals["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never;
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       inventory_movement_type: [
@@ -5323,9 +5488,7 @@ export const Constants = {
         "adjustment",
         "transfer_in",
         "transfer_out",
-        "return",
         "waste",
-        "disassembly",
       ],
       invoice_status: [
         "draft",
@@ -5334,6 +5497,7 @@ export const Constants = {
         "partial",
         "overdue",
         "cancelled",
+        "refunded",
       ],
       parts_car_location_group: [
         "engine",
@@ -5342,7 +5506,7 @@ export const Constants = {
         "brake",
         "body",
         "interior",
-        "electrical",
+        "interior",
         "cooling",
         "exhaust",
         "fuel",
@@ -5353,13 +5517,16 @@ export const Constants = {
       permission_action: [
         "create",
         "read",
+        "read",
         "update",
+        "delete",
         "delete",
         "manage",
         "write",
         "invite",
       ],
       plan_type: ["starter", "pro", "business", "enterprise"],
+      refund_status: ["pending", "completed", "failed", "cancelled"],
     },
   },
 } as const;

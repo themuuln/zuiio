@@ -56,6 +56,7 @@ export function ServiceForm({
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId ?? "";
   const commonT = useTranslations("common");
+  const st = useTranslations("services");
 
   const [currentMode, setCurrentMode] = useState<"quick" | "full">(mode);
   const [error, setError] = useState<string | null>(null);
@@ -97,7 +98,7 @@ export function ServiceForm({
       const service = await createServiceMutation.mutateAsync(payload);
       onSuccess?.(service);
     } catch (err: any) {
-      setError(err.message || "Failed to save service");
+      setError(err.message || st("failedToSave"));
     }
   });
 
@@ -114,13 +115,13 @@ export function ServiceForm({
             value="quick"
             className="flex-1 w-full rounded-md py-1 text-xs justify-center cursor-pointer"
           >
-            Quick Add
+            {st("quickAdd")}
           </TabsTrigger>
           <TabsTrigger
             value="full"
             className="flex-1 w-full rounded-md py-1 text-xs justify-center cursor-pointer"
           >
-            Full Details
+            {st("fullDetails")}
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -136,11 +137,11 @@ export function ServiceForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <Field data-invalid={!!form.formState.errors.name}>
             <FieldLabel>
-              Service Name <span className="text-destructive">*</span>
+              {st("serviceName")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
-                placeholder="e.g. Oil Change"
+                placeholder={st("namePlaceholderEn")}
                 autoFocus
                 aria-invalid={!!form.formState.errors.name}
                 {...form.register("name")}
@@ -151,10 +152,10 @@ export function ServiceForm({
             </FieldContent>
           </Field>
           <Field>
-            <FieldLabel>Монгол нэр</FieldLabel>
+            <FieldLabel>{st("nameMn")}</FieldLabel>
             <FieldContent>
               <Input
-                placeholder="e.g. Тос солих"
+                placeholder={st("namePlaceholderMn")}
                 {...form.register("name_mn")}
               />
             </FieldContent>
@@ -162,7 +163,7 @@ export function ServiceForm({
 
           <Field data-invalid={!!form.formState.errors.default_price}>
             <FieldLabel>
-              Default Price (₮) <span className="text-destructive">*</span>
+              {st("price")} (₮) <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
@@ -184,20 +185,20 @@ export function ServiceForm({
         {currentMode === "full" && (
           <div className="grid gap-3 sm:grid-cols-2 animate-fade-in">
             <Field>
-              <FieldLabel>Category</FieldLabel>
+              <FieldLabel>{st("category")}</FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder="e.g. Engine, Brakes"
+                  placeholder={st("categoryPlaceholderForm")}
                   {...form.register("category")}
                 />
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel>Description</FieldLabel>
+              <FieldLabel>{st("description")}</FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder="e.g. Replaced engine oil and oil filter"
+                  placeholder={st("descriptionPlaceholder")}
                   {...form.register("description")}
                 />
               </FieldContent>
@@ -225,10 +226,10 @@ export function ServiceForm({
           {createServiceMutation.isPending ? (
             <span className="flex items-center gap-2 justify-center">
               <Loader2 className="size-4 animate-spin" />
-              Saving...
+              {st("saving")}
             </span>
           ) : (
-            "Create Service"
+            st("createService")
           )}
         </Button>
       </div>

@@ -195,7 +195,9 @@ export function CustomerForm({
                 .join(" ") ||
               phoneMatch.company_name ||
               phoneMatch.phone;
-            toast.warning(`This phone number already belongs to ${name}`);
+            toast.warning(
+              t("phoneAlreadyExists", { name: String(name || "") }),
+            );
           }
         }
 
@@ -208,7 +210,9 @@ export function CustomerForm({
                 .join(" ") ||
               emailMatch.company_name ||
               emailMatch.email;
-            toast.warning(`This email already belongs to ${name}`);
+            toast.warning(
+              t("emailAlreadyExists", { name: String(name || "") }),
+            );
           }
         }
       } catch {
@@ -245,7 +249,7 @@ export function CustomerForm({
       const customer = await createCustomerMutation.mutateAsync(payload);
       onSuccess?.(customer);
     } catch (err: any) {
-      setError(err.message || "Failed to save customer");
+      setError(err.message || t("failedToSave"));
     }
   });
 
@@ -290,10 +294,10 @@ export function CustomerForm({
           <div className="text-sm text-amber-800 dark:text-amber-300">
             <span className="font-semibold">
               {conflictInfo.field === "phone"
-                ? "Phone number already exists."
-                : "Email address already exists."}
+                ? t("phoneConflictTitle")
+                : t("emailConflictTitle")}
             </span>{" "}
-            Please search for the existing customer or use a different value.
+            {t("conflictHint")}
           </div>
         </div>
       )}
@@ -320,7 +324,7 @@ export function CustomerForm({
               >
                 <SelectTrigger
                   className="w-full h-11"
-                  aria-label="Customer type"
+                  aria-label={t("customerTypeAria")}
                 >
                   <SelectValue>{selectedTypeLabel}</SelectValue>
                 </SelectTrigger>
@@ -341,7 +345,7 @@ export function CustomerForm({
               </FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder="Bat"
+                  placeholder={t("firstNamePlaceholder")}
                   autoComplete="given-name"
                   autoFocus={currentMode === "quick"}
                   aria-invalid={!!form.formState.errors.firstName}
@@ -359,7 +363,7 @@ export function CustomerForm({
               <FieldLabel>{t("lastName")}</FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder="Erdene"
+                  placeholder={t("lastNamePlaceholder")}
                   autoComplete="family-name"
                   {...form.register("lastName")}
                 />
@@ -376,7 +380,7 @@ export function CustomerForm({
               </FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder="Fleet Co."
+                  placeholder={t("companyNamePlaceholder")}
                   aria-invalid={!!form.formState.errors.companyName}
                   {...form.register("companyName")}
                 />
@@ -392,7 +396,7 @@ export function CustomerForm({
               <FieldLabel>{t("contactPerson")}</FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder="B. Batbold"
+                  placeholder={t("contactPersonPlaceholder")}
                   {...form.register("contactPerson")}
                 />
               </FieldContent>
@@ -414,7 +418,7 @@ export function CustomerForm({
                 onChange={(e) =>
                   form.setValue("phone", formatMongolianPhone(e.target.value))
                 }
-                placeholder="99112233"
+                placeholder={t("phonePlaceholder")}
                 type="tel"
                 aria-invalid={!!form.formState.errors.phone}
                 {...inputProps("phone")}
@@ -429,7 +433,7 @@ export function CustomerForm({
             <FieldLabel>{t("email")}</FieldLabel>
             <FieldContent>
               <Input
-                placeholder="name@example.com"
+                placeholder={t("emailPlaceholder")}
                 type="email"
                 {...inputProps("email")}
                 {...form.register("email")}
@@ -440,10 +444,10 @@ export function CustomerForm({
 
         {currentMode === "quick" && (
           <Field>
-            <FieldLabel>Company</FieldLabel>
+            <FieldLabel>{t("company")}</FieldLabel>
             <FieldContent>
               <Input
-                placeholder="Optional"
+                placeholder={t("optional")}
                 {...inputProps("companyName")}
                 {...form.register("companyName")}
               />
@@ -456,7 +460,7 @@ export function CustomerForm({
             <FieldLabel>{t("address")}</FieldLabel>
             <FieldContent>
               <Input
-                placeholder="Ulaanbaatar, Mongolia"
+                placeholder={t("addressPlaceholder")}
                 {...inputProps("address")}
                 {...form.register("address")}
               />
@@ -476,16 +480,22 @@ export function CustomerForm({
               >
                 <SelectTrigger
                   className="w-full h-11"
-                  aria-label="Customer source"
+                  aria-label={t("customerSourceAria")}
                 >
-                  <SelectValue placeholder="Select how they found you" />
+                  <SelectValue placeholder={t("sourceSelectPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="facebook">Facebook</SelectItem>
-                  <SelectItem value="google">Google</SelectItem>
-                  <SelectItem value="recommendation">Friend/Family</SelectItem>
-                  <SelectItem value="passing_by">Passing by</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="facebook">
+                    {t("sourceFacebook")}
+                  </SelectItem>
+                  <SelectItem value="google">{t("sourceGoogle")}</SelectItem>
+                  <SelectItem value="recommendation">
+                    {t("sourceFriendFamily")}
+                  </SelectItem>
+                  <SelectItem value="passing_by">
+                    {t("sourcePassingBy")}
+                  </SelectItem>
+                  <SelectItem value="other">{t("sourceOther")}</SelectItem>
                 </SelectContent>
               </Select>
             </FieldContent>
@@ -496,7 +506,7 @@ export function CustomerForm({
           <FieldLabel>{t("notes")}</FieldLabel>
           <FieldContent>
             <Textarea
-              placeholder="Optional notes"
+              placeholder={t("notesOptional")}
               rows={2}
               {...form.register("notes")}
             />
@@ -524,7 +534,7 @@ export function CustomerForm({
           {createCustomerMutation.isPending ? (
             <span className="flex items-center gap-2 justify-center">
               <Loader2 className="size-4 animate-spin" />
-              Saving...
+              {commonT("saving")}
             </span>
           ) : (
             t(currentMode === "quick" ? "createCustomer" : "createCustomer")

@@ -21,9 +21,9 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
 
-  /* Single worker — login-in-every-file pattern needed this. With storageState
-     global setup, parallel workers are safe. Bump if the server can handle it. */
-  workers: 1,
+  /* Parallel workers — safe with storageState global setup.
+     4 workers balances speed vs local Supabase load. */
+  workers: process.env.CI ? 4 : 2,
 
   /* Run global setup (auth login) before all tests */
   globalSetup: "./e2e/global-setup.ts",
@@ -74,11 +74,12 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* Use production build for E2E — eliminates lazy compilation overhead.
+     First request drops from ~9s (dev) to ~100ms (prod). */
   webServer: {
-    command: `PORT=${PORT} node node_modules/next/dist/bin/next dev`,
+    command: `PORT=${PORT} npm run build && PORT=${PORT} npm run start`,
     url: baseURL,
-    timeout: 120_000,
+    timeout: 180_000,
     reuseExistingServer: true,
   },
 });

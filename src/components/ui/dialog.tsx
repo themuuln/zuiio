@@ -1,28 +1,11 @@
 "use client";
 
-import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { XIcon } from "lucide-react";
 import type * as React from "react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 
-/**
- * Z-index layer classes for stacked overlays.
- * Layer 0 = default z-50, layer 1 = z-51, etc.
- */
-const zLayerClasses = [
-  "z-50",
-  "z-51",
-  "z-52",
-  "z-53",
-  "z-54",
-  "z-55",
-  "z-56",
-  "z-57",
-  "z-58",
-  "z-59",
-  "z-60",
-] as const;
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { XIcon } from "lucide-react";
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
@@ -40,6 +23,20 @@ function DialogClose({ ...props }: DialogPrimitive.Close.Props) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
+const dialogZLayerClasses = [
+  "z-50",
+  "z-51",
+  "z-52",
+  "z-53",
+  "z-54",
+  "z-55",
+  "z-56",
+  "z-57",
+  "z-58",
+  "z-59",
+  "z-60",
+] as const;
+
 function DialogOverlay({
   className,
   zLayer = 0,
@@ -50,7 +47,7 @@ function DialogOverlay({
       data-slot="dialog-overlay"
       className={cn(
         "fixed inset-0 isolate bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        zLayerClasses[zLayer] ?? "z-50",
+        dialogZLayerClasses[zLayer] ?? "z-50",
         className,
       )}
       {...props}
@@ -58,43 +55,25 @@ function DialogOverlay({
   );
 }
 
-const dialogSizeClasses = {
-  sm: "sm:max-w-sm",
-  md: "sm:max-w-md",
-  lg: "sm:max-w-lg",
-  xl: "sm:max-w-xl",
-  "2xl": "sm:max-w-2xl",
-  "3xl": "sm:max-w-3xl",
-  "4xl": "sm:max-w-4xl",
-  "5xl": "sm:max-w-5xl",
-} as const;
-
-type DialogSize = keyof typeof dialogSizeClasses;
-
 function DialogContent({
   className,
   children,
   showCloseButton = true,
-  size = "sm",
   zLayer = 0,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean;
-  size?: DialogSize;
-  /** Z-index layer for stacked overlays. 0 = default (z-50), 1 = z-51, etc. */
   zLayer?: number;
 }) {
-  const zClass = zLayerClasses[zLayer] ?? "z-50";
+  const zClass = dialogZLayerClasses[zLayer] ?? "z-50";
 
   return (
     <DialogPortal>
       <DialogOverlay zLayer={zLayer} />
       <DialogPrimitive.Popup
         data-slot="dialog-content"
-        onPointerDown={(e) => e.stopPropagation()}
         className={cn(
-          "fixed top-1/2 left-1/2 pointer-events-auto grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          dialogSizeClasses[size],
+          "fixed top-1/2 left-1/2 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           zClass,
           className,
         )}

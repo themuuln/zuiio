@@ -41,6 +41,15 @@ export default defineConfig({
         ],
       },
       {
+        text: "Зааврууд",
+        items: [
+          {
+            text: "Ажлын захиалга үүсгэх",
+            link: "/tutorial-create-work-order",
+          },
+        ],
+      },
+      {
         text: "Үндсэн хэсгүүд",
         items: [
           { text: "Хяналтын самбар", link: "/dashboard" },
@@ -66,7 +75,10 @@ export default defineConfig({
         text: "Бараа, санхүү",
         items: [
           { text: "Бараа материал", link: "/inventory" },
-          { text: "Бараа материалын сайжруулалтууд", link: "/inventory-improvements" },
+          {
+            text: "Бараа материалын сайжруулалтууд",
+            link: "/inventory-improvements",
+          },
           { text: "Санхүү", link: "/finance" },
           { text: "Зарлагын бүртгэл", link: "/expenses" },
           { text: "Тайлан", link: "/reports" },

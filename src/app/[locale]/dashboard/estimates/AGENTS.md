@@ -6,7 +6,8 @@
 
 ```
 estimates/
-├── page.tsx          # List page — simple card list with status filter
+├── page.tsx          # List page — DataTable with status filter, search, realtime
+├── _columns.tsx      # DataTable column definitions (factory pattern)
 ├── [id]/
 │   └── page.tsx      # Detail page — status actions, items table, convert to WO
 └── new/
@@ -16,13 +17,21 @@ estimates/
 ## Key Components
 
 ### List Page (`page.tsx`)
-- Status filter dropdown (all, active, draft, sent, approved, converted, declined, expired)
-- Simple card list — each row shows estimate number, status badge, date, customer ID, grand total
-- Click navigates to detail page
+- DataTable with sortable columns (estimate number, customer, vehicle, status, items, date, total, actions)
+- URL-synced filters via `useTableFilters("estimates")` — search, status
+- FilterChips for status selection with counts
+- Realtime subscription via `useRealtimeMulti` on `estimates` + `estimate_items` tables
 - Empty state with create button
 - Branch-aware: filters by `useSelectedBranchId()`
+- Delete confirmation dialog
+
+### Column Definitions (`_columns.tsx`)
+- Factory function `createColumns(callbacks)` returning `ColumnDef<EstimateListItem>[]`
+- Callbacks: `onStatusChange`, `onCancel`, `updatePending`
+- Status column renders dropdown with inline status switching (except for "converted")
 
 ### Detail Page (`[id]/page.tsx`)
+- Uses shared hooks: `useEstimateDetail`, `useUpdateEstimateStatus`, `useConvertEstimate`
 - Status action buttons depending on current status:
   - `draft` → "Mark Sent" + "Approve"
   - `sent` → "Approve" + "Decline"
@@ -55,31 +64,41 @@ Also: `declined` (from sent/approved), `expired`
 ## Data Flow
 
 ### API Endpoints
-| Endpoint | Methods | Purpose |
-|----------|---------|---------|
-| `/api/organizations/[id]/estimates` | GET, POST | List/create estimates |
-| `/api/organizations/[id]/estimates/[estimateId]` | GET, PATCH | Detail/update status |
-| `/api/organizations/[id]/estimates/[estimateId]/convert` | POST | Convert to work order |
-| `/api/organizations/[id]/services?q=` | GET | Service catalog search |
-| `/api/organizations/[id]/inventory?q=` | GET | Parts catalog search |
+| Endpoint | Methods | Permission | Purpose |
+|----------|---------|------------|---------|
+| `/api/organizations/[id]/estimates` | GET, POST | `work_orders:read`, `work_orders:create` | List/create estimates |
+| `/api/organizations/[id]/estimates/[estimateId]` | GET, PATCH, DELETE | `work_orders:read/update/delete` | Detail/update/delete |
+| `/api/organizations/[id]/estimates/[estimateId]/convert` | POST | `work_orders:create` | Convert to work order |
 
-### React Query / Fetch
-- List: inline `useQuery` with key `["estimates", orgId, branchFilter]`
-- Detail: inline `useQuery` with key `["estimate", estimateId]`
-- Status change: inline `useMutation` — PATCH with `{ status }`
-- Convert: inline `useMutation` — POST, then navigate to `/dashboard/work-orders/[id]`
-- No shared query hooks — estimates use direct fetch + inline queries (unlike work-orders)
+### React Query Hooks (`src/lib/queries/use-estimates.ts`)
+- `useEstimates(orgId, status?, search?, branchId?)` — list with filters
+- `useEstimateDetail(orgId, estimateId)` — single with all relations
+- `useUpdateEstimateStatus(orgId)` — status mutation with optimistic update
+- `useConvertEstimate(orgId)` — convert to WO mutation
+- Cache keys: `estimateKeys.list(orgId, status, search, branchId)`, `estimateKeys.detail(orgId, id)`
 
-### Types
-- `Estimate` — list item: `id`, `estimate_number`, `status`, `customer_id`, `grand_total`, `created_at`
-- `EstimateDetail` — full: adds `customer`, `vehicle`, `items[]`, `subtotal`, `discount_total`, `tax_total`, `notes`, `terms`, `converted_work_order`
+### Types (`src/lib/types/`)
+- `Estimate` — DB row alias
+- `EstimateItem` — DB row alias
+- `EstimateDetail` — composite: adds `customer`, `vehicle`, `items[]`, `converted_work_order`, `appointment`
+- `EstimateListItem` (in `use-estimates.ts`) — lightweight for list views
+
+### Service (`src/lib/services/estimate-service.ts`)
+- All functions accept `db: SupabaseClient` as first parameter (follows newer service convention)
+- `getEstimates(db, orgId, params?)` — list with filters, search, pagination
+- `getEstimate(db, id, orgId)` — single with relations
+- `createEstimate(db, orgId, params)` — create + items + recalculate totals
+- `updateEstimate(db, id, orgId, params)` — update header + optionally replace items
+- `updateEstimateStatus(db, id, orgId, status)` — status-only update
+- `deleteEstimate(db, id, orgId)` — soft delete
+- `convertEstimateToWorkOrder(db, estimateId, orgId)` — full conversion lifecycle
 
 ## State Management
 
-- **List filter:** Local `useState("all")` for status filter (not URL-synced)
+- **List filters:** URL-synced via `useTableFilters("estimates")` (search, status, page, sort)
 - **Branch filter:** `useSelectedBranchId()` from UI store
-- **No Zustand store** — all state is local or in React Query cache
-- **Mutations invalidate:** Both `["estimate", id]` and `["estimates"]` query keys
+- **Realtime:** `useRealtimeMulti` on `estimates` + `estimate_items` tables
+- **Mutations invalidate:** `estimateKeys.all(orgId)` and `estimateKeys.detail(orgId, id)`
 
 ## Conventions
 
@@ -87,12 +106,18 @@ Also: `declined` (from sent/approved), `expired`
 - Line items displayed in a 12-column grid layout
 - All monetary values use MNT (₮) with `toLocaleString()`
 - The "Convert to Work Order" action only appears when status is `approved`
-- After conversion, a linked WO card appears at the bottom with navigation
-- No column definitions file — the list is a simple card layout, not a DataTable
+- After conversion, navigation to `/dashboard/work-orders/[id]`
+- Reuses `work_orders` permissions (not separate `estimates:*` permissions)
+- Gated to Pro plan and above
 
 ## Dependencies
 
-- **Shared components:** `Badge`, `Button`, `Card`, `Dialog`, `Empty`, `Select`, `Sheet`, `Textarea`, `Typography`
+- **Shared components:** `Badge`, `Button`, `Card`, `DataTable`, `Dialog`, `Empty`, `FilterChips`, `ListPageShell`, `ListToolbar`, `Sheet`, `Typography`
 - **Cross-module:** Converts to work orders (navigates to `/dashboard/work-orders/[id]`)
 - **Customer/Vehicle selection:** `CustomerSelect` and `VehicleSelect` from `@/components/work-orders/`
-- **No shared query hooks** — unlike work-orders, estimates have their own inline data fetching
+- **Hooks:** `useTableFilters`, `useRealtimeMulti`, `useCurrentOrg`, `useSelectedBranchId`
+
+## Tests
+
+- Service tests: `src/lib/services/estimate-service.test.ts`
+- Coverage: CRUD operations, validation, status transitions, totals calculation

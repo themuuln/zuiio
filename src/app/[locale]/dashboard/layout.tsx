@@ -7,6 +7,7 @@ import BrandThemeProvider from "@/components/brand-theme-provider";
 import { PageHeader } from "@/components/page-header";
 import { RightSidebar } from "@/components/right-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { PageHeaderProvider, usePageHeader } from "@/hooks/use-page-header";
 import {
   RightSidebarProvider,
@@ -50,12 +51,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <SidebarInset className="min-h-0 min-w-0 w-auto">
                 <DashboardHeader />
                 <GlobalDialogs />
-                <div className="flex min-h-0 flex-1 overflow-hidden">
-                  <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-6 pt-4 md:px-6 relative">
+                <div className="relative min-h-0 flex-1 overflow-hidden">
+                  <div className="min-h-0 min-w-0 h-full overflow-y-auto overflow-x-hidden px-4 pb-6 pt-4 md:px-6">
                     {children}
                   </div>
-                  {isBayView && <RightSidebar />}
                 </div>
+                {isBayView && FEATURE_FLAGS.rightSidebar && <RightSidebar />}
               </SidebarInset>
             </SidebarProvider>
           </RightSidebarProvider>

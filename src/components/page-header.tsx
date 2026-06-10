@@ -11,7 +11,7 @@ import {
   PanelRightOpen,
   Plus,
   SearchIcon,
-  Settings2,
+  Cog,
   Truck,
   UserPlus,
 } from "lucide-react";
@@ -286,23 +286,24 @@ function SettingsShortcut() {
   return (
     <>
       <Button
-        variant={isActive ? "secondary" : "ghost"}
-        size="sm"
+        variant={isActive ? "secondary" : "outline"}
+        size="icon-md"
         className="hidden rounded-xl lg:inline-flex"
         render={<Link href="/dashboard/settings" />}
+        nativeButton={false}
         aria-label={t("nav.settings")}
       >
-        <Settings2 className="size-4" />
-        <span>{t("nav.settings")}</span>
+        <Cog className="size-4" />
       </Button>
       <Button
-        variant={isActive ? "secondary" : "ghost"}
-        size="icon-sm"
+        variant={isActive ? "secondary" : "outline"}
+        size="icon-md"
         className="rounded-xl lg:hidden"
         render={<Link href="/dashboard/settings" />}
+        nativeButton={false}
         aria-label={t("nav.settings")}
       >
-        <Settings2 className="size-4" />
+        <Cog className="size-4" />
       </Button>
     </>
   );
@@ -369,8 +370,8 @@ function QuickCreateActions() {
       <DropdownMenuTrigger
         render={
           <Button
-            size="sm"
-            className="size-9 rounded-xl"
+            size="icon-md"
+            className="rounded-xl"
             aria-label={t("common.create")}
           >
             <Plus className="size-4" />
@@ -404,10 +405,10 @@ function RightSidebarToggle() {
   return (
     <Button
       variant="ghost"
-      size="icon-sm"
+      size="icon-md"
       onClick={toggle}
       aria-label={state.isOpen ? "Collapse sidebar" : "Expand sidebar"}
-      className="size-9 rounded-xl text-muted-foreground/70 hover:text-foreground"
+      className="rounded-xl text-muted-foreground/70 hover:text-foreground"
     >
       {state.isOpen ? (
         <PanelRightClose className="size-4" />

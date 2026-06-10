@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CondensedQueueItem } from "./_condensed-queue-item";
 import { BayCard } from "./bay-card";
+import { ErrorSection } from "./_error-section";
 
 // ── KanbanDropColumn (moved from _types.tsx) ───────────────────
 
@@ -29,6 +31,8 @@ export function KanbanDropColumn({
   return (
     <div
       ref={setNodeRef}
+      role="region"
+      aria-label={`${status} column`}
       className={cn(
         "transition-colors duration-200 rounded-xl",
         isOver && "bg-primary/5 ring-1 ring-primary/20",
@@ -71,7 +75,7 @@ interface KanbanViewProps {
   t: (key: string) => string;
 }
 
-export function KanbanView({
+export const KanbanView = React.memo(function KanbanView({
   searchedBays,
   assignableBays,
   queue,
@@ -187,22 +191,24 @@ export function KanbanView({
             <div className="flex flex-1 flex-col gap-3 px-3 overflow-y-auto no-scrollbar">
               {baysWithStatus.map((bay) => (
                 <div key={bay.bayNumber} className="flex flex-col shrink-0">
-                  <BayCard
-                    bay={bay}
-                    isPending={
-                      bay.workOrder ? !!pendingWoIds[bay.workOrder.id] : false
-                    }
-                    isKanbanMode
-                    onStatusChange={onStatusChange}
-                    onRemoveFromBay={onRemoveFromBay}
-                    onOpenDetail={onOpenDetail}
-                    onRemoveHelper={onRemoveHelper}
-                    onPauseTimer={onPauseTimer}
-                    onAddNote={onAddNote}
-                    onQuickAddService={onQuickAddService}
-                    onQuickAddParts={onQuickAddParts}
-                    orgId={orgId}
-                  />
+                  <ErrorSection label={`Bay ${bay.bayNumber}`}>
+                    <BayCard
+                      bay={bay}
+                      isPending={
+                        bay.workOrder ? !!pendingWoIds[bay.workOrder.id] : false
+                      }
+                      isKanbanMode
+                      onStatusChange={onStatusChange}
+                      onRemoveFromBay={onRemoveFromBay}
+                      onOpenDetail={onOpenDetail}
+                      onRemoveHelper={onRemoveHelper}
+                      onPauseTimer={onPauseTimer}
+                      onAddNote={onAddNote}
+                      onQuickAddService={onQuickAddService}
+                      onQuickAddParts={onQuickAddParts}
+                      orgId={orgId}
+                    />
+                  </ErrorSection>
                 </div>
               ))}
               {baysWithStatus.length === 0 && (
@@ -225,4 +231,4 @@ export function KanbanView({
       })}
     </div>
   );
-}
+});

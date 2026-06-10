@@ -1,11 +1,14 @@
 "use client";
 
+import React from "react";
 import {
   Activity,
   ArrowDown,
   ArrowUp,
   CheckCircle2,
-  Wallet,
+  Clock,
+  DollarSign,
+  Users,
   Wrench,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -18,6 +21,7 @@ interface TrendDelta {
   activeJobs: number;
   completedToday: number;
   revenueToday: number;
+  revenuePerLaborHour: number;
 }
 
 interface KpiCardsProps {
@@ -29,7 +33,7 @@ interface KpiCardsProps {
   t: (key: string, params?: Record<string, string | number | Date>) => string;
 }
 
-export function KpiCards({
+export const KpiCards = React.memo(function KpiCards({
   shiftReport,
   trendDelta,
   occupiedBays,
@@ -38,10 +42,10 @@ export function KpiCards({
   t,
 }: KpiCardsProps) {
   return (
-    <div className="px-5 py-4 shrink-0">
+    <div className="px-5 py-2 shrink-0">
       <div className="flex flex-col lg:flex-row">
         {/* Card 1: Bay Utilization */}
-        <Card className="bg-transparent border-none ring-0 shadow-none px-5 py-4 gap-0 flex flex-col rounded-none flex-1 min-w-0">
+        <Card className="bg-transparent border-none ring-0 shadow-none px-4 py-3 gap-0 flex flex-col rounded-none flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
               {t("bayUtilization")}
@@ -85,7 +89,7 @@ export function KpiCards({
         <Separator orientation="vertical" className="hidden lg:block" />
 
         {/* Card 2: Active Workloads */}
-        <Card className="bg-transparent border-none ring-0 shadow-none px-5 py-4 gap-0 flex flex-col rounded-none flex-1 min-w-0">
+        <Card className="bg-transparent border-none ring-0 shadow-none px-4 py-3 gap-0 flex flex-col rounded-none flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
               {t("activeJobs")}
@@ -126,7 +130,7 @@ export function KpiCards({
         <Separator orientation="vertical" className="hidden lg:block" />
 
         {/* Card 3: Completed Today */}
-        <Card className="bg-transparent border-none ring-0 shadow-none px-5 py-4 gap-0 flex flex-col rounded-none flex-1 min-w-0">
+        <Card className="bg-transparent border-none ring-0 shadow-none px-4 py-3 gap-0 flex flex-col rounded-none flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
               {t("completedToday")}
@@ -160,49 +164,81 @@ export function KpiCards({
               completed
             </span>
           </div>
-          <span className="text-xs text-muted-foreground font-medium mt-1">
-            Avg duration: {shiftReport?.avgDurationMinutes ?? 0}m
+          <span className="flex items-center gap-1 text-xs text-muted-foreground font-medium mt-1">
+            <Clock className="size-3" /> Avg{" "}
+            {Number.isFinite(shiftReport?.avgDurationMinutes)
+              ? (shiftReport?.avgDurationMinutes ?? 0)
+              : 0}
+            m
           </span>
         </Card>
         <Separator orientation="vertical" className="hidden lg:block" />
 
-        {/* Card 4: Revenue Today */}
-        <Card className="bg-transparent border-none ring-0 shadow-none px-5 py-4 gap-0 flex flex-col rounded-none flex-1 min-w-0">
+        {/* Card 4: Revenue / Labor Hour */}
+        <Card className="bg-transparent border-none ring-0 shadow-none px-4 py-3 gap-0 flex flex-col rounded-none flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
-              {t("revenueToday")}
+              Rev / Labor Hr
             </span>
             <div className="flex size-8 items-center justify-center rounded-lg bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400">
-              <Wallet className="size-4" />
+              <DollarSign className="size-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-1 mt-1">
             <span className="text-xl font-bold font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
-              {formatMNT(shiftReport?.revenueToday ?? 0)}
-              {trendDelta && trendDelta.revenueToday !== 0 && (
+              {formatMNT(
+                Number.isFinite(shiftReport?.revenuePerLaborHour)
+                  ? (shiftReport?.revenuePerLaborHour ?? 0)
+                  : 0,
+              )}
+              {trendDelta && trendDelta.revenuePerLaborHour !== 0 && (
                 <span
                   className={cn(
                     "inline-flex items-center gap-1 text-xs font-semibold ml-2",
-                    trendDelta.revenueToday > 0
+                    trendDelta.revenuePerLaborHour > 0
                       ? "text-emerald-500"
                       : "text-red-500",
                   )}
                 >
-                  {trendDelta.revenueToday > 0 ? (
+                  {trendDelta.revenuePerLaborHour > 0 ? (
                     <ArrowUp className="size-3" />
                   ) : (
                     <ArrowDown className="size-3" />
                   )}
-                  {formatMNT(Math.abs(trendDelta.revenueToday))}
+                  {formatMNT(Math.abs(trendDelta.revenuePerLaborHour || 0))}
                 </span>
               )}
             </span>
           </div>
           <span className="text-xs text-muted-foreground font-medium mt-1">
-            Today&apos;s invoices paid
+            {formatMNT(shiftReport?.revenueToday ?? 0)} total today
+          </span>
+        </Card>
+        <Separator orientation="vertical" className="hidden lg:block" />
+
+        {/* Card 5: Waiting Queue */}
+        <Card className="bg-transparent border-none ring-0 shadow-none px-4 py-3 gap-0 flex flex-col rounded-none flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
+              {t("waitingQueue")}
+            </span>
+            <div className="flex size-8 items-center justify-center rounded-lg bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400">
+              <Users className="size-4" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-1 mt-1">
+            <span className="text-xl font-bold font-mono tracking-tight">
+              {waitingQueueLength}
+            </span>
+            <span className="text-xs text-muted-foreground font-medium">
+              waiting
+            </span>
+          </div>
+          <span className="text-xs text-muted-foreground font-medium mt-1">
+            {shiftReport?.activeJobs ?? 0} jobs in progress
           </span>
         </Card>
       </div>
     </div>
   );
-}
+});

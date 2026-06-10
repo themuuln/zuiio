@@ -1,8 +1,8 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Clock } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,33 +33,18 @@ function formatTime(iso: string): string {
 }
 
 export function DailyTimeline({ orgId }: { orgId: string }) {
-  const [events, setEvents] = useState<TimelineEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadTimeline = useCallback(
-    async (signal?: AbortSignal) => {
-      if (!orgId) return;
-      try {
-        const res = await fetch(
-          `/api/organizations/${orgId}/reports?type=timeline`,
-          { signal },
-        );
-        const d = await res.json();
-        setEvents(d.data ?? []);
-      } catch {
-        // ignore
-      } finally {
-        setLoading(false);
-      }
+  const { data: events = [], isLoading: loading } = useQuery<TimelineEvent[]>({
+    queryKey: ["organizations", orgId, "reports", "timeline"],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/reports?type=timeline`,
+      );
+      const d = await res.json();
+      return d.data ?? [];
     },
-    [orgId],
-  );
-
-  useEffect(() => {
-    const abort = new AbortController();
-    loadTimeline(abort.signal);
-    return () => abort.abort();
-  }, [loadTimeline]);
+    enabled: !!orgId,
+    staleTime: 60_000,
+  });
 
   if (loading) {
     return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +11,7 @@ interface InvoiceQrPopoverProps {
 }
 
 export function InvoiceQrPopover({ url, children }: InvoiceQrPopoverProps) {
+  const t = useTranslations("bayView");
   const [open, setOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -63,13 +65,13 @@ export function InvoiceQrPopover({ url, children }: InvoiceQrPopoverProps) {
         >
           <img
             src={qrDataUrl}
-            alt="Invoice QR code"
+            alt={t("invoiceQrCode")}
             width={240}
             height={240}
             className="rounded-lg"
           />
           <span className="text-sm font-medium text-muted-foreground text-center leading-snug">
-            Scan to view invoice
+            {t("scanToViewInvoice")}
           </span>
           {/* Arrow pointing down to the button */}
           <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-t-[7px] border-t-border" />

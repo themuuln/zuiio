@@ -153,15 +153,18 @@ export default function OrganizationPage() {
     subError?.message ??
     null;
 
-  const formatPlanType = useCallback((planType: string) => {
-    const map: Record<string, string> = {
-      starter: "Core",
-      pro: "Pro",
-      business: "Business",
-      enterprise: "Enterprise",
-    };
-    return map[planType] ?? planType;
-  }, []);
+  const formatPlanType = useCallback(
+    (planType: string) => {
+      const map: Record<string, string> = {
+        starter: orgT("planStarter"),
+        pro: orgT("planPro"),
+        business: orgT("planBusiness"),
+        enterprise: orgT("planEnterprise"),
+      };
+      return map[planType] ?? planType;
+    },
+    [orgT],
+  );
 
   const formatDate = useCallback((dateStr: string | null) => {
     if (!dateStr) return "\u2014";
@@ -173,13 +176,13 @@ export default function OrganizationPage() {
   useEffect(() => {
     registerTab(
       "subscription",
-      "Subscription",
+      orgT("subscription"),
       <div className="flex flex-col gap-2">
         {subscription ? (
           <>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
               <Typography.Muted className="text-[10px] text-muted-foreground">
-                Plan
+                {orgT("plan")}
               </Typography.Muted>
               <Typography.Text className="text-xs font-medium">
                 {formatPlanType(subscription.planType)}
@@ -187,7 +190,7 @@ export default function OrganizationPage() {
             </div>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
               <Typography.Muted className="text-[10px] text-muted-foreground">
-                Status
+                {orgT("status")}
               </Typography.Muted>
               <Typography.Text className="text-xs font-medium capitalize">
                 {subscription.status}
@@ -195,7 +198,7 @@ export default function OrganizationPage() {
             </div>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
               <Typography.Muted className="text-[10px] text-muted-foreground">
-                Started
+                {orgT("started")}
               </Typography.Muted>
               <Typography.Text className="text-xs font-medium">
                 {formatDate(subscription.startedAt)}
@@ -204,7 +207,7 @@ export default function OrganizationPage() {
             {subscription.trial && subscription.expiresAt && (
               <div className="rounded-md border border-amber-200/50 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/20 px-2.5 py-1.5">
                 <Typography.Muted className="text-[10px] text-muted-foreground">
-                  Trial ends
+                  {orgT("trialEnds")}
                 </Typography.Muted>
                 <Typography.Text className="text-xs font-medium">
                   {formatDate(subscription.expiresAt)}
@@ -218,27 +221,27 @@ export default function OrganizationPage() {
                 className="mt-1 w-full h-8 text-xs"
                 render={<Link href="/pricing" />}
               >
-                Upgrade Plan
+                {orgT("upgradePlan")}
               </Button>
             )}
             {subscription.planType === "enterprise" && (
               <Badge variant="secondary" className="mt-1 w-fit text-[10px]">
-                Current Plan
+                {orgT("currentPlan")}
               </Badge>
             )}
           </>
         ) : (
           <Typography.Muted className="text-xs text-muted-foreground">
-            No active subscription
+            {orgT("noActiveSubscription")}
           </Typography.Muted>
         )}
       </div>,
     );
     registerTab(
       "team",
-      "Team",
+      orgT("team"),
       <Typography.Muted className="text-xs text-muted-foreground px-2.5 py-1.5">
-        Manage team members via the Members page
+        {orgT("manageTeamMembers")}
       </Typography.Muted>,
     );
     return () => {
@@ -308,7 +311,7 @@ export default function OrganizationPage() {
           {t("nav.organization")}
         </Typography.H1>
         <Typography.Muted className="text-muted-foreground">
-          Manage your organization
+          {orgT("manageYourOrg")}
         </Typography.Muted>
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
@@ -316,7 +319,7 @@ export default function OrganizationPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="size-4" />
-              Organization
+              {orgT("organization")}
               {!editing && (
                 <Button
                   variant="ghost"
@@ -381,7 +384,7 @@ export default function OrganizationPage() {
                       <div className="mt-2 rounded border p-1">
                         <Image
                           src={watchedLogoUrl}
-                          alt="Logo preview"
+                          alt={orgT("logoPreview")}
                           width={200}
                           height={80}
                           className="max-h-20 rounded"
@@ -400,7 +403,7 @@ export default function OrganizationPage() {
                 <div className="flex gap-2 pt-2">
                   <Button type="submit" disabled={isSaving} size="sm">
                     <Save className="mr-1 size-3.5" />
-                    {isSaving ? "Saving..." : "Save"}
+                    {isSaving ? orgT("saving") : orgT("saved")}
                   </Button>
                   <Button
                     type="button"
@@ -410,7 +413,7 @@ export default function OrganizationPage() {
                     disabled={isSaving}
                   >
                     <X className="mr-1 size-3.5" />
-                    Cancel
+                    {orgT("cancel")}
                   </Button>
                 </div>
               </form>
@@ -441,7 +444,7 @@ export default function OrganizationPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="size-4" />
-              Subscription
+              {orgT("subscription")}
             </CardTitle>
             <CardDescription>{orgT("currentPlanAndBilling")}</CardDescription>
           </CardHeader>
@@ -451,7 +454,7 @@ export default function OrganizationPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Typography.Muted className="text-sm text-muted-foreground">
-                      Plan
+                      {orgT("plan")}
                     </Typography.Muted>
                     <Typography.Text className="font-medium">
                       {formatPlanType(subscription.planType)}
@@ -480,7 +483,7 @@ export default function OrganizationPage() {
                 </div>
                 <div>
                   <Typography.Muted className="text-sm text-muted-foreground">
-                    Status
+                    {orgT("status")}
                   </Typography.Muted>
                   <Typography.Text className="font-medium capitalize">
                     {subscription.status}
@@ -488,7 +491,7 @@ export default function OrganizationPage() {
                 </div>
                 <div>
                   <Typography.Muted className="text-sm text-muted-foreground">
-                    Started
+                    {orgT("started")}
                   </Typography.Muted>
                   <Typography.Text className="font-medium">
                     {formatDate(subscription.startedAt)}
@@ -498,7 +501,7 @@ export default function OrganizationPage() {
                   <div>
                     <Typography.Muted className="flex items-center gap-1 text-sm text-muted-foreground">
                       <CalendarClock className="size-3" />
-                      Trial ends
+                      {orgT("trialEnds")}
                     </Typography.Muted>
                     <Typography.Text className="font-medium">
                       {formatDate(subscription.expiresAt)}
@@ -508,7 +511,7 @@ export default function OrganizationPage() {
               </>
             ) : (
               <Typography.Muted className="text-sm text-muted-foreground">
-                No active subscription
+                {orgT("noActiveSubscription")}
               </Typography.Muted>
             )}
           </CardContent>
@@ -518,13 +521,13 @@ export default function OrganizationPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="size-4" />
-              Members
+              {orgT("members")}
             </CardTitle>
             <CardDescription>{orgT("teamManagement")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Typography.Muted className="text-sm text-muted-foreground">
-              Invite team members to collaborate.
+              {orgT("inviteTeam")}
             </Typography.Muted>
             <Button
               variant="outline"
@@ -532,7 +535,7 @@ export default function OrganizationPage() {
               render={<Link href="/dashboard/organization/members" />}
             >
               <Users className="mr-2 size-4" />
-              Manage Members
+              {orgT("manageMembers")}
             </Button>
             <Button
               variant="ghost"
@@ -540,7 +543,7 @@ export default function OrganizationPage() {
               render={<Link href="/dashboard/organization/roles" />}
             >
               <Shield className="mr-2 size-4" />
-              View Roles
+              {orgT("viewRoles")}
             </Button>
           </CardContent>
         </Card>
@@ -549,13 +552,13 @@ export default function OrganizationPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Palette className="size-4" />
-              Theme
+              {orgT("theme")}
             </CardTitle>
             <CardDescription>{orgT("customizeAppearance")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Typography.Muted className="text-sm text-muted-foreground">
-              Customize colors, fonts, and branding.
+              {orgT("customizeColors")}
             </Typography.Muted>
             <Button
               variant="outline"
@@ -563,7 +566,7 @@ export default function OrganizationPage() {
               render={<Link href="/dashboard/organization/settings/theme" />}
             >
               <Palette className="mr-2 size-4" />
-              Theme Settings
+              {orgT("themeSettings")}
             </Button>
           </CardContent>
         </Card>
@@ -572,13 +575,13 @@ export default function OrganizationPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="size-4" />
-              Payroll
+              {orgT("payroll")}
             </CardTitle>
             <CardDescription>{orgT("mechanicPayRates")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Typography.Muted className="text-sm text-muted-foreground">
-              Set hourly and flat rates for each mechanic.
+              {orgT("setHourlyRates")}
             </Typography.Muted>
             <Button
               variant="outline"
@@ -586,7 +589,7 @@ export default function OrganizationPage() {
               render={<Link href="/dashboard/payroll" />}
             >
               <DollarSign className="mr-2 size-4" />
-              Manage Payroll
+              {orgT("managePayroll")}
             </Button>
           </CardContent>
         </Card>
@@ -595,7 +598,7 @@ export default function OrganizationPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Smartphone className="size-4" />
-              Devices
+              {orgT("devices")}
             </CardTitle>
             <CardDescription>
               {orgT("mechanicTabletManagement")}
@@ -603,7 +606,7 @@ export default function OrganizationPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Typography.Muted className="text-sm text-muted-foreground">
-              Register and manage mechanic devices for bay view.
+              {orgT("registerDevices")}
             </Typography.Muted>
             <Button
               variant="outline"
@@ -611,7 +614,7 @@ export default function OrganizationPage() {
               render={<Link href="/dashboard/organization/devices" />}
             >
               <Smartphone className="mr-2 size-4" />
-              Manage Devices
+              {orgT("manageDevices")}
             </Button>
           </CardContent>
         </Card>
@@ -620,7 +623,7 @@ export default function OrganizationPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="size-4" />
-              Settings
+              {orgT("settings")}
             </CardTitle>
             <CardDescription>
               {orgT("businessDefaultsAndRules")}
@@ -628,7 +631,7 @@ export default function OrganizationPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Typography.Muted className="text-sm text-muted-foreground">
-              Commission rules, pricing rules, business defaults.
+              {orgT("commissionRules")}
             </Typography.Muted>
             <Button
               variant="outline"
@@ -636,7 +639,7 @@ export default function OrganizationPage() {
               render={<Link href="/dashboard/settings" />}
             >
               <Settings className="mr-2 size-4" />
-              Open Settings
+              {orgT("openSettings")}
             </Button>
           </CardContent>
         </Card>

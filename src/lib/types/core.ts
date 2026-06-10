@@ -12,6 +12,7 @@ export type Vehicle = Tables<"vehicles">;
 export type Invoice = Tables<"invoices">;
 export type InvoicePayment = Tables<"invoice_payments">;
 export type InvoiceItem = Tables<"invoice_items">;
+export type InvoiceRefund = Tables<"invoice_refunds">;
 export type WorkOrder = Tables<"work_orders">;
 
 /**
@@ -60,7 +61,24 @@ export type WorkOrderPart = Tables<"work_order_parts">;
 export type WorkOrderService = Tables<"work_order_services">;
 export type WorkOrderStatusHistory = Tables<"work_order_status_history">;
 export type CustomerCommunication = Tables<"customer_communications">;
-export type VehicleServiceSchedule = Tables<"vehicle_service_schedules">;
+export type VehicleServiceSchedule = Tables<"vehicle_service_schedules"> & {
+  contact_status: string;
+  contacted_at: string | null;
+  vehicle?: {
+    plate_number: string;
+    make: string;
+    model: string;
+    year: number | null;
+    customer_id: string | null;
+    customer?: {
+      id: string;
+      first_name: string | null;
+      last_name: string | null;
+      phone: string | null;
+    } | null;
+  } | null;
+  service?: { name: string } | null;
+};
 export type ReminderLog = Tables<"reminder_logs">;
 export type AuditLogInsert = TablesInsert<"audit_logs">;
 

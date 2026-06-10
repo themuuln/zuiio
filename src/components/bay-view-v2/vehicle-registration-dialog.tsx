@@ -299,7 +299,9 @@ export function VehicleRegistrationDialog({
         setMode("register");
       }
     } catch (err) {
-      setLookupError(err instanceof Error ? err.message : "Lookup failed");
+      setLookupError(
+        err instanceof Error ? err.message : t("common.somethingWentWrong"),
+      );
     } finally {
       setLookupLoading(false);
     }
@@ -385,7 +387,7 @@ export function VehicleRegistrationDialog({
         setLookupResult(refreshResult);
       } catch (err) {
         setSaveError(
-          err instanceof Error ? err.message : "Failed to register vehicle",
+          err instanceof Error ? err.message : t("common.somethingWentWrong"),
         );
       } finally {
         setSaving(false);
@@ -405,7 +407,7 @@ export function VehicleRegistrationDialog({
     if (!vehicleId) {
       // Vehicle hasn't been saved yet — save first
       if (!plate.trim() || !formData.make.trim() || !formData.model.trim()) {
-        setQueueError("Fill in vehicle info (plate, make, model) first.");
+        setQueueError(t("saveVehicleFirst"));
         return;
       }
       try {
@@ -427,14 +429,12 @@ export function VehicleRegistrationDialog({
         });
       } catch (err) {
         setQueueError(
-          err instanceof Error ? err.message : "Failed to add to queue",
+          err instanceof Error ? err.message : t("common.somethingWentWrong"),
         );
         return;
       }
     } else if (!customerId) {
-      setQueueError(
-        "Customer name and phone are required to add to queue. Fill in owner info and save first.",
-      );
+      setQueueError(t("fillOwnerInfo"));
       return;
     } else {
       // Both IDs resolved — queue directly
@@ -452,7 +452,7 @@ export function VehicleRegistrationDialog({
         });
       } catch (err) {
         setQueueError(
-          err instanceof Error ? err.message : "Failed to add to queue",
+          err instanceof Error ? err.message : t("common.somethingWentWrong"),
         );
         setQueueSaving(false);
         return;
@@ -836,7 +836,7 @@ export function VehicleRegistrationDialog({
                   <Field data-invalid={!!form.formState.errors.complaint}>
                     <FieldContent>
                       <Textarea
-                        placeholder="Complaint or reason for visit (optional)"
+                        placeholder={t("complaintPlaceholder")}
                         className="min-h-[60px] text-xs resize-none"
                         {...form.register("complaint")}
                       />
@@ -879,12 +879,12 @@ export function VehicleRegistrationDialog({
                       <MessageSquarePlus className="size-4" />
                     )}
                     {queueSaving
-                      ? "Adding..."
+                      ? t("addingToQueue")
                       : canQueue
-                        ? "Add to Queue"
+                        ? t("addQueueButton")
                         : needsSave
-                          ? "Save & Add to Queue"
-                          : "Add to Queue"}
+                          ? t("saveAndAddToQueue")
+                          : t("addQueueButton")}
                   </Button>
                 </div>
               </>

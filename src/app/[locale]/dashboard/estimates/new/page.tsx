@@ -1,11 +1,12 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Edit3, Package, Plus, Receipt, Trash2, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { SearchInput } from "@/components/search-input";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
@@ -26,8 +27,6 @@ import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Customer, Vehicle } from "@/lib/types";
-
-// ── Types ──────────────────────────────────────────────────────
 
 type ItemType = "service" | "part" | "custom";
 
@@ -59,8 +58,6 @@ function calculateLineTotal(line: {
   return Math.max(gross - pctDisc - flatDisc, 0);
 }
 
-// ── Form Schema ────────────────────────────────────────────────
-
 const quoteSchema = z.object({
   notes: z.string().optional(),
   terms: z.string().optional(),
@@ -68,7 +65,18 @@ const quoteSchema = z.object({
 
 type QuoteValues = z.infer<typeof quoteSchema>;
 
-// ── Main Component ─────────────────────────────────────────────
+const ITEM_TYPE_CONFIG: Record<
+  ItemType,
+  {
+    icon: typeof Wrench;
+    label: string;
+    variant: "default" | "secondary" | "outline";
+  }
+> = {
+  service: { icon: Wrench, label: "service", variant: "default" },
+  part: { icon: Package, label: "part", variant: "secondary" },
+  custom: { icon: Edit3, label: "custom", variant: "outline" },
+};
 
 export default function NewEstimatePage() {
   const t = useTranslations("estimates");
@@ -79,6 +87,9 @@ export default function NewEstimatePage() {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [lines, setLines] = useState<QuoteLine[]>([]);
   const [saving, setSaving] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [discountPercent, setDiscountPercent] = useState(0);
+  const [taxTotal, setTaxTotal] = useState(0);
   const [serviceSearch, setServiceSearch] = useState("");
   const [services, setServices] = useState<
     { id: string; name: string; default_price: number }[]
@@ -89,8 +100,6 @@ export default function NewEstimatePage() {
     resolver: zodResolver(quoteSchema),
     defaultValues: { notes: "", terms: "" },
   });
-
-  // ── Item management ────────────────────────────────────────
 
   const addServiceLine = (svc: {
     id: string;
@@ -163,8 +172,6 @@ export default function NewEstimatePage() {
     setLines((prev) => prev.filter((l) => l.id !== id));
   };
 
-  // ── Service catalog search ─────────────────────────────────
-
   const searchServices = (q: string) => {
     setServiceSearch(q);
     if (!q || q.length < 2) {
@@ -179,16 +186,12 @@ export default function NewEstimatePage() {
       .finally(() => setSearchingServices(false));
   };
 
-  // ── Totals ──────────────────────────────────────────────────
-
   const subtotal = lines.reduce((s, l) => s + l.line_total, 0);
-  const quoteDiscountAmount = 0; // Could add quote-level discount input
-  const quoteDiscountPercent = 0;
-  const discountTotal =
-    quoteDiscountAmount + subtotal * (quoteDiscountPercent / 100);
-  const grandTotal = Math.max(subtotal - discountTotal, 0);
-
-  // ── Submit ──────────────────────────────────────────────────
+  const lineDiscountTotal = 0;
+  const quoteDiscountTotal =
+    discountAmount + subtotal * (discountPercent / 100);
+  const discountTotal = lineDiscountTotal + quoteDiscountTotal;
+  const grandTotal = Math.max(subtotal - discountTotal + taxTotal, 0);
 
   const handleSave = async (status: string = "draft") => {
     if (!customer) {
@@ -216,6 +219,9 @@ export default function NewEstimatePage() {
           notes: data.notes || undefined,
           terms: data.terms || undefined,
           status,
+          discount_amount: discountAmount,
+          discount_percentage: discountPercent,
+          tax_total: taxTotal,
           items: lines.map((l) => ({
             item_type: l.item_type,
             description: l.description,
@@ -236,8 +242,6 @@ export default function NewEstimatePage() {
       setSaving(false);
     }
   };
-
-  // ── Parts catalog search (inline) ──────────────────────────
 
   const [partSearch, setPartSearch] = useState("");
   const [parts, setParts] = useState<
@@ -261,11 +265,11 @@ export default function NewEstimatePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
+      {/* Page Header */}
       <div>
         <Typography.H2>{t("newQuoteTitle")}</Typography.H2>
         <Typography.Text className="text-muted-foreground">
-          Build a quote with services and parts. When approved, convert it to a
-          work order.
+          {t("pageDescription")}
         </Typography.Text>
       </div>
 
@@ -286,262 +290,367 @@ export default function NewEstimatePage() {
         />
       </div>
 
-      {/* Add items */}
+      {/* Line Items */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center justify-between">
-            <span>{t("lineItems")}</span>
-            <div className="flex gap-2">
-              <Sheet>
-                <SheetTrigger>
-                  <Button variant="outline" size="sm">
-                    <Plus className="size-4" />
-                    {t("addService")}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:max-w-md">
-                  <SheetHeader>
-                    <SheetTitle>{t("addServiceTitle")}</SheetTitle>
-                    <SheetDescription>
-                      Search the service catalog
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="mt-4 space-y-3">
-                    <SearchInput
-                      placeholder={t("searchServicesPlaceholder")}
-                      onSearch={searchServices}
-                      loading={searchingServices}
-                      debounceMs={400}
-                    />
-                    <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
-                      {services.map((svc) => (
-                        <Button
-                          key={svc.id}
-                          variant="ghost"
-                          className="w-full justify-between p-3 h-auto"
-                          onClick={() => {
-                            addServiceLine(svc);
-                            setServiceSearch("");
-                            setServices([]);
-                          }}
-                        >
-                          <span className="font-medium">{svc.name}</span>
-                          <span className="text-muted-foreground tabular-nums">
-                            ₮{Number(svc.default_price).toLocaleString()}
-                          </span>
-                        </Button>
-                      ))}
-                      {serviceSearch &&
-                        services.length === 0 &&
-                        !searchingServices && (
-                          <Typography.Text className="text-sm text-muted-foreground p-4 text-center">
-                            No services found
-                          </Typography.Text>
-                        )}
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
-
-              <Sheet>
-                <SheetTrigger>
-                  <Button variant="outline" size="sm">
-                    <Plus className="size-4" />
-                    {t("addPart")}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:max-w-md">
-                  <SheetHeader>
-                    <SheetTitle>{t("addPartTitle")}</SheetTitle>
-                    <SheetDescription>
-                      Search the parts catalog
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="mt-4 space-y-3">
-                    <SearchInput
-                      placeholder={t("searchPartsPlaceholder")}
-                      onSearch={searchParts}
-                      loading={searchingParts}
-                      debounceMs={400}
-                    />
-                    <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
-                      {parts.map((part) => (
-                        <Button
-                          key={part.id}
-                          variant="ghost"
-                          className="w-full justify-between p-3 h-auto"
-                          onClick={() => {
-                            addPartLine(part);
-                            setPartSearch("");
-                            setParts([]);
-                          }}
-                        >
-                          <span className="font-medium">{part.part_name}</span>
-                          <span className="text-muted-foreground tabular-nums">
-                            ₮{Number(part.unit_price).toLocaleString()}
-                          </span>
-                        </Button>
-                      ))}
-                      {partSearch && parts.length === 0 && !searchingParts && (
-                        <Typography.Text className="text-sm text-muted-foreground p-4 text-center">
-                          No parts found
-                        </Typography.Text>
-                      )}
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
-
-              <Button variant="outline" size="sm" onClick={addCustomLine}>
-                <Plus className="size-4" />
-                Custom
-              </Button>
-            </div>
-          </CardTitle>
+          <CardTitle className="text-base">{t("lineItems")}</CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Add Item Toolbar */}
+          <div className="flex items-center gap-2 pb-4 border-b mb-4">
+            <Sheet>
+              <SheetTrigger>
+                <Button variant="outline" size="sm">
+                  <Plus className="size-4" />
+                  {t("addService")}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:max-w-md">
+                <SheetHeader>
+                  <SheetTitle>{t("addServiceTitle")}</SheetTitle>
+                  <SheetDescription>
+                    Search the service catalog
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="mt-4 space-y-3">
+                  <SearchInput
+                    placeholder={t("searchServicesPlaceholder")}
+                    onSearch={searchServices}
+                    loading={searchingServices}
+                    debounceMs={400}
+                  />
+                  <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
+                    {services.map((svc) => (
+                      <Button
+                        key={svc.id}
+                        variant="ghost"
+                        className="w-full justify-between p-3 h-auto"
+                        onClick={() => {
+                          addServiceLine(svc);
+                          setServiceSearch("");
+                          setServices([]);
+                        }}
+                      >
+                        <span className="font-medium">{svc.name}</span>
+                        <span className="text-muted-foreground tabular-nums">
+                          ₮{Number(svc.default_price).toLocaleString()}
+                        </span>
+                      </Button>
+                    ))}
+                    {serviceSearch &&
+                      services.length === 0 &&
+                      !searchingServices && (
+                        <Typography.Text className="text-sm text-muted-foreground p-4 text-center">
+                          No services found
+                        </Typography.Text>
+                      )}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            <Sheet>
+              <SheetTrigger>
+                <Button variant="outline" size="sm">
+                  <Plus className="size-4" />
+                  {t("addPart")}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:max-w-md">
+                <SheetHeader>
+                  <SheetTitle>{t("addPartTitle")}</SheetTitle>
+                  <SheetDescription>Search the parts catalog</SheetDescription>
+                </SheetHeader>
+                <div className="mt-4 space-y-3">
+                  <SearchInput
+                    placeholder={t("searchPartsPlaceholder")}
+                    onSearch={searchParts}
+                    loading={searchingParts}
+                    debounceMs={400}
+                  />
+                  <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
+                    {parts.map((part) => (
+                      <Button
+                        key={part.id}
+                        variant="ghost"
+                        className="w-full justify-between p-3 h-auto"
+                        onClick={() => {
+                          addPartLine(part);
+                          setPartSearch("");
+                          setParts([]);
+                        }}
+                      >
+                        <span className="font-medium">{part.part_name}</span>
+                        <span className="text-muted-foreground tabular-nums">
+                          ₮{Number(part.unit_price).toLocaleString()}
+                        </span>
+                      </Button>
+                    ))}
+                    {partSearch && parts.length === 0 && !searchingParts && (
+                      <Typography.Text className="text-sm text-muted-foreground p-4 text-center">
+                        No parts found
+                      </Typography.Text>
+                    )}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            <Button variant="outline" size="sm" onClick={addCustomLine}>
+              <Plus className="size-4" />
+              {t("addCustom")}
+            </Button>
+          </div>
+
+          {/* Items Content */}
           {lines.length === 0 ? (
-            <Typography.Text className="text-sm text-muted-foreground text-center py-8 block">
-              No items yet. Add services, parts, or custom line items above.
-            </Typography.Text>
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <div className="rounded-full bg-muted p-3">
+                <Receipt className="size-6 text-muted-foreground" />
+              </div>
+              <Typography.Text className="text-sm font-medium">
+                {t("noItemsTitle")}
+              </Typography.Text>
+              <Typography.Text className="text-xs text-muted-foreground text-center max-w-xs">
+                {t("noItemsDescription")}
+              </Typography.Text>
+            </div>
           ) : (
             <div className="space-y-2">
-              {/* Header */}
+              {/* Table Header */}
               <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-2">
                 <div className="col-span-1">#</div>
-                <div className="col-span-3">Description</div>
+                <div className="col-span-4">Description</div>
                 <div className="col-span-1 text-right">Qty</div>
                 <div className="col-span-2 text-right">Unit Price</div>
                 <div className="col-span-1 text-right">Disc %</div>
                 <div className="col-span-1 text-right">Disc ₮</div>
-                <div className="col-span-2 text-right">{t("total")}</div>
+                <div className="col-span-1 text-right">{t("total")}</div>
                 <div className="col-span-1" />
               </div>
-              {lines.map((line, idx) => (
-                <div
-                  key={line.id}
-                  className="grid grid-cols-12 gap-2 items-center rounded-lg border p-2"
-                >
-                  <div className="col-span-1 text-xs text-muted-foreground">
-                    {idx + 1}
-                  </div>
-                  <div className="col-span-3">
-                    {line.item_type === "custom" ? (
+
+              {/* Line Items */}
+              {lines.map((line, idx) => {
+                const typeConfig = ITEM_TYPE_CONFIG[line.item_type];
+                const TypeIcon = typeConfig.icon;
+                return (
+                  <div
+                    key={line.id}
+                    className="grid grid-cols-12 gap-2 items-center rounded-lg border p-2 hover:bg-muted/50 transition-colors"
+                  >
+                    {/* Row Number */}
+                    <div className="col-span-1 text-xs text-muted-foreground">
+                      {idx + 1}
+                    </div>
+
+                    {/* Description + Type Badge */}
+                    <div className="col-span-4">
+                      {line.item_type === "custom" ? (
+                        <Input
+                          placeholder={t("descriptionPlaceholder")}
+                          value={line.description}
+                          onChange={(e) =>
+                            updateLine(line.id, { description: e.target.value })
+                          }
+                          className="h-8 text-sm"
+                        />
+                      ) : (
+                        <div className="flex flex-col gap-0.5">
+                          <Typography.Text className="text-sm truncate block">
+                            {line.description}
+                          </Typography.Text>
+                          <Badge
+                            variant={typeConfig.variant}
+                            className="w-fit gap-1"
+                          >
+                            <TypeIcon className="size-2.5" />
+                            {t(typeConfig.label)}
+                          </Badge>
+                        </div>
+                      )}
+                      {line.item_type === "custom" && (
+                        <Badge
+                          variant={typeConfig.variant}
+                          className="w-fit gap-1 mt-1"
+                        >
+                          <TypeIcon className="size-2.5" />
+                          {t(typeConfig.label)}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Quantity */}
+                    <div className="col-span-1">
                       <Input
-                        placeholder={t("descriptionPlaceholder")}
-                        value={line.description}
+                        type="number"
+                        min={1}
+                        value={line.quantity}
                         onChange={(e) =>
-                          updateLine(line.id, { description: e.target.value })
+                          updateLine(line.id, {
+                            quantity: Math.max(
+                              1,
+                              parseInt(e.target.value, 10) || 1,
+                            ),
+                          })
                         }
-                        className="h-8 text-sm"
+                        className="h-8 text-sm text-right"
                       />
-                    ) : (
-                      <Typography.Text className="text-sm truncate block">
-                        {line.description}
-                      </Typography.Text>
-                    )}
-                    {line.item_type !== "custom" && (
-                      <Typography.Text className="text-xs text-muted-foreground">
-                        {line.item_type}
-                      </Typography.Text>
-                    )}
+                    </div>
+
+                    {/* Unit Price */}
+                    <div className="col-span-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        step={1000}
+                        value={line.unit_price}
+                        onChange={(e) =>
+                          updateLine(line.id, {
+                            unit_price: Math.max(
+                              0,
+                              parseInt(e.target.value, 10) || 0,
+                            ),
+                          })
+                        }
+                        className="h-8 text-sm text-right"
+                      />
+                    </div>
+
+                    {/* Discount % */}
+                    <div className="col-span-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={line.discount_percentage}
+                        onChange={(e) =>
+                          updateLine(line.id, {
+                            discount_percentage: Math.max(
+                              0,
+                              Math.min(100, parseInt(e.target.value, 10) || 0),
+                            ),
+                          })
+                        }
+                        className="h-8 text-sm text-right"
+                      />
+                    </div>
+
+                    {/* Discount Amount */}
+                    <div className="col-span-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        step={1000}
+                        value={line.discount_amount}
+                        onChange={(e) =>
+                          updateLine(line.id, {
+                            discount_amount: Math.max(
+                              0,
+                              parseInt(e.target.value, 10) || 0,
+                            ),
+                          })
+                        }
+                        className="h-8 text-sm text-right"
+                      />
+                    </div>
+
+                    {/* Line Total */}
+                    <div className="col-span-1 text-right font-mono text-sm font-medium">
+                      ₮{line.line_total.toLocaleString()}
+                    </div>
+
+                    {/* Remove Button */}
+                    <div className="col-span-1 text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 text-destructive"
+                        onClick={() => removeLine(line.id)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="col-span-1">
-                    <Input
-                      type="number"
-                      min={1}
-                      value={line.quantity}
-                      onChange={(e) =>
-                        updateLine(line.id, {
-                          quantity: Math.max(
-                            1,
-                            parseInt(e.target.value, 10) || 1,
-                          ),
-                        })
-                      }
-                      className="h-8 text-sm text-right"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Input
-                      type="number"
-                      min={0}
-                      step={1000}
-                      value={line.unit_price}
-                      onChange={(e) =>
-                        updateLine(line.id, {
-                          unit_price: Math.max(
-                            0,
-                            parseInt(e.target.value, 10) || 0,
-                          ),
-                        })
-                      }
-                      className="h-8 text-sm text-right"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={line.discount_percentage}
-                      onChange={(e) =>
-                        updateLine(line.id, {
-                          discount_percentage: Math.max(
-                            0,
-                            Math.min(100, parseInt(e.target.value, 10) || 0),
-                          ),
-                        })
-                      }
-                      className="h-8 text-sm text-right"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <Input
-                      type="number"
-                      min={0}
-                      step={1000}
-                      value={line.discount_amount}
-                      onChange={(e) =>
-                        updateLine(line.id, {
-                          discount_amount: Math.max(
-                            0,
-                            parseInt(e.target.value, 10) || 0,
-                          ),
-                        })
-                      }
-                      className="h-8 text-sm text-right"
-                    />
-                  </div>
-                  <div className="col-span-2 text-right font-mono text-sm font-medium">
-                    ₮{line.line_total.toLocaleString()}
-                  </div>
-                  <div className="col-span-1 text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-7 text-destructive"
-                      onClick={() => removeLine(line.id)}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Totals summary */}
+      {/* Totals Summary */}
       <Card>
-        <CardContent className="pt-4">
-          <div className="space-y-2 ml-auto w-full max-w-xs">
+        <CardContent className="pt-3">
+          <div className="space-y-2.5 ml-auto w-full max-w-xs">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
+              <span className="text-muted-foreground">{t("subtotal")}</span>
               <span className="font-mono">₮{subtotal.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between text-lg font-semibold border-t pt-2">
+
+            {/* Quote-level Discount */}
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground shrink-0">
+                {t("discount")}
+              </span>
+              <div className="flex items-center gap-1 ml-auto">
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={discountPercent}
+                  onChange={(e) =>
+                    setDiscountPercent(
+                      Math.max(0, Math.min(100, Number(e.target.value) || 0)),
+                    )
+                  }
+                  className="h-7 w-14 text-xs text-right"
+                  placeholder="%"
+                />
+                <span className="text-xs text-muted-foreground">%</span>
+                <span className="text-xs text-muted-foreground">+</span>
+                <Input
+                  type="number"
+                  min={0}
+                  step={1000}
+                  value={discountAmount}
+                  onChange={(e) =>
+                    setDiscountAmount(Math.max(0, Number(e.target.value) || 0))
+                  }
+                  className="h-7 w-20 text-xs text-right"
+                  placeholder="₮"
+                />
+              </div>
+            </div>
+
+            {discountTotal > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {t("discount")} {t("subtotal")}
+                </span>
+                <span className="font-mono text-destructive">
+                  -₮{discountTotal.toLocaleString()}
+                </span>
+              </div>
+            )}
+
+            {/* Tax */}
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground shrink-0">{t("tax")}</span>
+              <Input
+                type="number"
+                min={0}
+                step={1000}
+                value={taxTotal}
+                onChange={(e) =>
+                  setTaxTotal(Math.max(0, Number(e.target.value) || 0))
+                }
+                className="h-7 w-24 text-xs text-right ml-auto"
+                placeholder="₮"
+              />
+            </div>
+
+            {/* Grand Total */}
+            <div className="flex justify-between text-lg font-semibold border-t pt-2.5">
               <span>{t("grandTotal")}</span>
               <span className="font-mono">₮{grandTotal.toLocaleString()}</span>
             </div>
@@ -575,15 +684,15 @@ export default function NewEstimatePage() {
 
       {/* Actions */}
       <div className="flex gap-3 justify-end border-t pt-4">
-        <Button variant="outline" onClick={() => router.back()}>
-          Cancel
+        <Button variant="ghost" onClick={() => router.back()}>
+          {t("cancel")}
         </Button>
         <Button
           variant="outline"
           onClick={() => handleSave("draft")}
           disabled={saving || lines.length === 0}
         >
-          {saving ? "Saving..." : "Save as Draft"}
+          {saving ? t("saving") : t("saveAsDraft")}
         </Button>
         <Button
           onClick={() => handleSave("draft")}

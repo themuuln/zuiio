@@ -8,10 +8,14 @@ export type NavItemStatus = "validated" | "implementing";
 const VALIDATED_HREFS = new Set([
   "/dashboard",
   "/dashboard/bay-view",
+  "/dashboard/mechanic",
+  "/dashboard/mechanic-performance",
   "/dashboard/customers",
   "/dashboard/vehicles",
   "/dashboard/inventory",
   "/dashboard/services",
+  "/dashboard/work-orders",
+  "/dashboard/service-reminders",
   "/dashboard/settings",
   "/guide",
 ]);

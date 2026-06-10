@@ -125,6 +125,7 @@ export function createColumns(
       header: "",
       enableSorting: false,
       cell: ({ row }) => {
+        const t = useTranslations("services");
         const s = row.original;
         const count = data.modelPriceCounts[s.id] ?? 0;
         return (
@@ -135,8 +136,8 @@ export function createColumns(
               e.stopPropagation();
               cb.onModelPrices(s);
             }}
-            aria-label="Model prices"
-            title="Model-Specific Prices"
+            aria-label={t("modelSpecificPrices")}
+            title={t("modelSpecificPrices")}
             className="relative"
           >
             <CarFront className="size-4" />

@@ -2,6 +2,7 @@
 
 import { ArrowUpDown, CheckCircle2, RefreshCw, XCircle } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +22,7 @@ import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 export function OfflineQueueIndicator() {
   const { mutations, pendingCount, isReplaying } = useMutationQueue();
   const [open, setOpen] = useState(false);
+  const t = useTranslations("common");
 
   const relevantMutations = mutations.filter(
     (m) =>
@@ -47,23 +49,23 @@ export function OfflineQueueIndicator() {
           )}
           <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
             {pendingCount > 0
-              ? `${pendingCount} pending`
+              ? t("pendingCount", { count: pendingCount })
               : isReplaying
-                ? "Syncing…"
-                : "Queue empty"}
+                ? t("syncing")
+                : t("queueEmpty")}
           </Badge>
         </Button>
       </SheetTrigger>
 
       <SheetContent side="right" className="w-80">
         <SheetHeader>
-          <SheetTitle>Offline Queue</SheetTitle>
+          <SheetTitle>{t("offlineQueue")}</SheetTitle>
         </SheetHeader>
 
         <div className="mt-4 flex flex-col gap-2">
           {relevantMutations.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center text-sm">
-              All changes synced
+              {t("allChangesSynced")}
             </p>
           ) : (
             relevantMutations.map((m) => (

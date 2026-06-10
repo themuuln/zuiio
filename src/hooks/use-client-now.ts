@@ -7,7 +7,9 @@ import { useEffect, useState } from "react";
  * This prevents hydration mismatches caused by `new Date()` in JSX.
  */
 export function useClientNow(): Date {
-  const [now, setNow] = useState<Date>(() => new Date());
+  // Use a fixed epoch date for SSR so server and client match initially.
+  // The useEffect updates to the real time on the client.
+  const [now, setNow] = useState<Date>(() => new Date(0));
 
   useEffect(() => {
     setNow(new Date());

@@ -50,7 +50,7 @@ import { createColumns } from "./_columns";
 import { EditServiceSheet } from "./_edit-service-sheet";
 
 export default function ServicesPage() {
-  const t = useTranslations();
+  const st = useTranslations("services");
   const now = useClientNow();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
@@ -102,11 +102,11 @@ export default function ServicesPage() {
 
   const exportColumns: ExportColumn<ServiceCatalog>[] = useMemo(
     () => [
-      { key: "name", label: "Name" },
-      { key: "category", label: "Category" },
-      { key: "default_price", label: "Price", format: "currency" },
+      { key: "name", label: st("serviceName") },
+      { key: "category", label: st("category") },
+      { key: "default_price", label: st("price"), format: "currency" as const },
     ],
-    [],
+    [st],
   );
 
   // ── Delete mutation ──
@@ -139,9 +139,9 @@ export default function ServicesPage() {
           context.previous,
         );
       }
-      toast.error("Failed to delete service");
+      toast.error(st("failedToDelete"));
     },
-    onSuccess: () => toast.success("Service deleted"),
+    onSuccess: () => toast.success(st("serviceDeleted")),
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: serviceKeys.list(orgId ?? ""),
@@ -199,7 +199,7 @@ export default function ServicesPage() {
 
     const catCount = new Map<string, number>();
     for (const s of services) {
-      const cat = s.category ?? "Uncategorized";
+      const cat = s.category ?? st("uncategorized");
       catCount.set(cat, (catCount.get(cat) ?? 0) + 1);
     }
 
@@ -211,7 +211,7 @@ export default function ServicesPage() {
 
     sidebar.registerTab(
       "categories",
-      "Categories",
+      st("category"),
       <StatusSummary
         items={Array.from(catCount.entries()).map(([label, count]) => ({
           label,
@@ -222,14 +222,14 @@ export default function ServicesPage() {
 
     sidebar.registerTab(
       "popular",
-      "Popular",
+      st("lastUsed"),
       <RecentList
         items={top5.map((s) => ({
           id: s.id,
           primary: s.name,
           secondary: s.category ?? null,
         }))}
-        emptyMessage="No services"
+        emptyMessage={st("noServices")}
       />,
     );
 
@@ -268,19 +268,19 @@ export default function ServicesPage() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            Service Catalog
+            {st("serviceCatalog")}
           </Typography.H1>
           <Typography.Muted className="text-muted-foreground">
-            Manage your service prices
+            {st("managePrices")}
           </Typography.Muted>
         </div>
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="flex items-center justify-between p-4">
             <Typography.Text className="text-sm text-destructive">
-              {error ?? "No organization found"}
+              {error ?? st("noOrgFound")}
             </Typography.Text>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
-              Retry
+              {st("retry")}
             </Button>
           </CardContent>
         </Card>
@@ -295,27 +295,27 @@ export default function ServicesPage() {
       {/* ── Header ── */}
       <div className="flex flex-col gap-1">
         <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          Service Catalog
+          {st("serviceCatalog")}
         </Typography.H1>
         <Typography.Muted className="text-muted-foreground">
-          Manage your service prices
+          {st("managePrices")}
         </Typography.Muted>
       </div>
 
       {/* ── Toolbar ── */}
       <ListToolbar
         search={{
-          placeholder: "Search services...",
+          placeholder: st("searchPlaceholder"),
           value: search,
           onChange: setSearch,
           resultLabel: services.length
-            ? `${services.length} service${services.length === 1 ? "" : "s"}`
+            ? st("serviceCount", { count: services.length })
             : undefined,
-          emptyLabel: search ? `No matches for "${search}"` : undefined,
+          emptyLabel: search ? st("noMatches", { search }) : undefined,
         }}
         stats={
           <span className="text-sm text-muted-foreground">
-            {services.length} service{services.length !== 1 ? "s" : ""}
+            {st("serviceCount", { count: services.length })}
           </span>
         }
         actions={
@@ -331,7 +331,8 @@ export default function ServicesPage() {
               className="h-12"
               onClick={() => setShowAdd(!showAdd)}
             >
-              <Plus className="size-5" /> {showAdd ? "Cancel" : "Add Service"}
+              <Plus className="size-5" />{" "}
+              {showAdd ? st("cancel") : st("addService")}
             </Button>
           </div>
         }
@@ -341,13 +342,13 @@ export default function ServicesPage() {
       {showAdd && (
         <Card className="border-border">
           <CardHeader>
-            <CardTitle>Add New Service</CardTitle>
+            <CardTitle>{st("addNewService")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ServiceForm
               onSuccess={() => {
                 setShowAdd(false);
-                toast.success("Service created");
+                toast.success(st("serviceCreated"));
               }}
               onCancel={() => setShowAdd(false)}
             />
@@ -387,13 +388,13 @@ export default function ServicesPage() {
                 <EmptyMedia variant="icon">
                   <Pencil />
                 </EmptyMedia>
-                <EmptyTitle>{t("services.noServices")}</EmptyTitle>
-                <EmptyDescription>{t("services.noServices")}</EmptyDescription>
+                <EmptyTitle>{st("noServices")}</EmptyTitle>
+                <EmptyDescription>{st("noServices")}</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
                 <Button variant="outline" onClick={() => setShowAdd(true)}>
                   <Plus className="size-4" />
-                  Add your first service
+                  {st("addFirstService")}
                 </Button>
               </EmptyContent>
             </Empty>
@@ -403,10 +404,8 @@ export default function ServicesPage() {
                 <EmptyMedia variant="icon">
                   <Pencil />
                 </EmptyMedia>
-                <EmptyTitle>{t("services.noServices")}</EmptyTitle>
-                <EmptyDescription>
-                  Try a different search term or category.
-                </EmptyDescription>
+                <EmptyTitle>{st("noServices")}</EmptyTitle>
+                <EmptyDescription>{st("tryDifferentSearch")}</EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
@@ -429,13 +428,11 @@ export default function ServicesPage() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
-                        {service.category ?? t("services.uncategorized")}
-                      </span>
+                      <span>{service.category ?? st("uncategorized")}</span>
                       <span className="flex items-center gap-1">
                         {lastUsedPrices.data?.[service.id] && (
                           <span className="text-amber-600">
-                            Last:{" "}
+                            {st("lastPrefix")}
                             {formatMNT(
                               lastUsedPrices.data[service.id].unit_price,
                             )}
@@ -510,25 +507,21 @@ export default function ServicesPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete service</AlertDialogTitle>
+            <AlertDialogTitle>{st("deleteService")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-semibold text-foreground">
-                {serviceToDelete?.name}
-              </span>
-              ? This action cannot be undone.
+              {st("deleteServiceDesc", { name: serviceToDelete?.name ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteMutation.isPending}>
-              Cancel
+              {st("cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               disabled={deleteMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              {deleteMutation.isPending ? st("deleting") : st("deleteConfirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

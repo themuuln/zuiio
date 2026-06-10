@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -8,6 +9,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Car, Clock, CornerDownRight, Search, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,6 +60,7 @@ function QueueItem({
   availableBays,
   onAssignToBay,
 }: QueueItemProps) {
+  const t = useTranslations("bayView");
   const {
     attributes,
     listeners,
@@ -158,7 +161,7 @@ function QueueItem({
               {workOrder.complaint || `WO ${workOrder.id.slice(0, 8)}`}
             </Typography.Text>
             <Typography.Muted className="text-xs text-muted-foreground">
-              No vehicle
+              {t("noVehicle")}
             </Typography.Muted>
           </div>
         )}
@@ -174,7 +177,7 @@ function QueueItem({
               e.stopPropagation();
               onQuickAssign(workOrder.id);
             }}
-            title="Assign to first empty bay"
+            title={t("assignToFirstBay")}
           >
             <CornerDownRight className="size-3" />
           </Button>
@@ -234,7 +237,7 @@ interface QueuePanelProps {
 
 const EMPTY_RECORD: Record<string, boolean> = {};
 
-export function QueuePanel({
+export const QueuePanel = React.memo(function QueuePanel({
   items,
   pendingWoIds = EMPTY_RECORD,
   onQuickAssign,
@@ -243,6 +246,7 @@ export function QueuePanel({
   availableBays,
   onAssignToBay,
 }: QueuePanelProps) {
+  const t = useTranslations("bayView");
   const { setNodeRef, isOver } = useDroppable({ id: "waiting-queue" });
   const [searchQuery, setSearchQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
@@ -291,7 +295,7 @@ export function QueuePanel({
       <CardHeader className="gap-3 border-b border-border/40">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-sm">Waiting Queue</CardTitle>
+            <CardTitle className="text-sm">{t("waitingQueue")}</CardTitle>
             {items.length > 0 && (
               <Badge variant="secondary" className="text-xs">
                 {items.length}
@@ -310,7 +314,7 @@ export function QueuePanel({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search plate, make, model... (⌘K)"
+              placeholder={`${t("queueSearchPlaceholder")} (⌘K)`}
               className="h-8 pl-7 pr-7 text-xs"
             />
             {searchQuery && (
@@ -339,10 +343,9 @@ export function QueuePanel({
                 <EmptyMedia variant="icon">
                   <Car className="size-4" />
                 </EmptyMedia>
-                <EmptyTitle>No vehicles waiting</EmptyTitle>
+                <EmptyTitle>{t("noVehiclesWaiting")}</EmptyTitle>
                 <EmptyDescription>
-                  New work orders will appear here before they are assigned to a
-                  bay.
+                  {t("queueEmptyDescription")}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -352,10 +355,8 @@ export function QueuePanel({
                 <EmptyMedia variant="icon">
                   <Search className="size-4" />
                 </EmptyMedia>
-                <EmptyTitle>No match</EmptyTitle>
-                <EmptyDescription>
-                  Try another plate, make, model, or clear the current search.
-                </EmptyDescription>
+                <EmptyTitle>{t("noMatch")}</EmptyTitle>
+                <EmptyDescription>{t("noMatchDescription")}</EmptyDescription>
               </EmptyHeader>
               <Button
                 size="sm"
@@ -363,7 +364,7 @@ export function QueuePanel({
                 onClick={() => setSearchQuery("")}
                 className="h-auto text-xs"
               >
-                Clear search
+                {t("clearSearch")}
               </Button>
             </Empty>
           ) : (
@@ -394,4 +395,4 @@ export function QueuePanel({
       </CardContent>
     </Card>
   );
-}
+});

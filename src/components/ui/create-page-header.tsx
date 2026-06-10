@@ -2,6 +2,7 @@
 
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
@@ -23,13 +24,14 @@ export function CreatePageHeader({
   className,
   actions,
 }: CreatePageHeaderProps) {
+  const t = useTranslations("common");
   return (
     <div className={cn("flex items-center gap-3", className)}>
       <Button
         render={<Link href={backHref} />}
         variant="ghost"
         size="icon-xs"
-        aria-label="Back"
+        aria-label={t("back")}
       >
         <ArrowLeft className="size-5" />
       </Button>

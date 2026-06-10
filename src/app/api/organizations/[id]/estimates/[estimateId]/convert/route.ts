@@ -11,9 +11,10 @@ import { requireActiveSubscription } from "@/lib/services/subscription-enforceme
  * The estimate is marked as "converted" with a link to the new work order.
  */
 export const POST = createRouteHandler(
-  async ({ params, orgId }) => {
+  async ({ params, orgId, supabase }) => {
     await requireActiveSubscription(orgId);
     const workOrder = await convertEstimateToWorkOrder(
+      supabase,
       params.estimateId,
       orgId,
     );

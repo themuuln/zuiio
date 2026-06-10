@@ -2,6 +2,8 @@
  * Composite types — extend core DB types with related entity data.
  * Used by detail queries and API responses.
  */
+// biome-ignore lint/style/noRestrictedImports: composite types need raw DB types
+import type { Database } from "@/lib/database.types";
 import type {
   Appointment,
   Customer,
@@ -12,6 +14,7 @@ import type {
   Invoice,
   InvoiceItem,
   InvoicePayment,
+  InvoiceRefund,
   Vehicle,
   WorkOrder,
   WorkOrderHelper,
@@ -131,6 +134,7 @@ export interface CustomerWithVehicleCount extends Customer {
 export interface InvoiceWithItems extends Invoice {
   items: InvoiceItem[];
   payments: InvoicePayment[];
+  refunds: InvoiceRefund[];
 }
 
 // ── Appointment Composites ───────────────────────────────────
@@ -191,3 +195,27 @@ export type PartsCarLocationGroup =
   | "steering"
   | "ac"
   | "other";
+
+// ── Follow-ups ─────────────────────────────────────────────────
+
+type CustomerFollowupRow =
+  Database["public"]["Tables"]["customer_followups"]["Row"];
+
+export type CustomerFollowup = CustomerFollowupRow & {
+  customer?: {
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+    email: string | null;
+  } | null;
+  vehicle?: {
+    plate_number: string | null;
+    make: string | null;
+    model: string | null;
+  } | null;
+  assigned_user?: {
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  } | null;
+};

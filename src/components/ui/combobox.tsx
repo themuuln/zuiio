@@ -150,7 +150,7 @@ function ComboboxItem({
     <ComboboxPrimitive.Item
       data-slot="combobox-item"
       className={cn(
-        "relative flex w-full cursor-default items-center gap-2 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground not-data-[variant=destructive]:data-highlighted:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "relative flex w-full cursor-pointer items-center gap-2 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground not-data-[variant=destructive]:data-highlighted:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}
@@ -272,12 +272,34 @@ function ComboboxChip({
 
 function ComboboxChipsInput({
   className,
+  onPointerDown,
   ...props
 }: ComboboxPrimitive.Input.Props) {
+  const ref = React.useCallback((node: HTMLInputElement | null) => {
+    if (!node) return;
+    // Stop pointerdown in the native capture phase — BEFORE Base UI's
+    // document-level capture handler runs. This prevents useDismiss from
+    // registering its bubble-phase handler on this element, which would
+    // call closeOnPressOutside and close the parent Dialog/Drawer.
+    //
+    // We must use a native listener because React synthetic handlers fire
+    // AFTER all native capture handlers have already executed.
+    const handler = (e: PointerEvent) => e.stopPropagation();
+    node.addEventListener("pointerdown", handler, { capture: true });
+    return () =>
+      node.removeEventListener("pointerdown", handler, { capture: true });
+  }, []);
+
   return (
     <ComboboxPrimitive.Input
+      ref={ref}
       data-slot="combobox-chip-input"
       className={cn("min-w-16 flex-1 outline-none", className)}
+      onPointerDown={(e) => {
+        // Bubble-phase safety net (native capture above handles the real fix)
+        e.stopPropagation();
+        onPointerDown?.(e);
+      }}
       {...props}
     />
   );

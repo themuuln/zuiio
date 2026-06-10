@@ -10,6 +10,7 @@ import {
   Clock,
   Coins,
   DollarSign,
+  MoreHorizontal,
   Play,
   Search,
   Shield,
@@ -33,6 +34,7 @@ import { MechanicSelect } from "@/components/mechanic-select";
 import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,6 +68,7 @@ import {
 } from "@/lib/queries/use-mechanic-dashboard";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
 import { mechanicKeys } from "@/lib/queries/keys";
+import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
 import { cn, formatMNT } from "@/lib/utils";
 
 const MechanicTrendChart = dynamic(
@@ -447,11 +450,13 @@ function MechanicDashboard({
   userId,
   orgId,
   mechanicName,
+  avatarUrl,
   isAdminView,
 }: {
   userId: string;
   orgId: string;
   mechanicName?: string | null;
+  avatarUrl?: string | null;
   isAdminView: boolean;
 }) {
   const t = useTranslations();
@@ -724,22 +729,32 @@ function MechanicDashboard({
       {!isAdminView && (
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2.5">
-              <Typography.H1 className="text-xl font-semibold tracking-tight">
-                {mechanicName ?? t("nav.mechanic")}
-              </Typography.H1>
-              <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-50/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
-                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px] shadow-emerald-500/60" />
-                {t("common.live")}
-              </span>
+            <div className="flex items-center gap-3">
+              <Avatar className="size-10">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
+                <AvatarFallback
+                  className={cn(
+                    "text-sm font-medium",
+                    getMechanicColor(userId).bg,
+                    getMechanicColor(userId).text,
+                  )}
+                >
+                  {getMechanicInitials(mechanicName)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <Typography.H1 className="text-xl font-semibold tracking-tight">
+                  {mechanicName ?? t("nav.mechanic")}
+                </Typography.H1>
+                <Typography.Muted className="mt-0.5 text-xs text-muted-foreground/60">
+                  {now.toLocaleDateString("mn-MN", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </Typography.Muted>
+              </div>
             </div>
-            <Typography.Muted className="mt-0.5 text-xs text-muted-foreground/60">
-              {now.toLocaleDateString("mn-MN", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </Typography.Muted>
           </div>
           <ClockInOutButton
             clockedIn={clockStatus.clockedIn}
@@ -804,29 +819,25 @@ function MechanicDashboard({
         />
       </div>
 
-      {/* ── Efficiency KPIs ── */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        <KpiCard
-          icon={Coins}
-          label={t("mechanic.avgJobValue")}
-          value={trend ? formatMNT(trend.avgJobValue) : "—"}
-          subtext={t("mechanic.revenuePerOrder")}
-          accent="blue"
-          loading={dataLoading}
-        />
-        <KpiCard
-          icon={CheckCircle2}
-          label={t("mechanic.jobsPerDay")}
-          value={trend ? String(trend.jobsPerDay) : "—"}
-          subtext={t("mechanic.avgOverPeriod")}
-          accent="green"
-          loading={dataLoading}
-        />
-      </div>
-
-      {/* ── Trend Chart ── */}
+      {/* ── Summary stats + Trend Chart ── */}
       {trend?.weeklyTrend && trend.weeklyTrend.length > 0 && (
-        <MechanicTrendChart data={trend.weeklyTrend} />
+        <>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground/60">
+            <span>
+              <span className="font-semibold text-foreground/80">
+                {trend ? formatMNT(trend.avgJobValue) : "—"}
+              </span>{" "}
+              {t("mechanic.avgJobValue")}
+            </span>
+            <span>
+              <span className="font-semibold text-foreground/80">
+                {trend ? String(trend.jobsPerDay) : "—"}
+              </span>{" "}
+              {t("mechanic.jobsPerDay")}
+            </span>
+          </div>
+          <MechanicTrendChart data={trend!.weeklyTrend} />
+        </>
       )}
 
       {/* ── Work Orders ── */}
@@ -856,26 +867,37 @@ function MechanicDashboard({
                 className="h-8 w-full rounded-lg border border-border/60 bg-muted/30 pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
               />
             </div>
-            <div className="flex items-center gap-1">
-              {[
-                null,
-                "New",
-                "Diagnosing",
-                "In Progress",
-                "Ready for Pickup",
-              ].map((status) => (
+            <div className="flex items-center gap-0.5 rounded-lg border border-border/50 bg-muted/40 p-0.5 h-7">
+              {(
+                [
+                  { key: null, label: t("mechanic.all"), dot: null },
+                  { key: "New", label: "New", dot: "bg-amber-500" },
+                  { key: "Diagnosing", label: "Diag", dot: "bg-blue-500" },
+                  { key: "In Progress", label: "Active", dot: "bg-indigo-500" },
+                  {
+                    key: "Ready for Pickup",
+                    label: "Ready",
+                    dot: "bg-emerald-500",
+                  },
+                ] as const
+              ).map((opt) => (
                 <button
-                  key={status ?? "all"}
+                  key={opt.key ?? "all"}
                   type="button"
-                  onClick={() => setWoStatusFilter(status)}
+                  onClick={() => setWoStatusFilter(opt.key)}
                   className={cn(
-                    "rounded-md px-2 py-1 text-[10px] font-medium transition-colors",
-                    woStatusFilter === status
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground/60 hover:bg-muted/50 hover:text-foreground",
+                    "flex items-center gap-1 rounded-md px-2 text-xs font-medium transition-all cursor-pointer h-5",
+                    woStatusFilter === opt.key
+                      ? "bg-background text-foreground shadow-sm border border-border/30"
+                      : "text-muted-foreground/60 hover:bg-muted/60 hover:text-foreground/80",
                   )}
                 >
-                  {status ?? t("mechanic.all")}
+                  {opt.dot && (
+                    <span
+                      className={cn("size-1.5 rounded-full shrink-0", opt.dot)}
+                    />
+                  )}
+                  {opt.label}
                 </button>
               ))}
             </div>
@@ -1061,23 +1083,45 @@ export default function MechanicPage() {
             {/* Admin header with selector */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2.5">
-                  <Typography.H1 className="text-xl font-semibold tracking-tight">
+                <div className="flex items-center gap-3">
+                  <Avatar className="size-10">
                     {mechanics.find((m) => m.id === selectedMechanicId)
-                      ?.full_name ?? t("nav.mechanic")}
-                  </Typography.H1>
-                  <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-50/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
-                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px] shadow-emerald-500/60" />
-                    {t("common.live")}
-                  </span>
+                      ?.avatar_url && (
+                      <AvatarImage
+                        src={
+                          mechanics.find((m) => m.id === selectedMechanicId)
+                            ?.avatar_url ?? undefined
+                        }
+                        alt=""
+                      />
+                    )}
+                    <AvatarFallback
+                      className={cn(
+                        "text-sm font-medium",
+                        getMechanicColor(selectedMechanicId ?? "").bg,
+                        getMechanicColor(selectedMechanicId ?? "").text,
+                      )}
+                    >
+                      {getMechanicInitials(
+                        mechanics.find((m) => m.id === selectedMechanicId)
+                          ?.full_name,
+                      )}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <Typography.H1 className="text-xl font-semibold tracking-tight">
+                      {mechanics.find((m) => m.id === selectedMechanicId)
+                        ?.full_name ?? t("nav.mechanic")}
+                    </Typography.H1>
+                    <Typography.Muted className="mt-0.5 text-xs text-muted-foreground/60">
+                      {now.toLocaleDateString("mn-MN", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </Typography.Muted>
+                  </div>
                 </div>
-                <Typography.Muted className="mt-0.5 text-xs text-muted-foreground/60">
-                  {now.toLocaleDateString("mn-MN", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </Typography.Muted>
               </div>
 
               <div className="flex items-center gap-2">
@@ -1090,59 +1134,42 @@ export default function MechanicPage() {
                   size="sm"
                   className="w-[200px]"
                 />
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center justify-center size-8 rounded-md border border-border/60 hover:bg-muted/60 cursor-pointer">
+                    <MoreHorizontal className="size-4 text-muted-foreground/60" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setShowAddMechanic(true)}>
+                      <UserPlus className="size-4" />
+                      {t("mechanic.inviteMechanic")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      render={<Link href="/dashboard/organization/members" />}
+                    >
+                      <Users className="size-4" />
+                      {t("mechanic.members")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      render={<Link href="/dashboard/payroll" />}
+                    >
+                      <DollarSign className="size-4" />
+                      {t("mechanic.payroll")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      render={<Link href="/dashboard/organization/roles" />}
+                    >
+                      <Shield className="size-4" />
+                      {t("mechanic.roles")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      render={<Link href="/dashboard/organization" />}
+                    >
+                      <Building2 className="size-4" />
+                      {t("mechanic.organization")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-            </div>
-
-            {/* Quick-action bar */}
-            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-card p-3 shadow-sm shadow-black/5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mr-2 shrink-0">
-                {t("mechanic.management")}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddMechanic(true)}
-                className="h-8 text-xs gap-1.5"
-              >
-                <UserPlus className="size-3.5" />
-                {t("mechanic.inviteMechanic")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs gap-1.5"
-                render={<Link href="/dashboard/organization/members" />}
-              >
-                <Users className="size-3.5" />
-                {t("mechanic.members")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs gap-1.5"
-                render={<Link href="/dashboard/payroll" />}
-              >
-                <DollarSign className="size-3.5" />
-                {t("mechanic.payroll")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs gap-1.5"
-                render={<Link href="/dashboard/organization/roles" />}
-              >
-                <Shield className="size-3.5" />
-                {t("mechanic.roles")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs gap-1.5"
-                render={<Link href="/dashboard/organization" />}
-              >
-                <Building2 className="size-3.5" />
-                {t("mechanic.organization")}
-              </Button>
             </div>
 
             <MechanicDashboard
@@ -1150,6 +1177,9 @@ export default function MechanicPage() {
               orgId={profile?.organizationId!}
               mechanicName={
                 mechanics.find((m) => m.id === selectedMechanicId)?.full_name
+              }
+              avatarUrl={
+                mechanics.find((m) => m.id === selectedMechanicId)?.avatar_url
               }
               isAdminView
             />
@@ -1181,6 +1211,7 @@ export default function MechanicPage() {
         userId={profile?.id!}
         orgId={profile?.organizationId!}
         mechanicName={profile?.fullName}
+        avatarUrl={profile?.avatarUrl}
         isAdminView={false}
       />
       <NewMechanicSheet

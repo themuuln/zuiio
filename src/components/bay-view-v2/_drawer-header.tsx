@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { MechanicMultiSelect } from "@/components/bay-view-v2/_mechanic-multi-select";
 import { Button } from "@/components/ui/button";
-import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MongolianLicensePlate } from "@/components/vehicles/license-plate";
 import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
 import type { WorkOrderDetail } from "@/lib/types";
@@ -33,7 +33,7 @@ interface DrawerHeaderProps {
   showBack?: boolean;
   onBack?: () => void;
   setShowCustomerPicker?: (v: boolean) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number | Date>) => string;
 }
 
 export function DrawerHeaderSection({
@@ -62,18 +62,21 @@ export function DrawerHeaderSection({
     const alreadyIncluded = mechanics.some((m) => m.id === wo.mechanic_id);
     if (alreadyIncluded) return mechanics;
     return [
-      { id: wo.mechanic.id, full_name: wo.mechanic.full_name ?? "Unknown" },
+      {
+        id: wo.mechanic.id,
+        full_name: wo.mechanic.full_name ?? t("unknownCustomer"),
+      },
       ...mechanics,
     ];
   })();
 
   return (
-    <DrawerHeader className="border-b border-border px-4 py-3 text-left shrink-0 bg-muted/5">
-      <DrawerTitle className="sr-only">
+    <DialogHeader className="border-b border-border px-4 py-3 text-left shrink-0 bg-muted/5">
+      <DialogTitle className="sr-only">
         {wo
-          ? `Work Order — ${wo.vehicle?.plate_number ?? wo.id.slice(0, 8)}`
-          : "Work Order"}
-      </DrawerTitle>
+          ? `${t("workOrder")} — ${wo.vehicle?.plate_number ?? wo.id.slice(0, 8)}`
+          : t("workOrder")}
+      </DialogTitle>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center justify-between">
         {/* Column 1: Vehicle & WO Info */}
         <div className="flex min-w-0 items-center gap-3">
@@ -118,7 +121,9 @@ export function DrawerHeaderSection({
             )}
             {wo?.created_at && (
               <span className="text-xs text-muted-foreground/60 mt-1">
-                Opened {new Date(wo.created_at).toLocaleDateString()}
+                {t("openedDate", {
+                  date: new Date(wo.created_at).toLocaleDateString(),
+                })}
               </span>
             )}
           </div>
@@ -135,7 +140,7 @@ export function DrawerHeaderSection({
                     .filter(Boolean)
                     .join(" ") ||
                     wo.customer.phone ||
-                    "Unknown"}
+                    t("unknownCustomer")}
                 </span>
               </div>
               {wo.customer.phone &&
@@ -155,14 +160,14 @@ export function DrawerHeaderSection({
                 className="flex items-center gap-2 text-xs text-muted-foreground italic hover:text-foreground transition-colors pl-1"
               >
                 <User className="size-4 text-muted-foreground/75" />
-                Select customer...
+                {t("selectCustomer")}
               </button>
             </div>
           ) : null}
         </div>
 
         {/* Column 3: Status & Mechanic Assignment */}
-        <div className="flex items-center md:justify-end gap-3 flex-wrap">
+        <div className="flex items-center md:justify-end gap-3 overflow-hidden">
           {wo && orgId && workOrderId && (
             <MechanicMultiSelect
               leadMechanicId={wo.mechanic_id}
@@ -181,18 +186,20 @@ export function DrawerHeaderSection({
               variant="ghost"
               size="icon-xs"
               onClick={onBack}
-              aria-label="Back"
+              aria-label={t("backLabel")}
             >
               <ArrowLeft className="size-4" />
             </Button>
           ) : (
-            <>
+            <div className="flex items-center gap-3 shrink-0">
               {wo?.status && <StatusPill status={wo.status} />}
               <Button
                 variant="ghost"
                 size="icon-xs"
                 onClick={onToggleFullScreen}
-                aria-label={isFullScreen ? "Exit fullscreen" : "Fullscreen"}
+                aria-label={
+                  isFullScreen ? t("exitFullscreen") : t("fullscreen")
+                }
               >
                 {isFullScreen ? (
                   <Minimize2 className="size-4" />
@@ -208,10 +215,10 @@ export function DrawerHeaderSection({
               >
                 <X className="size-4" />
               </Button>
-            </>
+            </div>
           )}
         </div>
       </div>
-    </DrawerHeader>
+    </DialogHeader>
   );
 }

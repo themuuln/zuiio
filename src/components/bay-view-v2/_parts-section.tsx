@@ -70,7 +70,7 @@ export function PartsSection({
                   isLowStock ? (
                     <TriangleAlert
                       className="size-3 text-yellow-500 shrink-0"
-                      aria-label="Low stock"
+                      aria-label={t("lowStockLabel")}
                     />
                   ) : undefined
                 }
@@ -86,7 +86,7 @@ export function PartsSection({
                 onQtySave={(qty) => onEditQtySave(part.id, qty)}
                 onPriceSave={(price) => onEditPriceSave(part.id, price)}
                 onDelete={() => onRemovePart(part.id)}
-                deleteLabel="Remove part"
+                deleteLabel={t("removePartLabel")}
               />
             );
           })}

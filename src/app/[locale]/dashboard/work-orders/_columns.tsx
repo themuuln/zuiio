@@ -3,6 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
@@ -14,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -21,6 +23,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Typography } from "@/components/ui/typography";
 import type { WorkOrderListItem } from "@/lib/queries/use-work-orders";
+import { getMechanicInitials } from "@/lib/mechanic-colors";
 import { formatMNT } from "@/lib/utils";
 
 // ── Status helpers ────────────────────────────────────────────
@@ -55,15 +58,14 @@ function getVehicleDisplay(wo: WorkOrderListItem): string {
     .join(" ");
 }
 
-function getDaysSince(dateStr: string): number {
+function getDaysSince(dateStr: string, now: Date): number {
   const created = new Date(dateStr);
-  const now = new Date();
   return Math.floor(
     (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24),
   );
 }
 
-function getAgeDisplay(
+export function getAgeDisplay(
   days: number,
   t?: (key: string, values?: Record<string, number>) => string,
 ): string {
@@ -78,6 +80,7 @@ interface ColumnCallbacks {
   onStatusChange: (woId: string, newStatus: string) => void;
   onCancel: (woId: string) => void;
   updatePending: boolean;
+  now: Date;
 }
 
 export function createColumns(
@@ -137,11 +140,25 @@ export function createColumns(
         const t = useTranslations("workOrders");
         return <DataTableColumnHeader column={column} title={t("mechanic")} />;
       },
-      cell: ({ row }) => (
-        <span className="text-sm text-muted-foreground">
-          {row.original.mechanic?.full_name ?? "—"}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const mechanic = row.original.mechanic;
+        if (!mechanic)
+          return <span className="text-sm text-muted-foreground">—</span>;
+        const initials = getMechanicInitials(mechanic.full_name);
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar size="sm">
+              {mechanic.avatar_url && (
+                <AvatarImage src={mechanic.avatar_url} alt="" />
+              )}
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            <span className="text-sm text-muted-foreground">
+              {mechanic.full_name}
+            </span>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "status",
@@ -152,13 +169,28 @@ export function createColumns(
       cell: ({ row }) => {
         const t = useTranslations("workOrders");
         const wo = row.original;
+        const statusColors: Record<string, string> = {
+          New: "bg-blue-500/15 text-blue-500 border-blue-500/30",
+          Diagnosing: "bg-yellow-500/15 text-yellow-500 border-yellow-500/30",
+          "In Progress":
+            "bg-orange-500/15 text-orange-500 border-orange-500/30",
+          "Ready for Pickup":
+            "bg-green-500/15 text-green-500 border-green-500/30",
+          Completed: "bg-gray-500/15 text-gray-500 border-gray-500/30",
+          Cancelled: "bg-red-500/15 text-red-500 border-red-500/30",
+        };
         return (
           <DropdownMenu>
             <DropdownMenuTrigger
+              nativeButton={false}
               render={
                 <Badge
                   variant="outline"
-                  className="gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
+                  className={cn(
+                    "gap-1.5 cursor-pointer hover:opacity-80 transition-opacity",
+                    statusColors[wo.status] ??
+                      "bg-gray-500/15 text-gray-500 border-gray-500/30",
+                  )}
                 >
                   {wo.status}
                   <ArrowUpDown className="size-3 opacity-60" />
@@ -205,7 +237,7 @@ export function createColumns(
       },
       cell: ({ row }) => {
         const t = useTranslations("workOrders");
-        const days = getDaysSince(row.original.created_at);
+        const days = getDaysSince(row.original.created_at, cb.now);
         return (
           <span className="text-sm text-muted-foreground tabular-nums">
             {getAgeDisplay(days, t)}
@@ -224,7 +256,9 @@ export function createColumns(
         const total = row.original.grand_total;
         return (
           <span className="text-sm font-medium tabular-nums">
-            {total !== undefined ? `₮${total.toLocaleString()}` : "—"}
+            {total !== undefined
+              ? `₮${total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`
+              : "—"}
           </span>
         );
       },
@@ -273,6 +307,7 @@ export function createColumns(
         );
       },
       cell: ({ row }) => {
+        const t = useTranslations("workOrders");
         const val = row.original.gross_profit;
         const lossReason = row.original.loss_reason;
         if (val === undefined)
@@ -297,7 +332,7 @@ export function createColumns(
               <TooltipTrigger>{displayVal}</TooltipTrigger>
               <TooltipContent className="max-w-[240px] text-xs">
                 <span className="font-semibold text-destructive block mb-0.5">
-                  Loss Reason:
+                  {t("lossReason")}:
                 </span>
                 {lossReason}
               </TooltipContent>
@@ -316,6 +351,7 @@ export function createColumns(
         return <DataTableColumnHeader column={column} title={t("margin")} />;
       },
       cell: ({ row }) => {
+        const t = useTranslations("workOrders");
         const val = row.original.margin_percent;
         const lossReason = row.original.loss_reason;
         if (val === undefined)
@@ -340,7 +376,7 @@ export function createColumns(
               <TooltipTrigger>{displayVal}</TooltipTrigger>
               <TooltipContent className="max-w-[240px] text-xs">
                 <span className="font-semibold text-destructive block mb-0.5">
-                  Loss Reason:
+                  {t("lossReason")}:
                 </span>
                 {lossReason}
               </TooltipContent>
@@ -356,7 +392,9 @@ export function createColumns(
       accessorKey: "loss_reason",
       header: ({ column }) => {
         const t = useTranslations("workOrders");
-        return <DataTableColumnHeader column={column} title="Loss Reason" />;
+        return (
+          <DataTableColumnHeader column={column} title={t("lossReason")} />
+        );
       },
       cell: ({ row }) => {
         const val = row.original.loss_reason;

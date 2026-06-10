@@ -419,7 +419,7 @@ export function VehicleDetailSheet({
           title={
             <SheetTitle className="text-base truncate">
               {isLoadingData
-                ? "Loading…"
+                ? t("loading")
                 : vehicle
                   ? vehicle.plate_number
                   : t("vehicleNotFound")}
@@ -494,7 +494,7 @@ export function VehicleDetailSheet({
       {(error || notFound) && (
         <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
           <Typography.Muted className="text-sm">
-            {error || "Vehicle not found"}
+            {error || t("vehicleNotFound")}
           </Typography.Muted>
           <Button
             variant="outline"
@@ -825,7 +825,7 @@ function VehicleEditForm({
             id="vds-plateNumber"
             value={form.plateNumber}
             onChange={(v) => onChange((p) => ({ ...p, plateNumber: v }))}
-            placeholder="ABC123"
+            placeholder={t("platePlaceholderEdit")}
             {...inputProps("plate")}
           />
         </Field>
@@ -834,14 +834,14 @@ function VehicleEditForm({
           field="make"
           form={form}
           onFieldChange={setField}
-          placeholder="Toyota"
+          placeholder={t("brandPlaceholder")}
         />
         <FormField
           label={t("model")}
           field="model"
           form={form}
           onFieldChange={setField}
-          placeholder="Prius"
+          placeholder={t("modelPlaceholder")}
         />
         <FormField
           label={t("year")}
@@ -856,7 +856,7 @@ function VehicleEditForm({
           field="vin"
           form={form}
           onFieldChange={setField}
-          placeholder="17-char VIN"
+          placeholder={t("vinPlaceholderEdit")}
         />
       </div>
 
@@ -908,7 +908,7 @@ function VehicleEditForm({
               onValueChange={(val) => setField("fuelType", val ?? "")}
             >
               <SelectTrigger className="w-full mt-1">
-                <SelectValue placeholder="Select" />
+                <SelectValue placeholder={t("selectFuelType")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Gasoline">Gasoline</SelectItem>
@@ -926,7 +926,7 @@ function VehicleEditForm({
               onValueChange={(val) => setField("transmission", val ?? "")}
             >
               <SelectTrigger className="w-full mt-1">
-                <SelectValue placeholder="Select" />
+                <SelectValue placeholder={t("selectTransmission")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Automatic">Automatic</SelectItem>
@@ -943,7 +943,7 @@ function VehicleEditForm({
               onValueChange={(val) => setField("drivetrain", val ?? "")}
             >
               <SelectTrigger className="w-full mt-1">
-                <SelectValue placeholder="Select" />
+                <SelectValue placeholder={t("selectDrivetrain")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="AWD">AWD</SelectItem>
@@ -960,7 +960,7 @@ function VehicleEditForm({
               onValueChange={(val) => setField("bodyType", val ?? "")}
             >
               <SelectTrigger className="w-full mt-1">
-                <SelectValue placeholder="Select" />
+                <SelectValue placeholder={t("selectBodyType")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="SUV">SUV</SelectItem>
@@ -992,7 +992,7 @@ function VehicleEditForm({
             field="steering"
             form={form}
             onFieldChange={setField}
-            placeholder="e.g. Right, Left"
+            placeholder={t("steeringPlaceholder")}
           />
           <FormField
             label={t("seats")}
@@ -1000,7 +1000,7 @@ function VehicleEditForm({
             form={form}
             onFieldChange={setField}
             type="number"
-            placeholder="e.g. 5"
+            placeholder={t("seatsPlaceholderEdit")}
           />
           <FormField
             label={t("height")}
@@ -1008,7 +1008,7 @@ function VehicleEditForm({
             form={form}
             onFieldChange={setField}
             type="number"
-            placeholder="e.g. 1420"
+            placeholder={t("heightPlaceholder")}
           />
           <FormField
             label={t("width")}
@@ -1016,7 +1016,7 @@ function VehicleEditForm({
             form={form}
             onFieldChange={setField}
             type="number"
-            placeholder="e.g. 1690"
+            placeholder={t("widthPlaceholder")}
           />
           <FormField
             label={t("length")}
@@ -1024,7 +1024,7 @@ function VehicleEditForm({
             form={form}
             onFieldChange={setField}
             type="number"
-            placeholder="e.g. 4390"
+            placeholder={t("lengthPlaceholder")}
           />
           <FormField
             label={t("weight")}
@@ -1032,7 +1032,7 @@ function VehicleEditForm({
             form={form}
             onFieldChange={setField}
             type="number"
-            placeholder="e.g. 1190"
+            placeholder={t("weightPlaceholder")}
           />
           <FormField
             label={t("importDate")}
@@ -1046,14 +1046,14 @@ function VehicleEditForm({
             field="countryOfOrigin"
             form={form}
             onFieldChange={setField}
-            placeholder="e.g. Japan, Germany"
+            placeholder={t("countryPlaceholder")}
           />
           <FormField
             label={t("category")}
             field="category"
             form={form}
             onFieldChange={setField}
-            placeholder="e.g. M1, N1"
+            placeholder={t("categoryPlaceholder")}
           />
           <Field className="col-span-2">
             <FieldLabel htmlFor="vds-notes">{t("notes")}</FieldLabel>

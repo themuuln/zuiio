@@ -8,8 +8,8 @@ import {
 } from "@/lib/services/estimate-service";
 
 export const GET = createRouteHandler(
-  async ({ params }) => {
-    const estimate = await getEstimate(params.estimateId);
+  async ({ params, supabase, orgId }) => {
+    const estimate = await getEstimate(supabase, params.estimateId, orgId);
     if (!estimate) {
       return NextResponse.json(
         { error: { code: "NOT_FOUND", message: "Estimate not found" } },
@@ -22,7 +22,7 @@ export const GET = createRouteHandler(
 );
 
 export const PATCH = createRouteHandler(
-  async ({ request, params, orgId }) => {
+  async ({ request, params, orgId, supabase }) => {
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
@@ -39,7 +39,12 @@ export const PATCH = createRouteHandler(
       );
     }
     const body = await request.json();
-    const estimate = await updateEstimate(params.estimateId, orgId, body);
+    const estimate = await updateEstimate(
+      supabase,
+      params.estimateId,
+      orgId,
+      body,
+    );
     return NextResponse.json({ data: estimate });
   },
   {
@@ -48,7 +53,7 @@ export const PATCH = createRouteHandler(
 );
 
 export const DELETE = createRouteHandler(
-  async ({ request, params, orgId }) => {
+  async ({ request, params, orgId, supabase }) => {
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
@@ -64,7 +69,7 @@ export const DELETE = createRouteHandler(
         },
       );
     }
-    await deleteEstimate(params.estimateId, orgId);
+    await deleteEstimate(supabase, params.estimateId, orgId);
     return NextResponse.json({ data: null });
   },
   {

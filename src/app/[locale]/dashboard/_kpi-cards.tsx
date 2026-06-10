@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ArrowDown, ArrowUp, type LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,7 +50,7 @@ export const KPI_ACCENTS: Record<
   },
 };
 
-export function KpiCard({
+export const KpiCard = memo(function KpiCard({
   label,
   value,
   icon: Icon,
@@ -124,4 +125,4 @@ export function KpiCard({
       </CardContent>
     </Card>
   );
-}
+});

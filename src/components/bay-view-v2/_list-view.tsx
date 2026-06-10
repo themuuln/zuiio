@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +27,7 @@ interface ListViewProps {
   t: (key: string) => string;
 }
 
-export function ListView({
+export const ListView = React.memo(function ListView({
   bays,
   onOpenDetail,
   onAssignClick,
@@ -177,4 +178,4 @@ export function ListView({
       </Card>
     </div>
   );
-}
+});

@@ -20,13 +20,26 @@ import { Link } from "@/lib/i18n/navigation";
 import { setCookie } from "@/lib/utils";
 import { login } from "./actions";
 
+const DEV_EMAIL = process.env.NEXT_PUBLIC_DEV_EMAIL ?? "";
+const DEV_PASSWORD = process.env.NEXT_PUBLIC_DEV_PASSWORD ?? "";
+
 export default function LoginPage() {
   const t = useTranslations("auth.login");
   const authT = useTranslations("auth");
   const locale = useLocale();
   const [state, formAction, isPending] = useActionState(login, {});
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
+  const [identifier, setIdentifier] = useState(DEV_EMAIL);
+  const [password, setPassword] = useState(DEV_PASSWORD);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Dev auto-submit: log in automatically when dev credentials are set
+  useEffect(() => {
+    if (DEV_EMAIL && DEV_PASSWORD && !state?.formError && !isPending) {
+      const timeout = setTimeout(() => formRef.current?.requestSubmit(), 300);
+      return () => clearTimeout(timeout);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const searchParams = useSearchParams();
@@ -86,7 +99,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <form action={formAction}>
+      <form ref={formRef} action={formAction}>
         {redirectTo && (
           <input type="hidden" name="redirectTo" value={redirectTo} />
         )}

@@ -1,3 +1,8 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "supabase": {
+      "transport": "streamable-http",
+      "url": "https://mcp.supabase.com/mcp"
+    }
+  }
 }

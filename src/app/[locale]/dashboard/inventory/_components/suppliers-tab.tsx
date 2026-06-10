@@ -67,9 +67,9 @@ export function SuppliersTab({
 
   const handleDeleteSupplier = useCallback(
     (id: string) => {
-      if (!confirm("Delete this supplier?")) return;
+      if (!confirm(t("inventory.confirmDeleteSupplier"))) return;
       deleteSupplier.mutate(id, {
-        onSuccess: () => toast.success("Supplier deleted"),
+        onSuccess: () => toast.success(t("inventory.supplierDeleted")),
         onError: (err: Error) => toast.error(err.message),
       });
     },
@@ -169,7 +169,7 @@ export function SuppliersTab({
         { id: editingSupplier.id, body },
         {
           onSuccess: () => {
-            toast.success("Supplier updated");
+            toast.success(t("inventory.supplierUpdated"));
             setShowAddSupplier(false);
             setEditingSupplier(null);
           },
@@ -179,7 +179,7 @@ export function SuppliersTab({
     } else {
       createSupplier.mutate(body, {
         onSuccess: () => {
-          toast.success("Supplier created");
+          toast.success(t("inventory.supplierCreated"));
           setShowAddSupplier(false);
         },
         onError: (err: Error) => toast.error(err.message),
@@ -264,7 +264,7 @@ export function SuppliersTab({
       {/* Add/Edit Supplier Modal */}
       {showAddSupplier && (
         <Modal
-          title={editingSupplier ? "Edit Supplier" : t("addSupplier")}
+          title={editingSupplier ? t("editSupplier") : t("addSupplier")}
           onClose={() => {
             setShowAddSupplier(false);
             setEditingSupplier(null);
@@ -283,7 +283,7 @@ export function SuppliersTab({
                 name="name"
                 required
                 defaultValue={editingSupplier?.name ?? ""}
-                placeholder="ABC Auto Parts"
+                placeholder={t("inventory.namePlaceholder")}
                 className="h-11"
               />
             </div>
@@ -299,6 +299,7 @@ export function SuppliersTab({
                   id="inv-supplier-contact"
                   name="contact_person"
                   defaultValue={editingSupplier?.contact_person ?? ""}
+                  placeholder={t("inventory.contactPersonPlaceholder")}
                   className="h-11"
                 />
               </div>
@@ -316,7 +317,7 @@ export function SuppliersTab({
                   inputMode="tel"
                   autoComplete="tel"
                   defaultValue={editingSupplier?.phone ?? ""}
-                  placeholder="99112233"
+                  placeholder={t("inventory.phonePlaceholder")}
                   className="h-11"
                 />
               </div>
@@ -333,6 +334,7 @@ export function SuppliersTab({
                 name="email"
                 type="email"
                 defaultValue={editingSupplier?.email ?? ""}
+                placeholder={t("inventory.emailPlaceholder")}
                 className="h-11"
               />
             </div>
@@ -347,6 +349,7 @@ export function SuppliersTab({
                 id="inv-supplier-address"
                 name="address"
                 defaultValue={editingSupplier?.address ?? ""}
+                placeholder={t("inventory.addressPlaceholder")}
                 className="h-11"
               />
             </div>
@@ -389,13 +392,15 @@ export function SuppliersTab({
                   setEditingSupplier(null);
                 }}
               >
-                Cancel
+                {t("inventory.cancel")}
               </Button>
               <Button
                 type="submit"
                 disabled={createSupplier.isPending || updateSupplier.isPending}
               >
-                {editingSupplier ? "Update" : "Create"}
+                {editingSupplier
+                  ? t("inventory.update")
+                  : t("inventory.create")}
               </Button>
             </div>
           </form>

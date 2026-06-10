@@ -2,6 +2,7 @@
 
 import { Loader2, Paperclip } from "lucide-react";
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useCreateAttachment } from "@/lib/queries/use-work-order-attachments";
@@ -28,20 +29,19 @@ export default function WorkOrderPhotoUpload({
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const createAttachment = useCreateAttachment(orgId, workOrderId);
+  const t = useTranslations("workOrderDetail");
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.size > MAX_SIZE) {
-      toast.error("File must be under 10MB");
+      toast.error(t("fileTooLarge"));
       return;
     }
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error(
-        "Only JPEG, PNG, WebP, HEIC images and PDF files are allowed",
-      );
+      toast.error(t("invalidFileType"));
       return;
     }
 
@@ -75,7 +75,7 @@ export default function WorkOrderPhotoUpload({
         file_type: fileType,
       });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
+      toast.error(err instanceof Error ? err.message : t("uploadFailed"));
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -105,7 +105,7 @@ export default function WorkOrderPhotoUpload({
         ) : (
           <Paperclip className="mr-1.5 size-3.5" />
         )}
-        {isBusy ? "Uploading..." : "Add Photo"}
+        {isBusy ? t("uploading") : t("addPhoto")}
       </Button>
     </div>
   );

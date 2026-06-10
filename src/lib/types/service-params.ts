@@ -156,7 +156,7 @@ export interface UpdateEstimateParams {
 export interface CreateWorkOrderParams {
   customer_id?: string;
   vehicle_id: string;
-  branchId?: string;
+  branchId?: string | null;
   mechanic_id?: string;
   notes?: string;
   complaint?: string;

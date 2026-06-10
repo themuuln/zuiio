@@ -1119,6 +1119,7 @@ export interface ShiftReport {
   bayUtilization: number;
   bayCount: number;
   activeJobs: number;
+  revenuePerLaborHour: number;
 }
 
 export async function getShiftReport(branchId?: string): Promise<ShiftReport> {
@@ -1163,7 +1164,7 @@ export async function getShiftReport(branchId?: string): Promise<ShiftReport> {
       withBranchFilter(
         supabase
           .from("work_orders")
-          .select("id")
+          .select("id, started_at")
           .eq("organization_id", orgId)
           .not("status", "in", '("Completed","Cancelled")')
           .is("deleted_at", null),
@@ -1199,6 +1200,33 @@ export async function getShiftReport(branchId?: string): Promise<ShiftReport> {
 
   const activeJobs = active?.length ?? 0;
 
+  // Total labor hours = completed durations + active jobs elapsed time
+  let totalLaborMinutes = 0;
+  if (completed) {
+    for (const wo of completed) {
+      if (!wo.started_at || !wo.completed_at) continue;
+      const mins = Math.round(
+        (new Date(wo.completed_at).getTime() -
+          new Date(wo.started_at).getTime()) /
+          60000,
+      );
+      if (Number.isFinite(mins) && mins > 0) totalLaborMinutes += mins;
+    }
+  }
+  if (active) {
+    const now = Date.now();
+    for (const wo of active) {
+      if (!wo.started_at) continue;
+      const mins = Math.round(
+        (now - new Date(wo.started_at).getTime()) / 60000,
+      );
+      if (Number.isFinite(mins) && mins > 0) totalLaborMinutes += mins;
+    }
+  }
+  const totalLaborHours = totalLaborMinutes / 60;
+  const revenuePerLaborHour =
+    totalLaborHours > 0 ? Math.round(revenueToday / totalLaborHours) : 0;
+
   const bayUtilization =
     bayCount > 0 ? Math.round(((inBay?.length ?? 0) / bayCount) * 100) : 0;
 
@@ -1209,6 +1237,7 @@ export async function getShiftReport(branchId?: string): Promise<ShiftReport> {
     bayUtilization,
     bayCount,
     activeJobs,
+    revenuePerLaborHour,
   };
 }
 

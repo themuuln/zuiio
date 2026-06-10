@@ -84,7 +84,7 @@ describe("getPartsCatalog", () => {
         Promise.resolve({ data: mockAssignments, error: null }),
       );
 
-    const result = await getPartsCatalog("org-1");
+    const result = await getPartsCatalog(mockClient as any, "org-1");
 
     const items = result as PartsCatalogItem[];
     expect(items).toHaveLength(2);
@@ -101,7 +101,7 @@ describe("getPartsCatalog", () => {
       .eq.mockReturnValueOnce(mockClient.from("parts_catalog"))
       .mockReturnValueOnce(Promise.resolve({ data: [], error: null }));
 
-    const result = await getPartsCatalog("org-1");
+    const result = await getPartsCatalog(mockClient as any, "org-1");
 
     expect(result).toEqual([]);
     expect(mockClient.from).toHaveBeenCalledWith("parts_catalog");
@@ -124,7 +124,7 @@ describe("getPartsCatalog", () => {
       .eq.mockReturnValueOnce(mockClient.from("parts_catalog"))
       .mockReturnValueOnce(Promise.resolve({ data: [], error: null }));
 
-    const result = await getPartsCatalog("org-1");
+    const result = await getPartsCatalog(mockClient as any, "org-1");
 
     expect(result).toEqual([]);
   });
@@ -187,11 +187,11 @@ describe("createPart", () => {
 
   it("rejects when Mongolian name is missing", async () => {
     await expect(
-      createPart("org-1", { name_mn: "" }, "user-1"),
+      createPart(mockClient as any, "org-1", { name_mn: "" }, "user-1"),
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      createPart("org-1", { name_mn: "   " }, "user-1"),
+      createPart(mockClient as any, "org-1", { name_mn: "   " }, "user-1"),
     ).rejects.toThrow("Монгол нэр шаардлагатай");
   });
 });
@@ -218,7 +218,7 @@ describe("updatePart", () => {
       error: null,
     });
 
-    const result = await updatePart("part-1", "org-1", {
+    const result = await updatePart(mockClient as any, "part-1", "org-1", {
       name: "Premium Oil Filter",
       default_price: 18000,
     });
@@ -254,7 +254,7 @@ describe("deletePart", () => {
   it("soft-deletes a part by setting deleted_at", async () => {
     mockClient.from("parts_catalog").update.mockReturnThis();
 
-    await deletePart("part-1", "org-1");
+    await deletePart(mockClient as any, "part-1", "org-1");
 
     const updateCall = mockClient.from("parts_catalog").update.mock.calls[0][0];
     expect(updateCall).toHaveProperty("deleted_at");
@@ -325,7 +325,7 @@ describe("getInventoryBalances", () => {
         Promise.resolve({ data: mockBalances, error: null }),
       );
 
-    const result = await getInventoryBalances("org-1");
+    const result = await getInventoryBalances(mockClient as any, "org-1");
 
     expect(result).toEqual(mockBalances);
     expect(result).toHaveLength(2);
@@ -341,7 +341,7 @@ describe("getInventoryBalances", () => {
       .from("inventory_balances")
       .eq.mockReturnValueOnce(Promise.resolve({ data: null, error: null }));
 
-    const result = await getInventoryBalances("org-1");
+    const result = await getInventoryBalances(mockClient as any, "org-1");
 
     expect(result).toEqual([]);
   });
@@ -375,7 +375,7 @@ describe("createMovement", () => {
       error: null,
     });
 
-    const result = await createMovement(
+    const result = await createMovement(mockClient as any, mockClient as any, 
       "org-1",
       {
         part_id: "part-1",
@@ -409,7 +409,7 @@ describe("createMovement", () => {
 
   it("rejects when part_id is missing", async () => {
     await expect(
-      createMovement(
+      createMovement(mockClient as any, 
         "org-1",
         { part_id: "", movement_type: "purchase", quantity: 1 },
         "user-1",
@@ -417,7 +417,7 @@ describe("createMovement", () => {
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      createMovement(
+      createMovement(mockClient as any, 
         "org-1",
         { part_id: "", movement_type: "purchase", quantity: 1 },
         "user-1",
@@ -427,7 +427,7 @@ describe("createMovement", () => {
 
   it("rejects when movement_type is missing", async () => {
     await expect(
-      createMovement(
+      createMovement(mockClient as any, 
         "org-1",
         // @ts-expect-error - testing runtime validation for missing movement_type
         { part_id: "part-1", quantity: 1 },
@@ -436,7 +436,7 @@ describe("createMovement", () => {
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      createMovement(
+      createMovement(mockClient as any, 
         "org-1",
         // @ts-expect-error - testing runtime validation for missing movement_type
         { part_id: "part-1", quantity: 1 },
@@ -447,7 +447,7 @@ describe("createMovement", () => {
 
   it("rejects when quantity is zero", async () => {
     await expect(
-      createMovement(
+      createMovement(mockClient as any, 
         "org-1",
         { part_id: "part-1", movement_type: "purchase", quantity: 0 },
         "user-1",
@@ -455,7 +455,7 @@ describe("createMovement", () => {
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      createMovement(
+      createMovement(mockClient as any, 
         "org-1",
         { part_id: "part-1", movement_type: "purchase", quantity: 0 },
         "user-1",
@@ -469,7 +469,7 @@ describe("createMovement", () => {
       error: { message: "Not found" },
     });
 
-    const promise = createMovement(
+    const promise = createMovement(mockClient as any, 
       "org-1",
       { part_id: "nonexistent", movement_type: "purchase", quantity: 5 },
       "user-1",
@@ -495,7 +495,7 @@ describe("createMovement", () => {
       error: null,
     });
 
-    const result = await createMovement(
+    const result = await createMovement(mockClient as any, mockClient as any, 
       "org-1",
       {
         part_id: "part-1",
@@ -540,7 +540,7 @@ describe("setStockThreshold", () => {
       error: null,
     });
 
-    const result = await setStockThreshold("org-1", {
+    const result = await setStockThreshold(mockClient as any, "org-1", {
       part_id: "part-1",
       minimum_quantity: 10,
     });
@@ -564,11 +564,11 @@ describe("setStockThreshold", () => {
 
   it("rejects when part_id is missing", async () => {
     await expect(
-      setStockThreshold("org-1", { part_id: "", minimum_quantity: 10 }),
+      setStockThreshold(mockClient as any, "org-1", { part_id: "", minimum_quantity: 10 }),
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      setStockThreshold("org-1", { part_id: "", minimum_quantity: 10 }),
+      setStockThreshold(mockClient as any, "org-1", { part_id: "", minimum_quantity: 10 }),
     ).rejects.toThrow("Part is required");
   });
 });
@@ -610,7 +610,7 @@ describe("getStockThresholds", () => {
         Promise.resolve({ data: mockThresholds, error: null }),
       );
 
-    const result = await getStockThresholds("org-1");
+    const result = await getStockThresholds(mockClient as any, "org-1");
 
     expect(result).toEqual(mockThresholds);
     expect(result).toHaveLength(2);
@@ -625,7 +625,7 @@ describe("getStockThresholds", () => {
       .from("stock_thresholds")
       .eq.mockReturnValueOnce(Promise.resolve({ data: null, error: null }));
 
-    const result = await getStockThresholds("org-1");
+    const result = await getStockThresholds(mockClient as any, "org-1");
 
     expect(result).toEqual([]);
   });

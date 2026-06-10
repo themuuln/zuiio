@@ -52,6 +52,7 @@ export function ServiceModelPricesSheet({
   onOpenChange,
 }: ServiceModelPricesSheetProps) {
   const t = useTranslations("services");
+  const commonT = useTranslations("common");
   const locale = useLocale();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
@@ -211,15 +212,13 @@ export function ServiceModelPricesSheet({
 
     if (failures.length > 0) {
       toast.error(
-        `${failures.length} of ${changedIds.size} prices failed to save`,
+        t("pricesFailed", { count: failures.length, total: changedIds.size }),
       );
       return;
     }
 
     toast.dismiss();
-    toast.success(
-      `${changedIds.size} model price${changedIds.size > 1 ? "s" : ""} updated`,
-    );
+    toast.success(t("modelsUpdated", { count: changedIds.size }));
     setChangedIds(new Set());
   };
 
@@ -238,18 +237,17 @@ export function ServiceModelPricesSheet({
           <div className="flex items-center justify-between">
             <SheetTitle>{t("modelSpecificPrices")}</SheetTitle>
             <Badge variant="secondary" className="shrink-0">
-              {customCount} / {totalModels} custom
+              {t("customCount", { count: customCount, total: totalModels })}
             </Badge>
           </div>
           <SheetDescription>
-            Set different prices per vehicle model for{" "}
-            <span className="font-medium">{serviceName}</span>.
+            {t("setDifferentPrices", { name: serviceName })}
             <br />
-            Default price:{" "}
+            {t("defaultPriceLabel")}{" "}
             <span className="font-medium tabular-nums">
               {formatMNT(defaultPrice)}
             </span>
-            . Leave a field empty to use the default price.
+            . {t("leaveEmptyDefault")}
           </SheetDescription>
         </DetailSheet.Header>
 
@@ -260,7 +258,7 @@ export function ServiceModelPricesSheet({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
                 ref={searchInputRef}
-                placeholder="Search makes or models..."
+                placeholder={t("searchMakesModels")}
                 value={modelSearch}
                 onChange={(e) => setModelSearch(e.target.value)}
                 className="pl-9 pr-8 h-9"
@@ -281,28 +279,28 @@ export function ServiceModelPricesSheet({
                 size="xs"
                 className="h-8 text-xs"
                 onClick={() => setAllPrices(defaultPrice)}
-                title="Set all models to the default price"
+                title={t("setAllDefault")}
               >
-                Set all to default
+                {t("setAllDefault")}
               </Button>
               <Button
                 variant="outline"
                 size="xs"
                 className="h-8 text-xs"
                 onClick={() => setAllPrices(0)}
-                title="Set all models to 0 (free)"
+                title={t("setAllZero")}
               >
-                Set all to 0
+                {t("setAllZero")}
               </Button>
               <Button
                 variant="ghost"
                 size="xs"
                 className="h-8 text-xs text-destructive"
                 onClick={resetAll}
-                title="Clear all custom prices"
+                title={t("resetAll")}
               >
                 <RotateCcw className="size-3 mr-1" />
-                Reset all
+                {t("resetAll")}
               </Button>
             </div>
           </div>
@@ -318,12 +316,12 @@ export function ServiceModelPricesSheet({
             <div className="flex flex-col items-center gap-2 py-12 text-center">
               <AlertTriangle className="size-8 text-destructive/60" />
               <Typography.Text className="text-destructive">
-                Failed to load data
+                {t("failedToLoad")}
               </Typography.Text>
               <Typography.Muted className="text-sm text-muted-foreground max-w-sm">
                 {fetchError instanceof Error
                   ? fetchError.message
-                  : "An unexpected error occurred"}
+                  : t("unexpectedError")}
               </Typography.Muted>
             </div>
           ) : modelsByMake.length === 0 ? (
@@ -332,17 +330,17 @@ export function ServiceModelPricesSheet({
                 <>
                   <Search className="size-8 text-muted-foreground/40" />
                   <Typography.Muted className="text-muted-foreground">
-                    No models match "{modelSearch}"
+                    {t("noModelsMatch", { search: modelSearch })}
                   </Typography.Muted>
                 </>
               ) : (
                 <>
                   <AlertTriangle className="size-8 text-muted-foreground/40" />
                   <Typography.Muted className="text-muted-foreground">
-                    No vehicle models found.
+                    {t("noModelsFound")}
                   </Typography.Muted>
                   <Typography.Muted className="text-sm text-muted-foreground">
-                    Add vehicle models in Settings → Vehicle Models first.
+                    {t("addModelsFirst")}
                   </Typography.Muted>
                 </>
               )}
@@ -383,16 +381,18 @@ export function ServiceModelPricesSheet({
                           <div className="flex items-center gap-2">
                             {isChanged ? (
                               <Typography.Muted className="text-xs text-primary">
-                                Will save:{" "}
-                                {value ? formatMNT(Number(value)) : "Default"}
+                                {t("willSave")}{" "}
+                                {value
+                                  ? formatMNT(Number(value))
+                                  : t("willSaveDefault")}
                               </Typography.Muted>
                             ) : hasExisting ? (
                               <Typography.Muted className="text-xs text-muted-foreground">
-                                Custom: {formatMNT(existingPrice!)}
+                                {t("customPrice")} {formatMNT(existingPrice!)}
                               </Typography.Muted>
                             ) : (
                               <Typography.Muted className="text-xs text-muted-foreground">
-                                Default: {formatMNT(defaultPrice)}
+                                {t("defaultPrice")} {formatMNT(defaultPrice)}
                               </Typography.Muted>
                             )}
                           </div>
@@ -446,7 +446,7 @@ export function ServiceModelPricesSheet({
             className="flex-1 h-11"
             onClick={handleCloseAttempt}
           >
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             className="flex-1 h-11"
@@ -456,12 +456,12 @@ export function ServiceModelPricesSheet({
             {upsertMutation.isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Saving...
+                {t("saving")}
               </>
             ) : (
               <>
                 <Save className="size-4" />
-                Save {hasChanges ? `(${changedIds.size})` : ""}
+                {commonT("save")} {hasChanges ? `(${changedIds.size})` : ""}
               </>
             )}
           </Button>
@@ -475,22 +475,22 @@ export function ServiceModelPricesSheet({
       >
         <AlertDialogContent zLayer={1}>
           <AlertDialogHeader>
-            <AlertDialogTitle>Discard unsaved changes?</AlertDialogTitle>
+            <AlertDialogTitle>{t("discardTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              You have {changedIds.size} unsaved price change
-              {changedIds.size > 1 ? "s" : ""}. These will be lost if you close
-              without saving.
+              {changedIds.size === 1
+                ? t("discardDesc", { count: changedIds.size })
+                : t("discardDescPlural", { count: changedIds.size })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setPendingClose(false)}>
-              Keep editing
+              {t("keepEditing")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDiscard}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Discard changes
+              {t("discardChanges")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Package, Plus, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,15 +33,17 @@ export function PartLines({
   onUpdate,
   onRemove,
 }: PartLinesProps) {
+  const t = useTranslations("workOrderDetail");
+  const tc = useTranslations("common");
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Package className="size-4" />
-          Parts
+          {t("parts")}
           {lines.length > 0 && (
             <span className="ml-auto text-sm font-normal text-muted-foreground">
-              {lines.length} part{lines.length !== 1 ? "s" : ""}
+              {t("partCount", { count: lines.length })}
             </span>
           )}
         </CardTitle>
@@ -55,13 +58,13 @@ export function PartLines({
                   className="flex items-center gap-2 p-3 hover:bg-muted/20"
                 >
                   <Input
-                    placeholder="e.g. Oil filter"
+                    placeholder={t("partNamePlaceholder")}
                     value={part.part_name}
                     onChange={(e) => onUpdate(idx, "part_name", e.target.value)}
                     className="flex-1 h-10 min-w-[120px]"
                   />
                   <Input
-                    placeholder="e.g. OF-101"
+                    placeholder={t("partNumberPlaceholder")}
                     value={part.part_number}
                     onChange={(e) =>
                       onUpdate(idx, "part_number", e.target.value)
@@ -87,7 +90,7 @@ export function PartLines({
                     }}
                     className="w-14 h-10 text-center"
                     min={1}
-                    aria-label="Quantity"
+                    aria-label={tc("quantity")}
                   />
                   <Input
                     type="number"
@@ -104,7 +107,7 @@ export function PartLines({
                     className="w-20 h-10 text-right"
                     min={0}
                     step={100}
-                    aria-label="Unit price"
+                    aria-label={tc("unitPrice")}
                   />
                   <span className="text-sm font-semibold tabular-nums w-20 text-right">
                     {formatCurrency(part.final_price)}
@@ -114,7 +117,9 @@ export function PartLines({
                     size="icon-xs"
                     onClick={() => onRemove(idx)}
                     className="shrink-0 min-w-[44px] min-h-[var(--ui-touch-target)]"
-                    aria-label={`Remove ${part.part_name || "part"}`}
+                    aria-label={t("removeItem", {
+                      name: part.part_name || "part",
+                    })}
                   >
                     <Trash2 className="size-4 text-destructive" />
                   </Button>
@@ -130,7 +135,7 @@ export function PartLines({
           className="self-start min-h-[var(--ui-touch-target)]"
         >
           <Plus className="size-4" />
-          Add part
+          {t("addPart")}
         </Button>
       </CardContent>
     </Card>

@@ -104,10 +104,10 @@ describe("createVehicle", () => {
   });
 
   it("rejects empty plate number", async () => {
-    setupMockClient();
+    const client = setupMockClient();
     await expect(
       createVehicle(
-        client,
+        client as any,
         ORG_ID,
         { plateNumber: "", make: "Toyota", model: "Camry" },
         USER_ID,
@@ -116,10 +116,10 @@ describe("createVehicle", () => {
   });
 
   it("rejects empty make", async () => {
-    setupMockClient();
+    const client = setupMockClient();
     await expect(
       createVehicle(
-        client,
+        client as any,
         ORG_ID,
         { plateNumber: "4444УНА", make: "", model: "Camry" },
         USER_ID,
@@ -128,10 +128,10 @@ describe("createVehicle", () => {
   });
 
   it("rejects empty model", async () => {
-    setupMockClient();
+    const client = setupMockClient();
     await expect(
       createVehicle(
-        client,
+        client as any,
         ORG_ID,
         { plateNumber: "4444УНА", make: "Toyota", model: "" },
         USER_ID,
@@ -301,7 +301,7 @@ describe("getVehicle", () => {
       error: null,
     });
 
-    const result = await getVehicle("v-1", ORG_ID);
+    const result = await getVehicle(client, "v-1", ORG_ID);
 
     expect(result.id).toBe("v-1");
     expect(result.plate_number).toBe("ABC123");
@@ -317,7 +317,7 @@ describe("getVehicle", () => {
       error: { message: "Not found" },
     });
 
-    await expect(getVehicle("nonexistent", ORG_ID)).rejects.toThrow(
+    await expect(getVehicle(client, "nonexistent", ORG_ID)).rejects.toThrow(
       NotFoundError,
     );
   });

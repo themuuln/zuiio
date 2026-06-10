@@ -19,6 +19,8 @@ type ScheduleUpdateParams = {
   next_due_km?: number | null;
   reminder_enabled?: boolean;
   notes?: string | null;
+  contact_status?: string;
+  contacted_at?: string | null;
 };
 
 const scheduleFieldMap: FieldMap<ScheduleUpdateParams> = {
@@ -33,6 +35,8 @@ const scheduleFieldMap: FieldMap<ScheduleUpdateParams> = {
     next_due_km: "next_due_km",
     reminder_enabled: "reminder_enabled",
     notes: "notes",
+    contact_status: "contact_status",
+    contacted_at: "contacted_at",
   },
   transforms: {
     service_name: trimField,
@@ -55,7 +59,7 @@ export async function getServiceSchedules(
   let query = supabase
     .from("vehicle_service_schedules")
     .select(
-      "*, vehicle:vehicles(plate_number, make, model, year), service:service_catalog(name)",
+      "*, vehicle:vehicles(plate_number, make, model, year, customer_id, customer:customers(id, first_name, last_name, phone))",
     )
     .eq("organization_id", orgId)
     .is("deleted_at", null)
@@ -177,7 +181,7 @@ export async function updateServiceSchedule(
     .eq("organization_id", orgId)
     .is("deleted_at", null)
     .select(
-      "id, organization_id, branch_id, vehicle_id, service_catalog_id, service_name, interval_months, interval_km, last_service_date, last_service_odometer, next_due_date, next_due_km, reminder_enabled, notes, created_by, updated_by, created_at, updated_at",
+      "id, organization_id, branch_id, vehicle_id, service_catalog_id, service_name, interval_months, interval_km, last_service_date, last_service_odometer, next_due_date, next_due_km, reminder_enabled, notes, contact_status, contacted_at, created_by, updated_by, created_at, updated_at",
     )
     .single();
 

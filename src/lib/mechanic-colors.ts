@@ -68,7 +68,7 @@ export function getMechanicColor(id: string): (typeof MECHANIC_COLORS)[number] {
 }
 
 export function getMechanicInitials(name: string | null | undefined): string {
-  if (!name) return "?";
+  if (!name || typeof name !== "string") return "?";
   const parts = name.trim().split(/\s+/);
   if (parts.length <= 1) return parts[0]?.[0]?.toUpperCase() ?? "?";
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();

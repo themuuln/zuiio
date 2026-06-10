@@ -95,16 +95,16 @@ function KpiCard({
 
 type PaidFilter = "all" | "paid" | "unpaid" | "overdue";
 
-const PAID_FILTER_OPTIONS: { key: PaidFilter; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "unpaid", label: "Unpaid" },
-  { key: "overdue", label: "Overdue" },
-  { key: "paid", label: "Paid" },
-];
-
 export default function ExpensesPage() {
   const t = useTranslations();
   const now = useClientNow();
+
+  const PAID_FILTER_OPTIONS: { key: PaidFilter; label: string }[] = [
+    { key: "all", label: t("expenses.allStatus") },
+    { key: "unpaid", label: t("expenses.unpaid") },
+    { key: "overdue", label: t("expenses.overdue") },
+    { key: "paid", label: t("expenses.paid") },
+  ];
 
   const {
     search,
@@ -191,12 +191,16 @@ export default function ExpensesPage() {
 
     sidebar.registerTab(
       "summary",
-      "Summary",
+      t("expenses.summary"),
       <StatusSummary
-        title="This Month"
+        title={t("expenses.thisMonth")}
         items={[
-          { label: "Total", count: stats.thisMonth },
-          { label: "Unpaid", count: stats.unpaidAmount, color: "destructive" },
+          { label: t("expenses.total"), count: stats.thisMonth },
+          {
+            label: t("expenses.unpaid"),
+            count: stats.unpaidAmount,
+            color: "destructive",
+          },
         ]}
       />,
       <DollarSign className="size-4" />,
@@ -204,13 +208,13 @@ export default function ExpensesPage() {
 
     sidebar.registerTab(
       "categories",
-      "Categories",
+      t("expenses.categories"),
       <RecentList
         items={categories.map((cat) => ({
           id: cat.id,
           primary: cat.name,
         }))}
-        emptyMessage="No categories"
+        emptyMessage={t("expenses.noCategories")}
       />,
       <Tag className="size-4" />,
     );
@@ -235,20 +239,20 @@ export default function ExpensesPage() {
 
   const exportColumns: ExportColumn<ExpenseWithCategory>[] = useMemo(
     () => [
-      { key: "expense_date", label: "Date", format: "date" },
-      { key: "description", label: "Description" },
-      { key: "vendor_name", label: "Vendor" },
+      { key: "expense_date", label: t("expenses.date"), format: "date" },
+      { key: "description", label: t("expenses.description") },
+      { key: "vendor_name", label: t("expenses.vendor") },
       {
         key: "category_id",
-        label: "Category",
+        label: t("expenses.category"),
         value: (e) => e.category?.name ?? "\u2014",
       },
-      { key: "amount", label: "Amount", format: "number" },
-      { key: "reference_number", label: "Reference" },
+      { key: "amount", label: t("expenses.amount"), format: "number" },
+      { key: "reference_number", label: t("expenses.reference") },
       {
         key: "paid_at",
-        label: "Status",
-        value: (e) => (e.paid_at ? "Paid" : "Unpaid"),
+        label: t("expenses.status"),
+        value: (e) => (e.paid_at ? t("expenses.paid") : t("expenses.unpaid")),
       },
     ],
     [],
@@ -256,7 +260,7 @@ export default function ExpensesPage() {
 
   const displayError =
     isError || (!orgId && !orgLoading)
-      ? (error?.message ?? "No organization found")
+      ? (error?.message ?? t("common.noOrganization"))
       : null;
 
   return (
@@ -273,7 +277,7 @@ export default function ExpensesPage() {
       headerAction={
         <Button onClick={() => setNewExpenseSheetOpen(true)} size="default">
           <Plus className="size-4" />
-          Add Expense
+          {t("expenses.addExpenseButton")}
         </Button>
       }
     >
@@ -314,14 +318,16 @@ export default function ExpensesPage() {
       {/* ── Filter Bar ── */}
       <ListToolbar
         search={{
-          placeholder: "Search by description, vendor, or reference...",
+          placeholder: t("expenses.searchPlaceholder"),
           value: search,
           onChange: setSearch,
           loading: expensesFetching,
           resultLabel: expenses?.length
-            ? `${expenses.length} result${expenses.length === 1 ? "" : "s"}`
+            ? t("expenses.resultCount", { count: expenses.length })
             : undefined,
-          emptyLabel: search ? `No matches for "${search}"` : undefined,
+          emptyLabel: search
+            ? t("expenses.noMatches", { query: search })
+            : undefined,
         }}
         filters={
           <div className="flex flex-wrap items-center gap-3">
@@ -358,7 +364,7 @@ export default function ExpensesPage() {
                 className="h-9 px-2 text-muted-foreground hover:text-foreground text-xs"
                 onClick={resetAll}
               >
-                Clear filters
+                {t("expenses.clearFilters")}
               </Button>
             )}
 
@@ -388,8 +394,7 @@ export default function ExpensesPage() {
         }
         stats={
           <span className="text-sm text-muted-foreground">
-            {expenses?.length ?? 0}{" "}
-            {(expenses?.length ?? 0) === 1 ? "expense" : "expenses"}
+            {t("expenses.resultCount", { count: expenses?.length ?? 0 })}
           </span>
         }
       />
@@ -403,14 +408,14 @@ export default function ExpensesPage() {
                 <EmptyMedia variant="icon">
                   <Wallet />
                 </EmptyMedia>
-                <EmptyTitle>No expenses found</EmptyTitle>
+                <EmptyTitle>{t("expenses.noExpenses")}</EmptyTitle>
               </EmptyHeader>
               <EmptyContent>
                 <Button
                   onClick={() => setNewExpenseSheetOpen(true)}
                   variant="outline"
                 >
-                  Record Your First Expense
+                  {t("expenses.addFirstExpense")}
                 </Button>
               </EmptyContent>
             </Empty>
@@ -442,7 +447,9 @@ export default function ExpensesPage() {
                         variant="outline"
                         className="text-[10px] px-1.5 py-0"
                       >
-                        {expense.paid_at ? "Paid" : "Unpaid"}
+                        {expense.paid_at
+                          ? t("expenses.paid")
+                          : t("expenses.unpaid")}
                       </Badge>
                     </div>
                     <span className="font-medium truncate">

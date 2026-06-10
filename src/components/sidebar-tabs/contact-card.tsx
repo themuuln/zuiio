@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy, type Mail, type MapPin, type Phone } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export function ContactCard({
     color?: "default" | "secondary" | "outline" | "destructive";
   };
 }) {
+  const t = useTranslations("common");
   if (items.length === 0) return null;
 
   return (
@@ -66,7 +68,7 @@ export function ContactCard({
                   className="size-5 shrink-0 text-muted-foreground/30 hover:text-foreground"
                   onClick={() => {
                     navigator.clipboard.writeText(item.value!);
-                    toast.success("Copied");
+                    toast.success(t("copied"));
                   }}
                 >
                   <Copy className="size-3" />

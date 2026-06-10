@@ -2,6 +2,7 @@
 
 import { Trash2, Wrench } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,6 +52,8 @@ export function ServiceLines({
   onRemove,
 }: ServiceLinesProps) {
   const [serviceSearch, setServiceSearch] = useState("");
+  const t = useTranslations("workOrderDetail");
+  const tc = useTranslations("common");
 
   const filteredCatalog = useFuzzySearch(catalog, serviceSearch, {
     keys: ["name", "category"],
@@ -63,10 +66,10 @@ export function ServiceLines({
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Wrench className="size-4" />
-          Services
+          {t("services")}
           {lines.length > 0 && (
             <span className="ml-auto text-sm font-normal text-muted-foreground">
-              {lines.length} service{lines.length !== 1 ? "s" : ""}
+              {t("serviceCount", { count: lines.length })}
             </span>
           )}
         </CardTitle>
@@ -74,7 +77,7 @@ export function ServiceLines({
       <CardContent className="flex flex-col gap-3">
         {/* Service search */}
         <SearchInput
-          placeholder="Search services to add..."
+          placeholder={t("searchServices")}
           loading={false}
           onSearch={setServiceSearch}
           debounceMs={300}
@@ -131,7 +134,7 @@ export function ServiceLines({
             })}
             {filteredCatalog.length === 0 && (
               <div className="p-4 text-sm text-muted-foreground text-center">
-                No services found
+                {t("noServicesFound")}
               </div>
             )}
           </div>
@@ -178,7 +181,7 @@ export function ServiceLines({
                       }}
                       className="w-14 h-10 text-center"
                       min={1}
-                      aria-label="Quantity"
+                      aria-label={tc("quantity")}
                     />
                     <span className="text-sm font-semibold tabular-nums w-20 text-right">
                       {formatCurrency(svc.final_price)}
@@ -188,7 +191,7 @@ export function ServiceLines({
                       size="icon-xs"
                       onClick={() => onRemove(idx)}
                       className="shrink-0 min-w-[44px] min-h-[var(--ui-touch-target)]"
-                      aria-label={`Remove ${svc.name}`}
+                      aria-label={t("removeItem", { name: svc.name })}
                     >
                       <Trash2 className="size-4 text-destructive" />
                     </Button>

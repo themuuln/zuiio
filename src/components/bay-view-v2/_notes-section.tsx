@@ -70,7 +70,7 @@ export function NotesSection({
       );
       const json = await res.json();
       if (json.error) {
-        toast.error(json.error.message ?? "Failed to save");
+        toast.error(json.error.message ?? t("failedToSave"));
         return;
       }
       toast.dismiss();
@@ -79,7 +79,7 @@ export function NotesSection({
       setEditValue("");
       onUpdated();
     } catch {
-      toast.error("Failed to save");
+      toast.error(t("failedToSave"));
     } finally {
       setSaving(false);
     }

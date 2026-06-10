@@ -3,7 +3,6 @@
 import { SettingsIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,24 +20,12 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
+import { useProfile } from "@/lib/queries/use-profile";
 import { getInitials } from "@/lib/utils";
 
 export function NavUser() {
   const t = useTranslations("userMenu");
-  const [profile, setProfile] = useState<{
-    fullName?: string | null;
-    username?: string | null;
-    email?: string | null;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then((d) => setProfile(d))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: profile, isLoading: loading } = useProfile();
 
   const displayName = profile?.fullName ?? t("user");
   const displayIdentifier = profile?.username ?? "";

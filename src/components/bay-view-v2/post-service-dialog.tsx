@@ -14,11 +14,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -201,17 +201,17 @@ export function PostServiceDialog({
   const isComplete = newStatus === "Completed";
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh]">
-        <DrawerHeader>
-          <DrawerTitle className="flex items-center gap-2 text-base">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="max-h-[85vh]" showCloseButton={false}>
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2 text-base">
             <Car className="size-4 text-muted-foreground" />
             {isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
             <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 px-2 py-1 ml-1">
               {vehiclePlate}
             </span>
-          </DrawerTitle>
-        </DrawerHeader>
+          </SheetTitle>
+        </SheetHeader>
 
         <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-4">
           {/* Odometer */}
@@ -248,7 +248,7 @@ export function PostServiceDialog({
                 ) : (
                   <ChevronDown className="size-3" />
                 )}
-                {allExpanded ? "Collapse" : "Expand"}
+                {allExpanded ? t("collapseToggle") : t("expandToggle")}
               </Button>
             </div>
 
@@ -260,7 +260,7 @@ export function PostServiceDialog({
 
             {!servicesLoading && !hasEntries && (
               <Typography.Muted className="text-xs text-muted-foreground/60 italic py-2">
-                No services recorded on this work order.
+                {t("noServicesRecorded")}
               </Typography.Muted>
             )}
 
@@ -279,7 +279,7 @@ export function PostServiceDialog({
           {/* Mechanic notes */}
           <div className="flex flex-col gap-2">
             <Label className="text-xs font-semibold text-muted-foreground">
-              Mechanic Notes
+              {t("mechanicNotesLabel")}
             </Label>
             <Input
               value={mechanicNotes}
@@ -318,8 +318,8 @@ export function PostServiceDialog({
             </Button>
           </div>
         </div>
-      </DrawerContent>
-    </Drawer>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -450,7 +450,7 @@ function ServiceCard({
                 value={entry.notes}
                 onChange={(e) => onChange({ notes: e.target.value })}
                 className="h-8 text-xs"
-                placeholder="Optional"
+                placeholder={t("optional")}
               />
             </div>
           </div>

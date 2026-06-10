@@ -96,11 +96,11 @@ export function ShiftReportDialog({ open, onOpenChange }: Props) {
                   {t("completedToday")}
                 </div>
               </div>
-              <div className=" bg-blue-50/50 dark:bg-blue-950/10 border border-blue-200/50 dark:border-blue-800/30 p-3 text-center">
-                <div className="flex items-center justify-center size-8 bg-blue-500/10 mx-auto mb-2">
-                  <DollarSign className="size-4 text-blue-600" />
+              <div className=" bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-200/50 dark:border-emerald-800/30 p-3 text-center">
+                <div className="flex items-center justify-center size-8 bg-emerald-500/10 mx-auto mb-2">
+                  <DollarSign className="size-4 text-emerald-600" />
                 </div>
-                <div className="text-xl font-semibold tabular-nums text-blue-700 dark:text-blue-300 truncate">
+                <div className="text-xl font-semibold tabular-nums text-emerald-700 dark:text-emerald-300 truncate">
                   {formatMNT(report.revenueToday)}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">

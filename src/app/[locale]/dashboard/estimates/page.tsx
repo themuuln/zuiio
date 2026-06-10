@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { FileText, Plus } from "lucide-react";
+import { estimateKeys } from "@/lib/queries/keys";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -55,7 +56,7 @@ export default function EstimatesPage() {
 
   // Fetch estimates
   const { data: estimates, isLoading } = useQuery({
-    queryKey: ["estimates", orgId, branchFilter],
+    queryKey: estimateKeys.list(orgId, undefined, undefined, branchFilter),
     queryFn: async () => {
       const params = new URLSearchParams();
       if (branchFilter) params.set("branch_id", branchFilter);

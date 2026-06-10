@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle, Copy, Loader2, UserPlus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -109,12 +110,13 @@ function MechanicCredentialsView({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useTranslations("mechanic");
   const copyCredentials = () => {
     const loginUser = createdMechanic.identifier || createdMechanic.email;
-    const text = `Username/Phone/Email: ${loginUser}\nPassword: ${createdMechanic.password}`;
+    const text = `${t("credentialUsernameLabel")}: ${loginUser}\n${t("credentialPasswordLabel")}: ${createdMechanic.password}`;
     navigator.clipboard.writeText(text);
     toast.dismiss();
-    toast.success("Credentials copied to clipboard");
+    toast.success(t("credentialsCopied"));
   };
 
   return (
@@ -122,12 +124,9 @@ function MechanicCredentialsView({
       <SheetHeader>
         <SheetTitle className="flex items-center gap-2 text-base">
           <CheckCircle className="size-4 text-emerald-500" />
-          Mechanic Added
+          {t("credentialsTitle")}
         </SheetTitle>
-        <SheetDescription>
-          Share these credentials with the mechanic. They can log in
-          immediately.
-        </SheetDescription>
+        <SheetDescription>{t("credentialsDescription")}</SheetDescription>
       </SheetHeader>
 
       <div className="flex flex-1 flex-col gap-6 px-4">
@@ -135,21 +134,25 @@ function MechanicCredentialsView({
           <div className="flex flex-col gap-3">
             <div>
               <Typography.Muted className="text-xs">
-                Username / Phone / Email
+                {t("credentialUsernameLabel")}
               </Typography.Muted>
               <Typography.Text className="font-medium">
                 {createdMechanic.identifier || createdMechanic.email}
               </Typography.Text>
             </div>
             <div>
-              <Typography.Muted className="text-xs">Password</Typography.Muted>
+              <Typography.Muted className="text-xs">
+                {t("credentialPasswordLabel")}
+              </Typography.Muted>
               <Typography.Text className="font-mono font-medium">
                 {createdMechanic.password}
               </Typography.Text>
             </div>
             {createdMechanic.fullName && (
               <div>
-                <Typography.Muted className="text-xs">Name</Typography.Muted>
+                <Typography.Muted className="text-xs">
+                  {t("credentialNameLabel")}
+                </Typography.Muted>
                 <Typography.Text className="font-medium">
                   {createdMechanic.fullName}
                 </Typography.Text>
@@ -161,14 +164,14 @@ function MechanicCredentialsView({
         <div className="mt-auto flex flex-col gap-2 pt-4">
           <Button type="button" onClick={copyCredentials} className="gap-2">
             <Copy className="size-4" />
-            Copy Credentials
+            {t("copyCredentials")}
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
           >
-            Done
+            {t("done")}
           </Button>
         </div>
       </div>
@@ -182,6 +185,7 @@ export function NewMechanicSheet({
 }: NewMechanicSheetProps) {
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
+  const t = useTranslations("mechanic");
 
   const [form, dispatch] = useReducer(formReducer, INITIAL_FORM_STATE);
   // Roles are API data, kept separate from form state
@@ -208,7 +212,7 @@ export function NewMechanicSheet({
           roleId: mechanic?.id ?? list[0]?.id ?? "",
         });
       } catch {
-        toast.error("Failed to load roles");
+        toast.error(t("failedToLoadRoles"));
       }
       setRolesLoading(false);
     };
@@ -229,18 +233,18 @@ export function NewMechanicSheet({
 
     const newErrors: Record<string, string> = {};
     if (!form.fullName.trim()) {
-      newErrors.fullName = "Full name is required";
+      newErrors.fullName = t("validation.fullNameRequired");
     }
     if (!form.identifier.trim()) {
-      newErrors.identifier = "Username, phone, or email is required";
+      newErrors.identifier = t("validation.identifierRequired");
     }
     if (!form.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = t("validation.passwordRequired");
     } else if (form.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+      newErrors.password = t("validation.passwordMinLength");
     }
     if (!form.selectedRoleId) {
-      newErrors.roleId = "Role is required";
+      newErrors.roleId = t("validation.roleRequired");
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -266,16 +270,14 @@ export function NewMechanicSheet({
       const body = await res.json();
 
       if (!res.ok || body.error) {
-        throw new Error(body.error?.message ?? "Failed to add mechanic");
+        throw new Error(body.error?.message ?? t("failedToAdd"));
       }
 
       dispatch({ type: "SET_CREATED", mechanic: body.data });
       toast.dismiss();
-      toast.success("Mechanic added successfully");
+      toast.success(t("mechanicAdded"));
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to add mechanic",
-      );
+      toast.error(err instanceof Error ? err.message : t("failedToAdd"));
     }
     dispatch({ type: "SET_SENDING", sending: false });
   };
@@ -297,19 +299,19 @@ export function NewMechanicSheet({
       <SheetHeader>
         <SheetTitle className="flex items-center gap-2 text-base">
           <UserPlus className="size-4" />
-          Add Mechanic
+          {t("formTitle")}
         </SheetTitle>
-        <SheetDescription>
-          Create an account for a new mechanic. They&apos;ll receive their
-          credentials to log in.
-        </SheetDescription>
+        <SheetDescription>{t("formDescription")}</SheetDescription>
       </SheetHeader>
 
-      <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-6 px-4 pb-6">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-1 flex-col gap-6 px-4 pb-6"
+      >
         <div className="flex flex-col gap-5">
           <Field data-invalid={!!form.errors.fullName}>
             <FieldLabel htmlFor="mechanic-fullname">
-              Full Name <span className="text-destructive">*</span>
+              {t("fullNameLabel")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
@@ -325,7 +327,7 @@ export function NewMechanicSheet({
                   if (form.errors.fullName)
                     dispatch({ type: "CLEAR_ERROR", field: "fullName" });
                 }}
-                placeholder="John Smith"
+                placeholder={t("fullNamePlaceholder")}
               />
               {form.errors.fullName && (
                 <FieldError>{form.errors.fullName}</FieldError>
@@ -335,8 +337,7 @@ export function NewMechanicSheet({
 
           <Field data-invalid={!!form.errors.identifier}>
             <FieldLabel htmlFor="mechanic-identifier">
-              Username, Phone, or Email{" "}
-              <span className="text-destructive">*</span>
+              {t("identifierLabel")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
@@ -352,7 +353,7 @@ export function NewMechanicSheet({
                   if (form.errors.identifier)
                     dispatch({ type: "CLEAR_ERROR", field: "identifier" });
                 }}
-                placeholder="mechanic@example.com, 9911..., or username"
+                placeholder={t("identifierPlaceholder")}
               />
               {form.errors.identifier && (
                 <FieldError>{form.errors.identifier}</FieldError>
@@ -362,7 +363,7 @@ export function NewMechanicSheet({
 
           <Field data-invalid={!!form.errors.password}>
             <FieldLabel htmlFor="mechanic-password">
-              Password <span className="text-destructive">*</span>
+              {t("passwordLabel")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
@@ -378,7 +379,7 @@ export function NewMechanicSheet({
                   if (form.errors.password)
                     dispatch({ type: "CLEAR_ERROR", field: "password" });
                 }}
-                placeholder="Min. 8 characters"
+                placeholder={t("passwordPlaceholder")}
               />
               {form.errors.password && (
                 <FieldError>{form.errors.password}</FieldError>
@@ -388,7 +389,7 @@ export function NewMechanicSheet({
 
           <Field data-invalid={!!form.errors.roleId}>
             <FieldLabel htmlFor="mechanic-role">
-              Role <span className="text-destructive">*</span>
+              {t("roleLabel")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Select
@@ -400,9 +401,9 @@ export function NewMechanicSheet({
                   <SelectValue
                     placeholder={
                       rolesLoading
-                        ? "Loading..."
+                        ? t("loading")
                         : roles.length === 0
-                          ? "No roles available"
+                          ? t("noRolesAvailable")
                           : undefined
                     }
                   >
@@ -433,14 +434,14 @@ export function NewMechanicSheet({
             ) : (
               <UserPlus className="mr-2 size-4" />
             )}
-            Add Mechanic
+            {t("formTitle")}
           </Button>
           <Button
             type="button"
             variant="ghost"
             onClick={() => handleOpenChange(false)}
           >
-            Cancel
+            {t("cancel")}
           </Button>
         </div>
       </form>

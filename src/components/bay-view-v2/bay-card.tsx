@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -27,6 +28,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Typography } from "@/components/ui/typography";
 import { MongolianLicensePlate } from "@/components/vehicles/license-plate";
 import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
@@ -144,7 +151,7 @@ export function BayCardDragPreview({ bay }: { bay: BaySlotData }) {
   );
 }
 
-export function BayCard({
+export const BayCard = React.memo(function BayCard({
   bay,
   isPending = false,
   isKanbanMode = false,
@@ -195,6 +202,8 @@ export function BayCard({
   return (
     <div
       ref={setNodeRef}
+      role="region"
+      aria-label={`Bay ${bay.bayNumber}${wo ? ` - ${wo.vehicle?.plate_number ?? "occupied"}` : " - empty"}`}
       className={cn("transition-all duration-300", isOver && "scale-[1.02]")}
     >
       <div
@@ -317,6 +326,39 @@ export function BayCard({
                       />
                     ));
                   })()}
+                  {onAssignClick && (
+                    <TooltipProvider delay={300}>
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={(props) => (
+                            <button
+                              {...props}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onAssignClick(bay.bayNumber);
+                              }}
+                              disabled={isPending}
+                              className={cn(
+                                "flex size-6 items-center justify-center rounded-full border border-dashed transition-all duration-200",
+                                "text-muted-foreground/40 hover:text-primary hover:border-primary/50 hover:bg-primary/10",
+                                "active:scale-95 disabled:opacity-40 disabled:pointer-events-none",
+                              )}
+                            />
+                          )}
+                        >
+                          <UserPlus className="size-3" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={4}>
+                          <span>
+                            {wo.mechanic
+                              ? "Assign different mechanic"
+                              : "Assign mechanic"}
+                          </span>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
                 </div>
               </div>
 
@@ -484,4 +526,4 @@ export function BayCard({
       </div>
     </div>
   );
-}
+});

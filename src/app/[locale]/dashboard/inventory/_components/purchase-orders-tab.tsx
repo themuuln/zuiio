@@ -80,12 +80,12 @@ export function PurchaseOrdersTab({
     { key: "order_number", label: "PO #" },
     {
       key: "supplier",
-      label: "Supplier",
+      label: t("supplier"),
       value: (po) => po.supplier?.name ?? "—",
     },
-    { key: "status", label: "Status" },
-    { key: "total_amount", label: "Total", format: "currency" },
-    { key: "created_at", label: "Date", format: "date" },
+    { key: "status", label: t("status") },
+    { key: "total_amount", label: t("totalAmount"), format: "currency" },
+    { key: "created_at", label: t("date"), format: "date" },
   ];
 
   function handleCreatePO(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -211,7 +211,7 @@ export function PurchaseOrdersTab({
                   htmlFor="inv-po-order-number"
                   className="text-sm font-medium"
                 >
-                  Order Number *
+                  {t("orderNumber")} *
                 </label>
                 <Input
                   id="inv-po-order-number"
@@ -226,14 +226,14 @@ export function PurchaseOrdersTab({
                   htmlFor="inv-po-supplier"
                   className="text-sm font-medium"
                 >
-                  Supplier
+                  {t("supplier")}
                 </label>
                 <select
                   id="inv-po-supplier"
                   name="supplier_id"
                   className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
                 >
-                  <option value="">No supplier</option>
+                  <option value="">{t("noSupplier")}</option>
                   {suppliers
                     .filter((s) => s.is_active)
                     .map((s) => (
@@ -246,19 +246,19 @@ export function PurchaseOrdersTab({
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="inv-po-notes" className="text-sm font-medium">
-                Notes
+                {t("notes")}
               </label>
               <Input
                 id="inv-po-notes"
                 name="notes"
-                placeholder="Optional notes"
+                placeholder={t("optionalNotes")}
                 className="h-11"
               />
             </div>
             <div className="flex flex-col gap-3 rounded-lg border border-border p-4">
               <div className="flex items-center justify-between">
                 <Typography.Text className="text-sm font-medium">
-                  Items
+                  {t("items")}
                 </Typography.Text>
               </div>
               <POItemEditor parts={activeParts} locale={locale} t={t} />

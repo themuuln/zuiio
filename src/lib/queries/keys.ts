@@ -1,5 +1,9 @@
 /** Query key factory — single source of truth for cache keys */
 
+export const profileKeys = {
+  current: () => ["profile", "current"] as const,
+};
+
 export const orgKeys = {
   all: ["organizations"] as const,
   current: () => [...orgKeys.all, "current"] as const,
@@ -41,6 +45,36 @@ export const workOrderKeys = {
     [...workOrderKeys.all(orgId), "list", status ?? "All"] as const,
   detail: (orgId: string, id: string) =>
     [...workOrderKeys.all(orgId), "detail", id] as const,
+};
+
+export const estimateKeys = {
+  all: (orgId: string) => ["organizations", orgId, "estimates"] as const,
+  list: (
+    orgId: string,
+    status?: string,
+    search?: string,
+    branchId?: string | null,
+  ) =>
+    [
+      ...estimateKeys.all(orgId),
+      "list",
+      status ?? "",
+      search ?? "",
+      branchId ?? "all",
+    ] as const,
+  detail: (orgId: string, id: string) =>
+    [...estimateKeys.all(orgId), "detail", id] as const,
+};
+
+export const refundKeys = {
+  all: (orgId: string) => ["organizations", orgId, "refunds"] as const,
+  list: (orgId: string, status?: string) =>
+    [...refundKeys.all(orgId), "list", status ?? "all"] as const,
+  detail: (orgId: string, id: string) =>
+    [...refundKeys.all(orgId), "detail", id] as const,
+  stats: (orgId: string) => [...refundKeys.all(orgId), "stats"] as const,
+  invoiceRefunds: (orgId: string, invoiceId: string) =>
+    [...refundKeys.all(orgId), "invoice", invoiceId] as const,
 };
 
 export const priceMemoryKeys = {
@@ -99,6 +133,28 @@ export const mechanicKeys = {
   /** Active work orders for a mechanic (multiple statuses) */
   workOrders: (orgId: string, userId: string) =>
     [...mechanicKeys.all(orgId), userId, "work-orders"] as const,
+};
+
+export const mechanicPerfKeys = {
+  all: (orgId: string) =>
+    ["organizations", orgId, "mechanic-performance"] as const,
+  kpis: (
+    orgId: string,
+    dateFrom: string,
+    dateTo: string,
+    branchId?: string | null,
+  ) =>
+    [
+      ...mechanicPerfKeys.all(orgId),
+      "kpis",
+      dateFrom,
+      dateTo,
+      branchId ?? "all",
+    ] as const,
+  hours: (orgId: string, dateFrom: string, dateTo: string) =>
+    [...mechanicPerfKeys.all(orgId), "hours", dateFrom, dateTo] as const,
+  commissions: (orgId: string, dateFrom: string, dateTo: string) =>
+    [...mechanicPerfKeys.all(orgId), "commissions", dateFrom, dateTo] as const,
 };
 
 export const clockKeys = {
@@ -353,4 +409,15 @@ export const bayViewKeys = {
     [...bayViewKeys.all, "data", branchId ?? "all"] as const,
   shiftReport: (branchId: string | undefined) =>
     [...bayViewKeys.all, "shift-report", branchId ?? "all"] as const,
+};
+
+export const appointmentKeys = {
+  all: (orgId: string) => ["organizations", orgId, "appointments"] as const,
+  list: (orgId: string, date: string, branchId?: string | null) =>
+    [...appointmentKeys.all(orgId), "list", date, branchId ?? "all"] as const,
+};
+
+export const priceRuleKeys = {
+  all: (orgId: string) => ["organizations", orgId, "price-rules"] as const,
+  list: (orgId: string) => [...priceRuleKeys.all(orgId), "list"] as const,
 };

@@ -20,6 +20,7 @@ import {
   useGlobalServiceCatalog,
 } from "@/lib/queries/use-global-catalog";
 import { usePartsCatalog } from "@/lib/queries/use-inventory";
+import { useProfile } from "@/lib/queries/use-profile";
 import {
   fetchVehiclePartPrice,
   fetchVehicleServicePrice,
@@ -245,18 +246,10 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
   const [_draftRestored, _setDraftRestored] = useState(false);
   const draftCheckedRef = useRef(false);
 
-  const { data: profile, isLoading: profileLoading } = useQuery({
-    queryKey: ["profile"],
-    queryFn: async () => {
-      const res = await fetch("/api/profile");
-      if (!res.ok) throw new Error("Failed to load profile");
-      return res.json();
-    },
-    staleTime: Infinity,
-  });
+  const { data: profile, isLoading: profileLoading } = useProfile();
 
-  const orgId =
-    (profile?.organizationId ?? profile?.data?.organizationId) || null;
+  const orgId = profile?.organizationId ?? null;
+  const orgIdSafe = orgId ?? undefined;
 
   // Auto-select customer from URL param
   const { data: preselectedCustomer } = useQuery({
@@ -279,30 +272,30 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
   }, [preselectedCustomer, selectedCustomer]);
 
   const { data: catalogData, isInitialLoading: catalogLoading } =
-    useServiceCatalog(orgId);
+    useServiceCatalog(orgIdSafe);
   const { data: partsCatalogData, isInitialLoading: partsCatalogLoading } =
-    usePartsCatalog(orgId);
+    usePartsCatalog(orgIdSafe);
   const { data: globalServicesData } = useGlobalServiceCatalog();
   const { data: globalPartsData } = useGlobalPartsCatalog();
   const { data: mechanicsData, isInitialLoading: mechanicsLoading } =
-    useMechanicsWithJobCount(orgId);
+    useMechanicsWithJobCount(orgIdSafe);
   const { data: priceHistoryData, isInitialLoading: priceHistoryLoading } =
-    usePriceHistory(orgId);
+    usePriceHistory(orgIdSafe);
 
   const { data: customerSearchResults, isFetching: customerSearchFetching } =
-    useCustomerSearch(orgId, customerSearch);
+    useCustomerSearch(orgIdSafe, customerSearch);
   const { data: plateSearchResults, isFetching: plateSearchFetching } =
-    useCustomersByPlate(orgId, customerSearch);
+    useCustomersByPlate(orgIdSafe, customerSearch);
 
   const { data: vehicleSearchResults, isFetching: vehicleSearchFetching } =
-    useVehicleSearch(orgId, selectedCustomer?.id, vehicleSearch);
+    useVehicleSearch(orgIdSafe, selectedCustomer?.id, vehicleSearch);
 
   const { data: vehicleLastVisitData } = useVehicleLastVisit(
-    orgId,
+    orgIdSafe,
     selectedVehicle?.id,
   );
 
-  const createWorkOrderMutation = useCreateWorkOrder(orgId);
+  const createWorkOrderMutation = useCreateWorkOrder(orgIdSafe);
 
   const loading =
     profileLoading ||

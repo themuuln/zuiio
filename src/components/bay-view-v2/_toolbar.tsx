@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   Building2,
   Car,
@@ -75,9 +76,12 @@ interface ToolbarProps {
   selectedBranchId: string;
   /** Called when a branch pill is clicked */
   onBranchChange: (branchId: string) => void;
+  /** Status filter — null means "All" */
+  statusFilter: string | null;
+  setStatusFilter: (v: string | null) => void;
 }
 
-export function Toolbar({
+export const Toolbar = React.memo(function Toolbar({
   viewMode,
   setViewMode,
   userIsMechanic,
@@ -105,6 +109,8 @@ export function Toolbar({
   branches,
   selectedBranchId,
   onBranchChange,
+  statusFilter,
+  setStatusFilter,
 }: ToolbarProps) {
   return (
     <div className="flex-shrink-0 border-b border-border/40 bg-background/80 backdrop-blur-md p-3 select-none">
@@ -155,6 +161,7 @@ export function Toolbar({
                   key={opt.mode}
                   type="button"
                   onClick={() => setViewMode(opt.mode)}
+                  aria-pressed={isActive}
                   className={cn(
                     "flex items-center gap-2 rounded-md px-3 text-xs font-semibold transition-all cursor-pointer h-full",
                     isActive
@@ -189,6 +196,63 @@ export function Toolbar({
               {myJobsOnly ? t("myJobs") : t("allJobs")}
             </Button>
           )}
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-px rounded-lg border border-border/50 bg-muted/40 p-0.5 shadow-sm h-8">
+            {(
+              [
+                {
+                  key: null,
+                  label: "All",
+                  dot: null,
+                  activeBg: "bg-background",
+                },
+                {
+                  key: "In Progress",
+                  label: "In Progress",
+                  dot: "bg-indigo-500",
+                  activeBg: "bg-indigo-500/10",
+                },
+                {
+                  key: "New",
+                  label: "New",
+                  dot: "bg-amber-500",
+                  activeBg: "bg-amber-500/10",
+                },
+                {
+                  key: "Ready for Pickup",
+                  label: "Ready",
+                  dot: "bg-emerald-500",
+                  activeBg: "bg-emerald-500/10",
+                },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.key ?? "all"}
+                type="button"
+                onClick={() => setStatusFilter(opt.key)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-all cursor-pointer h-6",
+                  statusFilter === opt.key
+                    ? cn(
+                        "text-foreground shadow-sm border border-border/30",
+                        opt.activeBg,
+                      )
+                    : "text-muted-foreground/60 hover:bg-muted/60 hover:text-foreground/80",
+                )}
+              >
+                {opt.dot && (
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full shrink-0 ring-1 ring-black/5",
+                      opt.dot,
+                    )}
+                  />
+                )}
+                {opt.label}
+              </button>
+            ))}
+          </div>
 
           {/* Refresh Button */}
           <Button
@@ -408,4 +472,4 @@ export function Toolbar({
       </div>
     </div>
   );
-}
+});

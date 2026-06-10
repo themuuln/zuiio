@@ -101,14 +101,20 @@ export async function getWorkOrders(
   const mechanicIds = [
     ...new Set(rows.flatMap((r) => (r.mechanic_id ? [r.mechanic_id] : []))),
   ] as string[];
-  const mechanicMap = new Map<string, string | null>();
+  const mechanicMap = new Map<
+    string,
+    { full_name: string | null; avatar_url: string | null }
+  >();
   if (mechanicIds.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, full_name")
+      .select("id, full_name, avatar_url")
       .in("id", mechanicIds);
     for (const p of profiles ?? []) {
-      mechanicMap.set(p.id, p.full_name);
+      mechanicMap.set(p.id, {
+        full_name: p.full_name,
+        avatar_url: p.avatar_url,
+      });
     }
   }
 
@@ -169,6 +175,7 @@ export async function getWorkOrders(
       total_revenue > 0 ? (gross_profit / total_revenue) * 100 : 0;
     return {
       ...r,
+      grand_total: r.total ?? 0,
       services_cost: costs?.services_cost ?? 0,
       parts_cost: costs?.parts_cost ?? 0,
       services_revenue,
@@ -176,10 +183,13 @@ export async function getWorkOrders(
       gross_profit,
       margin_percent: Math.round(margin_percent * 100) / 100,
       mechanic: r.mechanic_id
-        ? { full_name: mechanicMap.get(r.mechanic_id) ?? null }
+        ? (mechanicMap.get(r.mechanic_id) ?? {
+            full_name: null,
+            avatar_url: null,
+          })
         : null,
     };
-  }) as unknown as unknown as WorkOrderWithRefs[];
+  }) as unknown as WorkOrderWithRefs[];
 }
 
 // ── Get Single Work Order (with detail) ───────────────────────

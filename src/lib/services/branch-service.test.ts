@@ -12,7 +12,7 @@ import {
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("@/lib/cache/with-cache", () => ({
-  withCache: vi.fn((_key, fn) => fn()),
+  withCache: vi.fn((_key: unknown, fn: () => unknown) => fn()),
 }));
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 
@@ -30,14 +30,16 @@ function makeBuilder<T = unknown>(data?: T) {
     limit: vi.fn().mockReturnThis(),
     range: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue(resolved),
+    maybeSingle: vi.fn().mockResolvedValue(resolved),
     then: vi.fn((resolve: (v: typeof resolved) => void) => resolve(resolved)),
   };
 }
 
-const mockClient = createMockSupabaseClient();
+let mockClient: ReturnType<typeof createMockSupabaseClient>;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockClient = createMockSupabaseClient();
   vi.mocked(createClient).mockResolvedValue(
     mockClient as unknown as Awaited<ReturnType<typeof createClient>>,
   );
@@ -48,15 +50,17 @@ describe("createBranch", () => {
     mockClient.from = vi
       .fn()
       .mockReturnValue(makeBuilder({ id: "b-1", name: "Branch 2" }));
-    const result = await createBranch("org-1", { name: "Branch 2" });
+    const result = await createBranch(mockClient as any, "org-1", {
+      name: "Branch 2",
+    });
     expect(result.id).toBe("b-1");
     expect(revalidateTag).toHaveBeenCalled();
   });
 
   it("rejects empty name", async () => {
-    await expect(createBranch("org-1", { name: "" })).rejects.toThrow(
-      ValidationError,
-    );
+    await expect(
+      createBranch(mockClient as any, "org-1", { name: "" }),
+    ).rejects.toThrow(ValidationError);
   });
 });
 
@@ -67,7 +71,7 @@ describe("getBranches", () => {
       resolve({ data: [{ id: "b-1", name: "Main" }], error: null }),
     );
     mockClient.from = vi.fn().mockReturnValue(builder);
-    const result = await getBranches("org-1");
+    const result = await getBranches(mockClient as any, "org-1");
     expect(result).toHaveLength(1);
   });
 
@@ -77,7 +81,7 @@ describe("getBranches", () => {
       resolve({ data: [], error: null }),
     );
     mockClient.from = vi.fn().mockReturnValue(builder);
-    expect(await getBranches("org-1")).toEqual([]);
+    expect(await getBranches(mockClient as any, "org-1")).toEqual([]);
   });
 });
 
@@ -86,7 +90,9 @@ describe("updateBranch", () => {
     mockClient.from = vi
       .fn()
       .mockReturnValue(makeBuilder({ id: "b-1", name: "Updated" }));
-    const result = await updateBranch("b-1", "org-1", { name: "Updated" });
+    const result = await updateBranch(mockClient as any, "b-1", "org-1", {
+      name: "Updated",
+    });
     expect(result.name).toBe("Updated");
     expect(revalidateTag).toHaveBeenCalled();
   });
@@ -98,7 +104,7 @@ describe("updateBranch", () => {
       .mockResolvedValue({ data: null, error: { message: "Not found" } });
     mockClient.from = vi.fn().mockReturnValue(builder);
     await expect(
-      updateBranch("nonexistent", "org-1", { name: "X" }),
+      updateBranch(mockClient as any, "nonexistent", "org-1", { name: "X" }),
     ).rejects.toThrow(NotFoundError);
   });
 });
@@ -110,7 +116,7 @@ describe("deleteBranch", () => {
       resolve({ data: null, error: null }),
     );
     mockClient.from = vi.fn().mockReturnValue(builder);
-    await deleteBranch("b-1", "org-1");
+    await deleteBranch(mockClient as any, "b-1", "org-1");
     expect(revalidateTag).toHaveBeenCalled();
   });
 });

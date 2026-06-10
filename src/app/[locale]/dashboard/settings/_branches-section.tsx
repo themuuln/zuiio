@@ -60,11 +60,11 @@ export function BranchesSection({ orgId }: BranchesSectionProps) {
       });
       toast.success(
         checked
-          ? "Finance will separate per branch"
-          : "Finance shows all branches",
+          ? t("financeSeparateEnabledToast")
+          : t("financeSeparateDisabledToast"),
       );
     } catch {
-      toast.error("Failed to save finance separation setting");
+      toast.error(t("financeSeparateFailedToast"));
     }
   };
 

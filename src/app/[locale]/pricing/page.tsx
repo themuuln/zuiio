@@ -375,7 +375,7 @@ export default function PricingPage() {
                   <tr className="border-b">
                     <th
                       className="pb-3 pr-4 font-medium text-muted-foreground"
-                      aria-label="Feature"
+                      aria-label={t("feature")}
                     />
                     <th className="pb-3 px-4 font-medium text-muted-foreground">
                       {t("starterName")}

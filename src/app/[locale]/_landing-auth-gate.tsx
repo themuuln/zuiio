@@ -1,17 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { usePublicStats } from "@/lib/queries/use-public-stats";
 import { createClient } from "@/lib/supabase/client";
 
-interface PublicStats {
-  shops: number;
-  vehiclesServiced: number;
-  satisfaction: number;
-}
-
 interface AuthGateProps {
-  children: (stats: PublicStats | null) => React.ReactNode;
+  children: (
+    stats: {
+      shops: number;
+      vehiclesServiced: number;
+      satisfaction: number;
+    } | null,
+  ) => React.ReactNode;
 }
 
 /**
@@ -21,7 +22,7 @@ interface AuthGateProps {
  */
 export function AuthGate({ children }: AuthGateProps) {
   const router = useRouter();
-  const [stats, setStats] = useState<PublicStats | null>(null);
+  const { data: stats = null } = usePublicStats();
 
   // Redirect logged-in users to dashboard (non-blocking, delayed for router init)
   useEffect(() => {
@@ -47,14 +48,6 @@ export function AuthGate({ children }: AuthGateProps) {
       cancelled = true;
     };
   }, [router]);
-
-  // Fetch public stats (non-blocking)
-  useEffect(() => {
-    fetch("/api/public/stats")
-      .then((res) => res.json())
-      .then(setStats)
-      .catch(() => {});
-  }, []);
 
   return <>{children(stats)}</>;
 }

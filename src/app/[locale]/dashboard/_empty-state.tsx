@@ -1,5 +1,8 @@
+"use client";
+
 import { Plus, Wrench } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -11,29 +14,28 @@ import {
 } from "@/components/ui/empty";
 
 export function EmptyDashboardState({ onRetry }: { onRetry: () => void }) {
+  const t = useTranslations("dashboard");
+  const tc = useTranslations("common");
+
   return (
     <Empty>
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <Wrench />
         </EmptyMedia>
-        <EmptyTitle>Welcome to TOLOM</EmptyTitle>
-        <EmptyDescription>
-          Your garage&apos;s command center. Start by creating your first work
-          order; revenue, customer stats, and trends will appear here
-          automatically as you complete jobs.
-        </EmptyDescription>
+        <EmptyTitle>{t("welcome")}</EmptyTitle>
+        <EmptyDescription>{t("emptyDescription")}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <div className="flex gap-3">
           <Link href="/dashboard/work-orders/new">
             <Button>
               <Plus className="size-4" />
-              Create Your First Work Order
+              {t("createFirstWorkOrder")}
             </Button>
           </Link>
           <Button variant="outline" onClick={onRetry}>
-            Refresh
+            {tc("refresh")}
           </Button>
         </div>
       </EmptyContent>

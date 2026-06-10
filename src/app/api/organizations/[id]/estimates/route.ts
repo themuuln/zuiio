@@ -6,22 +6,29 @@ import { requireActiveSubscription } from "@/lib/services/subscription-enforceme
 import type { EstimateStatus } from "@/lib/types";
 
 export const GET = createRouteHandler(
-  async ({ request }) => {
+  async ({ request, supabase, orgId }) => {
     const { searchParams } = new URL(request.url);
-    const estimates = await getEstimates({
+    const result = await getEstimates(supabase, orgId, {
       status: (searchParams.get("status") as EstimateStatus) ?? undefined,
       customer_id: searchParams.get("customer_id") ?? undefined,
       date_from: searchParams.get("date_from") ?? undefined,
       date_to: searchParams.get("date_to") ?? undefined,
       branchId: searchParams.get("branch_id") ?? undefined,
+      search: searchParams.get("q") ?? undefined,
+      page: searchParams.get("page")
+        ? Number(searchParams.get("page"))
+        : undefined,
+      pageSize: searchParams.get("pageSize")
+        ? Number(searchParams.get("pageSize"))
+        : undefined,
     });
-    return NextResponse.json({ data: estimates });
+    return NextResponse.json({ data: result.data, count: result.count });
   },
   { requiredPermission: { resource: "work_orders", action: "read" } },
 );
 
 export const POST = createRouteHandler(
-  async ({ request, orgId }) => {
+  async ({ request, orgId, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
@@ -39,7 +46,7 @@ export const POST = createRouteHandler(
       );
     }
     const body = await request.json();
-    const estimate = await createEstimate(orgId, body);
+    const estimate = await createEstimate(supabase, orgId, body);
     return NextResponse.json({ data: estimate }, { status: 201 });
   },
   {

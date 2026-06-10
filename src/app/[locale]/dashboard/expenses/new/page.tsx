@@ -125,7 +125,7 @@ export default function NewExpensePage() {
             render={<Link href="/dashboard/expenses" />}
             variant="ghost"
             size="icon-xs"
-            aria-label="Back"
+            aria-label={commonT("back")}
           >
             <ArrowLeft className="size-4" />
           </Button>
@@ -156,7 +156,7 @@ export default function NewExpensePage() {
           render={<Link href="/dashboard/expenses" />}
           variant="ghost"
           size="icon-xs"
-          aria-label="Back"
+          aria-label={commonT("back")}
         >
           <ArrowLeft className="size-4" />
         </Button>

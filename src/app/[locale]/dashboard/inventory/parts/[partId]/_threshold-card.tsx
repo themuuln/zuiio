@@ -51,7 +51,7 @@ export function ThresholdCard({
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: inventoryKeys.thresholds(orgId) });
-      toast.success("Threshold saved");
+      toast.success(t("inventory.thresholdSaved"));
       setEditing(false);
     },
     onError: (err: Error) => toast.error(err.message),

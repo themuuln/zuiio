@@ -176,14 +176,14 @@ export function ServiceCard({
                 htmlFor={`entry-notes-${entry.workOrderServiceId}`}
                 className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider"
               >
-                Notes
+                {t("notesLabel")}
               </label>
               <Input
                 id={`entry-notes-${entry.workOrderServiceId}`}
                 value={entry.notes}
                 onChange={(e) => onChange({ notes: e.target.value })}
                 className="h-8 text-xs"
-                placeholder="Optional"
+                placeholder={t("optional")}
               />
             </div>
           </div>

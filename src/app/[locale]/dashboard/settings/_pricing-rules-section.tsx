@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Tags, Trash2 } from "lucide-react";
+import { priceRuleKeys } from "@/lib/queries/keys";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -94,22 +95,28 @@ const DEFAULT_FORM: RuleForm = {
   service_name_pattern: "",
 };
 
-const OPERATOR_LABELS: Record<string, string> = {
-  multiply: "Multiply (price × value)",
-  add_fixed: "+ Fixed amount (price + value)",
-  set_fixed: "Fixed price (price = value)",
-  percentage_add: "+ Percentage (price × (1 + value%))",
-  percentage_sub: "- Percentage (price × (1 - value%))",
-};
+function getOperatorLabels(t: (key: string) => string): Record<string, string> {
+  return {
+    multiply: t("operatorMultiply"),
+    add_fixed: t("operatorAddFixed"),
+    set_fixed: t("operatorSetFixed"),
+    percentage_add: t("operatorPercentAdd"),
+    percentage_sub: t("operatorPercentSub"),
+  };
+}
 
-const CONDITION_LABELS: Record<string, string> = {
-  class: "Vehicle class (Luxury/Standard/etc)",
-  make: "Vehicle make (Toyota, Lexus, etc)",
-  make_model: "Specific make + model",
-  fuel: "Fuel type (Hybrid, Gasoline, etc)",
-  body_type: "Body type (SUV, Sedan, etc)",
-  all: "All vehicles (catch-all)",
-};
+function getConditionLabels(
+  t: (key: string) => string,
+): Record<string, string> {
+  return {
+    class: t("conditionClass"),
+    make: t("conditionMake"),
+    make_model: t("conditionMakeModel"),
+    fuel: t("conditionFuel"),
+    body_type: t("conditionBodyType"),
+    all: t("conditionAll"),
+  };
+}
 
 function buildConditions(
   type: string,
@@ -213,7 +220,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const { data: rules, isLoading } = useQuery({
-    queryKey: ["price-rules", orgId],
+    queryKey: priceRuleKeys.all(orgId),
     queryFn: async () => {
       const res = await fetch(`/api/organizations/${orgId}/price-rules`);
       const json = await res.json();
@@ -268,7 +275,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["price-rules", orgId] });
+      queryClient.invalidateQueries({ queryKey: priceRuleKeys.all(orgId) });
       setDialogOpen(false);
       setEditingRule(null);
       setForm(DEFAULT_FORM);
@@ -291,7 +298,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
       if (json.error) throw new Error(json.error.message);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["price-rules", orgId] });
+      queryClient.invalidateQueries({ queryKey: priceRuleKeys.all(orgId) });
       setDeleteConfirm(null);
       toast.success(t("deletePriceRule"));
     },
@@ -320,7 +327,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
       if (json.error) throw new Error(json.error.message);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["price-rules", orgId] });
+      queryClient.invalidateQueries({ queryKey: priceRuleKeys.all(orgId) });
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -508,7 +515,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
               <Input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="e.g. Luxury parts × 1.25"
+                placeholder={t("ruleNamePlaceholder")}
               />
             </div>
 
@@ -519,7 +526,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                 onChange={(e) =>
                   setForm({ ...form, description: e.target.value })
                 }
-                placeholder="Why this rule exists..."
+                placeholder={t("descriptionPlaceholder")}
                 rows={2}
               />
             </div>
@@ -568,7 +575,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(CONDITION_LABELS).map(([key, label]) => (
+                  {Object.entries(getConditionLabels(t)).map(([key, label]) => (
                     <SelectItem key={key} value={key}>
                       {label}
                     </SelectItem>
@@ -585,7 +592,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                   onChange={(e) =>
                     setForm({ ...form, conditions_classes: e.target.value })
                   }
-                  placeholder="luxury, standard, economy, performance"
+                  placeholder={t("vehicleClassesPlaceholder")}
                 />
               </div>
             )}
@@ -599,7 +606,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                   onChange={(e) =>
                     setForm({ ...form, conditions_makes: e.target.value })
                   }
-                  placeholder="Lexus, Toyota, BMW"
+                  placeholder={t("makesPlaceholder")}
                 />
               </div>
             )}
@@ -612,7 +619,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                   onChange={(e) =>
                     setForm({ ...form, conditions_models: e.target.value })
                   }
-                  placeholder="RX, Harrier, X5"
+                  placeholder={t("modelsPlaceholder")}
                 />
               </div>
             )}
@@ -625,7 +632,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                   onChange={(e) =>
                     setForm({ ...form, conditions_fuel_types: e.target.value })
                   }
-                  placeholder="hybrid, plug-in-hybrid, electric"
+                  placeholder={t("fuelTypesPlaceholder")}
                 />
               </div>
             )}
@@ -638,7 +645,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                   onChange={(e) =>
                     setForm({ ...form, conditions_body_types: e.target.value })
                   }
-                  placeholder="suv, sedan, crossover, truck"
+                  placeholder={t("bodyTypesPlaceholder")}
                 />
               </div>
             )}
@@ -650,7 +657,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                 onChange={(e) =>
                   setForm({ ...form, conditions_description: e.target.value })
                 }
-                placeholder="e.g. Luxury vehicles (Lexus, BMW, Mercedes)"
+                placeholder={t("conditionDisplayPlaceholder")}
               />
             </div>
 
@@ -668,7 +675,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(OPERATOR_LABELS).map(([key, label]) => (
+                  {Object.entries(getOperatorLabels(t)).map(([key, label]) => (
                     <SelectItem key={key} value={key}>
                       {label}
                     </SelectItem>
@@ -728,7 +735,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                     onChange={(e) =>
                       setForm({ ...form, part_category: e.target.value })
                     }
-                    placeholder="Тос, шингэн, Brakes..."
+                    placeholder={t("partCategoryPlaceholder")}
                   />
                 </div>
                 <div>
@@ -740,7 +747,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                     onChange={(e) =>
                       setForm({ ...form, service_category: e.target.value })
                     }
-                    placeholder="Diagnostic, Brakes..."
+                    placeholder={t("serviceCategoryPlaceholder")}
                   />
                 </div>
               </div>

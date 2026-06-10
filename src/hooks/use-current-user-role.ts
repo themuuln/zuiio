@@ -1,56 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-
-interface UserProfile {
-  id: string;
-  fullName: string | null;
-  roleName: string | null;
-  organizationId: string | null;
-  branchId: string | null;
-}
-
-type RoleName = "Org Owner" | "Manager" | "Mechanic" | "Guest" | null;
-
-const profileKeys = {
-  current: () => ["profile", "current"] as const,
-};
-
-export function useCurrentUserRole() {
-  const { data: profile, isLoading: loading } = useQuery<UserProfile | null>({
-    queryKey: profileKeys.current(),
-    queryFn: async () => {
-      const res = await fetch("/api/profile");
-      if (!res.ok) return null;
-      const data = await res.json();
-      return {
-        id: data.id ?? "",
-        fullName: data.fullName ?? null,
-        roleName: data.roleName ?? null,
-        organizationId: data.organizationId ?? null,
-        branchId: data.branchId ?? null,
-      };
-    },
-    staleTime: 5 * 60_000,
-    retry: 1,
-  });
-
-  const role: RoleName =
-    profile?.roleName === "Org Owner" ||
-    profile?.roleName === "Manager" ||
-    profile?.roleName === "Mechanic" ||
-    profile?.roleName === "Guest"
-      ? profile.roleName
-      : null;
-
-  return {
-    profile,
-    role,
-    loading,
-    isOrgOwner: role === "Org Owner",
-    isAdmin: role === "Org Owner",
-    isManager: role === "Manager",
-    isMechanic: role === "Mechanic",
-    isGuest: role === "Guest",
-  };
-}
+/**
+ * Re-exports useCurrentUserRole from the unified use-profile hook.
+ * All profile data comes from a single /api/profile fetch.
+ */
+export { useCurrentUserRole } from "../lib/queries/use-profile";

@@ -26,6 +26,7 @@ import {
   SortDesc,
 } from "lucide-react";
 import * as React from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -130,6 +131,11 @@ export function DataTable<TData, TValue>({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState("");
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const paginationEnabled = pageSize > 0;
 
@@ -202,6 +208,8 @@ export function DataTable<TData, TValue>({
     );
   }
 
+  const t = useTranslations("common");
+
   // ── Empty state ───────────────────────────────────────────
 
   if (data.length === 0) {
@@ -210,10 +218,8 @@ export function DataTable<TData, TValue>({
         {emptyState ?? (
           <Empty>
             <EmptyHeader>
-              <EmptyTitle>No data found</EmptyTitle>
-              <EmptyDescription>
-                Try adjusting your search or filters.
-              </EmptyDescription>
+              <EmptyTitle>{t("noDataFound")}</EmptyTitle>
+              <EmptyDescription>{t("tryAdjustingFilters")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         )}
@@ -224,12 +230,12 @@ export function DataTable<TData, TValue>({
   return (
     <div className={cn("space-y-4", className)}>
       {/* ── Toolbar ────────────────────────────────────────── */}
-      {(toolbar || search || showColumnVisibility) && (
+      {(toolbar || search) && (
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-4">
             {search && (
               <Input
-                placeholder={search.placeholder ?? "Search..."}
+                placeholder={search.placeholder ?? t("searchDots")}
                 value={
                   search.type === "global"
                     ? globalFilter
@@ -251,12 +257,11 @@ export function DataTable<TData, TValue>({
             )}
             {toolbar}
           </div>
-          {showColumnVisibility && <DataTableViewOptions table={table} />}
         </div>
       )}
 
       {/* ── Mobile Card View ──────────────────────────────── */}
-      {renderMobileCard && (
+      {renderMobileCard && mounted && (
         <div className="grid gap-3 sm:gap-4 md:hidden">
           {table.getRowModel().rows.length > 0 ? (
             table.getRowModel().rows.map((row) => (
@@ -281,7 +286,7 @@ export function DataTable<TData, TValue>({
             ))
           ) : (
             <div className="py-8 text-center text-sm text-muted-foreground">
-              No results.
+              {t("noResultsDot")}
             </div>
           )}
         </div>
@@ -290,12 +295,12 @@ export function DataTable<TData, TValue>({
       {/* ── Table ──────────────────────────────────────────── */}
       <div
         className={cn(
-          "overflow-x-auto rounded-none border",
+          "overflow-hidden rounded-md border",
           renderMobileCard && "hidden md:block",
         )}
       >
         <Table>
-          <TableHeader className="bg-muted/50">
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -329,7 +334,7 @@ export function DataTable<TData, TValue>({
                     onRowClick?.(row.original);
                   }}
                   className={cn(
-                    "border-b border-border transition-colors",
+                    "transition-colors",
                     onRowClick && "cursor-pointer hover:bg-muted/30",
                   )}
                 >
@@ -349,7 +354,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  No results.
+                  {t("noResultsDot")}
                 </TableCell>
               </TableRow>
             )}
@@ -358,7 +363,12 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* ── Pagination ─────────────────────────────────────── */}
-      {paginationEnabled && <DataTablePagination table={table} />}
+      {paginationEnabled && (
+        <DataTablePagination
+          table={table}
+          showColumnVisibility={showColumnVisibility}
+        />
+      )}
     </div>
   );
 }
@@ -400,7 +410,7 @@ export function DataTableColumnHeader<TData>({
         ) : column.getIsSorted() === "desc" ? (
           <SortDesc className="ml-1 size-3.5" />
         ) : (
-          <ArrowUpDown className="ml-1 size-3.5 shrink-0 text-muted-foreground/50" />
+          <ArrowUpDown className="ml-1 size-3.5 shrink-0 text-muted-foreground" />
         )}
       </Button>
     </div>
@@ -411,26 +421,34 @@ export function DataTableColumnHeader<TData>({
 
 interface DataTablePaginationProps<TData> {
   table: TanStackTable<TData>;
+  showColumnVisibility?: boolean;
 }
 
 export function DataTablePagination<TData>({
   table,
+  showColumnVisibility = false,
 }: DataTablePaginationProps<TData>) {
+  const t = useTranslations("common");
   const pageSizes = [10, 20, 30, 40, 50];
 
   return (
     <div className="flex items-center justify-between px-2">
-      {/* Selected row count */}
-      <div className="hidden flex-1 text-sm text-muted-foreground sm:block">
-        {table.getFilteredSelectedRowModel().rows.length > 0 && (
-          <>
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
-          </>
-        )}
+      {/* Left: selected count + column visibility */}
+      <div className="flex flex-1 items-center gap-4">
+        <div className="hidden text-sm text-muted-foreground sm:block">
+          {table.getFilteredSelectedRowModel().rows.length > 0 && (
+            <>
+              {t("rowsSelected", {
+                selected: table.getFilteredSelectedRowModel().rows.length,
+                total: table.getFilteredRowModel().rows.length,
+              })}
+            </>
+          )}
+        </div>
+        {showColumnVisibility && <DataTableViewOptions table={table} />}
       </div>
 
-      {/* Page info */}
+      {/* Right: page info */}
       <div className="flex items-center gap-6 sm:gap-8">
         {/* Page size */}
         <div className="hidden items-center gap-2 md:flex">
@@ -438,7 +456,7 @@ export function DataTablePagination<TData>({
             htmlFor="rows-per-page"
             className="text-sm font-medium text-muted-foreground"
           >
-            Rows per page
+            {t("rowsPerPage")}
           </Label>
           <Select
             value={`${table.getState().pagination.pageSize}`}
@@ -461,8 +479,10 @@ export function DataTablePagination<TData>({
 
         {/* Page indicator */}
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
+          {t("pageOf", {
+            current: table.getState().pagination.pageIndex + 1,
+            total: table.getPageCount(),
+          })}
         </div>
 
         {/* Navigation buttons */}
@@ -473,7 +493,7 @@ export function DataTablePagination<TData>({
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
           >
-            <span className="sr-only">Go to first page</span>
+            <span className="sr-only">{t("goToFirstPage")}</span>
             <ChevronsLeft />
           </Button>
           <Button
@@ -482,7 +502,7 @@ export function DataTablePagination<TData>({
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            <span className="sr-only">Go to previous page</span>
+            <span className="sr-only">{t("goToPreviousPage")}</span>
             <ChevronLeft />
           </Button>
           <Button
@@ -491,7 +511,7 @@ export function DataTablePagination<TData>({
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            <span className="sr-only">Go to next page</span>
+            <span className="sr-only">{t("goToNextPage")}</span>
             <ChevronRight />
           </Button>
           <Button
@@ -500,7 +520,7 @@ export function DataTablePagination<TData>({
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             disabled={!table.getCanNextPage()}
           >
-            <span className="sr-only">Go to last page</span>
+            <span className="sr-only">{t("goToLastPage")}</span>
             <ChevronsRight />
           </Button>
         </div>
@@ -518,19 +538,20 @@ interface DataTableViewOptionsProps<TData> {
 export function DataTableViewOptions<TData>({
   table,
 }: DataTableViewOptionsProps<TData>) {
+  const t = useTranslations("common");
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
           <Button variant="outline" size="sm" className="h-9 gap-1.5">
             <Columns3 className="size-4" />
-            <span className="hidden lg:inline">Columns</span>
+            <span className="hidden lg:inline">{t("columns")}</span>
           </Button>
         }
       />
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+          <DropdownMenuLabel>{t("toggleColumns")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {table
             .getAllColumns()

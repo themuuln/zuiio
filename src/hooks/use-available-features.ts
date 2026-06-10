@@ -7,6 +7,7 @@ import {
   isPlanFeatureEnabled,
   type PlanType,
 } from "@/lib/plan-features";
+import { useProfile } from "@/lib/queries/use-profile";
 import type { ApiResponse } from "@/lib/types";
 
 interface FeatureFlag {
@@ -21,23 +22,7 @@ interface FeatureFlag {
  * to determine which features the current user can access.
  */
 export function useAvailableFeatures() {
-  const { data: profile } = useQuery<{
-    organizationId: string | null;
-    roleName: string | null;
-  }>({
-    queryKey: ["profile", "current"],
-    queryFn: async () => {
-      const res = await fetch("/api/profile");
-      if (!res.ok) return { organizationId: null, roleName: null };
-      const data = await res.json();
-      return {
-        organizationId:
-          data.organizationId ?? data.data?.organizationId ?? null,
-        roleName: data.roleName ?? data.data?.roleName ?? null,
-      };
-    },
-    staleTime: 5 * 60_000,
-  });
+  const { data: profile } = useProfile();
 
   const orgId = profile?.organizationId;
 

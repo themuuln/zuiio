@@ -23,6 +23,7 @@ import {
 import { Typography } from "@/components/ui/typography";
 
 function SectionHeading() {
+  const t = useTranslations("settings");
   return (
     <Item variant="default" className="border-0 p-0 gap-3">
       <ItemMedia
@@ -32,11 +33,10 @@ function SectionHeading() {
         <MessageCircle />
       </ItemMedia>
       <ItemContent>
-        <ItemTitle className="text-base tracking-tight">Telegram Bot</ItemTitle>
-        <ItemDescription>
-          Connect your Telegram account to receive service reminder summaries,
-          revenue impact reports, and urgent alerts directly in your chat.
-        </ItemDescription>
+        <ItemTitle className="text-base tracking-tight">
+          {t("telegramBotTitle")}
+        </ItemTitle>
+        <ItemDescription>{t("telegramBotSectionDesc")}</ItemDescription>
       </ItemContent>
     </Item>
   );
@@ -101,16 +101,15 @@ export function TelegramSection() {
               </div>
               <div>
                 <Typography.Text className="font-semibold">
-                  Telegram Bot
+                  {t("telegramBotTitle")}
                 </Typography.Text>
                 <Typography.Muted className="text-xs text-muted-foreground">
-                  Get notified about service reminders and revenue impact
+                  {t("telegramBotCardDesc")}
                 </Typography.Muted>
               </div>
             </div>
             <Typography.Muted className="text-sm leading-relaxed text-muted-foreground">
-              After generating a link token, send it to the TOLOM bot on
-              Telegram to start receiving daily and weekly summaries.
+              {t("telegramBotAfterGenerate")}
             </Typography.Muted>
           </CardContent>
         </Card>
@@ -118,7 +117,7 @@ export function TelegramSection() {
         <Card className="lg:col-span-2">
           <CardContent className="flex flex-col gap-4 pt-6">
             <Typography.Text className="font-semibold text-sm">
-              Connect Telegram
+              {t("connectTelegram")}
             </Typography.Text>
 
             <ol className="flex flex-col gap-3 text-sm text-muted-foreground">
@@ -126,18 +125,14 @@ export function TelegramSection() {
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
                   1
                 </span>
-                <span>
-                  Click <strong>&quot;Generate Link&quot;</strong> below to
-                  create a one-time connection token (valid for 15 minutes)
-                </span>
+                <span>{t("telegramStep1")}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
                   2
                 </span>
                 <span>
-                  Open Telegram and start the bot:{" "}
-                  <strong>t.me/tolom_bot</strong>
+                  {t("telegramStep2")} <strong>t.me/tolom_bot</strong>
                 </span>
               </li>
               <li className="flex items-start gap-2">
@@ -145,7 +140,7 @@ export function TelegramSection() {
                   3
                 </span>
                 <span>
-                  Send the <strong>/start</strong> command with your token:{" "}
+                  {t("telegramStep3")}{" "}
                   <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
                     /start &lt;your_token&gt;
                   </code>
@@ -155,10 +150,7 @@ export function TelegramSection() {
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
                   4
                 </span>
-                <span>
-                  Done! You&apos;ll start receiving daily and weekly service
-                  reminder summaries with revenue impact.
-                </span>
+                <span>{t("telegramStep4")}</span>
               </li>
             </ol>
 
@@ -167,12 +159,12 @@ export function TelegramSection() {
                 {loading ? (
                   <>
                     <RefreshCw className="mr-2 size-4 animate-spin" />
-                    Generating...
+                    {t("generating")}
                   </>
                 ) : (
                   <>
                     <MessageCircle className="mr-2 size-4" />
-                    Generate Link
+                    {t("generateLink")}
                   </>
                 )}
               </Button>
@@ -185,7 +177,7 @@ export function TelegramSection() {
                     ) : (
                       <Copy className="mr-2 size-4" />
                     )}
-                    {copied ? "Copied!" : "Copy Link"}
+                    {copied ? t("copiedLabel") : t("copyLink")}
                   </Button>
 
                   <Button
@@ -193,7 +185,7 @@ export function TelegramSection() {
                     onClick={() => window.open(deepLink, "_blank")}
                   >
                     <ExternalLink className="mr-2 size-4" />
-                    Open in Telegram
+                    {t("openInTelegram")}
                   </Button>
                 </>
               )}
@@ -206,14 +198,14 @@ export function TelegramSection() {
                   {/* biome-ignore lint/performance/noImgElement: QR codes use inline data URIs, next/Image is not suitable */}
                   <img
                     src={qrDataUrl}
-                    alt="Telegram bot deep link QR code"
+                    alt={t("qrCodeAlt")}
                     className="size-32"
                   />
                 </div>
                 {/* Deep link text */}
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <Typography.Muted className="text-xs text-muted-foreground">
-                    Scan with your phone or copy the link to connect
+                    {t("scanQrHint")}
                   </Typography.Muted>
                   <code className="block break-all rounded-md bg-muted px-3 py-2 text-xs font-mono">
                     {deepLink}

@@ -2,7 +2,8 @@
 
 import { Check, Loader2, RefreshCw, Shield, ShieldAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,27 +32,31 @@ const STATUS_COLORS: Record<string, string> = {
 const PLAN_OPTIONS = ["starter", "pro", "business", "enterprise"];
 
 export default function AdminPage() {
-  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean | null>(null);
-  const [orgs, setOrgs] = useState<AdminOrg[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [savingOrgId, setSavingOrgId] = useState<string | null>(null);
   const t = useTranslations();
+  const queryClient = useQueryClient();
+  const [savingOrgId, setSavingOrgId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const abort = new AbortController();
-    const signal = abort.signal;
-    Promise.all([
-      fetch("/api/admin/me", { signal }).then((r) => r.json()),
-      fetch("/api/admin/organizations", { signal }).then((r) => r.json()),
-    ])
-      .then(([meJson, orgsJson]) => {
-        setIsSuperAdmin(meJson.data?.isSuperAdmin ?? false);
-        if (orgsJson.data) setOrgs(orgsJson.data);
-      })
-      .catch(() => setIsSuperAdmin(false))
-      .finally(() => setLoading(false));
-    return () => abort.abort();
-  }, []);
+  const { data: meData, isLoading: meLoading } = useQuery({
+    queryKey: ["admin", "me"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/me");
+      const json = await res.json();
+      return json.data?.isSuperAdmin ?? false;
+    },
+  });
+
+  const { data: orgs = [], isLoading: orgsLoading } = useQuery<AdminOrg[]>({
+    queryKey: ["admin", "organizations"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/organizations");
+      const json = await res.json();
+      return json.data ?? [];
+    },
+    enabled: meData === true,
+  });
+
+  const loading = meLoading || orgsLoading;
+  const isSuperAdmin = meData === true;
 
   async function handlePlanChange(orgId: string, planType: string) {
     setSavingOrgId(orgId);
@@ -66,13 +71,7 @@ export default function AdminPage() {
       );
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
-      setOrgs((prev) =>
-        prev.map((o) =>
-          o.id === orgId && o.subscription
-            ? { ...o, subscription: { ...o.subscription, plan_type: planType } }
-            : o,
-        ),
-      );
+      queryClient.invalidateQueries({ queryKey: ["admin", "organizations"] });
       toast.success(t("admin.updatedTo", { plan: planType }));
     } catch (err) {
       toast.error(
@@ -96,13 +95,7 @@ export default function AdminPage() {
       );
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
-      setOrgs((prev) =>
-        prev.map((o) =>
-          o.id === orgId && o.subscription
-            ? { ...o, subscription: json.data }
-            : o,
-        ),
-      );
+      queryClient.invalidateQueries({ queryKey: ["admin", "organizations"] });
       toast.success(t("admin.trialReset"));
     } catch (err) {
       toast.error(

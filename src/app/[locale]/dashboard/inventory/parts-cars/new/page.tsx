@@ -18,7 +18,7 @@ import { useCreatePartsCar } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 export default function NewPartsCarPage() {
-  const _t = useTranslations("inventory");
+  const partsCarsT = useTranslations("partsCars");
   const { push } = useRouter();
   const { setDetailPartsCarId } = usePageHeader();
   const { data: org } = useCurrentOrg();
@@ -50,11 +50,13 @@ export default function NewPartsCarPage() {
           : new Date().toISOString().split("T")[0],
         notes: (form.get("notes") as string) || undefined,
       });
-      toast.success("Машин бүртгэгдлээ");
+      toast.success(partsCarsT("saved"));
       push("/dashboard/inventory/parts-cars");
       setDetailPartsCarId(car.id);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Амжилтгүй боллоо");
+      toast.error(
+        err instanceof Error ? err.message : partsCarsT("failedToSave"),
+      );
     } finally {
       setSaving(false);
     }
@@ -72,10 +74,10 @@ export default function NewPartsCarPage() {
         </Button>
         <div>
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            Шинэ задаргааны машин
+            {partsCarsT("pageTitle")}
           </Typography.H1>
           <Typography.Muted className="text-muted-foreground">
-            Хятадаас ирсэн машины мэдээллийг бүртгэх
+            {partsCarsT("pageSubtitle")}
           </Typography.Muted>
         </div>
       </div>
@@ -83,13 +85,14 @@ export default function NewPartsCarPage() {
       <form onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle>Машины мэдээлэл</CardTitle>
+            <CardTitle>{partsCarsT("carInfo")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-4">
               <Field>
                 <FieldLabel htmlFor="make">
-                  Үйлдвэрлэгч <span className="text-destructive">*</span>
+                  {partsCarsT("manufacturer")}{" "}
+                  <span className="text-destructive">*</span>
                 </FieldLabel>
                 <Input
                   id="make"
@@ -100,7 +103,8 @@ export default function NewPartsCarPage() {
               </Field>
               <Field>
                 <FieldLabel htmlFor="model">
-                  Модель <span className="text-destructive">*</span>
+                  {partsCarsT("model")}{" "}
+                  <span className="text-destructive">*</span>
                 </FieldLabel>
                 <Input
                   id="model"
@@ -113,7 +117,7 @@ export default function NewPartsCarPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <Field>
-                <FieldLabel htmlFor="year">Он</FieldLabel>
+                <FieldLabel htmlFor="year">{partsCarsT("year")}</FieldLabel>
                 <Input
                   id="year"
                   name="year"
@@ -124,11 +128,13 @@ export default function NewPartsCarPage() {
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="arrival_date">Ирсэн огноо</FieldLabel>
+                <FieldLabel htmlFor="arrival_date">
+                  {partsCarsT("arrivalDate")}
+                </FieldLabel>
                 <DatePicker
                   value={arrivalDate}
                   onChange={(date) => date && setArrivalDate(date)}
-                  placeholder="Огноо сонгох"
+                  placeholder={partsCarsT("datePlaceholder")}
                   fromYear={2020}
                   toYear={2026}
                 />
@@ -149,18 +155,20 @@ export default function NewPartsCarPage() {
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="license_plate">Хятадын дугаар</FieldLabel>
+                <FieldLabel htmlFor="license_plate">
+                  {partsCarsT("chinesePlate")}
+                </FieldLabel>
                 <Input
                   id="license_plate"
                   name="license_plate"
-                  placeholder="Хятадын дугаар"
+                  placeholder={partsCarsT("chinesePlatePlaceholder")}
                 />
               </Field>
             </div>
 
             <Field>
               <FieldLabel htmlFor="purchase_cost">
-                Худалдан авалтын үнэ
+                {partsCarsT("purchaseCost")}
               </FieldLabel>
               <Input
                 id="purchase_cost"
@@ -173,11 +181,11 @@ export default function NewPartsCarPage() {
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="notes">Тэмдэглэл</FieldLabel>
+              <FieldLabel htmlFor="notes">{partsCarsT("notes")}</FieldLabel>
               <Textarea
                 id="notes"
                 name="notes"
-                placeholder="Машины тухай нэмэлт мэдээлэл..."
+                placeholder={partsCarsT("notesPlaceholder")}
                 rows={3}
               />
             </Field>
@@ -188,16 +196,16 @@ export default function NewPartsCarPage() {
                 type="button"
                 render={<Link href="/dashboard/inventory/parts-cars" />}
               >
-                Буцах
+                {partsCarsT("cancel")}
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Хадгалж байна...
+                    {partsCarsT("saving")}
                   </>
                 ) : (
-                  "Бүртгэх"
+                  partsCarsT("pageTitle")
                 )}
               </Button>
             </div>

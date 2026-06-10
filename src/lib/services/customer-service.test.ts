@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuditLog } from "@/lib/audit";
@@ -22,7 +23,7 @@ vi.mock("@/lib/audit", () => ({
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 
 describe("createCustomer", () => {
-  const mockClient = createMockSupabaseClient();
+  const mockClient = createMockSupabaseClient() as unknown as SupabaseClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -42,6 +43,7 @@ describe("createCustomer", () => {
     });
 
     const result = await createCustomer(
+      mockClient,
       "org-1",
       { firstName: "Bat", phone: "99112233" },
       "user-1",
@@ -51,30 +53,49 @@ describe("createCustomer", () => {
     expect(createAuditLog).toHaveBeenCalled();
   });
 
-  it("rejects duplicate phone numbers", async () => {
+  it("warns on duplicate phone but still creates customer", async () => {
     mockClient.from("customers").maybeSingle.mockResolvedValueOnce({
-      data: { id: "existing-id" },
+      data: {
+        id: "existing-id",
+        first_name: "Existing",
+        last_name: null,
+        company_name: null,
+        phone: "99112233",
+      },
       error: null,
     });
 
-    await expect(
-      createCustomer(
-        "org-1",
-        { firstName: "Dul", phone: "99112233" },
-        "user-1",
-      ),
-    ).rejects.toThrow("already exists");
+    // Mock the insert flow
+    mockClient.from("customers").single.mockResolvedValueOnce({
+      data: { id: "cust-new", first_name: "Dul", phone: "99112233" },
+      error: null,
+    });
+
+    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const result = await createCustomer(
+      mockClient,
+      "org-1",
+      { firstName: "Dul", phone: "99112233" },
+      "user-1",
+    );
+
+    expect(result.first_name).toBe("Dul");
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("99112233"),
+    );
+    consoleSpy.mockRestore();
   });
 
   it("validates that at least one identifying field is required", async () => {
     await expect(
-      createCustomer("org-1", { firstName: "" }, "user-1"),
+      createCustomer(mockClient, "org-1", { firstName: "" }, "user-1"),
     ).rejects.toThrow("At least one identifying field");
   });
 });
 
 describe("getCustomer", () => {
-  const mockClient = createMockSupabaseClient();
+  const mockClient = createMockSupabaseClient() as unknown as SupabaseClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -96,7 +117,7 @@ describe("getCustomer", () => {
       error: null,
     });
 
-    const result = await getCustomer("c1", "org-1");
+    const result = await getCustomer(mockClient, "c1", "org-1");
 
     expect(result.id).toBe("c1");
     expect(result.first_name).toBe("Bat");
@@ -108,14 +129,14 @@ describe("getCustomer", () => {
       error: { message: "not found" },
     });
 
-    await expect(getCustomer("nonexistent", "org-1")).rejects.toThrow(
-      "Customer not found",
-    );
+    await expect(
+      getCustomer(mockClient, "nonexistent", "org-1"),
+    ).rejects.toThrow("Customer not found");
   });
 });
 
 describe("getCustomers", () => {
-  const mockClient = createMockSupabaseClient();
+  const mockClient = createMockSupabaseClient() as unknown as SupabaseClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -148,7 +169,7 @@ describe("getCustomers", () => {
       error: null,
     });
 
-    const result = await getCustomers("org-1");
+    const result = await getCustomers(mockClient, "org-1");
 
     expect(result.data).toHaveLength(2);
     expect(result.data[0].first_name).toBe("Bat");
@@ -175,7 +196,7 @@ describe("getCustomers", () => {
       error: null,
     });
 
-    const result = await getCustomers("org-1", { search: "Bat" });
+    const result = await getCustomers(mockClient, "org-1", { search: "Bat" });
 
     expect(result.data).toHaveLength(1);
     expect(result.data[0].first_name).toBe("Bat");
@@ -199,7 +220,7 @@ describe("getCustomers", () => {
       error: null,
     });
 
-    const result = await getCustomers("org-1");
+    const result = await getCustomers(mockClient, "org-1");
 
     expect(result.data[0]).toHaveProperty("vehicle_count");
   });
@@ -211,7 +232,7 @@ describe("getCustomers", () => {
       error: null,
     });
 
-    const result = await getCustomers("org-1");
+    const result = await getCustomers(mockClient, "org-1");
 
     expect(result.data).toEqual([]);
     expect(result.total).toBe(0);
@@ -233,7 +254,10 @@ describe("getCustomers", () => {
       error: null,
     });
 
-    const result = await getCustomers("org-1", { page: 2, pageSize: 5 });
+    const result = await getCustomers(mockClient, "org-1", {
+      page: 2,
+      pageSize: 5,
+    });
 
     expect(result.page).toBe(2);
     expect(result.pageSize).toBe(5);
@@ -243,7 +267,7 @@ describe("getCustomers", () => {
 });
 
 describe("updateCustomer", () => {
-  const mockClient = createMockSupabaseClient();
+  const mockClient = createMockSupabaseClient() as unknown as SupabaseClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -281,6 +305,7 @@ describe("updateCustomer", () => {
       .mockResolvedValueOnce({ data: updatedCustomer, error: null });
 
     const result = await updateCustomer(
+      mockClient,
       "c1",
       "org-1",
       {
@@ -318,7 +343,13 @@ describe("updateCustomer", () => {
     });
 
     await expect(
-      updateCustomer("nonexistent", "org-1", { firstName: "Test" }, "user-1"),
+      updateCustomer(
+        mockClient,
+        "nonexistent",
+        "org-1",
+        { firstName: "Test" },
+        "user-1",
+      ),
     ).rejects.toThrow("Customer not found");
   });
 
@@ -328,9 +359,9 @@ describe("updateCustomer", () => {
       error: null,
     });
 
-    await expect(updateCustomer("c1", "org-1", {}, "user-1")).rejects.toThrow(
-      "No fields to update",
-    );
+    await expect(
+      updateCustomer(mockClient, "c1", "org-1", {}, "user-1"),
+    ).rejects.toThrow("No fields to update");
   });
 
   it("creates audit log with old_data and new_data", async () => {
@@ -353,7 +384,13 @@ describe("updateCustomer", () => {
       .single.mockResolvedValueOnce({ data: existingCustomer, error: null })
       .mockResolvedValueOnce({ data: updatedCustomer, error: null });
 
-    await updateCustomer("c1", "org-1", { lastName: "Dorj" }, "user-1");
+    await updateCustomer(
+      mockClient,
+      "c1",
+      "org-1",
+      { lastName: "Dorj" },
+      "user-1",
+    );
 
     expect(createAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -392,7 +429,13 @@ describe("updateCustomer", () => {
         error: null,
       });
 
-    await updateCustomer("c1", "org-1", { lastName: "Test" }, "user-1");
+    await updateCustomer(
+      mockClient,
+      "c1",
+      "org-1",
+      { lastName: "Test" },
+      "user-1",
+    );
 
     expect(revalidateTag).toHaveBeenCalledWith(
       expect.stringContaining("customers"),
@@ -402,7 +445,7 @@ describe("updateCustomer", () => {
 });
 
 describe("deleteCustomer", () => {
-  const mockClient = createMockSupabaseClient();
+  const mockClient = createMockSupabaseClient() as unknown as SupabaseClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -417,7 +460,7 @@ describe("deleteCustomer", () => {
       error: null,
     });
 
-    await deleteCustomer("c1", "org-1", "user-1");
+    await deleteCustomer(mockClient, "c1", "org-1", "user-1");
 
     expect(createAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -434,7 +477,7 @@ describe("deleteCustomer", () => {
     });
 
     await expect(
-      deleteCustomer("nonexistent", "org-1", "user-1"),
+      deleteCustomer(mockClient, "nonexistent", "org-1", "user-1"),
     ).rejects.toThrow("Customer not found");
   });
 
@@ -444,7 +487,7 @@ describe("deleteCustomer", () => {
       error: null,
     });
 
-    await deleteCustomer("c1", "org-1", "user-1");
+    await deleteCustomer(mockClient, "c1", "org-1", "user-1");
 
     expect(createAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -463,7 +506,7 @@ describe("deleteCustomer", () => {
       error: null,
     });
 
-    await deleteCustomer("c1", "org-1", "user-1");
+    await deleteCustomer(mockClient, "c1", "org-1", "user-1");
 
     expect(revalidateTag).toHaveBeenCalledWith(
       expect.stringContaining("customers"),
@@ -473,7 +516,7 @@ describe("deleteCustomer", () => {
 });
 
 describe("searchCustomers", () => {
-  const mockClient = createMockSupabaseClient();
+  const mockClient = createMockSupabaseClient() as unknown as SupabaseClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -499,7 +542,7 @@ describe("searchCustomers", () => {
       error: null,
     });
 
-    const result = await searchCustomers("org-1", "Bat");
+    const result = await searchCustomers(mockClient, "org-1", "Bat");
 
     expect(result.data).toHaveLength(1);
     expect(result.data[0].first_name).toBe("Bat");
@@ -525,7 +568,7 @@ describe("searchCustomers", () => {
       error: null,
     });
 
-    const result = await searchCustomers("org-1", "Bat");
+    const result = await searchCustomers(mockClient, "org-1", "Bat");
 
     expect(result.data).toHaveLength(1);
     expect(result.data[0].phone).toBe("99112233");

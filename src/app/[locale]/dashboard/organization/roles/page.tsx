@@ -2,12 +2,13 @@
 
 import { Eye, Shield, ShieldCheck, ShieldHalf, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useReducer } from "react";
-import { toast } from "sonner";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
+import { useProfile } from "@/lib/queries/use-profile";
 import type { ApiResponse } from "@/lib/types";
 
 interface Role {
@@ -16,24 +17,6 @@ interface Role {
   description: string | null;
   is_system: boolean;
   memberCount: number;
-}
-
-type RoleAction =
-  | { type: "SET_LOADING"; value: boolean }
-  | { type: "SET_ROLES"; roles: Role[] };
-
-interface RolesState {
-  loading: boolean;
-  roles: Role[];
-}
-
-function rolesReducer(state: RolesState, action: RoleAction): RolesState {
-  switch (action.type) {
-    case "SET_LOADING":
-      return { ...state, loading: action.value };
-    case "SET_ROLES":
-      return { ...state, roles: action.roles };
-  }
 }
 
 const roleIcons: Record<string, typeof Shield> = {
@@ -56,27 +39,12 @@ const roleColors: Record<string, string> = {
 
 export default function RolesPage() {
   const t = useTranslations("organization.roles");
-  const _t = useTranslations();
-  const [state, dispatch] = useReducer(rolesReducer, {
-    loading: true,
-    roles: [],
-  });
+  const { data: profile } = useProfile();
+  const orgId = profile?.organizationId ?? "";
 
-  const getOrgId = useCallback(async (): Promise<string> => {
-    const res = await fetch("/api/profile");
-    const profile = await res.json();
-    return profile.organizationId ?? profile.data?.organizationId ?? "";
-  }, []);
-
-  const loadRoles = useCallback(async () => {
-    dispatch({ type: "SET_LOADING", value: true });
-    try {
-      const orgId = await getOrgId();
-      if (!orgId) {
-        dispatch({ type: "SET_ROLES", roles: [] });
-        return;
-      }
-
+  const { data: roles = [], isLoading: loading } = useQuery<Role[]>({
+    queryKey: ["organizations", orgId, "roles-with-counts"],
+    queryFn: async () => {
       const [rolesRes, usersRes] = await Promise.all([
         fetch(`/api/organizations/${orgId}/roles`),
         fetch(`/api/organizations/${orgId}/users`),
@@ -87,38 +55,29 @@ export default function RolesPage() {
         { roleName: string | null }[]
       >;
 
-      if (rolesBody.data) {
-        // Count members per role name
-        const roleCounts: Record<string, number> = {};
-        if (usersBody.data) {
-          for (const u of usersBody.data) {
-            const rn = u.roleName ?? "Unassigned";
-            roleCounts[rn] = (roleCounts[rn] ?? 0) + 1;
-          }
+      if (!rolesBody.data) return [];
+
+      const roleCounts: Record<string, number> = {};
+      if (usersBody.data) {
+        for (const u of usersBody.data) {
+          const rn = u.roleName ?? "Unassigned";
+          roleCounts[rn] = (roleCounts[rn] ?? 0) + 1;
         }
-
-        const roles = rolesBody.data.map((r) => ({
-          id: r.id,
-          name: r.name,
-          description: r.description ?? null,
-          is_system:
-            (r as unknown as Record<string, unknown>).is_system === true,
-          memberCount: roleCounts[r.name] ?? 0,
-        }));
-        dispatch({ type: "SET_ROLES", roles });
       }
-    } catch {
-      toast.error(t("failedToLoadRoles"));
-    } finally {
-      dispatch({ type: "SET_LOADING", value: false });
-    }
-  }, [getOrgId]);
 
-  useEffect(() => {
-    loadRoles();
-  }, [loadRoles]);
+      return rolesBody.data.map((r) => ({
+        id: r.id,
+        name: r.name,
+        description: r.description ?? null,
+        is_system: (r as unknown as Record<string, unknown>).is_system === true,
+        memberCount: roleCounts[r.name] ?? 0,
+      }));
+    },
+    enabled: !!orgId,
+    staleTime: 60_000,
+  });
 
-  if (state.loading) {
+  if (loading) {
     return (
       <div className="flex flex-col gap-6">
         <div>
@@ -153,7 +112,7 @@ export default function RolesPage() {
         </Typography.Muted>
       </div>
 
-      {state.roles.length === 0 ? (
+      {roles.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center py-12">
             <Shield className="size-10 text-muted-foreground/40 mb-3" />
@@ -164,7 +123,7 @@ export default function RolesPage() {
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {state.roles.map((role) => {
+          {roles.map((role) => {
             const Icon = roleIcons[role.name] ?? Shield;
             const colorClass = roleColors[role.name] ?? "bg-card";
 

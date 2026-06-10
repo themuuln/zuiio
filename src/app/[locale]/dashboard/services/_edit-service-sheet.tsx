@@ -118,10 +118,10 @@ export function EditServiceSheet({
           context.previous,
         );
       }
-      toast.error("Failed to update service");
+      toast.error(t("failedToUpdate"));
     },
     onSuccess: () => {
-      toast.success("Service updated");
+      toast.success(t("serviceUpdated"));
       onOpenChange(false);
     },
     onSettled: () => {
@@ -144,11 +144,9 @@ export function EditServiceSheet({
   return (
     <DetailSheet open={open} onOpenChange={handleOpenChange} size="lg">
       <DetailSheet.Header>
-        <DetailSheet.Title>
-          {t("editService") || "Edit Service"}
-        </DetailSheet.Title>
+        <DetailSheet.Title>{t("editService")}</DetailSheet.Title>
         <DetailSheet.Description>
-          {t("editServiceDescription") || "Update service details and pricing"}
+          {t("editServiceDescription")}
         </DetailSheet.Description>
       </DetailSheet.Header>
 
@@ -158,21 +156,21 @@ export function EditServiceSheet({
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
               <FieldLabel>
-                {t("name")} <span className="text-destructive">*</span>
+                {t("serviceName")} <span className="text-destructive">*</span>
               </FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder="e.g. Oil Change"
+                  placeholder={t("namePlaceholderEn")}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
               </FieldContent>
             </Field>
             <Field>
-              <FieldLabel>{t("nameMn") || "Монгол нэр"}</FieldLabel>
+              <FieldLabel>{t("nameMn")}</FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder="e.g. Тос солих"
+                  placeholder={t("namePlaceholderMn")}
                   value={nameMn}
                   onChange={(e) => setNameMn(e.target.value)}
                 />
@@ -212,7 +210,7 @@ export function EditServiceSheet({
                 itemToStringLabel={(item) => item?.name ?? ""}
               >
                 <ComboboxInput
-                  placeholder="e.g. Oil, Brakes"
+                  placeholder={t("categoryPlaceholder")}
                   showTrigger
                   showClear={!!category}
                   className="h-10"
@@ -239,7 +237,9 @@ export function EditServiceSheet({
                         }}
                         className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer border-t border-border"
                       >
-                        <span>Create &ldquo;{categoryInput.trim()}&rdquo;</span>
+                        <span>
+                          {t("createCategory", { name: categoryInput.trim() })}
+                        </span>
                       </button>
                     )}
                   <ComboboxEmpty />
@@ -253,7 +253,7 @@ export function EditServiceSheet({
             <FieldLabel>{t("description")}</FieldLabel>
             <FieldContent>
               <Input
-                placeholder="e.g. Replaced engine oil and oil filter"
+                placeholder={t("descriptionPlaceholder")}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
@@ -273,10 +273,10 @@ export function EditServiceSheet({
           {updateMutation.isPending ? (
             <span className="flex items-center gap-2">
               <Loader2 className="size-4 animate-spin" />
-              Saving...
+              {t("saving")}
             </span>
           ) : (
-            commonT("save") || "Save"
+            commonT("save")
           )}
         </Button>
       </DetailSheet.Footer>

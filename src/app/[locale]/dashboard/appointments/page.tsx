@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Plus } from "lucide-react";
+import { appointmentKeys } from "@/lib/queries/keys";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -54,7 +55,7 @@ export default function AppointmentsPage() {
 
   // Fetch appointments
   const { data: appointments, isLoading } = useQuery({
-    queryKey: ["appointments", orgId, today, branchFilter],
+    queryKey: appointmentKeys.list(orgId, today, branchFilter),
     queryFn: async () => {
       const params = new URLSearchParams({ date: today });
       if (branchFilter) params.set("branch_id", branchFilter);

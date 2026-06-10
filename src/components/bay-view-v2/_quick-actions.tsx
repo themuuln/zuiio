@@ -53,7 +53,7 @@ export function QuickActions({
       );
       const json = await res.json();
       if (json.error) {
-        toast.error(json.error.message ?? "Failed to save note");
+        toast.error(json.error.message ?? t("failedToSaveNote"));
         return;
       }
       toast.dismiss();
@@ -62,7 +62,7 @@ export function QuickActions({
       setShowNoteInput(false);
       onNoteAdded();
     } catch {
-      toast.error("Failed to save note");
+      toast.error(t("failedToSaveNote"));
     } finally {
       setSaving(false);
     }

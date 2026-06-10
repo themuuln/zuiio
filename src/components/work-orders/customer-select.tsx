@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Plus, User } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,9 @@ export function CustomerSelect({
   const [searching, setSearching] = useState(false);
   const [showQuick, setShowQuick] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+
+  const t = useTranslations("workOrderDetail");
+  const tc = useTranslations("common");
 
   const customerQuickSchema = z.object({
     first_name: z.string().min(1, "First name is required"),
@@ -88,11 +92,9 @@ export function CustomerSelect({
       const json = await res.json();
       if (json.error) {
         if (json.error.code === "CONFLICT") {
-          setCreateError(
-            "This phone number belongs to an existing customer. Search for them instead.",
-          );
+          setCreateError(t("conflictPhone"));
         } else {
-          setCreateError(json.error.message ?? "Failed to create customer");
+          setCreateError(json.error.message ?? t("failedToCreateCustomer"));
         }
       } else if (json.data) {
         onSelect(json.data);
@@ -100,7 +102,7 @@ export function CustomerSelect({
         setShowQuick(false);
       }
     } catch {
-      setCreateError("Network error");
+      setCreateError(tc("networkError"));
     }
   });
 
@@ -109,7 +111,7 @@ export function CustomerSelect({
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <User className="size-4" />
-          Customer
+          {t("customer")}
           {selectedCustomer && (
             <span className="ml-auto text-sm font-normal text-muted-foreground">
               {[selectedCustomer.first_name, selectedCustomer.last_name]
@@ -146,14 +148,14 @@ export function CustomerSelect({
             </ItemContent>
             <ItemActions>
               <Button variant="ghost" size="sm" onClick={onClear}>
-                Change
+                {tc("change")}
               </Button>
             </ItemActions>
           </Item>
         ) : (
           <div className="flex flex-col gap-3">
             <SearchInput
-              placeholder="Search by name or phone..."
+              placeholder={t("searchByNameOrPhone")}
               loading={searching}
               onSearch={handleSearch}
               debounceMs={400}
@@ -172,7 +174,7 @@ export function CustomerSelect({
                       <span className="font-medium">
                         {[c.first_name, c.last_name]
                           .filter(Boolean)
-                          .join(" ") || "No name"}
+                          .join(" ") || tc("noName")}
                       </span>
                       {c.phone && (
                         <span className="ml-2 text-sm text-muted-foreground">
@@ -191,7 +193,7 @@ export function CustomerSelect({
                 className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
               >
                 <Plus className="size-4" />
-                Quick create customer
+                {t("quickCreateCustomer")}
               </Button>
             )}
             {showQuick && (
@@ -200,13 +202,13 @@ export function CustomerSelect({
                 onSubmit={handleQuickCreate}
               >
                 <Typography.Text className="text-sm font-medium">
-                  New Customer
+                  {t("newCustomer")}
                 </Typography.Text>
                 <div className="grid grid-cols-2 gap-3">
                   <Field data-invalid={!!form.formState.errors.first_name}>
                     <FieldContent>
                       <Input
-                        placeholder="e.g. Bat"
+                        placeholder={t("firstNamePlaceholder")}
                         aria-invalid={!!form.formState.errors.first_name}
                         className="h-11"
                         {...inputProps("firstName")}
@@ -233,7 +235,7 @@ export function CustomerSelect({
                   <Field>
                     <FieldContent>
                       <Input
-                        placeholder="e.g. Erdene"
+                        placeholder={t("lastNamePlaceholder")}
                         className="h-11"
                         {...inputProps("lastName")}
                         {...form.register("last_name")}
@@ -254,7 +256,7 @@ export function CustomerSelect({
                 <Field data-invalid={!!form.formState.errors.phone}>
                   <FieldContent>
                     <Input
-                      placeholder="e.g. 99112233"
+                      placeholder={t("phonePlaceholder")}
                       type="tel"
                       className="h-11"
                       aria-invalid={!!form.formState.errors.phone}
@@ -293,7 +295,7 @@ export function CustomerSelect({
                       form.reset();
                     }}
                   >
-                    Cancel
+                    {tc("cancel")}
                   </Button>
                   <Button
                     type="submit"
@@ -304,8 +306,8 @@ export function CustomerSelect({
                     }
                   >
                     {form.formState.isSubmitting
-                      ? "Creating..."
-                      : "Create & Select"}
+                      ? tc("creating")
+                      : t("createAndSelect")}
                   </Button>
                 </div>
               </form>

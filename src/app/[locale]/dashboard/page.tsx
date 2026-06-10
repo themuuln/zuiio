@@ -233,7 +233,7 @@ export default function DashboardPage() {
           </div>
           <Skeleton className="h-9 w-72 rounded-lg" />
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
           {[1, 2, 3, 4].map((key) => (
             <Card key={key}>
               <div className="p-6 pb-2">
@@ -374,7 +374,7 @@ export default function DashboardPage() {
 
   // ── Shared content ─────────────────────────────────
   const mainContent = (
-    <div className="pb-8">
+    <div className="flex flex-col gap-8 pb-8">
       {header}
       {!hasRevenue && hasActiveWos && (
         <Card className="border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10">
@@ -391,9 +391,9 @@ export default function DashboardPage() {
         </Card>
       )}
       <div
-        className={`grid grid-cols-2 gap-3 sm:grid-cols-2 ${
+        className={`grid grid-cols-2 gap-4 sm:grid-cols-2 ${
           hasRevenue ? "lg:grid-cols-4" : "lg:grid-cols-2"
-        } lg:gap-5`}
+        } lg:gap-6`}
       >
         {hasRevenue && (
           <>

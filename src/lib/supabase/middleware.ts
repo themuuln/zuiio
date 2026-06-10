@@ -34,7 +34,40 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  const routes = matchRoutes(request.nextUrl.pathname);
+  // Rewrite /{org-slug} and /{org-slug}/parts → /en/{org-slug}/parts
+  const pathname = request.nextUrl.pathname;
+  const isLocale = pathname.startsWith("/en/") || pathname.startsWith("/mn/");
+  // Match /{slug}/parts or bare /{slug} (single segment, not a locale)
+  const storefrontMatch = !isLocale
+    ? pathname.match(/^\/([^/]+)(?:\/(.*))?$/)
+    : null;
+  const slug = storefrontMatch?.[1] as string | undefined;
+  const subPath = storefrontMatch?.[2] as string | undefined;
+  // Reserved paths that should never be treated as org slugs
+  const RESERVED = new Set([
+    "auth",
+    "dashboard",
+    "api",
+    "invoice",
+    "booking",
+    "portal",
+    "invite",
+    "pricing",
+    "guide",
+    "super-admin",
+    "favicon.ico",
+  ]);
+  const isStorefrontPath =
+    !!slug &&
+    !RESERVED.has(slug) &&
+    (!subPath || subPath === "parts" || subPath.startsWith("parts/"));
+
+  let resolvedPathname = pathname;
+  if (isStorefrontPath) {
+    resolvedPathname = `/en/${slug}/parts`;
+  }
+
+  const routes = matchRoutes(resolvedPathname);
 
   if (
     !user &&
@@ -42,6 +75,7 @@ export async function updateSession(request: NextRequest) {
     !routes.isInvoiceRoute &&
     !routes.isPortalRoute &&
     !routes.isBookingRoute &&
+    !routes.isStorefrontRoute &&
     !routes.isInviteRoute &&
     !routes.isPricingRoute &&
     !routes.isPublicRoute
@@ -97,6 +131,21 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url);
       }
     }
+  }
+
+  // Apply storefront rewrite: /{slug}/parts → /en/{slug}/parts
+  if (isStorefrontPath) {
+    const rewriteUrl = request.nextUrl.clone();
+    rewriteUrl.pathname = resolvedPathname;
+    const rewritten = NextResponse.rewrite(rewriteUrl, {
+      request: { headers: request.headers },
+      headers: { "x-storefront-rewrite": "1" },
+    });
+    // Copy cookies from supabase session refresh
+    for (const cookie of supabaseResponse.cookies.getAll()) {
+      rewritten.cookies.set(cookie.name, cookie.value, cookie);
+    }
+    return rewritten;
   }
 
   return supabaseResponse;

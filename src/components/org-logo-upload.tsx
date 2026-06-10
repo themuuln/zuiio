@@ -2,6 +2,7 @@
 
 import { Camera, Loader2, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,19 +23,20 @@ export default function OrgLogoUpload({
 }: OrgLogoUploadProps) {
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations("organization");
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Logo must be under 5MB");
+      toast.error(t("logo.sizeError"));
       return;
     }
 
     const allowed = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
     if (!allowed.includes(file.type)) {
-      toast.error("Only PNG, JPEG, WebP, and SVG files are allowed");
+      toast.error(t("logo.typeError"));
       return;
     }
 
@@ -53,7 +55,7 @@ export default function OrgLogoUpload({
         .from("org-logos")
         .getPublicUrl(filePath);
 
-      if (!urlData?.publicUrl) throw new Error("Failed to get public URL");
+      if (!urlData?.publicUrl) throw new Error(t("logo.uploadFailed"));
 
       const res = await fetch(`/api/organizations/${orgId}`, {
         method: "PATCH",
@@ -63,14 +65,14 @@ export default function OrgLogoUpload({
 
       const json = await res.json();
       if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? "Failed to save logo");
+        throw new Error(json.error?.message ?? t("logo.saveFailed"));
       }
 
       onLogoChange(urlData.publicUrl);
       toast.dismiss();
-      toast.success("Logo uploaded");
+      toast.success(t("logo.uploaded"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
+      toast.error(err instanceof Error ? err.message : t("logo.uploadFailed"));
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -91,14 +93,14 @@ export default function OrgLogoUpload({
 
       const json = await res.json();
       if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? "Failed to remove logo");
+        throw new Error(json.error?.message ?? t("logo.removeFailed"));
       }
 
       onLogoChange(null);
       toast.dismiss();
-      toast.success("Logo removed");
+      toast.success(t("logo.removed"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to remove logo");
+      toast.error(err instanceof Error ? err.message : t("logo.removeFailed"));
     } finally {
       setUploading(false);
     }
@@ -110,7 +112,7 @@ export default function OrgLogoUpload({
         {logoUrl ? (
           <Image
             src={logoUrl}
-            alt={`${orgName} logo`}
+            alt={t("logo.altText", { name: orgName })}
             width={64}
             height={64}
             className="size-full object-contain p-1"
@@ -143,7 +145,7 @@ export default function OrgLogoUpload({
           disabled={uploading}
         >
           <Camera className="mr-1.5 size-3.5" />
-          {logoUrl ? "Change logo" : "Upload logo"}
+          {logoUrl ? t("logo.changeLogo") : t("logo.uploadLogo")}
         </Button>
         {logoUrl && (
           <Button
@@ -155,7 +157,7 @@ export default function OrgLogoUpload({
             className="text-muted-foreground"
           >
             <Trash2 className="mr-1.5 size-3.5" />
-            Remove
+            {t("logo.remove")}
           </Button>
         )}
       </div>

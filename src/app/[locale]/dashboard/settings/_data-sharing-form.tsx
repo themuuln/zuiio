@@ -105,20 +105,20 @@ export function DataSharingForm({
             </Typography.Text>
             <div className="grid gap-2 sm:grid-cols-2">
               <SharedItem
-                label="Customer profiles"
-                description="Name, phone, email, address"
+                label={t("sharedCustomerProfilesLabel")}
+                description={t("sharedCustomerProfilesDesc")}
               />
               <SharedItem
-                label="Vehicle details"
-                description="Plate, make, model, VIN, odometer"
+                label={t("sharedVehicleDetailsLabel")}
+                description={t("sharedVehicleDetailsDesc")}
               />
               <SharedItem
-                label="Service history"
-                description="Work orders, services, parts used"
+                label={t("sharedServiceHistoryLabel")}
+                description={t("sharedServiceHistoryDesc")}
               />
               <SharedItem
-                label="Invoices & payments"
-                description="Billing records and payment status"
+                label={t("sharedInvoicesPaymentsLabel")}
+                description={t("sharedInvoicesPaymentsDesc")}
               />
             </div>
           </div>
@@ -130,15 +130,9 @@ export function DataSharingForm({
               {t("accessRules")}
             </Typography.Text>
             <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
-              <li>
-                • Other organizations can only <strong>view</strong> your data —
-                they cannot edit or delete it
-              </li>
-              <li>• Your own staff retain full access as normal</li>
-              <li>
-                • You can disable sharing at any time — the change takes effect
-                immediately
-              </li>
+              <li>• {t("accessRuleViewOnly")}</li>
+              <li>• {t("accessRuleStaffAccess")}</li>
+              <li>• {t("accessRuleDisableAnytime")}</li>
             </ul>
           </div>
         </CardContent>
@@ -147,13 +141,7 @@ export function DataSharingForm({
       <Alert variant="default">
         <Info className="size-4" />
         <AlertTitle>{t("aboutDataSharing")}</AlertTitle>
-        <AlertDescription>
-          Data sharing is an opt-in feature. Your customer and vehicle data is
-          private by default. When you enable sharing, other auto service
-          businesses on the TOLOM network can look up a customer&apos;s service
-          history across all participating shops. This helps mechanics make
-          better decisions when a customer visits a new shop.
-        </AlertDescription>
+        <AlertDescription>{t("aboutDataSharingDesc")}</AlertDescription>
       </Alert>
     </div>
   );

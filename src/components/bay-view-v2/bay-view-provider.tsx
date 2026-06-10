@@ -11,6 +11,7 @@ import {
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useProfile } from "@/lib/queries/use-profile";
 import type { BayViewData, ShiftReport } from "@/lib/services/bay-view-service";
 import {
   getBayViewDataFresh,
@@ -113,28 +114,20 @@ export function BayViewProvider({ children }: { children: ReactNode }) {
 
   // ── Initial fetch ──
   useEffect(() => {
-    const abort = new AbortController();
     fetchData(true);
-
-    // Fetch profile
-    fetch("/api/profile", { signal: abort.signal })
-      .then((r) => r.json())
-      .then((d) => {
-        if (abort.signal.aborted) return;
-        const profile = d?.profile ?? d?.data;
-        if (profile?.id) {
-          setCurrentProfile({
-            id: profile.id,
-            full_name: profile.full_name ?? null,
-          });
-        }
-      })
-      .catch(() => {});
-
-    return () => {
-      abort.abort();
-    };
   }, [fetchData]);
+
+  // ── Profile (from unified hook) ──
+  const { data: profileData } = useProfile();
+
+  useEffect(() => {
+    if (profileData?.id) {
+      setCurrentProfile({
+        id: profileData.id,
+        full_name: profileData.fullName ?? null,
+      });
+    }
+  }, [profileData?.id, profileData?.fullName]);
 
   // ── Polling (respects pause state) ──
   useEffect(() => {

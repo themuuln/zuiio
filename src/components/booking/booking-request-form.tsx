@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,6 +30,7 @@ export function BookingRequestForm({
   initialName,
   initialPhone,
 }: BookingRequestFormProps) {
+  const t = useTranslations("booking");
   const [name, setName] = useState(initialName ?? "");
   const [phone, setPhone] = useState(initialPhone ?? "");
   const [plate, setPlate] = useState("");
@@ -41,19 +43,18 @@ export function BookingRequestForm({
     const newErrors: Record<string, string> = {};
 
     if (!name.trim()) {
-      newErrors.name = "Name is required";
+      newErrors.name = t("nameRequired");
     }
     if (!phone.trim()) {
-      newErrors.phone = "Phone number is required";
+      newErrors.phone = t("phoneRequired");
     } else {
       const normalized = phone.trim().replace(/[\s-]/g, "");
       if (!/^\+976\d{8}$/.test(normalized)) {
-        newErrors.phone =
-          "Enter a valid Mongolian phone number (e.g. +976 9911 9911)";
+        newErrors.phone = t("phoneInvalid");
       }
     }
     if (!plate.trim()) {
-      newErrors.plate = "Vehicle plate is required";
+      newErrors.plate = t("vehiclePlateRequired");
     }
 
     setErrors(newErrors);
@@ -83,17 +84,14 @@ export function BookingRequestForm({
 
       if (!res.ok) {
         setErrors({
-          submit: json.error?.message ?? "Failed to submit. Please try again.",
+          submit: json.error?.message ?? t("submitFailed"),
         });
         return;
       }
 
-      onSuccess(
-        json.data?.message ??
-          "Booking request submitted. The shop will contact you to confirm.",
-      );
+      onSuccess(json.data?.message ?? t("submitSuccess"));
     } catch {
-      setErrors({ submit: "Network error. Please check your connection." });
+      setErrors({ submit: t("networkError") });
     } finally {
       setSending(false);
     }
@@ -105,13 +103,13 @@ export function BookingRequestForm({
         <CardContent className="p-6 flex flex-col gap-4">
           <Field>
             <FieldLabel>
-              Name <span className="text-destructive">*</span>
+              {t("name")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Your full name"
+                placeholder={t("namePlaceholder")}
               />
               {errors.name && <FieldError>{errors.name}</FieldError>}
             </FieldContent>
@@ -119,13 +117,13 @@ export function BookingRequestForm({
 
           <Field>
             <FieldLabel>
-              Phone <span className="text-destructive">*</span>
+              {t("phone")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="e.g. +976 9911 9911"
+                placeholder={t("phonePlaceholder")}
                 type="tel"
               />
               {errors.phone && <FieldError>{errors.phone}</FieldError>}
@@ -134,20 +132,20 @@ export function BookingRequestForm({
 
           <Field>
             <FieldLabel>
-              Vehicle Plate <span className="text-destructive">*</span>
+              {t("vehiclePlate")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
                 value={plate}
                 onChange={(e) => setPlate(e.target.value)}
-                placeholder="e.g. 4444УНА"
+                placeholder={t("vehiclePlatePlaceholder")}
               />
               {errors.plate && <FieldError>{errors.plate}</FieldError>}
             </FieldContent>
           </Field>
 
           <Field>
-            <FieldLabel>Preferred Date</FieldLabel>
+            <FieldLabel>{t("preferredDate")}</FieldLabel>
             <FieldContent>
               <Input
                 type="date"
@@ -159,12 +157,12 @@ export function BookingRequestForm({
           </Field>
 
           <Field>
-            <FieldLabel>Notes</FieldLabel>
+            <FieldLabel>{t("notes")}</FieldLabel>
             <FieldContent>
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Describe what service is needed (optional)"
+                placeholder={t("notesPlaceholder")}
                 rows={3}
               />
             </FieldContent>
@@ -178,7 +176,7 @@ export function BookingRequestForm({
 
           <Button type="submit" disabled={sending} className="w-full">
             {sending && <Loader2 className="size-4 animate-spin mr-2" />}
-            {sending ? "Submitting..." : "Request Appointment"}
+            {sending ? t("submitting") : t("requestAppointment")}
           </Button>
         </CardContent>
       </Card>

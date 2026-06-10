@@ -13,7 +13,7 @@ export function DateFilterBar({ value, onChange }: DateFilterBarProps) {
     <DateRangePicker
       value={value}
       onChange={onChange}
-      className="w-full sm:w-[260px]"
+      className="w-full min-w-0 sm:w-[260px]"
       align="end"
     />
   );

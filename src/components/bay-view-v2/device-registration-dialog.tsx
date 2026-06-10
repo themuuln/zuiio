@@ -96,7 +96,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
       setMechanics(json.data ?? []);
     } catch (err) {
       setErrorMessage(
-        err instanceof Error ? err.message : "Failed to load mechanics",
+        err instanceof Error ? err.message : t("common.somethingWentWrong"),
       );
     } finally {
       setMechanicLoading(false);
@@ -168,7 +168,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
       startPolling();
     } catch (err) {
       setErrorMessage(
-        err instanceof Error ? err.message : "Failed to generate QR code",
+        err instanceof Error ? err.message : t("common.somethingWentWrong"),
       );
       setState("error");
     }
@@ -342,7 +342,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
               {/* biome-ignore lint/performance/noImgElement: QR codes use inline data URIs, next/Image is not suitable */}
               <img
                 src={qrDataUrl}
-                alt="Registration QR Code"
+                alt={t("bayView.registrationQrCode")}
                 className="size-44"
               />
             </div>
@@ -364,10 +364,14 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
           <div className="flex flex-col items-center gap-3 py-2">
             <div className="relative rounded-lg border p-2 opacity-50">
               {/* biome-ignore lint/performance/noImgElement: QR codes use inline data URIs, next/Image is not suitable */}
-              <img src={qrDataUrl} alt="Expired QR Code" className="size-44" />
+              <img
+                src={qrDataUrl}
+                alt={t("bayView.registrationQrCode")}
+                className="size-44"
+              />
               <div className="absolute inset-0 flex items-center justify-center">
                 <Typography.Muted className="text-sm font-medium">
-                  Expired
+                  {t("bayView.expiredLabel")}
                 </Typography.Muted>
               </div>
             </div>

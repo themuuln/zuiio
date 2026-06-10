@@ -151,14 +151,14 @@ function mapMongolianValue(
 
 // ── Helpers ──────────────────────────────────────────────────
 
-function getCustomerLabel(customer: Customer) {
+function getCustomerLabel(customer: Customer, fallback = "Unnamed customer") {
   return (
     [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
     customer.company_name ||
     customer.contact_person ||
     customer.full_name ||
     customer.phone ||
-    "Unnamed customer"
+    fallback
   );
 }
 
@@ -335,7 +335,7 @@ export function VehicleForm({
     plateRef.current?.blur();
     const plate = form.getValues("plateNumber").trim();
     if (!plate || plate.length < 7) {
-      toast.error("Enter a valid plate number first");
+      toast.error(t("enterValidPlateFirst"));
       return;
     }
     setLooking(true);
@@ -345,7 +345,7 @@ export function VehicleForm({
       );
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error ?? "Lookup failed");
+        toast.error(json.error ?? t("lookupFailed"));
         return;
       }
       const d = json.data;
@@ -446,9 +446,9 @@ export function VehicleForm({
       if (d.weight) form.setValue("weight", String(d.weight));
 
       toast.dismiss();
-      toast.success("Plate lookup complete");
+      toast.success(t("lookupComplete"));
     } catch {
-      toast.error("Lookup failed — try again");
+      toast.error(t("lookupFailedTryAgain"));
     } finally {
       setLooking(false);
     }
@@ -476,9 +476,9 @@ export function VehicleForm({
       form.setValue("model", "");
       setNewBrandName("");
       toast.dismiss();
-      toast.success(`Brand "${name}" created`);
+      toast.success(t("brandCreated", { name }));
     } catch {
-      toast.error("Failed to create brand");
+      toast.error(t("failedToCreateBrand"));
     }
   };
 
@@ -503,9 +503,9 @@ export function VehicleForm({
       form.setValue("model", newModel.name);
       setNewModelName("");
       toast.dismiss();
-      toast.success(`Model "${name}" created`);
+      toast.success(t("modelCreated", { name }));
     } catch {
-      toast.error("Failed to create model");
+      toast.error(t("failedToCreateModel"));
     }
   };
 
@@ -548,7 +548,7 @@ export function VehicleForm({
 
   const onSubmit = form.handleSubmit(async (data) => {
     if (!orgId) {
-      setError("No organization selected");
+      setError(t("noOrganization"));
       return;
     }
 
@@ -556,24 +556,26 @@ export function VehicleForm({
     if (data.year?.trim()) {
       const n = Number(data.year);
       if (Number.isNaN(n) || n < 1900 || n > new Date().getFullYear() + 2) {
-        form.setError("year", { message: "Enter a valid year" });
-        toast.error("Enter a valid year");
+        form.setError("year", { message: t("validation.yearInvalid") });
+        toast.error(t("validation.yearInvalid"));
         return;
       }
     }
     if (data.odometer?.trim()) {
       const n = Number(data.odometer);
       if (Number.isNaN(n) || n < 0) {
-        form.setError("odometer", { message: "Must be a positive number" });
-        toast.error("Odometer must be a positive number");
+        form.setError("odometer", {
+          message: t("validation.odometerPositive"),
+        });
+        toast.error(t("validation.odometerPositive"));
         return;
       }
     }
     if (data.seats?.trim()) {
       const n = Number(data.seats);
       if (Number.isNaN(n) || n < 1 || n > 50) {
-        form.setError("seats", { message: "Must be 1–50" });
-        toast.error("Seats must be between 1 and 50");
+        form.setError("seats", { message: t("validation.seatsRange") });
+        toast.error(t("validation.seatsRange"));
         return;
       }
     }
@@ -655,7 +657,7 @@ export function VehicleForm({
       }
       onSuccess?.(vehicle);
     } catch (err: any) {
-      const msg = err.message || "Failed to create vehicle";
+      const msg = err.message || t("failedToCreateVehicle");
       setError(msg);
       toast.error(msg);
     }
@@ -705,10 +707,10 @@ export function VehicleForm({
         >
           <CardHeader className="py-4">
             <CardTitle className="text-base flex items-center justify-between">
-              Owner Customer
+              {t("ownerCustomer")}
               {selectedCustomer && (
                 <span className="ml-auto text-sm font-normal text-muted-foreground">
-                  {getCustomerLabel(selectedCustomer)}
+                  {getCustomerLabel(selectedCustomer, t("unnamedCustomer"))}
                   {selectedCustomer.phone && ` · ${selectedCustomer.phone}`}
                 </span>
               )}
@@ -728,7 +730,7 @@ export function VehicleForm({
                 </ItemMedia>
                 <ItemContent>
                   <ItemTitle>
-                    {getCustomerLabel(selectedCustomer)}
+                    {getCustomerLabel(selectedCustomer, t("unnamedCustomer"))}
                     {selectedCustomer.phone && (
                       <span className="ml-2 text-sm font-normal text-muted-foreground">
                         {selectedCustomer.phone}
@@ -743,7 +745,7 @@ export function VehicleForm({
                     size="sm"
                     onClick={() => setSelectedCustomer(null)}
                   >
-                    Change
+                    {commonT("change")}
                   </Button>
                 </ItemActions>
               </Item>
@@ -752,7 +754,7 @@ export function VehicleForm({
                 {!showQuickCustomer && (
                   <>
                     <SearchInput
-                      placeholder="Search by name or phone..."
+                      placeholder={t("searchPlaceholder")}
                       loading={customerSearching}
                       onSearch={setCustomerSearch}
                       debounceMs={400}
@@ -770,7 +772,7 @@ export function VehicleForm({
                             <User className="size-5 shrink-0 text-muted-foreground" />
                             <div>
                               <span className="font-medium">
-                                {getCustomerLabel(c)}
+                                {getCustomerLabel(c, t("unnamedCustomer"))}
                               </span>
                               {c.phone && (
                                 <span className="ml-2 text-sm text-muted-foreground">
@@ -789,7 +791,7 @@ export function VehicleForm({
                       className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
                     >
                       <Plus className="size-4" />
-                      Quick add customer
+                      {t("quickAddCustomer")}
                     </Button>
                   </>
                 )}
@@ -798,7 +800,7 @@ export function VehicleForm({
                 {showQuickCustomer && (
                   <div className="border rounded-lg p-4 bg-muted/20 mt-2">
                     <Typography.Text className="text-sm font-semibold mb-3 block">
-                      Quick Add Customer
+                      {t("quickAddCustomerTitle")}
                     </Typography.Text>
                     <CustomerForm
                       mode="quick"
@@ -820,13 +822,13 @@ export function VehicleForm({
       {/* ── Vehicle Info Section ── */}
       <Card className="border-border">
         <CardHeader className="py-4">
-          <CardTitle className="text-base">Vehicle Information</CardTitle>
+          <CardTitle className="text-base">{t("vehicleInformation")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           {/* Plate Number */}
           <Field data-invalid={!!form.formState.errors.plateNumber}>
             <FieldLabel>
-              Plate Number <span className="text-destructive">*</span>
+              {t("plate")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <div className="relative flex gap-2">
@@ -835,7 +837,7 @@ export function VehicleForm({
                   value={form.watch("plateNumber")}
                   onChange={(v) => form.setValue("plateNumber", v)}
                   className="h-11 flex-1"
-                  placeholder="4444УНА"
+                  placeholder={t("platePlaceholder")}
                   lang="mn"
                   autoFocus={!!initialData?.plateNumber}
                   aria-invalid={!!form.formState.errors.plateNumber}
@@ -876,7 +878,7 @@ export function VehicleForm({
           {/* Make */}
           <Field data-invalid={!!form.formState.errors.make}>
             <FieldLabel>
-              Make <span className="text-destructive">*</span>
+              {t("make")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Combobox
@@ -890,7 +892,10 @@ export function VehicleForm({
                 isItemEqualToValue={(a, b) => a.id === b.id}
                 itemToStringLabel={(brand) => brand.name}
               >
-                <ComboboxInput placeholder="Search brand..." className="h-11" />
+                <ComboboxInput
+                  placeholder={t("searchPlaceholder")}
+                  className="h-11"
+                />
                 <ComboboxContent>
                   <ComboboxList>
                     {(brand: (typeof brands)[number]) => (
@@ -923,7 +928,7 @@ export function VehicleForm({
           {/* Model */}
           <Field data-invalid={!!form.formState.errors.model}>
             <FieldLabel>
-              Model <span className="text-destructive">*</span>
+              {t("model")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Combobox
@@ -942,7 +947,9 @@ export function VehicleForm({
               >
                 <ComboboxInput
                   placeholder={
-                    selectedBrand ? "Search model..." : "Select brand first"
+                    selectedBrand
+                      ? t("searchPlaceholder")
+                      : t("selectBrandFirst")
                   }
                   className="h-11"
                 />
@@ -982,7 +989,7 @@ export function VehicleForm({
 
           {/* Year */}
           <Field data-invalid={!!form.formState.errors.year}>
-            <FieldLabel>Year</FieldLabel>
+            <FieldLabel>{t("year")}</FieldLabel>
             <FieldContent>
               <Input
                 type="number"
@@ -1000,7 +1007,7 @@ export function VehicleForm({
 
           {/* Odometer */}
           <Field data-invalid={!!form.formState.errors.odometer}>
-            <FieldLabel>Odometer (km)</FieldLabel>
+            <FieldLabel>{t("odometer")} (km)</FieldLabel>
             <FieldContent>
               <Input
                 type="number"
@@ -1020,7 +1027,7 @@ export function VehicleForm({
 
           {/* Color */}
           <Field>
-            <FieldLabel>Color</FieldLabel>
+            <FieldLabel>{t("color")}</FieldLabel>
             <FieldContent>
               <ColorSelect
                 value={form.watch("color") || ""}
@@ -1032,12 +1039,12 @@ export function VehicleForm({
 
           {/* Engine */}
           <Field>
-            <FieldLabel>Engine</FieldLabel>
+            <FieldLabel>{t("engine")}</FieldLabel>
             <FieldContent>
               <Input
                 value={form.watch("engine") || ""}
                 onChange={(e) => form.setValue("engine", e.target.value)}
-                placeholder="e.g. 2.5L, 3500cc"
+                placeholder={t("enginePlaceholder")}
                 {...inputProps("engine")}
               />
             </FieldContent>
@@ -1047,13 +1054,13 @@ export function VehicleForm({
           {currentMode === "full" && (
             <>
               <Field data-invalid={!!form.formState.errors.vin}>
-                <FieldLabel>VIN</FieldLabel>
+                <FieldLabel>{t("vin")}</FieldLabel>
                 <FieldContent>
                   <Input
                     value={form.watch("vin") || ""}
                     onChange={(e) => form.setValue("vin", e.target.value)}
                     className="font-mono"
-                    placeholder="17 character VIN"
+                    placeholder={t("vinPlaceholder")}
                     aria-invalid={!!form.formState.errors.vin}
                     {...inputProps("vin")}
                   />
@@ -1064,7 +1071,7 @@ export function VehicleForm({
               </Field>
 
               <Field>
-                <FieldLabel>Chassis Number</FieldLabel>
+                <FieldLabel>{t("chassisNumber")}</FieldLabel>
                 <FieldContent>
                   <Input
                     value={form.watch("chassisNumber") || ""}
@@ -1072,25 +1079,25 @@ export function VehicleForm({
                       form.setValue("chassisNumber", e.target.value)
                     }
                     className="font-mono"
-                    placeholder="Frame/Chassis"
+                    placeholder={t("chassisPlaceholder")}
                   />
                 </FieldContent>
               </Field>
 
               <Field>
-                <FieldLabel>Trim</FieldLabel>
+                <FieldLabel>{t("trim")}</FieldLabel>
                 <FieldContent>
                   <Input
                     value={form.watch("trim") || ""}
                     onChange={(e) => form.setValue("trim", e.target.value)}
-                    placeholder="e.g. LE, Limited"
+                    placeholder={t("trimPlaceholder")}
                     {...inputProps("trim")}
                   />
                 </FieldContent>
               </Field>
 
               <Field>
-                <FieldLabel>Fuel Type</FieldLabel>
+                <FieldLabel>{t("fuelType")}</FieldLabel>
                 <FieldContent>
                   <Select
                     value={form.watch("fuelType") || ""}
@@ -1099,7 +1106,7 @@ export function VehicleForm({
                     }
                   >
                     <SelectTrigger className="w-full h-11">
-                      <SelectValue placeholder="Select fuel type" />
+                      <SelectValue placeholder={t("selectFuelType")} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Gasoline">Gasoline</SelectItem>
@@ -1113,7 +1120,7 @@ export function VehicleForm({
               </Field>
 
               <Field>
-                <FieldLabel>Transmission</FieldLabel>
+                <FieldLabel>{t("transmission")}</FieldLabel>
                 <FieldContent>
                   <Select
                     value={form.watch("transmission") || ""}
@@ -1122,7 +1129,7 @@ export function VehicleForm({
                     }
                   >
                     <SelectTrigger className="w-full h-11">
-                      <SelectValue placeholder="Select transmission" />
+                      <SelectValue placeholder={t("selectTransmission")} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Automatic">Automatic</SelectItem>
@@ -1134,7 +1141,7 @@ export function VehicleForm({
               </Field>
 
               <Field>
-                <FieldLabel>Drivetrain</FieldLabel>
+                <FieldLabel>{t("drivetrain")}</FieldLabel>
                 <FieldContent>
                   <Select
                     value={form.watch("drivetrain") || ""}
@@ -1143,7 +1150,7 @@ export function VehicleForm({
                     }
                   >
                     <SelectTrigger className="w-full h-11">
-                      <SelectValue placeholder="Select drivetrain" />
+                      <SelectValue placeholder={t("selectDrivetrain")} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="FWD">
@@ -1162,7 +1169,7 @@ export function VehicleForm({
               </Field>
 
               <Field>
-                <FieldLabel>Body Type</FieldLabel>
+                <FieldLabel>{t("bodyType")}</FieldLabel>
                 <FieldContent>
                   <Select
                     value={form.watch("bodyType") || ""}
@@ -1171,7 +1178,7 @@ export function VehicleForm({
                     }
                   >
                     <SelectTrigger className="w-full h-11">
-                      <SelectValue placeholder="Select body type" />
+                      <SelectValue placeholder={t("selectBodyType")} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Sedan">Sedan</SelectItem>
@@ -1189,7 +1196,7 @@ export function VehicleForm({
               </Field>
 
               <Field data-invalid={!!form.formState.errors.seats}>
-                <FieldLabel>Seats</FieldLabel>
+                <FieldLabel>{t("seats")}</FieldLabel>
                 <FieldContent>
                   <Input
                     type="number"
@@ -1207,7 +1214,7 @@ export function VehicleForm({
               </Field>
 
               <Field>
-                <FieldLabel>License Expiry</FieldLabel>
+                <FieldLabel>{t("licenseExpiry")}</FieldLabel>
                 <FieldContent>
                   <Input
                     type="date"
@@ -1220,7 +1227,7 @@ export function VehicleForm({
               </Field>
 
               <Field>
-                <FieldLabel>Next Service Due</FieldLabel>
+                <FieldLabel>{t("nextService")}</FieldLabel>
                 <FieldContent>
                   <Input
                     type="date"
@@ -1233,7 +1240,7 @@ export function VehicleForm({
               </Field>
 
               <Field>
-                <FieldLabel>Import Date</FieldLabel>
+                <FieldLabel>{t("importDate")}</FieldLabel>
                 <FieldContent>
                   <Input
                     type="date"
@@ -1246,84 +1253,84 @@ export function VehicleForm({
               </Field>
 
               <Field>
-                <FieldLabel>Country of Origin</FieldLabel>
+                <FieldLabel>{t("countryOfOrigin")}</FieldLabel>
                 <FieldContent>
                   <Input
                     value={form.watch("countryOfOrigin") || ""}
                     onChange={(e) =>
                       form.setValue("countryOfOrigin", e.target.value)
                     }
-                    placeholder="e.g. Japan, Germany"
+                    placeholder={t("countryPlaceholder")}
                   />
                 </FieldContent>
               </Field>
 
               <Field>
-                <FieldLabel>Vehicle Category</FieldLabel>
+                <FieldLabel>{t("category")}</FieldLabel>
                 <FieldContent>
                   <Input
                     value={form.watch("category") || ""}
                     onChange={(e) => form.setValue("category", e.target.value)}
-                    placeholder="e.g. M1, N1"
+                    placeholder={t("categoryPlaceholder")}
                   />
                 </FieldContent>
               </Field>
 
               <Field>
-                <FieldLabel>Steering</FieldLabel>
+                <FieldLabel>{t("steering")}</FieldLabel>
                 <FieldContent>
                   <Input
                     value={form.watch("steering") || ""}
                     onChange={(e) => form.setValue("steering", e.target.value)}
-                    placeholder="e.g. Right, Left"
+                    placeholder={t("steeringPlaceholder")}
                   />
                 </FieldContent>
               </Field>
 
               <Field>
-                <FieldLabel>Height (mm)</FieldLabel>
+                <FieldLabel>{t("height")}</FieldLabel>
                 <FieldContent>
                   <Input
                     type="number"
                     value={form.watch("height") || ""}
                     onChange={(e) => form.setValue("height", e.target.value)}
-                    placeholder="e.g. 1420"
+                    placeholder={t("heightPlaceholder")}
                   />
                 </FieldContent>
               </Field>
 
               <Field>
-                <FieldLabel>Width (mm)</FieldLabel>
+                <FieldLabel>{t("width")}</FieldLabel>
                 <FieldContent>
                   <Input
                     type="number"
                     value={form.watch("width") || ""}
                     onChange={(e) => form.setValue("width", e.target.value)}
-                    placeholder="e.g. 1690"
+                    placeholder={t("widthPlaceholder")}
                   />
                 </FieldContent>
               </Field>
 
               <Field>
-                <FieldLabel>Length (mm)</FieldLabel>
+                <FieldLabel>{t("length")}</FieldLabel>
                 <FieldContent>
                   <Input
                     type="number"
                     value={form.watch("length") || ""}
                     onChange={(e) => form.setValue("length", e.target.value)}
-                    placeholder="e.g. 4390"
+                    placeholder={t("lengthPlaceholder")}
                   />
                 </FieldContent>
               </Field>
 
               <Field>
-                <FieldLabel>Weight (kg)</FieldLabel>
+                <FieldLabel>{t("weight")}</FieldLabel>
                 <FieldContent>
                   <Input
                     type="number"
                     value={form.watch("weight") || ""}
                     onChange={(e) => form.setValue("weight", e.target.value)}
-                    placeholder="e.g. 1190"
+                    placeholder={t("weightPlaceholder")}
                   />
                 </FieldContent>
               </Field>
@@ -1333,12 +1340,12 @@ export function VehicleForm({
           {/* Notes — always visible */}
           <div className="sm:col-span-2">
             <Field>
-              <FieldLabel>Notes</FieldLabel>
+              <FieldLabel>{t("notes")}</FieldLabel>
               <FieldContent>
                 <Textarea
                   value={form.watch("notes") || ""}
                   onChange={(e) => form.setValue("notes", e.target.value)}
-                  placeholder="General vehicle history or custom notes"
+                  placeholder={t("notesPlaceholderForm")}
                   rows={2}
                 />
               </FieldContent>
@@ -1369,7 +1376,7 @@ export function VehicleForm({
             {form.formState.isSubmitting || createVehicleMutation.isPending ? (
               <span className="flex items-center gap-2 justify-center">
                 <Loader2 className="size-4 animate-spin" />
-                Saving...
+                {t("saving")}
               </span>
             ) : (
               t("addVehicle")

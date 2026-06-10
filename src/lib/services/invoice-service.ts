@@ -9,6 +9,7 @@ import type {
   Invoice,
   InvoiceItem,
   InvoicePayment,
+  InvoiceRefund,
   InvoiceWithItems,
 } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
@@ -120,27 +121,36 @@ export async function getInvoice(id: string): Promise<InvoiceWithItems> {
 
   if (error || !invoice) throw new NotFoundError("Invoice not found");
 
-  const [{ data: items }, { data: payments }] = await Promise.all([
-    supabase
-      .from("invoice_items")
-      .select(
-        "id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at",
-      )
-      .eq("invoice_id", id)
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("invoice_payments")
-      .select(
-        "id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by",
-      )
-      .eq("invoice_id", id)
-      .order("paid_at", { ascending: false }),
-  ]);
+  const [{ data: items }, { data: payments }, { data: refunds }] =
+    await Promise.all([
+      supabase
+        .from("invoice_items")
+        .select(
+          "id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order, created_at",
+        )
+        .eq("invoice_id", id)
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("invoice_payments")
+        .select(
+          "id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by",
+        )
+        .eq("invoice_id", id)
+        .order("paid_at", { ascending: false }),
+      supabase
+        .from("invoice_refunds")
+        .select(
+          "id, invoice_id, organization_id, amount, method, status, reason, reference, notes, refunded_at, created_at, updated_at, created_by",
+        )
+        .eq("invoice_id", id)
+        .order("refunded_at", { ascending: false }),
+    ]);
 
   return {
     ...invoice,
     items: (items ?? []) as unknown as InvoiceItem[],
     payments: (payments ?? []) as unknown as InvoicePayment[],
+    refunds: (refunds ?? []) as unknown as InvoiceRefund[],
   } as unknown as unknown as InvoiceWithItems;
 }
 
@@ -581,8 +591,23 @@ export async function updateInvoiceStatus(
   }
 
   if (status === "cancelled") {
+    // Check if invoice has refunds — prevent cancellation of refunded invoices
+    const { data: refunds } = await supabase
+      .from("invoice_refunds")
+      .select("id")
+      .eq("invoice_id", id)
+      .eq("status", "completed")
+      .limit(1);
+
+    if (refunds && refunds.length > 0) {
+      throw new ValidationError(
+        "Cannot cancel an invoice that has completed refunds. Void the refunds first or issue a refund instead of cancelling.",
+      );
+    }
+
     updateData.amount_paid = 0;
     updateData.balance_due = 0;
+    updateData.amount_refunded = 0;
   }
 
   const { data, error } = await supabase
@@ -690,7 +715,7 @@ export async function recordPayment(
   // Get current invoice
   const { data: invoice } = await supabase
     .from("invoices")
-    .select("id, total, status, amount_paid, balance_due")
+    .select("id, total, status, amount_paid, amount_refunded, balance_due")
     .eq("id", invoiceId)
     .eq("organization_id", orgId)
     .single();
@@ -721,8 +746,20 @@ export async function recordPayment(
   );
   const balanceDue = Math.max(0, Number(invoice.total) - totalPaid);
 
-  const newStatus =
-    balanceDue <= 0 ? "paid" : totalPaid > 0 ? "partial" : invoice.status;
+  // Status logic: account for refunds
+  // If fully refunded, status stays "refunded"
+  // If balance due is 0, status is "paid"
+  // If partial payment, status is "partial"
+  // Otherwise keep current status
+  let newStatus = invoice.status;
+  if (invoice.status === "refunded") {
+    // Keep refunded status even after new payment
+    newStatus = "refunded";
+  } else if (balanceDue <= 0) {
+    newStatus = "paid";
+  } else if (totalPaid > 0) {
+    newStatus = "partial";
+  }
 
   await supabase
     .from("invoices")

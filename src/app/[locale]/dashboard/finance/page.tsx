@@ -10,6 +10,7 @@ import {
   DollarSign,
   Loader2,
   Mail,
+  RotateCcw,
   TrendingUp,
   Wallet,
 } from "lucide-react";
@@ -62,9 +63,10 @@ import { formatCurrency, formatMNT, hasMultipleBranches } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
 import { KpiCard } from "./_kpi-card";
 import { OverviewTab } from "./_overview-tab";
+import { RefundsTab } from "./_refunds-tab";
 import { TransactionsTab } from "./_transactions-tab";
 
-type Tab = "overview" | "transactions" | "invoices" | "expenses";
+type Tab = "overview" | "transactions" | "invoices" | "expenses" | "refunds";
 
 function TabBar({
   value,
@@ -73,11 +75,13 @@ function TabBar({
   value: Tab;
   onChange: (t: Tab) => void;
 }) {
-  const tabs: { key: Tab; label: string; icon: typeof DollarSign }[] = [
-    { key: "overview", label: "Overview", icon: BarChart3 },
-    { key: "transactions", label: "Transactions", icon: ClipboardList },
-    { key: "invoices", label: "Invoices", icon: DollarSign },
-    { key: "expenses", label: "Expenses", icon: TrendingUp },
+  const t = useTranslations("finance");
+  const tabs: { key: Tab; labelKey: string; icon: typeof DollarSign }[] = [
+    { key: "overview", labelKey: "tabOverview", icon: BarChart3 },
+    { key: "transactions", labelKey: "tabTransactions", icon: ClipboardList },
+    { key: "invoices", labelKey: "tabInvoices", icon: DollarSign },
+    { key: "expenses", labelKey: "tabExpenses", icon: TrendingUp },
+    { key: "refunds", labelKey: "tabRefunds", icon: RotateCcw },
   ];
 
   return (
@@ -92,7 +96,7 @@ function TabBar({
             className="gap-2"
           >
             <Icon className="size-4" />
-            {tab.label}
+            {t(tab.labelKey)}
           </Button>
         );
       })}
@@ -102,50 +106,51 @@ function TabBar({
 
 const invoiceStatusConfig: Record<
   string,
-  { label: string; className: string }
+  { labelKey: string; className: string }
 > = {
   draft: {
-    label: "Draft",
+    labelKey: "statusDraft",
     className:
       "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-400",
   },
   sent: {
-    label: "Sent",
+    labelKey: "statusSent",
     className:
       "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400",
   },
   paid: {
-    label: "Paid",
+    labelKey: "statusPaid",
     className:
       "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400",
   },
   partial: {
-    label: "Partial",
+    labelKey: "statusPartial",
     className:
       "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400",
   },
   overdue: {
-    label: "Overdue",
+    labelKey: "statusOverdue",
     className:
       "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 animate-pulse",
   },
   unpaid: {
-    label: "Unpaid",
+    labelKey: "statusUnpaid",
     className:
       "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400",
   },
   cancelled: {
-    label: "Cancelled",
+    labelKey: "statusCancelled",
     className:
       "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-500",
   },
 };
 
 function InvoiceStatusBadge({ status }: { status: string }) {
+  const t = useTranslations("finance");
   const cfg = invoiceStatusConfig[status] ?? invoiceStatusConfig.draft;
   return (
     <Badge variant="outline" className={cfg.className}>
-      {cfg.label}
+      {t(cfg.labelKey)}
     </Badge>
   );
 }
@@ -212,7 +217,7 @@ function invoiceDataReducer(
 }
 
 function InvoicesTab({ orgId }: { orgId: string | null }) {
-  const t = useTranslations();
+  const t = useTranslations("finance");
   const now = useClientNow();
   const {
     search,
@@ -246,7 +251,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
           invoices: listJson.data ?? [],
         });
       } catch {
-        toast.error("Failed to load invoices");
+        toast.error(t("failedToLoadInvoices"));
         dispatchInvoice({ type: "FETCH_DONE" });
       }
     },
@@ -272,13 +277,13 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
         );
         const json = await res.json();
         if (json.error) {
-          toast.error(json.error.message ?? "Failed to send email");
+          toast.error(json.error.message ?? t("failedToSendEmail"));
         } else {
-          toast.success(`Invoice #${invoiceNumber} sent via email`);
+          toast.success(t("invoiceSentEmail", { number: invoiceNumber }));
           if (orgId) fetchInvoices(orgId, filter);
         }
       } catch {
-        toast.error("Failed to send invoice email");
+        toast.error(t("failedToSendInvoiceEmail"));
       } finally {
         setSendingId(null);
       }
@@ -295,18 +300,18 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
   const handleCopyLink = (token: string) => {
     const url = `${window.location.origin}/invoice/${token}`;
     navigator.clipboard.writeText(url);
-    toast.success("Link copied to clipboard");
+    toast.success(t("linkCopied"));
   };
 
   const invoiceExportColumns: ExportColumn<InvoiceListItem>[] = [
-    { key: "invoice_number", label: "Invoice #" },
-    { key: "customer_name", label: "Customer" },
-    { key: "vehicle_plate", label: "Vehicle" },
-    { key: "status", label: "Status" },
-    { key: "total", label: "Total", format: "currency" },
-    { key: "amount_paid", label: "Paid", format: "currency" },
-    { key: "balance_due", label: "Balance", format: "currency" },
-    { key: "issued_at", label: "Date", format: "date" },
+    { key: "invoice_number", label: t("invoiceNumber") },
+    { key: "customer_name", label: t("customer") },
+    { key: "vehicle_plate", label: t("vehicle") },
+    { key: "status", label: t("status") },
+    { key: "total", label: t("total"), format: "currency" },
+    { key: "amount_paid", label: t("paid"), format: "currency" },
+    { key: "balance_due", label: t("balance"), format: "currency" },
+    { key: "issued_at", label: t("date"), format: "date" },
   ];
 
   const isLoading = loading && !stats;
@@ -325,19 +330,19 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          label="Total Invoices"
+          label={t("totalInvoices")}
           value={isLoading ? "—" : String(stats?.total ?? 0)}
           icon={DollarSign}
           loading={isLoading}
         />
         <KpiCard
-          label="Sent"
+          label={t("sent")}
           value={isLoading ? "—" : String(stats?.sent ?? 0)}
           icon={ArrowUpRight}
           loading={isLoading}
         />
         <KpiCard
-          label="Paid"
+          label={t("paid")}
           value={isLoading ? "—" : String(stats?.paid ?? 0)}
           icon={TrendingUp}
           subtitle={
@@ -346,22 +351,22 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
           loading={isLoading}
         />
         <KpiCard
-          label="Outstanding"
+          label={t("outstanding")}
           value={isLoading ? "—" : formatCurrency(stats?.outstanding ?? 0)}
           icon={Clock}
-          subtitle={`${stats?.overdue ?? 0} overdue`}
+          subtitle={`${stats?.overdue ?? 0} ${t("overdueCount")}`}
           loading={isLoading}
         />
       </div>
       <ListToolbar
         search={{
-          placeholder: "Search by invoice #, customer, or plate...",
+          placeholder: t("searchInvoices"),
           value: search,
           onChange: setSearch,
           resultLabel: filtered.length
-            ? `${filtered.length} result${filtered.length === 1 ? "" : "s"}`
+            ? t("resultsCount", { count: filtered.length })
             : undefined,
-          emptyLabel: search ? `No matches for "${search}"` : undefined,
+          emptyLabel: search ? t("noMatches", { query: search }) : undefined,
         }}
         filters={
           <div className="flex gap-2 flex-wrap">
@@ -380,7 +385,17 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
                 size="sm"
                 onClick={() => setFilter(s)}
               >
-                {s ? s.charAt(0).toUpperCase() + s.slice(1) : "All"}
+                {(
+                  {
+                    "": t("filterAll"),
+                    draft: t("statusDraft"),
+                    sent: t("statusSent"),
+                    paid: t("statusPaid"),
+                    overdue: t("statusOverdue"),
+                    partial: t("statusPartial"),
+                    cancelled: t("statusCancelled"),
+                  } as Record<string, string>
+                )[s] ?? s}
               </Button>
             ))}
           </div>
@@ -391,7 +406,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
               data={invoices}
               columns={invoiceExportColumns}
               filename={`invoices-${now.toISOString().split("T")[0]}.xlsx`}
-              sheetName="Invoices"
+              sheetName={t("invoicesSheet")}
             />
           </div>
         }
@@ -403,25 +418,25 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    {t("common.invoiceNumber") ?? "Invoice #"}
+                    {t("invoiceNumber")}
                   </TableHead>
                   <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    Customer
+                    {t("customer")}
                   </TableHead>
                   <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    Vehicle
+                    {t("vehicle")}
                   </TableHead>
                   <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    Status
+                    {t("status")}
                   </TableHead>
                   <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    Total
+                    {t("total")}
                   </TableHead>
                   <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    Date
+                    {t("date")}
                   </TableHead>
                   <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    Actions
+                    {t("actions")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -488,20 +503,24 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
                             <Badge
                               variant="outline"
                               className="gap-1 text-[11px]"
-                              title={`Sent ${new Date(inv.email_sent_at).toLocaleDateString()}`}
+                              title={t("sentOn", {
+                                date: new Date(
+                                  inv.email_sent_at,
+                                ).toLocaleDateString(),
+                              })}
                             >
                               <Mail className="size-3" />
-                              Sent
+                              {t("sentBadge")}
                             </Badge>
                           )}
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleCopyLink(inv.public_token)}
-                            title="Copy public link"
+                            title={t("copyPublicLink")}
                           >
                             <ArrowUpRight className="size-3.5" />
-                            Share
+                            {t("share")}
                           </Button>
                           {!inv.email_sent_at && (
                             <Button
@@ -513,8 +532,10 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
                               disabled={sendingId === inv.id}
                               title={
                                 inv.customer_email
-                                  ? `Send invoice to ${inv.customer_email}`
-                                  : "No customer email on this invoice"
+                                  ? t("sendInvoiceTo", {
+                                      email: inv.customer_email,
+                                    })
+                                  : t("noCustomerEmail")
                               }
                             >
                               {sendingId === inv.id ? (
@@ -522,7 +543,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
                               ) : (
                                 <Mail className="size-3.5" />
                               )}
-                              Email
+                              {t("email")}
                             </Button>
                           )}
                         </div>
@@ -580,7 +601,7 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
           icon={Clock}
           subtitle={
             stats
-              ? `${stats.unpaidAmount > 0 ? `${((stats.unpaidAmount / stats.totalAmount) * 100).toFixed(0)}% of total` : "All paid"}`
+              ? `${stats.unpaidAmount > 0 ? t("finance.percentOfTotal", { percent: ((stats.unpaidAmount / stats.totalAmount) * 100).toFixed(0) }) : t("finance.allPaid")}`
               : undefined
           }
           loading={loading}
@@ -749,9 +770,9 @@ export default function FinancePage() {
 
   const loading = orgLoading || (!!orgId && dataLoading && !hasLoadedOnce);
   const error = orgError
-    ? "Failed to load organization"
+    ? t("finance.failedToLoadOrg")
     : !orgId && !orgLoading
-      ? "No organization found"
+      ? t("finance.noOrgFound")
       : dataError
         ? dataError.message
         : null;
@@ -761,24 +782,24 @@ export default function FinancePage() {
     const s = data.summary;
     registerTab(
       "summary",
-      "Summary",
+      t("finance.summary"),
       <StatusSummary
-        title="Period Summary"
+        title={t("finance.periodSummary")}
         items={[
-          { label: "Total Revenue", count: s.totalRevenue },
-          { label: "Service Revenue", count: s.serviceRevenue },
-          { label: "Parts Revenue", count: s.partsRevenue },
-          { label: "Active Orders", count: s.activeWorkOrders },
-          { label: "Completed Today", count: s.completedToday },
-          { label: "Gross Profit", count: s.grossProfit },
+          { label: t("finance.totalRevenue"), count: s.totalRevenue },
+          { label: t("finance.serviceRevenue"), count: s.serviceRevenue },
+          { label: t("finance.partsRevenue"), count: s.partsRevenue },
+          { label: t("finance.activeOrders"), count: s.activeWorkOrders },
+          { label: t("finance.completedToday"), count: s.completedToday },
+          { label: t("finance.grossProfit"), count: s.grossProfit },
         ]}
       />,
     );
     registerTab(
       "recent",
-      "Recent",
+      t("finance.recent"),
       <RecentList
-        title="Recent Transactions"
+        title={t("finance.recentTransactions")}
         items={(data.recentWorkOrders ?? []).map((wo) => ({
           id: wo.id,
           primary:
@@ -811,9 +832,9 @@ export default function FinancePage() {
     const margin = summary.marginPercent;
     const profitPart =
       profit >= 0
-        ? `${formatCurrency(profit)} profit`
-        : `-${formatCurrency(Math.abs(profit))} loss`;
-    return `${formatCurrency(rev)} revenue · ${profitPart} (${margin.toFixed(1)}%) · ${summary.completedToday} completed · ${wo} active · avg ${formatCurrency(avg)}/WO`;
+        ? `${formatCurrency(profit)} ${t("finance.profit")}`
+        : `-${formatCurrency(Math.abs(profit))} ${t("finance.loss")}`;
+    return `${formatCurrency(rev)} ${t("finance.revenueWord")} · ${profitPart} (${margin.toFixed(1)}%) · ${summary.completedToday} ${t("finance.completedWord")} · ${wo} ${t("finance.activeWord")} · ${t("finance.avgPerWo")} ${formatCurrency(avg)}/WO`;
   }, [summary, loading, hasRevenue]);
 
   const filteredWorkOrders = useMemo<DashboardData["recentWorkOrders"]>(() => {
@@ -891,7 +912,9 @@ export default function FinancePage() {
             <Typography.Muted className="text-muted-foreground">
               {error}
             </Typography.Muted>
-            <Button onClick={() => window.location.reload()}>Retry</Button>
+            <Button onClick={() => window.location.reload()}>
+              {t("finance.retry")}
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -934,9 +957,7 @@ export default function FinancePage() {
         <Alert>
           <AlertCircle className="size-4" />
           <AlertTitle>{t("finance.largeDataset")}</AlertTitle>
-          <AlertDescription>
-            Showing all data — may be slow for large datasets.
-          </AlertDescription>
+          <AlertDescription>{t("finance.largeDatasetDesc")}</AlertDescription>
         </Alert>
       )}
 
@@ -965,6 +986,8 @@ export default function FinancePage() {
       {tab === "invoices" && <InvoicesTab orgId={orgId} />}
 
       {tab === "expenses" && <ExpensesTab orgId={orgId} />}
+
+      {tab === "refunds" && orgId && <RefundsTab orgId={orgId} />}
     </div>
   );
 }

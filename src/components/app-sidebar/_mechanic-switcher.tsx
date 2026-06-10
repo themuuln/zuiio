@@ -22,6 +22,7 @@ import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
 import { mechanicKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useProfile } from "@/lib/queries/use-profile";
 import { cn } from "@/lib/utils";
 
 const MECHANIC_STORAGE_KEY = "tolom_active_mechanic";
@@ -31,11 +32,8 @@ export function MechanicSwitcher() {
   const { data: orgInfo } = useCurrentOrg();
   const orgId = orgInfo?.orgId;
 
+  const { data: profile } = useProfile();
   const [activeMechanicId, setActiveMechanicId] = useState<string | null>(null);
-  const [profile, setProfile] = useState<{
-    id?: string;
-    full_name?: string | null;
-  } | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem(MECHANIC_STORAGE_KEY);
@@ -43,17 +41,10 @@ export function MechanicSwitcher() {
       setActiveMechanicId(stored);
       return;
     }
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then((d) => {
-        const p = d?.profile ?? d?.data ?? d;
-        if (p?.id) {
-          setProfile(p);
-          setActiveMechanicId(p.id);
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (profile?.id) {
+      setActiveMechanicId(profile.id);
+    }
+  }, [profile?.id]);
 
   const { data: mechanics = [] } = useQuery({
     queryKey: mechanicKeys.list(orgId ?? ""),
@@ -71,7 +62,7 @@ export function MechanicSwitcher() {
   const activeMechanic =
     mechanics.find((m) => m.id === activeMechanicId) ?? null;
   const displayName =
-    activeMechanic?.full_name ?? profile?.full_name ?? "Mechanic";
+    activeMechanic?.full_name ?? profile?.fullName ?? "Mechanic";
 
   const queryClient = useQueryClient();
   const [showAddMechanic, setShowAddMechanic] = useState(false);

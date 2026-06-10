@@ -2,6 +2,7 @@
 
 import { Car, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,9 @@ export function VehicleSelect({
   const [searching, setSearching] = useState(false);
   const [showQuick, setShowQuick] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+
+  const t = useTranslations("workOrderDetail");
+  const tc = useTranslations("common");
 
   const vehicleQuickSchema = z.object({
     plate_number: z
@@ -213,14 +217,14 @@ export function VehicleSelect({
       });
       const json = await res.json();
       if (json.error) {
-        setCreateError(json.error.message ?? "Failed to create vehicle");
+        setCreateError(json.error.message ?? t("failedToCreateVehicle"));
       } else if (json.data) {
         onSelect(json.data);
         form.reset();
         setShowQuick(false);
       }
     } catch {
-      setCreateError("Network error");
+      setCreateError(tc("networkError"));
     }
   });
 
@@ -229,7 +233,7 @@ export function VehicleSelect({
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Car className="size-4" />
-          Vehicle
+          {t("vehicle")}
           {selectedVehicle && (
             <span className="ml-auto text-sm font-normal text-muted-foreground">
               {selectedVehicle.plate_number}
@@ -269,14 +273,14 @@ export function VehicleSelect({
             </ItemContent>
             <ItemActions>
               <Button variant="ghost" size="sm" onClick={onClear}>
-                Change
+                {tc("change")}
               </Button>
             </ItemActions>
           </Item>
         ) : (
           <div className="flex flex-col gap-3">
             <SearchInput
-              placeholder="Search by plate number..."
+              placeholder={t("searchByPlate")}
               loading={searching}
               onSearch={handleSearch}
               debounceMs={400}
@@ -310,7 +314,7 @@ export function VehicleSelect({
                 className="w-full justify-start gap-2 border-dashed p-3 min-h-[48px] h-auto"
               >
                 <Plus className="size-4" />
-                Quick create vehicle
+                {t("quickCreateVehicle")}
               </Button>
             )}
             {showQuick && (
@@ -319,12 +323,12 @@ export function VehicleSelect({
                 onSubmit={handleQuickCreate}
               >
                 <Typography.Text className="text-sm font-medium">
-                  New Vehicle
+                  {t("newVehicle")}
                 </Typography.Text>
                 <Field data-invalid={!!form.formState.errors.plate_number}>
                   <FieldContent className="relative">
                     <PlateInput
-                      placeholder="e.g. 4444УНА"
+                      placeholder={t("platePlaceholder")}
                       aria-invalid={!!form.formState.errors.plate_number}
                       className="h-11"
                       value={form.watch("plate_number")}
@@ -342,7 +346,7 @@ export function VehicleSelect({
                 <div className="flex flex-col gap-3">
                   <Field data-invalid={!!form.formState.errors.make}>
                     <FieldLabel>
-                      Make <span className="text-destructive">*</span>
+                      {t("make")} <span className="text-destructive">*</span>
                     </FieldLabel>
                     <FieldContent>
                       <Combobox
@@ -358,7 +362,7 @@ export function VehicleSelect({
                         }}
                       >
                         <ComboboxInput
-                          placeholder="Search make…"
+                          placeholder={t("searchMake")}
                           showTrigger
                           showClear={!!quickMake}
                           className="h-11 text-sm"
@@ -371,7 +375,7 @@ export function VehicleSelect({
                               </ComboboxItem>
                             )}
                           </ComboboxList>
-                          <ComboboxEmpty>No makes found</ComboboxEmpty>
+                          <ComboboxEmpty>{t("noMakesFound")}</ComboboxEmpty>
                         </ComboboxContent>
                       </Combobox>
                       {form.formState.errors.make && (
@@ -383,7 +387,7 @@ export function VehicleSelect({
                   </Field>
                   <Field data-invalid={!!form.formState.errors.model}>
                     <FieldLabel>
-                      Model <span className="text-destructive">*</span>
+                      {t("model")} <span className="text-destructive">*</span>
                     </FieldLabel>
                     <FieldContent>
                       <Combobox
@@ -398,8 +402,8 @@ export function VehicleSelect({
                         <ComboboxInput
                           placeholder={
                             quickMake.trim()
-                              ? "Search model…"
-                              : "Select make first"
+                              ? t("searchModel")
+                              : t("selectMakeFirst")
                           }
                           showTrigger
                           showClear={!!quickModel}
@@ -414,7 +418,7 @@ export function VehicleSelect({
                               </ComboboxItem>
                             )}
                           </ComboboxList>
-                          <ComboboxEmpty>No models found</ComboboxEmpty>
+                          <ComboboxEmpty>{t("noModelsFound")}</ComboboxEmpty>
                         </ComboboxContent>
                       </Combobox>
                       {form.formState.errors.model && (
@@ -425,7 +429,7 @@ export function VehicleSelect({
                     </FieldContent>
                   </Field>
                   <Field>
-                    <FieldLabel>Year</FieldLabel>
+                    <FieldLabel>{t("year")}</FieldLabel>
                     <FieldContent>
                       <Input
                         placeholder="20__"
@@ -453,7 +457,7 @@ export function VehicleSelect({
                       form.reset();
                     }}
                   >
-                    Cancel
+                    {tc("cancel")}
                   </Button>
                   <Button
                     type="submit"
@@ -465,8 +469,8 @@ export function VehicleSelect({
                     }
                   >
                     {form.formState.isSubmitting
-                      ? "Creating..."
-                      : "Create & Select"}
+                      ? tc("creating")
+                      : t("createAndSelect")}
                   </Button>
                 </div>
               </form>

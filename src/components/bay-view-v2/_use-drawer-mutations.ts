@@ -1026,7 +1026,7 @@ export function useDrawerMutations({
 
   // ── Computed ──
 
-  const isDirty = showAddService;
+  const isDirty = showAddService || showAddPart;
 
   // ── Drawer close handlers ──
 

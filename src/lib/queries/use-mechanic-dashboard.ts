@@ -219,6 +219,7 @@ export function useClockToggle(orgId: string | undefined) {
 export interface MechanicItem {
   id: string;
   full_name: string | null;
+  avatar_url: string | null;
 }
 
 /**

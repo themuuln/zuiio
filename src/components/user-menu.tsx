@@ -2,7 +2,6 @@
 
 import { LogOut } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -21,7 +20,7 @@ import {
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "@/lib/i18n/navigation";
-import type { UserProfile } from "@/lib/types";
+import { useProfile } from "@/lib/queries/use-profile";
 import { cn } from "@/lib/utils";
 
 function getInitials(name: string | null | undefined): string {
@@ -38,26 +37,7 @@ interface UserMenuProps {
 export default function UserMenu({ collapsed }: UserMenuProps) {
   const t = useTranslations("userMenu");
   const { push, refresh } = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchProfile = useCallback(async () => {
-    try {
-      const res = await fetch("/api/profile");
-      if (res.ok) {
-        const data = await res.json();
-        setProfile(data);
-      }
-    } catch {
-      // Silently fail — user stays as fallback
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+  const { data: profile, isLoading: loading } = useProfile();
 
   const handleSignOut = async () => {
     await fetch("/auth/signout", { method: "POST" });

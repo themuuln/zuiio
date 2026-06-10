@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -77,6 +78,7 @@ export function ListPageError({
   error: string;
   onRetry?: () => void;
 }) {
+  const t = useTranslations("common");
   return (
     <Empty>
       <EmptyHeader>
@@ -89,7 +91,7 @@ export function ListPageError({
             stroke="currentColor"
             aria-hidden="true"
           >
-            <title>Error</title>
+            <title>{t("error")}</title>
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -97,13 +99,13 @@ export function ListPageError({
             />
           </svg>
         </EmptyMedia>
-        <EmptyTitle>Something went wrong</EmptyTitle>
+        <EmptyTitle>{t("somethingWentWrong")}</EmptyTitle>
         <EmptyDescription>{error}</EmptyDescription>
       </EmptyHeader>
       {onRetry && (
         <EmptyContent>
           <Button variant="outline" onClick={onRetry}>
-            Try again
+            {t("tryAgain")}
           </Button>
         </EmptyContent>
       )}

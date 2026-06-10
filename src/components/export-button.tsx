@@ -2,6 +2,7 @@
 
 import { Download, Loader2 } from "lucide-react";
 import type { ComponentProps } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useExcelExport } from "@/hooks/use-excel-export";
@@ -32,6 +33,7 @@ export function ExportButton<T>({
   className,
 }: ExportButtonProps<T>) {
   const { exportToExcel, isExporting } = useExcelExport();
+  const t = useTranslations("common");
 
   const handleClick = async () => {
     try {
@@ -42,9 +44,9 @@ export function ExportButton<T>({
         sheetName,
         title,
       });
-      toast.success(`${label} — file downloaded`);
+      toast.success(t("exportSuccess", { label }));
     } catch {
-      toast.error(`${label} failed. Please try again.`);
+      toast.error(t("exportFailed", { label }));
     }
   };
 

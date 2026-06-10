@@ -9,6 +9,8 @@ import {
   Mail,
   Phone,
   Plus,
+  Printer,
+  RotateCcw,
   Trash2,
   Wallet,
 } from "lucide-react";
@@ -43,6 +45,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import WorkOrderPhotoUpload from "@/components/work-order-photo-upload";
+import { RefundDialog } from "@/components/invoices/_refund-dialog";
+import { RefundReceipt } from "@/components/invoices/_refund-receipt";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
@@ -51,6 +55,10 @@ import { workOrderKeys } from "@/lib/queries/keys";
 import { usePartsCatalog } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useLastVisitData } from "@/lib/queries/use-price-memory";
+import {
+  useRefundList,
+  useStoreCreditBalance,
+} from "@/lib/queries/use-refunds";
 import {
   useAttachments,
   useDeleteAttachment,
@@ -120,6 +128,16 @@ export default function WorkOrderDetailPage() {
     null,
   );
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showRefundDialog, setShowRefundDialog] = useState(false);
+  const [receiptRefund, setReceiptRefund] = useState<{
+    id: string;
+    amount: number;
+    method: string;
+    reason: string | null;
+    reference: string | null;
+    notes: string | null;
+    refunded_at: string;
+  } | null>(null);
   const [showRepeatDialog, setShowRepeatDialog] = useState(false);
 
   const paymentSchema = z.object({
@@ -147,6 +165,7 @@ export default function WorkOrderDetailPage() {
     error: orgError,
   } = useCurrentOrg();
   const orgId = orgData?.orgId;
+  const orgName = orgData?.orgName;
 
   const {
     data: wo,
@@ -174,6 +193,11 @@ export default function WorkOrderDetailPage() {
   const { data: invoicePaymentsData } = useInvoicePayments(
     orgId,
     existingInvoiceId,
+  );
+  const { data: invoiceRefundsData } = useRefundList(orgId);
+  const { data: storeCreditBalance = 0 } = useStoreCreditBalance(
+    orgId,
+    wo?.customer_id ?? undefined,
   );
   const recordPayment = useRecordPayment(orgId);
 
@@ -525,7 +549,7 @@ export default function WorkOrderDetailPage() {
 
   const handlePaymentSubmit = paymentForm.handleSubmit(async (data) => {
     if (!orgId || !existingInvoiceId) {
-      toast.error("Please enter a valid payment amount");
+      toast.error(t("invalidPaymentAmount"));
       return;
     }
     recordPayment.mutate(
@@ -543,7 +567,7 @@ export default function WorkOrderDetailPage() {
           toast.success(t("paymentRecorded"));
         },
         onError: (err: Error) => {
-          toast.error(err.message || "Failed to record payment");
+          toast.error(err.message || t("failedToRecordPayment"));
         },
       },
     );
@@ -555,7 +579,7 @@ export default function WorkOrderDetailPage() {
   if (orgError) {
     error = orgError.message;
   } else if (!orgLoading && !orgId) {
-    error = "No organization found";
+    error = t("noOrganization");
   } else if (woError) {
     error = woError.message;
   }
@@ -609,6 +633,16 @@ export default function WorkOrderDetailPage() {
     invoicePaymentsData?.balance_due ?? servicesTotal + partsTotal;
   const invoiceStatus = invoicePaymentsData?.status ?? "";
 
+  // Filter refunds for this invoice
+  const invoiceRefunds = (invoiceRefundsData ?? []).filter(
+    (r) => r.invoice_id === existingInvoiceId && r.status === "completed",
+  );
+  const totalRefunded = invoiceRefunds.reduce(
+    (sum, r) => sum + Number(r.amount),
+    0,
+  );
+  const maxRefundable = totalPaid - totalRefunded;
+
   const servicesCost = (wo.services ?? []).reduce(
     (sum, s) => sum + Number(s.unit_cost ?? 0) * s.quantity,
     0,
@@ -632,7 +666,7 @@ export default function WorkOrderDetailPage() {
           variant="ghost"
           size="icon-xs"
           onClick={() => back()}
-          aria-label="Back"
+          aria-label={t("back")}
           className="tablet:size-12"
         >
           <ArrowLeft className="size-5" />
@@ -640,7 +674,8 @@ export default function WorkOrderDetailPage() {
         <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap">
             <Typography.H1 className="text-2xl font-semibold tracking-tight">
-              WO #{wo.id.slice(0, 8)}
+              {t("woPrefix")}
+              {wo.id.slice(0, 8)}
             </Typography.H1>
             <StatusBadge status={wo.status as unknown as WorkOrderStatus} />
           </div>
@@ -725,7 +760,7 @@ export default function WorkOrderDetailPage() {
                     setLossReasonText("");
                   }}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button
                   variant={
@@ -886,7 +921,7 @@ export default function WorkOrderDetailPage() {
           {showAddService && (
             <div className="flex flex-col gap-2 mb-2">
               <Input
-                placeholder="Search services..."
+                placeholder={t("searchPlaceholder")}
                 value={serviceSearch}
                 onChange={(e) => setServiceSearch(e.target.value)}
                 className="h-11"
@@ -963,7 +998,7 @@ export default function WorkOrderDetailPage() {
                         name: s.service_name,
                       })
                     }
-                    aria-label="Remove service"
+                    aria-label={t("removeServiceAria")}
                   >
                     <Trash2 className="size-4" />
                   </Button>
@@ -1158,7 +1193,7 @@ export default function WorkOrderDetailPage() {
                         name: p.part_name,
                       })
                     }
-                    aria-label="Remove part"
+                    aria-label={t("removePartAria")}
                   >
                     <Trash2 className="size-4" />
                   </Button>
@@ -1416,7 +1451,7 @@ export default function WorkOrderDetailPage() {
               <div className="flex items-center gap-2">
                 <Wallet className="size-5 text-green-600" />
                 <Typography.Text className="font-medium text-sm">
-                  Payment Status
+                  {t("paymentStatus")}
                 </Typography.Text>
               </div>
               <Badge
@@ -1480,8 +1515,103 @@ export default function WorkOrderDetailPage() {
                 <Wallet className="size-4" /> {t("recordPayment")}
               </Button>
             )}
+
+            {maxRefundable > 0 && existingInvoiceId && (
+              <Button
+                onClick={() => setShowRefundDialog(true)}
+                variant="outline"
+                size="sm"
+                className="w-full"
+              >
+                <RotateCcw className="size-4" /> {t("recordRefund")}
+              </Button>
+            )}
           </CardContent>
         </Card>
+      )}
+
+      {existingInvoiceId && totalRefunded > 0 && (
+        <Card className="border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10">
+          <CardContent className="flex p-4 flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <RotateCcw className="size-5 text-amber-600" />
+              <Typography.Text className="font-medium text-sm">
+                {t("refundHistory")}
+              </Typography.Text>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {invoiceRefunds.map((r) => (
+                <div
+                  key={r.id}
+                  className="flex items-center justify-between text-xs"
+                >
+                  <span className="text-muted-foreground">
+                    {r.method} · {new Date(r.refunded_at).toLocaleDateString()}
+                    {r.reason ? ` · ${r.reason}` : ""}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-destructive">
+                      -{formatMNT(Number(r.amount))}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2"
+                      onClick={() => setReceiptRefund(r)}
+                    >
+                      <Printer className="size-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-between text-sm border-t pt-2">
+              <span>{t("totalRefunded")}</span>
+              <span className="font-medium text-destructive">
+                -{formatMNT(totalRefunded)}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Refund Dialog */}
+      {existingInvoiceId && orgId && (
+        <RefundDialog
+          open={showRefundDialog}
+          onOpenChange={setShowRefundDialog}
+          invoiceId={existingInvoiceId}
+          orgId={orgId}
+          invoiceTotal={servicesTotal + partsTotal}
+          amountPaid={totalPaid}
+          amountRefunded={totalRefunded}
+          invoiceNumber={invoicePaymentsData?.invoice_number ?? ""}
+        />
+      )}
+
+      {/* Refund Receipt Dialog */}
+      {receiptRefund && (
+        <Dialog
+          open={!!receiptRefund}
+          onOpenChange={(open) => {
+            if (!open) setReceiptRefund(null);
+          }}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{t("refund.receiptTitle")}</DialogTitle>
+            </DialogHeader>
+            <RefundReceipt
+              refund={receiptRefund}
+              invoice={{
+                invoice_number: invoicePaymentsData?.invoice_number ?? "",
+                total: servicesTotal + partsTotal,
+                customer_name: wo?.customer?.full_name ?? null,
+              }}
+              orgName={orgName ?? ""}
+            />
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Totals */}
@@ -1664,6 +1794,11 @@ export default function WorkOrderDetailPage() {
                   <option value="card">{t("card")}</option>
                   <option value="bank_transfer">{t("bankTransfer")}</option>
                   <option value="manual">{t("manual")}</option>
+                  {storeCreditBalance > 0 && (
+                    <option value="store_credit">
+                      {t("storeCredit")} ({formatMNT(storeCreditBalance)})
+                    </option>
+                  )}
                 </select>
                 {paymentForm.formState.errors.method && (
                   <FieldError>
@@ -1672,6 +1807,23 @@ export default function WorkOrderDetailPage() {
                 )}
               </FieldContent>
             </Field>
+            {storeCreditBalance > 0 && (
+              <div className="rounded-lg bg-muted/50 p-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {t("storeCredit")}
+                  </span>
+                  <span className="font-medium text-green-600">
+                    {formatMNT(storeCreditBalance)}
+                  </span>
+                </div>
+                {storeCreditBalance >= balanceDue && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t("storeCreditCoversFull")}
+                  </p>
+                )}
+              </div>
+            )}
             <Field>
               <FieldLabel>{t("referenceOptional")}</FieldLabel>
               <FieldContent>

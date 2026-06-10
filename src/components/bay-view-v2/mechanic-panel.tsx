@@ -1,7 +1,9 @@
 "use client";
 
+import React from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { UserPlus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +30,7 @@ interface MechanicItemProps {
 }
 
 function MechanicItem({ mechanic }: MechanicItemProps) {
+  const t = useTranslations("bayView");
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: `mechanic-${mechanic.id}`,
@@ -69,17 +72,19 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <Typography.Text className="text-xs font-medium truncate leading-tight text-foreground/90">
-            {mechanic.full_name ?? "Unknown"}
+            {mechanic.full_name ?? t("unknownCustomer")}
           </Typography.Text>
           <span
             className={cn(
               "size-1.5  shrink-0",
-              isAvailable ? "bg-emerald-500" : "bg-amber-400",
+              isAvailable ? "bg-emerald-500" : "bg-emerald-400",
             )}
           />
         </div>
         <Typography.Muted className="text-xs text-muted-foreground/60 truncate leading-tight">
-          {isAvailable ? "Available" : `${jobCount} active`}
+          {isAvailable
+            ? t("availableStatus")
+            : t("activeJobsCount", { count: jobCount })}
         </Typography.Muted>
       </div>
     </div>
@@ -90,7 +95,10 @@ interface MechanicPanelProps {
   mechanics: (Profile & { current_jobs: number })[];
 }
 
-export function MechanicPanel({ mechanics }: MechanicPanelProps) {
+export const MechanicPanel = React.memo(function MechanicPanel({
+  mechanics,
+}: MechanicPanelProps) {
+  const t = useTranslations("bayView");
   const activeMechanics = mechanics.filter((m) => m.current_jobs > 0);
   const availableMechanics = mechanics.filter((m) => m.current_jobs === 0);
 
@@ -98,13 +106,13 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
     <Card size="sm" className="ring-0">
       <CardHeader className="gap-2 border-b border-border/40">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-sm">Mechanic Roster</CardTitle>
+          <CardTitle className="text-sm">{t("mechanicRoster")}</CardTitle>
           {mechanics.length > 0 && (
             <Badge variant="outline">{mechanics.length}</Badge>
           )}
         </div>
         <CardDescription className="text-xs">
-          Drag a mechanic onto a bay to assign work.
+          {t("dragMechanicToBay")}
         </CardDescription>
       </CardHeader>
 
@@ -112,9 +120,9 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
         {mechanics.length === 0 ? (
           <Empty className="border border-dashed border-border/60 py-8">
             <EmptyHeader>
-              <EmptyTitle>No mechanics available</EmptyTitle>
+              <EmptyTitle>{t("noMechanics")}</EmptyTitle>
               <EmptyDescription>
-                Add or register mechanics to start assigning work from Bay View.
+                {t("mechanicEmptyDescription")}
               </EmptyDescription>
             </EmptyHeader>
             <Button
@@ -126,7 +134,7 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
               className="mt-2 gap-2"
             >
               <UserPlus className="size-4" />
-              Invite mechanic
+              {t("inviteMechanic")}
             </Button>
           </Empty>
         ) : (
@@ -135,7 +143,7 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
               <div>
                 <div className="mb-1 flex items-center gap-2 px-1">
                   <Typography.Muted className="text-xs font-medium uppercase tracking-wider text-muted-foreground/50">
-                    Working
+                    {t("workingLabel")}
                   </Typography.Muted>
                   <Badge variant="secondary" className="h-5 px-2 text-xs">
                     {activeMechanics.length}
@@ -152,7 +160,7 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
               <div>
                 <div className="mb-1 flex items-center gap-2 px-1">
                   <Typography.Muted className="text-xs font-medium uppercase tracking-wider text-muted-foreground/50">
-                    Free
+                    {t("freeLabel")}
                   </Typography.Muted>
                   <Badge variant="outline" className="h-5 px-2 text-xs">
                     {availableMechanics.length}
@@ -170,4 +178,4 @@ export function MechanicPanel({ mechanics }: MechanicPanelProps) {
       </CardContent>
     </Card>
   );
-}
+});

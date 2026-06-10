@@ -18,6 +18,7 @@ import {
   CustomerEditForm,
   type CustomerFormState,
 } from "@/app/[locale]/dashboard/customers/[id]/_customer-edit-form";
+import { CustomerFollowupsSection } from "@/components/customers/customer-followups-section";
 import { StatusBadge } from "@/components/status-badge";
 import {
   AlertDialog,
@@ -445,6 +446,7 @@ export function CustomerDetailSheet({
                     variant="muted"
                     render={
                       <button
+                        type="button"
                         className="cursor-pointer"
                         onClick={() => {
                           handleOpenChange(false);
@@ -498,6 +500,14 @@ export function CustomerDetailSheet({
                 ))}
               </div>
             </div>
+          )}
+
+          {/* Follow-ups */}
+          {customer.id && (
+            <CustomerFollowupsSection
+              orgId={orgId ?? ""}
+              customerId={customer.id}
+            />
           )}
 
           {/* Footer — edit mode */}

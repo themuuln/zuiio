@@ -25,6 +25,7 @@ export interface RouteMatch {
   isPricingRoute: boolean;
   isPublicRoute: boolean;
   isBookingRoute: boolean;
+  isStorefrontRoute: boolean;
   isLoginRoute: boolean;
   isOwnerRoute: boolean;
   isManagerRoute: boolean;
@@ -40,6 +41,10 @@ export function matchRoutes(pathname: string): RouteMatch {
   const isAuthRoute = p.includes("/auth/");
   const isInvoiceRoute = p.startsWith("/invoice/");
   const isBookingRoute = p.startsWith("/booking/");
+  // Match /{org-slug}/parts OR bare /{org-slug} — storefront route pattern
+  // The bare slug case handles the middleware rewrite: /{slug} → /en/{slug}/parts
+  const isStorefrontRoute =
+    /^\/[^/]+\/parts(?:\/.*)?$/.test(p) || /^\/[^/]+$/.test(p);
   const isPortalRoute = p.startsWith("/portal");
   const isInviteRoute = p.startsWith("/invite/");
   const isPricingRoute = p.startsWith("/pricing");
@@ -77,6 +82,7 @@ export function matchRoutes(pathname: string): RouteMatch {
     isInvoiceRoute,
     isPortalRoute,
     isBookingRoute,
+    isStorefrontRoute,
     isInviteRoute,
     isPricingRoute,
     isPublicRoute,

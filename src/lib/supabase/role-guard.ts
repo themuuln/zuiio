@@ -87,9 +87,18 @@ export async function requireRole(
  *
  * Throws ForbiddenError if the user lacks the permission.
  */
+type PermissionAction =
+  | "invite"
+  | "create"
+  | "read"
+  | "update"
+  | "delete"
+  | "manage"
+  | "write";
+
 export async function requirePermission(
   resource: string,
-  action: string,
+  action: PermissionAction,
   orgId?: string,
 ): Promise<void> {
   const supabase = await createClient();
@@ -160,7 +169,7 @@ export async function requirePermission(
  */
 export async function hasPermission(
   resource: string,
-  action: string,
+  action: PermissionAction,
   orgId?: string,
 ): Promise<boolean> {
   try {

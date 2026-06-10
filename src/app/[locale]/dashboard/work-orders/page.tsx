@@ -46,9 +46,25 @@ import {
   type WorkOrderListItem,
 } from "@/lib/queries/use-work-orders";
 import { useSelectedBranchId } from "@/lib/stores";
-import { createColumns } from "./_columns";
+import { createColumns, getAgeDisplay } from "./_columns";
 
 // ── Status helpers ────────────────────────────────────────────
+
+const MOBILE_STATUS_STEPS = [
+  "New",
+  "Diagnosing",
+  "In Progress",
+  "Ready for Pickup",
+  "Completed",
+] as const;
+
+const MOBILE_STATUS_COLORS = [
+  "var(--color-blue-500)",
+  "var(--color-yellow-500)",
+  "var(--color-orange-500)",
+  "var(--color-green-500)",
+  "var(--color-gray-500)",
+];
 
 const STATUS_COLORS: Record<string, string> = {
   New: "bg-blue-500",
@@ -146,6 +162,7 @@ const exportColumns: ExportColumn<WorkOrderListItem>[] = [
 
 export default function WorkOrdersPage() {
   const t = useTranslations();
+  const tWorkOrders = useTranslations("workOrders");
   const { push } = useRouter();
   const now = useClientNow();
   const queryClient = useQueryClient();
@@ -157,6 +174,13 @@ export default function WorkOrdersPage() {
   } = useTableFilters("work-orders");
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [todayStr, setTodayStr] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setTodayStr(new Date().toISOString().split("T")[0]);
+    setMounted(true);
+  }, []);
   const { setNewWorkOrderSheetOpen } = usePageHeader();
 
   const { data: org } = useCurrentOrg();
@@ -267,9 +291,7 @@ export default function WorkOrdersPage() {
     for (const sc of statusCounts) {
       countMap[sc.label] = sc.count;
     }
-    return STATUS_KEYS.filter(
-      (key) => key === "" || (countMap[key] ?? 0) > 0,
-    ).map((key) => {
+    return STATUS_KEYS.map((key) => {
       const i = STATUS_KEYS.indexOf(key);
       return {
         key: key || "all",
@@ -287,8 +309,9 @@ export default function WorkOrdersPage() {
         onStatusChange: handleStatusChange,
         onCancel: (woId) => setCancelTarget(woId),
         updatePending: updateStatus.isPending,
+        now,
       }),
-    [handleStatusChange, updateStatus.isPending],
+    [handleStatusChange, updateStatus.isPending, now],
   );
 
   return (
@@ -332,38 +355,12 @@ export default function WorkOrdersPage() {
               <ExportButton
                 data={list}
                 columns={exportColumns}
-                filename={`work-orders-${now.toISOString().split("T")[0]}.xlsx`}
+                filename={`work-orders-${todayStr || "export"}.xlsx`}
                 sheetName="Work Orders"
               />
             </div>
           }
         />
-
-        {/* Status Summary Bar */}
-        {statusCounts.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {statusCounts.map((sc) => (
-              <Badge
-                key={sc.label}
-                variant={
-                  sc.label === "Cancelled"
-                    ? "destructive"
-                    : sc.label === "Completed"
-                      ? "outline"
-                      : "default"
-                }
-                className="gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => setStatus(sc.label)}
-              >
-                <span
-                  className={`size-2 rounded-full ${STATUS_COLORS[sc.label] ?? "bg-gray-500"}`}
-                />
-                {translateStatus(t, sc.label)}{" "}
-                <span className="font-mono text-xs">({sc.count})</span>
-              </Badge>
-            ))}
-          </div>
-        )}
 
         {error ? (
           <Card>
@@ -392,7 +389,7 @@ export default function WorkOrdersPage() {
             </EmptyContent>
           </Empty>
         ) : (
-          <Card className="py-0">
+          <Card className="rounded-none py-0">
             <CardContent className="p-0">
               <DataTable
                 columns={columns}
@@ -416,15 +413,9 @@ export default function WorkOrdersPage() {
                         .join(" ")
                     : "—";
                   const daysSince = Math.floor(
-                    (Date.now() - new Date(wo.created_at).getTime()) /
+                    (now.getTime() - new Date(wo.created_at).getTime()) /
                       (1000 * 60 * 60 * 24),
                   );
-                  const ageDisplay =
-                    daysSince === 0
-                      ? "Today"
-                      : daysSince === 1
-                        ? "Yesterday"
-                        : `${daysSince} days ago`;
                   return (
                     <div className="flex flex-col gap-2 text-sm">
                       <div className="flex items-center justify-between">
@@ -448,38 +439,24 @@ export default function WorkOrdersPage() {
                       </div>
                       {wo.status !== "Cancelled" &&
                         (() => {
-                          const STEPS = [
-                            "New",
-                            "Diagnosing",
-                            "In Progress",
-                            "Ready for Pickup",
-                            "Completed",
-                          ];
-                          const COLORS = [
-                            "#3B82F6",
-                            "#EAB308",
-                            "#F97316",
-                            "#22C55E",
-                            "#6B7280",
-                          ];
-                          const cur = STEPS.indexOf(wo.status);
+                          const cur = MOBILE_STATUS_STEPS.indexOf(
+                            wo.status as (typeof MOBILE_STATUS_STEPS)[number],
+                          );
                           if (cur < 0) return null;
                           return (
                             <div className="flex items-center gap-1 py-1">
-                              {STEPS.map((s, i) => (
+                              {MOBILE_STATUS_STEPS.map((s, i) => (
                                 <div
                                   key={s}
                                   className="size-2 rounded-full transition-all"
                                   style={{
                                     backgroundColor:
-                                      i < cur
-                                        ? COLORS[i]
-                                        : i === cur
-                                          ? COLORS[i]
-                                          : "hsl(var(--muted-foreground) / 0.2)",
+                                      i <= cur
+                                        ? MOBILE_STATUS_COLORS[i]
+                                        : "hsl(var(--muted-foreground) / 0.2)",
                                     ...(i === cur
                                       ? {
-                                          boxShadow: `0 0 0 2px ${COLORS[i]}40`,
+                                          boxShadow: `0 0 0 2px ${MOBILE_STATUS_COLORS[i]}40`,
                                         }
                                       : {}),
                                   }}
@@ -492,11 +469,15 @@ export default function WorkOrdersPage() {
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <span>{wo.mechanic?.full_name ?? "—"}</span>
                           <span>·</span>
-                          <span>{ageDisplay}</span>
+                          <span>
+                            {mounted
+                              ? getAgeDisplay(daysSince, tWorkOrders)
+                              : "—"}
+                          </span>
                         </div>
                         <span className="text-sm font-semibold tabular-nums">
                           {wo.grand_total !== undefined
-                            ? `₮${wo.grand_total.toLocaleString()}`
+                            ? `₮${wo.grand_total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`
                             : "—"}
                         </span>
                       </div>

@@ -78,14 +78,12 @@ export function OrgBranding() {
       <span className="truncate text-sm font-semibold" suppressHydrationWarning>
         {name}
       </span>
-      {canSwitchBranches && (
-        <span
-          className="truncate text-[10px] text-sidebar-foreground/50"
-          suppressHydrationWarning
-        >
-          {activeBranchName}
-        </span>
-      )}
+      <span
+        className="truncate text-[10px] text-sidebar-foreground/50"
+        suppressHydrationWarning
+      >
+        {canSwitchBranches ? activeBranchName : "\u00a0"}
+      </span>
     </div>
   );
 

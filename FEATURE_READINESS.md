@@ -95,12 +95,12 @@
 | Price rules engine | ✅ LIVE | **Beyond plan** — configurable pricing rules |
 | Telegram notifications | ✅ LIVE | **Beyond plan** — owner Telegram notifications (daily/weekly/monthly), customer Telegram link |
 | Reports (ERP-grade) | ✅ LIVE | **Beyond plan** — 10+ chart types: daily revenue, mechanic bar, service breakdown, forecast, targets, retention, P&L, insight alerts, mechanic table |
+| Estimates / Quotes | ✅ LIVE | Full CRUD with line items (services/parts/custom), status workflow (draft→sent→approved→converted), convert-to-work-order. Gated to Pro+ plans |
 
 **⚠️ Partial — Needs Work:**
 | Feature | Status | Notes |
 |---------|--------|-------|
 | SMS/Email *sending* integration | 🟡 ENGINE READY | Service reminders create logs via cron, but actual SMS/email sending integration is pending (`reminder_logs` filled, Send/SMS step unwired). The add-on pricing assumes a working SMS channel |
-| Estimates / Quotes | 🔴 MISSING | No quote/estimate workflow. No `estimates` or `estimate_items` tables |
 | Customer follow-ups | 🔴 MISSING | No `customer_followups` table or scheduled follow-up flow |
 | Refunds | 🔴 MISSING | No refund workflow or `refunds` table |
 | Tax rules | 🔴 MISSING | No `tax_rules` table or tax calculation engine |
@@ -193,24 +193,23 @@
 ### High Priority
 
 1. **❌ SMS/Email sending integration is unwired** — `reminder_logs` are created by cron but the actual Send step is incomplete. Without this, the SMS add-on (₮80k–₮200k/month pricing) cannot be sold
-2. **❌ No estimate/quote workflow** — Garages typically quote before work. Missing workflow means price negotiation is invisible in the system
-3. **⚠️ 1 failing test** — customer-service duplicate phone rejection is broken. This is a schema/validation gap that could cause data integrity issues
-4. **⚠️ No API keys/webhook infrastructure** — No integration accounts, API keys table, or webhook events. Zero external integrations possible without this
-5. **⚠️ No cash register session tracking** — Day-end close works but without cash session management for branch-level accountability
+2. **⚠️ 1 failing test** — customer-service duplicate phone rejection is broken. This is a schema/validation gap that could cause data integrity issues
+3. **⚠️ No API keys/webhook infrastructure** — No integration accounts, API keys table, or webhook events. Zero external integrations possible without this
+4. **⚠️ No cash register session tracking** — Day-end close works but without cash session management for branch-level accountability
 
 ### Medium Priority
 
-6. **⚠️ No refund workflow** — If a payment is recorded, there's no formal refund path (just `cancelled` status)
-7. **⚠️ 77 source lint errors** — Mostly formatting but ~10 genuine (unused imports, a11y, strict equality)
-8. **⚠️ Some types hand-declared** — `composite.ts`, `inventory.ts`, `expense.ts` use static interfaces instead of `Tables<>` generics, can drift on regeneration
-9. **⚠️ Large report service** — `report-service.ts` at ~3177 lines would benefit from decomposition
-10. **⚠️ No test coverage for most UI components** — Only 4 component test files vs 170+ components
+5. **⚠️ No refund workflow** — If a payment is recorded, there's no formal refund path (just `cancelled` status)
+6. **⚠️ 77 source lint errors** — Mostly formatting but ~10 genuine (unused imports, a11y, strict equality)
+7. **⚠️ Some types hand-declared** — `composite.ts`, `inventory.ts`, `expense.ts` use static interfaces instead of `Tables<>` generics, can drift on regeneration
+8. **⚠️ Large report service** — `report-service.ts` at ~3177 lines would benefit from decomposition
+9. **⚠️ No test coverage for most UI components** — Only 4 component test files vs 170+ components
 
 ### Low Priority
 
-11. **⏳ `vehicle_photos` / `vehicle_documents` tables missing** — Workaround: attachments work via `work_order_attachments`
-12. **⏳ No CI/CD visible** — No GitHub Actions config found in codebase
-13. **⏳ Coverage thresholds are low** (40-50%) — Acceptable for v0.1 but should improve
+10. **⏳ `vehicle_photos` / `vehicle_documents` tables missing** — Workaround: attachments work via `work_order_attachments`
+11. **⏳ No CI/CD visible** — No GitHub Actions config found in codebase
+12. **⏳ Coverage thresholds are low** (40-50%) — Acceptable for v0.1 but should improve
 
 ---
 
