@@ -1,10 +1,11 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { sendInvoiceEmail } from "@/lib/services/email-service";
+import { calculateTax, getOrgTaxSettings } from "@/lib/services/tax-service";
 import { createClient } from "@/lib/supabase/server";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   Invoice,
   InvoiceItem,
@@ -294,7 +295,18 @@ export async function createInvoiceFromWorkOrder(
       0,
     ) +
     (parts ?? []).reduce((sum, p) => sum + Number(p.discount_amount ?? 0), 0);
-  const total = Math.max(0, subtotal - discountTotal);
+
+  // Calculate НӨАТ (VAT) based on work order and org settings
+  const orgSettings = await getOrgTaxSettings(supabase, orgId);
+  const nuatEnabled = wo.nuat_enabled ?? false;
+  const taxableAmount = Math.max(subtotal - discountTotal, 0);
+  const taxTotal = calculateTax(
+    taxableAmount,
+    orgSettings.taxRate,
+    nuatEnabled,
+  );
+
+  const total = Math.max(0, subtotal - discountTotal + taxTotal);
 
   // Generate invoice number
   const invoiceNumber = await generateInvoiceNumber(orgId, supabase);
@@ -328,7 +340,7 @@ export async function createInvoiceFromWorkOrder(
       status: "draft",
       subtotal,
       discount_total: discountTotal,
-      tax_total: 0,
+      tax_total: taxTotal,
       total,
       amount_paid: 0,
       balance_due: total,
@@ -396,7 +408,7 @@ export async function createInvoiceFromWorkOrder(
     status: "draft",
     subtotal,
     discount_total: discountTotal,
-    tax_total: 0,
+    tax_total: taxTotal,
     total,
     amount_paid: 0,
     balance_due: total,
