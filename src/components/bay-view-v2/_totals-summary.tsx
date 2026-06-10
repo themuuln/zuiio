@@ -11,6 +11,8 @@ interface TotalsSummaryProps {
   grandTotal: number;
   discountTotal?: number;
   taxRate?: number;
+  nuatEnabled?: boolean;
+  locale?: string;
   t: (key: string) => string;
 }
 
@@ -20,14 +22,17 @@ export function TotalsSummary({
   grandTotal,
   discountTotal = 0,
   taxRate = 0,
+  nuatEnabled = false,
+  locale = "mn",
   t,
 }: TotalsSummaryProps) {
   const [expanded, setExpanded] = useState(false);
   const hasDiscount = discountTotal > 0;
-  const hasTax = taxRate > 0;
+  const hasTax = nuatEnabled && taxRate > 0;
   const hasAdjustments = hasDiscount || hasTax;
-  const taxAmount = Math.round(grandTotal * taxRate) / 100;
+  const taxAmount = hasTax ? Math.round(grandTotal * taxRate) / 100 : 0;
   const totalToPay = grandTotal - discountTotal + taxAmount;
+  const taxLabel = locale === "mn" ? "НӨАТ" : "VAT";
 
   return (
     <section className="rounded-lg bg-gradient-to-br from-primary/5 to-primary/[0.02] border border-primary/10">
@@ -91,7 +96,7 @@ export function TotalsSummary({
             {hasTax && (
               <div className="flex justify-between text-xs leading-tight text-muted-foreground">
                 <span>
-                  {t("tax")} ({taxRate}%)
+                  {taxLabel} ({taxRate}%)
                 </span>
                 <span className="tabular-nums">{formatMNT(taxAmount)}</span>
               </div>

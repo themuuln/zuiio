@@ -18,7 +18,7 @@ import {
 
 interface InvoiceDocumentProps {
   invoice: InvoiceWithItems;
-  org: { name: string; logo_url?: string | null };
+  org: { name: string; logo_url?: string | null; tax_id?: string | null };
   branch?: {
     name?: string | null;
     address?: string | null;
@@ -28,6 +28,7 @@ interface InvoiceDocumentProps {
   settings?: {
     default_currency?: string | null;
     default_tax_rate?: number | null;
+    nuat_enabled?: boolean | null;
   } | null;
   locale?: Locale;
 }
@@ -89,6 +90,11 @@ export function InvoiceDocument({
             )}
             {branch?.email && (
               <Text style={sharedStyles.businessDetail}>{branch.email}</Text>
+            )}
+            {org.tax_id && (
+              <Text style={sharedStyles.businessDetail}>
+                {locale === "mn" ? "Регистрийн дугаар" : "Tax ID"}: {org.tax_id}
+              </Text>
             )}
           </View>
           <View style={sharedStyles.headerRight}>
@@ -294,7 +300,9 @@ export function InvoiceDocument({
             )}
             {invoice.tax_total > 0 && (
               <View style={sharedStyles.totalRow}>
-                <Text style={sharedStyles.totalRowLabel}>Tax</Text>
+                <Text style={sharedStyles.totalRowLabel}>
+                  {locale === "mn" ? "НӨАТ" : "VAT"}
+                </Text>
                 <Text style={sharedStyles.totalRowValue}>
                   {formatAmount(invoice.tax_total, currency)}
                 </Text>

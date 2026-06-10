@@ -1,6 +1,15 @@
 "use client";
 
-import { Edit3, Package, Plus, Receipt, Trash2, Wrench } from "lucide-react";
+import {
+  ArrowLeft,
+  Edit3,
+  Package,
+  Plus,
+  Receipt,
+  Save,
+  Send,
+  Wrench,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -11,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -19,6 +30,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import { CustomerSelect } from "@/components/work-orders/customer-select";
@@ -26,13 +38,17 @@ import { VehicleSelect } from "@/components/work-orders/vehicle-select";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useSelectedBranchId } from "@/lib/stores";
 import type { Customer, Vehicle } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
 
 type ItemType = "service" | "part" | "custom";
 
 interface QuoteLine {
   id: string;
   item_type: ItemType;
+  source_service_id?: string | null;
+  source_part_id?: string | null;
   description: string;
   quantity: number;
   unit_price: number;
@@ -41,26 +57,10 @@ interface QuoteLine {
   line_total: number;
 }
 
-let lineIdCounter = 0;
-function newLineId() {
-  return `line_${++lineIdCounter}_${Date.now()}`;
-}
-
-function calculateLineTotal(line: {
-  quantity: number;
-  unit_price: number;
-  discount_amount: number;
-  discount_percentage: number;
-}): number {
-  const gross = line.unit_price * line.quantity;
-  const pctDisc = gross * (line.discount_percentage / 100);
-  const flatDisc = line.discount_amount;
-  return Math.max(gross - pctDisc - flatDisc, 0);
-}
-
 const quoteSchema = z.object({
   notes: z.string().optional(),
   terms: z.string().optional(),
+  valid_until: z.string().optional(),
 });
 
 type QuoteValues = z.infer<typeof quoteSchema>;
@@ -70,53 +70,95 @@ const ITEM_TYPE_CONFIG: Record<
   {
     icon: typeof Wrench;
     label: string;
-    variant: "default" | "secondary" | "outline";
+    badge: "default" | "secondary" | "outline";
   }
 > = {
-  service: { icon: Wrench, label: "service", variant: "default" },
-  part: { icon: Package, label: "part", variant: "secondary" },
-  custom: { icon: Edit3, label: "custom", variant: "outline" },
+  service: { icon: Wrench, label: "service", badge: "default" },
+  part: { icon: Package, label: "part", badge: "secondary" },
+  custom: { icon: Edit3, label: "custom", badge: "outline" },
 };
+
+let lineIdCounter = 0;
+function createLineId() {
+  lineIdCounter += 1;
+  return `estimate-line-${lineIdCounter}-${Date.now()}`;
+}
+
+function calculateLineTotal(line: {
+  quantity: number;
+  unit_price: number;
+  discount_amount: number;
+  discount_percentage: number;
+}) {
+  const gross = line.quantity * line.unit_price;
+  const percentageDiscount = gross * (line.discount_percentage / 100);
+  return Math.max(gross - percentageDiscount - line.discount_amount, 0);
+}
 
 export default function NewEstimatePage() {
   const t = useTranslations("estimates");
+  const commonT = useTranslations("common");
   const router = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId ?? "";
+  const selectedBranchId = useSelectedBranchId();
+  const branchId = selectedBranchId === "all" ? null : selectedBranchId;
+
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [lines, setLines] = useState<QuoteLine[]>([]);
-  const [saving, setSaving] = useState(false);
+  const [savingState, setSavingState] = useState<"draft" | "sent" | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [discountPercent, setDiscountPercent] = useState(0);
+  const [nuatEnabled, setNuatEnabled] = useState(false);
   const [taxTotal, setTaxTotal] = useState(0);
+
+  // Get org tax rate for auto-calculation
+  const defaultTaxRate =
+    (
+      org as Record<string, unknown> as {
+        settings?: { default_tax_rate?: number };
+      }
+    )?.settings?.default_tax_rate ?? 10;
+
   const [serviceSearch, setServiceSearch] = useState("");
   const [services, setServices] = useState<
     { id: string; name: string; default_price: number }[]
   >([]);
   const [searchingServices, setSearchingServices] = useState(false);
 
+  const [partSearch, setPartSearch] = useState("");
+  const [parts, setParts] = useState<
+    { id: string; part_name: string; unit_price: number }[]
+  >([]);
+  const [searchingParts, setSearchingParts] = useState(false);
+
   const form = useForm<QuoteValues>({
     resolver: zodResolver(quoteSchema),
-    defaultValues: { notes: "", terms: "" },
+    defaultValues: {
+      notes: "",
+      terms: "",
+      valid_until: "",
+    },
   });
 
-  const addServiceLine = (svc: {
+  const addServiceLine = (service: {
     id: string;
     name: string;
     default_price: number;
   }) => {
-    setLines((prev) => [
-      ...prev,
+    setLines((current) => [
+      ...current,
       {
-        id: newLineId(),
+        id: createLineId(),
         item_type: "service",
-        description: svc.name,
+        source_service_id: service.id,
+        description: service.name,
         quantity: 1,
-        unit_price: Number(svc.default_price),
+        unit_price: Number(service.default_price ?? 0),
         discount_amount: 0,
         discount_percentage: 0,
-        line_total: Number(svc.default_price),
+        line_total: Number(service.default_price ?? 0),
       },
     ]);
   };
@@ -126,26 +168,27 @@ export default function NewEstimatePage() {
     part_name: string;
     unit_price: number;
   }) => {
-    setLines((prev) => [
-      ...prev,
+    setLines((current) => [
+      ...current,
       {
-        id: newLineId(),
+        id: createLineId(),
         item_type: "part",
+        source_part_id: part.id,
         description: part.part_name,
         quantity: 1,
-        unit_price: Number(part.unit_price),
+        unit_price: Number(part.unit_price ?? 0),
         discount_amount: 0,
         discount_percentage: 0,
-        line_total: Number(part.unit_price),
+        line_total: Number(part.unit_price ?? 0),
       },
     ]);
   };
 
   const addCustomLine = () => {
-    setLines((prev) => [
-      ...prev,
+    setLines((current) => [
+      ...current,
       {
-        id: newLineId(),
+        id: createLineId(),
         item_type: "custom",
         description: "",
         quantity: 1,
@@ -157,43 +200,75 @@ export default function NewEstimatePage() {
     ]);
   };
 
-  const updateLine = (id: string, updates: Partial<QuoteLine>) => {
-    setLines((prev) =>
-      prev.map((line) => {
+  const updateLine = (id: string, patch: Partial<QuoteLine>) => {
+    setLines((current) =>
+      current.map((line) => {
         if (line.id !== id) return line;
-        const updated = { ...line, ...updates };
-        updated.line_total = calculateLineTotal(updated);
-        return updated;
+        const next = { ...line, ...patch };
+        next.line_total = calculateLineTotal(next);
+        return next;
       }),
     );
   };
 
   const removeLine = (id: string) => {
-    setLines((prev) => prev.filter((l) => l.id !== id));
+    setLines((current) => current.filter((line) => line.id !== id));
   };
 
-  const searchServices = (q: string) => {
-    setServiceSearch(q);
-    if (!q || q.length < 2) {
+  const searchServices = async (query: string) => {
+    setServiceSearch(query);
+    if (!orgId || query.trim().length < 2) {
       setServices([]);
       return;
     }
+
     setSearchingServices(true);
-    fetch(`/api/organizations/${orgId}/services?q=${encodeURIComponent(q)}`)
-      .then((r) => r.json())
-      .then((d) => setServices(d.data ?? []))
-      .catch(() => setServices([]))
-      .finally(() => setSearchingServices(false));
+    try {
+      const res = await fetch(
+        `/api/organizations/${orgId}/services?q=${encodeURIComponent(query.trim())}`,
+      );
+      const json = await res.json();
+      setServices(json.data ?? []);
+    } catch {
+      setServices([]);
+    } finally {
+      setSearchingServices(false);
+    }
   };
 
-  const subtotal = lines.reduce((s, l) => s + l.line_total, 0);
-  const lineDiscountTotal = 0;
+  const searchParts = async (query: string) => {
+    setPartSearch(query);
+    if (!orgId || query.trim().length < 2) {
+      setParts([]);
+      return;
+    }
+
+    setSearchingParts(true);
+    try {
+      const res = await fetch(
+        `/api/organizations/${orgId}/inventory?q=${encodeURIComponent(query.trim())}`,
+      );
+      const json = await res.json();
+      setParts(json.data ?? []);
+    } catch {
+      setParts([]);
+    } finally {
+      setSearchingParts(false);
+    }
+  };
+
+  const subtotal = lines.reduce((sum, line) => sum + line.line_total, 0);
   const quoteDiscountTotal =
     discountAmount + subtotal * (discountPercent / 100);
-  const discountTotal = lineDiscountTotal + quoteDiscountTotal;
-  const grandTotal = Math.max(subtotal - discountTotal + taxTotal, 0);
+  // Auto-calculate tax when НӨАТ is enabled
+  const calculatedTax = nuatEnabled
+    ? Math.round((subtotal - quoteDiscountTotal) * defaultTaxRate) / 100
+    : 0;
+  const effectiveTax = nuatEnabled ? calculatedTax : taxTotal;
+  const grandTotal = Math.max(subtotal - quoteDiscountTotal + effectiveTax, 0);
 
-  const handleSave = async (status: string = "draft") => {
+  const handleSave = async (status: "draft" | "sent") => {
+    if (!orgId) return;
     if (!customer) {
       toast.error(t("pleaseSelectCustomer"));
       return;
@@ -206,29 +281,39 @@ export default function NewEstimatePage() {
       toast.error(t("addAtLeastOneItem"));
       return;
     }
+    if (lines.some((line) => !line.description.trim())) {
+      toast.error(t("description"));
+      return;
+    }
 
-    setSaving(true);
+    setSavingState(status);
+
     try {
-      const data = form.getValues();
+      const values = form.getValues();
       const res = await fetch(`/api/organizations/${orgId}/estimates`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer_id: customer.id,
           vehicle_id: vehicle.id,
-          notes: data.notes || undefined,
-          terms: data.terms || undefined,
+          branchId,
           status,
+          notes: values.notes?.trim() || undefined,
+          terms: values.terms?.trim() || undefined,
+          valid_until: values.valid_until || undefined,
           discount_amount: discountAmount,
           discount_percentage: discountPercent,
-          tax_total: taxTotal,
-          items: lines.map((l) => ({
-            item_type: l.item_type,
-            description: l.description,
-            quantity: l.quantity,
-            unit_price: l.unit_price,
-            discount_amount: l.discount_amount,
-            discount_percentage: l.discount_percentage,
+          tax_total: effectiveTax,
+          items: lines.map((line, index) => ({
+            item_type: line.item_type,
+            source_service_id: line.source_service_id ?? null,
+            source_part_id: line.source_part_id ?? null,
+            description: line.description.trim(),
+            quantity: line.quantity,
+            unit_price: line.unit_price,
+            discount_amount: line.discount_amount,
+            discount_percentage: line.discount_percentage,
+            sort_order: index,
           })),
         }),
       });
@@ -236,470 +321,565 @@ export default function NewEstimatePage() {
       if (json.error) throw new Error(json.error.message);
       toast.success(t("quoteCreated"));
       router.push(`/dashboard/estimates/${json.data.id}`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("failedToCreate"));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("failedToSave"));
     } finally {
-      setSaving(false);
+      setSavingState(null);
     }
-  };
-
-  const [partSearch, setPartSearch] = useState("");
-  const [parts, setParts] = useState<
-    { id: string; part_name: string; unit_price: number }[]
-  >([]);
-  const [searchingParts, setSearchingParts] = useState(false);
-
-  const searchParts = (q: string) => {
-    setPartSearch(q);
-    if (!q || q.length < 2) {
-      setParts([]);
-      return;
-    }
-    setSearchingParts(true);
-    fetch(`/api/organizations/${orgId}/inventory?q=${encodeURIComponent(q)}`)
-      .then((r) => r.json())
-      .then((d) => setParts(d.data ?? []))
-      .catch(() => setParts([]))
-      .finally(() => setSearchingParts(false));
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
-      {/* Page Header */}
-      <div>
-        <Typography.H2>{t("newQuoteTitle")}</Typography.H2>
-        <Typography.Text className="text-muted-foreground">
-          {t("pageDescription")}
-        </Typography.Text>
-      </div>
-
-      {/* Customer & Vehicle */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <CustomerSelect
-          orgId={orgId}
-          selectedCustomer={customer}
-          onSelect={setCustomer}
-          onClear={() => setCustomer(null)}
-        />
-        <VehicleSelect
-          orgId={orgId}
-          customerId={customer?.id ?? null}
-          selectedVehicle={vehicle}
-          onSelect={setVehicle}
-          onClear={() => setVehicle(null)}
-        />
-      </div>
-
-      {/* Line Items */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t("lineItems")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Add Item Toolbar */}
-          <div className="flex items-center gap-2 pb-4 border-b mb-4">
-            <Sheet>
-              <SheetTrigger>
-                <Button variant="outline" size="sm">
-                  <Plus className="size-4" />
-                  {t("addService")}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:max-w-md">
-                <SheetHeader>
-                  <SheetTitle>{t("addServiceTitle")}</SheetTitle>
-                  <SheetDescription>
-                    Search the service catalog
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="mt-4 space-y-3">
-                  <SearchInput
-                    placeholder={t("searchServicesPlaceholder")}
-                    onSearch={searchServices}
-                    loading={searchingServices}
-                    debounceMs={400}
-                  />
-                  <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
-                    {services.map((svc) => (
-                      <Button
-                        key={svc.id}
-                        variant="ghost"
-                        className="w-full justify-between p-3 h-auto"
-                        onClick={() => {
-                          addServiceLine(svc);
-                          setServiceSearch("");
-                          setServices([]);
-                        }}
-                      >
-                        <span className="font-medium">{svc.name}</span>
-                        <span className="text-muted-foreground tabular-nums">
-                          ₮{Number(svc.default_price).toLocaleString()}
-                        </span>
-                      </Button>
-                    ))}
-                    {serviceSearch &&
-                      services.length === 0 &&
-                      !searchingServices && (
-                        <Typography.Text className="text-sm text-muted-foreground p-4 text-center">
-                          No services found
-                        </Typography.Text>
-                      )}
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-
-            <Sheet>
-              <SheetTrigger>
-                <Button variant="outline" size="sm">
-                  <Plus className="size-4" />
-                  {t("addPart")}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:max-w-md">
-                <SheetHeader>
-                  <SheetTitle>{t("addPartTitle")}</SheetTitle>
-                  <SheetDescription>Search the parts catalog</SheetDescription>
-                </SheetHeader>
-                <div className="mt-4 space-y-3">
-                  <SearchInput
-                    placeholder={t("searchPartsPlaceholder")}
-                    onSearch={searchParts}
-                    loading={searchingParts}
-                    debounceMs={400}
-                  />
-                  <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
-                    {parts.map((part) => (
-                      <Button
-                        key={part.id}
-                        variant="ghost"
-                        className="w-full justify-between p-3 h-auto"
-                        onClick={() => {
-                          addPartLine(part);
-                          setPartSearch("");
-                          setParts([]);
-                        }}
-                      >
-                        <span className="font-medium">{part.part_name}</span>
-                        <span className="text-muted-foreground tabular-nums">
-                          ₮{Number(part.unit_price).toLocaleString()}
-                        </span>
-                      </Button>
-                    ))}
-                    {partSearch && parts.length === 0 && !searchingParts && (
-                      <Typography.Text className="text-sm text-muted-foreground p-4 text-center">
-                        No parts found
-                      </Typography.Text>
-                    )}
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-
-            <Button variant="outline" size="sm" onClick={addCustomLine}>
-              <Plus className="size-4" />
-              {t("addCustom")}
+    <div className="mx-auto flex max-w-7xl flex-col gap-6 pb-8">
+      <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="space-y-3">
+            <Button variant="ghost" size="sm" onClick={() => router.back()}>
+              <ArrowLeft className="size-4" />
+              {commonT("back")}
             </Button>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary" className="rounded-full px-2.5 py-0.5">
+                <Receipt className="size-3.5" />
+                {t("status_draft")}
+              </Badge>
+              {branchId && (
+                <Badge variant="outline" className="rounded-full px-2.5 py-0.5">
+                  {commonT("branch")}
+                </Badge>
+              )}
+            </div>
+
+            <div>
+              <Typography.H1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                {t("newQuoteTitle")}
+              </Typography.H1>
+              <Typography.Muted className="mt-1 max-w-2xl text-sm">
+                {t("pageDescription")}
+              </Typography.Muted>
+            </div>
           </div>
 
-          {/* Items Content */}
-          {lines.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-3">
-              <div className="rounded-full bg-muted p-3">
-                <Receipt className="size-6 text-muted-foreground" />
-              </div>
-              <Typography.Text className="text-sm font-medium">
-                {t("noItemsTitle")}
+          <div className="grid gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-3 xl:min-w-[420px]">
+            <div>
+              <Typography.Text className="text-xs uppercase tracking-wide text-muted-foreground">
+                {t("subtotal")}
               </Typography.Text>
-              <Typography.Text className="text-xs text-muted-foreground text-center max-w-xs">
-                {t("noItemsDescription")}
+              <Typography.Text className="mt-1 block font-mono text-lg font-semibold">
+                {formatCurrency(subtotal)}
               </Typography.Text>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {/* Table Header */}
-              <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-2">
-                <div className="col-span-1">#</div>
-                <div className="col-span-4">Description</div>
-                <div className="col-span-1 text-right">Qty</div>
-                <div className="col-span-2 text-right">Unit Price</div>
-                <div className="col-span-1 text-right">Disc %</div>
-                <div className="col-span-1 text-right">Disc ₮</div>
-                <div className="col-span-1 text-right">{t("total")}</div>
-                <div className="col-span-1" />
-              </div>
+            <div>
+              <Typography.Text className="text-xs uppercase tracking-wide text-muted-foreground">
+                {t("discount")}
+              </Typography.Text>
+              <Typography.Text className="mt-1 block font-mono text-lg font-semibold">
+                {formatCurrency(quoteDiscountTotal)}
+              </Typography.Text>
+            </div>
+            <div>
+              <Typography.Text className="text-xs uppercase tracking-wide text-muted-foreground">
+                {t("grandTotal")}
+              </Typography.Text>
+              <Typography.Text className="mt-1 block font-mono text-lg font-semibold">
+                {formatCurrency(grandTotal)}
+              </Typography.Text>
+            </div>
+          </div>
+        </div>
+      </div>
 
-              {/* Line Items */}
-              {lines.map((line, idx) => {
-                const typeConfig = ITEM_TYPE_CONFIG[line.item_type];
-                const TypeIcon = typeConfig.icon;
-                return (
-                  <div
-                    key={line.id}
-                    className="grid grid-cols-12 gap-2 items-center rounded-lg border p-2 hover:bg-muted/50 transition-colors"
-                  >
-                    {/* Row Number */}
-                    <div className="col-span-1 text-xs text-muted-foreground">
-                      {idx + 1}
-                    </div>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex flex-col gap-6">
+          <Card className="rounded-3xl border-border/60 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base">{t("customerInfo")}</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <CustomerSelect
+                orgId={orgId}
+                selectedCustomer={customer}
+                onSelect={setCustomer}
+                onClear={() => {
+                  setCustomer(null);
+                  setVehicle(null);
+                }}
+              />
+              <VehicleSelect
+                orgId={orgId}
+                customerId={customer?.id ?? null}
+                selectedVehicle={vehicle}
+                onSelect={setVehicle}
+                onClear={() => setVehicle(null)}
+              />
+            </CardContent>
+          </Card>
 
-                    {/* Description + Type Badge */}
-                    <div className="col-span-4">
-                      {line.item_type === "custom" ? (
-                        <Input
-                          placeholder={t("descriptionPlaceholder")}
-                          value={line.description}
-                          onChange={(e) =>
-                            updateLine(line.id, { description: e.target.value })
-                          }
-                          className="h-8 text-sm"
+          <Card className="rounded-3xl border-border/60 shadow-sm">
+            <CardHeader className="gap-4">
+              <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <CardTitle className="text-base">{t("lineItems")}</CardTitle>
+                  <Typography.Muted className="mt-1">
+                    {t("noItemsDescription")}
+                  </Typography.Muted>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Sheet>
+                    <SheetTrigger
+                      render={<Button variant="outline" size="sm" />}
+                    >
+                      <Plus className="size-4" />
+                      {t("addService")}
+                    </SheetTrigger>
+                    <SheetContent side="right" size="lg" className="w-full">
+                      <SheetHeader>
+                        <SheetTitle>{t("addServiceTitle")}</SheetTitle>
+                        <SheetDescription>
+                          {t("searchServicesPlaceholder")}
+                        </SheetDescription>
+                      </SheetHeader>
+                      <div className="flex flex-col gap-4 p-4">
+                        <SearchInput
+                          placeholder={t("searchServicesPlaceholder")}
+                          onSearch={searchServices}
+                          loading={searchingServices}
+                          debounceMs={400}
                         />
-                      ) : (
-                        <div className="flex flex-col gap-0.5">
-                          <Typography.Text className="text-sm truncate block">
-                            {line.description}
-                          </Typography.Text>
-                          <Badge
-                            variant={typeConfig.variant}
-                            className="w-fit gap-1"
-                          >
-                            <TypeIcon className="size-2.5" />
-                            {t(typeConfig.label)}
-                          </Badge>
+                        <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto">
+                          {services.map((service) => (
+                            <button
+                              key={service.id}
+                              type="button"
+                              className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
+                              onClick={() => {
+                                addServiceLine(service);
+                                setServiceSearch("");
+                                setServices([]);
+                              }}
+                            >
+                              <div>
+                                <Typography.Text className="font-medium">
+                                  {service.name}
+                                </Typography.Text>
+                              </div>
+                              <Typography.Text className="font-mono text-sm text-muted-foreground">
+                                {formatCurrency(
+                                  Number(service.default_price ?? 0),
+                                )}
+                              </Typography.Text>
+                            </button>
+                          ))}
+                          {serviceSearch &&
+                          services.length === 0 &&
+                          !searchingServices ? (
+                            <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+                              {commonT("noResults")}
+                            </div>
+                          ) : null}
                         </div>
-                      )}
-                      {line.item_type === "custom" && (
-                        <Badge
-                          variant={typeConfig.variant}
-                          className="w-fit gap-1 mt-1"
-                        >
-                          <TypeIcon className="size-2.5" />
-                          {t(typeConfig.label)}
-                        </Badge>
-                      )}
-                    </div>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
 
-                    {/* Quantity */}
-                    <div className="col-span-1">
-                      <Input
-                        type="number"
-                        min={1}
-                        value={line.quantity}
-                        onChange={(e) =>
-                          updateLine(line.id, {
-                            quantity: Math.max(
-                              1,
-                              parseInt(e.target.value, 10) || 1,
-                            ),
-                          })
-                        }
-                        className="h-8 text-sm text-right"
-                      />
-                    </div>
+                  <Sheet>
+                    <SheetTrigger
+                      render={<Button variant="outline" size="sm" />}
+                    >
+                      <Plus className="size-4" />
+                      {t("addPart")}
+                    </SheetTrigger>
+                    <SheetContent side="right" size="lg" className="w-full">
+                      <SheetHeader>
+                        <SheetTitle>{t("addPartTitle")}</SheetTitle>
+                        <SheetDescription>
+                          {t("searchPartsPlaceholder")}
+                        </SheetDescription>
+                      </SheetHeader>
+                      <div className="flex flex-col gap-4 p-4">
+                        <SearchInput
+                          placeholder={t("searchPartsPlaceholder")}
+                          onSearch={searchParts}
+                          loading={searchingParts}
+                          debounceMs={400}
+                        />
+                        <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto">
+                          {parts.map((part) => (
+                            <button
+                              key={part.id}
+                              type="button"
+                              className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
+                              onClick={() => {
+                                addPartLine(part);
+                                setPartSearch("");
+                                setParts([]);
+                              }}
+                            >
+                              <div>
+                                <Typography.Text className="font-medium">
+                                  {part.part_name}
+                                </Typography.Text>
+                              </div>
+                              <Typography.Text className="font-mono text-sm text-muted-foreground">
+                                {formatCurrency(Number(part.unit_price ?? 0))}
+                              </Typography.Text>
+                            </button>
+                          ))}
+                          {partSearch &&
+                          parts.length === 0 &&
+                          !searchingParts ? (
+                            <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+                              {commonT("noResults")}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
 
-                    {/* Unit Price */}
-                    <div className="col-span-2">
-                      <Input
-                        type="number"
-                        min={0}
-                        step={1000}
-                        value={line.unit_price}
-                        onChange={(e) =>
-                          updateLine(line.id, {
-                            unit_price: Math.max(
-                              0,
-                              parseInt(e.target.value, 10) || 0,
-                            ),
-                          })
-                        }
-                        className="h-8 text-sm text-right"
-                      />
-                    </div>
+                  <Button variant="outline" size="sm" onClick={addCustomLine}>
+                    <Plus className="size-4" />
+                    {t("addCustom")}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
 
-                    {/* Discount % */}
-                    <div className="col-span-1">
+            <CardContent>
+              {lines.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed py-14 text-center">
+                  <div className="rounded-full bg-muted p-3">
+                    <Receipt className="size-6 text-muted-foreground" />
+                  </div>
+                  <Typography.Text className="font-medium">
+                    {t("noItemsTitle")}
+                  </Typography.Text>
+                  <Typography.Muted className="max-w-sm">
+                    {t("noItemsDescription")}
+                  </Typography.Muted>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {lines.map((line, index) => {
+                    const config = ITEM_TYPE_CONFIG[line.item_type];
+                    const TypeIcon = config.icon;
+
+                    return (
+                      <div
+                        key={line.id}
+                        className="rounded-2xl border border-border/60 bg-card p-4"
+                      >
+                        <div className="flex flex-col gap-4">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <div className="flex size-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
+                                {index + 1}
+                              </div>
+                              <div>
+                                <Badge
+                                  variant={config.badge}
+                                  className="rounded-full px-2.5 py-0.5"
+                                >
+                                  <TypeIcon className="size-3.5" />
+                                  {t(config.label)}
+                                </Badge>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive"
+                              onClick={() => removeLine(line.id)}
+                            >
+                              {commonT("delete")}
+                            </Button>
+                          </div>
+
+                          <div className="grid gap-4 md:grid-cols-[minmax(0,1.8fr)_repeat(4,minmax(0,1fr))]">
+                            <Field>
+                              <FieldLabel>{t("description")}</FieldLabel>
+                              <FieldContent>
+                                <Input
+                                  value={line.description}
+                                  onChange={(event) =>
+                                    updateLine(line.id, {
+                                      description: event.target.value,
+                                    })
+                                  }
+                                  placeholder={t("descriptionPlaceholder")}
+                                  className="h-11"
+                                />
+                              </FieldContent>
+                            </Field>
+
+                            <Field>
+                              <FieldLabel>{t("qty")}</FieldLabel>
+                              <FieldContent>
+                                <Input
+                                  type="number"
+                                  min={1}
+                                  value={line.quantity}
+                                  onChange={(event) =>
+                                    updateLine(line.id, {
+                                      quantity: Math.max(
+                                        1,
+                                        Number(event.target.value) || 1,
+                                      ),
+                                    })
+                                  }
+                                  className="h-11 text-right"
+                                />
+                              </FieldContent>
+                            </Field>
+
+                            <Field>
+                              <FieldLabel>{t("unitPrice")}</FieldLabel>
+                              <FieldContent>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  value={line.unit_price}
+                                  onChange={(event) =>
+                                    updateLine(line.id, {
+                                      unit_price: Math.max(
+                                        0,
+                                        Number(event.target.value) || 0,
+                                      ),
+                                    })
+                                  }
+                                  className="h-11 text-right"
+                                />
+                              </FieldContent>
+                            </Field>
+
+                            <Field>
+                              <FieldLabel>{t("discountPercent")}</FieldLabel>
+                              <FieldContent>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  value={line.discount_percentage}
+                                  onChange={(event) =>
+                                    updateLine(line.id, {
+                                      discount_percentage: Math.max(
+                                        0,
+                                        Math.min(
+                                          100,
+                                          Number(event.target.value) || 0,
+                                        ),
+                                      ),
+                                    })
+                                  }
+                                  className="h-11 text-right"
+                                />
+                              </FieldContent>
+                            </Field>
+
+                            <Field>
+                              <FieldLabel>{t("discountAmount")}</FieldLabel>
+                              <FieldContent>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  value={line.discount_amount}
+                                  onChange={(event) =>
+                                    updateLine(line.id, {
+                                      discount_amount: Math.max(
+                                        0,
+                                        Number(event.target.value) || 0,
+                                      ),
+                                    })
+                                  }
+                                  className="h-11 text-right"
+                                />
+                              </FieldContent>
+                            </Field>
+                          </div>
+
+                          <div className="flex items-center justify-between rounded-2xl bg-muted/30 px-4 py-3">
+                            <Typography.Text className="text-sm text-muted-foreground">
+                              {t("total")}
+                            </Typography.Text>
+                            <Typography.Text className="font-mono font-semibold">
+                              {formatCurrency(line.line_total)}
+                            </Typography.Text>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-3xl border-border/60 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base">{t("notes")}</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <Field>
+                <FieldLabel>{t("notes")}</FieldLabel>
+                <FieldContent>
+                  <Textarea
+                    rows={5}
+                    placeholder={t("notesPlaceholder")}
+                    {...form.register("notes")}
+                  />
+                </FieldContent>
+              </Field>
+
+              <Field>
+                <FieldLabel>{t("termsAndConditions")}</FieldLabel>
+                <FieldContent>
+                  <Textarea
+                    rows={5}
+                    placeholder={t("termsPlaceholder")}
+                    {...form.register("terms")}
+                  />
+                </FieldContent>
+              </Field>
+
+              <Field className="md:col-span-2">
+                <FieldLabel>Valid Until</FieldLabel>
+                <FieldContent>
+                  <Input
+                    type="date"
+                    className="h-11 max-w-xs"
+                    {...form.register("valid_until")}
+                  />
+                </FieldContent>
+              </Field>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="flex flex-col gap-6">
+          <Card className="rounded-3xl border-border/60 shadow-sm xl:sticky xl:top-6">
+            <CardHeader>
+              <CardTitle className="text-base">{t("summary")}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{t("subtotal")}</span>
+                  <span className="font-mono">{formatCurrency(subtotal)}</span>
+                </div>
+                <div className="grid gap-3">
+                  <Field>
+                    <FieldLabel>{t("discountPercent")}</FieldLabel>
+                    <FieldContent>
                       <Input
                         type="number"
                         min={0}
                         max={100}
-                        value={line.discount_percentage}
-                        onChange={(e) =>
-                          updateLine(line.id, {
-                            discount_percentage: Math.max(
+                        value={discountPercent}
+                        onChange={(event) =>
+                          setDiscountPercent(
+                            Math.max(
                               0,
-                              Math.min(100, parseInt(e.target.value, 10) || 0),
+                              Math.min(100, Number(event.target.value) || 0),
                             ),
-                          })
+                          )
                         }
-                        className="h-8 text-sm text-right"
+                        className="h-11 text-right"
                       />
-                    </div>
+                    </FieldContent>
+                  </Field>
 
-                    {/* Discount Amount */}
-                    <div className="col-span-1">
+                  <Field>
+                    <FieldLabel>{t("discountAmount")}</FieldLabel>
+                    <FieldContent>
                       <Input
                         type="number"
                         min={0}
-                        step={1000}
-                        value={line.discount_amount}
-                        onChange={(e) =>
-                          updateLine(line.id, {
-                            discount_amount: Math.max(
-                              0,
-                              parseInt(e.target.value, 10) || 0,
-                            ),
-                          })
+                        value={discountAmount}
+                        onChange={(event) =>
+                          setDiscountAmount(
+                            Math.max(0, Number(event.target.value) || 0),
+                          )
                         }
-                        className="h-8 text-sm text-right"
+                        className="h-11 text-right"
                       />
-                    </div>
+                    </FieldContent>
+                  </Field>
 
-                    {/* Line Total */}
-                    <div className="col-span-1 text-right font-mono text-sm font-medium">
-                      ₮{line.line_total.toLocaleString()}
+                  {/* НӨАТ Toggle */}
+                  <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-3">
+                    <div className="flex flex-col">
+                      <Label className="text-xs font-medium">
+                        {org?.locale === "en" ? "VAT" : "НӨАТ"}
+                      </Label>
+                      <span className="text-[10px] text-muted-foreground">
+                        {defaultTaxRate}%
+                      </span>
                     </div>
-
-                    {/* Remove Button */}
-                    <div className="col-span-1 text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 text-destructive"
-                        onClick={() => removeLine(line.id)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
+                    <Switch
+                      checked={nuatEnabled}
+                      onCheckedChange={setNuatEnabled}
+                    />
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
-      {/* Totals Summary */}
-      <Card>
-        <CardContent className="pt-3">
-          <div className="space-y-2.5 ml-auto w-full max-w-xs">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t("subtotal")}</span>
-              <span className="font-mono">₮{subtotal.toLocaleString()}</span>
-            </div>
-
-            {/* Quote-level Discount */}
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground shrink-0">
-                {t("discount")}
-              </span>
-              <div className="flex items-center gap-1 ml-auto">
-                <Input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={discountPercent}
-                  onChange={(e) =>
-                    setDiscountPercent(
-                      Math.max(0, Math.min(100, Number(e.target.value) || 0)),
-                    )
-                  }
-                  className="h-7 w-14 text-xs text-right"
-                  placeholder="%"
-                />
-                <span className="text-xs text-muted-foreground">%</span>
-                <span className="text-xs text-muted-foreground">+</span>
-                <Input
-                  type="number"
-                  min={0}
-                  step={1000}
-                  value={discountAmount}
-                  onChange={(e) =>
-                    setDiscountAmount(Math.max(0, Number(e.target.value) || 0))
-                  }
-                  className="h-7 w-20 text-xs text-right"
-                  placeholder="₮"
-                />
+                  {/* Manual tax input - only when НӨАТ is disabled */}
+                  {!nuatEnabled && (
+                    <Field>
+                      <FieldLabel>{t("tax")}</FieldLabel>
+                      <FieldContent>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={taxTotal}
+                          onChange={(event) =>
+                            setTaxTotal(
+                              Math.max(0, Number(event.target.value) || 0),
+                            )
+                          }
+                          className="h-11 text-right"
+                        />
+                      </FieldContent>
+                    </Field>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {discountTotal > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {t("discount")} {t("subtotal")}
-                </span>
-                <span className="font-mono text-destructive">
-                  -₮{discountTotal.toLocaleString()}
-                </span>
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <Typography.Text className="font-medium">
+                  {t("grandTotal")}
+                </Typography.Text>
+                <Typography.Text className="font-mono text-xl font-semibold">
+                  {formatCurrency(grandTotal)}
+                </Typography.Text>
               </div>
-            )}
 
-            {/* Tax */}
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground shrink-0">{t("tax")}</span>
-              <Input
-                type="number"
-                min={0}
-                step={1000}
-                value={taxTotal}
-                onChange={(e) =>
-                  setTaxTotal(Math.max(0, Number(e.target.value) || 0))
-                }
-                className="h-7 w-24 text-xs text-right ml-auto"
-                placeholder="₮"
-              />
-            </div>
-
-            {/* Grand Total */}
-            <div className="flex justify-between text-lg font-semibold border-t pt-2.5">
-              <span>{t("grandTotal")}</span>
-              <span className="font-mono">₮{grandTotal.toLocaleString()}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Notes & Terms */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field>
-          <FieldLabel>{t("notes")}</FieldLabel>
-          <FieldContent>
-            <Textarea
-              placeholder={t("notesPlaceholder")}
-              rows={3}
-              {...form.register("notes")}
-            />
-          </FieldContent>
-        </Field>
-        <Field>
-          <FieldLabel>{t("termsAndConditions")}</FieldLabel>
-          <FieldContent>
-            <Textarea
-              placeholder={t("termsPlaceholder")}
-              rows={3}
-              {...form.register("terms")}
-            />
-          </FieldContent>
-        </Field>
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-3 justify-end border-t pt-4">
-        <Button variant="ghost" onClick={() => router.back()}>
-          {t("cancel")}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => handleSave("draft")}
-          disabled={saving || lines.length === 0}
-        >
-          {saving ? t("saving") : t("saveAsDraft")}
-        </Button>
-        <Button
-          onClick={() => handleSave("draft")}
-          disabled={saving || lines.length === 0}
-        >
-          {saving ? t("saving") : t("createQuote")}
-        </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={() => handleSave("sent")}
+                  disabled={savingState !== null || lines.length === 0}
+                >
+                  <Send className="size-4" />
+                  {savingState === "sent"
+                    ? t("creatingQuote")
+                    : t("createQuote")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleSave("draft")}
+                  disabled={savingState !== null || lines.length === 0}
+                >
+                  <Save className="size-4" />
+                  {savingState === "draft" ? t("saving") : t("saveAsDraft")}
+                </Button>
+                <Button variant="ghost" onClick={() => router.back()}>
+                  {t("cancel")}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

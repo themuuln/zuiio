@@ -11,6 +11,8 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
 import { workOrderKeys } from "@/lib/queries/keys";
 import { useDrawerQueries } from "@/lib/queries/use-drawer-queries";
@@ -390,6 +392,43 @@ export function WorkOrderDetailDrawer({
                           </div>
                         </div>
 
+                        {/* НӨАТ Toggle */}
+                        <div className="mt-3 flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                          <div className="flex flex-col">
+                            <Label className="text-xs font-medium">
+                              {orgSettings?.language === "en" ? "VAT" : "НӨАТ"}
+                            </Label>
+                            <span className="text-[10px] text-muted-foreground">
+                              {orgSettings?.language === "en"
+                                ? "Value Added Tax"
+                                : "Нэмэгдсэн Өртөгт Татвар"}
+                            </span>
+                          </div>
+                          <Switch
+                            checked={(wo as Record<string, unknown>).nuat_enabled as boolean ?? false}
+                            onCheckedChange={async (checked) => {
+                              try {
+                                const res = await fetch(
+                                  `/api/organizations/${orgId}/work-orders/${workOrderId}`,
+                                  {
+                                    method: "PATCH",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ nuat_enabled: checked }),
+                                  },
+                                );
+                                if (!res.ok) throw new Error("Failed to update");
+                                // Optimistic update
+                                setWo((prev) =>
+                                  prev ? { ...prev, nuat_enabled: checked } as WorkOrderDetail : prev,
+                                );
+                                toast.success(checked ? "НӨАТ идэвхижүүлэв" : "НӨАТ идэвхигүй болгов");
+                              } catch {
+                                toast.error("НӨАТ тохиргоо шинэчлэхэд алдаа гарлаа");
+                              }
+                            }}
+                          />
+                        </div>
+
                         <div className="mt-3">
                           <TotalsSummary
                             servicesTotal={servicesTotal}
@@ -397,6 +436,8 @@ export function WorkOrderDetailDrawer({
                             grandTotal={grandTotal}
                             discountTotal={wo.discount_total ?? 0}
                             taxRate={orgSettings?.default_tax_rate ?? 0}
+                            nuatEnabled={(wo as Record<string, unknown>).nuat_enabled as boolean ?? false}
+                            locale={orgSettings?.language as string ?? "mn"}
                             t={t}
                           />
                         </div>
