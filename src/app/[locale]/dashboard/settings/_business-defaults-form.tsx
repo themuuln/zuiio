@@ -3,7 +3,7 @@
 import { CreditCard, FileText, Globe } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -28,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { getNumberSetting, getStringSetting } from "./_settings-utils";
@@ -36,6 +38,7 @@ export interface SettingsForm {
   invoicePrefix: string;
   defaultCurrency: string;
   defaultTaxRate: string;
+  nuatEnabled: boolean;
   timezone: string;
   dateFormat: string;
   language: string;
@@ -46,6 +49,7 @@ export const DEFAULT_FORM: SettingsForm = {
   invoicePrefix: "INV",
   defaultCurrency: "MNT",
   defaultTaxRate: "10",
+  nuatEnabled: false,
   timezone: "Asia/Ulaanbaatar",
   dateFormat: "YYYY-MM-DD",
   language: "mn",
@@ -74,6 +78,8 @@ export function buildFormFromOrganization(organization: {
       "default_tax_rate",
       DEFAULT_FORM.defaultTaxRate,
     ),
+    nuatEnabled:
+      (settings?.nuat_enabled as boolean) ?? DEFAULT_FORM.nuatEnabled,
     timezone: getStringSetting(settings, "timezone", DEFAULT_FORM.timezone),
     dateFormat: getStringSetting(
       settings,
@@ -128,6 +134,7 @@ export function BusinessDefaultsForm({
   onSubmit,
 }: BusinessDefaultsFormProps) {
   const t = useTranslations("settings");
+  const [nuatEnabled, setNuatEnabled] = useState(formData.nuatEnabled);
 
   const rhfForm = useForm<BusinessDefaultsValues>({
     resolver: zodResolver(businessDefaultsSchema),
@@ -154,6 +161,7 @@ export function BusinessDefaultsForm({
           invoicePrefix: values.invoicePrefix ?? prev.invoicePrefix,
           defaultCurrency: values.defaultCurrency ?? prev.defaultCurrency,
           defaultTaxRate: values.defaultTaxRate ?? prev.defaultTaxRate,
+          nuatEnabled,
           timezone: values.timezone ?? prev.timezone,
           dateFormat: values.dateFormat ?? prev.dateFormat,
           language: values.language ?? prev.language,
@@ -164,6 +172,7 @@ export function BusinessDefaultsForm({
           next.invoicePrefix === prev.invoicePrefix &&
           next.defaultCurrency === prev.defaultCurrency &&
           next.defaultTaxRate === prev.defaultTaxRate &&
+          next.nuatEnabled === prev.nuatEnabled &&
           next.timezone === prev.timezone &&
           next.dateFormat === prev.dateFormat &&
           next.language === prev.language &&
@@ -175,7 +184,7 @@ export function BusinessDefaultsForm({
       });
     });
     return () => subscription.unsubscribe();
-  }, [rhfForm.watch, setForm]);
+  }, [rhfForm.watch, setForm, nuatEnabled]);
 
   const watchedLanguage = rhfForm.watch("language");
   const watchedInvoicePrefix = rhfForm.watch("invoicePrefix");
@@ -262,27 +271,63 @@ export function BusinessDefaultsForm({
               </FieldContent>
             </Field>
 
-            <Field data-invalid={!!rhfForm.formState.errors.defaultTaxRate}>
-              <FieldLabel htmlFor="defaultTaxRate">
-                {t("defaultTaxRate")}
-              </FieldLabel>
+            {/* НӨАТ (VAT) Toggle */}
+            <Field className="sm:col-span-2">
               <FieldContent>
-                <Input
-                  id="defaultTaxRate"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  aria-invalid={!!rhfForm.formState.errors.defaultTaxRate}
-                  {...rhfForm.register("defaultTaxRate")}
-                />
-                {rhfForm.formState.errors.defaultTaxRate && (
-                  <FieldError>
-                    {rhfForm.formState.errors.defaultTaxRate.message}
-                  </FieldError>
-                )}
+                <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-4">
+                  <div className="flex flex-col gap-1">
+                    <Label
+                      htmlFor="nuatEnabled"
+                      className="text-sm font-medium"
+                    >
+                      {currentLocale === "mn" ? "НӨАТ татвар" : "VAT"}
+                    </Label>
+                    <Typography.Muted className="text-xs">
+                      {currentLocale === "mn"
+                        ? "Нэмэгдсэн Өртөгт Татвар (10%)"
+                        : "Value Added Tax (10%)"}
+                    </Typography.Muted>
+                  </div>
+                  <Switch
+                    id="nuatEnabled"
+                    checked={nuatEnabled}
+                    onCheckedChange={(checked) => {
+                      setNuatEnabled(checked);
+                      setForm((prev) => ({ ...prev, nuatEnabled: checked }));
+                    }}
+                  />
+                </div>
               </FieldContent>
             </Field>
+
+            {/* НӨАТ Rate - only shown when enabled */}
+            {nuatEnabled && (
+              <Field data-invalid={!!rhfForm.formState.errors.defaultTaxRate}>
+                <FieldLabel htmlFor="defaultTaxRate">
+                  {currentLocale === "mn" ? "НӨАТ хувь" : "VAT Rate"}
+                </FieldLabel>
+                <FieldContent>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="defaultTaxRate"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      className="w-24"
+                      aria-invalid={!!rhfForm.formState.errors.defaultTaxRate}
+                      {...rhfForm.register("defaultTaxRate")}
+                    />
+                    <span className="text-sm text-muted-foreground">%</span>
+                  </div>
+                  {rhfForm.formState.errors.defaultTaxRate && (
+                    <FieldError>
+                      {rhfForm.formState.errors.defaultTaxRate.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
+            )}
 
             <Field data-invalid={!!rhfForm.formState.errors.timezone}>
               <FieldLabel htmlFor="timezone">{t("timezone")}</FieldLabel>

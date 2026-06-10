@@ -25,6 +25,19 @@ export interface WorkOrderTaxResult {
   taxTotal: number;
 }
 
+export interface TaxableItem {
+  total_price: number;
+  is_tax_exempt?: boolean;
+  tax_rate?: number | null;
+}
+
+export interface ItemTaxResult {
+  taxableAmount: number;
+  taxAmount: number;
+  isExempt: boolean;
+  effectiveRate: number;
+}
+
 // ── Get Org Tax Settings ─────────────────────────────────────
 
 /**
@@ -145,6 +158,67 @@ export async function updateWorkOrderNuat(
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 
   return true;
+}
+
+// ── Calculate Item Tax ───────────────────────────────────────
+
+/**
+ * Calculates tax for a single line item, respecting exemptions and custom rates.
+ *
+ * @param item - The item to calculate tax for
+ * @param orgTaxRate - The organization's default tax rate
+ * @returns Tax calculation result for the item
+ */
+export function calculateItemTax(
+  item: TaxableItem,
+  orgTaxRate: number,
+): ItemTaxResult {
+  // If item is exempt, no tax
+  if (item.is_tax_exempt) {
+    return {
+      taxableAmount: 0,
+      taxAmount: 0,
+      isExempt: true,
+      effectiveRate: 0,
+    };
+  }
+
+  // Use item's custom rate if set, otherwise use org rate
+  const effectiveRate = item.tax_rate ?? orgTaxRate;
+  const taxableAmount = item.total_price;
+  const taxAmount = Math.round((taxableAmount * effectiveRate) / 100);
+
+  return {
+    taxableAmount,
+    taxAmount,
+    isExempt: false,
+    effectiveRate,
+  };
+}
+
+// ── Calculate Total Tax for Items ────────────────────────────
+
+/**
+ * Calculates total tax for an array of items, respecting exemptions.
+ *
+ * @param items - Array of items to calculate tax for
+ * @param orgTaxRate - The organization's default tax rate
+ * @returns Total taxable amount and total tax
+ */
+export function calculateItemsTax(
+  items: TaxableItem[],
+  orgTaxRate: number,
+): { totalTaxable: number; totalTax: number } {
+  let totalTaxable = 0;
+  let totalTax = 0;
+
+  for (const item of items) {
+    const result = calculateItemTax(item, orgTaxRate);
+    totalTaxable += result.taxableAmount;
+    totalTax += result.taxAmount;
+  }
+
+  return { totalTaxable, totalTax };
 }
 
 // ── Update Org НӨАТ Settings ─────────────────────────────────

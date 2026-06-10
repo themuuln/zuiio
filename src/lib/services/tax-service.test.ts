@@ -262,4 +262,97 @@ describe("Tax Service", () => {
       expect(result.taxRate).toBe(10);
     });
   });
+
+  describe("calculateItemTax", () => {
+    it("calculates tax for a normal item", async () => {
+      const { calculateItemTax } = await import("./tax-service");
+
+      const result = calculateItemTax(
+        { total_price: 50000 },
+        10,
+      );
+
+      expect(result.taxAmount).toBe(5000);
+      expect(result.isExempt).toBe(false);
+      expect(result.effectiveRate).toBe(10);
+    });
+
+    it("returns 0 tax for exempt items", async () => {
+      const { calculateItemTax } = await import("./tax-service");
+
+      const result = calculateItemTax(
+        { total_price: 50000, is_tax_exempt: true },
+        10,
+      );
+
+      expect(result.taxAmount).toBe(0);
+      expect(result.isExempt).toBe(true);
+      expect(result.effectiveRate).toBe(0);
+    });
+
+    it("uses custom tax rate when set on item", async () => {
+      const { calculateItemTax } = await import("./tax-service");
+
+      const result = calculateItemTax(
+        { total_price: 100000, tax_rate: 5 },
+        10,
+      );
+
+      // 100000 * 5% = 5000
+      expect(result.taxAmount).toBe(5000);
+      expect(result.effectiveRate).toBe(5);
+    });
+
+    it("ignores custom rate when item is exempt", async () => {
+      const { calculateItemTax } = await import("./tax-service");
+
+      const result = calculateItemTax(
+        { total_price: 100000, is_tax_exempt: true, tax_rate: 5 },
+        10,
+      );
+
+      expect(result.taxAmount).toBe(0);
+      expect(result.isExempt).toBe(true);
+    });
+  });
+
+  describe("calculateItemsTax", () => {
+    it("calculates total tax for mixed exempt and non-exempt items", async () => {
+      const { calculateItemsTax } = await import("./tax-service");
+
+      const items = [
+        { total_price: 50000, is_tax_exempt: false },  // Tax: 5000
+        { total_price: 30000, is_tax_exempt: true },   // Tax: 0
+        { total_price: 20000, is_tax_exempt: false },  // Tax: 2000
+      ];
+
+      const result = calculateItemsTax(items, 10);
+
+      expect(result.totalTaxable).toBe(70000);  // 50000 + 20000
+      expect(result.totalTax).toBe(7000);       // 5000 + 2000
+    });
+
+    it("returns 0 when all items are exempt", async () => {
+      const { calculateItemsTax } = await import("./tax-service");
+
+      const items = [
+        { total_price: 50000, is_tax_exempt: true },
+        { total_price: 30000, is_tax_exempt: true },
+      ];
+
+      const result = calculateItemsTax(items, 10);
+
+      expect(result.totalTaxable).toBe(0);
+      expect(result.totalTax).toBe(0);
+    });
+
+    it("handles empty items array", async () => {
+      const { calculateItemsTax } = await import("./tax-service");
+
+      const result = calculateItemsTax([], 10);
+
+      expect(result.totalTaxable).toBe(0);
+      expect(result.totalTax).toBe(0);
+    });
+  });
 });

@@ -312,6 +312,7 @@ export default function SettingsPage() {
         default_currency:
           form.defaultCurrency.trim() || DEFAULT_FORM.defaultCurrency,
         default_tax_rate: Number(form.defaultTaxRate) || 0,
+        nuat_enabled: form.nuatEnabled,
         timezone: form.timezone.trim() || DEFAULT_FORM.timezone,
         date_format: form.dateFormat.trim() || DEFAULT_FORM.dateFormat,
         language: form.language || DEFAULT_FORM.language,
