@@ -9,6 +9,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
+import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 
@@ -115,6 +116,7 @@ export async function calculateWorkOrderTax(
     .select("nuat_enabled")
     .eq("id", workOrderId)
     .eq("organization_id", orgId)
+    .is("deleted_at", null)
     .single();
 
   // Fetch org tax settings
@@ -142,7 +144,17 @@ export async function updateWorkOrderNuat(
   workOrderId: string,
   orgId: string,
   nuatEnabled: boolean,
+  userId?: string,
 ): Promise<boolean> {
+  // Get current value for audit log
+  const { data: current } = await db
+    .from("work_orders")
+    .select("nuat_enabled")
+    .eq("id", workOrderId)
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .single();
+
   const { error } = await db
     .from("work_orders")
     .update({ nuat_enabled: nuatEnabled })
@@ -153,6 +165,18 @@ export async function updateWorkOrderNuat(
   if (error) {
     throw new NotFoundError("Work order not found");
   }
+
+  // Audit log
+  await createAuditLog({
+    supabase: db,
+    action: "update",
+    table_name: "work_orders",
+    record_id: workOrderId,
+    user_id: userId,
+    organization_id: orgId,
+    old_data: { nuat_enabled: current?.nuat_enabled },
+    new_data: { nuat_enabled: nuatEnabled },
+  });
 
   revalidateTag(cacheTags.workOrders(orgId), "max");
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
@@ -233,7 +257,11 @@ export async function updateOrgNuatSettings(
     nuatEnabled?: boolean;
     taxRate?: number;
   },
+  userId?: string,
 ): Promise<OrgTaxSettings> {
+  // Get current settings for audit log
+  const currentSettings = await getOrgTaxSettings(db, orgId);
+
   const updates: Record<string, unknown> = {};
 
   if (settings.nuatEnabled !== undefined) {
@@ -250,7 +278,7 @@ export async function updateOrgNuatSettings(
 
   if (Object.keys(updates).length === 0) {
     // No updates needed, return current settings
-    return getOrgTaxSettings(db, orgId);
+    return currentSettings;
   }
 
   const { error } = await db
@@ -261,6 +289,18 @@ export async function updateOrgNuatSettings(
   if (error) {
     throw new Error("Failed to update tax settings");
   }
+
+  // Audit log
+  await createAuditLog({
+    supabase: db,
+    action: "update",
+    table_name: "organization_settings",
+    record_id: orgId,
+    user_id: userId,
+    organization_id: orgId,
+    old_data: currentSettings,
+    new_data: updates,
+  });
 
   // Settings changes are rare - invalidate organizationUsers to refresh sidebar
   revalidateTag(cacheTags.organizationUsers(orgId), "max");
