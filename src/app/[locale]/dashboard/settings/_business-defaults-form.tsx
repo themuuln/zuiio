@@ -80,6 +80,13 @@ export function buildFormFromOrganization(organization: {
     ),
     nuatEnabled:
       (settings?.nuat_enabled as boolean) ?? DEFAULT_FORM.nuatEnabled,
+    ndshEnabled: (settings?.ndsh_enabled as boolean) ?? DEFAULT_FORM.ndshEnabled,
+    ndshEmployerRate: getNumberSetting(settings, "ndsh_employer_rate", DEFAULT_FORM.ndshEmployerRate),
+    ndshEmployeeRate: getNumberSetting(settings, "ndsh_employee_rate", DEFAULT_FORM.ndshEmployeeRate),
+    einvoiceEnabled: (settings?.einvoice_enabled as boolean) ?? DEFAULT_FORM.einvoiceEnabled,
+    einvoiceApiKey: getStringSetting(settings, "einvoice_api_key", DEFAULT_FORM.einvoiceApiKey),
+    einvoiceMerchantId: getStringSetting(settings, "einvoice_merchant_id", DEFAULT_FORM.einvoiceMerchantId),
+    einvoiceEndpoint: getStringSetting(settings, "einvoice_endpoint", DEFAULT_FORM.einvoiceEndpoint),
     timezone: getStringSetting(settings, "timezone", DEFAULT_FORM.timezone),
     dateFormat: getStringSetting(
       settings,
@@ -327,6 +334,139 @@ export function BusinessDefaultsForm({
                   )}
                 </FieldContent>
               </Field>
+            )}
+
+            {/* НДШ (Social Insurance) Toggle */}
+            <Field className="sm:col-span-2">
+              <FieldContent>
+                <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-4">
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="ndshEnabled" className="text-sm font-medium">
+                      {currentLocale === "mn" ? "НДШ тооцоо" : "Social Insurance"}
+                    </Label>
+                    <Typography.Muted className="text-xs">
+                      {currentLocale === "mn"
+                        ? "Нийгмийн даатгалын шимтгэл"
+                        : "Payroll tax tracking"}
+                    </Typography.Muted>
+                  </div>
+                  <Switch
+                    id="ndshEnabled"
+                    checked={formData.ndshEnabled}
+                    onCheckedChange={(checked) => {
+                      setForm((prev) => ({ ...prev, ndshEnabled: checked }));
+                    }}
+                  />
+                </div>
+              </FieldContent>
+            </Field>
+
+            {/* НДШ Rates - only shown when enabled */}
+            {formData.ndshEnabled && (
+              <>
+                <Field>
+                  <FieldLabel>
+                    {currentLocale === "mn" ? "Ажил олгогч НДШ" : "Employer НДШ"}
+                  </FieldLabel>
+                  <FieldContent>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        className="w-24"
+                        value={formData.ndshEmployerRate}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, ndshEmployerRate: e.target.value }))
+                        }
+                      />
+                      <span className="text-sm text-muted-foreground">%</span>
+                    </div>
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel>
+                    {currentLocale === "mn" ? "Ажилтан НДШ" : "Employee НДШ"}
+                  </FieldLabel>
+                  <FieldContent>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        className="w-24"
+                        value={formData.ndshEmployeeRate}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, ndshEmployeeRate: e.target.value }))
+                        }
+                      />
+                      <span className="text-sm text-muted-foreground">%</span>
+                    </div>
+                  </FieldContent>
+                </Field>
+              </>
+            )}
+
+            {/* E-Invoice (Э-Баримт) Toggle */}
+            <Field className="sm:col-span-2">
+              <FieldContent>
+                <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-4">
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="einvoiceEnabled" className="text-sm font-medium">
+                      {currentLocale === "mn" ? "Э-Баримт" : "E-Invoice"}
+                    </Label>
+                    <Typography.Muted className="text-xs">
+                      {currentLocale === "mn"
+                        ? "Цахим нэхэмжлэл (Татварын ерөнхий газар)"
+                        : "Electronic invoice (General Taxation Authority)"}
+                    </Typography.Muted>
+                  </div>
+                  <Switch
+                    id="einvoiceEnabled"
+                    checked={formData.einvoiceEnabled}
+                    onCheckedChange={(checked) => {
+                      setForm((prev) => ({ ...prev, einvoiceEnabled: checked }));
+                    }}
+                  />
+                </div>
+              </FieldContent>
+            </Field>
+
+            {/* E-Invoice Settings - only shown when enabled */}
+            {formData.einvoiceEnabled && (
+              <>
+                <Field>
+                  <FieldLabel>
+                    {currentLocale === "mn" ? "Merchant ID" : "Merchant ID"}
+                  </FieldLabel>
+                  <FieldContent>
+                    <Input
+                      value={formData.einvoiceMerchantId}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, einvoiceMerchantId: e.target.value }))
+                      }
+                      placeholder="Merchant ID"
+                    />
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel>
+                    {currentLocale === "mn" ? "API Түлхүүр" : "API Key"}
+                  </FieldLabel>
+                  <FieldContent>
+                    <Input
+                      type="password"
+                      value={formData.einvoiceApiKey}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, einvoiceApiKey: e.target.value }))
+                      }
+                      placeholder="API Key"
+                    />
+                  </FieldContent>
+                </Field>
+              </>
             )}
 
             <Field data-invalid={!!rhfForm.formState.errors.timezone}>
