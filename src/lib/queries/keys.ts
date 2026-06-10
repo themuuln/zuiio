@@ -265,14 +265,17 @@ export const reportKeys = {
 
 export const payrollKeys = {
   all: (orgId: string) => [...orgKeys.detail(orgId), "payroll"] as const,
+  payRatesRoot: (orgId: string) =>
+    [...payrollKeys.all(orgId), "pay-rates"] as const,
   payRates: (orgId: string, branchId?: string) =>
-    [...payrollKeys.all(orgId), "pay-rates", branchId ?? "all"] as const,
+    [...payrollKeys.payRatesRoot(orgId), branchId ?? "all"] as const,
+  recordsRoot: (orgId: string) =>
+    [...payrollKeys.all(orgId), "records"] as const,
+  recordsPeriod: (orgId: string, year: number, month: number) =>
+    [...payrollKeys.recordsRoot(orgId), String(year), String(month)] as const,
   records: (orgId: string, year: number, month: number, branchId?: string) =>
     [
-      ...payrollKeys.all(orgId),
-      "records",
-      String(year),
-      String(month),
+      ...payrollKeys.recordsPeriod(orgId, year, month),
       branchId ?? "all",
     ] as const,
 };
@@ -335,6 +338,20 @@ export const inventoryKeys = {
       : ([...inventoryKeys.reports(orgId), "slow-moving"] as const),
   categories: (orgId: string) =>
     [...inventoryKeys.all(orgId), "part-categories"] as const,
+  transfers: (orgId: string, status?: string | null) =>
+    [
+      ...inventoryKeys.all(orgId),
+      "transfers",
+      status ?? "all",
+    ] as const,
+  transferDetail: (orgId: string, id: string) =>
+    [...inventoryKeys.all(orgId), "transfers", "detail", id] as const,
+  /** Invalidate transfers + balances + movements together */
+  transferInvalidations: (orgId: string) => [
+    inventoryKeys.transfers(orgId),
+    inventoryKeys.balances(orgId),
+    inventoryKeys.movements(orgId),
+  ] as const,
 };
 
 export const serviceReminderKeys = {
@@ -420,4 +437,18 @@ export const appointmentKeys = {
 export const priceRuleKeys = {
   all: (orgId: string) => ["organizations", orgId, "price-rules"] as const,
   list: (orgId: string) => [...priceRuleKeys.all(orgId), "list"] as const,
+};
+
+export const cashRegisterKeys = {
+  all: (orgId: string) => ["organizations", orgId, "cash-register"] as const,
+  current: (orgId: string, branchId?: string | null) =>
+    [...cashRegisterKeys.all(orgId), "current", branchId ?? "all"] as const,
+  session: (orgId: string, sessionId: string) =>
+    [...cashRegisterKeys.all(orgId), "session", sessionId] as const,
+  list: (orgId: string, filters?: Record<string, string>) =>
+    [
+      ...cashRegisterKeys.all(orgId),
+      "list",
+      JSON.stringify(filters ?? {}),
+    ] as const,
 };

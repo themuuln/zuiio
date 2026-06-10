@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Banknote,
   Car,
   ClipboardList,
   Clock,
@@ -25,9 +26,10 @@ import { usePageHeader } from "@/hooks/use-page-header";
 import { useSelectedBranchGuard } from "@/hooks/use-selected-branch-guard";
 import type { ExportColumn } from "@/lib/export";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
-import { useRouter } from "@/lib/i18n/navigation";
+import { Link, useRouter } from "@/lib/i18n/navigation";
 import { dashboardKeys } from "@/lib/queries/keys";
 import { useBranches } from "@/lib/queries/use-branches";
+import { useCashRegisterSessions } from "@/lib/queries/use-cash-register";
 import { useDashboard } from "@/lib/queries/use-dashboard";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
@@ -508,6 +510,7 @@ export default function DashboardPage() {
         </div>
       )}
       {orgId && <LowStockCard orgId={orgId} />}
+      {orgId && <CashRegisterWidget orgId={orgId} />}
       {insightElements}
       {/* ── Recent Work Orders ── */}
       <div>
@@ -526,4 +529,54 @@ export default function DashboardPage() {
   );
 
   return mainContent;
+}
+
+// ── Cash Register Widget ───────────────────────────────────
+
+function CashRegisterWidget({ orgId }: { orgId: string }) {
+  const t = useTranslations();
+  const { data: sessions } = useCashRegisterSessions(orgId, {
+    status: "open",
+    limit: 1,
+  });
+
+  const session = sessions?.data?.[0];
+
+  return (
+    <Card>
+      <CardContent className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-3">
+          <div
+            className={`flex size-8 items-center justify-center rounded-full ${
+              session ? "bg-emerald-100 dark:bg-emerald-900/30" : "bg-muted"
+            }`}
+          >
+            <Banknote
+              className={`size-4 ${
+                session
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-muted-foreground"
+              }`}
+            />
+          </div>
+          <div>
+            <Typography.Text className="text-sm font-semibold">
+              {t("cashRegister.title")}
+            </Typography.Text>
+            <Typography.Muted className="text-xs">
+              {session
+                ? `${t("cashRegister.sessionOpen")} · ${formatCurrency(session.opening_balance)}`
+                : t("cashRegister.noSession")}
+            </Typography.Muted>
+          </div>
+        </div>
+        <Link
+          href="/dashboard/cash-register"
+          className="text-xs text-primary hover:underline"
+        >
+          →
+        </Link>
+      </CardContent>
+    </Card>
+  );
 }

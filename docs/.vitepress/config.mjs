@@ -81,6 +81,7 @@ export default defineConfig({
           },
           { text: "Санхүү", link: "/finance" },
           { text: "Зарлагын бүртгэл", link: "/expenses" },
+          { text: "Кассын бүртгэл", link: "/cash-register" },
           { text: "Тайлан", link: "/reports" },
         ],
       },

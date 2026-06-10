@@ -25,6 +25,7 @@ export const cacheTags = {
   inventoryMovements: (orgId: string) => `inventory-movements:${orgId}`,
   purchaseOrders: (orgId: string) => `purchase-orders:${orgId}`,
   stockThresholds: (orgId: string) => `stock-thresholds:${orgId}`,
+  stockTransfers: (orgId: string) => `stock-transfers:${orgId}`,
   suppliers: (orgId: string) => `suppliers:${orgId}`,
 
   // Pricing Rules
@@ -86,6 +87,10 @@ export const cacheTags = {
   // Time Tracking
   timeTracking: (orgId: string, mechanicId: string) =>
     `time-tracking:${orgId}:${mechanicId}`,
+
+  // Cash Register
+  cashRegisterSessions: (orgId: string) => `cash-register-sessions:${orgId}`,
+  cashRegisterSession: (id: string) => `cash-register-session:${id}`,
 } as const;
 
 // Cache duration constants (in seconds)
@@ -133,4 +138,8 @@ export const cacheDurations = {
   // Service Reminders
   serviceSchedules: 120, // 2 minutes (updated when services are performed)
   reminderLogs: 300, // 5 minutes
+
+  // Cash Register
+  cashRegisterSessions: 30, // 30 seconds (frequently changing during open session)
+  cashRegisterSession: 10, // 10 seconds (real-time balance updates)
 } as const;

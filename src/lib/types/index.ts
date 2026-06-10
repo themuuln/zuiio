@@ -3,6 +3,7 @@
  * Domain types live in ./core, ./composite, ./service-params, ./dashboard, ./expense, ./inventory.
  */
 
+export * from "./cash-register";
 export * from "./composite";
 export * from "./core";
 export * from "./dashboard";

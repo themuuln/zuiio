@@ -1,11 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
+import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { sendInvoiceEmail } from "@/lib/services/email-service";
 import { calculateTax, getOrgTaxSettings } from "@/lib/services/tax-service";
-import { createClient } from "@/lib/supabase/server";
 import type {
   Invoice,
   InvoiceItem,
@@ -32,10 +32,10 @@ const invoiceItemFieldMap: FieldMap<Partial<AddInvoiceItemParams>> = {
 
 // ── Generate the next invoice number for an org ───
 export async function generateInvoiceNumber(
+  db: SupabaseClient,
   orgId: string,
-  supabaseOverride?: SupabaseClient,
 ): Promise<string> {
-  const supabase = supabaseOverride ?? (await createClient());
+  const supabase = db;
 
   // Get org settings for prefix
   const { data: settings } = await supabase
@@ -70,6 +70,7 @@ export async function generateInvoiceNumber(
 
 // ── Get invoices for an org ───────────────────────
 export async function getInvoices(
+  db: SupabaseClient,
   orgId: string,
   options?: {
     status?: string;
@@ -77,7 +78,7 @@ export async function getInvoices(
     offset?: number;
   },
 ): Promise<InvoiceWithItems[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   let query = supabase
     .from("invoices")
@@ -108,8 +109,11 @@ export async function getInvoices(
 }
 
 // ── Get a single invoice by ID ────────────────────
-export async function getInvoice(id: string): Promise<InvoiceWithItems> {
-  const supabase = await createClient();
+export async function getInvoice(
+  db: SupabaseClient,
+  id: string,
+): Promise<InvoiceWithItems> {
+  const supabase = db;
 
   const { data: invoice, error } = await supabase
     .from("invoices")
@@ -157,9 +161,10 @@ export async function getInvoice(id: string): Promise<InvoiceWithItems> {
 
 // ── Get invoice by public token (no auth needed) ──
 export async function getInvoiceByPublicToken(
+  db: SupabaseClient,
   token: string,
 ): Promise<InvoiceWithItems> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data: invoice, error } = await supabase
     .from("invoices")
@@ -198,17 +203,17 @@ export async function getInvoiceByPublicToken(
 
 // ── Create invoice from a work order ──────────────
 export async function createInvoiceFromWorkOrder(
+  db: SupabaseClient,
   orgId: string,
   workOrderId: string,
   options?: {
     dueDays?: number;
     notes?: string;
     terms?: string;
-    supabase?: SupabaseClient;
     userId?: string;
   },
 ): Promise<InvoiceWithItems> {
-  const supabase = options?.supabase ?? (await createClient());
+  const supabase = db;
   const userId =
     options?.userId ?? (await supabase.auth.getUser()).data.user?.id;
 
@@ -238,7 +243,7 @@ export async function createInvoiceFromWorkOrder(
     .maybeSingle();
 
   if (existing) {
-    return getInvoice(existing.id);
+    return getInvoice(db, existing.id);
   }
 
   // Fetch customer, vehicle, services, and parts in parallel
@@ -309,7 +314,7 @@ export async function createInvoiceFromWorkOrder(
   const total = Math.max(0, subtotal - discountTotal + taxTotal);
 
   // Generate invoice number
-  const invoiceNumber = await generateInvoiceNumber(orgId, supabase);
+  const invoiceNumber = await generateInvoiceNumber(db, orgId);
 
   // Customer name
   const customerName = customer
@@ -363,6 +368,22 @@ export async function createInvoiceFromWorkOrder(
   if (error || !invoice) {
     throw new Error(error?.message ?? "Failed to create invoice");
   }
+
+  await createAuditLog({
+    supabase,
+    action: "create",
+    table_name: "invoices",
+    record_id: invoice.id,
+    user_id: userId ?? undefined,
+    organization_id: orgId,
+    new_data: {
+      invoice_number: invoiceNumber,
+      status: "draft",
+      total,
+      customer_id: wo.customer_id,
+      vehicle_id: wo.vehicle_id,
+    },
+  });
 
   // Create invoice items from services
   const serviceItems = (services ?? []).map((s, i) => ({
@@ -475,6 +496,7 @@ interface CreateStandaloneInvoiceParams {
  * Creates an invoice without a work order — for ad-hoc/manual billing.
  */
 export async function createStandaloneInvoice(
+  db: SupabaseClient,
   orgId: string,
   params: CreateStandaloneInvoiceParams,
   userId?: string,
@@ -483,7 +505,7 @@ export async function createStandaloneInvoice(
     throw new ValidationError("At least one invoice item is required");
   }
 
-  const supabase = await createClient();
+  const supabase = db;
 
   // Calculate totals from items
   let subtotal = 0;
@@ -518,7 +540,7 @@ export async function createStandaloneInvoice(
   }
 
   const total = subtotal + computedTaxTotal;
-  const invoiceNumber = await generateInvoiceNumber(orgId);
+  const invoiceNumber = await generateInvoiceNumber(db, orgId);
 
   const dueDays = params.dueDays ?? 7;
   const dueAt = new Date();
@@ -572,18 +594,25 @@ export async function createStandaloneInvoice(
   if (itemsError) throw new Error(itemsError.message);
 
   revalidateTag(cacheTags.invoices(orgId), "max");
-  return getInvoice(invoice.id);
+  return getInvoice(db, invoice.id);
 }
 
 // ── Update invoice status ─────────────────────────
 export async function updateInvoiceStatus(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   status: string,
   _notes?: string,
 ): Promise<Invoice> {
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const { data: oldInvoice } = await supabase
+    .from("invoices")
+    .select("id, status, total, amount_paid, balance_due")
+    .eq("id", id)
+    .single();
 
   const updateData: Record<string, unknown> = {
     status,
@@ -634,6 +663,18 @@ export async function updateInvoiceStatus(
     .single();
 
   if (error || !data) throw new NotFoundError("Invoice not found");
+
+  await createAuditLog({
+    supabase,
+    action: "update",
+    table_name: "invoices",
+    record_id: id,
+    user_id: userId ?? undefined,
+    organization_id: orgId,
+    old_data: oldInvoice ?? undefined,
+    new_data: { status, updated_by: userId },
+  });
+
   revalidateTag(cacheTags.invoice(id), "max");
   revalidateTag(cacheTags.invoices(data.organization_id as string), "max");
   return data as unknown as Invoice;
@@ -641,10 +682,11 @@ export async function updateInvoiceStatus(
 
 // ── Mark invoice as emailed ───────────────────────
 export async function markInvoiceEmailed(
+  db: SupabaseClient,
   id: string,
   orgId: string,
 ): Promise<Invoice> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("invoices")
@@ -668,12 +710,13 @@ export async function markInvoiceEmailed(
 }
 
 export async function sendInvoiceAndMarkEmailed(
+  db: SupabaseClient,
   invoiceId: string,
   orgId: string,
 ): Promise<{ emailed: boolean }> {
-  const supabase = await createClient();
+  const supabase = db;
 
-  const invoice = await getInvoice(invoiceId);
+  const invoice = await getInvoice(db, invoiceId);
 
   if (!invoice.customer_email) {
     throw new ValidationError(
@@ -705,13 +748,14 @@ export async function sendInvoiceAndMarkEmailed(
     publicInvoiceUrl,
   });
 
-  await markInvoiceEmailed(invoiceId, orgId);
+  await markInvoiceEmailed(db, invoiceId, orgId);
 
   return { emailed: true };
 }
 
 // ── Record a payment against an invoice ───────────
 export async function recordPayment(
+  db: SupabaseClient,
   invoiceId: string,
   orgId: string,
   payment: {
@@ -721,30 +765,90 @@ export async function recordPayment(
     notes?: string;
   },
 ): Promise<InvoicePayment[]> {
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   // Get current invoice
   const { data: invoice } = await supabase
     .from("invoices")
-    .select("id, total, status, amount_paid, amount_refunded, balance_due")
+    .select(
+      "id, invoice_number, total, status, amount_paid, amount_refunded, balance_due",
+    )
     .eq("id", invoiceId)
     .eq("organization_id", orgId)
     .single();
 
   if (!invoice) throw new NotFoundError("Invoice not found");
 
+  // Find current open cash register session (for cash payments)
+  const method = payment.method ?? "cash";
+  let sessionId: string | null = null;
+  if (method === "cash") {
+    const today = new Date().toISOString().split("T")[0];
+    const { data: session } = await supabase
+      .from("cash_register_sessions")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("date", today)
+      .eq("status", "open")
+      .is("deleted_at", null)
+      .maybeSingle();
+    sessionId = session?.id ?? null;
+  }
+
   // Record payment
   const { error } = await supabase.from("invoice_payments").insert({
     invoice_id: invoiceId,
     amount: payment.amount,
-    method: payment.method ?? "cash",
+    method,
     reference: payment.reference ?? null,
     notes: payment.notes ?? null,
+    cash_register_session_id: sessionId,
     created_by: userId,
   });
 
   if (error) throw new Error(error.message ?? "Failed to record payment");
+
+  const { data: newPayment } = await supabase
+    .from("invoice_payments")
+    .select(
+      "id, invoice_id, amount, method, reference, notes, paid_at, created_at, created_by",
+    )
+    .eq("invoice_id", invoiceId)
+    .eq("created_by", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  await createAuditLog({
+    supabase,
+    action: "create",
+    table_name: "invoice_payments",
+    record_id: newPayment?.id,
+    user_id: userId ?? undefined,
+    organization_id: orgId,
+    new_data: newPayment ?? {
+      invoice_id: invoiceId,
+      amount: payment.amount,
+      method: payment.method ?? "cash",
+      reference: payment.reference ?? null,
+      notes: payment.notes ?? null,
+    },
+  });
+
+  // Create cash register entry for cash payments linked to a session
+  if (sessionId && method === "cash") {
+    await supabase.from("cash_register_entries").insert({
+      session_id: sessionId,
+      organization_id: orgId,
+      entry_type: "in",
+      amount: payment.amount,
+      source: "invoice_payment",
+      source_id: invoiceId,
+      description: `Invoice ${invoice.invoice_number ?? invoiceId}`,
+      created_by: userId,
+    });
+  }
 
   // Update invoice totals
   const { data: allPayments } = await supabase
@@ -800,7 +904,10 @@ export async function recordPayment(
 }
 
 // ── Get invoice count by status ───────────────────
-export async function getInvoiceStats(orgId: string): Promise<{
+export async function getInvoiceStats(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<{
   total: number;
   draft: number;
   sent: number;
@@ -809,7 +916,7 @@ export async function getInvoiceStats(orgId: string): Promise<{
   totalRevenue: number;
   outstanding: number;
 }> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data: invoices } = await supabase
     .from("invoices")
@@ -850,6 +957,7 @@ interface AddInvoiceItemParams {
  * Recalculates invoice totals after adding.
  */
 export async function addInvoiceItem(
+  db: SupabaseClient,
   invoiceId: string,
   orgId: string,
   params: AddInvoiceItemParams,
@@ -858,7 +966,7 @@ export async function addInvoiceItem(
     throw new ValidationError("Item description is required");
   }
 
-  const supabase = await createClient();
+  const supabase = db;
 
   const quantity = params.quantity ?? 1;
   const unitPrice = params.unit_price ?? 0;
@@ -887,7 +995,7 @@ export async function addInvoiceItem(
   }
 
   // Recalculate invoice totals
-  await recalculateInvoiceTotals(invoiceId, orgId);
+  await recalculateInvoiceTotals(db, invoiceId, orgId);
 
   revalidateTag(cacheTags.invoice(invoiceId), "max");
   revalidateTag(cacheTags.invoices(orgId), "max");
@@ -900,12 +1008,13 @@ export async function addInvoiceItem(
  * Recalculates invoice totals after updating.
  */
 export async function updateInvoiceItem(
+  db: SupabaseClient,
   itemId: string,
   invoiceId: string,
   orgId: string,
   params: Partial<AddInvoiceItemParams>,
 ): Promise<InvoiceItem> {
-  const supabase = await createClient();
+  const supabase = db;
 
   if (params.description !== undefined && !params.description.trim()) {
     throw new ValidationError("Item description cannot be empty");
@@ -953,7 +1062,7 @@ export async function updateInvoiceItem(
   }
 
   // Recalculate invoice totals
-  await recalculateInvoiceTotals(invoiceId, orgId);
+  await recalculateInvoiceTotals(db, invoiceId, orgId);
 
   revalidateTag(cacheTags.invoice(invoiceId), "max");
 
@@ -965,11 +1074,12 @@ export async function updateInvoiceItem(
  * Hard-deletes the item record and recalculates totals.
  */
 export async function removeInvoiceItem(
+  db: SupabaseClient,
   itemId: string,
   invoiceId: string,
   orgId: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { error } = await supabase
     .from("invoice_items")
@@ -979,7 +1089,7 @@ export async function removeInvoiceItem(
   if (error) throw new NotFoundError("Invoice item not found");
 
   // Recalculate invoice totals
-  await recalculateInvoiceTotals(invoiceId, orgId);
+  await recalculateInvoiceTotals(db, invoiceId, orgId);
 
   revalidateTag(cacheTags.invoice(invoiceId), "max");
   revalidateTag(cacheTags.invoices(orgId), "max");
@@ -990,10 +1100,11 @@ export async function removeInvoiceItem(
  * by summing its line items and re-applying discount/tax.
  */
 async function recalculateInvoiceTotals(
+  db: SupabaseClient,
   invoiceId: string,
   orgId: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data: items } = await supabase
     .from("invoice_items")
@@ -1036,8 +1147,12 @@ async function recalculateInvoiceTotals(
 }
 
 // ── Delete (soft) an invoice ──────────────────────
-export async function deleteInvoice(id: string, orgId: string): Promise<void> {
-  const supabase = await createClient();
+export async function deleteInvoice(
+  db: SupabaseClient,
+  id: string,
+  orgId: string,
+): Promise<void> {
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const { error } = await supabase

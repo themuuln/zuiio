@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  Banknote,
   BarChart3,
   Bell,
   BookOpen,
@@ -181,6 +182,11 @@ const navGroups: NavGroup[] = [
         labelKey: "nav.reports",
         href: "/dashboard/reports",
         icon: BarChart3,
+      },
+      {
+        labelKey: "nav.cashRegister",
+        href: "/dashboard/cash-register",
+        icon: Banknote,
       },
       {
         labelKey: "nav.endOfDay",

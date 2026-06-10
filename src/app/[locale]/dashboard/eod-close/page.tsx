@@ -11,11 +11,24 @@ import {
   DollarSign,
   Printer,
   Receipt,
+  RefreshCw,
   Trophy,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { LowStockCard } from "@/app/[locale]/dashboard/_low-stock-card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,52 +41,21 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
+import { useBranches } from "@/lib/queries/use-branches";
+import { useCurrentSession } from "@/lib/queries/use-cash-register";
+import {
+  useCloseDay,
+  useDayCloseStatus,
+  useEodReport,
+} from "@/lib/queries/use-day-close";
 import {
   useInventoryBalances,
   useStockThresholds,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
+import type { EndOfDaySummary } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
-
-// ── Types ──────────────────────────────────────────────────
-
-interface PaymentBreakdown {
-  cash: number;
-  card: number;
-  bank_transfer: number;
-  other: number;
-}
-
-interface IssueEntry {
-  description: string;
-  work_order_id: string;
-  customer: string;
-  days_open: number;
-}
-
-interface EodData {
-  date: string;
-  total_work_orders: number;
-  total_revenue: number;
-  open_work_orders: number;
-  payment_breakdown: PaymentBreakdown;
-  unpaid_invoices: { count: number; total: number };
-  best_mechanic: {
-    id: string;
-    name: string;
-    revenue: number;
-    jobs: number;
-  } | null;
-  biggest_issue: IssueEntry | null;
-}
-
-interface DayCloseStatus {
-  isClosed: boolean;
-  streak: number;
-}
-
-// ── Helpers ────────────────────────────────────────────────
 
 function todayStr(): string {
   const d = new Date();
@@ -83,17 +65,15 @@ function todayStr(): string {
   return `${y}-${m}-${day}`;
 }
 
-function formatDate(iso: string): string {
+function formatDate(iso: string, locale: string): string {
   const d = new Date(`${iso}T00:00:00`);
-  return d.toLocaleDateString("en-US", {
+  return d.toLocaleDateString(locale, {
     weekday: "long",
     month: "long",
     day: "numeric",
     year: "numeric",
   });
 }
-
-// ── Stat Card ──────────────────────────────────────────────
 
 function StatCard({
   icon: Icon,
@@ -111,16 +91,22 @@ function StatCard({
   accent?: string;
 }) {
   const inner = (
-    <Card className="print:border-border print:shadow-none">
+    <Card
+      className={`transition-shadow print:border-border print:shadow-none ${
+        href ? "hover:shadow-sm" : ""
+      }`}
+    >
       <CardContent className="flex flex-col gap-1.5 p-4">
         <div className="flex items-center gap-2">
           <Icon className={`size-4 ${accent ?? "text-muted-foreground"}`} />
           <Typography.Muted className="text-xs">{label}</Typography.Muted>
         </div>
-        <Typography.H3 className="m-0 text-2xl font-bold tracking-tight">
+        <Typography.H3 className="m-0 text-2xl font-semibold tracking-tight">
           {value}
         </Typography.H3>
-        {sub && <Typography.Muted className="text-xs">{sub}</Typography.Muted>}
+        {sub ? (
+          <Typography.Muted className="text-xs">{sub}</Typography.Muted>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -128,10 +114,9 @@ function StatCard({
   if (href) {
     return <Link href={href}>{inner}</Link>;
   }
+
   return inner;
 }
-
-// ── Payment Method Mini Card ───────────────────────────────
 
 function PaymentMiniCard({
   label,
@@ -143,7 +128,7 @@ function PaymentMiniCard({
   color: string;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-lg border border-border/60 bg-card px-3 py-2">
+    <div className="flex min-h-[44px] items-center justify-between rounded-lg border border-border/60 bg-card px-3 py-2">
       <div className="flex items-center gap-2">
         <div className={`size-2.5 rounded-full ${color}`} />
         <Typography.Text className="text-sm">{label}</Typography.Text>
@@ -155,12 +140,10 @@ function PaymentMiniCard({
   );
 }
 
-// ── Loading Skeleton ───────────────────────────────────────
-
 function PageSkeleton() {
   return (
-    <div className="flex flex-col gap-6 pb-8">
-      <div className="flex items-center justify-between">
+    <div className="tablet-touch flex flex-col gap-6 pb-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
           <Skeleton className="h-7 w-56" />
           <Skeleton className="h-4 w-40" />
@@ -170,6 +153,7 @@ function PageSkeleton() {
           <Skeleton className="h-9 w-32" />
         </div>
       </div>
+      <Skeleton className="h-24 rounded-xl" />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[1, 2, 3, 4].map((n) => (
           <Skeleton key={n} className="h-24 rounded-xl" />
@@ -184,434 +168,601 @@ function PageSkeleton() {
   );
 }
 
-// ── Main Page ──────────────────────────────────────────────
-
 export default function EodClosePage() {
   const t = useTranslations();
+  const locale = useLocale();
+  const localeTag = locale === "mn" ? "mn-MN" : "en-US";
   const { data: org, isPending: orgLoading } = useCurrentOrg();
   const orgId = org?.orgId;
   const selectedBranchId = useSelectedBranchId();
   const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
-
-  const [eodData, setEodData] = useState<EodData | null>(null);
-  const [closeStatus, setCloseStatus] = useState<DayCloseStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [closing, setClosing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const today = todayStr();
 
-  const fetchData = useCallback(async () => {
-    if (!orgId) return;
-    setLoading(true);
-    setError(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isPendingItemsOpen, setIsPendingItemsOpen] = useState(true);
 
-    try {
-      const eodParams = new URLSearchParams({ type: "eod", date: today });
-      if (branchFilter) eodParams.set("branch_id", branchFilter);
-      const [eodRes, closeRes] = await Promise.all([
-        fetch(`/api/organizations/${orgId}/reports?${eodParams.toString()}`),
-        fetch(`/api/organizations/${orgId}/day-close?date=${today}`),
-      ]);
+  const { data: branches = [] } = useBranches(orgId);
+  const branchName = branchFilter
+    ? (branches.find((branch) => branch.id === branchFilter)?.name ??
+      t("common.unknown"))
+    : t("dashboard.allBranches");
 
-      if (!eodRes.ok) {
-        const eodErr = await eodRes.json().catch(() => ({}));
-        throw new Error(eodErr.error ?? "Failed to load EOD data");
-      }
+  const eodQuery = useEodReport(orgId, today, branchFilter);
+  const statusQuery = useDayCloseStatus(orgId, today);
+  const closeDayMutation = useCloseDay(orgId, today, branchFilter);
+  const { data: cashSession } = useCurrentSession(orgId, branchFilter);
 
-      const eodJson = await eodRes.json();
-      const closeJson = closeRes.ok
-        ? await closeRes.json()
-        : { data: { isClosed: false, streak: 0 } };
-
-      setEodData(eodJson.data);
-      setCloseStatus(closeJson.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  }, [orgId, today]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const handleCloseDay = useCallback(async () => {
-    if (!orgId || closing) return;
-    setClosing(true);
-
-    try {
-      const res = await fetch(`/api/organizations/${orgId}/day-close`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: today }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Failed to close day");
-      }
-
-      const json = await res.json();
-      setCloseStatus({ isClosed: true, streak: json.data.streak });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to close day");
-    } finally {
-      setClosing(false);
-    }
-  }, [orgId, today, closing]);
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // ── Low stock count for Pending Items ──────────────
-  const { data: balances = [] } = useInventoryBalances(orgId);
-  const { data: thresholds = [] } = useStockThresholds(orgId);
+  const { data: balances = [] } = useInventoryBalances(orgId, branchFilter);
+  const { data: thresholds = [] } = useStockThresholds(orgId, branchFilter);
 
   const lowStockCount = useMemo(() => {
     if (!orgId) return 0;
+
     const thresholdMap = new Map<string, number>();
-    for (const th of thresholds) {
-      thresholdMap.set(th.part_id, th.minimum_quantity);
+    for (const threshold of thresholds) {
+      thresholdMap.set(threshold.part_id, threshold.minimum_quantity);
     }
 
     let count = 0;
-    for (const b of balances) {
-      const min = thresholdMap.get(b.part_id ?? "") ?? 5;
-      const qty = b.quantity_on_hand ?? 0;
-      if (qty <= 0 || qty < min) count++;
+    for (const balance of balances) {
+      const min = thresholdMap.get(balance.part_id ?? "") ?? 5;
+      const qty = balance.quantity_on_hand ?? 0;
+      if (qty <= 0 || qty < min) count += 1;
     }
+
     return count;
   }, [balances, thresholds, orgId]);
 
-  // ── Loading state ──────────────────────────────────
-  if (orgLoading || (loading && !eodData)) {
+  const eod = (eodQuery.data ?? null) as EndOfDaySummary | null;
+  const closeStatus = statusQuery.data ?? null;
+  const isClosed = closeStatus?.isClosed ?? false;
+  const streak = closeStatus?.streak ?? 0;
+  const openCount = eod?.open_work_orders ?? 0;
+  const biggestIssue = eod?.biggest_issue ?? null;
+  const unpaidInvoiceCount = eod?.unpaid_invoices?.count ?? 0;
+
+  const attentionItems = [
+    {
+      id: "open-jobs",
+      active: openCount > 0,
+      label: `${openCount} ${t("eodClose.openJobs")}`,
+    },
+    {
+      id: "unpaid-invoices",
+      active: unpaidInvoiceCount > 0,
+      label: `${unpaidInvoiceCount} ${t("eodClose.unpaidInvoices")}`,
+    },
+    {
+      id: "low-stock",
+      active: lowStockCount > 0,
+      label: `${lowStockCount} ${t("inventory.lowStockItems")}`,
+    },
+  ].filter((item) => item.active);
+
+  const initialLoading = orgLoading || (eodQuery.isPending && !eod);
+  const fullPageError =
+    !eod && (eodQuery.error?.message ?? statusQuery.error?.message);
+  const inlineError = eod
+    ? (eodQuery.error?.message ?? statusQuery.error?.message)
+    : null;
+  const isRefreshing = eodQuery.isFetching || statusQuery.isFetching;
+
+  const handleRefresh = async () => {
+    await Promise.all([eodQuery.refetch(), statusQuery.refetch()]);
+  };
+
+  const handleConfirmClose = async () => {
+    try {
+      const result = await closeDayMutation.mutateAsync();
+      const queued =
+        typeof result === "object" &&
+        result !== null &&
+        "queued" in result &&
+        Boolean((result as Record<string, unknown>).queued);
+
+      if (!queued) {
+        toast.success(t("eodClose.toastCloseDaySuccess"));
+      }
+
+      setIsConfirmOpen(false);
+      await Promise.all([eodQuery.refetch(), statusQuery.refetch()]);
+    } catch {
+      toast.error(t("eodClose.toastCloseDayError"));
+    }
+  };
+
+  if (initialLoading) {
     return <PageSkeleton />;
   }
 
-  if (error && !eodData) {
+  if (fullPageError) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16">
+      <div className="tablet-touch flex flex-col items-center gap-4 py-16">
         <AlertTriangle className="size-10 text-destructive" />
         <Typography.H3 className="m-0">
           {t("eodClose.failedToLoad")}
         </Typography.H3>
-        <Typography.Muted>{error}</Typography.Muted>
-        <Button onClick={fetchData}>{t("common.retry")}</Button>
+        <Typography.Muted>{fullPageError}</Typography.Muted>
+        <Button onClick={handleRefresh}>{t("common.retry")}</Button>
       </div>
     );
   }
 
-  const eod = eodData;
-  const close = closeStatus;
-  const isClosed = close?.isClosed ?? false;
-  const streak = close?.streak ?? 0;
-  const openCount = eod?.open_work_orders ?? 0;
-  const biggestIssue = eod?.biggest_issue ?? null;
-
   return (
-    <div id="eod-report" className="flex flex-col gap-6 pb-8 print:gap-4">
-      {/* ═══ Header ═══ */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <ClipboardList className="size-5 text-primary" />
-            <Typography.H2 className="m-0 text-xl font-semibold">
-              {t("eodClose.title")}
-            </Typography.H2>
-          </div>
-          <Typography.Muted className="mt-1">
-            {formatDate(today)}
-          </Typography.Muted>
-          {streak > 0 && (
-            <div className="mt-1 flex items-center gap-1.5 print:hidden">
-              <Trophy className="size-4 text-amber-500" />
-              <Badge
-                variant="secondary"
-                className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-              >
-                {t("eodClose.streak", { count: streak })}
+    <>
+      <div
+        id="eod-report"
+        className="tablet-touch flex flex-col gap-6 pb-8 print:gap-4"
+      >
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <ClipboardList className="size-5 text-primary" />
+                <Typography.H2 className="m-0 text-xl font-semibold">
+                  {t("eodClose.title")}
+                </Typography.H2>
+              </div>
+              <Typography.Muted className="mt-1">
+                {formatDate(today, localeTag)}
+              </Typography.Muted>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 print:hidden">
+              <Badge variant="outline" className="gap-1.5">
+                <span className="text-muted-foreground">
+                  {t("reports.branch")}:
+                </span>
+                <span>{branchName}</span>
               </Badge>
-              <Typography.Muted className="text-[11px] text-muted-foreground/60 ml-1">
-                {streak >= 5
-                  ? "Amazing consistency!"
-                  : streak >= 3
-                    ? "Getting consistent!"
-                    : "Keep it going!"}
-              </Typography.Muted>
+              <Badge variant={isClosed ? "secondary" : "outline"}>
+                {isClosed
+                  ? t("eodClose.closedStatus")
+                  : t("eodClose.openStatus")}
+              </Badge>
+              {streak > 0 ? (
+                <Badge
+                  variant="secondary"
+                  className="gap-1.5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                >
+                  <Trophy className="size-3.5" />
+                  {t("eodClose.streak", { count: streak })}
+                </Badge>
+              ) : null}
             </div>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2 print:hidden">
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className="mr-1.5 size-3.5" />
-            {t("eodClose.print")}
-          </Button>
-          {!isClosed ? (
+          </div>
+
+          <div className="flex flex-wrap gap-2 print:hidden">
             <Button
+              variant="outline"
               size="sm"
-              className="bg-emerald-600 text-white hover:bg-emerald-700"
-              onClick={handleCloseDay}
-              disabled={closing}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
             >
-              <CheckCircle2
-                className={`mr-1.5 size-3.5 ${closing ? "animate-spin" : ""}`}
+              <RefreshCw
+                className={`mr-1.5 size-3.5 ${isRefreshing ? "animate-spin" : ""}`}
               />
-              {closing ? t("common.saving") : t("eodClose.closeDay")}
+              {t("common.refresh")}
             </Button>
-          ) : (
-            <Button size="sm" variant="outline" disabled>
-              <CheckCircle2 className="mr-1.5 size-3.5 text-emerald-500" />
-              {t("eodClose.dayClosed")}
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
+              <Printer className="mr-1.5 size-3.5" />
+              {t("eodClose.print")}
             </Button>
-          )}
+            {!isClosed ? (
+              <Button
+                size="sm"
+                className="bg-emerald-600 text-white hover:bg-emerald-700"
+                onClick={() => setIsConfirmOpen(true)}
+                disabled={closeDayMutation.isPending}
+              >
+                <CheckCircle2
+                  className={`mr-1.5 size-3.5 ${closeDayMutation.isPending ? "animate-spin" : ""}`}
+                />
+                {closeDayMutation.isPending
+                  ? t("common.saving")
+                  : t("eodClose.closeDay")}
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" disabled>
+                <CheckCircle2 className="mr-1.5 size-3.5 text-emerald-500" />
+                {t("eodClose.dayClosed")}
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
 
-      <Separator className="print:hidden" />
-
-      {/* ═══ KPI Cards ═══ */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-        <StatCard
-          icon={DollarSign}
-          label={t("eodClose.revenue")}
-          value={formatCurrency(eod?.total_revenue ?? 0)}
-          accent="text-emerald-500"
-        />
-        <StatCard
-          icon={CheckCircle2}
-          label={t("eodClose.completedJobs")}
-          value={String(eod?.total_work_orders ?? 0)}
-          accent="text-blue-500"
-        />
-        <StatCard
-          icon={Clock}
-          label={t("eodClose.openJobs")}
-          value={String(eod?.open_work_orders ?? 0)}
-          href="/dashboard/work-orders"
-          accent={
-            (eod?.open_work_orders ?? 0) > 0
-              ? "text-amber-500"
-              : "text-muted-foreground"
+        <Alert
+          className={
+            isClosed
+              ? "border-emerald-200/50 bg-emerald-50/30 dark:border-emerald-800/30 dark:bg-emerald-950/10"
+              : attentionItems.length > 0
+                ? "border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10"
+                : "border-blue-200/50 bg-blue-50/30 dark:border-blue-800/30 dark:bg-blue-950/10"
           }
-        />
-        <StatCard
-          icon={Receipt}
-          label={t("eodClose.unpaidInvoices")}
-          value={`${eod?.unpaid_invoices?.count ?? 0} · ${formatCurrency(eod?.unpaid_invoices?.total ?? 0)}`}
-          href="/dashboard/finance"
-          accent={
-            (eod?.unpaid_invoices?.count ?? 0) > 0
-              ? "text-red-500"
-              : "text-muted-foreground"
-          }
-        />
-      </div>
+        >
+          <AlertTitle>
+            {isClosed
+              ? t("eodClose.closedStatus")
+              : attentionItems.length > 0
+                ? t("eodClose.reviewBeforeClose")
+                : t("eodClose.readyToClose")}
+          </AlertTitle>
+          <AlertDescription className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {attentionItems.length > 0 ? (
+                attentionItems.map((item) => (
+                  <Badge
+                    key={item.id}
+                    variant="outline"
+                    className="bg-background/70"
+                  >
+                    {item.label}
+                  </Badge>
+                ))
+              ) : (
+                <Badge variant="outline" className="bg-background/70">
+                  {t("eodClose.noPendingItems")}
+                </Badge>
+              )}
+            </div>
+            <Typography.Muted className="text-xs">
+              {isClosed ? t("eodClose.printHint") : t("eodClose.closeHint")}
+            </Typography.Muted>
+          </AlertDescription>
+        </Alert>
 
-      {/* ═══ Payment Breakdown ═══ */}
-      {eod && (
-        <Card className="print:border-border print:shadow-none">
-          <CardContent className="p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <Banknote className="size-4 text-muted-foreground" />
-              <Typography.Text className="text-sm font-semibold">
-                {t("eodClose.paymentBreakdown")}
-              </Typography.Text>
-            </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <PaymentMiniCard
-                label={t("eodClose.cash")}
-                amount={eod.payment_breakdown?.cash ?? 0}
-                color="bg-emerald-500"
-              />
-              <PaymentMiniCard
-                label={t("eodClose.card")}
-                amount={eod.payment_breakdown?.card ?? 0}
-                color="bg-blue-500"
-              />
-              <PaymentMiniCard
-                label={t("eodClose.bankTransfer")}
-                amount={eod.payment_breakdown?.bank_transfer ?? 0}
-                color="bg-purple-500"
-              />
-              <PaymentMiniCard
-                label={t("eodClose.other")}
-                amount={eod.payment_breakdown?.other ?? 0}
-                color="bg-gray-400"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        {inlineError ? (
+          <Alert className="border-destructive/30 bg-destructive/5">
+            <AlertTitle>{t("eodClose.failedToLoad")}</AlertTitle>
+            <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <span>{inlineError}</span>
+              <Button variant="outline" size="sm" onClick={handleRefresh}>
+                {t("common.retry")}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
-      {/* ═══ Secondary Cards Grid ═══ */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Best Mechanic */}
-        <Card className="print:border-border print:shadow-none">
-          <CardContent className="p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <Crown className="size-4 text-amber-500" />
-              <Typography.Text className="text-sm font-semibold">
-                {t("eodClose.bestMechanic")}
-              </Typography.Text>
-            </div>
-            {eod?.best_mechanic ? (
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                  <Trophy className="size-5" />
-                </div>
-                <div className="flex-1">
-                  <Typography.Text className="font-medium">
-                    {eod.best_mechanic.name}
-                  </Typography.Text>
-                  <Typography.Muted className="text-xs">
-                    {eod.best_mechanic.revenue
-                      ? formatCurrency(eod.best_mechanic.revenue)
-                      : "₮0"}{" "}
-                    · {eod.best_mechanic.jobs} job
-                    {eod.best_mechanic.jobs === 1 ? "" : "s"}
-                  </Typography.Muted>
-                </div>
-              </div>
-            ) : (
-              <Typography.Muted className="text-sm">
-                {t("eodClose.noMechanicData")}
-              </Typography.Muted>
+        <Separator className="print:hidden" />
+
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+          <StatCard
+            icon={DollarSign}
+            label={t("eodClose.revenue")}
+            value={formatCurrency(eod?.total_revenue ?? 0)}
+            accent="text-emerald-500"
+          />
+          <StatCard
+            icon={CheckCircle2}
+            label={t("eodClose.completedJobs")}
+            value={String(eod?.total_work_orders ?? 0)}
+            sub={formatCurrency(
+              (eod?.total_revenue ?? 0) /
+                Math.max(eod?.total_work_orders ?? 0, 1),
             )}
-          </CardContent>
-        </Card>
+            accent="text-blue-500"
+          />
+          <StatCard
+            icon={Clock}
+            label={t("eodClose.openJobs")}
+            value={String(openCount)}
+            sub={
+              attentionItems.length > 0
+                ? t("eodClose.reviewBeforeClose")
+                : undefined
+            }
+            href="/dashboard/work-orders"
+            accent={openCount > 0 ? "text-amber-500" : "text-muted-foreground"}
+          />
+          <StatCard
+            icon={Receipt}
+            label={t("eodClose.unpaidInvoices")}
+            value={`${unpaidInvoiceCount} · ${formatCurrency(eod?.unpaid_invoices?.total ?? 0)}`}
+            sub={
+              lowStockCount > 0
+                ? `${lowStockCount} ${t("inventory.lowStockItems")}`
+                : undefined
+            }
+            href="/dashboard/finance"
+            accent={
+              unpaidInvoiceCount > 0 ? "text-red-500" : "text-muted-foreground"
+            }
+          />
+        </div>
 
-        {/* Biggest Issue */}
+        {/* Cash Register Status */}
         <Card className="print:border-border print:shadow-none">
-          <CardContent className="p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <AlertTriangle className="size-4 text-amber-500" />
-              <Typography.Text className="text-sm font-semibold">
-                {t("eodClose.biggestIssue")}
-              </Typography.Text>
-            </div>
-            {openCount > 0 ? (
+          <CardContent className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <div
+                className={`flex size-8 items-center justify-center rounded-full ${
+                  cashSession
+                    ? "bg-emerald-100 dark:bg-emerald-900/30"
+                    : "bg-muted"
+                }`}
+              >
+                <Banknote
+                  className={`size-4 ${
+                    cashSession
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-muted-foreground"
+                  }`}
+                />
+              </div>
               <div>
-                {biggestIssue && (
-                  <>
-                    <Typography.Text className="text-sm font-medium line-clamp-1">
-                      {biggestIssue.description}
-                    </Typography.Text>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>
-                        {biggestIssue.days_open > 0
-                          ? t("eodClose.daysOpen", {
-                              count: biggestIssue.days_open,
-                            })
-                          : t("eodClose.openedToday")}
-                      </span>
-                      {biggestIssue.customer && (
-                        <>
-                          <span>·</span>
-                          <span>{biggestIssue.customer}</span>
-                        </>
-                      )}
-                    </div>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="mt-1 h-auto p-0 text-xs"
-                      render={
-                        <Link
-                          href={`/dashboard/work-orders/${biggestIssue.work_order_id}`}
-                        />
-                      }
-                    >
-                      {t("eodClose.viewJob") ?? "View job →"}
-                    </Button>
-                  </>
-                )}
-                {openCount > 1 && (
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    + {openCount - 1} more open work order
-                    {openCount - 1 !== 1 ? "s" : ""}
-                  </div>
-                )}
+                <Typography.Text className="text-sm font-semibold">
+                  {t("cashRegister.title")}
+                </Typography.Text>
+                <Typography.Muted className="text-xs">
+                  {cashSession
+                    ? `${t("cashRegister.sessionOpen")} · ${formatCurrency(cashSession.opening_balance)}`
+                    : t("cashRegister.noSession")}
+                </Typography.Muted>
               </div>
-            ) : (
-              <Typography.Muted className="text-sm">
-                {t("eodClose.noIssues") ?? "No outstanding issues 🎉"}
-              </Typography.Muted>
-            )}
+            </div>
+            <Link
+              href="/dashboard/cash-register"
+              className="text-xs text-primary hover:underline"
+            >
+              {cashSession
+                ? t("cashRegister.closeSession")
+                : t("cashRegister.openSession")}
+              →
+            </Link>
           </CardContent>
         </Card>
-      </div>
 
-      {/* ═══ Pending Items ═══ */}
-      {orgId && lowStockCount > 0 && (
-        <Collapsible defaultOpen className="print:hidden">
-          <Card className="border-amber-200/50 bg-amber-50/30 print:border-border print:shadow-none dark:border-amber-800/30 dark:bg-amber-950/10">
+        {eod ? (
+          <Card className="print:border-border print:shadow-none">
             <CardContent className="p-4">
-              <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="size-4 text-amber-500" />
-                  <Typography.Text className="text-sm font-semibold">
-                    {t("eodClose.pendingItems")}
-                  </Typography.Text>
-                  <Badge variant="secondary">{lowStockCount}</Badge>
-                </div>
-                <ChevronDown className="size-4 transition-transform data-[panel-open]:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent keepMounted className="mt-3">
-                <LowStockCard orgId={orgId} />
-              </CollapsibleContent>
+              <div className="mb-3 flex items-center gap-2">
+                <Banknote className="size-4 text-muted-foreground" />
+                <Typography.Text className="text-sm font-semibold">
+                  {t("eodClose.paymentBreakdown")}
+                </Typography.Text>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <PaymentMiniCard
+                  label={t("eodClose.cash")}
+                  amount={eod.payment_breakdown?.cash ?? 0}
+                  color="bg-emerald-500"
+                />
+                <PaymentMiniCard
+                  label={t("eodClose.card")}
+                  amount={eod.payment_breakdown?.card ?? 0}
+                  color="bg-blue-500"
+                />
+                <PaymentMiniCard
+                  label={t("eodClose.bankTransfer")}
+                  amount={eod.payment_breakdown?.bank_transfer ?? 0}
+                  color="bg-purple-500"
+                />
+                <PaymentMiniCard
+                  label={t("eodClose.other")}
+                  amount={eod.payment_breakdown?.other ?? 0}
+                  color="bg-gray-400"
+                />
+              </div>
             </CardContent>
           </Card>
-        </Collapsible>
-      )}
+        ) : null}
 
-      {/* ═══ Footer ═══ */}
-      <div className="print:mt-4 print:border-t print:border-border print:pt-4 print:text-center print:text-xs print:text-muted-foreground">
-        {isClosed && (
-          <Typography.Muted className="flex items-center gap-1.5 text-sm print:text-xs">
-            <CheckCircle2 className="size-3.5 text-emerald-500" />
-            {t("eodClose.dayClosedMessage") ??
-              "Day closed — report captured for your records"}
-            {streak > 0 && ` · ${streak}-day streak`}
-          </Typography.Muted>
-        )}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card className="print:border-border print:shadow-none">
+            <CardContent className="p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Crown className="size-4 text-amber-500" />
+                <Typography.Text className="text-sm font-semibold">
+                  {t("eodClose.bestMechanic")}
+                </Typography.Text>
+              </div>
+              {eod?.best_mechanic ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    <Trophy className="size-5" />
+                  </div>
+                  <div className="flex-1">
+                    <Typography.Text className="font-medium">
+                      {eod.best_mechanic.name}
+                    </Typography.Text>
+                    <Typography.Muted className="text-xs">
+                      {formatCurrency(eod.best_mechanic.revenue)} ·{" "}
+                      {t("reports.jobs")}: {eod.best_mechanic.jobs}
+                    </Typography.Muted>
+                  </div>
+                </div>
+              ) : (
+                <Typography.Muted className="text-sm">
+                  {t("eodClose.noMechanicData")}
+                </Typography.Muted>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="print:border-border print:shadow-none">
+            <CardContent className="p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <AlertTriangle className="size-4 text-amber-500" />
+                <Typography.Text className="text-sm font-semibold">
+                  {t("eodClose.biggestIssue")}
+                </Typography.Text>
+              </div>
+              {openCount > 0 ? (
+                <div>
+                  {biggestIssue ? (
+                    <>
+                      <Typography.Text className="line-clamp-1 text-sm font-medium">
+                        {biggestIssue.description}
+                      </Typography.Text>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>
+                          {biggestIssue.days_open > 0
+                            ? t("eodClose.daysOpen", {
+                                count: biggestIssue.days_open,
+                              })
+                            : t("eodClose.openedToday")}
+                        </span>
+                        {biggestIssue.customer ? (
+                          <>
+                            <span>·</span>
+                            <span>{biggestIssue.customer}</span>
+                          </>
+                        ) : null}
+                      </div>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="mt-1 h-auto p-0 text-xs"
+                        render={
+                          <Link
+                            href={`/dashboard/work-orders/${biggestIssue.work_order_id}`}
+                          />
+                        }
+                      >
+                        {t("eodClose.viewJob")}
+                      </Button>
+                    </>
+                  ) : null}
+                  {openCount > 1 ? (
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      {t("eodClose.moreOpenWorkOrders", {
+                        count: openCount - 1,
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <Typography.Muted className="text-sm">
+                  {t("eodClose.noIssues")}
+                </Typography.Muted>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {orgId && lowStockCount > 0 ? (
+          <Collapsible
+            open={isPendingItemsOpen}
+            onOpenChange={setIsPendingItemsOpen}
+            className="print:hidden"
+          >
+            <Card className="border-amber-200/50 bg-amber-50/30 print:border-border print:shadow-none dark:border-amber-800/30 dark:bg-amber-950/10">
+              <CardContent className="p-4">
+                <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between rounded-md text-left">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="size-4 text-amber-500" />
+                    <Typography.Text className="text-sm font-semibold">
+                      {t("eodClose.pendingItems")}
+                    </Typography.Text>
+                    <Badge variant="secondary">{lowStockCount}</Badge>
+                  </div>
+                  <ChevronDown
+                    className={`size-4 transition-transform ${
+                      isPendingItemsOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </CollapsibleTrigger>
+                <CollapsibleContent keepMounted className="mt-3">
+                  <LowStockCard orgId={orgId} />
+                </CollapsibleContent>
+              </CardContent>
+            </Card>
+          </Collapsible>
+        ) : null}
+
+        <div className="print:mt-4 print:border-t print:border-border print:pt-4 print:text-center print:text-xs print:text-muted-foreground">
+          {isClosed ? (
+            <Typography.Muted className="flex items-center gap-1.5 text-sm print:text-xs">
+              <CheckCircle2 className="size-3.5 text-emerald-500" />
+              {t("eodClose.dayClosedMessage")}
+              {streak > 0
+                ? ` · ${t("eodClose.streak", { count: streak })}`
+                : ""}
+            </Typography.Muted>
+          ) : null}
+        </div>
+
+        <style jsx>{`
+          @media print {
+            .print\\:hidden {
+              display: none !important;
+            }
+            .print\\:border-border {
+              border-color: hsl(var(--border));
+            }
+            .print\\:shadow-none {
+              box-shadow: none !important;
+            }
+            .print\\:gap-4 {
+              gap: 1rem;
+            }
+            .print\\:mt-4 {
+              margin-top: 1rem;
+            }
+            .print\\:border-t {
+              border-top-width: 1px;
+            }
+            .print\\:pt-4 {
+              padding-top: 1rem;
+            }
+            .print\\:text-center {
+              text-align: center;
+            }
+            .print\\:text-xs {
+              font-size: 0.75rem;
+              line-height: 1rem;
+            }
+          }
+        `}</style>
       </div>
 
-      {/* ═══ Print Styles ═══ */}
-      <style jsx>{`
-        @media print {
-          .print\\:hidden {
-            display: none !important;
-          }
-          .print\\:border-border {
-            border-color: hsl(var(--border));
-          }
-          .print\\:shadow-none {
-            box-shadow: none !important;
-          }
-          .print\\:gap-4 {
-            gap: 1rem;
-          }
-          .print\\:mt-4 {
-            margin-top: 1rem;
-          }
-          .print\\:border-t {
-            border-top-width: 1px;
-          }
-          .print\\:pt-4 {
-            padding-top: 1rem;
-          }
-          .print\\:text-center {
-            text-align: center;
-          }
-          .print\\:text-xs {
-            font-size: 0.75rem;
-            line-height: 1rem;
-          }
-        }
-      `}</style>
-    </div>
+      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("eodClose.closeConfirmTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("eodClose.closeConfirmDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="flex flex-col gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">
+                {t("eodClose.openJobs")}
+              </span>
+              <span className="font-medium tabular-nums">{openCount}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">
+                {t("eodClose.unpaidInvoices")}
+              </span>
+              <span className="font-medium tabular-nums">
+                {unpaidInvoiceCount}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">
+                {t("inventory.lowStockItems")}
+              </span>
+              <span className="font-medium tabular-nums">{lowStockCount}</span>
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmClose}
+              className="bg-emerald-600 text-white hover:bg-emerald-700"
+            >
+              {closeDayMutation.isPending
+                ? t("common.saving")
+                : t("eodClose.closeDay")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
