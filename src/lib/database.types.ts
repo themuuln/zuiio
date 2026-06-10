@@ -769,6 +769,7 @@ export type Database = {
           discount_percentage: number;
           estimate_id: string;
           id: string;
+          is_tax_exempt: boolean | null;
           item_type: string;
           line_total: number;
           notes: string | null;
@@ -777,6 +778,7 @@ export type Database = {
           sort_order: number;
           source_part_id: string | null;
           source_service_id: string | null;
+          tax_rate: number | null;
           unit_cost: number;
           unit_price: number;
         };
@@ -788,6 +790,7 @@ export type Database = {
           discount_percentage?: number;
           estimate_id: string;
           id?: string;
+          is_tax_exempt?: boolean | null;
           item_type: string;
           line_total?: number;
           notes?: string | null;
@@ -796,6 +799,7 @@ export type Database = {
           sort_order?: number;
           source_part_id?: string | null;
           source_service_id?: string | null;
+          tax_rate?: number | null;
           unit_cost?: number;
           unit_price?: number;
         };
@@ -807,6 +811,7 @@ export type Database = {
           discount_percentage?: number;
           estimate_id?: string;
           id?: string;
+          is_tax_exempt?: boolean | null;
           item_type?: string;
           line_total?: number;
           notes?: string | null;
@@ -815,6 +820,7 @@ export type Database = {
           sort_order?: number;
           source_part_id?: string | null;
           source_service_id?: string | null;
+          tax_rate?: number | null;
           unit_cost?: number;
           unit_price?: number;
         };
@@ -1416,9 +1422,11 @@ export type Database = {
           discount_amount: number;
           id: string;
           invoice_id: string;
+          is_tax_exempt: boolean | null;
           item_type: string;
           quantity: number;
           sort_order: number;
+          tax_rate: number | null;
           total_price: number;
           unit_price: number;
         };
@@ -1428,9 +1436,11 @@ export type Database = {
           discount_amount?: number;
           id?: string;
           invoice_id: string;
+          is_tax_exempt?: boolean | null;
           item_type: string;
           quantity?: number;
           sort_order?: number;
+          tax_rate?: number | null;
           total_price?: number;
           unit_price?: number;
         };
@@ -1440,9 +1450,11 @@ export type Database = {
           discount_amount?: number;
           id?: string;
           invoice_id?: string;
+          is_tax_exempt?: boolean | null;
           item_type?: string;
           quantity?: number;
           sort_order?: number;
+          tax_rate?: number | null;
           total_price?: number;
           unit_price?: number;
         };
@@ -2091,6 +2103,7 @@ export type Database = {
           default_tax_rate: number | null;
           invoice_prefix: string | null;
           notification_email: string | null;
+          nuat_enabled: boolean | null;
           organization_id: string;
           settings: Json | null;
           timezone: string | null;
@@ -2103,6 +2116,7 @@ export type Database = {
           default_tax_rate?: number | null;
           invoice_prefix?: string | null;
           notification_email?: string | null;
+          nuat_enabled?: boolean | null;
           organization_id: string;
           settings?: Json | null;
           timezone?: string | null;
@@ -2115,6 +2129,7 @@ export type Database = {
           default_tax_rate?: number | null;
           invoice_prefix?: string | null;
           notification_email?: string | null;
+          nuat_enabled?: boolean | null;
           organization_id?: string;
           settings?: Json | null;
           timezone?: string | null;
@@ -5034,10 +5049,13 @@ export type Database = {
           discount_percentage: number;
           discount_total: number;
           id: string;
+          labor_cost: number | null;
+          labor_hours: number | null;
           loss_reason: string | null;
           mechanic_id: string | null;
           mechanic_notes: string | null;
           notes: string | null;
+          nuat_enabled: boolean | null;
           odometer_at_service: number | null;
           organization_id: string;
           queue_order: number;
@@ -5066,10 +5084,13 @@ export type Database = {
           discount_percentage?: number;
           discount_total?: number;
           id?: string;
+          labor_cost?: number | null;
+          labor_hours?: number | null;
           loss_reason?: string | null;
           mechanic_id?: string | null;
           mechanic_notes?: string | null;
           notes?: string | null;
+          nuat_enabled?: boolean | null;
           odometer_at_service?: number | null;
           organization_id: string;
           queue_order?: number;
@@ -5098,10 +5119,13 @@ export type Database = {
           discount_percentage?: number;
           discount_total?: number;
           id?: string;
+          labor_cost?: number | null;
+          labor_hours?: number | null;
           loss_reason?: string | null;
           mechanic_id?: string | null;
           mechanic_notes?: string | null;
           notes?: string | null;
+          nuat_enabled?: boolean | null;
           odometer_at_service?: number | null;
           organization_id: string;
           queue_order?: number;
