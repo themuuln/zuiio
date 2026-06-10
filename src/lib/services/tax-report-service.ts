@@ -151,8 +151,7 @@ export function formatTaxReport(
   locale: string = "mn",
 ): string {
   const isMn = locale === "mn";
-  const currency = (amount: number) =>
-    `₮${amount.toLocaleString("mn-MN")}`;
+  const currency = (amount: number) => `₮${amount.toLocaleString("mn-MN")}`;
 
   if (isMn) {
     return `НӨАТ Тайлан: ${summary.period.startDate} — ${summary.period.endDate}
