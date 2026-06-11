@@ -14,6 +14,11 @@ import type {
   WorkOrderStatusHistory,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import {
+  STATUS_TIMELINE_DOT,
+  STATUS_TIMELINE_TEXT,
+  STATUS_TRANSLATION_KEYS,
+} from "./_constants";
 
 interface StatusTimelineProps {
   statusHistory: WorkOrderStatusHistory[];
@@ -31,42 +36,6 @@ interface DedupedEntry {
   id: string;
 }
 
-const STATUS_COLORS: Record<string, { dot: string; text: string }> = {
-  New: {
-    dot: "bg-yellow-500 ring-yellow-500/20",
-    text: "text-yellow-600 dark:text-yellow-400",
-  },
-  Diagnosing: {
-    dot: "bg-blue-500 ring-blue-500/20",
-    text: "text-blue-600 dark:text-blue-400",
-  },
-  "In Progress": {
-    dot: "bg-amber-500 ring-amber-500/20",
-    text: "text-amber-600 dark:text-amber-400",
-  },
-  "Ready for Pickup": {
-    dot: "bg-green-500 ring-green-500/20",
-    text: "text-green-600 dark:text-green-400",
-  },
-  Completed: {
-    dot: "bg-emerald-500 ring-emerald-500/20",
-    text: "text-emerald-600 dark:text-emerald-400",
-  },
-  Cancelled: {
-    dot: "bg-rose-500 ring-rose-500/20",
-    text: "text-rose-600 dark:text-rose-400",
-  },
-};
-
-const STATUS_NAMES: Record<string, string> = {
-  New: "statusNew",
-  Diagnosing: "statusDiagnosing",
-  "In Progress": "statusInProgress",
-  "Ready for Pickup": "statusReadyForPickup",
-  Completed: "statusCompleted",
-  Cancelled: "statusCancelled",
-};
-
 const STATUS_FLOW = [
   "New",
   "Diagnosing",
@@ -74,6 +43,11 @@ const STATUS_FLOW = [
   "Ready for Pickup",
   "Completed",
 ];
+
+const TIME_FORMAT = new Intl.DateTimeFormat([], {
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
 function isForwardTransition(
   status: string,
@@ -87,14 +61,9 @@ function isForwardTransition(
 }
 
 function formatTimeRange(isoStart: string, isoEnd: string): string {
-  const opts: Intl.DateTimeFormatOptions = {
-    hour: "2-digit",
-    minute: "2-digit",
-  };
   const start = new Date(isoStart);
   const end = new Date(isoEnd);
-  const fmt = new Intl.DateTimeFormat([], opts);
-  return `${fmt.format(start)} – ${fmt.format(end)}`;
+  return `${TIME_FORMAT.format(start)} – ${TIME_FORMAT.format(end)}`;
 }
 
 function formatDate(iso: string): string {
@@ -113,7 +82,7 @@ function formatTime(iso: string): string {
 
 function deduplicateHistory(history: WorkOrderStatusHistory[]): DedupedEntry[] {
   // Sort ASC for grouping, then reverse for display
-  const sorted = [...history].sort(
+  const sorted = history.toSorted(
     (a, b) =>
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
   );
@@ -191,12 +160,14 @@ export function StatusTimeline({
             <div className="flex flex-col gap-0 pl-1">
               {deduped.map((h, idx) => {
                 const isLast = idx === deduped.length - 1;
-                const colors = STATUS_COLORS[h.status] ?? {
-                  dot: "bg-slate-500 ring-slate-500/20",
-                  text: "text-slate-600 dark:text-slate-400",
-                };
-                const statusLabel = STATUS_NAMES[h.status]
-                  ? t(STATUS_NAMES[h.status])
+                const dotClass =
+                  STATUS_TIMELINE_DOT[h.status] ??
+                  "bg-slate-500 ring-slate-500/20";
+                const textClass =
+                  STATUS_TIMELINE_TEXT[h.status] ??
+                  "text-slate-600 dark:text-slate-400";
+                const statusLabel = STATUS_TRANSLATION_KEYS[h.status]
+                  ? t(STATUS_TRANSLATION_KEYS[h.status])
                   : h.status;
                 const forward = isForwardTransition(
                   h.status,
@@ -228,7 +199,7 @@ export function StatusTimeline({
                         <div
                           className={cn(
                             "flex size-5 items-center justify-center rounded-full ring-4 transition-all duration-300",
-                            colors.dot,
+                            dotClass,
                           )}
                         >
                           {h.status === "Completed" ||
@@ -247,7 +218,7 @@ export function StatusTimeline({
                             "text-xs font-semibold tracking-tight",
                             isBackward
                               ? "text-orange-600 dark:text-orange-400"
-                              : colors.text,
+                              : textClass,
                           )}
                         >
                           {statusLabel}
@@ -331,15 +302,22 @@ export function StatusTimeline({
                     ) : null}
 
                     {entry.services.length > 0 ? (
-                      <div className="mt-2 flex flex-wrap gap-1">
+                      <div className="mt-2 flex flex-wrap gap-1.5">
                         {entry.services.map((service) => (
                           <Badge
                             key={`${entry.work_order_id}-${service.name}-${service.price}`}
                             variant="outline"
-                            className="gap-1 text-xs"
+                            className="gap-1.5 text-xs py-1 px-2"
                           >
-                            <Wrench className="size-3" />
-                            {service.name}
+                            <Wrench className="size-3 text-muted-foreground/60" />
+                            <span className="truncate max-w-[140px]">
+                              {service.name}
+                            </span>
+                            {service.price > 0 ? (
+                              <span className="font-mono text-muted-foreground/80 tabular-nums">
+                                {service.price.toLocaleString()}₮
+                              </span>
+                            ) : null}
                           </Badge>
                         ))}
                       </div>

@@ -24,8 +24,10 @@ export async function generateMetadata({
 }
 
 export default async function SetupOrganizationPage() {
-  const t = await getTranslations("auth.setupOrganization");
-  const inviteT = await getTranslations("invite");
+  const [t, inviteT] = await Promise.all([
+    getTranslations("auth.setupOrganization"),
+    getTranslations("invite"),
+  ]);
 
   try {
     const supabase = await createClient();
@@ -36,7 +38,7 @@ export default async function SetupOrganizationPage() {
     }
 
     // If user already has organizations, redirect to select-organization
-    const organizations = await listUserOrganizations();
+    const organizations = await listUserOrganizations(supabase);
     if (organizations.length > 0) {
       redirect("/auth/select-organization");
     }

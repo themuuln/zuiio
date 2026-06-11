@@ -30,8 +30,10 @@ export default async function SelectOrganizationPage({
 }: {
   searchParams: Promise<{ redirectTo?: string }>;
 }) {
-  const t = await getTranslations("auth.selectOrganization");
-  const inviteT = await getTranslations("invite");
+  const [t, inviteT] = await Promise.all([
+    getTranslations("auth.selectOrganization"),
+    getTranslations("invite"),
+  ]);
   const { redirectTo } = await searchParams;
 
   try {
@@ -87,9 +89,7 @@ export default async function SelectOrganizationPage({
       }
     }
 
-    const organizations = await listUserOrganizations();
-
-    // If user has no organizations, redirect to setup-organization page
+    const organizations = await listUserOrganizations(supabase);
     if (organizations.length === 0) {
       redirect("/auth/setup-organization");
     }

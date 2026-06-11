@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { customerKeys } from "@/lib/queries/keys";
 import {
   type GlobalPart,
@@ -190,6 +191,7 @@ interface WizardProviderProps {
 export function WizardProvider({ children, onCreated }: WizardProviderProps) {
   const { push } = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations();
   const preselectedCustomerId = searchParams.get("customerId");
 
   const [customerSearch, setCustomerSearch] = useState("");
@@ -226,7 +228,7 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
   const [vehiclePartPrices, setVehiclePartPrices] = useState<
     Record<string, number>
   >({});
-  const vehiclePartsFetchedRef = useRef<Set<string>>(new Set());
+  const vehiclePartsFetchedRef = useRef<Set<string>>(new Set<string>());
 
   const [mechanics, setMechanics] = useState<MechanicOption[]>([]);
   const [selectedMechanic, setSelectedMechanic] = useState("");
@@ -322,7 +324,9 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
     serviceLines.length > 0 ||
     partLines.length > 0;
   const hasUnsavedDataRef = useRef(hasUnsavedData);
-  hasUnsavedDataRef.current = hasUnsavedData;
+  useEffect(() => {
+    hasUnsavedDataRef.current = hasUnsavedData;
+  }, [hasUnsavedData]);
 
   useEffect(() => {
     if (catalogData) setCatalog(catalogData);
@@ -455,13 +459,15 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
 
   const addAllFromLastVisit = useCallback(() => {
     if (!lastVisitData) return;
+    const existingServiceIds = new Set(
+      serviceLines
+        .map((s) => s.service_catalog_id)
+        .filter((id): id is string => !!id),
+    );
     for (const svc of lastVisitData.services) {
       if (
-        !serviceLines.find(
-          (s) =>
-            s.service_catalog_id === svc.service_catalog_id &&
-            svc.service_catalog_id,
-        )
+        svc.service_catalog_id &&
+        !existingServiceIds.has(svc.service_catalog_id)
       ) {
         if (svc.service_name) {
           setServiceLines((prev) => [
@@ -729,7 +735,7 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
 
   const handleCreate = async () => {
     if (!orgId || !selectedCustomer || !selectedVehicle) {
-      toast.error("Customer and vehicle are required");
+      toast.error(t("workOrderDetail.customerAndVehicleRequired"));
       return;
     }
 
@@ -768,12 +774,14 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
             /* ignore */
           }
           toast.dismiss();
-          toast.success("Work order created");
+          toast.success(t("workOrderDetail.workOrderCreated"));
           onCreated?.();
           push(`/dashboard/work-orders/${data.id}`);
         },
         onError: (err) => {
-          toast.error(err?.message ?? "Failed to create work order");
+          toast.error(
+            err?.message ?? t("workOrderDetail.failedToCreateWorkOrder"),
+          );
         },
       },
     );

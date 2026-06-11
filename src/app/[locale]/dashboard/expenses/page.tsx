@@ -52,6 +52,7 @@ import {
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
 import type { ExpenseWithCategory } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { formatMNT } from "@/lib/utils";
 import { columns } from "./_columns";
 
@@ -62,21 +63,40 @@ function KpiCard({
   value,
   icon: Icon,
   loading,
+  tone = "default",
 }: {
   label: string;
   value: string;
   icon: React.ComponentType<{ className?: string }>;
   loading?: boolean;
+  tone?: "default" | "success" | "warning" | "danger";
 }) {
+  const toneClasses = {
+    default: "bg-muted/60 text-muted-foreground",
+    success:
+      "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400",
+    warning:
+      "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400",
+    danger: "bg-destructive/10 text-destructive",
+  } as const;
+
   return (
-    <Card>
-      <CardHeader className="pb-2">
+    <Card className="border-border/70 shadow-xs">
+      <CardHeader className="flex flex-row items-start justify-between pb-2">
         <Typography.Muted className="text-xs font-medium text-muted-foreground">
           {label}
         </Typography.Muted>
+        <span
+          className={cn(
+            "inline-flex size-8 items-center justify-center rounded-lg",
+            toneClasses[tone],
+          )}
+        >
+          <Icon className="size-4" />
+        </span>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-2">
+        <div className="flex items-end gap-2">
           {loading ? (
             <Skeleton className="h-8 w-24" />
           ) : (
@@ -84,7 +104,6 @@ function KpiCard({
               {value}
             </Typography.Text>
           )}
-          <Icon className="ml-auto size-5 text-muted-foreground/40" />
         </div>
       </CardContent>
     </Card>
@@ -178,7 +197,10 @@ export default function ExpensesPage() {
     branchId: branchFilter ?? undefined,
   });
 
-  const { data: stats, isLoading: statsLoading } = useExpenseStats(orgId);
+  const { data: stats, isLoading: statsLoading } = useExpenseStats(
+    orgId,
+    branchFilter,
+  );
 
   const { data: categories } = useExpenseCategories(orgId);
 
@@ -262,13 +284,16 @@ export default function ExpensesPage() {
     isError || (!orgId && !orgLoading)
       ? (error?.message ?? t("common.noOrganization"))
       : null;
+  const resultCount = expenses?.length ?? 0;
+  const categoryCount = categories?.length ?? 0;
+  const hasFilters = activeCount > 0;
 
   return (
     <ListPageShell
       title={t("nav.expenses")}
       description={
-        expenses?.length
-          ? `${expenses.length} ${expenses.length === 1 ? "expense" : "expenses"}`
+        resultCount
+          ? t("expenses.resultCount", { count: resultCount })
           : undefined
       }
       loading={showLoadingScreen}
@@ -288,32 +313,70 @@ export default function ExpensesPage() {
           value={stats ? String(stats.totalExpenses) : "\u2014"}
           icon={Wallet}
           loading={statsLoading}
+          tone="default"
         />
         <KpiCard
           label={t("expenses.totalAmount")}
           value={stats ? formatMNT(stats.totalAmount) : "\u2014"}
           icon={DollarSign}
           loading={statsLoading}
+          tone="success"
         />
         <KpiCard
           label={t("expenses.thisMonth")}
           value={stats ? formatMNT(stats.thisMonth) : "\u2014"}
           icon={TrendingUp}
           loading={statsLoading}
+          tone="warning"
         />
         <KpiCard
           label={t("sidebar.overdue")}
           value={stats ? String(stats.overdueCount) : "\u2014"}
           icon={AlertCircle}
           loading={statsLoading}
+          tone="danger"
         />
         <KpiCard
           label={t("expenses.unpaid")}
           value={stats ? formatMNT(stats.unpaidAmount) : "\u2014"}
           icon={Clock}
           loading={statsLoading}
+          tone="warning"
         />
       </div>
+
+      <Card className="border-border/70 bg-muted/20 shadow-xs">
+        <CardContent className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="bg-background">
+              {t("expenses.resultCount", { count: resultCount })}
+            </Badge>
+            <Badge variant="outline" className="bg-background">
+              {t("expenses.categories")}: {categoryCount}
+            </Badge>
+            {stats && stats.overdueCount > 0 && (
+              <Badge
+                variant="outline"
+                className="border-destructive/25 bg-destructive/5 text-destructive"
+              >
+                {t("expenses.overdue")}: {stats.overdueCount}
+              </Badge>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {branchFilter && (
+              <Badge variant="secondary" className="font-normal">
+                {t("expenses.branchFiltered")}
+              </Badge>
+            )}
+            {hasFilters && (
+              <Badge variant="secondary" className="font-normal">
+                {t("expenses.filterCount", { count: activeCount })}
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ── Filter Bar ── */}
       <ListToolbar
@@ -338,12 +401,10 @@ export default function ExpensesPage() {
               }
             >
               <SelectTrigger size="sm" className="min-w-44">
-                <SelectValue placeholder={t("inventory.allCategories")} />
+                <SelectValue placeholder={t("expenses.category")} />
               </SelectTrigger>
               <SelectContent align="start">
-                <SelectItem value="all">
-                  {t("inventory.allCategories")}
-                </SelectItem>
+                <SelectItem value="all">{t("expenses.allStatus")}</SelectItem>
                 {categories?.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
                     {cat.name}
@@ -400,7 +461,7 @@ export default function ExpensesPage() {
       />
 
       {/* ── Table / Empty State ── */}
-      <Card className="py-0">
+      <Card className="overflow-hidden border-border/70 py-0 shadow-xs">
         <CardContent className="p-0">
           {!expenses || expenses.length === 0 ? (
             <Empty>
@@ -427,6 +488,10 @@ export default function ExpensesPage() {
               pageSize={20}
               onRowClick={(row) => setDetailExpenseId(row.id)}
               renderMobileCard={(expense) => {
+                const overdue =
+                  !expense.paid_at &&
+                  !!expense.due_date &&
+                  new Date(expense.due_date) < now;
                 const dateStr = (() => {
                   try {
                     return new Date(expense.expense_date).toLocaleDateString(
@@ -438,27 +503,54 @@ export default function ExpensesPage() {
                   }
                 })();
                 return (
-                  <div className="flex flex-col gap-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">
-                        {dateStr}
-                      </span>
+                  <div className="flex flex-col gap-3 text-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 space-y-1">
+                        <span className="block truncate font-medium">
+                          {expense.description}
+                        </span>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span>{dateStr}</span>
+                          {expense.category?.name && (
+                            <span className="rounded-full bg-muted px-2 py-0.5 text-foreground/80">
+                              {expense.category.name}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                       <Badge
                         variant="outline"
-                        className="text-[10px] px-1.5 py-0"
+                        className={cn(
+                          "shrink-0 text-[10px] px-1.5 py-0",
+                          expense.paid_at &&
+                            "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-400",
+                          overdue &&
+                            "border-destructive/25 bg-destructive/5 text-destructive",
+                        )}
                       >
                         {expense.paid_at
                           ? t("expenses.paid")
-                          : t("expenses.unpaid")}
+                          : overdue
+                            ? t("expenses.overdue")
+                            : t("expenses.unpaid")}
                       </Badge>
                     </div>
-                    <span className="font-medium truncate">
-                      {expense.description}
-                    </span>
                     <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
-                      <span>
-                        {expense.vendor_name || expense.category?.name || "—"}
-                      </span>
+                      <div className="min-w-0 space-y-1">
+                        <span className="block truncate">
+                          {expense.vendor_name || expense.category?.name || "—"}
+                        </span>
+                        {expense.due_date && (
+                          <span
+                            className={cn(
+                              "block",
+                              overdue && "font-medium text-destructive",
+                            )}
+                          >
+                            {t("expenses.due")}: {expense.due_date}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-sm font-semibold tabular-nums">
                         {formatMNT(expense.amount)}
                       </span>

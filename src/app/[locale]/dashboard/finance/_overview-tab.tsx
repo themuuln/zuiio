@@ -18,6 +18,8 @@ import type { ChartConfig } from "@/components/ui/chart";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
 import { Typography } from "@/components/ui/typography";
 import type { RevenueTrendPoint } from "@/lib/types";
+
+const EMPTY_REVENUE_TREND: RevenueTrendPoint[] = [];
 import { formatCurrency } from "@/lib/utils";
 import { EmptyFinanceState } from "./_empty-finance-state";
 import { KpiCard } from "./_kpi-card";
@@ -60,9 +62,10 @@ export function OverviewTab({
   insightLine,
   loading,
   topServices,
-  revenueTrend = [],
+  revenueTrend = EMPTY_REVENUE_TREND,
 }: OverviewTabProps) {
   const t = useTranslations();
+  const financeT = useTranslations("finance");
 
   if (!hasAnyData) {
     return <EmptyFinanceState />;
@@ -87,14 +90,14 @@ export function OverviewTab({
         <NoRevenueBanner activeWorkOrders={safeSummary.activeWorkOrders} />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
           <KpiCard
-            label="Active Work Orders"
+            label={t("dashboard.activeWorkOrders")}
             value={String(safeSummary.activeWorkOrders)}
             icon={Clock}
-            subtitle="Currently in progress"
+            subtitle={financeT("currentlyInProgress")}
             loading={loading}
           />
           <KpiCard
-            label="Total Customers"
+            label={t("dashboard.totalCustomers")}
             value={String(safeSummary.totalCustomers)}
             icon={Users}
             loading={loading}
@@ -102,16 +105,16 @@ export function OverviewTab({
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
           <KpiCard
-            label="Total Vehicles"
+            label={t("dashboard.totalVehicles")}
             value={String(safeSummary.totalVehicles)}
             icon={TrendingUp}
             loading={loading}
           />
           <KpiCard
-            label="Service Revenue"
+            label={t("dashboard.serviceRevenue")}
             value={formatCurrency(0)}
             icon={Wrench}
-            subtitle="Complete WOs to populate"
+            subtitle={financeT("completeWosToPopulate")}
             loading={loading}
           />
         </div>
@@ -134,27 +137,29 @@ export function OverviewTab({
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          label="Total Revenue"
+          label={t("dashboard.totalRevenue")}
           value={formatCurrency(safeSummary.totalRevenue)}
           icon={DollarSign}
-          subtitle={`${safeSummary.completedToday} completed today`}
+          subtitle={financeT("completedTodaySummary", {
+            count: safeSummary.completedToday,
+          })}
           loading={loading}
         />
         <KpiCard
-          label="Active Work Orders"
+          label={t("dashboard.activeWorkOrders")}
           value={String(safeSummary.activeWorkOrders)}
           icon={Clock}
-          subtitle="Currently in progress"
+          subtitle={financeT("currentlyInProgress")}
           loading={loading}
         />
         <KpiCard
-          label="Avg Repair Order"
+          label={t("dashboard.avgRepairOrder")}
           value={formatCurrency(safeSummary.avgRepairOrderValue)}
           icon={TrendingUp}
           loading={loading}
         />
         <KpiCard
-          label="Total Customers"
+          label={t("dashboard.totalCustomers")}
           value={String(safeSummary.totalCustomers)}
           icon={Users}
           loading={loading}
@@ -162,41 +167,43 @@ export function OverviewTab({
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          label="Gross Profit"
+          label={t("finance.grossProfit")}
           value={formatCurrency(safeSummary.grossProfit)}
           icon={TrendingUp}
           subtitle={
             safeSummary.marginPercent > 0
-              ? `${safeSummary.marginPercent.toFixed(1)}% margin`
+              ? financeT("marginSummary", {
+                  percent: safeSummary.marginPercent.toFixed(1),
+                })
               : undefined
           }
           loading={loading}
         />
         <KpiCard
-          label="Service Revenue"
+          label={t("dashboard.serviceRevenue")}
           value={formatCurrency(safeSummary.serviceRevenue)}
           icon={Wrench}
-          subtitle="Labor & services"
+          subtitle={financeT("laborAndServices")}
           loading={loading}
         />
         <KpiCard
-          label="Parts Revenue"
+          label={t("dashboard.partsRevenue")}
           value={formatCurrency(safeSummary.partsRevenue)}
           icon={ClipboardList}
-          subtitle="Parts & materials"
+          subtitle={financeT("partsAndMaterials")}
           loading={loading}
         />
         <KpiCard
-          label="Total Vehicles"
+          label={t("dashboard.totalVehicles")}
           value={String(safeSummary.totalVehicles)}
           icon={TrendingUp}
           loading={loading}
         />
         <KpiCard
-          label="Service Mix"
+          label={t("dashboard.serviceMix")}
           value={`${safeSummary.totalRevenue > 0 ? Math.round((safeSummary.serviceRevenue / safeSummary.totalRevenue) * 100) : "—"}%`}
           icon={Percent}
-          subtitle="Service vs Parts"
+          subtitle={financeT("serviceVsParts")}
           loading={loading}
         />
       </div>
@@ -214,8 +221,14 @@ export function OverviewTab({
               data={revenueTrend as unknown as Record<string, unknown>[]}
               config={
                 {
-                  revenue: { label: "Revenue", color: "#3b82f6" },
-                  workOrders: { label: "Work Orders", color: "#22c55e" },
+                  revenue: {
+                    label: t("dashboard.totalRevenue"),
+                    color: "#3b82f6",
+                  },
+                  workOrders: {
+                    label: t("dashboard.workOrderStatus"),
+                    color: "#22c55e",
+                  },
                 } satisfies ChartConfig
               }
               xKey="date"
@@ -229,7 +242,7 @@ export function OverviewTab({
             />
           ) : (
             <Typography.Muted className="text-sm text-muted-foreground py-8 text-center">
-              No revenue data yet
+              {financeT("noRevenueDataYet")}
             </Typography.Muted>
           )}
         </CardContent>
@@ -246,7 +259,7 @@ export function OverviewTab({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold">
-              Top Services
+              {financeT("topServices")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -259,18 +272,27 @@ export function OverviewTab({
 }
 
 function TopServicesTable({ services }: { services: TopService[] }) {
+  const t = useTranslations();
+  const financeT = useTranslations("finance");
+
   const columns: ColumnDef<TopService>[] = useMemo(
     () => [
       {
         accessorKey: "name",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Service" />
+          <DataTableColumnHeader
+            column={column}
+            title={financeT("serviceColumn")}
+          />
         ),
       },
       {
         accessorKey: "count",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Count" />
+          <DataTableColumnHeader
+            column={column}
+            title={financeT("countColumn")}
+          />
         ),
         cell: ({ row }) => (
           <span className="tabular-nums">{row.original.count}</span>
@@ -279,7 +301,10 @@ function TopServicesTable({ services }: { services: TopService[] }) {
       {
         accessorKey: "revenue",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Revenue" />
+          <DataTableColumnHeader
+            column={column}
+            title={t("dashboard.totalRevenue")}
+          />
         ),
         cell: ({ row }) => (
           <span className="font-medium tabular-nums">
@@ -288,7 +313,7 @@ function TopServicesTable({ services }: { services: TopService[] }) {
         ),
       },
     ],
-    [],
+    [financeT, t],
   );
 
   return (

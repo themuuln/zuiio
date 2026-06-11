@@ -7,6 +7,7 @@
 "use client";
 
 import { BarChart3 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
@@ -22,6 +23,8 @@ export function BranchComparisonView({
   data,
   loading = false,
 }: BranchComparisonViewProps) {
+  const t = useTranslations("reports");
+
   if (loading) {
     return (
       <div className="flex flex-col gap-4">
@@ -55,10 +58,10 @@ export function BranchComparisonView({
           </div>
           <div className="text-center">
             <Typography.H3 className="text-sm font-semibold">
-              No Branch Data
+              {t("noBranchData")}
             </Typography.H3>
             <Typography.Muted className="mt-1 text-xs text-muted-foreground">
-              Create multiple branches to see comparison data
+              {t("noBranchDataDesc")}
             </Typography.Muted>
           </div>
         </CardContent>
@@ -66,7 +69,7 @@ export function BranchComparisonView({
     );
   }
 
-  const sortedBranches = [...data.branches].sort(
+  const sortedBranches = data.branches.toSorted(
     (a, b) => b.totalRevenue - a.totalRevenue,
   );
 
@@ -77,7 +80,7 @@ export function BranchComparisonView({
         <Card>
           <div className="p-4">
             <Typography.Muted className="text-xs">
-              Total Revenue
+              {t("totalRevenue")}
             </Typography.Muted>
             <Typography.H2 className="mt-1 text-2xl font-bold tabular-nums">
               {formatCurrency(data.totals.totalRevenue)}
@@ -87,7 +90,7 @@ export function BranchComparisonView({
         <Card>
           <div className="p-4">
             <Typography.Muted className="text-xs">
-              Total Work Orders
+              {t("totalWorkOrders")}
             </Typography.Muted>
             <Typography.H2 className="mt-1 text-2xl font-bold tabular-nums">
               {data.totals.completedWorkOrders}
@@ -97,7 +100,7 @@ export function BranchComparisonView({
         <Card>
           <div className="p-4">
             <Typography.Muted className="text-xs">
-              Gross Profit
+              {t("grossProfit")}
             </Typography.Muted>
             <Typography.H2 className="mt-1 text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
               {formatCurrency(data.totals.grossProfit)}
@@ -106,7 +109,9 @@ export function BranchComparisonView({
         </Card>
         <Card>
           <div className="p-4">
-            <Typography.Muted className="text-xs">Avg Margin</Typography.Muted>
+            <Typography.Muted className="text-xs">
+              {t("avgMargin")}
+            </Typography.Muted>
             <Typography.H2 className="mt-1 text-2xl font-bold tabular-nums">
               {data.totals.marginPercent}%
             </Typography.H2>
@@ -117,32 +122,32 @@ export function BranchComparisonView({
       {/* Branch ranking table */}
       <Card>
         <CardContent className="overflow-x-auto p-0">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label={t("branchComparison")}>
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Rank
+                  {t("rank")}
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  Branch
+                  {t("branch")}
                 </th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Revenue
+                  {t("revenue")}
                 </th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  WOs
+                  {t("completedWo")}
                 </th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Gross Profit
+                  {t("grossProfit")}
                 </th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Margin
+                  {t("margin")}
                 </th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Avg Order
+                  {t("avgOrder")}
                 </th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                  Customers
+                  {t("customers")}
                 </th>
               </tr>
             </thead>
@@ -160,7 +165,7 @@ export function BranchComparisonView({
                       <span className="font-medium">{branch.branchName}</span>
                       {branch.isMain && (
                         <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                          Main
+                          {t("main")}
                         </span>
                       )}
                     </div>
@@ -189,7 +194,7 @@ export function BranchComparisonView({
             <tfoot>
               <tr className="bg-muted/30 font-semibold">
                 <td className="px-4 py-3" />
-                <td className="px-4 py-3">TOTAL</td>
+                <td className="px-4 py-3">{t("total")}</td>
                 <td className="px-4 py-3 text-right tabular-nums">
                   {formatCurrency(data.totals.totalRevenue)}
                 </td>

@@ -39,6 +39,13 @@ export interface SettingsForm {
   defaultCurrency: string;
   defaultTaxRate: string;
   nuatEnabled: boolean;
+  ndshEnabled: boolean;
+  ndshEmployerRate: string;
+  ndshEmployeeRate: string;
+  einvoiceEnabled: boolean;
+  einvoiceApiKey: string;
+  einvoiceMerchantId: string;
+  einvoiceEndpoint: string;
   timezone: string;
   dateFormat: string;
   language: string;
@@ -50,6 +57,13 @@ export const DEFAULT_FORM: SettingsForm = {
   defaultCurrency: "MNT",
   defaultTaxRate: "10",
   nuatEnabled: false,
+  ndshEnabled: false,
+  ndshEmployerRate: "10",
+  ndshEmployeeRate: "10",
+  einvoiceEnabled: false,
+  einvoiceApiKey: "",
+  einvoiceMerchantId: "",
+  einvoiceEndpoint: "",
   timezone: "Asia/Ulaanbaatar",
   dateFormat: "YYYY-MM-DD",
   language: "mn",
@@ -80,13 +94,35 @@ export function buildFormFromOrganization(organization: {
     ),
     nuatEnabled:
       (settings?.nuat_enabled as boolean) ?? DEFAULT_FORM.nuatEnabled,
-    ndshEnabled: (settings?.ndsh_enabled as boolean) ?? DEFAULT_FORM.ndshEnabled,
-    ndshEmployerRate: getNumberSetting(settings, "ndsh_employer_rate", DEFAULT_FORM.ndshEmployerRate),
-    ndshEmployeeRate: getNumberSetting(settings, "ndsh_employee_rate", DEFAULT_FORM.ndshEmployeeRate),
-    einvoiceEnabled: (settings?.einvoice_enabled as boolean) ?? DEFAULT_FORM.einvoiceEnabled,
-    einvoiceApiKey: getStringSetting(settings, "einvoice_api_key", DEFAULT_FORM.einvoiceApiKey),
-    einvoiceMerchantId: getStringSetting(settings, "einvoice_merchant_id", DEFAULT_FORM.einvoiceMerchantId),
-    einvoiceEndpoint: getStringSetting(settings, "einvoice_endpoint", DEFAULT_FORM.einvoiceEndpoint),
+    ndshEnabled:
+      (settings?.ndsh_enabled as boolean) ?? DEFAULT_FORM.ndshEnabled,
+    ndshEmployerRate: getNumberSetting(
+      settings,
+      "ndsh_employer_rate",
+      DEFAULT_FORM.ndshEmployerRate,
+    ),
+    ndshEmployeeRate: getNumberSetting(
+      settings,
+      "ndsh_employee_rate",
+      DEFAULT_FORM.ndshEmployeeRate,
+    ),
+    einvoiceEnabled:
+      (settings?.einvoice_enabled as boolean) ?? DEFAULT_FORM.einvoiceEnabled,
+    einvoiceApiKey: getStringSetting(
+      settings,
+      "einvoice_api_key",
+      DEFAULT_FORM.einvoiceApiKey,
+    ),
+    einvoiceMerchantId: getStringSetting(
+      settings,
+      "einvoice_merchant_id",
+      DEFAULT_FORM.einvoiceMerchantId,
+    ),
+    einvoiceEndpoint: getStringSetting(
+      settings,
+      "einvoice_endpoint",
+      DEFAULT_FORM.einvoiceEndpoint,
+    ),
     timezone: getStringSetting(settings, "timezone", DEFAULT_FORM.timezone),
     dateFormat: getStringSetting(
       settings,
@@ -157,7 +193,9 @@ export function BusinessDefaultsForm({
   });
 
   const formRef = useRef(formData);
-  formRef.current = formData;
+  useEffect(() => {
+    formRef.current = formData;
+  }, [formData]);
 
   // Keep parent state in sync when form values change
   useEffect(() => {
@@ -341,8 +379,13 @@ export function BusinessDefaultsForm({
               <FieldContent>
                 <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-4">
                   <div className="flex flex-col gap-1">
-                    <Label htmlFor="ndshEnabled" className="text-sm font-medium">
-                      {currentLocale === "mn" ? "НДШ тооцоо" : "Social Insurance"}
+                    <Label
+                      htmlFor="ndshEnabled"
+                      className="text-sm font-medium"
+                    >
+                      {currentLocale === "mn"
+                        ? "НДШ тооцоо"
+                        : "Social Insurance"}
                     </Label>
                     <Typography.Muted className="text-xs">
                       {currentLocale === "mn"
@@ -366,7 +409,9 @@ export function BusinessDefaultsForm({
               <>
                 <Field>
                   <FieldLabel>
-                    {currentLocale === "mn" ? "Ажил олгогч НДШ" : "Employer НДШ"}
+                    {currentLocale === "mn"
+                      ? "Ажил олгогч НДШ"
+                      : "Employer НДШ"}
                   </FieldLabel>
                   <FieldContent>
                     <div className="flex items-center gap-2">
@@ -378,7 +423,10 @@ export function BusinessDefaultsForm({
                         className="w-24"
                         value={formData.ndshEmployerRate}
                         onChange={(e) =>
-                          setForm((prev) => ({ ...prev, ndshEmployerRate: e.target.value }))
+                          setForm((prev) => ({
+                            ...prev,
+                            ndshEmployerRate: e.target.value,
+                          }))
                         }
                       />
                       <span className="text-sm text-muted-foreground">%</span>
@@ -399,7 +447,10 @@ export function BusinessDefaultsForm({
                         className="w-24"
                         value={formData.ndshEmployeeRate}
                         onChange={(e) =>
-                          setForm((prev) => ({ ...prev, ndshEmployeeRate: e.target.value }))
+                          setForm((prev) => ({
+                            ...prev,
+                            ndshEmployeeRate: e.target.value,
+                          }))
                         }
                       />
                       <span className="text-sm text-muted-foreground">%</span>
@@ -414,7 +465,10 @@ export function BusinessDefaultsForm({
               <FieldContent>
                 <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-4">
                   <div className="flex flex-col gap-1">
-                    <Label htmlFor="einvoiceEnabled" className="text-sm font-medium">
+                    <Label
+                      htmlFor="einvoiceEnabled"
+                      className="text-sm font-medium"
+                    >
                       {currentLocale === "mn" ? "Э-Баримт" : "E-Invoice"}
                     </Label>
                     <Typography.Muted className="text-xs">
@@ -427,7 +481,10 @@ export function BusinessDefaultsForm({
                     id="einvoiceEnabled"
                     checked={formData.einvoiceEnabled}
                     onCheckedChange={(checked) => {
-                      setForm((prev) => ({ ...prev, einvoiceEnabled: checked }));
+                      setForm((prev) => ({
+                        ...prev,
+                        einvoiceEnabled: checked,
+                      }));
                     }}
                   />
                 </div>
@@ -445,9 +502,12 @@ export function BusinessDefaultsForm({
                     <Input
                       value={formData.einvoiceMerchantId}
                       onChange={(e) =>
-                        setForm((prev) => ({ ...prev, einvoiceMerchantId: e.target.value }))
+                        setForm((prev) => ({
+                          ...prev,
+                          einvoiceMerchantId: e.target.value,
+                        }))
                       }
-                      placeholder="Merchant ID"
+                      placeholder={t("merchantIdPlaceholder")}
                     />
                   </FieldContent>
                 </Field>
@@ -460,9 +520,12 @@ export function BusinessDefaultsForm({
                       type="password"
                       value={formData.einvoiceApiKey}
                       onChange={(e) =>
-                        setForm((prev) => ({ ...prev, einvoiceApiKey: e.target.value }))
+                        setForm((prev) => ({
+                          ...prev,
+                          einvoiceApiKey: e.target.value,
+                        }))
                       }
-                      placeholder="API Key"
+                      placeholder={t("apiKeyPlaceholder")}
                     />
                   </FieldContent>
                 </Field>

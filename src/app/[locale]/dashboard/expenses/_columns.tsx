@@ -5,17 +5,111 @@ import { AlertCircle, ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
+import { cn } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
 import type { ExpenseWithCategory } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
+
+// ── Header Components (hooks must be in components, not in column defs) ──
+
+function ExpenseDateHeader({ column }: { column: any }) {
+  const t = useTranslations("expenses");
+  return <DataTableColumnHeader column={column} title={t("date")} />;
+}
+
+function ExpenseDescriptionHeader({ column }: { column: any }) {
+  const t = useTranslations("expenses");
+  return <DataTableColumnHeader column={column} title={t("description")} />;
+}
+
+function ExpenseCategoryHeader({ column }: { column: any }) {
+  const t = useTranslations("expenses");
+  return <DataTableColumnHeader column={column} title={t("category")} />;
+}
+
+function ExpenseVendorHeader({ column }: { column: any }) {
+  const t = useTranslations("expenses");
+  return <DataTableColumnHeader column={column} title={t("vendor")} />;
+}
+
+function ExpenseDueHeader({ column }: { column: any }) {
+  const t = useTranslations("expenses");
+  return <DataTableColumnHeader column={column} title={t("due")} />;
+}
+
+function ExpenseAmountHeader({ column }: { column: any }) {
+  const t = useTranslations("expenses");
+  return <DataTableColumnHeader column={column} title={t("amount")} />;
+}
+
+function ExpenseStatusHeader({ column }: { column: any }) {
+  const t = useTranslations("expenses");
+  return <DataTableColumnHeader column={column} title={t("status")} />;
+}
+
+// ── Cell Components ──
+
+function DescriptionCell({ expense }: { expense: ExpenseWithCategory }) {
+  const t = useTranslations("expenses");
+  return (
+    <div className="min-w-0 max-w-64">
+      <Typography.Text className="truncate text-sm font-medium">
+        {expense.description}
+      </Typography.Text>
+      {expense.reference_number && (
+        <Typography.Muted className="truncate text-xs text-muted-foreground">
+          {t("reference")}: {expense.reference_number}
+        </Typography.Muted>
+      )}
+    </div>
+  );
+}
+
+function StatusCell({ expense }: { expense: ExpenseWithCategory }) {
+  const t = useTranslations("expenses");
+  if (expense.paid_at) {
+    return (
+      <Badge
+        variant="outline"
+        className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-400"
+      >
+        {t("paid")}
+      </Badge>
+    );
+  }
+  const overdue = isOverdue(expense);
+  if (overdue) {
+    return (
+      <Badge
+        variant="outline"
+        className="border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400 gap-1"
+      >
+        <AlertCircle className="size-3" />
+        {t("overdue")}
+      </Badge>
+    );
+  }
+  return (
+    <Badge
+      variant="outline"
+      className="border-border bg-muted/40 text-muted-foreground"
+    >
+      {t("unpaid")}
+    </Badge>
+  );
+}
 
 // ── Category Badge ──
 
 function CategoryBadge({ name, color }: { name: string; color: string }) {
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
-      style={{ backgroundColor: `${color}20`, color }}
+      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium"
+      style={{
+        backgroundColor: `${color}14`,
+        borderColor: `${color}26`,
+        color,
+      }}
     >
       <span
         className="size-1.5 rounded-full"
@@ -50,10 +144,7 @@ function isOverdue(expense: ExpenseWithCategory): boolean {
 export const columns: ColumnDef<ExpenseWithCategory>[] = [
   {
     accessorKey: "expense_date",
-    header: ({ column }) => {
-      const t = useTranslations("expenses");
-      return <DataTableColumnHeader column={column} title={t("date")} />;
-    },
+    header: ({ column }) => <ExpenseDateHeader column={column} />,
     cell: ({ row }) => (
       <span className="text-sm tabular-nums">
         {formatDate(row.original.expense_date)}
@@ -63,32 +154,12 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
   {
     id: "description",
     accessorKey: "description",
-    header: ({ column }) => {
-      const t = useTranslations("expenses");
-      return <DataTableColumnHeader column={column} title={t("description")} />;
-    },
-    cell: ({ row }) => {
-      const expense = row.original;
-      return (
-        <div className="min-w-0 max-w-64">
-          <Typography.Text className="truncate text-sm font-medium">
-            {expense.description}
-          </Typography.Text>
-          {expense.reference_number && (
-            <Typography.Muted className="truncate text-xs text-muted-foreground">
-              Ref: {expense.reference_number}
-            </Typography.Muted>
-          )}
-        </div>
-      );
-    },
+    header: ({ column }) => <ExpenseDescriptionHeader column={column} />,
+    cell: ({ row }) => <DescriptionCell expense={row.original} />,
   },
   {
     id: "category",
-    header: ({ column }) => {
-      const t = useTranslations("expenses");
-      return <DataTableColumnHeader column={column} title={t("category")} />;
-    },
+    header: ({ column }) => <ExpenseCategoryHeader column={column} />,
     cell: ({ row }) => {
       const cat = row.original.category;
       return cat ? (
@@ -100,10 +171,7 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
   },
   {
     accessorKey: "vendor_name",
-    header: ({ column }) => {
-      const t = useTranslations("expenses");
-      return <DataTableColumnHeader column={column} title={t("vendor")} />;
-    },
+    header: ({ column }) => <ExpenseVendorHeader column={column} />,
     cell: ({ row }) => {
       const vendor = row.original.vendor_name;
       return vendor ? (
@@ -115,10 +183,7 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
   },
   {
     accessorKey: "due_date",
-    header: ({ column }) => {
-      const t = useTranslations("expenses");
-      return <DataTableColumnHeader column={column} title={t("due")} />;
-    },
+    header: ({ column }) => <ExpenseDueHeader column={column} />,
     cell: ({ row }) => {
       const expense = row.original;
       if (!expense.due_date) {
@@ -128,62 +193,36 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
       }
       const overdue = isOverdue(expense);
       return (
-        <span
-          className={`text-sm tabular-nums ${
-            overdue ? "font-medium text-destructive" : ""
-          }`}
-        >
-          {formatDate(expense.due_date)}
-          {overdue && (
-            <AlertCircle className="ml-1 inline size-3.5 text-destructive" />
+        <div
+          className={cn(
+            "inline-flex items-center gap-1 text-sm tabular-nums",
+            overdue && "font-medium text-destructive",
           )}
-        </span>
+        >
+          <span>{formatDate(expense.due_date)}</span>
+          {overdue && <AlertCircle className="size-3.5 text-destructive" />}
+        </div>
       );
     },
   },
   {
     accessorKey: "amount",
-    header: ({ column }) => {
-      const t = useTranslations("expenses");
-      return <DataTableColumnHeader column={column} title={t("amount")} />;
-    },
+    header: ({ column }) => <ExpenseAmountHeader column={column} />,
     cell: ({ row }) => (
-      <span className="text-sm font-medium tabular-nums">
+      <span className="text-sm font-semibold tabular-nums">
         {formatMNT(row.original.amount)}
       </span>
     ),
   },
   {
     accessorKey: "paid_at",
-    header: ({ column }) => {
-      const t = useTranslations("expenses");
-      return <DataTableColumnHeader column={column} title={t("status")} />;
-    },
-    cell: ({ row }) => {
-      const t = useTranslations("expenses");
-      const expense = row.original;
-      if (expense.paid_at) {
-        return <Badge variant="outline">{t("paid")}</Badge>;
-      }
-      const overdue = isOverdue(expense);
-      if (overdue) {
-        return (
-          <Badge
-            variant="outline"
-            className="border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400 gap-1"
-          >
-            <AlertCircle className="size-3" />
-            {t("overdue")}
-          </Badge>
-        );
-      }
-      return <Badge variant="outline">{t("unpaid")}</Badge>;
-    },
+    header: ({ column }) => <ExpenseStatusHeader column={column} />,
+    cell: ({ row }) => <StatusCell expense={row.original} />,
   },
   {
     id: "chevron",
     header: "",
     enableSorting: false,
-    cell: () => <ArrowRight className="size-4 text-muted-foreground/40" />,
+    cell: () => <ArrowRight className="size-4 text-muted-foreground/60" />,
   },
 ];

@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
+import { transliterateMongolianPlate } from "@/lib/form-validation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Combobox,
@@ -170,7 +171,7 @@ export function VehicleSelect({
       "Wuling",
       "ZX Auto",
     ]);
-    return [...merged].sort((a, b) => a.localeCompare(b));
+    return Array.from(merged).toSorted((a, b) => a.localeCompare(b));
   }, [dbMakes]);
 
   const modelOptions = useMemo(() => {
@@ -183,8 +184,9 @@ export function VehicleSelect({
 
   // Search vehicles — normalize plate input (strip separators, uppercase)
   const handleSearch = (q: string) => {
-    const normalized = q.replace(/[\s-]/g, "").toUpperCase();
-    setVehicleSearch(q);
+    const transliterated = transliterateMongolianPlate(q);
+    const normalized = transliterated.replace(/[\s-]/g, "").toUpperCase();
+    setVehicleSearch(transliterated);
     if (!orgId || !normalized || normalized.length < 2) {
       setVehicles([]);
       return;

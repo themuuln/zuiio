@@ -167,6 +167,7 @@ export interface EstimateDetail extends Estimate {
     title: string;
     scheduled_at: string;
   } | null;
+  public_token: string;
 }
 
 // ── Inventory Composites ───────────────────────────────────────

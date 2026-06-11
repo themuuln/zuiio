@@ -1,5 +1,6 @@
 "use client";
 
+import { subMonths } from "date-fns";
 import {
   AlertCircle,
   ArrowRight,
@@ -14,7 +15,6 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { subMonths } from "date-fns";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import type { DateRange } from "react-day-picker";
@@ -48,6 +48,19 @@ import {
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
+
+// ── Shared helpers (module scope to avoid per-render rebuild) ──
+
+function formatInvoiceDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
 import type { ExportColumn } from "@/lib/export";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { useTableFilters } from "@/lib/hooks/use-url-filters";
@@ -85,17 +98,28 @@ function TabBar({
   ];
 
   return (
-    <div className="flex gap-1 rounded-xl border border-border bg-card p-1 w-fit">
+    <div
+      role="tablist"
+      aria-label={t("title")}
+      className="flex gap-1 rounded-xl border border-border bg-card p-1 w-fit"
+    >
       {tabs.map((tab) => {
         const Icon = tab.icon;
+        const isActive = value === tab.key;
         return (
           <Button
             key={tab.key}
-            variant={value === tab.key ? "default" : "ghost"}
+            id={`finance-tab-${tab.key}`}
+            role="tab"
+            type="button"
+            variant={isActive ? "default" : "ghost"}
+            aria-selected={isActive}
+            aria-controls={`finance-panel-${tab.key}`}
+            tabIndex={isActive ? 0 : -1}
             onClick={() => onChange(tab.key)}
             className="gap-2"
           >
-            <Icon className="size-4" />
+            <Icon className="size-4" aria-hidden="true" />
             {t(tab.labelKey)}
           </Button>
         );
@@ -255,7 +279,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
         dispatchInvoice({ type: "FETCH_DONE" });
       }
     },
-    [],
+    [t],
   );
 
   useEffect(() => {
@@ -288,7 +312,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
         setSendingId(null);
       }
     },
-    [orgId, fetchInvoices, filter],
+    [orgId, fetchInvoices, filter, t],
   );
 
   const filtered = useFuzzySearch(invoices, search, {
@@ -315,16 +339,6 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
   ];
 
   const isLoading = loading && !stats;
-  const formatDate = (iso: string) => {
-    try {
-      return new Date(iso).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      return iso;
-    }
-  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -495,7 +509,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
                         {formatCurrency(inv.total)}
                       </TableCell>
                       <TableCell className="px-5 py-3.5 text-right text-muted-foreground">
-                        {formatDate(inv.issued_at)}
+                        {formatInvoiceDate(inv.issued_at)}
                       </TableCell>
                       <TableCell className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1">
@@ -741,6 +755,7 @@ export default function FinancePage() {
 
   // ── Branch filter gated by finance_separate_per_branch toggle ──
   const selectedBranchId = useSelectedBranchId();
+  const setSelectedBranchId = useSetSelectedBranchId();
   const { settings: orgSettings } = useOrgSettings(orgId ?? undefined);
   const financeSeparate =
     (orgSettings as Record<string, unknown>)?.[
@@ -815,7 +830,7 @@ export default function FinancePage() {
         }))}
       />,
     );
-  }, [data, registerTab]);
+  }, [data, registerTab, t]);
 
   const summary = data?.summary;
   const hasRevenue = (summary?.totalRevenue ?? 0) > 0;
@@ -835,7 +850,7 @@ export default function FinancePage() {
         ? `${formatCurrency(profit)} ${t("finance.profit")}`
         : `-${formatCurrency(Math.abs(profit))} ${t("finance.loss")}`;
     return `${formatCurrency(rev)} ${t("finance.revenueWord")} · ${profitPart} (${margin.toFixed(1)}%) · ${summary.completedToday} ${t("finance.completedWord")} · ${wo} ${t("finance.activeWord")} · ${t("finance.avgPerWo")} ${formatCurrency(avg)}/WO`;
-  }, [summary, loading, hasRevenue]);
+  }, [summary, loading, hasRevenue, t]);
 
   const filteredWorkOrders = useMemo<DashboardData["recentWorkOrders"]>(() => {
     if (!data?.recentWorkOrders) return [];
@@ -936,7 +951,7 @@ export default function FinancePage() {
           {financeSeparate && hasMultipleBranches(branches) && (
             <BranchSelect
               value={selectedBranchId}
-              onChange={useSetSelectedBranchId()}
+              onChange={setSelectedBranchId}
               branches={branches}
               placeholder={t("dashboard.branch")}
               allLabel={t("dashboard.allBranches")}
@@ -962,32 +977,68 @@ export default function FinancePage() {
       )}
 
       {tab === "overview" && (
-        <OverviewTab
-          hasAnyData={hasAnyData}
-          hasRevenue={hasRevenue}
-          summary={summary ?? null}
-          insightLine={insightLine}
-          loading={loading}
-          topServices={data?.topServices}
-          revenueTrend={data?.revenueTrend ?? []}
-        />
+        <div
+          id="finance-panel-overview"
+          role="tabpanel"
+          aria-labelledby="finance-tab-overview"
+        >
+          <OverviewTab
+            hasAnyData={hasAnyData}
+            hasRevenue={hasRevenue}
+            summary={summary ?? null}
+            insightLine={insightLine}
+            loading={loading}
+            topServices={data?.topServices}
+            revenueTrend={data?.revenueTrend ?? []}
+          />
+        </div>
       )}
 
       {tab === "transactions" && (
-        <TransactionsTab
-          hasAnyData={hasAnyData}
-          search={search}
-          onSearchChange={setSearch}
-          filteredWorkOrders={filteredWorkOrders}
-          data={data ?? null}
-        />
+        <div
+          id="finance-panel-transactions"
+          role="tabpanel"
+          aria-labelledby="finance-tab-transactions"
+        >
+          <TransactionsTab
+            hasAnyData={hasAnyData}
+            search={search}
+            onSearchChange={setSearch}
+            filteredWorkOrders={filteredWorkOrders}
+            data={data ?? null}
+          />
+        </div>
       )}
 
-      {tab === "invoices" && <InvoicesTab orgId={orgId} />}
+      {tab === "invoices" && (
+        <div
+          id="finance-panel-invoices"
+          role="tabpanel"
+          aria-labelledby="finance-tab-invoices"
+        >
+          <InvoicesTab orgId={orgId} />
+        </div>
+      )}
 
-      {tab === "expenses" && <ExpensesTab orgId={orgId} />}
+      {tab === "expenses" && (
+        <div
+          id="finance-panel-expenses"
+          role="tabpanel"
+          aria-labelledby="finance-tab-expenses"
+        >
+          <ExpensesTab orgId={orgId} />
+        </div>
+      )}
 
-      {tab === "refunds" && orgId && <RefundsTab orgId={orgId} />}
+      {tab === "refunds" && orgId && (
+        <div
+          id="finance-panel-refunds"
+          role="tabpanel"
+          aria-labelledby="finance-tab-refunds"
+        >
+          <RefundsTab orgId={orgId} />
+        </div>
+      )}
     </div>
   );
 }

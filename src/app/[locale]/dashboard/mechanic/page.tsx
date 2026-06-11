@@ -34,7 +34,7 @@ import { MechanicSelect } from "@/components/mechanic-select";
 import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,7 +68,7 @@ import {
 } from "@/lib/queries/use-mechanic-dashboard";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
 import { mechanicKeys } from "@/lib/queries/keys";
-import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
+
 import { cn, formatMNT } from "@/lib/utils";
 
 const MechanicTrendChart = dynamic(
@@ -677,13 +677,12 @@ function MechanicDashboard({
       }
     }
 
-    // Show notes modal for status transitions (not Cancelled — that goes direct)
-    if (newStatus !== "Cancelled") {
-      setPendingStatusNotes({ woId, status: newStatus });
-      return;
-    }
+    // All forward transitions: optimistic, fire-and-forget — no modal needed
 
-    // Cancelled: go direct (no notes needed)
+    // Direct transitions (Diagnosing, In Progress, Cancelled): optimistic, fire-and-forget
+    const prevWos = queryClient.getQueryData<WorkOrderRow[]>(
+      mechanicKeys.workOrders(orgId, userId),
+    );
     queryClient.setQueryData(
       mechanicKeys.workOrders(orgId, userId),
       (prev: WorkOrderRow[] | undefined) =>
@@ -691,36 +690,58 @@ function MechanicDashboard({
           w.id === woId ? { ...w, status: newStatus } : w,
         ),
     );
-    try {
-      await updateStatus.mutateAsync({ woId, status: newStatus });
-      toast.success(t("mechanic.statusUpdatedTo", { status: newStatus }));
-    } catch {
-      queryClient.invalidateQueries({
-        queryKey: mechanicKeys.workOrders(orgId, userId),
-      });
-    }
+    toast.dismiss();
+    toast.success(t("mechanic.statusUpdatedTo", { status: newStatus }));
+    updateStatus.mutate(
+      { woId, status: newStatus },
+      {
+        onError: () => {
+          if (prevWos) {
+            queryClient.setQueryData(
+              mechanicKeys.workOrders(orgId, userId),
+              prevWos,
+            );
+          }
+          queryClient.invalidateQueries({
+            queryKey: mechanicKeys.workOrders(orgId, userId),
+          });
+        },
+      },
+    );
   };
 
-  const handleStatusNotesConfirm = async (
+  const handleStatusNotesConfirm = (
     woId: string,
     status: string,
     notes?: string,
   ) => {
     setPendingStatusNotes(null);
-    // Optimistic update
+    const prevWos = queryClient.getQueryData<WorkOrderRow[]>(
+      mechanicKeys.workOrders(orgId, userId),
+    );
     queryClient.setQueryData(
       mechanicKeys.workOrders(orgId, userId),
       (prev: WorkOrderRow[] | undefined) =>
         (prev ?? []).map((w) => (w.id === woId ? { ...w, status } : w)),
     );
-    try {
-      await updateStatus.mutateAsync({ woId, status, notes });
-      toast.success(t("mechanic.statusUpdatedTo", { status }));
-    } catch {
-      queryClient.invalidateQueries({
-        queryKey: mechanicKeys.workOrders(orgId, userId),
-      });
-    }
+    toast.dismiss();
+    toast.success(t("mechanic.statusUpdatedTo", { status }));
+    updateStatus.mutate(
+      { woId, status, notes },
+      {
+        onError: () => {
+          if (prevWos) {
+            queryClient.setQueryData(
+              mechanicKeys.workOrders(orgId, userId),
+              prevWos,
+            );
+          }
+          queryClient.invalidateQueries({
+            queryKey: mechanicKeys.workOrders(orgId, userId),
+          });
+        },
+      },
+    );
   };
 
   return (
@@ -730,18 +751,14 @@ function MechanicDashboard({
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <Avatar className="size-10">
-                {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
-                <AvatarFallback
-                  className={cn(
-                    "text-sm font-medium",
-                    getMechanicColor(userId).bg,
-                    getMechanicColor(userId).text,
-                  )}
-                >
-                  {getMechanicInitials(mechanicName)}
-                </AvatarFallback>
-              </Avatar>
+              <MechanicAvatar
+                mechanic={{
+                  id: userId,
+                  full_name: mechanicName,
+                  avatar_url: avatarUrl,
+                }}
+                className="size-10"
+              />
               <div>
                 <Typography.H1 className="text-xl font-semibold tracking-tight">
                   {mechanicName ?? t("nav.mechanic")}
@@ -862,6 +879,7 @@ function MechanicDashboard({
               <input
                 type="text"
                 placeholder={t("mechanic.searchWorkOrders")}
+                aria-label={t("mechanic.searchWorkOrders")}
                 value={woSearch}
                 onChange={(e) => setWoSearch(e.target.value)}
                 className="h-8 w-full rounded-lg border border-border/60 bg-muted/30 pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
@@ -1084,30 +1102,15 @@ export default function MechanicPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <div className="flex items-center gap-3">
-                  <Avatar className="size-10">
-                    {mechanics.find((m) => m.id === selectedMechanicId)
-                      ?.avatar_url && (
-                      <AvatarImage
-                        src={
-                          mechanics.find((m) => m.id === selectedMechanicId)
-                            ?.avatar_url ?? undefined
-                        }
-                        alt=""
-                      />
-                    )}
-                    <AvatarFallback
-                      className={cn(
-                        "text-sm font-medium",
-                        getMechanicColor(selectedMechanicId ?? "").bg,
-                        getMechanicColor(selectedMechanicId ?? "").text,
-                      )}
-                    >
-                      {getMechanicInitials(
-                        mechanics.find((m) => m.id === selectedMechanicId)
-                          ?.full_name,
-                      )}
-                    </AvatarFallback>
-                  </Avatar>
+                  <MechanicAvatar
+                    mechanic={
+                      mechanics.find((m) => m.id === selectedMechanicId) ?? {
+                        id: selectedMechanicId ?? "",
+                        full_name: null,
+                      }
+                    }
+                    className="size-10"
+                  />
                   <div>
                     <Typography.H1 className="text-xl font-semibold tracking-tight">
                       {mechanics.find((m) => m.id === selectedMechanicId)
