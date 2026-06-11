@@ -285,6 +285,15 @@ export const dashboardKeys = {
     ["organizations", orgId, "dashboard", branchId ?? "all"] as const,
   summary: (orgId: string, period: string, branchId?: string | null) =>
     [...dashboardKeys.all(orgId, branchId), "summary", period] as const,
+  branchComparison: (orgId: string, dateFrom: string, dateTo: string) =>
+    [
+      "organizations",
+      orgId,
+      "dashboard",
+      "branch-comparison",
+      dateFrom,
+      dateTo,
+    ] as const,
 };
 
 export const inventoryKeys = {
@@ -339,19 +348,16 @@ export const inventoryKeys = {
   categories: (orgId: string) =>
     [...inventoryKeys.all(orgId), "part-categories"] as const,
   transfers: (orgId: string, status?: string | null) =>
-    [
-      ...inventoryKeys.all(orgId),
-      "transfers",
-      status ?? "all",
-    ] as const,
+    [...inventoryKeys.all(orgId), "transfers", status ?? "all"] as const,
   transferDetail: (orgId: string, id: string) =>
     [...inventoryKeys.all(orgId), "transfers", "detail", id] as const,
   /** Invalidate transfers + balances + movements together */
-  transferInvalidations: (orgId: string) => [
-    inventoryKeys.transfers(orgId),
-    inventoryKeys.balances(orgId),
-    inventoryKeys.movements(orgId),
-  ] as const,
+  transferInvalidations: (orgId: string) =>
+    [
+      inventoryKeys.transfers(orgId),
+      inventoryKeys.balances(orgId),
+      inventoryKeys.movements(orgId),
+    ] as const,
 };
 
 export const serviceReminderKeys = {

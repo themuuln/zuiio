@@ -12,6 +12,7 @@ import {
   Calendar,
   CheckCircle2,
   ClipboardList,
+  GitBranch,
   type LucideIcon,
   RefreshCw,
   TrendingUp,
@@ -19,7 +20,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { type KeyboardEvent, useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { Cell, Pie, PieChart as RechartsPieChart } from "recharts";
 import { BranchSelect } from "@/components/branch-select";
@@ -64,6 +65,8 @@ import { useSelectedBranchGuard } from "@/hooks/use-selected-branch-guard";
 import type { ExportColumn } from "@/lib/export";
 import { useBranches } from "@/lib/queries/use-branches";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { BranchComparisonView } from "./_branch-comparison-view";
+import { useBranchComparison } from "@/lib/queries/use-branch-comparison";
 import {
   useMechanics,
   useReport,
@@ -85,7 +88,13 @@ import { formatCurrency, hasMultipleBranches } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────
 
-type ReportType = "daily" | "weekly" | "monthly" | "custom" | "eod";
+type ReportType =
+  | "daily"
+  | "weekly"
+  | "monthly"
+  | "custom"
+  | "eod"
+  | "comparison";
 
 interface ReportData {
   work_orders_completed: number;
@@ -248,7 +257,7 @@ function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
               },
             ]}
             filename={`eod-${data.date}.xlsx`}
-            sheetName="EOD"
+            sheetName={t("eodSheet")}
           />
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
@@ -292,10 +301,14 @@ function EodView({ data, t }: { data: EodReport; t: (key: string) => string }) {
                     className={`border-b border-border hover:bg-muted/30 ${i === 0 ? "bg-muted/10" : ""} ${bestMechanic && m.mechanic_id === bestMechanic.mechanic_id ? "bg-amber-50/30 dark:bg-amber-950/10" : ""}`}
                   >
                     <TableCell className="px-4 py-3 font-medium">
-                      {i === 0 && bestMechanic ? (
+                      {bestMechanic &&
+                      m.mechanic_id === bestMechanic.mechanic_id ? (
                         <span className="inline-flex items-center gap-1.5">
                           {m.mechanic_name}
-                          <Trophy className="size-3.5 text-amber-500" />
+                          <Trophy
+                            className="size-3.5 text-amber-500"
+                            aria-hidden="true"
+                          />
                         </span>
                       ) : (
                         m.mechanic_name
@@ -493,6 +506,12 @@ export default function ReportsPage() {
     !isEod,
     branchFilter,
   );
+  const branchComparisonQ = useBranchComparison(
+    orgId,
+    dateFrom,
+    dateTo,
+    reportType === "comparison",
+  );
 
   const loading = reportQ.isLoading;
   const erpLoading = insightsQ.isLoading;
@@ -601,7 +620,48 @@ export default function ReportsPage() {
     { label: t("monthly"), value: "monthly", icon: TrendingUp },
     { label: t("customRange"), value: "custom", icon: Calendar },
     { label: t("eodSummary"), value: "eod", icon: ClipboardList },
+    ...(hasMultipleBranches(branches)
+      ? [
+          {
+            label: t("branchComparison"),
+            value: "comparison" as ReportType,
+            icon: GitBranch,
+          },
+        ]
+      : []),
   ];
+
+  const handleTabKeyDown = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    currentIndex: number,
+  ) => {
+    let nextIndex = currentIndex;
+
+    switch (event.key) {
+      case "ArrowRight":
+        nextIndex = (currentIndex + 1) % tabs.length;
+        break;
+      case "ArrowLeft":
+        nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        break;
+      case "Home":
+        nextIndex = 0;
+        break;
+      case "End":
+        nextIndex = tabs.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    const nextTab = tabs[nextIndex];
+    setReportType(nextTab.value);
+
+    requestAnimationFrame(() => {
+      document.getElementById(`reports-tab-${nextTab.value}`)?.focus();
+    });
+  };
 
   // ── Render ───────────────────────────────────────────
   return (
@@ -630,6 +690,7 @@ export default function ReportsPage() {
         <Button
           variant="outline"
           size="sm"
+          aria-label={t("refresh")}
           onClick={() => {
             void Promise.all([
               reportQ.refetch(),
@@ -645,6 +706,7 @@ export default function ReportsPage() {
         >
           <RefreshCw
             className={`mr-1.5 size-3.5 ${loading ? "animate-spin" : ""}`}
+            aria-hidden="true"
           />
           {t("refresh")}
         </Button>
@@ -652,19 +714,34 @@ export default function ReportsPage() {
 
       {/* Tabs + Filter */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-1 rounded-lg border border-border bg-card p-0.5">
-          {tabs.map((tab) => (
-            <Button
-              key={tab.value}
-              onClick={() => setReportType(tab.value)}
-              variant={reportType === tab.value ? "default" : "ghost"}
-              size="sm"
-              className="rounded-md"
-            >
-              <tab.icon className="size-3.5" />
-              {tab.label}
-            </Button>
-          ))}
+        <div
+          role="tablist"
+          aria-label={t("title")}
+          className="flex flex-wrap gap-1 rounded-lg border border-border bg-card p-0.5"
+        >
+          {tabs.map((tab, index) => {
+            const isActive = reportType === tab.value;
+
+            return (
+              <Button
+                key={tab.value}
+                id={`reports-tab-${tab.value}`}
+                role="tab"
+                type="button"
+                aria-selected={isActive}
+                aria-controls={`reports-panel-${tab.value}`}
+                tabIndex={isActive ? 0 : -1}
+                onClick={() => setReportType(tab.value)}
+                onKeyDown={(event) => handleTabKeyDown(event, index)}
+                variant={isActive ? "default" : "ghost"}
+                size="sm"
+                className="rounded-md"
+              >
+                <tab.icon className="size-3.5" aria-hidden="true" />
+                {tab.label}
+              </Button>
+            );
+          })}
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           {hasMultipleBranches(branches) && (
@@ -689,7 +766,7 @@ export default function ReportsPage() {
 
       {/* Date pickers */}
       <div className="flex flex-wrap items-center gap-3">
-        <Calendar className="size-4 text-muted-foreground" />
+        <Calendar className="size-4 text-muted-foreground" aria-hidden="true" />
         {(reportType === "daily" || reportType === "eod") && (
           <DatePicker
             value={date ? new Date(date) : undefined}
@@ -781,11 +858,38 @@ export default function ReportsPage() {
       )}
 
       {/* ═══ EOD ═════════════════════════════════════════ */}
-      {!loading && isEod && eodReport && <EodView data={eodReport} t={t} />}
+      {!loading && isEod && eodReport && (
+        <div
+          id="reports-panel-eod"
+          role="tabpanel"
+          aria-labelledby="reports-tab-eod"
+        >
+          <EodView data={eodReport} t={t} />
+        </div>
+      )}
+
+      {/* ═══ BRANCH COMPARISON ════════════════════════════ */}
+      {!loading && reportType === "comparison" && (
+        <div
+          id="reports-panel-comparison"
+          role="tabpanel"
+          aria-labelledby="reports-tab-comparison"
+        >
+          <BranchComparisonView
+            data={branchComparisonQ.data ?? null}
+            loading={branchComparisonQ.isLoading}
+          />
+        </div>
+      )}
 
       {/* ═══ DAILY / WEEKLY / MONTHLY ════════════════════ */}
       {!loading && !isEod && report && (
-        <div className="flex flex-col gap-6">
+        <div
+          id={`reports-panel-${reportType}`}
+          role="tabpanel"
+          aria-labelledby={`reports-tab-${reportType}`}
+          className="flex flex-col gap-6"
+        >
           <InsightAlerts insights={insightsQ.data ?? []} loading={erpLoading} />
 
           {/* ── #68: Comparison period column — computed deltas + prev period values ── */}
@@ -797,7 +901,13 @@ export default function ReportsPage() {
               delta={r?.comparison?.work_orders_change_pct}
               subtitle={
                 r?.work_orders_completed
-                  ? `avg ${formatCurrency(Math.round((r?.total_revenue ?? 0) / r.work_orders_completed))}/WO`
+                  ? t("averagePerWorkOrder", {
+                      value: formatCurrency(
+                        Math.round(
+                          (r?.total_revenue ?? 0) / r.work_orders_completed,
+                        ),
+                      ),
+                    })
                   : undefined
               }
             />
@@ -807,7 +917,12 @@ export default function ReportsPage() {
               icon={Wallet}
               subtitle={
                 r?.services_count && r?.work_orders_completed
-                  ? `${Math.round((r.services_count / r.work_orders_completed) * 10) / 10}/WO`
+                  ? t("servicesPerWorkOrder", {
+                      value:
+                        Math.round(
+                          (r.services_count / r.work_orders_completed) * 10,
+                        ) / 10,
+                    })
                   : undefined
               }
               delta={
@@ -830,7 +945,9 @@ export default function ReportsPage() {
               delta={r?.comparison?.revenue_change_pct}
               subtitle={
                 r?.comparison?.total_revenue != null
-                  ? `prev: ${formatCurrency(r.comparison.total_revenue)}`
+                  ? t("previousRevenue", {
+                      value: formatCurrency(r.comparison.total_revenue),
+                    })
                   : undefined
               }
             />
@@ -868,13 +985,13 @@ export default function ReportsPage() {
                 label={t("effLaborRate")}
                 value={formatCurrency(r.profitability.effective_labor_rate)}
                 icon={Wallet}
-                subtitle="per work order"
+                subtitle={t("perWorkOrder")}
               />
               <ReportKpiCard
                 label={t("partsToLabor")}
                 value={`${Math.round(r.profitability.parts_to_labor_ratio * 100)}%`}
                 icon={BarChart3}
-                subtitle="parts / labor"
+                subtitle={t("partsOverLabor")}
               />
             </div>
           )}
@@ -1025,17 +1142,15 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {reportType === "weekly" && dailyBreakdown.length > 0 && (
+          {reportType === "weekly" && (
             <DailyRevenueChart data={dailyBreakdown} />
           )}
-          {reportType === "monthly" && monthlyBreakdown.length > 0 && (
+          {reportType === "monthly" && (
             <DailyRevenueChart data={monthlyBreakdown} />
           )}
-          {!mechanicFilter &&
-            r?.mechanic_kpis &&
-            r.mechanic_kpis.length > 0 && (
-              <MechanicBarChart kpis={r.mechanic_kpis} />
-            )}
+          {!mechanicFilter && (
+            <MechanicBarChart kpis={r?.mechanic_kpis ?? []} />
+          )}
           <ServiceBreakdownChart
             data={serviceBdQ.data ?? []}
             loading={erpLoading}
@@ -1049,16 +1164,14 @@ export default function ReportsPage() {
             <PnLCard data={pnlQ.data ?? null} loading={erpLoading} />
           </div>
 
-          {!mechanicFilter &&
-            r?.mechanic_kpis &&
-            r.mechanic_kpis.length > 0 && (
-              <MechanicTable
-                kpis={r.mechanic_kpis}
-                exportCols={mechExportCols}
-                exportFile={`mechanics-${reportType}-${dateParam}.xlsx`}
-                comparison={r?.comparison}
-              />
-            )}
+          {!mechanicFilter && (
+            <MechanicTable
+              kpis={r?.mechanic_kpis ?? []}
+              exportCols={mechExportCols}
+              exportFile={`mechanics-${reportType}-${dateParam}.xlsx`}
+              comparison={r?.comparison}
+            />
+          )}
         </div>
       )}
 

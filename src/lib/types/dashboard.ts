@@ -78,3 +78,29 @@ export interface WorkOrderProfit {
   partsRevenue: number;
   partsCost: number;
 }
+
+// ── Branch Comparison ────────────────────────────────────────
+
+/** Per-branch KPI summary for cross-branch comparison */
+export interface BranchKpiSummary {
+  branchId: string;
+  branchName: string;
+  isMain: boolean;
+  totalRevenue: number;
+  serviceRevenue: number;
+  partsRevenue: number;
+  grossProfit: number;
+  marginPercent: number;
+  activeWorkOrders: number;
+  completedWorkOrders: number;
+  totalCustomers: number;
+  avgRepairOrderValue: number;
+  serviceMix: number;
+}
+
+/** Cross-branch comparison data */
+export interface BranchComparisonData {
+  branches: BranchKpiSummary[];
+  totals: Omit<BranchKpiSummary, "branchId" | "branchName" | "isMain">;
+  periodLabel: string;
+}

@@ -61,3 +61,6 @@ export {
   getRevenueTargets,
   setRevenueTarget,
 } from "./revenue";
+
+// ── Branch Comparison ──
+export { getBranchComparison } from "./branch-comparison";

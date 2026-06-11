@@ -37,6 +37,7 @@ import type { WorkOrderDetail } from "@/lib/types";
 import { formatCurrency, hasMultipleBranches } from "@/lib/utils";
 import { DailyTimeline } from "./_daily-timeline";
 import { KpiCard } from "./_kpi-cards";
+import { BranchComparisonSection } from "./_branch-comparison-section";
 import { LowStockCard } from "./_low-stock-card";
 import { DateFilterBar } from "./_period-bar";
 import { RecentWorkOrdersTable } from "./_recent-work-orders";
@@ -502,6 +503,14 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+      {/* ── Branch Comparison (multi-branch only) ── */}
+      {hasMultipleBranches(branches) && (
+        <BranchComparisonSection
+          orgId={orgId}
+          dateFrom={dateFrom ?? new Date().toISOString().split("T")[0]}
+          dateTo={dateTo ?? new Date().toISOString().split("T")[0]}
+        />
+      )}
       {data ? <ChartsSection data={data} /> : null}
       {/* ── Timeline (horizontal strip) ── */}
       {orgId && (

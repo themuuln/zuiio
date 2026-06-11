@@ -4,6 +4,7 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { ForbiddenError, ValidationError } from "@/lib/errors";
 import {
   generateReportInsights,
+  getBranchComparison,
   getCustomerRetention,
   getCustomReport,
   getDailyReport,
@@ -133,7 +134,7 @@ export const GET = createRouteHandler(
     const effectiveMid = hasReportsRead ? (requestedMechanicId ?? "") : user.id; // force self-access when no reports.read
 
     if (type === "mechanics") {
-      const mechanics = await getMechanicsList(orgId, branchId);
+      const mechanics = await getMechanicsList(supabase, orgId, branchId);
       return NextResponse.json({ data: mechanics });
     }
 
@@ -143,7 +144,7 @@ export const GET = createRouteHandler(
 
       if (dateFromParam && dateToParam) {
         // Custom date range — pass as object
-        const dashboard = await getDashboardData(orgId, {
+        const dashboard = await getDashboardData(supabase, orgId, {
           dateFrom: dateFromParam,
           dateTo: dateToParam,
           branchId,
@@ -155,7 +156,12 @@ export const GET = createRouteHandler(
       const period =
         (searchParams.get("period") as "today" | "week" | "month" | "all") ??
         "all";
-      const dashboard = await getDashboardData(orgId, period, branchId);
+      const dashboard = await getDashboardData(
+        supabase,
+        orgId,
+        period,
+        branchId,
+      );
       return NextResponse.json({ data: dashboard });
     }
 
@@ -163,11 +169,18 @@ export const GET = createRouteHandler(
 
     switch (type) {
       case "daily": {
-        const report = await getDailyReport(orgId, mid || null, date, branchId);
+        const report = await getDailyReport(
+          supabase,
+          orgId,
+          mid || null,
+          date,
+          branchId,
+        );
         return NextResponse.json({ data: report });
       }
       case "custom": {
         const report = await getCustomReport(
+          supabase,
           orgId,
           mid || null,
           dateFrom,
@@ -178,6 +191,7 @@ export const GET = createRouteHandler(
       }
       case "weekly": {
         const report = await getWeeklyReport(
+          supabase,
           orgId,
           mid || null,
           date,
@@ -188,6 +202,7 @@ export const GET = createRouteHandler(
       case "monthly": {
         const [year, month] = date.split("-").map(Number);
         const report = await getMonthlyReport(
+          supabase,
           orgId,
           mid || null,
           year,
@@ -197,11 +212,16 @@ export const GET = createRouteHandler(
         return NextResponse.json({ data: report });
       }
       case "eod": {
-        const summary = await getEndOfDaySummary(orgId, date, branchId);
+        const summary = await getEndOfDaySummary(
+          supabase,
+          orgId,
+          date,
+          branchId,
+        );
         return NextResponse.json({ data: summary });
       }
       case "timeline": {
-        const timeline = await getDailyTimeline(orgId, branchId);
+        const timeline = await getDailyTimeline(supabase, orgId, branchId);
         return NextResponse.json({ data: timeline });
       }
       case "mechanic-trend": {
@@ -215,6 +235,7 @@ export const GET = createRouteHandler(
         const startDate = searchParams.get("startDate") ?? date;
         const endDate = searchParams.get("endDate") ?? date;
         const trend = await getMechanicPerformanceTrend(
+          supabase,
           orgId,
           effectiveMid,
           period,
@@ -227,6 +248,7 @@ export const GET = createRouteHandler(
       // ── ERP-Grade endpoints ────────────────────────────────
       case "insights": {
         const insights = await generateReportInsights(
+          supabase,
           orgId,
           dateFrom,
           dateTo,
@@ -239,6 +261,7 @@ export const GET = createRouteHandler(
           (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ??
           "monthly";
         const forecast = await getRevenueForecast(
+          supabase,
           orgId,
           periodType,
           date,
@@ -251,6 +274,7 @@ export const GET = createRouteHandler(
           (searchParams.get("period_type") as "daily" | "weekly" | "monthly") ??
           "monthly";
         const targets = await getRevenueTargets(
+          supabase,
           orgId,
           periodType,
           date,
@@ -260,6 +284,7 @@ export const GET = createRouteHandler(
       }
       case "retention": {
         const retention = await getCustomerRetention(
+          supabase,
           orgId,
           dateFrom,
           dateTo,
@@ -268,11 +293,18 @@ export const GET = createRouteHandler(
         return NextResponse.json({ data: retention });
       }
       case "pnl": {
-        const pnl = await getPnLSummary(orgId, dateFrom, dateTo, branchId);
+        const pnl = await getPnLSummary(
+          supabase,
+          orgId,
+          dateFrom,
+          dateTo,
+          branchId,
+        );
         return NextResponse.json({ data: pnl });
       }
       case "service-breakdown": {
         const breakdown = await getServiceBreakdown(
+          supabase,
           orgId,
           dateFrom,
           dateTo,
@@ -280,9 +312,18 @@ export const GET = createRouteHandler(
         );
         return NextResponse.json({ data: breakdown });
       }
+      case "branch-comparison": {
+        const comparison = await getBranchComparison(
+          supabase,
+          orgId,
+          dateFrom,
+          dateTo,
+        );
+        return NextResponse.json({ data: comparison });
+      }
       default:
         throw new ValidationError(
-          "Invalid report type. Use: daily, weekly, monthly, eod, dashboard, mechanics, mechanic-trend, insights, forecast, targets, retention, pnl, service-breakdown",
+          "Invalid report type. Use: daily, weekly, monthly, eod, dashboard, mechanics, mechanic-trend, insights, forecast, targets, retention, pnl, service-breakdown, branch-comparison",
         );
     }
   },
@@ -290,7 +331,7 @@ export const GET = createRouteHandler(
 
 /** POST /api/organizations/[id]/reports — Set revenue target */
 export const POST = createRouteHandler(
-  async ({ request, orgId }) => {
+  async ({ request, orgId, supabase }) => {
     const body = await request.json();
     const { period_type, period_start, period_end, target_revenue } = body;
 
@@ -306,6 +347,7 @@ export const POST = createRouteHandler(
     }
 
     const target = await setRevenueTarget(
+      supabase,
       orgId,
       period_type,
       period_start,
