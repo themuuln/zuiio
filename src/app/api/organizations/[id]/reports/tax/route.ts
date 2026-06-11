@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { apiHandler } from "@/lib/api-handler";
+import { createRouteHandler } from "@/lib/api-handler";
 import { getTaxReport } from "@/lib/services/tax-report-service";
 import { createClient } from "@/lib/supabase/server";
 
-export const GET = apiHandler(async (req, ctx) => {
+export const GET = createRouteHandler(async (req, ctx) => {
   const supabase = await createClient();
   const orgId = ctx.params.id;
 
