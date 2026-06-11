@@ -7,10 +7,10 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, GripVertical, List, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "@/components/error-boundary";
 import {
@@ -25,11 +25,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
+import { bayViewKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useProfile } from "@/lib/queries/use-profile";
-import { bayViewKeys } from "@/lib/queries/keys";
 import type { BayViewData, ShiftReport } from "@/lib/services/bay-view-service";
 import {
   assignVehicleToBay,
@@ -40,17 +40,13 @@ import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { formatPlateNumber } from "@/lib/utils";
 import { useBayActionHandlers } from "./_bay-action-handlers";
-import { useBayCountMutation } from "./_use-bay-count-mutation";
 import { useBayDragHandlers } from "./_bay-drag-handlers";
-import { useBayViewDialogs } from "./_use-bay-view-dialogs";
-import { useBayViewPending } from "./_use-bay-view-pending";
-import { useBayViewToast } from "./_use-bay-view-toast";
 import { BayViewErrorState } from "./_error-state";
 import { GridView } from "./_grid-view";
 import { KanbanView } from "./_kanban-view";
 import { KpiCards } from "./_kpi-cards";
 import { ListView } from "./_list-view";
-
+import { BayViewPageSkeleton } from "./_page-skeleton";
 import { Toolbar } from "./_toolbar";
 import {
   type ActiveDragState,
@@ -58,20 +54,21 @@ import {
   GuardedTouchSensor,
   type ViewMode,
 } from "./_types";
+import { useBayCountMutation } from "./_use-bay-count-mutation";
+import { useBayViewDialogs } from "./_use-bay-view-dialogs";
+import { useBayViewPending } from "./_use-bay-view-pending";
+import { useBayViewToast } from "./_use-bay-view-toast";
 import { AssignDialog } from "./assign-dialog";
 import { BayCardDragPreview } from "./bay-card";
 import { MechanicPanel } from "./mechanic-panel";
-import { MechanicRegistrationDialog } from "./mechanic-registration-dialog";
 import type { PickupCompleteData } from "./pickup-complete-dialog";
 import { PickupCompleteDialog } from "./pickup-complete-dialog";
-import { PinSettingsDialog } from "./pin-settings-dialog";
 import type { PostServiceFormData } from "./post-service-dialog";
 import { PostServiceDialog } from "./post-service-dialog";
 import { QueuePanel } from "./queue-panel";
 import { ShiftReportDialog } from "./shift-report-dialog";
 import { StatusNotesModal } from "./status-notes-modal";
 import { ToastMessage } from "./toast-message";
-import { BayViewPageSkeleton } from "./_page-skeleton";
 import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
 import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
 
@@ -290,6 +287,15 @@ export function BayViewV2Client() {
         status,
         Number(wo.total),
       );
+      return;
+    }
+    // All forward transitions go direct — optimistic, no modal
+    if (
+      status === "Diagnosing" ||
+      status === "In Progress" ||
+      status === "Ready for Pickup"
+    ) {
+      handleStatusChangeConfirm(woId, status);
       return;
     }
     rawHandleStatusClick(woId, status);
@@ -666,18 +672,14 @@ export function BayViewV2Client() {
   useEffect(() => {
     const anyDialogOpen =
       dialogs.open.shiftReport ||
-      dialogs.open.pinSettings ||
       dialogs.open.vehicleReg ||
-      dialogs.open.mechanicReg ||
       pending.pending !== null ||
       dialogs.open.assign ||
       detailDrawerOpen;
     setIsPollingPaused(anyDialogOpen);
   }, [
     dialogs.open.shiftReport,
-    dialogs.open.pinSettings,
     dialogs.open.vehicleReg,
-    dialogs.open.mechanicReg,
     pending.pending,
     dialogs.open.assign,
     detailDrawerOpen,
@@ -700,6 +702,62 @@ export function BayViewV2Client() {
       }
     },
     [fetchData, toast.setToast],
+  );
+
+  // ── Assign mechanic (quick assign from BayCard) ──────────────
+  const handleAssignMechanic = useCallback(
+    async (woId: string, mechanicId: string) => {
+      try {
+        const res = await fetch(
+          `/api/organizations/${orgInfo?.orgId}/work-orders/${woId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mechanic_id: mechanicId }),
+          },
+        );
+        const json = await res.json();
+        if (json.error) {
+          toast.setToast({ message: json.error.message, variant: "error" });
+        } else {
+          await fetchData();
+        }
+      } catch {
+        toast.setToast({
+          message: "Failed to assign mechanic",
+          variant: "error",
+        });
+      }
+    },
+    [orgInfo?.orgId, fetchData, toast.setToast],
+  );
+
+  // ── Remove mechanic (quick remove from BayCard) ──────────────
+  const handleRemoveMechanic = useCallback(
+    async (woId: string) => {
+      try {
+        const res = await fetch(
+          `/api/organizations/${orgInfo?.orgId}/work-orders/${woId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mechanic_id: null }),
+          },
+        );
+        const json = await res.json();
+        if (json.error) {
+          toast.setToast({ message: json.error.message, variant: "error" });
+        } else {
+          await fetchData();
+        }
+      } catch {
+        toast.setToast({
+          message: "Failed to remove mechanic",
+          variant: "error",
+        });
+      }
+    },
+    [orgInfo?.orgId, fetchData, toast.setToast],
   );
 
   // ── Loading / error ──────────────────────────────────────────
@@ -754,9 +812,7 @@ export function BayViewV2Client() {
           batchCompletePending={batchCompletePending}
           setBatchCompleteDialogOpen={(v) => dialogs.set("batchComplete", v)}
           setShowVehicleReg={(v) => dialogs.set("vehicleReg", v)}
-          setShowMechanicReg={(v) => dialogs.set("mechanicReg", v)}
           setShowShiftReport={(v) => dialogs.set("shiftReport", v)}
-          setShowPinSettings={(v) => dialogs.set("pinSettings", v)}
           bayCountMutationInFlightRef={{ current: false }}
           bayCountDebounceRef={{ current: null }}
           bayCountPending={bayCount.pending}
@@ -777,13 +833,18 @@ export function BayViewV2Client() {
           occupiedBays={occupiedBays}
           bayCount={data.bayCount}
           waitingQueueLength={data.waitingQueue.length}
+          bays={
+            data.branchSections?.flatMap((section) => section.bays) ?? data.bays
+          }
+          waitingQueue={data.waitingQueue}
+          onOpenWorkOrder={handleOpenDetail}
           t={t}
         />
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent">
           {viewMode === "grid" &&
             (searchedBranchSections ? (
-              <div className="flex-1 min-h-0 overflow-y-auto p-5">
+              <div className="flex-1 min-h-full overflow-y-auto p-5">
                 {searchedBranchSections.map((section) => (
                   <div key={section.branchId} className="mb-6 last:mb-0">
                     {searchedBranchSections.length > 1 &&
@@ -797,12 +858,15 @@ export function BayViewV2Client() {
                       onAssignClick={dialogs.openAssign}
                       onRemoveHelper={handleRemoveHelper}
                       orgId={orgInfo?.orgId}
+                      mechanics={data?.mechanics ?? []}
+                      onAssignMechanic={handleAssignMechanic}
+                      onRemoveMechanic={handleRemoveMechanic}
                     />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="flex-1 min-h-0 overflow-y-auto p-5">
+              <div className="flex-1 min-h-full overflow-y-auto p-5">
                 <GridView
                   bays={searchedBays}
                   pendingWoIds={pendingWoIds}
@@ -812,6 +876,9 @@ export function BayViewV2Client() {
                   onAssignClick={dialogs.openAssign}
                   onRemoveHelper={handleRemoveHelper}
                   orgId={orgInfo?.orgId}
+                  mechanics={data?.mechanics ?? []}
+                  onAssignMechanic={handleAssignMechanic}
+                  onRemoveMechanic={handleRemoveMechanic}
                 />
               </div>
             ))}
@@ -1021,10 +1088,6 @@ export function BayViewV2Client() {
         open={dialogs.open.shiftReport}
         onOpenChange={(v) => dialogs.set("shiftReport", v)}
       />
-      <PinSettingsDialog
-        open={dialogs.open.pinSettings}
-        onOpenChange={(v) => dialogs.set("pinSettings", v)}
-      />
       <VehicleRegistrationDialog
         open={dialogs.open.vehicleReg}
         onOpenChange={(v) => dialogs.set("vehicleReg", v)}
@@ -1038,33 +1101,6 @@ export function BayViewV2Client() {
         }}
         branchId={branchFilter}
       />
-      <MechanicRegistrationDialog
-        open={dialogs.open.mechanicReg}
-        onOpenChange={(v) => dialogs.set("mechanicReg", v)}
-        onRegistered={async (email, fullName, phone) => {
-          dialogs.hide("mechanicReg");
-          try {
-            const { registerMechanic } = await import(
-              "@/lib/services/bay-view-actions"
-            );
-            await registerMechanic({ email, fullName, phone });
-            void fetchData();
-            toast.setToast({
-              message: t("mechanicRegistered", { name: fullName }),
-              variant: "info",
-            });
-          } catch (err) {
-            toast.setToast({
-              message:
-                err instanceof Error
-                  ? err.message
-                  : "Failed to register mechanic",
-              variant: "error",
-            });
-          }
-        }}
-      />
-
       {toast.toast && (
         <ToastMessage
           message={toast.toast.message}

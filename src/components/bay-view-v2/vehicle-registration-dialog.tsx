@@ -3,6 +3,7 @@
 import {
   Car,
   CheckCircle2,
+  ChevronDown,
   HistoryIcon,
   Loader2,
   MessageSquarePlus,
@@ -13,6 +14,11 @@ import {
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
@@ -30,7 +36,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BuuzHint } from "@/components/ui/plate-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";
@@ -38,6 +43,7 @@ import { formatPlateInput } from "@/lib/form-ux";
 import { transliterateMongolianPlate } from "@/lib/form-validation";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { formatMNT } from "@/lib/utils";
+import { STATUS_DOT } from "./_constants";
 import {
   EMPTY_LOOKUP,
   formatDate,
@@ -54,19 +60,11 @@ import {
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialMode?: "register" | "lookup";
   onQueued?: () => void;
   branchId?: string;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  Completed: "bg-green-500",
-  "Ready for Pickup": "bg-green-400",
-  "In Progress": "bg-amber-500",
-  Diagnosing: "bg-blue-500",
-  New: "bg-slate-400",
-  Cancelled: "bg-red-400",
-};
+// ── Service Timeline ───────────────────────────────────────
 
 function ServiceTimeline({
   history,
@@ -91,7 +89,7 @@ function ServiceTimeline({
   return (
     <div className="flex flex-col gap-0">
       {history.map((entry, idx) => {
-        const dotColor = STATUS_COLORS[entry.status] ?? "bg-slate-400";
+        const dotColor = STATUS_DOT[entry.status] ?? "bg-slate-400";
         const isLast = idx === history.length - 1;
 
         return (
@@ -102,12 +100,12 @@ function ServiceTimeline({
 
             <div className="relative z-10 mt-1 shrink-0">
               <div
-                className={`size-5  ${dotColor} ring-2 ring-background flex items-center justify-center`}
+                className={`size-5 ${dotColor} ring-2 ring-background flex items-center justify-center`}
               >
                 {entry.status === "Completed" ? (
                   <CheckCircle2 className="size-3 text-white" />
                 ) : (
-                  <div className="size-2  bg-white" />
+                  <div className="size-2 bg-white" />
                 )}
               </div>
             </div>
@@ -133,7 +131,7 @@ function ServiceTimeline({
                   {entry.services.map((s) => (
                     <span
                       key={`${s.name}-${s.price}`}
-                      className="inline-flex items-center gap-1  bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400"
+                      className="inline-flex items-center gap-1 bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400"
                     >
                       <Wrench className="size-3" />
                       {s.name}
@@ -163,40 +161,45 @@ function ServiceTimeline({
   );
 }
 
-// ── Component ──────────────────────────────────────────────
+// ── Main Component ─────────────────────────────────────────
 
 export function VehicleRegistrationDialog({
   open,
   onOpenChange,
-  initialMode = "register",
   onQueued,
   branchId,
 }: Props) {
   const t = useTranslations("bayView");
-  const [mode, setMode] = useState<"register" | "lookup">(initialMode);
+
+  // ── Lookup state ──────────────────────────────────────────
   const [plate, setPlate] = useState("");
   const [lookupResult, setLookupResult] = useState<LookupResult>(EMPTY_LOOKUP);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [lookupDone, setLookupDone] = useState(false);
 
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [saveMode, setSaveMode] = useState<"created" | "updated" | null>(null);
-
-  // ── Vehicle search state ─────────────────────────────────────
+  // ── Vehicle search state ──────────────────────────────────
   const [searchResults, setSearchResults] = useState<SearchVehicleResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [plateFocused, setPlateFocused] = useState(false);
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ── Queue state ──────────────────────────────────────────────
+  // ── Save state ────────────────────────────────────────────
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveMode, setSaveMode] = useState<"created" | "updated" | null>(null);
+
+  // ── Queue state ───────────────────────────────────────────
   const [queueSaving, setQueueSaving] = useState(false);
   const [queueError, setQueueError] = useState<string | null>(null);
   const [savedVehicleId, setSavedVehicleId] = useState<string | null>(null);
   const [savedCustomerId, setSavedCustomerId] = useState<string | null>(null);
+
+  // ── Collapsible sections ──────────────────────────────────
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
+  const [showOwnerInfo, setShowOwnerInfo] = useState(false);
 
   const plateRef = useRef<HTMLInputElement>(null);
 
@@ -217,6 +220,7 @@ export function VehicleRegistrationDialog({
     },
   });
 
+  // Focus plate on open
   useEffect(() => {
     if (!open) return;
     plateRef.current?.focus();
@@ -240,6 +244,8 @@ export function VehicleRegistrationDialog({
       setSavedCustomerId(null);
       setSearchResults([]);
       setShowDropdown(false);
+      setShowTechnicalDetails(false);
+      setShowOwnerInfo(false);
       form.reset({
         make: "",
         model: "",
@@ -279,6 +285,7 @@ export function VehicleRegistrationDialog({
     }
   }, [lookupResult, form]);
 
+  // ── Lookup handler ────────────────────────────────────────
   const handleLookup = useCallback(async () => {
     if (!plate.trim()) return;
     setLookupLoading(true);
@@ -286,6 +293,7 @@ export function VehicleRegistrationDialog({
     setLookupDone(false);
     setSaveSuccess(false);
     setSaveError(null);
+    setQueueError(null);
 
     try {
       const { lookupVehicleByPlate } = await import(
@@ -294,10 +302,6 @@ export function VehicleRegistrationDialog({
       const result = await lookupVehicleByPlate(plate.trim().toUpperCase());
       setLookupResult(result);
       setLookupDone(true);
-
-      if (result.exists) {
-        setMode("register");
-      }
     } catch (err) {
       setLookupError(
         err instanceof Error ? err.message : t("common.somethingWentWrong"),
@@ -305,9 +309,9 @@ export function VehicleRegistrationDialog({
     } finally {
       setLookupLoading(false);
     }
-  }, [plate]);
+  }, [plate, t]);
 
-  // ── Vehicle search (debounced) ────────────────────────────────
+  // ── Vehicle search (debounced) ────────────────────────────
   const handleSearch = useCallback((term: string) => {
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
 
@@ -343,6 +347,7 @@ export function VehicleRegistrationDialog({
     [handleLookup],
   );
 
+  // ── Save payload ──────────────────────────────────────────
   const getSavePayload = useCallback(
     (data: VehicleRegistrationFormValues) => ({
       plateNumber: plate.trim().toUpperCase(),
@@ -360,6 +365,7 @@ export function VehicleRegistrationDialog({
     [plate],
   );
 
+  // ── Save handler ──────────────────────────────────────────
   const handleSave = useCallback(
     async (data: VehicleRegistrationFormValues) => {
       if (!plate.trim() || !data.make.trim() || !data.model.trim()) return;
@@ -373,10 +379,8 @@ export function VehicleRegistrationDialog({
         );
         const saveResult = await quickRegisterVehicle(getSavePayload(data));
 
-        // Store returned IDs for queue use
         setSavedVehicleId(saveResult.vehicle.id);
         setSavedCustomerId(saveResult.customerId);
-
         setSaveSuccess(true);
         setSaveMode(saveResult.isUpdate ? "updated" : "created");
 
@@ -385,6 +389,7 @@ export function VehicleRegistrationDialog({
           plate.trim().toUpperCase(),
         );
         setLookupResult(refreshResult);
+        setLookupDone(true);
       } catch (err) {
         setSaveError(
           err instanceof Error ? err.message : t("common.somethingWentWrong"),
@@ -393,9 +398,10 @@ export function VehicleRegistrationDialog({
         setSaving(false);
       }
     },
-    [plate, getSavePayload],
+    [plate, getSavePayload, t],
   );
 
+  // ── Queue handler ─────────────────────────────────────────
   const handleAddToQueue = useCallback(async () => {
     const formData = form.getValues();
     const { vehicleId, customerId } = resolveQueueIds(
@@ -470,19 +476,22 @@ export function VehicleRegistrationDialog({
     form,
     getSavePayload,
     branchId,
+    t,
   ]);
 
-  // Determine whether queue action is available
+  // ── Derived state ─────────────────────────────────────────
   const { vehicleId: resolvedVehicleId, customerId: resolvedCustomerId } =
     resolveQueueIds(savedVehicleId, savedCustomerId, lookupResult);
   const canQueue = !!resolvedVehicleId && !!resolvedCustomerId;
 
   const formValues = form.watch();
   const needsSave =
-    !resolvedVehicleId &&
+    !lookupResult.exists &&
     plate.trim() &&
     formValues.make.trim() &&
     formValues.model.trim();
+
+  const isExistingVehicle = lookupDone && lookupResult.exists;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -490,38 +499,15 @@ export function VehicleRegistrationDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Car className="size-4 text-blue-500" />
-            {mode === "lookup"
-              ? t("vehicleServiceHistory")
-              : t("vehicleRegistration")}
+            {t("vehicleRegistration")}
           </DialogTitle>
-          <DialogDescription>
-            {mode === "lookup" ? t("lookupSubtitle") : t("registerSubtitle")}
-          </DialogDescription>
+          <DialogDescription>{t("registerSubtitle")}</DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center gap-2 mb-2">
-          <Button
-            variant="outline"
-            size="sm"
-            type="button"
-            onClick={() => {
-              setMode(mode === "register" ? "lookup" : "register");
-              setLookupResult(EMPTY_LOOKUP);
-              setLookupDone(false);
-              setLookupError(null);
-              setSaveSuccess(false);
-              setSaveError(null);
-              setQueueError(null);
-            }}
-          >
-            {mode === "register" ? t("switchToLookup") : t("switchToRegister")}
-          </Button>
-        </div>
-
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left: Registration Form */}
+          {/* ── Left: Main Content ───────────────────────────── */}
           <div className="flex-1 flex flex-col gap-4">
-            {/* Plate search with autocomplete */}
+            {/* ── Plate Input ────────────────────────────────── */}
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -610,20 +596,21 @@ export function VehicleRegistrationDialog({
               </Button>
             </div>
 
+            {/* ── Error/Success Banners ──────────────────────── */}
             {lookupError && (
-              <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
+              <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
                 {lookupError}
               </div>
             )}
 
             {saveError && (
-              <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
+              <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
                 {saveError}
               </div>
             )}
 
             {saveSuccess && (
-              <div className=" bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 px-4 py-2 text-xs text-green-600 dark:text-green-400 flex items-center gap-2">
+              <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 px-4 py-2 text-xs text-green-600 dark:text-green-400 flex items-center gap-2">
                 <CheckCircle2 className="size-4" />
                 {saveMode === "updated"
                   ? t("vehicleUpdated")
@@ -632,208 +619,246 @@ export function VehicleRegistrationDialog({
             )}
 
             {lookupDone && !lookupResult.exists && (
-              <div className=" bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-4 py-2 text-xs text-amber-600 dark:text-amber-400">
+              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-4 py-2 text-xs text-amber-600 dark:text-amber-400">
                 {t("vehicleNotFound")}
               </div>
             )}
 
-            <form
-              onSubmit={form.handleSubmit(handleSave)}
-              className="flex flex-col gap-4"
-            >
-              {/* ── Primary: Brand, Model ── */}
-              <div className="flex flex-col gap-2">
-                <Field data-invalid={!!form.formState.errors.make}>
-                  <FieldContent>
-                    <Input
-                      placeholder={`${t("brand")} (e.g. Toyota)`}
-                      className="font-medium"
-                      aria-invalid={!!form.formState.errors.make}
-                      {...form.register("make")}
-                    />
-                    {form.formState.errors.make && (
-                      <FieldError>
-                        {form.formState.errors.make.message}
-                      </FieldError>
-                    )}
-                  </FieldContent>
-                </Field>
-                <Field data-invalid={!!form.formState.errors.model}>
-                  <FieldContent>
-                    <Input
-                      placeholder={`${t("model")} (e.g. Prius)`}
-                      className="font-medium"
-                      aria-invalid={!!form.formState.errors.model}
-                      {...form.register("model")}
-                    />
-                    {form.formState.errors.model && (
-                      <FieldError>
-                        {form.formState.errors.model.message}
-                      </FieldError>
-                    )}
-                  </FieldContent>
-                </Field>
-              </div>
-
-              {/* ── Secondary: Year, Color ── */}
-              <div className="grid grid-cols-2 gap-2">
-                <Field data-invalid={!!form.formState.errors.year}>
-                  <FieldLabel className="mb-1 block text-xs font-medium text-muted-foreground">
-                    {t("year")}
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      type="number"
-                      placeholder="e.g. 2020"
-                      aria-invalid={!!form.formState.errors.year}
-                      {...form.register("year")}
-                    />
-                    {form.formState.errors.year && (
-                      <FieldError>
-                        {form.formState.errors.year.message}
-                      </FieldError>
-                    )}
-                  </FieldContent>
-                </Field>
-                <Field data-invalid={!!form.formState.errors.color}>
-                  <FieldLabel className="mb-1 block text-xs font-medium text-muted-foreground">
-                    {t("color")}
-                  </FieldLabel>
-                  <FieldContent>
-                    <ColorSelect
-                      value={formValues.color ?? ""}
-                      onChange={(val) => form.setValue("color", val)}
-                      className="w-full"
-                    />
-                  </FieldContent>
-                </Field>
-              </div>
-
-              {/* ── Separator ── */}
-              <div className="border-t border-border/50" />
-
-              {/* ── Less Important: VIN, Engine, Odometer ── */}
-              <div className="flex flex-col gap-2">
-                <Label className="text-xs font-medium text-muted-foreground/70">
-                  {t("additionalDetails")}
+            {/* ── Existing Vehicle: Queue Section ────────────── */}
+            {isExistingVehicle && (
+              <div className="flex flex-col gap-3 bg-muted/30 border border-border/60 rounded-lg p-4">
+                <Label className="flex items-center gap-2 text-sm font-semibold">
+                  <MessageSquarePlus className="size-4 text-primary" />
+                  Add to Waiting Queue
                 </Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Field data-invalid={!!form.formState.errors.vin}>
-                    <FieldContent>
-                      <Input
-                        placeholder="VIN / Chassis"
-                        className="text-xs"
-                        aria-invalid={!!form.formState.errors.vin}
-                        {...form.register("vin")}
-                      />
-                    </FieldContent>
-                  </Field>
-                  <Field data-invalid={!!form.formState.errors.engine}>
-                    <FieldContent>
-                      <Input
-                        placeholder={`${t("engine")} (e.g. 2ZR-FE)`}
-                        className="text-xs"
-                        aria-invalid={!!form.formState.errors.engine}
-                        {...form.register("engine")}
-                      />
-                    </FieldContent>
-                  </Field>
-                </div>
-                <Field data-invalid={!!form.formState.errors.odometer}>
+
+                <Field data-invalid={!!form.formState.errors.complaint}>
                   <FieldContent>
-                    <Input
-                      type="number"
-                      placeholder={`${t("odometer")} (e.g. 120000)`}
-                      className="text-xs"
-                      aria-invalid={!!form.formState.errors.odometer}
-                      {...form.register("odometer")}
+                    <Textarea
+                      placeholder={t("complaintPlaceholder")}
+                      className="min-h-[60px] text-xs resize-none"
+                      {...form.register("complaint")}
                     />
                   </FieldContent>
                 </Field>
-              </div>
 
-              {/* ── Separator ── */}
-              <div className="border-t border-border/50" />
-
-              {/* ── Owner Info (Optional) ── */}
-              <div className="flex flex-col gap-2">
-                <Label className="text-xs font-medium text-muted-foreground/70">
-                  {t("ownerInfo")}{" "}
-                  <span className="text-muted-foreground/50">(optional)</span>
-                </Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Field data-invalid={!!form.formState.errors.custFirstName}>
-                    <FieldContent>
-                      <Input
-                        placeholder="e.g. Bat"
-                        className="text-xs"
-                        aria-invalid={!!form.formState.errors.custFirstName}
-                        {...form.register("custFirstName")}
-                      />
-                    </FieldContent>
-                  </Field>
-                  <Field data-invalid={!!form.formState.errors.custLastName}>
-                    <FieldContent>
-                      <Input
-                        placeholder="e.g. Erdene"
-                        className="text-xs"
-                        aria-invalid={!!form.formState.errors.custLastName}
-                        {...form.register("custLastName")}
-                      />
-                    </FieldContent>
-                  </Field>
-                </div>
-                <Field data-invalid={!!form.formState.errors.custPhone}>
-                  <FieldContent>
-                    <Input
-                      type="tel"
-                      placeholder="e.g. 99112233"
-                      inputMode="tel"
-                      autoComplete="tel"
-                      className="text-xs"
-                      aria-invalid={!!form.formState.errors.custPhone}
-                      {...form.register("custPhone")}
-                    />
-                    {form.formState.errors.custPhone && (
-                      <FieldError>
-                        {form.formState.errors.custPhone.message}
-                      </FieldError>
-                    )}
-                  </FieldContent>
-                </Field>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={saving}
-                size="default"
-              >
-                {saving ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : lookupResult.exists ? (
-                  <CheckCircle2 className="size-4" />
-                ) : (
-                  <Car className="size-4" />
+                {queueError && (
+                  <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
+                    {queueError}
+                  </div>
                 )}
-                {saving
-                  ? t("saving")
-                  : lookupResult.exists
-                    ? t("updateVehicle")
-                    : t("registerVehicleBtn")}
-              </Button>
-            </form>
 
-            {/* ── Add to Queue section ───────────────────────────── */}
-            {(lookupDone || !!savedVehicleId) && (
-              <>
-                <Separator />
-                <div className="flex flex-col gap-3">
-                  <Label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                    <MessageSquarePlus className="size-4 text-primary" />
-                    Add to Waiting Queue
+                <Button
+                  type="button"
+                  variant="default"
+                  size="default"
+                  disabled={queueSaving || !canQueue}
+                  onClick={handleAddToQueue}
+                  className="w-full"
+                >
+                  {queueSaving ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <MessageSquarePlus className="size-4" />
+                  )}
+                  {queueSaving ? t("addingToQueue") : t("addQueueButton")}
+                </Button>
+              </div>
+            )}
+
+            {/* ── New Vehicle: Registration Form ─────────────── */}
+            {lookupDone && !lookupResult.exists && (
+              <form
+                onSubmit={form.handleSubmit(handleSave)}
+                className="flex flex-col gap-4"
+              >
+                {/* ── Primary: Brand, Model, Year, Color ──── */}
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-medium text-muted-foreground">
+                    Vehicle Information
                   </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field data-invalid={!!form.formState.errors.make}>
+                      <FieldContent>
+                        <Input
+                          placeholder={`${t("brand")} (e.g. Toyota)`}
+                          className="font-medium"
+                          aria-invalid={!!form.formState.errors.make}
+                          {...form.register("make")}
+                        />
+                        {form.formState.errors.make && (
+                          <FieldError>
+                            {form.formState.errors.make.message}
+                          </FieldError>
+                        )}
+                      </FieldContent>
+                    </Field>
+                    <Field data-invalid={!!form.formState.errors.model}>
+                      <FieldContent>
+                        <Input
+                          placeholder={`${t("model")} (e.g. Prius)`}
+                          className="font-medium"
+                          aria-invalid={!!form.formState.errors.model}
+                          {...form.register("model")}
+                        />
+                        {form.formState.errors.model && (
+                          <FieldError>
+                            {form.formState.errors.model.message}
+                          </FieldError>
+                        )}
+                      </FieldContent>
+                    </Field>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field data-invalid={!!form.formState.errors.year}>
+                      <FieldContent>
+                        <Input
+                          type="number"
+                          placeholder={`${t("year")} (e.g. 2020)`}
+                          aria-invalid={!!form.formState.errors.year}
+                          {...form.register("year")}
+                        />
+                        {form.formState.errors.year && (
+                          <FieldError>
+                            {form.formState.errors.year.message}
+                          </FieldError>
+                        )}
+                      </FieldContent>
+                    </Field>
+                    <Field data-invalid={!!form.formState.errors.color}>
+                      <FieldContent>
+                        <ColorSelect
+                          value={formValues.color ?? ""}
+                          onChange={(val) => form.setValue("color", val)}
+                          className="w-full"
+                        />
+                      </FieldContent>
+                    </Field>
+                  </div>
+                </div>
+
+                {/* ── Collapsible: Technical Details ───────── */}
+                <Collapsible
+                  open={showTechnicalDetails}
+                  onOpenChange={setShowTechnicalDetails}
+                >
+                  <CollapsibleTrigger className="flex items-center gap-2 text-xs font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors py-1">
+                    <ChevronDown
+                      className={`size-3 transition-transform ${showTechnicalDetails ? "rotate-180" : ""}`}
+                    />
+                    {t("additionalDetails")}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <div className="flex flex-col gap-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Field data-invalid={!!form.formState.errors.vin}>
+                          <FieldContent>
+                            <Input
+                              placeholder="VIN / Chassis"
+                              className="text-xs"
+                              aria-invalid={!!form.formState.errors.vin}
+                              {...form.register("vin")}
+                            />
+                          </FieldContent>
+                        </Field>
+                        <Field data-invalid={!!form.formState.errors.engine}>
+                          <FieldContent>
+                            <Input
+                              placeholder={`${t("engine")} (e.g. 2ZR-FE)`}
+                              className="text-xs"
+                              aria-invalid={!!form.formState.errors.engine}
+                              {...form.register("engine")}
+                            />
+                          </FieldContent>
+                        </Field>
+                      </div>
+                      <Field data-invalid={!!form.formState.errors.odometer}>
+                        <FieldContent>
+                          <Input
+                            type="number"
+                            placeholder={`${t("odometer")} (e.g. 120000)`}
+                            className="text-xs"
+                            aria-invalid={!!form.formState.errors.odometer}
+                            {...form.register("odometer")}
+                          />
+                        </FieldContent>
+                      </Field>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* ── Collapsible: Owner Info ──────────────── */}
+                <Collapsible
+                  open={showOwnerInfo}
+                  onOpenChange={setShowOwnerInfo}
+                >
+                  <CollapsibleTrigger className="flex items-center gap-2 text-xs font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors py-1">
+                    <ChevronDown
+                      className={`size-3 transition-transform ${showOwnerInfo ? "rotate-180" : ""}`}
+                    />
+                    {t("ownerInfo")}{" "}
+                    <span className="text-muted-foreground/50">(optional)</span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2">
+                    <div className="flex flex-col gap-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Field
+                          data-invalid={!!form.formState.errors.custFirstName}
+                        >
+                          <FieldContent>
+                            <Input
+                              placeholder="e.g. Bat"
+                              className="text-xs"
+                              aria-invalid={
+                                !!form.formState.errors.custFirstName
+                              }
+                              {...form.register("custFirstName")}
+                            />
+                          </FieldContent>
+                        </Field>
+                        <Field
+                          data-invalid={!!form.formState.errors.custLastName}
+                        >
+                          <FieldContent>
+                            <Input
+                              placeholder="e.g. Erdene"
+                              className="text-xs"
+                              aria-invalid={
+                                !!form.formState.errors.custLastName
+                              }
+                              {...form.register("custLastName")}
+                            />
+                          </FieldContent>
+                        </Field>
+                      </div>
+                      <Field data-invalid={!!form.formState.errors.custPhone}>
+                        <FieldContent>
+                          <Input
+                            type="tel"
+                            placeholder="e.g. 99112233"
+                            inputMode="tel"
+                            autoComplete="tel"
+                            className="text-xs"
+                            aria-invalid={!!form.formState.errors.custPhone}
+                            {...form.register("custPhone")}
+                          />
+                          {form.formState.errors.custPhone && (
+                            <FieldError>
+                              {form.formState.errors.custPhone.message}
+                            </FieldError>
+                          )}
+                        </FieldContent>
+                      </Field>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* ── Complaint ────────────────────────────── */}
+                <div className="border-t border-border/50 pt-4">
                   <Field data-invalid={!!form.formState.errors.complaint}>
+                    <FieldLabel className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Complaint / Reason for Visit
+                    </FieldLabel>
                     <FieldContent>
                       <Textarea
                         placeholder={t("complaintPlaceholder")}
@@ -842,56 +867,110 @@ export function VehicleRegistrationDialog({
                       />
                     </FieldContent>
                   </Field>
+                </div>
 
-                  {!canQueue && needsSave && (
-                    <Typography.Muted className="text-xs text-muted-foreground/60">
-                      Save the vehicle first, then you can add it to the queue.
-                    </Typography.Muted>
-                  )}
+                {/* ── Queue hint ───────────────────────────── */}
+                {needsSave && !canQueue && (
+                  <Typography.Muted className="text-xs text-muted-foreground/60">
+                    Save the vehicle first, then you can add it to the queue.
+                  </Typography.Muted>
+                )}
 
-                  {!canQueue && resolvedVehicleId && !resolvedCustomerId && (
-                    <Typography.Text className="text-xs text-amber-600">
-                      Fill in owner info (name + phone) and save to add to
-                      queue.
-                    </Typography.Text>
-                  )}
+                {lookupResult.exists && !resolvedCustomerId && (
+                  <Typography.Text className="text-xs text-amber-600">
+                    Fill in owner info (name + phone) and save to add to queue.
+                  </Typography.Text>
+                )}
 
-                  {queueError && (
-                    <div className=" bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-2 text-xs text-red-600 dark:text-red-400">
-                      {queueError}
-                    </div>
-                  )}
-
+                {/* ── Actions ──────────────────────────────── */}
+                <div className="flex flex-col gap-2">
                   <Button
-                    type="button"
-                    variant={canQueue ? "default" : "outline"}
+                    type="submit"
+                    className="w-full"
+                    disabled={saving}
                     size="default"
-                    disabled={
-                      queueSaving ||
-                      (!canQueue && !needsSave) ||
-                      (!!resolvedVehicleId && !resolvedCustomerId)
-                    }
-                    onClick={handleAddToQueue}
                   >
-                    {queueSaving ? (
+                    {saving ? (
                       <Loader2 className="size-4 animate-spin" />
                     ) : (
-                      <MessageSquarePlus className="size-4" />
+                      <Car className="size-4" />
                     )}
-                    {queueSaving
-                      ? t("addingToQueue")
-                      : canQueue
-                        ? t("addQueueButton")
-                        : needsSave
-                          ? t("saveAndAddToQueue")
-                          : t("addQueueButton")}
+                    {saving ? t("saving") : t("registerVehicleBtn")}
                   </Button>
+
+                  {/* Save & Queue (combined) */}
+                  {needsSave && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      disabled={saving || queueSaving}
+                      onClick={async () => {
+                        // Save first, then queue
+                        const formData = form.getValues();
+                        if (!formData.make.trim() || !formData.model.trim())
+                          return;
+
+                        setSaving(true);
+                        setSaveError(null);
+                        try {
+                          const { quickRegisterVehicle } = await import(
+                            "@/lib/services/bay-view-actions"
+                          );
+                          const saveResult = await quickRegisterVehicle(
+                            getSavePayload(formData),
+                          );
+                          setSavedVehicleId(saveResult.vehicle.id);
+                          setSavedCustomerId(saveResult.customerId);
+
+                          const { addVehicleToQueue } = await import(
+                            "@/lib/services/bay-view-actions"
+                          );
+                          await addVehicleToQueue({
+                            vehicleId: saveResult.vehicle.id,
+                            customerId: saveResult.customerId ?? "",
+                            complaint: formData.complaint?.trim() || undefined,
+                            branchId,
+                          });
+                          onQueued?.();
+                        } catch (err) {
+                          setSaveError(
+                            err instanceof Error
+                              ? err.message
+                              : t("common.somethingWentWrong"),
+                          );
+                        } finally {
+                          setSaving(false);
+                        }
+                      }}
+                    >
+                      {saving || queueSaving ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <MessageSquarePlus className="size-4" />
+                      )}
+                      {t("saveAndAddToQueue")}
+                    </Button>
+                  )}
                 </div>
-              </>
+              </form>
+            )}
+
+            {/* ── Waiting state ──────────────────────────────── */}
+            {!lookupDone && (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/40">
+                <Car className="size-12 mb-3" />
+                <Typography.Text className="text-sm font-medium">
+                  {t("enterPlateAbove")}
+                </Typography.Text>
+                <Typography.Text className="text-xs mt-1">
+                  {t("timelineWillAppear")}
+                </Typography.Text>
+              </div>
             )}
           </div>
 
-          {/* Right: Timeline */}
+          {/* ── Right: Timeline ──────────────────────────────── */}
           <div className="w-full lg:w-[360px] shrink-0">
             <div className="flex items-center gap-2 mb-4">
               <div className="flex items-center justify-center size-8 bg-amber-500/10">
@@ -901,7 +980,7 @@ export function VehicleRegistrationDialog({
                 {t("serviceTimeline")}
               </span>
               {lookupResult.serviceHistory.length > 0 && (
-                <span className=" bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
+                <span className="bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
                   {lookupResult.serviceHistory.length}
                 </span>
               )}
@@ -910,7 +989,7 @@ export function VehicleRegistrationDialog({
             {lookupDone ? (
               <ScrollArea className="max-h-[420px] pr-1">
                 {lookupResult.vehicle && (
-                  <div className="mb-4  bg-muted/30 border border-border/60 p-3">
+                  <div className="mb-4 bg-muted/30 border border-border/60 p-3">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-semibold text-sm">
@@ -926,7 +1005,7 @@ export function VehicleRegistrationDialog({
                       </div>
                       {lookupResult.vehicle.color && (
                         <div
-                          className="size-5  border border-border"
+                          className="size-5 border border-border"
                           style={{
                             backgroundColor:
                               lookupResult.vehicle.color.toLowerCase(),
