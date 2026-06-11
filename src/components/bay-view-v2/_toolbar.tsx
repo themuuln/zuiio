@@ -1,12 +1,10 @@
 "use client";
 
-import React from "react";
 import {
   Building2,
   Car,
   CheckCircle2,
   Columns3,
-  KeyRound,
   LayoutDashboard,
   LayoutGrid,
   List,
@@ -14,9 +12,9 @@ import {
   Plus,
   RefreshCw,
   Search,
-  Wrench,
   X,
 } from "lucide-react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
@@ -26,6 +24,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn, hasMultipleBranches } from "@/lib/utils";
+import { STATUS_DOT, STATUS_FILTER_ACTIVE } from "./_constants";
 
 type ViewMode = "grid" | "kanban" | "list";
 
@@ -58,9 +57,7 @@ interface ToolbarProps {
   batchCompletePending: boolean;
   setBatchCompleteDialogOpen: (v: boolean) => void;
   setShowVehicleReg: (v: boolean) => void;
-  setShowMechanicReg: (v: boolean) => void;
   setShowShiftReport: (v: boolean) => void;
-  setShowPinSettings: (v: boolean) => void;
   bayCountMutationInFlightRef: React.MutableRefObject<boolean>;
   bayCountDebounceRef: React.MutableRefObject<ReturnType<
     typeof setTimeout
@@ -96,9 +93,7 @@ export const Toolbar = React.memo(function Toolbar({
   batchCompletePending,
   setBatchCompleteDialogOpen,
   setShowVehicleReg,
-  setShowMechanicReg,
   setShowShiftReport,
-  setShowPinSettings,
   bayCountMutationInFlightRef,
   bayCountDebounceRef,
   bayCountPending,
@@ -131,7 +126,9 @@ export const Toolbar = React.memo(function Toolbar({
                 }`}
               >
                 <Building2 className="size-4" />
-                <span className="hidden sm:inline text-xs">All</span>
+                <span className="hidden sm:inline text-xs">
+                  {t("allBranches")}
+                </span>
               </button>
               {branches.map((b) => (
                 <button
@@ -203,27 +200,27 @@ export const Toolbar = React.memo(function Toolbar({
               [
                 {
                   key: null,
-                  label: "All",
+                  label: t("allStatuses"),
                   dot: null,
                   activeBg: "bg-background",
                 },
                 {
                   key: "In Progress",
-                  label: "In Progress",
-                  dot: "bg-indigo-500",
-                  activeBg: "bg-indigo-500/10",
+                  label: t("inProgress"),
+                  dot: STATUS_DOT["In Progress"],
+                  activeBg: STATUS_FILTER_ACTIVE["In Progress"],
                 },
                 {
                   key: "New",
-                  label: "New",
-                  dot: "bg-amber-500",
-                  activeBg: "bg-amber-500/10",
+                  label: t("newStatus"),
+                  dot: STATUS_DOT["New"],
+                  activeBg: STATUS_FILTER_ACTIVE["New"],
                 },
                 {
                   key: "Ready for Pickup",
-                  label: "Ready",
-                  dot: "bg-emerald-500",
-                  activeBg: "bg-emerald-500/10",
+                  label: t("ready"),
+                  dot: STATUS_DOT["Ready for Pickup"],
+                  activeBg: STATUS_FILTER_ACTIVE["Ready for Pickup"],
                 },
               ] as const
             ).map((opt) => (
@@ -273,7 +270,7 @@ export const Toolbar = React.memo(function Toolbar({
               type="text"
               value={baySearchQuery}
               onChange={(e) => setBaySearchQuery(e.target.value)}
-              placeholder="Search plate, make, model..."
+              placeholder={t("queueSearchPlaceholder")}
               className="h-8 pl-7 pr-7 text-xs"
             />
             {baySearchQuery && (
@@ -340,25 +337,6 @@ export const Toolbar = React.memo(function Toolbar({
                     type="button"
                     size="icon-sm"
                     variant="ghost"
-                    onClick={() => setShowMechanicReg(true)}
-                    className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
-                  />
-                }
-              >
-                <Wrench className="size-4" />
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs font-semibold">
-                {t("registerMechanic")}
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    type="button"
-                    size="icon-sm"
-                    variant="ghost"
                     onClick={() => setShowShiftReport(true)}
                     className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
                   />
@@ -368,25 +346,6 @@ export const Toolbar = React.memo(function Toolbar({
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs font-semibold">
                 {t("shiftReport")}
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    type="button"
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => setShowPinSettings(true)}
-                    className="rounded-md hover:bg-muted hover:text-primary transition-colors text-muted-foreground/85 cursor-pointer"
-                  />
-                }
-              >
-                <KeyRound className="size-4" />
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs font-semibold">
-                {t("bayPinSettings")}
               </TooltipContent>
             </Tooltip>
           </div>

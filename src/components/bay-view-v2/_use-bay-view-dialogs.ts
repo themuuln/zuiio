@@ -2,21 +2,13 @@
 
 import { useCallback, useState } from "react";
 
-type DialogKey =
-  | "shiftReport"
-  | "pinSettings"
-  | "vehicleReg"
-  | "mechanicReg"
-  | "batchComplete"
-  | "assign";
+type DialogKey = "shiftReport" | "vehicleReg" | "batchComplete" | "assign";
 
 /** All dialog open states as a single map. One state, one setter pattern. */
 export function useBayViewDialogs() {
   const [open, setOpen] = useState<Record<DialogKey, boolean>>({
     shiftReport: false,
-    pinSettings: false,
     vehicleReg: false,
-    mechanicReg: false,
     batchComplete: false,
     assign: false,
   });
