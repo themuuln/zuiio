@@ -65,6 +65,7 @@ import { resolvePaymentMethodFees } from "./_payment-fees";
 import { useBayViewPending } from "./_use-bay-view-pending";
 import { useBayViewToast } from "./_use-bay-view-toast";
 import { AssignDialog } from "./assign-dialog";
+import { EmptyBayActionDialog } from "./_empty-bay-action-dialog";
 import { BayCardDragPreview } from "./bay-card";
 import { MechanicPanel } from "./mechanic-panel";
 import type { PickupCompleteData } from "./pickup-complete-dialog";
@@ -150,6 +151,9 @@ export function BayViewV2Client() {
   // ── UI state ─────────────────────────────────────────────────
   const [activeDrag, setActiveDrag] = useState<ActiveDragState | null>(null);
   const [pendingWoIds, setPendingWoIds] = useState<Record<string, boolean>>({});
+  const [emptyBayBayNumber, setEmptyBayBayNumber] = useState<number | null>(
+    null,
+  );
   const woIdFromUrl = searchParams.get("woId");
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(!!woIdFromUrl);
   const [detailWoId, setDetailWoId] = useState<string | null>(woIdFromUrl);
@@ -495,6 +499,50 @@ export function BayViewV2Client() {
     ],
     threshold: 0.4,
   });
+
+  // ── Empty bay click handler ──────────────────────────────────
+  const handleEmptyBayClick = useCallback(
+    (bayNumber: number) => {
+      const queue = data?.waitingQueue ?? [];
+      if (queue.length === 0) {
+        // No queue items: open registration dialog directly
+        dialogs.set("vehicleReg", true);
+      } else {
+        // Queue has items: show the action chooser dialog
+        setEmptyBayBayNumber(bayNumber);
+      }
+    },
+    [data?.waitingQueue, dialogs],
+  );
+
+  const handleEmptyBayQueueSelect = useCallback(
+    async (workOrderId: string) => {
+      const bayNumber = emptyBayBayNumber;
+      if (bayNumber === null) return;
+      setEmptyBayBayNumber(null);
+      // Assign directly to bay
+      markPending(workOrderId);
+      try {
+        await assignVehicleToBay(workOrderId, bayNumber);
+        toast.setToast({
+          message: `${t("assignedToBay")} ${bayNumber}`,
+          variant: "info",
+        });
+        await fetchData();
+      } catch {
+        toast.setToast({ message: t("failedToAssign"), variant: "error" });
+      }
+      clearPending(workOrderId);
+    },
+    [
+      emptyBayBayNumber,
+      t,
+      markPending,
+      clearPending,
+      fetchData,
+      toast.setToast,
+    ],
+  );
 
   // ── Quick assign handlers ────────────────────────────────────
   const handleQuickAssignToBay = useCallback(
@@ -898,7 +946,7 @@ export function BayViewV2Client() {
                       onStatusChange={handleStatusClick}
                       onRemoveFromBay={handleRemoveFromBay}
                       onOpenDetail={handleOpenDetail}
-                      onAssignClick={dialogs.openAssign}
+                      onAssignClick={handleEmptyBayClick}
                       onRemoveHelper={handleRemoveHelper}
                       orgId={orgInfo?.orgId}
                       mechanics={data?.mechanics ?? []}
@@ -916,7 +964,7 @@ export function BayViewV2Client() {
                   onStatusChange={handleStatusClick}
                   onRemoveFromBay={handleRemoveFromBay}
                   onOpenDetail={handleOpenDetail}
-                  onAssignClick={dialogs.openAssign}
+                  onAssignClick={handleEmptyBayClick}
                   onRemoveHelper={handleRemoveHelper}
                   orgId={orgInfo?.orgId}
                   mechanics={data?.mechanics ?? []}
@@ -941,7 +989,7 @@ export function BayViewV2Client() {
                       onStatusChange={handleStatusClick}
                       onRemoveFromBay={handleRemoveFromBay}
                       onOpenDetail={handleOpenDetail}
-                      onAssignClick={dialogs.openAssign}
+                      onAssignClick={handleEmptyBayClick}
                       onNoEmptyBays={() =>
                         toast.setToast({
                           message: "No empty bays available",
@@ -966,7 +1014,7 @@ export function BayViewV2Client() {
                   onStatusChange={handleStatusClick}
                   onRemoveFromBay={handleRemoveFromBay}
                   onOpenDetail={handleOpenDetail}
-                  onAssignClick={dialogs.openAssign}
+                  onAssignClick={handleEmptyBayClick}
                   onNoEmptyBays={() =>
                     toast.setToast({
                       message: "No empty bays available",
@@ -991,7 +1039,7 @@ export function BayViewV2Client() {
                     <ListView
                       bays={section.bays}
                       onOpenDetail={handleOpenDetail}
-                      onAssignClick={dialogs.openAssign}
+                      onAssignClick={handleEmptyBayClick}
                       orgId={orgInfo?.orgId}
                       t={t}
                     />
@@ -1003,7 +1051,7 @@ export function BayViewV2Client() {
                 <ListView
                   bays={searchedBays}
                   onOpenDetail={handleOpenDetail}
-                  onAssignClick={dialogs.openAssign}
+                  onAssignClick={handleEmptyBayClick}
                   orgId={orgInfo?.orgId}
                   t={t}
                 />
@@ -1095,6 +1143,20 @@ export function BayViewV2Client() {
         mechanics={data.mechanics}
         onAssign={handleAssignToBay}
         branchId={branchFilter}
+      />
+
+      <EmptyBayActionDialog
+        open={emptyBayBayNumber !== null}
+        onOpenChange={(open) => {
+          if (!open) setEmptyBayBayNumber(null);
+        }}
+        bayNumber={emptyBayBayNumber ?? 0}
+        queue={data.waitingQueue}
+        onSelectRegister={() => {
+          setEmptyBayBayNumber(null);
+          dialogs.set("vehicleReg", true);
+        }}
+        onSelectQueueItem={handleEmptyBayQueueSelect}
       />
 
       <DragOverlay dropAnimation={null}>
